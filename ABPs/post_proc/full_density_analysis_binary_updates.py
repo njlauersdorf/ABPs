@@ -514,8 +514,6 @@ g = open(outPath2+outTxt_num_dens, 'w+') # write file headings
 g.write('tauB'.center(20) + ' ' +\
                         'sizeBin'.center(20) + ' ' +\
                         'clust_size'.center(20) + ' ' +\
-                        'lat_mean'.center(20) + ' ' +\
-                        'lat_std'.center(20) + ' ' +\
                         'bulk_area'.center(20) + ' ' +\
                         'bulk_ndens'.center(20) + ' ' +\
                         'bulk_ndens_std'.center(20) + ' ' +\
@@ -845,6 +843,16 @@ with hoomd.open(name=inFile, mode='rb') as t:
         num_dens3A = [[0 for b in range(NBins)] for a in range(NBins)]
         num_dens3B = [[0 for b in range(NBins)] for a in range(NBins)]
                         
+        fa_all_tot = [[0 for b in range(NBins)] for a in range(NBins)]
+        fa_all_x_tot = [[0 for b in range(NBins)] for a in range(NBins)]
+        fa_all_y_tot = [[0 for b in range(NBins)] for a in range(NBins)]
+        fa_fast_tot = [[0 for b in range(NBins)] for a in range(NBins)]
+        fa_slow_tot = [[0 for b in range(NBins)] for a in range(NBins)]
+        
+        fa_all_num = [[0 for b in range(NBins)] for a in range(NBins)]
+        fa_fast_num = [[0 for b in range(NBins)] for a in range(NBins)]
+        fa_slow_num = [[0 for b in range(NBins)] for a in range(NBins)]
+        
         binParts = [[[] for b in range(NBins)] for a in range(NBins)]
         typParts=  [[[] for b in range(NBins)] for a in range(NBins)]
         occParts = [[0 for b in range(NBins)] for a in range(NBins)]
@@ -4217,7 +4225,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 for m in range(0, len(int_x)):
                     int_x_pos = np.append(int_x_pos, int_x[m] * sizeBin)
                     int_y_pos = np.append(int_y_pos, int_y[m] * sizeBin)
-
+                
                 adjacent_x = np.array([])
                 adjacent_x_pos = np.array([])
                 adjacent_x_arr = np.array([])
@@ -4231,54 +4239,40 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 adjacent_x_pos = np.append(adjacent_x_pos, int_x_pos[0])
                 adjacent_y = np.append(adjacent_y, int_y[0])
                 adjacent_y_pos = np.append(adjacent_y_pos, int_y_pos[0])
-                
-                for m in range(1, len(int_x)):
-                    if len(adjacent_x) == 0:
-                        adjacent_x = np.append(adjacent_x, int_x[m])
-                        adjacent_x_pos = np.append(adjacent_x_pos, int_x_pos[m])
-                        adjacent_y = np.append(adjacent_y, int_y[m])
-                        adjacent_y_pos = np.append(adjacent_y_pos, int_y_pos[m])
-                    else:
-                        difx = int_x_pos[m]-int_x_pos[m-1]
-                        dify = int_y_pos[m]-int_y_pos[m-1]
-                        
-                        #Enforce periodic boundary conditions
-                        difx_abs = np.abs(difx)
-                        dify_abs = np.abs(dify)
-                        
-                        #Enforce periodic boundary conditions
-                        if difx_abs>=h_box:
-                            if difx < -h_box:
-                                int_x_pos[m:-1] += l_box
-                                int_x[m:-1] += NBins
-                            else:
-                                int_x_pos[m:-1] -= l_box
-                                int_x[m:-1] -= NBins
-                        
-                        #Enforce periodic boundary conditions
-                        if dify_abs>=h_box:
-                            if dify < -h_box:
-                                int_y_pos[m:-1] += l_box
-                                int_y[m:-1] += NBins
-                            else:
-                                int_y_pos[m:-1] -= l_box
-                                int_y[m:-1] -= NBins
-                                
-                        if (difx_abs>=h_box) or (dify_abs>=h_box):
-                            adjacent_x_arr = np.append(adjacent_x_arr, adjacent_x)
-                            adjacent_x_arr_pos = np.append(adjacent_x_arr_pos, adjacent_x_pos)
-                            adjacent_y_arr = np.append(adjacent_y_arr, adjacent_y)
-                            adjacent_y_arr_pos = np.append(adjacent_y_arr_pos, adjacent_y_pos)
-                            adjacent_x = np.array([])
-                            adjacent_x_pos = np.array([])
-                            adjacent_y = np.array([])
-                            adjacent_y_pos = np.array([])
-                        else:
+                if len(int_x)>1:
+                    for m in range(1, len(int_x)):
+                        if len(adjacent_x) == 0:
                             adjacent_x = np.append(adjacent_x, int_x[m])
                             adjacent_x_pos = np.append(adjacent_x_pos, int_x_pos[m])
                             adjacent_y = np.append(adjacent_y, int_y[m])
                             adjacent_y_pos = np.append(adjacent_y_pos, int_y_pos[m])
-                            if (m==len(int_x)-1):
+                        else:
+                            difx = int_x_pos[m]-int_x_pos[m-1]
+                            dify = int_y_pos[m]-int_y_pos[m-1]
+                            
+                            #Enforce periodic boundary conditions
+                            difx_abs = np.abs(difx)
+                            dify_abs = np.abs(dify)
+                            
+                            #Enforce periodic boundary conditions
+                            if difx_abs>=h_box:
+                                if difx < -h_box:
+                                    int_x_pos[m:-1] += l_box
+                                    int_x[m:-1] += NBins
+                                else:
+                                    int_x_pos[m:-1] -= l_box
+                                    int_x[m:-1] -= NBins
+                            
+                            #Enforce periodic boundary conditions
+                            if dify_abs>=h_box:
+                                if dify < -h_box:
+                                    int_y_pos[m:-1] += l_box
+                                    int_y[m:-1] += NBins
+                                else:
+                                    int_y_pos[m:-1] -= l_box
+                                    int_y[m:-1] -= NBins
+                                    
+                            if (difx_abs>=h_box) or (dify_abs>=h_box):
                                 adjacent_x_arr = np.append(adjacent_x_arr, adjacent_x)
                                 adjacent_x_arr_pos = np.append(adjacent_x_arr_pos, adjacent_x_pos)
                                 adjacent_y_arr = np.append(adjacent_y_arr, adjacent_y)
@@ -4287,79 +4281,128 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                 adjacent_x_pos = np.array([])
                                 adjacent_y = np.array([])
                                 adjacent_y_pos = np.array([])
-                
-                adjacent_x_arr_pos_new = np.array([])
-                adjacent_y_arr_pos_new = np.array([])
-                adjacent_x_arr_new = np.array([])
-                adjacent_y_arr_new = np.array([])
-                for m in range(0, len(adjacent_x_arr_pos)):
-                    adjacent_x_arr_pos_new = np.append(adjacent_x_arr_pos_new, adjacent_x_arr_pos[m])
-                    adjacent_y_arr_pos_new = np.append(adjacent_y_arr_pos_new, adjacent_y_arr_pos[m])
-                    adjacent_x_arr_new = np.append(adjacent_x_arr_new, adjacent_x_arr[m])
-                    adjacent_y_arr_new = np.append(adjacent_y_arr_new, adjacent_y_arr[m])
-                
-                
-                int_x_copy = np.copy(adjacent_x_arr_new)
-                int_y_copy = np.copy(adjacent_y_arr_new)
-                for m in range(0, len(adjacent_x_arr_new)):
-                    if m==0:
-                        adjacent_x_arr_new[m] = (int_x_copy[-1] + int_x_copy[0] + int_x_copy[1])/3
-                        adjacent_y_arr_new[m] = (int_y_copy[-1] + int_y_copy[0] + int_y_copy[1])/3
-                    elif m==len(adjacent_x_arr_new)-1:
-                        adjacent_x_arr_new[m]= (int_x_copy[m] + int_x_copy[0] + int_x_copy[m-1])/3
-                        adjacent_y_arr_new[m]= (int_y_copy[m] + int_y_copy[0] + int_y_copy[m-1])/3
+                            else:
+                                adjacent_x = np.append(adjacent_x, int_x[m])
+                                adjacent_x_pos = np.append(adjacent_x_pos, int_x_pos[m])
+                                adjacent_y = np.append(adjacent_y, int_y[m])
+                                adjacent_y_pos = np.append(adjacent_y_pos, int_y_pos[m])
+                                if (m==len(int_x)-1):
+                                    adjacent_x_arr = np.append(adjacent_x_arr, adjacent_x)
+                                    adjacent_x_arr_pos = np.append(adjacent_x_arr_pos, adjacent_x_pos)
+                                    adjacent_y_arr = np.append(adjacent_y_arr, adjacent_y)
+                                    adjacent_y_arr_pos = np.append(adjacent_y_arr_pos, adjacent_y_pos)
+                                    adjacent_x = np.array([])
+                                    adjacent_x_pos = np.array([])
+                                    adjacent_y = np.array([])
+                                    adjacent_y_pos = np.array([])
+                    
+                    adjacent_x_arr_pos_new = np.array([])
+                    adjacent_y_arr_pos_new = np.array([])
+                    adjacent_x_arr_new = np.array([])
+                    adjacent_y_arr_new = np.array([])
+                    for m in range(0, len(adjacent_x_arr_pos)):
+                        adjacent_x_arr_pos_new = np.append(adjacent_x_arr_pos_new, adjacent_x_arr_pos[m])
+                        adjacent_y_arr_pos_new = np.append(adjacent_y_arr_pos_new, adjacent_y_arr_pos[m])
+                        adjacent_x_arr_new = np.append(adjacent_x_arr_new, adjacent_x_arr[m])
+                        adjacent_y_arr_new = np.append(adjacent_y_arr_new, adjacent_y_arr[m])
+                    
+                    
+                    int_x_copy = np.copy(adjacent_x_arr_new)
+                    int_y_copy = np.copy(adjacent_y_arr_new)
+                    for m in range(0, len(adjacent_x_arr_new)):
+                        if m==0:
+                            adjacent_x_arr_new[m] = (int_x_copy[-1] + int_x_copy[0] + int_x_copy[1])/3
+                            adjacent_y_arr_new[m] = (int_y_copy[-1] + int_y_copy[0] + int_y_copy[1])/3
+                        elif m==len(adjacent_x_arr_new)-1:
+                            adjacent_x_arr_new[m]= (int_x_copy[m] + int_x_copy[0] + int_x_copy[m-1])/3
+                            adjacent_y_arr_new[m]= (int_y_copy[m] + int_y_copy[0] + int_y_copy[m-1])/3
+                        else:
+                            adjacent_x_arr_new[m] = (int_x_copy[m-1] + int_x_copy[m] + int_x_copy[m+1])/3
+                            adjacent_y_arr_new[m] = (int_y_copy[m-1] + int_y_copy[m] + int_y_copy[m+1])/3
+    
+                    okay = np.where(np.abs(np.diff(adjacent_x_arr_new)) + np.abs(np.diff(adjacent_y_arr_new)) > 0)
+                    int_x = np.r_[adjacent_x_arr_new[okay], adjacent_x_arr_new[-1], adjacent_x_arr_new[0]]
+                    int_y = np.r_[adjacent_y_arr_new[okay], adjacent_y_arr_new[-1], adjacent_y_arr_new[0]]
+                    if len(int_x)==2:
+                        tck, u = interpolate.splprep([int_x, int_y], s=0, k=1, per=True)
+                    elif len(int_x)==3:
+                        tck, u = interpolate.splprep([int_x, int_y], s=0, k=2, per=True)
                     else:
-                        adjacent_x_arr_new[m] = (int_x_copy[m-1] + int_x_copy[m] + int_x_copy[m+1])/3
-                        adjacent_y_arr_new[m] = (int_y_copy[m-1] + int_y_copy[m] + int_y_copy[m+1])/3
-
-                okay = np.where(np.abs(np.diff(adjacent_x_arr_new)) + np.abs(np.diff(adjacent_y_arr_new)) > 0)
-                int_x = np.r_[adjacent_x_arr_new[okay], adjacent_x_arr_new[-1], adjacent_x_arr_new[0]]
-                int_y = np.r_[adjacent_y_arr_new[okay], adjacent_y_arr_new[-1], adjacent_y_arr_new[0]]
-                
-                tck, u = interpolate.splprep([int_x, int_y], s=0, per=True)
-                
-                # evaluate the spline fits for 1000 evenly spaced distance values
-                xi, yi = interpolate.splev(np.linspace(0, 1, 1000), tck)
-                
-                jump = np.sqrt(np.diff(xi)**2 + np.diff(yi)**2) 
-                smooth_jump = ndimage.gaussian_filter1d(jump, 5, mode='wrap')  # window of size 5 is arbitrary
-                limit = 2*np.median(smooth_jump)    # factor 2 is arbitrary
-                xn, yn = xi[:-1], yi[:-1]
-                xn = xn[(jump > 0) & (smooth_jump < limit)]
-                yn = yn[(jump > 0) & (smooth_jump < limit)]
-                
-                xn_pos = np.copy(xn)
-                yn_pos = np.copy(yn)
-                xn_pos_non_per = np.copy(xn)
-                yn_pos_non_per = np.copy(yn)
-
+                        tck, u = interpolate.splprep([int_x, int_y], s=0, per=True)
                     
-                for m in range(0, len(xn)):
-                    xn_pos[m] = xn[m] * sizeBin
-                    yn_pos[m] = yn[m] * sizeBin
-                    xn_pos_non_per[m] = xn[m] * sizeBin
-                    yn_pos_non_per[m] = yn[m] * sizeBin
+                    # evaluate the spline fits for 1000 evenly spaced distance values
+                    xi, yi = interpolate.splev(np.linspace(0, 1, 1000), tck)
                     
-                    if xn[m] < 0:
-                        xn[m]+=NBins
-                    if xn[m]>=NBins:
-                        xn[m]-=NBins
-                        
-                    if yn[m] < 0:
-                        yn[m]+=NBins
-                    if yn[m]>=NBins:
-                        yn[m]-=NBins
-                        
-                    if xn_pos[m] < 0:
-                        xn_pos[m]+=l_box
-                    if xn_pos[m]>=l_box:
-                        xn_pos[m]-=l_box
-                        
-                    if yn_pos[m] < 0:
-                        yn_pos[m]+=l_box
-                    if yn_pos[m]>=l_box:
-                        yn_pos[m]-=l_box
+                    jump = np.sqrt(np.diff(xi)**2 + np.diff(yi)**2) 
+                    smooth_jump = ndimage.gaussian_filter1d(jump, 5, mode='wrap')  # window of size 5 is arbitrary
+                    limit = 2*np.median(smooth_jump)    # factor 2 is arbitrary
+                    xn, yn = xi[:-1], yi[:-1]
+                    xn = xn[(jump > 0) & (smooth_jump < limit)]
+                    yn = yn[(jump > 0) & (smooth_jump < limit)]
                     
+                    xn_pos = np.copy(xn)
+                    yn_pos = np.copy(yn)
+                    xn_pos_non_per = np.copy(xn)
+                    yn_pos_non_per = np.copy(yn)
+    
+                        
+                    for m in range(0, len(xn)):
+                        xn_pos[m] = xn[m] * sizeBin
+                        yn_pos[m] = yn[m] * sizeBin
+                        xn_pos_non_per[m] = xn[m] * sizeBin
+                        yn_pos_non_per[m] = yn[m] * sizeBin
+                        
+                        if xn[m] < 0:
+                            xn[m]+=NBins
+                        if xn[m]>=NBins:
+                            xn[m]-=NBins
+                            
+                        if yn[m] < 0:
+                            yn[m]+=NBins
+                        if yn[m]>=NBins:
+                            yn[m]-=NBins
+                            
+                        if xn_pos[m] < 0:
+                            xn_pos[m]+=l_box
+                        if xn_pos[m]>=l_box:
+                            xn_pos[m]-=l_box
+                            
+                        if yn_pos[m] < 0:
+                            yn_pos[m]+=l_box
+                        if yn_pos[m]>=l_box:
+                            yn_pos[m]-=l_box
+                else:
+                    xn=np.array([int_x[0]])
+                    yn=np.array([int_y[0]])
+                    xn_pos = np.copy(xn)
+                    yn_pos = np.copy(yn)
+                    xn_pos_non_per = np.copy(xn)
+                    yn_pos_non_per = np.copy(yn)
+                    for m in range(0, len(xn)):
+                        xn_pos[m] = xn[m] * sizeBin
+                        yn_pos[m] = yn[m] * sizeBin
+                        xn_pos_non_per[m] = xn[m] * sizeBin
+                        yn_pos_non_per[m] = yn[m] * sizeBin
+                        
+                        if xn[m] < 0:
+                            xn[m]+=NBins
+                        if xn[m]>=NBins:
+                            xn[m]-=NBins
+                            
+                        if yn[m] < 0:
+                            yn[m]+=NBins
+                        if yn[m]>=NBins:
+                            yn[m]-=NBins
+                            
+                        if xn_pos[m] < 0:
+                            xn_pos[m]+=l_box
+                        if xn_pos[m]>=l_box:
+                            xn_pos[m]-=l_box
+                            
+                        if yn_pos[m] < 0:
+                            yn_pos[m]+=l_box
+                        if yn_pos[m]>=l_box:
+                            yn_pos[m]-=l_box
 
             if exterior_bin > 0:
                 ix=int(ext_x[0])
@@ -4722,54 +4765,40 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 adjacent_x_pos = np.append(adjacent_x_pos, ext_x_pos[0])
                 adjacent_y = np.append(adjacent_y, ext_y[0])
                 adjacent_y_pos = np.append(adjacent_y_pos, ext_y_pos[0])
-                
-                for m in range(1, len(ext_x)):
-                    if len(adjacent_x) == 0:
-                        adjacent_x = np.append(adjacent_x, ext_x[m])
-                        adjacent_x_pos = np.append(adjacent_x_pos, ext_x_pos[m])
-                        adjacent_y = np.append(adjacent_y, ext_y[m])
-                        adjacent_y_pos = np.append(adjacent_y_pos, ext_y_pos[m])
-                    else:
-                        difx = ext_x_pos[m]-ext_x_pos[m-1]
-                        dify = ext_y_pos[m]-ext_y_pos[m-1]
-                        
-                        #Enforce periodic boundary conditions
-                        difx_abs = np.abs(difx)
-                        dify_abs = np.abs(dify)
-                        
-                        #Enforce periodic boundary conditions
-                        if difx_abs>=h_box:
-                            if difx < -h_box:
-                                ext_x_pos[m:-1] += l_box
-                                ext_x[m:-1] += NBins
-                            else:
-                                ext_x_pos[m:-1] -= l_box
-                                ext_x[m:-1] -= NBins
-                        
-                        #Enforce periodic boundary conditions
-                        if dify_abs>=h_box:
-                            if dify < -h_box:
-                                ext_y_pos[m:-1] += l_box
-                                ext_y[m:-1] += NBins
-                            else:
-                                ext_y_pos[m:-1] -= l_box
-                                ext_y[m:-1] -= NBins
-                                
-                        if (difx_abs>=h_box) or (dify_abs>=h_box):
-                            adjacent_x_arr = np.append(adjacent_x_arr, adjacent_x)
-                            adjacent_x_arr_pos = np.append(adjacent_x_arr_pos, adjacent_x_pos)
-                            adjacent_y_arr = np.append(adjacent_y_arr, adjacent_y)
-                            adjacent_y_arr_pos = np.append(adjacent_y_arr_pos, adjacent_y_pos)
-                            adjacent_x = np.array([])
-                            adjacent_x_pos = np.array([])
-                            adjacent_y = np.array([])
-                            adjacent_y_pos = np.array([])
-                        else:
+                if len(ext_x)>1:
+                    for m in range(1, len(ext_x)):
+                        if len(adjacent_x) == 0:
                             adjacent_x = np.append(adjacent_x, ext_x[m])
                             adjacent_x_pos = np.append(adjacent_x_pos, ext_x_pos[m])
                             adjacent_y = np.append(adjacent_y, ext_y[m])
                             adjacent_y_pos = np.append(adjacent_y_pos, ext_y_pos[m])
-                            if (m==len(ext_x)-1):
+                        else:
+                            difx = ext_x_pos[m]-ext_x_pos[m-1]
+                            dify = ext_y_pos[m]-ext_y_pos[m-1]
+                            
+                            #Enforce periodic boundary conditions
+                            difx_abs = np.abs(difx)
+                            dify_abs = np.abs(dify)
+                            
+                            #Enforce periodic boundary conditions
+                            if difx_abs>=h_box:
+                                if difx < -h_box:
+                                    ext_x_pos[m:-1] += l_box
+                                    ext_x[m:-1] += NBins
+                                else:
+                                    ext_x_pos[m:-1] -= l_box
+                                    ext_x[m:-1] -= NBins
+                            
+                            #Enforce periodic boundary conditions
+                            if dify_abs>=h_box:
+                                if dify < -h_box:
+                                    ext_y_pos[m:-1] += l_box
+                                    ext_y[m:-1] += NBins
+                                else:
+                                    ext_y_pos[m:-1] -= l_box
+                                    ext_y[m:-1] -= NBins
+                                    
+                            if (difx_abs>=h_box) or (dify_abs>=h_box):
                                 adjacent_x_arr = np.append(adjacent_x_arr, adjacent_x)
                                 adjacent_x_arr_pos = np.append(adjacent_x_arr_pos, adjacent_x_pos)
                                 adjacent_y_arr = np.append(adjacent_y_arr, adjacent_y)
@@ -4778,77 +4807,128 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                 adjacent_x_pos = np.array([])
                                 adjacent_y = np.array([])
                                 adjacent_y_pos = np.array([])
-                
-                adjacent_x_arr_pos_new = np.array([])
-                adjacent_y_arr_pos_new = np.array([])
-                adjacent_x_arr_new = np.array([])
-                adjacent_y_arr_new = np.array([])
-                for m in range(0, len(adjacent_x_arr_pos)):
-                    adjacent_x_arr_pos_new = np.append(adjacent_x_arr_pos_new, adjacent_x_arr_pos[m])
-                    adjacent_y_arr_pos_new = np.append(adjacent_y_arr_pos_new, adjacent_y_arr_pos[m])
-                    adjacent_x_arr_new = np.append(adjacent_x_arr_new, adjacent_x_arr[m])
-                    adjacent_y_arr_new = np.append(adjacent_y_arr_new, adjacent_y_arr[m])
-                
-                int_x_copy = np.copy(adjacent_x_arr_new)
-                int_y_copy = np.copy(adjacent_y_arr_new)
-                for m in range(0, len(adjacent_x_arr_new)):
-                    if m==0:
-                        adjacent_x_arr_new[m] = (int_x_copy[-1] + int_x_copy[0] + int_x_copy[1])/3
-                        adjacent_y_arr_new[m] = (int_y_copy[-1] + int_y_copy[0] + int_y_copy[1])/3
-                    elif m==len(adjacent_x_arr_new)-1:
-                        adjacent_x_arr_new[m]= (int_x_copy[m] + int_x_copy[0] + int_x_copy[m-1])/3
-                        adjacent_y_arr_new[m]= (int_y_copy[m] + int_y_copy[0] + int_y_copy[m-1])/3
+                            else:
+                                adjacent_x = np.append(adjacent_x, ext_x[m])
+                                adjacent_x_pos = np.append(adjacent_x_pos, ext_x_pos[m])
+                                adjacent_y = np.append(adjacent_y, ext_y[m])
+                                adjacent_y_pos = np.append(adjacent_y_pos, ext_y_pos[m])
+                                if (m==len(ext_x)-1):
+                                    adjacent_x_arr = np.append(adjacent_x_arr, adjacent_x)
+                                    adjacent_x_arr_pos = np.append(adjacent_x_arr_pos, adjacent_x_pos)
+                                    adjacent_y_arr = np.append(adjacent_y_arr, adjacent_y)
+                                    adjacent_y_arr_pos = np.append(adjacent_y_arr_pos, adjacent_y_pos)
+                                    adjacent_x = np.array([])
+                                    adjacent_x_pos = np.array([])
+                                    adjacent_y = np.array([])
+                                    adjacent_y_pos = np.array([])
+                    
+                    adjacent_x_arr_pos_new = np.array([])
+                    adjacent_y_arr_pos_new = np.array([])
+                    adjacent_x_arr_new = np.array([])
+                    adjacent_y_arr_new = np.array([])
+                    for m in range(0, len(adjacent_x_arr_pos)):
+                        adjacent_x_arr_pos_new = np.append(adjacent_x_arr_pos_new, adjacent_x_arr_pos[m])
+                        adjacent_y_arr_pos_new = np.append(adjacent_y_arr_pos_new, adjacent_y_arr_pos[m])
+                        adjacent_x_arr_new = np.append(adjacent_x_arr_new, adjacent_x_arr[m])
+                        adjacent_y_arr_new = np.append(adjacent_y_arr_new, adjacent_y_arr[m])
+                    
+                    int_x_copy = np.copy(adjacent_x_arr_new)
+                    int_y_copy = np.copy(adjacent_y_arr_new)
+                    for m in range(0, len(adjacent_x_arr_new)):
+                        if m==0:
+                            adjacent_x_arr_new[m] = (int_x_copy[-1] + int_x_copy[0] + int_x_copy[1])/3
+                            adjacent_y_arr_new[m] = (int_y_copy[-1] + int_y_copy[0] + int_y_copy[1])/3
+                        elif m==len(adjacent_x_arr_new)-1:
+                            adjacent_x_arr_new[m]= (int_x_copy[m] + int_x_copy[0] + int_x_copy[m-1])/3
+                            adjacent_y_arr_new[m]= (int_y_copy[m] + int_y_copy[0] + int_y_copy[m-1])/3
+                        else:
+                            adjacent_x_arr_new[m] = (int_x_copy[m-1] + int_x_copy[m] + int_x_copy[m+1])/3
+                            adjacent_y_arr_new[m] = (int_y_copy[m-1] + int_y_copy[m] + int_y_copy[m+1])/3
+                            
+                    okay = np.where(np.abs(np.diff(adjacent_x_arr_new)) + np.abs(np.diff(adjacent_y_arr_new)) > 0)
+                    ext_x = np.r_[adjacent_x_arr_new[okay], adjacent_x_arr_new[-1], adjacent_x_arr_new[0]]
+                    ext_y = np.r_[adjacent_y_arr_new[okay], adjacent_y_arr_new[-1], adjacent_y_arr_new[0]]
+    
+                    if len(ext_x)==2:
+                        tck2, u2 = interpolate.splprep([ext_x, ext_y], s=0, k=1, per=True)
+                    elif len(ext_x)==3:
+                        tck2, u2 = interpolate.splprep([ext_x, ext_y], s=0, k=2, per=True)
                     else:
-                        adjacent_x_arr_new[m] = (int_x_copy[m-1] + int_x_copy[m] + int_x_copy[m+1])/3
-                        adjacent_y_arr_new[m] = (int_y_copy[m-1] + int_y_copy[m] + int_y_copy[m+1])/3
-                        
-                okay = np.where(np.abs(np.diff(adjacent_x_arr_new)) + np.abs(np.diff(adjacent_y_arr_new)) > 0)
-                ext_x = np.r_[adjacent_x_arr_new[okay], adjacent_x_arr_new[-1], adjacent_x_arr_new[0]]
-                ext_y = np.r_[adjacent_y_arr_new[okay], adjacent_y_arr_new[-1], adjacent_y_arr_new[0]]
-
-                tck2, u2 = interpolate.splprep([ext_x, ext_y], s=0, per=True)
-                
-                # evaluate the spline fits for 1000 evenly spaced distance values
-                xi2, yi2 = interpolate.splev(np.linspace(0, 1, 1000), tck2)
-                
-                jump2 = np.sqrt(np.diff(xi2)**2 + np.diff(yi2)**2) 
-                smooth_jump2 = ndimage.gaussian_filter1d(jump2, 5, mode='wrap')  # window of size 5 is arbitrary
-                limit2 = 2*np.median(smooth_jump2)    # factor 2 is arbitrary
-                xn2, yn2 = xi2[:-1], yi2[:-1]
-                xn2 = xn2[(jump2 > 0) & (smooth_jump2 < limit2)]
-                yn2 = yn2[(jump2 > 0) & (smooth_jump2 < limit2)]
-                
-                xn2_pos = np.copy(xn2)
-                yn2_pos = np.copy(yn2)
-                xn2_pos_non_per = np.copy(xn2)
-                yn2_pos_non_per = np.copy(yn2)
-
+                        tck2, u2 = interpolate.splprep([ext_x, ext_y], s=0, per=True)
+                                            
+                    # evaluate the spline fits for 1000 evenly spaced distance values
+                    xi2, yi2 = interpolate.splev(np.linspace(0, 1, 1000), tck2)
                     
-                for m in range(0, len(xn2)):
-                    xn2_pos[m] = xn2[m] * sizeBin
-                    yn2_pos[m] = yn2[m] * sizeBin
-                    xn2_pos_non_per[m] = xn2[m] * sizeBin
-                    yn2_pos_non_per[m] = yn2[m] * sizeBin
+                    jump2 = np.sqrt(np.diff(xi2)**2 + np.diff(yi2)**2) 
+                    smooth_jump2 = ndimage.gaussian_filter1d(jump2, 5, mode='wrap')  # window of size 5 is arbitrary
+                    limit2 = 2*np.median(smooth_jump2)    # factor 2 is arbitrary
+                    xn2, yn2 = xi2[:-1], yi2[:-1]
+                    xn2 = xn2[(jump2 > 0) & (smooth_jump2 < limit2)]
+                    yn2 = yn2[(jump2 > 0) & (smooth_jump2 < limit2)]
                     
-                    if xn2[m] < 0:
-                        xn2[m]+=NBins
-                    if xn2[m]>=NBins:
-                        xn2[m]-=NBins
+                    xn2_pos = np.copy(xn2)
+                    yn2_pos = np.copy(yn2)
+                    xn2_pos_non_per = np.copy(xn2)
+                    yn2_pos_non_per = np.copy(yn2)
+    
                         
-                    if yn2[m] < 0:
-                        yn2[m]+=NBins
-                    if yn2[m]>=NBins:
-                        yn2[m]-=NBins
+                    for m in range(0, len(xn2)):
+                        xn2_pos[m] = xn2[m] * sizeBin
+                        yn2_pos[m] = yn2[m] * sizeBin
+                        xn2_pos_non_per[m] = xn2[m] * sizeBin
+                        yn2_pos_non_per[m] = yn2[m] * sizeBin
                         
-                    if xn2_pos[m] < 0:
-                        xn2_pos[m]+=l_box
-                    if xn2_pos[m]>=l_box:
-                        xn2_pos[m]-=l_box
+                        if xn2[m] < 0:
+                            xn2[m]+=NBins
+                        if xn2[m]>=NBins:
+                            xn2[m]-=NBins
+                            
+                        if yn2[m] < 0:
+                            yn2[m]+=NBins
+                        if yn2[m]>=NBins:
+                            yn2[m]-=NBins
+                            
+                        if xn2_pos[m] < 0:
+                            xn2_pos[m]+=l_box
+                        if xn2_pos[m]>=l_box:
+                            xn2_pos[m]-=l_box
+                            
+                        if yn2_pos[m] < 0:
+                            yn2_pos[m]+=l_box
+                        if yn2_pos[m]>=l_box:
+                            yn2_pos[m]-=l_box 
+                else:
+                    xn2=np.array([ext_x[0]])
+                    yn2=np.array([ext_y[0]])
+                    xn2_pos = np.copy(xn2)
+                    yn2_pos = np.copy(yn2)
+                    xn2_pos_non_per = np.copy(xn2)
+                    yn2_pos_non_per = np.copy(yn2)
+                    for m in range(0, len(xn2)):
+                        xn2_pos[m] = xn2[m] * sizeBin
+                        yn2_pos[m] = yn2[m] * sizeBin
+                        xn2_pos_non_per[m] = xn2[m] * sizeBin
+                        yn2_pos_non_per[m] = yn2[m] * sizeBin
                         
-                    if yn2_pos[m] < 0:
-                        yn2_pos[m]+=l_box
-                    if yn2_pos[m]>=l_box:
-                        yn2_pos[m]-=l_box 
+                        if xn2[m] < 0:
+                            xn2[m]+=NBins
+                        if xn2[m]>=NBins:
+                            xn2[m]-=NBins
+                            
+                        if yn2[m] < 0:
+                            yn2[m]+=NBins
+                        if yn2[m]>=NBins:
+                            yn2[m]-=NBins
+                            
+                        if xn2_pos[m] < 0:
+                            xn2_pos[m]+=l_box
+                        if xn2_pos[m]>=l_box:
+                            xn2_pos[m]-=l_box
+                            
+                        if yn2_pos[m] < 0:
+                            yn2_pos[m]+=l_box
+                        if yn2_pos[m]>=l_box:
+                            yn2_pos[m]-=l_box
                 
         interior_bin_bub1=0
         exterior_bin_bub1=0
@@ -5307,54 +5387,40 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 adjacent_x_pos = np.append(adjacent_x_pos, int_x_pos[0])
                 adjacent_y = np.append(adjacent_y, int_y[0])
                 adjacent_y_pos = np.append(adjacent_y_pos, int_y_pos[0])
-                
-                for m in range(1, len(int_x)):
-                    if len(adjacent_x) == 0:
-                        adjacent_x = np.append(adjacent_x, int_x[m])
-                        adjacent_x_pos = np.append(adjacent_x_pos, int_x_pos[m])
-                        adjacent_y = np.append(adjacent_y, int_y[m])
-                        adjacent_y_pos = np.append(adjacent_y_pos, int_y_pos[m])
-                    else:
-                        difx = int_x_pos[m]-int_x_pos[m-1]
-                        dify = int_y_pos[m]-int_y_pos[m-1]
-                        
-                        #Enforce periodic boundary conditions
-                        difx_abs = np.abs(difx)
-                        dify_abs = np.abs(dify)
-                        
-                        #Enforce periodic boundary conditions
-                        if difx_abs>=h_box:
-                            if difx < -h_box:
-                                int_x_pos[m:-1] += l_box
-                                int_x[m:-1] += NBins
-                            else:
-                                int_x_pos[m:-1] -= l_box
-                                int_x[m:-1] -= NBins
-                        
-                        #Enforce periodic boundary conditions
-                        if dify_abs>=h_box:
-                            if dify < -h_box:
-                                int_y_pos[m:-1] += l_box
-                                int_y[m:-1] += NBins
-                            else:
-                                int_y_pos[m:-1] -= l_box
-                                int_y[m:-1] -= NBins
-                                
-                        if (difx_abs>=h_box) or (dify_abs>=h_box):
-                            adjacent_x_arr = np.append(adjacent_x_arr, adjacent_x)
-                            adjacent_x_arr_pos = np.append(adjacent_x_arr_pos, adjacent_x_pos)
-                            adjacent_y_arr = np.append(adjacent_y_arr, adjacent_y)
-                            adjacent_y_arr_pos = np.append(adjacent_y_arr_pos, adjacent_y_pos)
-                            adjacent_x = np.array([])
-                            adjacent_x_pos = np.array([])
-                            adjacent_y = np.array([])
-                            adjacent_y_pos = np.array([])
-                        else:
+                if len(int_x)>1:
+                    for m in range(1, len(int_x)):
+                        if len(adjacent_x) == 0:
                             adjacent_x = np.append(adjacent_x, int_x[m])
                             adjacent_x_pos = np.append(adjacent_x_pos, int_x_pos[m])
                             adjacent_y = np.append(adjacent_y, int_y[m])
                             adjacent_y_pos = np.append(adjacent_y_pos, int_y_pos[m])
-                            if (m==len(int_x)-1):
+                        else:
+                            difx = int_x_pos[m]-int_x_pos[m-1]
+                            dify = int_y_pos[m]-int_y_pos[m-1]
+                            
+                            #Enforce periodic boundary conditions
+                            difx_abs = np.abs(difx)
+                            dify_abs = np.abs(dify)
+                            
+                            #Enforce periodic boundary conditions
+                            if difx_abs>=h_box:
+                                if difx < -h_box:
+                                    int_x_pos[m:-1] += l_box
+                                    int_x[m:-1] += NBins
+                                else:
+                                    int_x_pos[m:-1] -= l_box
+                                    int_x[m:-1] -= NBins
+                            
+                            #Enforce periodic boundary conditions
+                            if dify_abs>=h_box:
+                                if dify < -h_box:
+                                    int_y_pos[m:-1] += l_box
+                                    int_y[m:-1] += NBins
+                                else:
+                                    int_y_pos[m:-1] -= l_box
+                                    int_y[m:-1] -= NBins
+                                    
+                            if (difx_abs>=h_box) or (dify_abs>=h_box):
                                 adjacent_x_arr = np.append(adjacent_x_arr, adjacent_x)
                                 adjacent_x_arr_pos = np.append(adjacent_x_arr_pos, adjacent_x_pos)
                                 adjacent_y_arr = np.append(adjacent_y_arr, adjacent_y)
@@ -5363,78 +5429,133 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                 adjacent_x_pos = np.array([])
                                 adjacent_y = np.array([])
                                 adjacent_y_pos = np.array([])
-
-                
-                adjacent_x_arr_pos_new = np.array([])
-                adjacent_y_arr_pos_new = np.array([])
-                adjacent_x_arr_new = np.array([])
-                adjacent_y_arr_new = np.array([])
-                for m in range(0, len(adjacent_x_arr_pos)):
-                    adjacent_x_arr_pos_new = np.append(adjacent_x_arr_pos_new, adjacent_x_arr_pos[m])
-                    adjacent_y_arr_pos_new = np.append(adjacent_y_arr_pos_new, adjacent_y_arr_pos[m])
-                    adjacent_x_arr_new = np.append(adjacent_x_arr_new, adjacent_x_arr[m])
-                    adjacent_y_arr_new = np.append(adjacent_y_arr_new, adjacent_y_arr[m])
-                
-                int_x_copy = np.copy(adjacent_x_arr_new)
-                int_y_copy = np.copy(adjacent_y_arr_new)
-                for m in range(0, len(adjacent_x_arr_new)):
-                    if m==0:
-                        adjacent_x_arr_new[m] = (int_x_copy[-1] + int_x_copy[0] + int_x_copy[1])/3
-                        adjacent_y_arr_new[m] = (int_y_copy[-1] + int_y_copy[0] + int_y_copy[1])/3
-                    elif m==len(adjacent_x_arr_new)-1:
-                        adjacent_x_arr_new[m]= (int_x_copy[m] + int_x_copy[0] + int_x_copy[m-1])/3
-                        adjacent_y_arr_new[m]= (int_y_copy[m] + int_y_copy[0] + int_y_copy[m-1])/3
+                            else:
+                                adjacent_x = np.append(adjacent_x, int_x[m])
+                                adjacent_x_pos = np.append(adjacent_x_pos, int_x_pos[m])
+                                adjacent_y = np.append(adjacent_y, int_y[m])
+                                adjacent_y_pos = np.append(adjacent_y_pos, int_y_pos[m])
+                                if (m==len(int_x)-1):
+                                    adjacent_x_arr = np.append(adjacent_x_arr, adjacent_x)
+                                    adjacent_x_arr_pos = np.append(adjacent_x_arr_pos, adjacent_x_pos)
+                                    adjacent_y_arr = np.append(adjacent_y_arr, adjacent_y)
+                                    adjacent_y_arr_pos = np.append(adjacent_y_arr_pos, adjacent_y_pos)
+                                    adjacent_x = np.array([])
+                                    adjacent_x_pos = np.array([])
+                                    adjacent_y = np.array([])
+                                    adjacent_y_pos = np.array([])
+    
+                    
+                    adjacent_x_arr_pos_new = np.array([])
+                    adjacent_y_arr_pos_new = np.array([])
+                    adjacent_x_arr_new = np.array([])
+                    adjacent_y_arr_new = np.array([])
+                    for m in range(0, len(adjacent_x_arr_pos)):
+                        adjacent_x_arr_pos_new = np.append(adjacent_x_arr_pos_new, adjacent_x_arr_pos[m])
+                        adjacent_y_arr_pos_new = np.append(adjacent_y_arr_pos_new, adjacent_y_arr_pos[m])
+                        adjacent_x_arr_new = np.append(adjacent_x_arr_new, adjacent_x_arr[m])
+                        adjacent_y_arr_new = np.append(adjacent_y_arr_new, adjacent_y_arr[m])
+                    
+                    int_x_copy = np.copy(adjacent_x_arr_new)
+                    int_y_copy = np.copy(adjacent_y_arr_new)
+                    for m in range(0, len(adjacent_x_arr_new)):
+                        if m==0:
+                            adjacent_x_arr_new[m] = (int_x_copy[-1] + int_x_copy[0] + int_x_copy[1])/3
+                            adjacent_y_arr_new[m] = (int_y_copy[-1] + int_y_copy[0] + int_y_copy[1])/3
+                        elif m==len(adjacent_x_arr_new)-1:
+                            adjacent_x_arr_new[m]= (int_x_copy[m] + int_x_copy[0] + int_x_copy[m-1])/3
+                            adjacent_y_arr_new[m]= (int_y_copy[m] + int_y_copy[0] + int_y_copy[m-1])/3
+                        else:
+                            adjacent_x_arr_new[m] = (int_x_copy[m-1] + int_x_copy[m] + int_x_copy[m+1])/3
+                            adjacent_y_arr_new[m] = (int_y_copy[m-1] + int_y_copy[m] + int_y_copy[m+1])/3
+                            
+                    okay = np.where(np.abs(np.diff(adjacent_x_arr_new)) + np.abs(np.diff(adjacent_y_arr_new)) > 0)
+                    int_x = np.r_[adjacent_x_arr_new[okay], adjacent_x_arr_new[-1], adjacent_x_arr_new[0]]
+                    int_y = np.r_[adjacent_y_arr_new[okay], adjacent_y_arr_new[-1], adjacent_y_arr_new[0]]
+                    
+                    
+                    if len(int_x)==2:
+                        tck, u = interpolate.splprep([int_x, int_y], s=0, k=1, per=True)
+                    elif len(int_x)==3:
+                        tck, u = interpolate.splprep([int_x, int_y], s=0, k=2, per=True)
                     else:
-                        adjacent_x_arr_new[m] = (int_x_copy[m-1] + int_x_copy[m] + int_x_copy[m+1])/3
-                        adjacent_y_arr_new[m] = (int_y_copy[m-1] + int_y_copy[m] + int_y_copy[m+1])/3
-                        
-                okay = np.where(np.abs(np.diff(adjacent_x_arr_new)) + np.abs(np.diff(adjacent_y_arr_new)) > 0)
-                int_x = np.r_[adjacent_x_arr_new[okay], adjacent_x_arr_new[-1], adjacent_x_arr_new[0]]
-                int_y = np.r_[adjacent_y_arr_new[okay], adjacent_y_arr_new[-1], adjacent_y_arr_new[0]]
-                
-                tck, u = interpolate.splprep([int_x, int_y], s=0, per=True)
-                
-                # evaluate the spline fits for 1000 evenly spaced distance values
-                xi, yi = interpolate.splev(np.linspace(0, 1, 1000), tck)
-                
-                jump = np.sqrt(np.diff(xi)**2 + np.diff(yi)**2) 
-                smooth_jump = ndimage.gaussian_filter1d(jump, 5, mode='wrap')  # window of size 5 is arbitrary
-                limit = 2*np.median(smooth_jump)    # factor 2 is arbitrary
-                xn_bub2, yn_bub2 = xi[:-1], yi[:-1]
-                xn_bub2 = xn_bub2[(jump > 0) & (smooth_jump < limit)]
-                yn_bub2 = yn_bub2[(jump > 0) & (smooth_jump < limit)]
-                xn_bub2_pos = np.copy(xn_bub2)
-                yn_bub2_pos = np.copy(yn_bub2)
-                xn_bub2_pos_non_per = np.copy(xn_bub2)
-                yn_bub2_pos_non_per = np.copy(yn_bub2)
-
+                        tck, u = interpolate.splprep([int_x, int_y], s=0, per=True)
                     
+                    # evaluate the spline fits for 1000 evenly spaced distance values
+                    xi, yi = interpolate.splev(np.linspace(0, 1, 1000), tck)
                     
-                for m in range(0, len(xn_bub2)):
-                    xn_bub2_pos[m] = xn_bub2[m] * sizeBin
-                    yn_bub2_pos[m] = yn_bub2[m] * sizeBin
-                    xn_bub2_pos_non_per[m] = xn_bub2[m] * sizeBin
-                    yn_bub2_pos_non_per[m] = yn_bub2[m] * sizeBin
-                    
-                    if xn_bub2[m] < 0:
-                        xn_bub2[m]+=NBins
-                    if xn_bub2[m]>=NBins:
-                        xn_bub2[m]-=NBins
+                    jump = np.sqrt(np.diff(xi)**2 + np.diff(yi)**2) 
+                    smooth_jump = ndimage.gaussian_filter1d(jump, 5, mode='wrap')  # window of size 5 is arbitrary
+                    limit = 2*np.median(smooth_jump)    # factor 2 is arbitrary
+                    xn_bub2, yn_bub2 = xi[:-1], yi[:-1]
+                    xn_bub2 = xn_bub2[(jump > 0) & (smooth_jump < limit)]
+                    yn_bub2 = yn_bub2[(jump > 0) & (smooth_jump < limit)]
+                    xn_bub2_pos = np.copy(xn_bub2)
+                    yn_bub2_pos = np.copy(yn_bub2)
+                    xn_bub2_pos_non_per = np.copy(xn_bub2)
+                    yn_bub2_pos_non_per = np.copy(yn_bub2)
+    
                         
-                    if yn_bub2[m] < 0:
-                        yn_bub2[m]+=NBins
-                    if yn_bub2[m]>=NBins:
-                        yn_bub2[m]-=NBins
                         
-                    if xn_bub2_pos[m] < 0:
-                        xn_bub2_pos[m]+=l_box
-                    if xn_bub2_pos[m]>=l_box:
-                        xn_bub2_pos[m]-=l_box
+                    for m in range(0, len(xn_bub2)):
+                        xn_bub2_pos[m] = xn_bub2[m] * sizeBin
+                        yn_bub2_pos[m] = yn_bub2[m] * sizeBin
+                        xn_bub2_pos_non_per[m] = xn_bub2[m] * sizeBin
+                        yn_bub2_pos_non_per[m] = yn_bub2[m] * sizeBin
                         
-                    if yn_bub2_pos[m] < 0:
-                        yn_bub2_pos[m]+=l_box
-                    if yn_bub2_pos[m]>=l_box:
-                        yn_bub2_pos[m]-=l_box
+                        if xn_bub2[m] < 0:
+                            xn_bub2[m]+=NBins
+                        if xn_bub2[m]>=NBins:
+                            xn_bub2[m]-=NBins
+                            
+                        if yn_bub2[m] < 0:
+                            yn_bub2[m]+=NBins
+                        if yn_bub2[m]>=NBins:
+                            yn_bub2[m]-=NBins
+                            
+                        if xn_bub2_pos[m] < 0:
+                            xn_bub2_pos[m]+=l_box
+                        if xn_bub2_pos[m]>=l_box:
+                            xn_bub2_pos[m]-=l_box
+                            
+                        if yn_bub2_pos[m] < 0:
+                            yn_bub2_pos[m]+=l_box
+                        if yn_bub2_pos[m]>=l_box:
+                            yn_bub2_pos[m]-=l_box
+                else:
+                    xn_bub2 = np.array([int_x[0]])
+                    yn_bub2 = np.array([int_y[0]])
+                    xn_bub2_pos = np.copy(xn_bub2)
+                    yn_bub2_pos = np.copy(yn_bub2)
+                    xn_bub2_pos_non_per = np.copy(xn_bub2)
+                    yn_bub2_pos_non_per = np.copy(yn_bub2)
+    
+                        
+                        
+                    for m in range(0, len(xn_bub2)):
+                        xn_bub2_pos[m] = xn_bub2[m] * sizeBin
+                        yn_bub2_pos[m] = yn_bub2[m] * sizeBin
+                        xn_bub2_pos_non_per[m] = xn_bub2[m] * sizeBin
+                        yn_bub2_pos_non_per[m] = yn_bub2[m] * sizeBin
+                        
+                        if xn_bub2[m] < 0:
+                            xn_bub2[m]+=NBins
+                        if xn_bub2[m]>=NBins:
+                            xn_bub2[m]-=NBins
+                            
+                        if yn_bub2[m] < 0:
+                            yn_bub2[m]+=NBins
+                        if yn_bub2[m]>=NBins:
+                            yn_bub2[m]-=NBins
+                            
+                        if xn_bub2_pos[m] < 0:
+                            xn_bub2_pos[m]+=l_box
+                        if xn_bub2_pos[m]>=l_box:
+                            xn_bub2_pos[m]-=l_box
+                            
+                        if yn_bub2_pos[m] < 0:
+                            yn_bub2_pos[m]+=l_box
+                        if yn_bub2_pos[m]>=l_box:
+                            yn_bub2_pos[m]-=l_box
             
             
             
@@ -5793,56 +5914,41 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 adjacent_x_pos = np.append(adjacent_x_pos, ext_x_pos[0])
                 adjacent_y = np.append(adjacent_y, ext_y[0])
                 adjacent_y_pos = np.append(adjacent_y_pos, ext_y_pos[0])
-                
-                for m in range(1, len(ext_x)):
-                    if len(adjacent_x) == 0:
-                        adjacent_x = np.append(adjacent_x, ext_x[m])
-                        adjacent_x_pos = np.append(adjacent_x_pos, ext_x_pos[m])
-                        adjacent_y = np.append(adjacent_y, ext_y[m])
-                        adjacent_y_pos = np.append(adjacent_y_pos, ext_y_pos[m])
-                    else:
-                        difx = ext_x_pos[m]-ext_x_pos[m-1]
-                        dify = ext_y_pos[m]-ext_y_pos[m-1]
-                        
-                        #Enforce periodic boundary conditions
-                        difx_abs = np.abs(difx)
-                        dify_abs = np.abs(dify)
-                        
-                        #Enforce periodic boundary conditions
-                        if difx_abs>=h_box:
-                            if difx < -h_box:
-                                ext_x_pos[m:-1] += l_box
-                                ext_x[m:-1] += NBins
-                            else:
-                                ext_x_pos[m:-1] -= l_box
-                                ext_x[m:-1] -= NBins
-                        
-                        #Enforce periodic boundary conditions
-                        if dify_abs>=h_box:
-                            if dify < -h_box:
-                                ext_y_pos[m:-1] += l_box
-                                ext_y[m:-1] += NBins
-                            else:
-                                ext_y_pos[m:-1] -= l_box
-                                ext_y[m:-1] -= NBins
-                                   
-                        if (difx_abs>=h_box) or (dify_abs>=h_box):
-                                                                    
-                            adjacent_x_arr.append(adjacent_x)
-                            adjacent_x_arr_pos.append(adjacent_x_pos)
-                            adjacent_y_arr.append(adjacent_y)
-                            adjacent_y_arr_pos.append(adjacent_y_pos)
-                            adjacent_x = np.array([])
-                            adjacent_x_pos = np.array([])
-                            adjacent_y = np.array([])
-                            adjacent_y_pos = np.array([])
-                            
-                        else:
+                if len(ext_x)>1:
+                    for m in range(1, len(ext_x)):
+                        if len(adjacent_x) == 0:
                             adjacent_x = np.append(adjacent_x, ext_x[m])
                             adjacent_x_pos = np.append(adjacent_x_pos, ext_x_pos[m])
                             adjacent_y = np.append(adjacent_y, ext_y[m])
                             adjacent_y_pos = np.append(adjacent_y_pos, ext_y_pos[m])
-                            if (m==len(ext_x)-1):
+                        else:
+                            difx = ext_x_pos[m]-ext_x_pos[m-1]
+                            dify = ext_y_pos[m]-ext_y_pos[m-1]
+                            
+                            #Enforce periodic boundary conditions
+                            difx_abs = np.abs(difx)
+                            dify_abs = np.abs(dify)
+                            
+                            #Enforce periodic boundary conditions
+                            if difx_abs>=h_box:
+                                if difx < -h_box:
+                                    ext_x_pos[m:-1] += l_box
+                                    ext_x[m:-1] += NBins
+                                else:
+                                    ext_x_pos[m:-1] -= l_box
+                                    ext_x[m:-1] -= NBins
+                            
+                            #Enforce periodic boundary conditions
+                            if dify_abs>=h_box:
+                                if dify < -h_box:
+                                    ext_y_pos[m:-1] += l_box
+                                    ext_y[m:-1] += NBins
+                                else:
+                                    ext_y_pos[m:-1] -= l_box
+                                    ext_y[m:-1] -= NBins
+                                       
+                            if (difx_abs>=h_box) or (dify_abs>=h_box):
+                                                                        
                                 adjacent_x_arr.append(adjacent_x)
                                 adjacent_x_arr_pos.append(adjacent_x_pos)
                                 adjacent_y_arr.append(adjacent_y)
@@ -5851,81 +5957,136 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                 adjacent_x_pos = np.array([])
                                 adjacent_y = np.array([])
                                 adjacent_y_pos = np.array([])
-                # append the starting x,y coordinates
-                #int_x = np.r_[int_x, int_x[0]]
-                #int_y = np.r_[int_y, int_y[0]]
-                xn2_bub2_arr = []
-                yn2_bub2_arr = []
-                adjacent_x_arr_pos_new = np.array([])
-                adjacent_y_arr_pos_new = np.array([])
-                adjacent_x_arr_new = np.array([])
-                adjacent_y_arr_new = np.array([])
-                for m in range(0, len(adjacent_x_arr_pos)):
-                    adjacent_x_arr_pos_new = np.append(adjacent_x_arr_pos_new, adjacent_x_arr_pos[m])
-                    adjacent_y_arr_pos_new = np.append(adjacent_y_arr_pos_new, adjacent_y_arr_pos[m])
-                    adjacent_x_arr_new = np.append(adjacent_x_arr_new, adjacent_x_arr[m])
-                    adjacent_y_arr_new = np.append(adjacent_y_arr_new, adjacent_y_arr[m])
-                
-                int_x_copy = np.copy(adjacent_x_arr_new)
-                int_y_copy = np.copy(adjacent_y_arr_new)
-                for m in range(0, len(adjacent_x_arr_new)):
-                    if m==0:
-                        adjacent_x_arr_new[m] = (int_x_copy[-1] + int_x_copy[0] + int_x_copy[1])/3
-                        adjacent_y_arr_new[m] = (int_y_copy[-1] + int_y_copy[0] + int_y_copy[1])/3
-                    elif m==len(adjacent_x_arr_new)-1:
-                        adjacent_x_arr_new[m]= (int_x_copy[m] + int_x_copy[0] + int_x_copy[m-1])/3
-                        adjacent_y_arr_new[m]= (int_y_copy[m] + int_y_copy[0] + int_y_copy[m-1])/3
+                                
+                            else:
+                                adjacent_x = np.append(adjacent_x, ext_x[m])
+                                adjacent_x_pos = np.append(adjacent_x_pos, ext_x_pos[m])
+                                adjacent_y = np.append(adjacent_y, ext_y[m])
+                                adjacent_y_pos = np.append(adjacent_y_pos, ext_y_pos[m])
+                                if (m==len(ext_x)-1):
+                                    adjacent_x_arr.append(adjacent_x)
+                                    adjacent_x_arr_pos.append(adjacent_x_pos)
+                                    adjacent_y_arr.append(adjacent_y)
+                                    adjacent_y_arr_pos.append(adjacent_y_pos)
+                                    adjacent_x = np.array([])
+                                    adjacent_x_pos = np.array([])
+                                    adjacent_y = np.array([])
+                                    adjacent_y_pos = np.array([])
+                    # append the starting x,y coordinates
+                    #int_x = np.r_[int_x, int_x[0]]
+                    #int_y = np.r_[int_y, int_y[0]]
+                    xn2_bub2_arr = []
+                    yn2_bub2_arr = []
+                    adjacent_x_arr_pos_new = np.array([])
+                    adjacent_y_arr_pos_new = np.array([])
+                    adjacent_x_arr_new = np.array([])
+                    adjacent_y_arr_new = np.array([])
+                    for m in range(0, len(adjacent_x_arr_pos)):
+                        adjacent_x_arr_pos_new = np.append(adjacent_x_arr_pos_new, adjacent_x_arr_pos[m])
+                        adjacent_y_arr_pos_new = np.append(adjacent_y_arr_pos_new, adjacent_y_arr_pos[m])
+                        adjacent_x_arr_new = np.append(adjacent_x_arr_new, adjacent_x_arr[m])
+                        adjacent_y_arr_new = np.append(adjacent_y_arr_new, adjacent_y_arr[m])
+                    
+                    int_x_copy = np.copy(adjacent_x_arr_new)
+                    int_y_copy = np.copy(adjacent_y_arr_new)
+                    for m in range(0, len(adjacent_x_arr_new)):
+                        if m==0:
+                            adjacent_x_arr_new[m] = (int_x_copy[-1] + int_x_copy[0] + int_x_copy[1])/3
+                            adjacent_y_arr_new[m] = (int_y_copy[-1] + int_y_copy[0] + int_y_copy[1])/3
+                        elif m==len(adjacent_x_arr_new)-1:
+                            adjacent_x_arr_new[m]= (int_x_copy[m] + int_x_copy[0] + int_x_copy[m-1])/3
+                            adjacent_y_arr_new[m]= (int_y_copy[m] + int_y_copy[0] + int_y_copy[m-1])/3
+                        else:
+                            adjacent_x_arr_new[m] = (int_x_copy[m-1] + int_x_copy[m] + int_x_copy[m+1])/3
+                            adjacent_y_arr_new[m] = (int_y_copy[m-1] + int_y_copy[m] + int_y_copy[m+1])/3
+    
+                    okay = np.where(np.abs(np.diff(adjacent_x_arr_new)) + np.abs(np.diff(adjacent_y_arr_new)) > 0)
+                    ext_x = np.r_[adjacent_x_arr_new[okay], adjacent_x_arr_new[-1], adjacent_x_arr_new[0]]
+                    ext_y = np.r_[adjacent_y_arr_new[okay], adjacent_y_arr_new[-1], adjacent_y_arr_new[0]]
+                    
+                    if len(ext_x)==2:
+                        tck2, u2 = interpolate.splprep([ext_x, ext_y], s=0, k=1, per=True)
+                    elif len(ext_x)==3:
+                        tck2, u2 = interpolate.splprep([ext_x, ext_y], s=0, k=2, per=True)
                     else:
-                        adjacent_x_arr_new[m] = (int_x_copy[m-1] + int_x_copy[m] + int_x_copy[m+1])/3
-                        adjacent_y_arr_new[m] = (int_y_copy[m-1] + int_y_copy[m] + int_y_copy[m+1])/3
-
-                okay = np.where(np.abs(np.diff(adjacent_x_arr_new)) + np.abs(np.diff(adjacent_y_arr_new)) > 0)
-                ext_x = np.r_[adjacent_x_arr_new[okay], adjacent_x_arr_new[-1], adjacent_x_arr_new[0]]
-                ext_y = np.r_[adjacent_y_arr_new[okay], adjacent_y_arr_new[-1], adjacent_y_arr_new[0]]
-                
-                tck2, u2 = interpolate.splprep([ext_x, ext_y], s=0, per=True)
-                
-                # evaluate the spline fits for 1000 evenly spaced distance values
-                xi2, yi2 = interpolate.splev(np.linspace(0, 1, 1000), tck2)
-                
-                jump2 = np.sqrt(np.diff(xi2)**2 + np.diff(yi2)**2) 
-                smooth_jump2 = ndimage.gaussian_filter1d(jump2, 5, mode='wrap')  # window of size 5 is arbitrary
-                limit2 = 2*np.median(smooth_jump2)    # factor 2 is arbitrary
-                xn2_bub2, yn2_bub2 = xi2[:-1], yi2[:-1]
-                xn2_bub2 = xn2_bub2[(jump2 > 0) & (smooth_jump2 < limit2)]
-                yn2_bub2 = yn2_bub2[(jump2 > 0) & (smooth_jump2 < limit2)]
-                xn2_bub2_pos = np.copy(xn2_bub2)
-                yn2_bub2_pos = np.copy(yn2_bub2)
-                xn2_bub2_pos_non_per = np.copy(xn2_bub2)
-                yn2_bub2_pos_non_per = np.copy(yn2_bub2)
-
+                        tck2, u2 = interpolate.splprep([ext_x, ext_y], s=0, per=True)
                     
+                    # evaluate the spline fits for 1000 evenly spaced distance values
+                    xi2, yi2 = interpolate.splev(np.linspace(0, 1, 1000), tck2)
                     
-                for m in range(0, len(xn2_bub2)):
-                    xn2_bub2_pos[m] = xn2_bub2[m] * sizeBin
-                    yn2_bub2_pos[m] = yn2_bub2[m] * sizeBin
-                    xn2_bub2_pos_non_per[m] = xn2_bub2[m] * sizeBin
-                    yn2_bub2_pos_non_per[m] = yn2_bub2[m] * sizeBin
-                    
-                    if xn2_bub2[m] < 0:
-                        xn2_bub2[m]+=NBins
-                    if xn2_bub2[m]>=NBins:
-                        xn2_bub2[m]-=NBins
+                    jump2 = np.sqrt(np.diff(xi2)**2 + np.diff(yi2)**2) 
+                    smooth_jump2 = ndimage.gaussian_filter1d(jump2, 5, mode='wrap')  # window of size 5 is arbitrary
+                    limit2 = 2*np.median(smooth_jump2)    # factor 2 is arbitrary
+                    xn2_bub2, yn2_bub2 = xi2[:-1], yi2[:-1]
+                    xn2_bub2 = xn2_bub2[(jump2 > 0) & (smooth_jump2 < limit2)]
+                    yn2_bub2 = yn2_bub2[(jump2 > 0) & (smooth_jump2 < limit2)]
+                    xn2_bub2_pos = np.copy(xn2_bub2)
+                    yn2_bub2_pos = np.copy(yn2_bub2)
+                    xn2_bub2_pos_non_per = np.copy(xn2_bub2)
+                    yn2_bub2_pos_non_per = np.copy(yn2_bub2)
+    
                         
-                    if yn2_bub2[m] < 0:
-                        yn2_bub2[m]+=NBins
-                    if yn2_bub2[m]>=NBins:
-                        yn2_bub2[m]-=NBins
                         
-                    if xn2_bub2_pos[m] < 0:
-                        xn2_bub2_pos[m]+=l_box
-                    if xn2_bub2_pos[m]>=l_box:
-                        xn2_bub2_pos[m]-=l_box
+                    for m in range(0, len(xn2_bub2)):
+                        xn2_bub2_pos[m] = xn2_bub2[m] * sizeBin
+                        yn2_bub2_pos[m] = yn2_bub2[m] * sizeBin
+                        xn2_bub2_pos_non_per[m] = xn2_bub2[m] * sizeBin
+                        yn2_bub2_pos_non_per[m] = yn2_bub2[m] * sizeBin
                         
-                    if yn2_bub2_pos[m] < 0:
-                        yn2_bub2_pos[m]+=l_box
-                    if yn2_bub2_pos[m]>=l_box:
-                        yn2_bub2_pos[m]-=l_box
+                        if xn2_bub2[m] < 0:
+                            xn2_bub2[m]+=NBins
+                        if xn2_bub2[m]>=NBins:
+                            xn2_bub2[m]-=NBins
+                            
+                        if yn2_bub2[m] < 0:
+                            yn2_bub2[m]+=NBins
+                        if yn2_bub2[m]>=NBins:
+                            yn2_bub2[m]-=NBins
+                            
+                        if xn2_bub2_pos[m] < 0:
+                            xn2_bub2_pos[m]+=l_box
+                        if xn2_bub2_pos[m]>=l_box:
+                            xn2_bub2_pos[m]-=l_box
+                            
+                        if yn2_bub2_pos[m] < 0:
+                            yn2_bub2_pos[m]+=l_box
+                        if yn2_bub2_pos[m]>=l_box:
+                            yn2_bub2_pos[m]-=l_box
+                else:
+                    xn2_bub2 = np.array([ext_x[0]])
+                    yn2_bub2 = np.array([ext_y[0]])
+                    xn2_bub2_pos = np.copy(xn2_bub2)
+                    yn2_bub2_pos = np.copy(yn2_bub2)
+                    xn2_bub2_pos_non_per = np.copy(xn2_bub2)
+                    yn2_bub2_pos_non_per = np.copy(yn2_bub2)
+    
+                        
+                        
+                    for m in range(0, len(xn2_bub2)):
+                        xn2_bub2_pos[m] = xn2_bub2[m] * sizeBin
+                        yn2_bub2_pos[m] = yn2_bub2[m] * sizeBin
+                        xn2_bub2_pos_non_per[m] = xn2_bub2[m] * sizeBin
+                        yn2_bub2_pos_non_per[m] = yn2_bub2[m] * sizeBin
+                        
+                        if xn2_bub2[m] < 0:
+                            xn2_bub2[m]+=NBins
+                        if xn2_bub2[m]>=NBins:
+                            xn2_bub2[m]-=NBins
+                            
+                        if yn2_bub2[m] < 0:
+                            yn2_bub2[m]+=NBins
+                        if yn2_bub2[m]>=NBins:
+                            yn2_bub2[m]-=NBins
+                            
+                        if xn2_bub2_pos[m] < 0:
+                            xn2_bub2_pos[m]+=l_box
+                        if xn2_bub2_pos[m]>=l_box:
+                            xn2_bub2_pos[m]-=l_box
+                            
+                        if yn2_bub2_pos[m] < 0:
+                            yn2_bub2_pos[m]+=l_box
+                        if yn2_bub2_pos[m]>=l_box:
+                            yn2_bub2_pos[m]-=l_box
         interior_bin_bub2=0
         exterior_bin_bub2=0    
         if bub_large >=3:
@@ -6386,54 +6547,40 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 adjacent_x_pos = np.append(adjacent_x_pos, int_x_pos[0])
                 adjacent_y = np.append(adjacent_y, int_y[0])
                 adjacent_y_pos = np.append(adjacent_y_pos, int_y_pos[0])
-                
-                for m in range(1, len(int_x)):
-                    if len(adjacent_x) == 0:
-                        adjacent_x = np.append(adjacent_x, int_x[m])
-                        adjacent_x_pos = np.append(adjacent_x_pos, int_x_pos[m])
-                        adjacent_y = np.append(adjacent_y, int_y[m])
-                        adjacent_y_pos = np.append(adjacent_y_pos, int_y_pos[m])
-                    else:
-                        difx = int_x_pos[m]-int_x_pos[m-1]
-                        dify = int_y_pos[m]-int_y_pos[m-1]
-                        
-                        #Enforce periodic boundary conditions
-                        difx_abs = np.abs(difx)
-                        dify_abs = np.abs(dify)
-                            
-                        #Enforce periodic boundary conditions
-                        if difx_abs>=h_box:
-                            if difx < -h_box:
-                                int_x_pos[m:-1] += l_box
-                                int_x[m:-1] += NBins
-                            else:
-                                int_x_pos[m:-1] -= l_box
-                                int_x[m:-1] -= NBins
-                        
-                        #Enforce periodic boundary conditions
-                        if dify_abs>=h_box:
-                            if dify < -h_box:
-                                int_y_pos[m:-1] += l_box
-                                int_y[m:-1] += NBins
-                            else:
-                                int_y_pos[m:-1] -= l_box
-                                int_y[m:-1] -= NBins
-                                    
-                        if (difx_abs>=h_box) or (dify_abs>=h_box):
-                            adjacent_x_arr = np.append(adjacent_x_arr, adjacent_x)
-                            adjacent_x_arr_pos = np.append(adjacent_x_arr_pos, adjacent_x_pos)
-                            adjacent_y_arr = np.append(adjacent_y_arr, adjacent_y)
-                            adjacent_y_arr_pos = np.append(adjacent_y_arr_pos, adjacent_y_pos)
-                            adjacent_x = np.array([])
-                            adjacent_x_pos = np.array([])
-                            adjacent_y = np.array([])
-                            adjacent_y_pos = np.array([])
-                        else:
+                if len(int_x)>1:
+                    for m in range(1, len(int_x)):
+                        if len(adjacent_x) == 0:
                             adjacent_x = np.append(adjacent_x, int_x[m])
                             adjacent_x_pos = np.append(adjacent_x_pos, int_x_pos[m])
                             adjacent_y = np.append(adjacent_y, int_y[m])
                             adjacent_y_pos = np.append(adjacent_y_pos, int_y_pos[m])
-                            if (m==len(int_x)-1):
+                        else:
+                            difx = int_x_pos[m]-int_x_pos[m-1]
+                            dify = int_y_pos[m]-int_y_pos[m-1]
+                            
+                            #Enforce periodic boundary conditions
+                            difx_abs = np.abs(difx)
+                            dify_abs = np.abs(dify)
+                                
+                            #Enforce periodic boundary conditions
+                            if difx_abs>=h_box:
+                                if difx < -h_box:
+                                    int_x_pos[m:-1] += l_box
+                                    int_x[m:-1] += NBins
+                                else:
+                                    int_x_pos[m:-1] -= l_box
+                                    int_x[m:-1] -= NBins
+                            
+                            #Enforce periodic boundary conditions
+                            if dify_abs>=h_box:
+                                if dify < -h_box:
+                                    int_y_pos[m:-1] += l_box
+                                    int_y[m:-1] += NBins
+                                else:
+                                    int_y_pos[m:-1] -= l_box
+                                    int_y[m:-1] -= NBins
+                                        
+                            if (difx_abs>=h_box) or (dify_abs>=h_box):
                                 adjacent_x_arr = np.append(adjacent_x_arr, adjacent_x)
                                 adjacent_x_arr_pos = np.append(adjacent_x_arr_pos, adjacent_x_pos)
                                 adjacent_y_arr = np.append(adjacent_y_arr, adjacent_y)
@@ -6442,78 +6589,132 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                 adjacent_x_pos = np.array([])
                                 adjacent_y = np.array([])
                                 adjacent_y_pos = np.array([])
-
-                
-                adjacent_x_arr_pos_new = np.array([])
-                adjacent_y_arr_pos_new = np.array([])
-                adjacent_x_arr_new = np.array([])
-                adjacent_y_arr_new = np.array([])
-                for m in range(0, len(adjacent_x_arr_pos)):
-                    adjacent_x_arr_pos_new = np.append(adjacent_x_arr_pos_new, adjacent_x_arr_pos[m])
-                    adjacent_y_arr_pos_new = np.append(adjacent_y_arr_pos_new, adjacent_y_arr_pos[m])
-                    adjacent_x_arr_new = np.append(adjacent_x_arr_new, adjacent_x_arr[m])
-                    adjacent_y_arr_new = np.append(adjacent_y_arr_new, adjacent_y_arr[m])
-                
-                int_x_copy = np.copy(adjacent_x_arr_new)
-                int_y_copy = np.copy(adjacent_y_arr_new)
-                for m in range(0, len(adjacent_x_arr_new)):
-                    if m==0:
-                        adjacent_x_arr_new[m] = (int_x_copy[-1] + int_x_copy[0] + int_x_copy[1])/3
-                        adjacent_y_arr_new[m] = (int_y_copy[-1] + int_y_copy[0] + int_y_copy[1])/3
-                    elif m==len(adjacent_x_arr_new)-1:
-                        adjacent_x_arr_new[m]= (int_x_copy[m] + int_x_copy[0] + int_x_copy[m-1])/3
-                        adjacent_y_arr_new[m]= (int_y_copy[m] + int_y_copy[0] + int_y_copy[m-1])/3
+                            else:
+                                adjacent_x = np.append(adjacent_x, int_x[m])
+                                adjacent_x_pos = np.append(adjacent_x_pos, int_x_pos[m])
+                                adjacent_y = np.append(adjacent_y, int_y[m])
+                                adjacent_y_pos = np.append(adjacent_y_pos, int_y_pos[m])
+                                if (m==len(int_x)-1):
+                                    adjacent_x_arr = np.append(adjacent_x_arr, adjacent_x)
+                                    adjacent_x_arr_pos = np.append(adjacent_x_arr_pos, adjacent_x_pos)
+                                    adjacent_y_arr = np.append(adjacent_y_arr, adjacent_y)
+                                    adjacent_y_arr_pos = np.append(adjacent_y_arr_pos, adjacent_y_pos)
+                                    adjacent_x = np.array([])
+                                    adjacent_x_pos = np.array([])
+                                    adjacent_y = np.array([])
+                                    adjacent_y_pos = np.array([])
+    
+                    
+                    adjacent_x_arr_pos_new = np.array([])
+                    adjacent_y_arr_pos_new = np.array([])
+                    adjacent_x_arr_new = np.array([])
+                    adjacent_y_arr_new = np.array([])
+                    for m in range(0, len(adjacent_x_arr_pos)):
+                        adjacent_x_arr_pos_new = np.append(adjacent_x_arr_pos_new, adjacent_x_arr_pos[m])
+                        adjacent_y_arr_pos_new = np.append(adjacent_y_arr_pos_new, adjacent_y_arr_pos[m])
+                        adjacent_x_arr_new = np.append(adjacent_x_arr_new, adjacent_x_arr[m])
+                        adjacent_y_arr_new = np.append(adjacent_y_arr_new, adjacent_y_arr[m])
+                    
+                    int_x_copy = np.copy(adjacent_x_arr_new)
+                    int_y_copy = np.copy(adjacent_y_arr_new)
+                    for m in range(0, len(adjacent_x_arr_new)):
+                        if m==0:
+                            adjacent_x_arr_new[m] = (int_x_copy[-1] + int_x_copy[0] + int_x_copy[1])/3
+                            adjacent_y_arr_new[m] = (int_y_copy[-1] + int_y_copy[0] + int_y_copy[1])/3
+                        elif m==len(adjacent_x_arr_new)-1:
+                            adjacent_x_arr_new[m]= (int_x_copy[m] + int_x_copy[0] + int_x_copy[m-1])/3
+                            adjacent_y_arr_new[m]= (int_y_copy[m] + int_y_copy[0] + int_y_copy[m-1])/3
+                        else:
+                            adjacent_x_arr_new[m] = (int_x_copy[m-1] + int_x_copy[m] + int_x_copy[m+1])/3
+                            adjacent_y_arr_new[m] = (int_y_copy[m-1] + int_y_copy[m] + int_y_copy[m+1])/3
+                            
+                    okay = np.where(np.abs(np.diff(adjacent_x_arr_new)) + np.abs(np.diff(adjacent_y_arr_new)) > 0)
+                    int_x = np.r_[adjacent_x_arr_new[okay], adjacent_x_arr_new[-1], adjacent_x_arr_new[0]]
+                    int_y = np.r_[adjacent_y_arr_new[okay], adjacent_y_arr_new[-1], adjacent_y_arr_new[0]]
+                    
+                    if len(int_x)==2:
+                        tck, u = interpolate.splprep([int_x, int_y], s=0, k=1, per=True)
+                    elif len(int_x)==3:
+                        tck, u = interpolate.splprep([int_x, int_y], s=0, k=2, per=True)
                     else:
-                        adjacent_x_arr_new[m] = (int_x_copy[m-1] + int_x_copy[m] + int_x_copy[m+1])/3
-                        adjacent_y_arr_new[m] = (int_y_copy[m-1] + int_y_copy[m] + int_y_copy[m+1])/3
-                        
-                okay = np.where(np.abs(np.diff(adjacent_x_arr_new)) + np.abs(np.diff(adjacent_y_arr_new)) > 0)
-                int_x = np.r_[adjacent_x_arr_new[okay], adjacent_x_arr_new[-1], adjacent_x_arr_new[0]]
-                int_y = np.r_[adjacent_y_arr_new[okay], adjacent_y_arr_new[-1], adjacent_y_arr_new[0]]
-                
-                tck, u = interpolate.splprep([int_x, int_y], s=0, per=True)
-                
-                # evaluate the spline fits for 1000 evenly spaced distance values
-                xi, yi = interpolate.splev(np.linspace(0, 1, 1000), tck)
-                
-                jump = np.sqrt(np.diff(xi)**2 + np.diff(yi)**2) 
-                smooth_jump = ndimage.gaussian_filter1d(jump, 5, mode='wrap')  # window of size 5 is arbitrary
-                limit = 2*np.median(smooth_jump)    # factor 2 is arbitrary
-                xn_bub3, yn_bub3 = xi[:-1], yi[:-1]
-                xn_bub3 = xn_bub3[(jump > 0) & (smooth_jump < limit)]
-                yn_bub3 = yn_bub3[(jump > 0) & (smooth_jump < limit)]
-                
-                xn_bub3_pos = np.copy(xn_bub3)
-                yn_bub3_pos = np.copy(yn_bub3)
-                xn_bub3_pos_non_per = np.copy(xn_bub3)
-                yn_bub3_pos_non_per = np.copy(yn_bub3)
-
+                        tck, u = interpolate.splprep([int_x, int_y], s=0, per=True)
                     
-                for m in range(0, len(xn_bub3)):
-                    xn_bub3_pos[m] = xn_bub3[m] * sizeBin
-                    yn_bub3_pos[m] = yn_bub3[m] * sizeBin
-                    xn_bub3_pos_non_per[m] = xn_bub3[m] * sizeBin
-                    yn_bub3_pos_non_per[m] = yn_bub3[m] * sizeBin
+                    # evaluate the spline fits for 1000 evenly spaced distance values
+                    xi, yi = interpolate.splev(np.linspace(0, 1, 1000), tck)
                     
-                    if xn_bub3[m] < 0:
-                        xn_bub3[m]+=NBins
-                    if xn_bub3[m]>=NBins:
-                        xn_bub3[m]-=NBins
+                    jump = np.sqrt(np.diff(xi)**2 + np.diff(yi)**2) 
+                    smooth_jump = ndimage.gaussian_filter1d(jump, 5, mode='wrap')  # window of size 5 is arbitrary
+                    limit = 2*np.median(smooth_jump)    # factor 2 is arbitrary
+                    xn_bub3, yn_bub3 = xi[:-1], yi[:-1]
+                    xn_bub3 = xn_bub3[(jump > 0) & (smooth_jump < limit)]
+                    yn_bub3 = yn_bub3[(jump > 0) & (smooth_jump < limit)]
+                    
+                    xn_bub3_pos = np.copy(xn_bub3)
+                    yn_bub3_pos = np.copy(yn_bub3)
+                    xn_bub3_pos_non_per = np.copy(xn_bub3)
+                    yn_bub3_pos_non_per = np.copy(yn_bub3)
+    
                         
-                    if yn_bub3[m] < 0:
-                        yn_bub3[m]+=NBins
-                    if yn_bub3[m]>=NBins:
-                        yn_bub3[m]-=NBins
+                    for m in range(0, len(xn_bub3)):
+                        xn_bub3_pos[m] = xn_bub3[m] * sizeBin
+                        yn_bub3_pos[m] = yn_bub3[m] * sizeBin
+                        xn_bub3_pos_non_per[m] = xn_bub3[m] * sizeBin
+                        yn_bub3_pos_non_per[m] = yn_bub3[m] * sizeBin
                         
-                    if xn_bub3_pos[m] < 0:
-                        xn_bub3_pos[m]+=l_box
-                    if xn_bub3_pos[m]>=l_box:
-                        xn_bub3_pos[m]-=l_box
+                        if xn_bub3[m] < 0:
+                            xn_bub3[m]+=NBins
+                        if xn_bub3[m]>=NBins:
+                            xn_bub3[m]-=NBins
+                            
+                        if yn_bub3[m] < 0:
+                            yn_bub3[m]+=NBins
+                        if yn_bub3[m]>=NBins:
+                            yn_bub3[m]-=NBins
+                            
+                        if xn_bub3_pos[m] < 0:
+                            xn_bub3_pos[m]+=l_box
+                        if xn_bub3_pos[m]>=l_box:
+                            xn_bub3_pos[m]-=l_box
+                            
+                        if yn_bub3_pos[m] < 0:
+                            yn_bub3_pos[m]+=l_box
+                        if yn_bub3_pos[m]>=l_box:
+                            yn_bub3_pos[m]-=l_box
+                else:
+                    
+                    xn_bub3=np.array([int_x[0]])
+                    yn_bub3=np.array([int_y[0]])
+                    xn_bub3_pos = np.copy(xn_bub3)
+                    yn_bub3_pos = np.copy(yn_bub3)
+                    xn_bub3_pos_non_per = np.copy(xn_bub3)
+                    yn_bub3_pos_non_per = np.copy(yn_bub3)
+    
                         
-                    if yn_bub3_pos[m] < 0:
-                        yn_bub3_pos[m]+=l_box
-                    if yn_bub3_pos[m]>=l_box:
-                        yn_bub3_pos[m]-=l_box
+                    for m in range(0, len(xn_bub3)):
+                        xn_bub3_pos[m] = xn_bub3[m] * sizeBin
+                        yn_bub3_pos[m] = yn_bub3[m] * sizeBin
+                        xn_bub3_pos_non_per[m] = xn_bub3[m] * sizeBin
+                        yn_bub3_pos_non_per[m] = yn_bub3[m] * sizeBin
+                        
+                        if xn_bub3[m] < 0:
+                            xn_bub3[m]+=NBins
+                        if xn_bub3[m]>=NBins:
+                            xn_bub3[m]-=NBins
+                            
+                        if yn_bub3[m] < 0:
+                            yn_bub3[m]+=NBins
+                        if yn_bub3[m]>=NBins:
+                            yn_bub3[m]-=NBins
+                            
+                        if xn_bub3_pos[m] < 0:
+                            xn_bub3_pos[m]+=l_box
+                        if xn_bub3_pos[m]>=l_box:
+                            xn_bub3_pos[m]-=l_box
+                            
+                        if yn_bub3_pos[m] < 0:
+                            yn_bub3_pos[m]+=l_box
+                        if yn_bub3_pos[m]>=l_box:
+                            yn_bub3_pos[m]-=l_box
             
             
             if exterior_bin_bub2>0:
@@ -6872,53 +7073,40 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 adjacent_y = np.append(adjacent_y, ext_y[0])
                 adjacent_y_pos = np.append(adjacent_y_pos, ext_y_pos[0])
                 
-                for m in range(1, len(ext_x)):
-                    if len(adjacent_x) == 0:
-                        adjacent_x = np.append(adjacent_x, ext_x[m])
-                        adjacent_x_pos = np.append(adjacent_x_pos, ext_x_pos[m])
-                        adjacent_y = np.append(adjacent_y, ext_y[m])
-                        adjacent_y_pos = np.append(adjacent_y_pos, ext_y_pos[m])
-                    else:
-                        difx = ext_x_pos[m]-ext_x_pos[m-1]
-                        dify = ext_y_pos[m]-ext_y_pos[m-1]
-                        
-                        #Enforce periodic boundary conditions
-                        difx_abs = np.abs(difx)
-                        dify_abs = np.abs(dify)
-                        
-                        #Enforce periodic boundary conditions
-                        if difx_abs>=h_box:
-                            if difx < -h_box:
-                                ext_x_pos[m:-1] += l_box
-                                ext_x[m:-1] += NBins
-                            else:
-                                ext_x_pos[m:-1] -= l_box
-                                ext_x[m:-1] -= NBins
-                        
-                        #Enforce periodic boundary conditions
-                        if dify_abs>=h_box:
-                            if dify < -h_box:
-                                ext_y_pos[m:-1] += l_box
-                                ext_y[m:-1] += NBins
-                            else:
-                                ext_y_pos[m:-1] -= l_box
-                                ext_y[m:-1] -= NBins
-                                
-                        if (difx_abs>=h_box) or (dify_abs>=h_box):
-                            adjacent_x_arr = np.append(adjacent_x_arr, adjacent_x)
-                            adjacent_x_arr_pos = np.append(adjacent_x_arr_pos, adjacent_x_pos)
-                            adjacent_y_arr = np.append(adjacent_y_arr, adjacent_y)
-                            adjacent_y_arr_pos = np.append(adjacent_y_arr_pos, adjacent_y_pos)
-                            adjacent_x = np.array([])
-                            adjacent_x_pos = np.array([])
-                            adjacent_y = np.array([])
-                            adjacent_y_pos = np.array([])
-                        else:
+                if len(ext_x)>1:
+                    for m in range(1, len(ext_x)):
+                        if len(adjacent_x) == 0:
                             adjacent_x = np.append(adjacent_x, ext_x[m])
                             adjacent_x_pos = np.append(adjacent_x_pos, ext_x_pos[m])
                             adjacent_y = np.append(adjacent_y, ext_y[m])
                             adjacent_y_pos = np.append(adjacent_y_pos, ext_y_pos[m])
-                            if (m==len(ext_x)-1):
+                        else:
+                            difx = ext_x_pos[m]-ext_x_pos[m-1]
+                            dify = ext_y_pos[m]-ext_y_pos[m-1]
+                            
+                            #Enforce periodic boundary conditions
+                            difx_abs = np.abs(difx)
+                            dify_abs = np.abs(dify)
+                            
+                            #Enforce periodic boundary conditions
+                            if difx_abs>=h_box:
+                                if difx < -h_box:
+                                    ext_x_pos[m:-1] += l_box
+                                    ext_x[m:-1] += NBins
+                                else:
+                                    ext_x_pos[m:-1] -= l_box
+                                    ext_x[m:-1] -= NBins
+                            
+                            #Enforce periodic boundary conditions
+                            if dify_abs>=h_box:
+                                if dify < -h_box:
+                                    ext_y_pos[m:-1] += l_box
+                                    ext_y[m:-1] += NBins
+                                else:
+                                    ext_y_pos[m:-1] -= l_box
+                                    ext_y[m:-1] -= NBins
+                                    
+                            if (difx_abs>=h_box) or (dify_abs>=h_box):
                                 adjacent_x_arr = np.append(adjacent_x_arr, adjacent_x)
                                 adjacent_x_arr_pos = np.append(adjacent_x_arr_pos, adjacent_x_pos)
                                 adjacent_y_arr = np.append(adjacent_y_arr, adjacent_y)
@@ -6927,81 +7115,135 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                 adjacent_x_pos = np.array([])
                                 adjacent_y = np.array([])
                                 adjacent_y_pos = np.array([])
-                
-                
-                
-                
-                
-                adjacent_x_arr_pos_new = np.array([])
-                adjacent_y_arr_pos_new = np.array([])
-                adjacent_x_arr_new = np.array([])
-                adjacent_y_arr_new = np.array([])
-                for m in range(0, len(adjacent_x_arr_pos)):
-                    adjacent_x_arr_pos_new = np.append(adjacent_x_arr_pos_new, adjacent_x_arr_pos[m])
-                    adjacent_y_arr_pos_new = np.append(adjacent_y_arr_pos_new, adjacent_y_arr_pos[m])
-                    adjacent_x_arr_new = np.append(adjacent_x_arr_new, adjacent_x_arr[m])
-                    adjacent_y_arr_new = np.append(adjacent_y_arr_new, adjacent_y_arr[m])
-                
-                int_x_copy = np.copy(adjacent_x_arr_new)
-                int_y_copy = np.copy(adjacent_y_arr_new)
-                for m in range(0, len(adjacent_x_arr_new)):
-                    if m==0:
-                        adjacent_x_arr_new[m] = (int_x_copy[-1] + int_x_copy[0] + int_x_copy[1])/3
-                        adjacent_y_arr_new[m] = (int_y_copy[-1] + int_y_copy[0] + int_y_copy[1])/3
-                    elif m==len(adjacent_x_arr_new)-1:
-                        adjacent_x_arr_new[m]= (int_x_copy[m] + int_x_copy[0] + int_x_copy[m-1])/3
-                        adjacent_y_arr_new[m]= (int_y_copy[m] + int_y_copy[0] + int_y_copy[m-1])/3
+                            else:
+                                adjacent_x = np.append(adjacent_x, ext_x[m])
+                                adjacent_x_pos = np.append(adjacent_x_pos, ext_x_pos[m])
+                                adjacent_y = np.append(adjacent_y, ext_y[m])
+                                adjacent_y_pos = np.append(adjacent_y_pos, ext_y_pos[m])
+                                if (m==len(ext_x)-1):
+                                    adjacent_x_arr = np.append(adjacent_x_arr, adjacent_x)
+                                    adjacent_x_arr_pos = np.append(adjacent_x_arr_pos, adjacent_x_pos)
+                                    adjacent_y_arr = np.append(adjacent_y_arr, adjacent_y)
+                                    adjacent_y_arr_pos = np.append(adjacent_y_arr_pos, adjacent_y_pos)
+                                    adjacent_x = np.array([])
+                                    adjacent_x_pos = np.array([])
+                                    adjacent_y = np.array([])
+                                    adjacent_y_pos = np.array([])
+                    
+                    
+                    
+                    
+                    
+                    adjacent_x_arr_pos_new = np.array([])
+                    adjacent_y_arr_pos_new = np.array([])
+                    adjacent_x_arr_new = np.array([])
+                    adjacent_y_arr_new = np.array([])
+                    for m in range(0, len(adjacent_x_arr_pos)):
+                        adjacent_x_arr_pos_new = np.append(adjacent_x_arr_pos_new, adjacent_x_arr_pos[m])
+                        adjacent_y_arr_pos_new = np.append(adjacent_y_arr_pos_new, adjacent_y_arr_pos[m])
+                        adjacent_x_arr_new = np.append(adjacent_x_arr_new, adjacent_x_arr[m])
+                        adjacent_y_arr_new = np.append(adjacent_y_arr_new, adjacent_y_arr[m])
+                    
+                    int_x_copy = np.copy(adjacent_x_arr_new)
+                    int_y_copy = np.copy(adjacent_y_arr_new)
+                    for m in range(0, len(adjacent_x_arr_new)):
+                        if m==0:
+                            adjacent_x_arr_new[m] = (int_x_copy[-1] + int_x_copy[0] + int_x_copy[1])/3
+                            adjacent_y_arr_new[m] = (int_y_copy[-1] + int_y_copy[0] + int_y_copy[1])/3
+                        elif m==len(adjacent_x_arr_new)-1:
+                            adjacent_x_arr_new[m]= (int_x_copy[m] + int_x_copy[0] + int_x_copy[m-1])/3
+                            adjacent_y_arr_new[m]= (int_y_copy[m] + int_y_copy[0] + int_y_copy[m-1])/3
+                        else:
+                            adjacent_x_arr_new[m] = (int_x_copy[m-1] + int_x_copy[m] + int_x_copy[m+1])/3
+                            adjacent_y_arr_new[m] = (int_y_copy[m-1] + int_y_copy[m] + int_y_copy[m+1])/3
+                            
+                    okay = np.where(np.abs(np.diff(adjacent_x_arr_new)) + np.abs(np.diff(adjacent_y_arr_new)) > 0)
+                    ext_x = np.r_[adjacent_x_arr_new[okay], adjacent_x_arr_new[-1], adjacent_x_arr_new[0]]
+                    ext_y = np.r_[adjacent_y_arr_new[okay], adjacent_y_arr_new[-1], adjacent_y_arr_new[0]]
+                    
+                    if len(ext_x)==2:
+                        tck2, u2 = interpolate.splprep([ext_x, ext_y], s=0, k=1, per=True)
+                    elif len(ext_x)==3:
+                        tck2, u2 = interpolate.splprep([ext_x, ext_y], s=0, k=2, per=True)
                     else:
-                        adjacent_x_arr_new[m] = (int_x_copy[m-1] + int_x_copy[m] + int_x_copy[m+1])/3
-                        adjacent_y_arr_new[m] = (int_y_copy[m-1] + int_y_copy[m] + int_y_copy[m+1])/3
-                        
-                okay = np.where(np.abs(np.diff(adjacent_x_arr_new)) + np.abs(np.diff(adjacent_y_arr_new)) > 0)
-                ext_x = np.r_[adjacent_x_arr_new[okay], adjacent_x_arr_new[-1], adjacent_x_arr_new[0]]
-                ext_y = np.r_[adjacent_y_arr_new[okay], adjacent_y_arr_new[-1], adjacent_y_arr_new[0]]
-                
-                tck2, u2 = interpolate.splprep([ext_x, ext_y], s=0, per=True)
-                
-                # evaluate the spline fits for 1000 evenly spaced distance values
-                xi2, yi2 = interpolate.splev(np.linspace(0, 1, 1000), tck2)
-                
-                jump2 = np.sqrt(np.diff(xi2)**2 + np.diff(yi2)**2) 
-                smooth_jump2 = ndimage.gaussian_filter1d(jump2, 5, mode='wrap')  # window of size 5 is arbitrary
-                limit2 = 2*np.median(smooth_jump2)    # factor 2 is arbitrary
-                xn2_bub3, yn2_bub3 = xi2[:-1], yi2[:-1]
-                xn2_bub3 = xn2_bub3[(jump2 > 0) & (smooth_jump2 < limit2)]
-                yn2_bub3 = yn2_bub3[(jump2 > 0) & (smooth_jump2 < limit2)]
-                
-                xn2_bub3_pos = np.copy(xn2_bub3)
-                yn2_bub3_pos = np.copy(yn2_bub3)
-                xn2_bub3_pos_non_per = np.copy(xn2_bub3)
-                yn2_bub3_pos_non_per = np.copy(yn2_bub3)
-
+                        tck2, u2 = interpolate.splprep([ext_x, ext_y], s=0, per=True)
                     
-                for m in range(0, len(xn2_bub3)):
-                    xn2_bub3_pos[m] = xn2_bub3[m] * sizeBin
-                    yn2_bub3_pos[m] = yn2_bub3[m] * sizeBin
-                    xn2_bub3_pos_non_per[m] = xn2_bub3[m] * sizeBin
-                    yn2_bub3_pos_non_per[m] = yn2_bub3[m] * sizeBin
+                    # evaluate the spline fits for 1000 evenly spaced distance values
+                    xi2, yi2 = interpolate.splev(np.linspace(0, 1, 1000), tck2)
                     
-                    if xn2_bub3[m] < 0:
-                        xn2_bub3[m]+=NBins
-                    if xn2_bub3[m]>=NBins:
-                        xn2_bub3[m]-=NBins
+                    jump2 = np.sqrt(np.diff(xi2)**2 + np.diff(yi2)**2) 
+                    smooth_jump2 = ndimage.gaussian_filter1d(jump2, 5, mode='wrap')  # window of size 5 is arbitrary
+                    limit2 = 2*np.median(smooth_jump2)    # factor 2 is arbitrary
+                    xn2_bub3, yn2_bub3 = xi2[:-1], yi2[:-1]
+                    xn2_bub3 = xn2_bub3[(jump2 > 0) & (smooth_jump2 < limit2)]
+                    yn2_bub3 = yn2_bub3[(jump2 > 0) & (smooth_jump2 < limit2)]
+                    
+                    xn2_bub3_pos = np.copy(xn2_bub3)
+                    yn2_bub3_pos = np.copy(yn2_bub3)
+                    xn2_bub3_pos_non_per = np.copy(xn2_bub3)
+                    yn2_bub3_pos_non_per = np.copy(yn2_bub3)
+    
                         
-                    if yn2_bub3[m] < 0:
-                        yn2_bub3[m]+=NBins
-                    if yn2_bub3[m]>=NBins:
-                        yn2_bub3[m]-=NBins
+                    for m in range(0, len(xn2_bub3)):
+                        xn2_bub3_pos[m] = xn2_bub3[m] * sizeBin
+                        yn2_bub3_pos[m] = yn2_bub3[m] * sizeBin
+                        xn2_bub3_pos_non_per[m] = xn2_bub3[m] * sizeBin
+                        yn2_bub3_pos_non_per[m] = yn2_bub3[m] * sizeBin
                         
-                    if xn2_bub3_pos[m] < 0:
-                        xn2_bub3_pos[m]+=l_box
-                    if xn2_bub3_pos[m]>=l_box:
-                        xn2_bub3_pos[m]-=l_box
+                        if xn2_bub3[m] < 0:
+                            xn2_bub3[m]+=NBins
+                        if xn2_bub3[m]>=NBins:
+                            xn2_bub3[m]-=NBins
+                            
+                        if yn2_bub3[m] < 0:
+                            yn2_bub3[m]+=NBins
+                        if yn2_bub3[m]>=NBins:
+                            yn2_bub3[m]-=NBins
+                            
+                        if xn2_bub3_pos[m] < 0:
+                            xn2_bub3_pos[m]+=l_box
+                        if xn2_bub3_pos[m]>=l_box:
+                            xn2_bub3_pos[m]-=l_box
+                            
+                        if yn2_bub3_pos[m] < 0:
+                            yn2_bub3_pos[m]+=l_box
+                        if yn2_bub3_pos[m]>=l_box:
+                            yn2_bub3_pos[m]-=l_box
+                else:
+                    
+                    xn2_bub3=np.array([ext_x[0]])
+                    yn2_bub3=np.array([ext_y[0]])
+                    xn2_bub3_pos = np.copy(xn2_bub3)
+                    yn2_bub3_pos = np.copy(yn2_bub3)
+                    xn2_bub3_pos_non_per = np.copy(xn2_bub3)
+                    yn2_bub3_pos_non_per = np.copy(yn2_bub3)
+    
                         
-                    if yn2_bub3_pos[m] < 0:
-                        yn2_bub3_pos[m]+=l_box
-                    if yn2_bub3_pos[m]>=l_box:
-                        yn2_bub3_pos[m]-=l_box
+                    for m in range(0, len(xn2_bub3)):
+                        xn2_bub3_pos[m] = xn2_bub3[m] * sizeBin
+                        yn2_bub3_pos[m] = yn2_bub3[m] * sizeBin
+                        xn2_bub3_pos_non_per[m] = xn2_bub3[m] * sizeBin
+                        yn2_bub3_pos_non_per[m] = yn2_bub3[m] * sizeBin
+                        
+                        if xn2_bub3[m] < 0:
+                            xn2_bub3[m]+=NBins
+                        if xn2_bub3[m]>=NBins:
+                            xn2_bub3[m]-=NBins
+                            
+                        if yn2_bub3[m] < 0:
+                            yn2_bub3[m]+=NBins
+                        if yn2_bub3[m]>=NBins:
+                            yn2_bub3[m]-=NBins
+                            
+                        if xn2_bub3_pos[m] < 0:
+                            xn2_bub3_pos[m]+=l_box
+                        if xn2_bub3_pos[m]>=l_box:
+                            xn2_bub3_pos[m]-=l_box
+                            
+                        if yn2_bub3_pos[m] < 0:
+                            yn2_bub3_pos[m]+=l_box
+                        if yn2_bub3_pos[m]>=l_box:
+                            yn2_bub3_pos[m]-=l_box
                         
         interior_bin_bub3=0
         exterior_bin_bub3=0
@@ -7467,53 +7709,40 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 adjacent_y = np.append(adjacent_y, int_y[0])
                 adjacent_y_pos = np.append(adjacent_y_pos, int_y_pos[0])
                 
-                for m in range(1, len(int_x)):
-                    if len(adjacent_x) == 0:
-                        adjacent_x = np.append(adjacent_x, int_x[m])
-                        adjacent_x_pos = np.append(adjacent_x_pos, int_x_pos[m])
-                        adjacent_y = np.append(adjacent_y, int_y[m])
-                        adjacent_y_pos = np.append(adjacent_y_pos, int_y_pos[m])
-                    else:
-                        difx = int_x_pos[m]-int_x_pos[m-1]
-                        dify = int_y_pos[m]-int_y_pos[m-1]
-                        
-                        #Enforce periodic boundary conditions
-                        difx_abs = np.abs(difx)
-                        dify_abs = np.abs(dify)
-                            
-                        #Enforce periodic boundary conditions
-                        if difx_abs>=h_box:
-                            if difx < -h_box:
-                                int_x_pos[m:-1] += l_box
-                                int_x[m:-1] += NBins
-                            else:
-                                int_x_pos[m:-1] -= l_box
-                                int_x[m:-1] -= NBins
-                        
-                        #Enforce periodic boundary conditions
-                        if dify_abs>=h_box:
-                            if dify < -h_box:
-                                int_y_pos[m:-1] += l_box
-                                int_y[m:-1] += NBins
-                            else:
-                                int_y_pos[m:-1] -= l_box
-                                int_y[m:-1] -= NBins
-                                    
-                        if (difx_abs>=h_box) or (dify_abs>=h_box):
-                            adjacent_x_arr = np.append(adjacent_x_arr, adjacent_x)
-                            adjacent_x_arr_pos = np.append(adjacent_x_arr_pos, adjacent_x_pos)
-                            adjacent_y_arr = np.append(adjacent_y_arr, adjacent_y)
-                            adjacent_y_arr_pos = np.append(adjacent_y_arr_pos, adjacent_y_pos)
-                            adjacent_x = np.array([])
-                            adjacent_x_pos = np.array([])
-                            adjacent_y = np.array([])
-                            adjacent_y_pos = np.array([])
-                        else:
+                if len(int_x)>1:
+                    for m in range(1, len(int_x)):
+                        if len(adjacent_x) == 0:
                             adjacent_x = np.append(adjacent_x, int_x[m])
                             adjacent_x_pos = np.append(adjacent_x_pos, int_x_pos[m])
                             adjacent_y = np.append(adjacent_y, int_y[m])
                             adjacent_y_pos = np.append(adjacent_y_pos, int_y_pos[m])
-                            if (m==len(int_x)-1):
+                        else:
+                            difx = int_x_pos[m]-int_x_pos[m-1]
+                            dify = int_y_pos[m]-int_y_pos[m-1]
+                            
+                            #Enforce periodic boundary conditions
+                            difx_abs = np.abs(difx)
+                            dify_abs = np.abs(dify)
+                                
+                            #Enforce periodic boundary conditions
+                            if difx_abs>=h_box:
+                                if difx < -h_box:
+                                    int_x_pos[m:-1] += l_box
+                                    int_x[m:-1] += NBins
+                                else:
+                                    int_x_pos[m:-1] -= l_box
+                                    int_x[m:-1] -= NBins
+                            
+                            #Enforce periodic boundary conditions
+                            if dify_abs>=h_box:
+                                if dify < -h_box:
+                                    int_y_pos[m:-1] += l_box
+                                    int_y[m:-1] += NBins
+                                else:
+                                    int_y_pos[m:-1] -= l_box
+                                    int_y[m:-1] -= NBins
+                                        
+                            if (difx_abs>=h_box) or (dify_abs>=h_box):
                                 adjacent_x_arr = np.append(adjacent_x_arr, adjacent_x)
                                 adjacent_x_arr_pos = np.append(adjacent_x_arr_pos, adjacent_x_pos)
                                 adjacent_y_arr = np.append(adjacent_y_arr, adjacent_y)
@@ -7522,78 +7751,132 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                 adjacent_x_pos = np.array([])
                                 adjacent_y = np.array([])
                                 adjacent_y_pos = np.array([])
-
-                
-                adjacent_x_arr_pos_new = np.array([])
-                adjacent_y_arr_pos_new = np.array([])
-                adjacent_x_arr_new = np.array([])
-                adjacent_y_arr_new = np.array([])
-                for m in range(0, len(adjacent_x_arr_pos)):
-                    adjacent_x_arr_pos_new = np.append(adjacent_x_arr_pos_new, adjacent_x_arr_pos[m])
-                    adjacent_y_arr_pos_new = np.append(adjacent_y_arr_pos_new, adjacent_y_arr_pos[m])
-                    adjacent_x_arr_new = np.append(adjacent_x_arr_new, adjacent_x_arr[m])
-                    adjacent_y_arr_new = np.append(adjacent_y_arr_new, adjacent_y_arr[m])
-                
-                int_x_copy = np.copy(adjacent_x_arr_new)
-                int_y_copy = np.copy(adjacent_y_arr_new)
-                for m in range(0, len(adjacent_x_arr_new)):
-                    if m==0:
-                        adjacent_x_arr_new[m] = (int_x_copy[-1] + int_x_copy[0] + int_x_copy[1])/3
-                        adjacent_y_arr_new[m] = (int_y_copy[-1] + int_y_copy[0] + int_y_copy[1])/3
-                    elif m==len(adjacent_x_arr_new)-1:
-                        adjacent_x_arr_new[m]= (int_x_copy[m] + int_x_copy[0] + int_x_copy[m-1])/3
-                        adjacent_y_arr_new[m]= (int_y_copy[m] + int_y_copy[0] + int_y_copy[m-1])/3
+                            else:
+                                adjacent_x = np.append(adjacent_x, int_x[m])
+                                adjacent_x_pos = np.append(adjacent_x_pos, int_x_pos[m])
+                                adjacent_y = np.append(adjacent_y, int_y[m])
+                                adjacent_y_pos = np.append(adjacent_y_pos, int_y_pos[m])
+                                if (m==len(int_x)-1):
+                                    adjacent_x_arr = np.append(adjacent_x_arr, adjacent_x)
+                                    adjacent_x_arr_pos = np.append(adjacent_x_arr_pos, adjacent_x_pos)
+                                    adjacent_y_arr = np.append(adjacent_y_arr, adjacent_y)
+                                    adjacent_y_arr_pos = np.append(adjacent_y_arr_pos, adjacent_y_pos)
+                                    adjacent_x = np.array([])
+                                    adjacent_x_pos = np.array([])
+                                    adjacent_y = np.array([])
+                                    adjacent_y_pos = np.array([])
+    
+                    
+                    adjacent_x_arr_pos_new = np.array([])
+                    adjacent_y_arr_pos_new = np.array([])
+                    adjacent_x_arr_new = np.array([])
+                    adjacent_y_arr_new = np.array([])
+                    for m in range(0, len(adjacent_x_arr_pos)):
+                        adjacent_x_arr_pos_new = np.append(adjacent_x_arr_pos_new, adjacent_x_arr_pos[m])
+                        adjacent_y_arr_pos_new = np.append(adjacent_y_arr_pos_new, adjacent_y_arr_pos[m])
+                        adjacent_x_arr_new = np.append(adjacent_x_arr_new, adjacent_x_arr[m])
+                        adjacent_y_arr_new = np.append(adjacent_y_arr_new, adjacent_y_arr[m])
+                    
+                    int_x_copy = np.copy(adjacent_x_arr_new)
+                    int_y_copy = np.copy(adjacent_y_arr_new)
+                    for m in range(0, len(adjacent_x_arr_new)):
+                        if m==0:
+                            adjacent_x_arr_new[m] = (int_x_copy[-1] + int_x_copy[0] + int_x_copy[1])/3
+                            adjacent_y_arr_new[m] = (int_y_copy[-1] + int_y_copy[0] + int_y_copy[1])/3
+                        elif m==len(adjacent_x_arr_new)-1:
+                            adjacent_x_arr_new[m]= (int_x_copy[m] + int_x_copy[0] + int_x_copy[m-1])/3
+                            adjacent_y_arr_new[m]= (int_y_copy[m] + int_y_copy[0] + int_y_copy[m-1])/3
+                        else:
+                            adjacent_x_arr_new[m] = (int_x_copy[m-1] + int_x_copy[m] + int_x_copy[m+1])/3
+                            adjacent_y_arr_new[m] = (int_y_copy[m-1] + int_y_copy[m] + int_y_copy[m+1])/3
+                            
+                    okay = np.where(np.abs(np.diff(adjacent_x_arr_new)) + np.abs(np.diff(adjacent_y_arr_new)) > 0)
+                    int_x = np.r_[adjacent_x_arr_new[okay], adjacent_x_arr_new[-1], adjacent_x_arr_new[0]]
+                    int_y = np.r_[adjacent_y_arr_new[okay], adjacent_y_arr_new[-1], adjacent_y_arr_new[0]]
+                    
+                    if len(int_x)==2:
+                        tck, u = interpolate.splprep([int_x, int_y], s=0, k=1, per=True)
+                    elif len(int_x)==3:
+                        tck, u = interpolate.splprep([int_x, int_y], s=0, k=2, per=True)
                     else:
-                        adjacent_x_arr_new[m] = (int_x_copy[m-1] + int_x_copy[m] + int_x_copy[m+1])/3
-                        adjacent_y_arr_new[m] = (int_y_copy[m-1] + int_y_copy[m] + int_y_copy[m+1])/3
-                        
-                okay = np.where(np.abs(np.diff(adjacent_x_arr_new)) + np.abs(np.diff(adjacent_y_arr_new)) > 0)
-                int_x = np.r_[adjacent_x_arr_new[okay], adjacent_x_arr_new[-1], adjacent_x_arr_new[0]]
-                int_y = np.r_[adjacent_y_arr_new[okay], adjacent_y_arr_new[-1], adjacent_y_arr_new[0]]
-                
-                tck, u = interpolate.splprep([int_x, int_y], s=0, per=True)
-                
-                # evaluate the spline fits for 1000 evenly spaced distance values
-                xi, yi = interpolate.splev(np.linspace(0, 1, 1000), tck)
-                
-                jump = np.sqrt(np.diff(xi)**2 + np.diff(yi)**2) 
-                smooth_jump = ndimage.gaussian_filter1d(jump, 5, mode='wrap')  # window of size 5 is arbitrary
-                limit = 2*np.median(smooth_jump)    # factor 2 is arbitrary
-                xn_bub4, yn_bub4 = xi[:-1], yi[:-1]
-                xn_bub4 = xn_bub4[(jump > 0) & (smooth_jump < limit)]
-                yn_bub4 = yn_bub4[(jump > 0) & (smooth_jump < limit)]
-                
-                xn_bub4_pos = np.copy(xn_bub4)
-                yn_bub4_pos = np.copy(yn_bub4)
-                xn_bub4_pos_non_per = np.copy(xn_bub4)
-                yn_bub4_pos_non_per = np.copy(yn_bub4)
-
+                        tck, u = interpolate.splprep([int_x, int_y], s=0, per=True)
                     
-                for m in range(0, len(xn_bub4)):
-                    xn_bub4_pos[m] = xn_bub4[m] * sizeBin
-                    yn_bub4_pos[m] = yn_bub4[m] * sizeBin
-                    xn_bub4_pos_non_per[m] = xn_bub4[m] * sizeBin
-                    yn_bub4_pos_non_per[m] = yn_bub4[m] * sizeBin
+                    # evaluate the spline fits for 1000 evenly spaced distance values
+                    xi, yi = interpolate.splev(np.linspace(0, 1, 1000), tck)
                     
-                    if xn_bub4[m] < 0:
-                        xn_bub4[m]+=NBins
-                    if xn_bub4[m]>=NBins:
-                        xn_bub4[m]-=NBins
+                    jump = np.sqrt(np.diff(xi)**2 + np.diff(yi)**2) 
+                    smooth_jump = ndimage.gaussian_filter1d(jump, 5, mode='wrap')  # window of size 5 is arbitrary
+                    limit = 2*np.median(smooth_jump)    # factor 2 is arbitrary
+                    xn_bub4, yn_bub4 = xi[:-1], yi[:-1]
+                    xn_bub4 = xn_bub4[(jump > 0) & (smooth_jump < limit)]
+                    yn_bub4 = yn_bub4[(jump > 0) & (smooth_jump < limit)]
+                    
+                    xn_bub4_pos = np.copy(xn_bub4)
+                    yn_bub4_pos = np.copy(yn_bub4)
+                    xn_bub4_pos_non_per = np.copy(xn_bub4)
+                    yn_bub4_pos_non_per = np.copy(yn_bub4)
+    
                         
-                    if yn_bub4[m] < 0:
-                        yn_bub4[m]+=NBins
-                    if yn_bub4[m]>=NBins:
-                        yn_bub4[m]-=NBins
+                    for m in range(0, len(xn_bub4)):
+                        xn_bub4_pos[m] = xn_bub4[m] * sizeBin
+                        yn_bub4_pos[m] = yn_bub4[m] * sizeBin
+                        xn_bub4_pos_non_per[m] = xn_bub4[m] * sizeBin
+                        yn_bub4_pos_non_per[m] = yn_bub4[m] * sizeBin
                         
-                    if xn_bub4_pos[m] < 0:
-                        xn_bub4_pos[m]+=l_box
-                    if xn_bub4_pos[m]>=l_box:
-                        xn_bub4_pos[m]-=l_box
+                        if xn_bub4[m] < 0:
+                            xn_bub4[m]+=NBins
+                        if xn_bub4[m]>=NBins:
+                            xn_bub4[m]-=NBins
+                            
+                        if yn_bub4[m] < 0:
+                            yn_bub4[m]+=NBins
+                        if yn_bub4[m]>=NBins:
+                            yn_bub4[m]-=NBins
+                            
+                        if xn_bub4_pos[m] < 0:
+                            xn_bub4_pos[m]+=l_box
+                        if xn_bub4_pos[m]>=l_box:
+                            xn_bub4_pos[m]-=l_box
+                            
+                        if yn_bub4_pos[m] < 0:
+                            yn_bub4_pos[m]+=l_box
+                        if yn_bub4_pos[m]>=l_box:
+                            yn_bub4_pos[m]-=l_box
+                else:
+                    
+                    xn_bub4 = np.array([int_x[0]])
+                    yn_bub4 = np.array([int_y[0]])
+                    xn_bub4_pos = np.copy(xn_bub4)
+                    yn_bub4_pos = np.copy(yn_bub4)
+                    xn_bub4_pos_non_per = np.copy(xn_bub4)
+                    yn_bub4_pos_non_per = np.copy(yn_bub4)
+    
                         
-                    if yn_bub4_pos[m] < 0:
-                        yn_bub4_pos[m]+=l_box
-                    if yn_bub4_pos[m]>=l_box:
-                        yn_bub4_pos[m]-=l_box
+                    for m in range(0, len(xn_bub4)):
+                        xn_bub4_pos[m] = xn_bub4[m] * sizeBin
+                        yn_bub4_pos[m] = yn_bub4[m] * sizeBin
+                        xn_bub4_pos_non_per[m] = xn_bub4[m] * sizeBin
+                        yn_bub4_pos_non_per[m] = yn_bub4[m] * sizeBin
+                        
+                        if xn_bub4[m] < 0:
+                            xn_bub4[m]+=NBins
+                        if xn_bub4[m]>=NBins:
+                            xn_bub4[m]-=NBins
+                            
+                        if yn_bub4[m] < 0:
+                            yn_bub4[m]+=NBins
+                        if yn_bub4[m]>=NBins:
+                            yn_bub4[m]-=NBins
+                            
+                        if xn_bub4_pos[m] < 0:
+                            xn_bub4_pos[m]+=l_box
+                        if xn_bub4_pos[m]>=l_box:
+                            xn_bub4_pos[m]-=l_box
+                            
+                        if yn_bub4_pos[m] < 0:
+                            yn_bub4_pos[m]+=l_box
+                        if yn_bub4_pos[m]>=l_box:
+                            yn_bub4_pos[m]-=l_box
                         
             
             if exterior_bin_bub3>0:
@@ -7952,54 +8235,40 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 adjacent_x_pos = np.append(adjacent_x_pos, ext_x_pos[0])
                 adjacent_y = np.append(adjacent_y, ext_y[0])
                 adjacent_y_pos = np.append(adjacent_y_pos, ext_y_pos[0])
-                
-                for m in range(1, len(ext_x)):
-                    if len(adjacent_x) == 0:
-                        adjacent_x = np.append(adjacent_x, ext_x[m])
-                        adjacent_x_pos = np.append(adjacent_x_pos, ext_x_pos[m])
-                        adjacent_y = np.append(adjacent_y, ext_y[m])
-                        adjacent_y_pos = np.append(adjacent_y_pos, ext_y_pos[m])
-                    else:
-                        difx = ext_x_pos[m]-ext_x_pos[m-1]
-                        dify = ext_y_pos[m]-ext_y_pos[m-1]
-                        
-                        #Enforce periodic boundary conditions
-                        difx_abs = np.abs(difx)
-                        dify_abs = np.abs(dify)
-                        
-                        #Enforce periodic boundary conditions
-                        if difx_abs>=h_box:
-                            if difx < -h_box:
-                                ext_x_pos[m:-1] += l_box
-                                ext_x[m:-1] += NBins
-                            else:
-                                ext_x_pos[m:-1] -= l_box
-                                ext_x[m:-1] -= NBins
-                        
-                        #Enforce periodic boundary conditions
-                        if dify_abs>=h_box:
-                            if dify < -h_box:
-                                ext_y_pos[m:-1] += l_box
-                                ext_y[m:-1] += NBins
-                            else:
-                                ext_y_pos[m:-1] -= l_box
-                                ext_y[m:-1] -= NBins
-                                
-                        if (difx_abs>=h_box) or (dify_abs>=h_box):
-                            adjacent_x_arr = np.append(adjacent_x_arr, adjacent_x)
-                            adjacent_x_arr_pos = np.append(adjacent_x_arr_pos, adjacent_x_pos)
-                            adjacent_y_arr = np.append(adjacent_y_arr, adjacent_y)
-                            adjacent_y_arr_pos = np.append(adjacent_y_arr_pos, adjacent_y_pos)
-                            adjacent_x = np.array([])
-                            adjacent_x_pos = np.array([])
-                            adjacent_y = np.array([])
-                            adjacent_y_pos = np.array([])
-                        else:
+                if len(ext_x)>1:
+                    for m in range(1, len(ext_x)):
+                        if len(adjacent_x) == 0:
                             adjacent_x = np.append(adjacent_x, ext_x[m])
                             adjacent_x_pos = np.append(adjacent_x_pos, ext_x_pos[m])
                             adjacent_y = np.append(adjacent_y, ext_y[m])
                             adjacent_y_pos = np.append(adjacent_y_pos, ext_y_pos[m])
-                            if (m==len(ext_x)-1):
+                        else:
+                            difx = ext_x_pos[m]-ext_x_pos[m-1]
+                            dify = ext_y_pos[m]-ext_y_pos[m-1]
+                            
+                            #Enforce periodic boundary conditions
+                            difx_abs = np.abs(difx)
+                            dify_abs = np.abs(dify)
+                            
+                            #Enforce periodic boundary conditions
+                            if difx_abs>=h_box:
+                                if difx < -h_box:
+                                    ext_x_pos[m:-1] += l_box
+                                    ext_x[m:-1] += NBins
+                                else:
+                                    ext_x_pos[m:-1] -= l_box
+                                    ext_x[m:-1] -= NBins
+                            
+                            #Enforce periodic boundary conditions
+                            if dify_abs>=h_box:
+                                if dify < -h_box:
+                                    ext_y_pos[m:-1] += l_box
+                                    ext_y[m:-1] += NBins
+                                else:
+                                    ext_y_pos[m:-1] -= l_box
+                                    ext_y[m:-1] -= NBins
+                                    
+                            if (difx_abs>=h_box) or (dify_abs>=h_box):
                                 adjacent_x_arr = np.append(adjacent_x_arr, adjacent_x)
                                 adjacent_x_arr_pos = np.append(adjacent_x_arr_pos, adjacent_x_pos)
                                 adjacent_y_arr = np.append(adjacent_y_arr, adjacent_y)
@@ -8008,80 +8277,131 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                 adjacent_x_pos = np.array([])
                                 adjacent_y = np.array([])
                                 adjacent_y_pos = np.array([])
-                
-                
-                
-                
-                
-                adjacent_x_arr_pos_new = np.array([])
-                adjacent_y_arr_pos_new = np.array([])
-                adjacent_x_arr_new = np.array([])
-                adjacent_y_arr_new = np.array([])
-                for m in range(0, len(adjacent_x_arr_pos)):
-                    adjacent_x_arr_pos_new = np.append(adjacent_x_arr_pos_new, adjacent_x_arr_pos[m])
-                    adjacent_y_arr_pos_new = np.append(adjacent_y_arr_pos_new, adjacent_y_arr_pos[m])
-                    adjacent_x_arr_new = np.append(adjacent_x_arr_new, adjacent_x_arr[m])
-                    adjacent_y_arr_new = np.append(adjacent_y_arr_new, adjacent_y_arr[m])
-                
-                int_x_copy = np.copy(adjacent_x_arr_new)
-                int_y_copy = np.copy(adjacent_y_arr_new)
-                for m in range(0, len(adjacent_x_arr_new)):
-                    if m==0:
-                        adjacent_x_arr_new[m] = (int_x_copy[-1] + int_x_copy[0] + int_x_copy[1])/3
-                        adjacent_y_arr_new[m] = (int_y_copy[-1] + int_y_copy[0] + int_y_copy[1])/3
-                    elif m==len(adjacent_x_arr_new)-1:
-                        adjacent_x_arr_new[m]= (int_x_copy[m] + int_x_copy[0] + int_x_copy[m-1])/3
-                        adjacent_y_arr_new[m]= (int_y_copy[m] + int_y_copy[0] + int_y_copy[m-1])/3
+                            else:
+                                adjacent_x = np.append(adjacent_x, ext_x[m])
+                                adjacent_x_pos = np.append(adjacent_x_pos, ext_x_pos[m])
+                                adjacent_y = np.append(adjacent_y, ext_y[m])
+                                adjacent_y_pos = np.append(adjacent_y_pos, ext_y_pos[m])
+                                if (m==len(ext_x)-1):
+                                    adjacent_x_arr = np.append(adjacent_x_arr, adjacent_x)
+                                    adjacent_x_arr_pos = np.append(adjacent_x_arr_pos, adjacent_x_pos)
+                                    adjacent_y_arr = np.append(adjacent_y_arr, adjacent_y)
+                                    adjacent_y_arr_pos = np.append(adjacent_y_arr_pos, adjacent_y_pos)
+                                    adjacent_x = np.array([])
+                                    adjacent_x_pos = np.array([])
+                                    adjacent_y = np.array([])
+                                    adjacent_y_pos = np.array([])
+                    
+                    
+                    
+                    
+                    
+                    adjacent_x_arr_pos_new = np.array([])
+                    adjacent_y_arr_pos_new = np.array([])
+                    adjacent_x_arr_new = np.array([])
+                    adjacent_y_arr_new = np.array([])
+                    for m in range(0, len(adjacent_x_arr_pos)):
+                        adjacent_x_arr_pos_new = np.append(adjacent_x_arr_pos_new, adjacent_x_arr_pos[m])
+                        adjacent_y_arr_pos_new = np.append(adjacent_y_arr_pos_new, adjacent_y_arr_pos[m])
+                        adjacent_x_arr_new = np.append(adjacent_x_arr_new, adjacent_x_arr[m])
+                        adjacent_y_arr_new = np.append(adjacent_y_arr_new, adjacent_y_arr[m])
+                    
+                    int_x_copy = np.copy(adjacent_x_arr_new)
+                    int_y_copy = np.copy(adjacent_y_arr_new)
+                    for m in range(0, len(adjacent_x_arr_new)):
+                        if m==0:
+                            adjacent_x_arr_new[m] = (int_x_copy[-1] + int_x_copy[0] + int_x_copy[1])/3
+                            adjacent_y_arr_new[m] = (int_y_copy[-1] + int_y_copy[0] + int_y_copy[1])/3
+                        elif m==len(adjacent_x_arr_new)-1:
+                            adjacent_x_arr_new[m]= (int_x_copy[m] + int_x_copy[0] + int_x_copy[m-1])/3
+                            adjacent_y_arr_new[m]= (int_y_copy[m] + int_y_copy[0] + int_y_copy[m-1])/3
+                        else:
+                            adjacent_x_arr_new[m] = (int_x_copy[m-1] + int_x_copy[m] + int_x_copy[m+1])/3
+                            adjacent_y_arr_new[m] = (int_y_copy[m-1] + int_y_copy[m] + int_y_copy[m+1])/3
+                        
+                            
+                    okay = np.where(np.abs(np.diff(adjacent_x_arr_new)) + np.abs(np.diff(adjacent_y_arr_new)) > 0)
+                    ext_x = np.r_[adjacent_x_arr_new[okay], adjacent_x_arr_new[-1], adjacent_x_arr_new[0]]
+                    ext_y = np.r_[adjacent_y_arr_new[okay], adjacent_y_arr_new[-1], adjacent_y_arr_new[0]]
+                    
+                    if len(ext_x)==2:
+                        tck2, u2 = interpolate.splprep([ext_x, ext_y], s=0, k=1, per=True)
+                    elif len(ext_x)==3:
+                        tck2, u2 = interpolate.splprep([ext_x, ext_y], s=0, k=2, per=True)
                     else:
-                        adjacent_x_arr_new[m] = (int_x_copy[m-1] + int_x_copy[m] + int_x_copy[m+1])/3
-                        adjacent_y_arr_new[m] = (int_y_copy[m-1] + int_y_copy[m] + int_y_copy[m+1])/3
+                        tck2, u2 = interpolate.splprep([ext_x, ext_y], s=0, per=True)
                     
-                        
-                okay = np.where(np.abs(np.diff(adjacent_x_arr_new)) + np.abs(np.diff(adjacent_y_arr_new)) > 0)
-                ext_x = np.r_[adjacent_x_arr_new[okay], adjacent_x_arr_new[-1], adjacent_x_arr_new[0]]
-                ext_y = np.r_[adjacent_y_arr_new[okay], adjacent_y_arr_new[-1], adjacent_y_arr_new[0]]
-                
-                tck2, u2 = interpolate.splprep([ext_x, ext_y], s=0, per=True)
-                
-                # evaluate the spline fits for 1000 evenly spaced distance values
-                xi2, yi2 = interpolate.splev(np.linspace(0, 1, 1000), tck2)
-                
-                jump2 = np.sqrt(np.diff(xi2)**2 + np.diff(yi2)**2) 
-                smooth_jump2 = ndimage.gaussian_filter1d(jump2, 5, mode='wrap')  # window of size 5 is arbitrary
-                limit2 = 2*np.median(smooth_jump2)    # factor 2 is arbitrary
-                xn2_bub4, yn2_bub4 = xi2[:-1], yi2[:-1]
-                xn2_bub4 = xn2_bub4[(jump2 > 0) & (smooth_jump2 < limit2)]
-                yn2_bub4 = yn2_bub4[(jump2 > 0) & (smooth_jump2 < limit2)]
-                
-                xn2_bub4_pos = np.copy(xn2_bub4)
-                yn2_bub4_pos = np.copy(yn2_bub4)
-                xn2_bub4_pos_non_per = np.copy(xn2_bub4)
-                yn2_bub4_pos_non_per = np.copy(yn2_bub4)
-                for m in range(0, len(xn2_bub4)):
-                    xn2_bub4_pos[m] = xn2_bub4[m] * sizeBin
-                    yn2_bub4_pos[m] = yn2_bub4[m] * sizeBin
-                    xn2_bub4_pos_non_per[m] = xn2_bub4[m] * sizeBin
-                    yn2_bub4_pos_non_per[m] = yn2_bub4[m] * sizeBin
+                    # evaluate the spline fits for 1000 evenly spaced distance values
+                    xi2, yi2 = interpolate.splev(np.linspace(0, 1, 1000), tck2)
                     
-                    if xn2_bub4[m] < 0:
-                        xn2_bub4[m]+=NBins
-                    if xn2_bub4[m]>=NBins:
-                        xn2_bub4[m]-=NBins
+                    jump2 = np.sqrt(np.diff(xi2)**2 + np.diff(yi2)**2) 
+                    smooth_jump2 = ndimage.gaussian_filter1d(jump2, 5, mode='wrap')  # window of size 5 is arbitrary
+                    limit2 = 2*np.median(smooth_jump2)    # factor 2 is arbitrary
+                    xn2_bub4, yn2_bub4 = xi2[:-1], yi2[:-1]
+                    xn2_bub4 = xn2_bub4[(jump2 > 0) & (smooth_jump2 < limit2)]
+                    yn2_bub4 = yn2_bub4[(jump2 > 0) & (smooth_jump2 < limit2)]
+                    
+                    xn2_bub4_pos = np.copy(xn2_bub4)
+                    yn2_bub4_pos = np.copy(yn2_bub4)
+                    xn2_bub4_pos_non_per = np.copy(xn2_bub4)
+                    yn2_bub4_pos_non_per = np.copy(yn2_bub4)
+                    for m in range(0, len(xn2_bub4)):
+                        xn2_bub4_pos[m] = xn2_bub4[m] * sizeBin
+                        yn2_bub4_pos[m] = yn2_bub4[m] * sizeBin
+                        xn2_bub4_pos_non_per[m] = xn2_bub4[m] * sizeBin
+                        yn2_bub4_pos_non_per[m] = yn2_bub4[m] * sizeBin
                         
-                    if yn2_bub4[m] < 0:
-                        yn2_bub4[m]+=NBins
-                    if yn2_bub4[m]>=NBins:
-                        yn2_bub4[m]-=NBins
+                        if xn2_bub4[m] < 0:
+                            xn2_bub4[m]+=NBins
+                        if xn2_bub4[m]>=NBins:
+                            xn2_bub4[m]-=NBins
+                            
+                        if yn2_bub4[m] < 0:
+                            yn2_bub4[m]+=NBins
+                        if yn2_bub4[m]>=NBins:
+                            yn2_bub4[m]-=NBins
+                            
+                        if xn2_bub4_pos[m] < 0:
+                            xn2_bub4_pos[m]+=l_box
+                        if xn2_bub4_pos[m]>=l_box:
+                            xn2_bub4_pos[m]-=l_box
+                            
+                        if yn2_bub4_pos[m] < 0:
+                            yn2_bub4_pos[m]+=l_box
+                        if yn2_bub4_pos[m]>=l_box:
+                            yn2_bub4_pos[m]-=l_box
+                else:
+                    xn2_bub4 = np.array(ext_x[0])
+                    yn2_bub4 = np.array(ext_y[0])
+                    xn2_bub4_pos = np.copy(xn2_bub4)
+                    yn2_bub4_pos = np.copy(yn2_bub4)
+                    xn2_bub4_pos_non_per = np.copy(xn2_bub4)
+                    yn2_bub4_pos_non_per = np.copy(yn2_bub4)
+                    for m in range(0, len(xn2_bub4)):
+                        xn2_bub4_pos[m] = xn2_bub4[m] * sizeBin
+                        yn2_bub4_pos[m] = yn2_bub4[m] * sizeBin
+                        xn2_bub4_pos_non_per[m] = xn2_bub4[m] * sizeBin
+                        yn2_bub4_pos_non_per[m] = yn2_bub4[m] * sizeBin
                         
-                    if xn2_bub4_pos[m] < 0:
-                        xn2_bub4_pos[m]+=l_box
-                    if xn2_bub4_pos[m]>=l_box:
-                        xn2_bub4_pos[m]-=l_box
-                        
-                    if yn2_bub4_pos[m] < 0:
-                        yn2_bub4_pos[m]+=l_box
-                    if yn2_bub4_pos[m]>=l_box:
-                        yn2_bub4_pos[m]-=l_box
+                        if xn2_bub4[m] < 0:
+                            xn2_bub4[m]+=NBins
+                        if xn2_bub4[m]>=NBins:
+                            xn2_bub4[m]-=NBins
+                            
+                        if yn2_bub4[m] < 0:
+                            yn2_bub4[m]+=NBins
+                        if yn2_bub4[m]>=NBins:
+                            yn2_bub4[m]-=NBins
+                            
+                        if xn2_bub4_pos[m] < 0:
+                            xn2_bub4_pos[m]+=l_box
+                        if xn2_bub4_pos[m]>=l_box:
+                            xn2_bub4_pos[m]-=l_box
+                            
+                        if yn2_bub4_pos[m] < 0:
+                            yn2_bub4_pos[m]+=l_box
+                        if yn2_bub4_pos[m]>=l_box:
+                            yn2_bub4_pos[m]-=l_box
         interior_bin_bub4=0
         exterior_bin_bub4=0
         if bub_large ==5:
@@ -8538,54 +8858,40 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 adjacent_x_pos = np.append(adjacent_x_pos, int_x_pos[0])
                 adjacent_y = np.append(adjacent_y, int_y[0])
                 adjacent_y_pos = np.append(adjacent_y_pos, int_y_pos[0])
-                
-                for m in range(1, len(int_x)):
-                    if len(adjacent_x) == 0:
-                        adjacent_x = np.append(adjacent_x, int_x[m])
-                        adjacent_x_pos = np.append(adjacent_x_pos, int_x_pos[m])
-                        adjacent_y = np.append(adjacent_y, int_y[m])
-                        adjacent_y_pos = np.append(adjacent_y_pos, int_y_pos[m])
-                    else:
-                        difx = int_x_pos[m]-int_x_pos[m-1]
-                        dify = int_y_pos[m]-int_y_pos[m-1]
-                        
-                        #Enforce periodic boundary conditions
-                        difx_abs = np.abs(difx)
-                        dify_abs = np.abs(dify)
-                            
-                        #Enforce periodic boundary conditions
-                        if difx_abs>=h_box:
-                            if difx < -h_box:
-                                int_x_pos[m:-1] += l_box
-                                int_x[m:-1] += NBins
-                            else:
-                                int_x_pos[m:-1] -= l_box
-                                int_x[m:-1] -= NBins
-                        
-                        #Enforce periodic boundary conditions
-                        if dify_abs>=h_box:
-                            if dify < -h_box:
-                                int_y_pos[m:-1] += l_box
-                                int_y[m:-1] += NBins
-                            else:
-                                int_y_pos[m:-1] -= l_box
-                                int_y[m:-1] -= NBins
-                                    
-                        if (difx_abs>=h_box) or (dify_abs>=h_box):
-                            adjacent_x_arr = np.append(adjacent_x_arr, adjacent_x)
-                            adjacent_x_arr_pos = np.append(adjacent_x_arr_pos, adjacent_x_pos)
-                            adjacent_y_arr = np.append(adjacent_y_arr, adjacent_y)
-                            adjacent_y_arr_pos = np.append(adjacent_y_arr_pos, adjacent_y_pos)
-                            adjacent_x = np.array([])
-                            adjacent_x_pos = np.array([])
-                            adjacent_y = np.array([])
-                            adjacent_y_pos = np.array([])
-                        else:
+                if len(int_x)>1:
+                    for m in range(1, len(int_x)):
+                        if len(adjacent_x) == 0:
                             adjacent_x = np.append(adjacent_x, int_x[m])
                             adjacent_x_pos = np.append(adjacent_x_pos, int_x_pos[m])
                             adjacent_y = np.append(adjacent_y, int_y[m])
                             adjacent_y_pos = np.append(adjacent_y_pos, int_y_pos[m])
-                            if (m==len(int_x)-1):
+                        else:
+                            difx = int_x_pos[m]-int_x_pos[m-1]
+                            dify = int_y_pos[m]-int_y_pos[m-1]
+                            
+                            #Enforce periodic boundary conditions
+                            difx_abs = np.abs(difx)
+                            dify_abs = np.abs(dify)
+                                
+                            #Enforce periodic boundary conditions
+                            if difx_abs>=h_box:
+                                if difx < -h_box:
+                                    int_x_pos[m:-1] += l_box
+                                    int_x[m:-1] += NBins
+                                else:
+                                    int_x_pos[m:-1] -= l_box
+                                    int_x[m:-1] -= NBins
+                            
+                            #Enforce periodic boundary conditions
+                            if dify_abs>=h_box:
+                                if dify < -h_box:
+                                    int_y_pos[m:-1] += l_box
+                                    int_y[m:-1] += NBins
+                                else:
+                                    int_y_pos[m:-1] -= l_box
+                                    int_y[m:-1] -= NBins
+                                        
+                            if (difx_abs>=h_box) or (dify_abs>=h_box):
                                 adjacent_x_arr = np.append(adjacent_x_arr, adjacent_x)
                                 adjacent_x_arr_pos = np.append(adjacent_x_arr_pos, adjacent_x_pos)
                                 adjacent_y_arr = np.append(adjacent_y_arr, adjacent_y)
@@ -8594,81 +8900,135 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                 adjacent_x_pos = np.array([])
                                 adjacent_y = np.array([])
                                 adjacent_y_pos = np.array([])
-
-                
-                adjacent_x_arr_pos_new = np.array([])
-                adjacent_y_arr_pos_new = np.array([])
-                adjacent_x_arr_new = np.array([])
-                adjacent_y_arr_new = np.array([])
-                for m in range(0, len(adjacent_x_arr_pos)):
-                    adjacent_x_arr_pos_new = np.append(adjacent_x_arr_pos_new, adjacent_x_arr_pos[m])
-                    adjacent_y_arr_pos_new = np.append(adjacent_y_arr_pos_new, adjacent_y_arr_pos[m])
-                    adjacent_x_arr_new = np.append(adjacent_x_arr_new, adjacent_x_arr[m])
-                    adjacent_y_arr_new = np.append(adjacent_y_arr_new, adjacent_y_arr[m])
-                
-                int_x_copy = np.copy(adjacent_x_arr_new)
-                int_y_copy = np.copy(adjacent_y_arr_new)
-                for m in range(0, len(adjacent_x_arr_new)):
-                    if m==0:
-                        adjacent_x_arr_new[m] = (int_x_copy[-1] + int_x_copy[0] + int_x_copy[1])/3
-                        adjacent_y_arr_new[m] = (int_y_copy[-1] + int_y_copy[0] + int_y_copy[1])/3
-                    elif m==len(adjacent_x_arr_new)-1:
-                        adjacent_x_arr_new[m]= (int_x_copy[m] + int_x_copy[0] + int_x_copy[m-1])/3
-                        adjacent_y_arr_new[m]= (int_y_copy[m] + int_y_copy[0] + int_y_copy[m-1])/3
+                            else:
+                                adjacent_x = np.append(adjacent_x, int_x[m])
+                                adjacent_x_pos = np.append(adjacent_x_pos, int_x_pos[m])
+                                adjacent_y = np.append(adjacent_y, int_y[m])
+                                adjacent_y_pos = np.append(adjacent_y_pos, int_y_pos[m])
+                                if (m==len(int_x)-1):
+                                    adjacent_x_arr = np.append(adjacent_x_arr, adjacent_x)
+                                    adjacent_x_arr_pos = np.append(adjacent_x_arr_pos, adjacent_x_pos)
+                                    adjacent_y_arr = np.append(adjacent_y_arr, adjacent_y)
+                                    adjacent_y_arr_pos = np.append(adjacent_y_arr_pos, adjacent_y_pos)
+                                    adjacent_x = np.array([])
+                                    adjacent_x_pos = np.array([])
+                                    adjacent_y = np.array([])
+                                    adjacent_y_pos = np.array([])
+    
+                    
+                    adjacent_x_arr_pos_new = np.array([])
+                    adjacent_y_arr_pos_new = np.array([])
+                    adjacent_x_arr_new = np.array([])
+                    adjacent_y_arr_new = np.array([])
+                    for m in range(0, len(adjacent_x_arr_pos)):
+                        adjacent_x_arr_pos_new = np.append(adjacent_x_arr_pos_new, adjacent_x_arr_pos[m])
+                        adjacent_y_arr_pos_new = np.append(adjacent_y_arr_pos_new, adjacent_y_arr_pos[m])
+                        adjacent_x_arr_new = np.append(adjacent_x_arr_new, adjacent_x_arr[m])
+                        adjacent_y_arr_new = np.append(adjacent_y_arr_new, adjacent_y_arr[m])
+                    
+                    int_x_copy = np.copy(adjacent_x_arr_new)
+                    int_y_copy = np.copy(adjacent_y_arr_new)
+                    for m in range(0, len(adjacent_x_arr_new)):
+                        if m==0:
+                            adjacent_x_arr_new[m] = (int_x_copy[-1] + int_x_copy[0] + int_x_copy[1])/3
+                            adjacent_y_arr_new[m] = (int_y_copy[-1] + int_y_copy[0] + int_y_copy[1])/3
+                        elif m==len(adjacent_x_arr_new)-1:
+                            adjacent_x_arr_new[m]= (int_x_copy[m] + int_x_copy[0] + int_x_copy[m-1])/3
+                            adjacent_y_arr_new[m]= (int_y_copy[m] + int_y_copy[0] + int_y_copy[m-1])/3
+                        else:
+                            adjacent_x_arr_new[m] = (int_x_copy[m-1] + int_x_copy[m] + int_x_copy[m+1])/3
+                            adjacent_y_arr_new[m] = (int_y_copy[m-1] + int_y_copy[m] + int_y_copy[m+1])/3
+                            
+                    okay = np.where(np.abs(np.diff(adjacent_x_arr_new)) + np.abs(np.diff(adjacent_y_arr_new)) > 0)
+                    int_x = np.r_[adjacent_x_arr_new[okay], adjacent_x_arr_new[-1], adjacent_x_arr_new[0]]
+                    int_y = np.r_[adjacent_y_arr_new[okay], adjacent_y_arr_new[-1], adjacent_y_arr_new[0]]
+                    
+                    if len(int_x)==2:
+                        tck, u = interpolate.splprep([int_x, int_y], s=0, k=1, per=True)
+                    elif len(int_x)==3:
+                        tck, u = interpolate.splprep([int_x, int_y], s=0, k=2, per=True)
                     else:
-                        adjacent_x_arr_new[m] = (int_x_copy[m-1] + int_x_copy[m] + int_x_copy[m+1])/3
-                        adjacent_y_arr_new[m] = (int_y_copy[m-1] + int_y_copy[m] + int_y_copy[m+1])/3
-                        
-                okay = np.where(np.abs(np.diff(adjacent_x_arr_new)) + np.abs(np.diff(adjacent_y_arr_new)) > 0)
-                int_x = np.r_[adjacent_x_arr_new[okay], adjacent_x_arr_new[-1], adjacent_x_arr_new[0]]
-                int_y = np.r_[adjacent_y_arr_new[okay], adjacent_y_arr_new[-1], adjacent_y_arr_new[0]]
-                
-                tck, u = interpolate.splprep([int_x, int_y], s=0, per=True)
-                
-                # evaluate the spline fits for 1000 evenly spaced distance values
-                xi, yi = interpolate.splev(np.linspace(0, 1, 1000), tck)
-                
-                jump = np.sqrt(np.diff(xi)**2 + np.diff(yi)**2) 
-                smooth_jump = ndimage.gaussian_filter1d(jump, 5, mode='wrap')  # window of size 5 is arbitrary
-                limit = 2*np.median(smooth_jump)    # factor 2 is arbitrary
-                
-                xn_bub5, yn_bub5 = xi[:-1], yi[:-1]
-                xn_bub5 = xn_bub5[(jump > 0) & (smooth_jump < limit)]
-                yn_bub5 = yn_bub5[(jump > 0) & (smooth_jump < limit)]
-                
-                xn_bub5_pos = np.copy(xn_bub5)
-                yn_bub5_pos = np.copy(yn_bub5)
-                xn_bub5_pos_non_per = np.copy(xn_bub5)
-                yn_bub5_pos_non_per = np.copy(yn_bub5)
-
+                        tck, u = interpolate.splprep([int_x, int_y], s=0, per=True)
                     
+                    # evaluate the spline fits for 1000 evenly spaced distance values
+                    xi, yi = interpolate.splev(np.linspace(0, 1, 1000), tck)
                     
-                for m in range(0, len(xn_bub5)):
-                    xn_bub5_pos[m] = xn_bub5[m] * sizeBin
-                    yn_bub5_pos[m] = yn_bub5[m] * sizeBin
-                    xn_bub5_pos_non_per[m] = xn_bub5[m] * sizeBin
-                    yn_bub5_pos_non_per[m] = yn_bub5[m] * sizeBin
+                    jump = np.sqrt(np.diff(xi)**2 + np.diff(yi)**2) 
+                    smooth_jump = ndimage.gaussian_filter1d(jump, 5, mode='wrap')  # window of size 5 is arbitrary
+                    limit = 2*np.median(smooth_jump)    # factor 2 is arbitrary
                     
-                    if xn_bub5[m] < 0:
-                        xn_bub5[m]+=NBins
-                    if xn_bub5[m]>=NBins:
-                        xn_bub5[m]-=NBins
+                    xn_bub5, yn_bub5 = xi[:-1], yi[:-1]
+                    xn_bub5 = xn_bub5[(jump > 0) & (smooth_jump < limit)]
+                    yn_bub5 = yn_bub5[(jump > 0) & (smooth_jump < limit)]
+                    
+                    xn_bub5_pos = np.copy(xn_bub5)
+                    yn_bub5_pos = np.copy(yn_bub5)
+                    xn_bub5_pos_non_per = np.copy(xn_bub5)
+                    yn_bub5_pos_non_per = np.copy(yn_bub5)
+    
                         
-                    if yn_bub5[m] < 0:
-                        yn_bub5[m]+=NBins
-                    if yn_bub5[m]>=NBins:
-                        yn_bub5[m]-=NBins
                         
-                    if xn_bub5_pos[m] < 0:
-                        xn_bub5_pos[m]+=l_box
-                    if xn_bub5_pos[m]>=l_box:
-                        xn_bub5_pos[m]-=l_box
+                    for m in range(0, len(xn_bub5)):
+                        xn_bub5_pos[m] = xn_bub5[m] * sizeBin
+                        yn_bub5_pos[m] = yn_bub5[m] * sizeBin
+                        xn_bub5_pos_non_per[m] = xn_bub5[m] * sizeBin
+                        yn_bub5_pos_non_per[m] = yn_bub5[m] * sizeBin
                         
-                    if yn_bub5_pos[m] < 0:
-                        yn_bub5_pos[m]+=l_box
-                    if yn_bub5_pos[m]>=l_box:
-                        yn_bub5_pos[m]-=l_box
+                        if xn_bub5[m] < 0:
+                            xn_bub5[m]+=NBins
+                        if xn_bub5[m]>=NBins:
+                            xn_bub5[m]-=NBins
+                            
+                        if yn_bub5[m] < 0:
+                            yn_bub5[m]+=NBins
+                        if yn_bub5[m]>=NBins:
+                            yn_bub5[m]-=NBins
+                            
+                        if xn_bub5_pos[m] < 0:
+                            xn_bub5_pos[m]+=l_box
+                        if xn_bub5_pos[m]>=l_box:
+                            xn_bub5_pos[m]-=l_box
+                            
+                        if yn_bub5_pos[m] < 0:
+                            yn_bub5_pos[m]+=l_box
+                        if yn_bub5_pos[m]>=l_box:
+                            yn_bub5_pos[m]-=l_box
+                else:
+                    xn_bub5 = np.array([int_x[0]])
+                    yn_bub5 = np.array([int_y[0]])
+                    xn_bub5_pos = np.copy(xn_bub5)
+                    yn_bub5_pos = np.copy(yn_bub5)
+                    xn_bub5_pos_non_per = np.copy(xn_bub5)
+                    yn_bub5_pos_non_per = np.copy(yn_bub5)
+    
                         
+                        
+                    for m in range(0, len(xn_bub5)):
+                        xn_bub5_pos[m] = xn_bub5[m] * sizeBin
+                        yn_bub5_pos[m] = yn_bub5[m] * sizeBin
+                        xn_bub5_pos_non_per[m] = xn_bub5[m] * sizeBin
+                        yn_bub5_pos_non_per[m] = yn_bub5[m] * sizeBin
+                        
+                        if xn_bub5[m] < 0:
+                            xn_bub5[m]+=NBins
+                        if xn_bub5[m]>=NBins:
+                            xn_bub5[m]-=NBins
+                            
+                        if yn_bub5[m] < 0:
+                            yn_bub5[m]+=NBins
+                        if yn_bub5[m]>=NBins:
+                            yn_bub5[m]-=NBins
+                            
+                        if xn_bub5_pos[m] < 0:
+                            xn_bub5_pos[m]+=l_box
+                        if xn_bub5_pos[m]>=l_box:
+                            xn_bub5_pos[m]-=l_box
+                            
+                        if yn_bub5_pos[m] < 0:
+                            yn_bub5_pos[m]+=l_box
+                        if yn_bub5_pos[m]>=l_box:
+                            yn_bub5_pos[m]-=l_box
+                    
             
             if exterior_bin_bub4>0:
                 ix=int(ext_x[0])
@@ -9024,53 +9384,40 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 adjacent_y = np.append(adjacent_y, ext_y[0])
                 adjacent_y_pos = np.append(adjacent_y_pos, ext_y_pos[0])
                 
-                for m in range(1, len(ext_x)):
-                    if len(adjacent_x) == 0:
-                        adjacent_x = np.append(adjacent_x, ext_x[m])
-                        adjacent_x_pos = np.append(adjacent_x_pos, ext_x_pos[m])
-                        adjacent_y = np.append(adjacent_y, ext_y[m])
-                        adjacent_y_pos = np.append(adjacent_y_pos, ext_y_pos[m])
-                    else:
-                        difx = ext_x_pos[m]-ext_x_pos[m-1]
-                        dify = ext_y_pos[m]-ext_y_pos[m-1]
-                        
-                        #Enforce periodic boundary conditions
-                        difx_abs = np.abs(difx)
-                        dify_abs = np.abs(dify)
-                        
-                        #Enforce periodic boundary conditions
-                        if difx_abs>=h_box:
-                            if difx < -h_box:
-                                ext_x_pos[m:-1] += l_box
-                                ext_x[m:-1] += NBins
-                            else:
-                                ext_x_pos[m:-1] -= l_box
-                                ext_x[m:-1] -= NBins
-                        
-                        #Enforce periodic boundary conditions
-                        if dify_abs>=h_box:
-                            if dify < -h_box:
-                                ext_y_pos[m:-1] += l_box
-                                ext_y[m:-1] += NBins
-                            else:
-                                ext_y_pos[m:-1] -= l_box
-                                ext_y[m:-1] -= NBins
-                                
-                        if (difx_abs>=h_box) or (dify_abs>=h_box):
-                            adjacent_x_arr = np.append(adjacent_x_arr, adjacent_x)
-                            adjacent_x_arr_pos = np.append(adjacent_x_arr_pos, adjacent_x_pos)
-                            adjacent_y_arr = np.append(adjacent_y_arr, adjacent_y)
-                            adjacent_y_arr_pos = np.append(adjacent_y_arr_pos, adjacent_y_pos)
-                            adjacent_x = np.array([])
-                            adjacent_x_pos = np.array([])
-                            adjacent_y = np.array([])
-                            adjacent_y_pos = np.array([])
-                        else:
+                if len(ext_x)>1:
+                    for m in range(1, len(ext_x)):
+                        if len(adjacent_x) == 0:
                             adjacent_x = np.append(adjacent_x, ext_x[m])
                             adjacent_x_pos = np.append(adjacent_x_pos, ext_x_pos[m])
                             adjacent_y = np.append(adjacent_y, ext_y[m])
                             adjacent_y_pos = np.append(adjacent_y_pos, ext_y_pos[m])
-                            if (m==len(ext_x)-1):
+                        else:
+                            difx = ext_x_pos[m]-ext_x_pos[m-1]
+                            dify = ext_y_pos[m]-ext_y_pos[m-1]
+                            
+                            #Enforce periodic boundary conditions
+                            difx_abs = np.abs(difx)
+                            dify_abs = np.abs(dify)
+                            
+                            #Enforce periodic boundary conditions
+                            if difx_abs>=h_box:
+                                if difx < -h_box:
+                                    ext_x_pos[m:-1] += l_box
+                                    ext_x[m:-1] += NBins
+                                else:
+                                    ext_x_pos[m:-1] -= l_box
+                                    ext_x[m:-1] -= NBins
+                            
+                            #Enforce periodic boundary conditions
+                            if dify_abs>=h_box:
+                                if dify < -h_box:
+                                    ext_y_pos[m:-1] += l_box
+                                    ext_y[m:-1] += NBins
+                                else:
+                                    ext_y_pos[m:-1] -= l_box
+                                    ext_y[m:-1] -= NBins
+                                    
+                            if (difx_abs>=h_box) or (dify_abs>=h_box):
                                 adjacent_x_arr = np.append(adjacent_x_arr, adjacent_x)
                                 adjacent_x_arr_pos = np.append(adjacent_x_arr_pos, adjacent_x_pos)
                                 adjacent_y_arr = np.append(adjacent_y_arr, adjacent_y)
@@ -9079,78 +9426,128 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                 adjacent_x_pos = np.array([])
                                 adjacent_y = np.array([])
                                 adjacent_y_pos = np.array([])
-                
-                
-                
-                
-                
-                adjacent_x_arr_pos_new = np.array([])
-                adjacent_y_arr_pos_new = np.array([])
-                adjacent_x_arr_new = np.array([])
-                adjacent_y_arr_new = np.array([])
-                for m in range(0, len(adjacent_x_arr_pos)):
-                    adjacent_x_arr_pos_new = np.append(adjacent_x_arr_pos_new, adjacent_x_arr_pos[m])
-                    adjacent_y_arr_pos_new = np.append(adjacent_y_arr_pos_new, adjacent_y_arr_pos[m])
-                    adjacent_x_arr_new = np.append(adjacent_x_arr_new, adjacent_x_arr[m])
-                    adjacent_y_arr_new = np.append(adjacent_y_arr_new, adjacent_y_arr[m])
-                
-                int_x_copy = np.copy(adjacent_x_arr_new)
-                int_y_copy = np.copy(adjacent_y_arr_new)
-                for m in range(0, len(adjacent_x_arr_new)):
-                    if m==0:
-                        adjacent_x_arr_new[m] = (int_x_copy[-1] + int_x_copy[0] + int_x_copy[1])/3
-                        adjacent_y_arr_new[m] = (int_y_copy[-1] + int_y_copy[0] + int_y_copy[1])/3
-                    elif m==len(adjacent_x_arr_new)-1:
-                        adjacent_x_arr_new[m]= (int_x_copy[m] + int_x_copy[0] + int_x_copy[m-1])/3
-                        adjacent_y_arr_new[m]= (int_y_copy[m] + int_y_copy[0] + int_y_copy[m-1])/3
+                            else:
+                                adjacent_x = np.append(adjacent_x, ext_x[m])
+                                adjacent_x_pos = np.append(adjacent_x_pos, ext_x_pos[m])
+                                adjacent_y = np.append(adjacent_y, ext_y[m])
+                                adjacent_y_pos = np.append(adjacent_y_pos, ext_y_pos[m])
+                                if (m==len(ext_x)-1):
+                                    adjacent_x_arr = np.append(adjacent_x_arr, adjacent_x)
+                                    adjacent_x_arr_pos = np.append(adjacent_x_arr_pos, adjacent_x_pos)
+                                    adjacent_y_arr = np.append(adjacent_y_arr, adjacent_y)
+                                    adjacent_y_arr_pos = np.append(adjacent_y_arr_pos, adjacent_y_pos)
+                                    adjacent_x = np.array([])
+                                    adjacent_x_pos = np.array([])
+                                    adjacent_y = np.array([])
+                                    adjacent_y_pos = np.array([])
+                    
+                    
+                    
+                    
+                    
+                    adjacent_x_arr_pos_new = np.array([])
+                    adjacent_y_arr_pos_new = np.array([])
+                    adjacent_x_arr_new = np.array([])
+                    adjacent_y_arr_new = np.array([])
+                    for m in range(0, len(adjacent_x_arr_pos)):
+                        adjacent_x_arr_pos_new = np.append(adjacent_x_arr_pos_new, adjacent_x_arr_pos[m])
+                        adjacent_y_arr_pos_new = np.append(adjacent_y_arr_pos_new, adjacent_y_arr_pos[m])
+                        adjacent_x_arr_new = np.append(adjacent_x_arr_new, adjacent_x_arr[m])
+                        adjacent_y_arr_new = np.append(adjacent_y_arr_new, adjacent_y_arr[m])
+                    
+                    int_x_copy = np.copy(adjacent_x_arr_new)
+                    int_y_copy = np.copy(adjacent_y_arr_new)
+                    for m in range(0, len(adjacent_x_arr_new)):
+                        if m==0:
+                            adjacent_x_arr_new[m] = (int_x_copy[-1] + int_x_copy[0] + int_x_copy[1])/3
+                            adjacent_y_arr_new[m] = (int_y_copy[-1] + int_y_copy[0] + int_y_copy[1])/3
+                        elif m==len(adjacent_x_arr_new)-1:
+                            adjacent_x_arr_new[m]= (int_x_copy[m] + int_x_copy[0] + int_x_copy[m-1])/3
+                            adjacent_y_arr_new[m]= (int_y_copy[m] + int_y_copy[0] + int_y_copy[m-1])/3
+                        else:
+                            adjacent_x_arr_new[m] = (int_x_copy[m-1] + int_x_copy[m] + int_x_copy[m+1])/3
+                            adjacent_y_arr_new[m] = (int_y_copy[m-1] + int_y_copy[m] + int_y_copy[m+1])/3
+                            
+                    okay = np.where(np.abs(np.diff(adjacent_x_arr_new)) + np.abs(np.diff(adjacent_y_arr_new)) > 0)
+                    ext_x = np.r_[adjacent_x_arr_new[okay], adjacent_x_arr_new[-1], adjacent_x_arr_new[0]]
+                    ext_y = np.r_[adjacent_y_arr_new[okay], adjacent_y_arr_new[-1], adjacent_y_arr_new[0]]
+                    
+                    if len(ext_x)==2:
+                        tck2, u2 = interpolate.splprep([ext_x, ext_y], s=0, k=1, per=True)
+                    elif len(ext_x)==3:
+                        tck2, u2 = interpolate.splprep([ext_x, ext_y], s=0, k=2, per=True)
                     else:
-                        adjacent_x_arr_new[m] = (int_x_copy[m-1] + int_x_copy[m] + int_x_copy[m+1])/3
-                        adjacent_y_arr_new[m] = (int_y_copy[m-1] + int_y_copy[m] + int_y_copy[m+1])/3
-                        
-                okay = np.where(np.abs(np.diff(adjacent_x_arr_new)) + np.abs(np.diff(adjacent_y_arr_new)) > 0)
-                ext_x = np.r_[adjacent_x_arr_new[okay], adjacent_x_arr_new[-1], adjacent_x_arr_new[0]]
-                ext_y = np.r_[adjacent_y_arr_new[okay], adjacent_y_arr_new[-1], adjacent_y_arr_new[0]]
-                
-                tck2, u2 = interpolate.splprep([ext_x, ext_y], s=0, per=True)
-                
-                # evaluate the spline fits for 1000 evenly spaced distance values
-                xi2, yi2 = interpolate.splev(np.linspace(0, 1, 1000), tck2)
-                
-                jump2 = np.sqrt(np.diff(xi2)**2 + np.diff(yi2)**2) 
-                smooth_jump2 = ndimage.gaussian_filter1d(jump2, 5, mode='wrap')  # window of size 5 is arbitrary
-                limit2 = 2*np.median(smooth_jump2)    # factor 2 is arbitrary
-                xn2_bub5, yn2_bub5 = xi2[:-1], yi2[:-1]
-                xn2_bub5 = xn2_bub5[(jump2 > 0) & (smooth_jump2 < limit2)]
-                yn2_bub5 = yn2_bub5[(jump2 > 0) & (smooth_jump2 < limit2)]
-                
-                xn2_bub5_pos = np.copy(xn2_bub5)
-                yn2_bub5_pos = np.copy(yn2_bub5)
-                xn2_bub5_pos_non_per = np.copy(xn2_bub5)
-                yn2_bub5_pos_non_per = np.copy(yn2_bub5)
-                for m in range(0, len(xn2_bub5)):
-                    xn2_bub5_pos[m] = xn2_bub5[m] * sizeBin
-                    yn2_bub5_pos[m] = yn2_bub5[m] * sizeBin
-                    xn2_bub5_pos_non_per[m] = xn2_bub5[m] * sizeBin
-                    yn2_bub5_pos_non_per[m] = yn2_bub5[m] * sizeBin
-                    if xn2_bub5[m] < 0:
-                        xn2_bub5[m]+=NBins
-                    if xn2_bub5[m]>=NBins:
-                        xn2_bub5[m]-=NBins
-                        
-                    if yn2_bub5[m] < 0:
-                        yn2_bub5[m]+=NBins
-                    if yn2_bub5[m]>=NBins:
-                        yn2_bub5[m]-=NBins
-                        
-                    if xn2_bub5_pos[m] < 0:
-                        xn2_bub5_pos[m]+=l_box
-                    if xn2_bub5_pos[m]>=l_box:
-                        xn2_bub5_pos[m]-=l_box
-                        
-                    if yn2_bub5_pos[m] < 0:
-                        yn2_bub5_pos[m]+=l_box
-                    if yn2_bub5_pos[m]>=l_box:
-                        yn2_bub5_pos[m]-=l_box
+                        tck2, u2 = interpolate.splprep([ext_x, ext_y], s=0, per=True)
+                    
+                    # evaluate the spline fits for 1000 evenly spaced distance values
+                    xi2, yi2 = interpolate.splev(np.linspace(0, 1, 1000), tck2)
+                    
+                    jump2 = np.sqrt(np.diff(xi2)**2 + np.diff(yi2)**2) 
+                    smooth_jump2 = ndimage.gaussian_filter1d(jump2, 5, mode='wrap')  # window of size 5 is arbitrary
+                    limit2 = 2*np.median(smooth_jump2)    # factor 2 is arbitrary
+                    xn2_bub5, yn2_bub5 = xi2[:-1], yi2[:-1]
+                    xn2_bub5 = xn2_bub5[(jump2 > 0) & (smooth_jump2 < limit2)]
+                    yn2_bub5 = yn2_bub5[(jump2 > 0) & (smooth_jump2 < limit2)]
+                    
+                    xn2_bub5_pos = np.copy(xn2_bub5)
+                    yn2_bub5_pos = np.copy(yn2_bub5)
+                    xn2_bub5_pos_non_per = np.copy(xn2_bub5)
+                    yn2_bub5_pos_non_per = np.copy(yn2_bub5)
+                    for m in range(0, len(xn2_bub5)):
+                        xn2_bub5_pos[m] = xn2_bub5[m] * sizeBin
+                        yn2_bub5_pos[m] = yn2_bub5[m] * sizeBin
+                        xn2_bub5_pos_non_per[m] = xn2_bub5[m] * sizeBin
+                        yn2_bub5_pos_non_per[m] = yn2_bub5[m] * sizeBin
+                        if xn2_bub5[m] < 0:
+                            xn2_bub5[m]+=NBins
+                        if xn2_bub5[m]>=NBins:
+                            xn2_bub5[m]-=NBins
+                            
+                        if yn2_bub5[m] < 0:
+                            yn2_bub5[m]+=NBins
+                        if yn2_bub5[m]>=NBins:
+                            yn2_bub5[m]-=NBins
+                            
+                        if xn2_bub5_pos[m] < 0:
+                            xn2_bub5_pos[m]+=l_box
+                        if xn2_bub5_pos[m]>=l_box:
+                            xn2_bub5_pos[m]-=l_box
+                            
+                        if yn2_bub5_pos[m] < 0:
+                            yn2_bub5_pos[m]+=l_box
+                        if yn2_bub5_pos[m]>=l_box:
+                            yn2_bub5_pos[m]-=l_box
+                else:
+                    xn2_bub5 = np.array([ext_x[0]])
+                    yn2_bub5 = np.array([ext_y[0]])
+                    xn2_bub5_pos = np.copy(xn2_bub5)
+                    yn2_bub5_pos = np.copy(yn2_bub5)
+                    xn2_bub5_pos_non_per = np.copy(xn2_bub5)
+                    yn2_bub5_pos_non_per = np.copy(yn2_bub5)
+                    for m in range(0, len(xn2_bub5)):
+                        xn2_bub5_pos[m] = xn2_bub5[m] * sizeBin
+                        yn2_bub5_pos[m] = yn2_bub5[m] * sizeBin
+                        xn2_bub5_pos_non_per[m] = xn2_bub5[m] * sizeBin
+                        yn2_bub5_pos_non_per[m] = yn2_bub5[m] * sizeBin
+                        if xn2_bub5[m] < 0:
+                            xn2_bub5[m]+=NBins
+                        if xn2_bub5[m]>=NBins:
+                            xn2_bub5[m]-=NBins
+                            
+                        if yn2_bub5[m] < 0:
+                            yn2_bub5[m]+=NBins
+                        if yn2_bub5[m]>=NBins:
+                            yn2_bub5[m]-=NBins
+                            
+                        if xn2_bub5_pos[m] < 0:
+                            xn2_bub5_pos[m]+=l_box
+                        if xn2_bub5_pos[m]>=l_box:
+                            xn2_bub5_pos[m]-=l_box
+                            
+                        if yn2_bub5_pos[m] < 0:
+                            yn2_bub5_pos[m]+=l_box
+                        if yn2_bub5_pos[m]>=l_box:
+                            yn2_bub5_pos[m]-=l_box
                         
 
         ''' 
@@ -9705,7 +10102,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                 
                                 #If this distance is the shortest calculated thus far, replace the value with it
                                 surface_area_int[4] += difr
-                                
+                    
+                        
+        part_align = np.zeros(partNum)        
         for m in range(0, len(bub_id_arr)):
             
             theta_id_ext = []
@@ -9905,7 +10304,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                 
                                     #Save radius from CoM of bin
                                     radius_id_ext.append(bub_rad_tmp)
-                                    
+                                if bub_size_id_arr[m] == interface_id: 
+                                    interface_theta_ext_loc = theta_id_ext
+                                    interface_radius_ext_loc = radius_id_ext
                             if interior_bin > 0:
                                 for o in range(0, len(xn)):
     
@@ -9961,7 +10362,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                     
                                     #Save radius from CoM of bin
                                     radius_id_int.append(bub_rad_tmp)
-                                
+                                if bub_size_id_arr[m] == interface_id: 
+                                    interface_theta_int_loc = theta_id_int
+                                    interface_radius_int_loc = radius_id_int
                     #Loop over bins in system
                     elif bub_size_id_arr[m] == bub_size_id_arr[1]: 
                         if bub_large >= 2:
@@ -10020,7 +10423,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                 
                                     #Save radius from CoM of bin
                                     radius_id_ext.append(bub_rad_tmp)
-                                                                    
+                                if bub_size_id_arr[m] == interface_id: 
+                                    interface_theta_ext_loc = theta_id_ext
+                                    interface_radius_ext_loc = radius_id_ext                                    
                             if interior_bin_bub1 > 0:
                                 for o in range(0, len(xn_bub2)):
     
@@ -10076,7 +10481,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                     
                                     #Save radius from CoM of bin
                                     radius_id_int.append(bub_rad_tmp)
-                                
+                                if bub_size_id_arr[m] == interface_id: 
+                                    interface_theta_int_loc = theta_id_int
+                                    interface_radius_int_loc = radius_id_int
                     #Loop over bins in system
                     elif bub_size_id_arr[m] == bub_size_id_arr[2]: 
                         if bub_large >= 3:
@@ -10135,7 +10542,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                 
                                     #Save radius from CoM of bin
                                     radius_id_ext.append(bub_rad_tmp)
-                                                                
+                                if bub_size_id_arr[m] == interface_id: 
+                                    interface_theta_ext_loc = theta_id_ext
+                                    interface_radius_ext_loc = radius_id_ext                                
                             if interior_bin_bub2 > 0:
                                 for o in range(0, len(xn_bub3)):
     
@@ -10191,7 +10600,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                     
                                     #Save radius from CoM of bin
                                     radius_id_int.append(bub_rad_tmp)
-                                
+                                if bub_size_id_arr[m] == interface_id: 
+                                    interface_theta_int_loc = theta_id_int
+                                    interface_radius_int_loc = radius_id_int
                     elif bub_size_id_arr[m] == bub_size_id_arr[3]: 
                         if bub_large >= 4:
                             if exterior_bin_bub3 > 0:
@@ -10249,7 +10660,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                 
                                     #Save radius from CoM of bin
                                     radius_id_ext.append(bub_rad_tmp)
-                                                                    
+                                if bub_size_id_arr[m] == interface_id: 
+                                    interface_theta_ext_loc = theta_id_ext
+                                    interface_radius_ext_loc = radius_id_ext                                    
                             if interior_bin_bub3 > 0:
                                 for o in range(0, len(xn_bub4)):
     
@@ -10305,7 +10718,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                     
                                     #Save radius from CoM of bin
                                     radius_id_int.append(bub_rad_tmp)
-                                
+                                if bub_size_id_arr[m] == interface_id: 
+                                    interface_theta_int_loc = theta_id_int
+                                    interface_radius_int_loc = radius_id_int
                     elif bub_size_id_arr[m] == bub_size_id_arr[4]: 
                         if bub_large >= 5:
                             if exterior_bin_bub4 > 0:
@@ -10363,7 +10778,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                 
                                     #Save radius from CoM of bin
                                     radius_id_ext.append(bub_rad_tmp)
-                                                                    
+                                if bub_size_id_arr[m] == interface_id: 
+                                    interface_theta_ext_loc = theta_id_ext
+                                    interface_radius_ext_loc = radius_id_ext                                    
                             if interior_bin_bub4 > 0:
                                 for o in range(0, len(xn_bub5)):
     
@@ -10420,6 +10837,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                     
                                     #Save radius from CoM of bin
                                     radius_id_int.append(bub_rad_tmp)
+                                if bub_size_id_arr[m] == interface_id: 
+                                    interface_theta_int_loc = theta_id_int
+                                    interface_radius_int_loc = radius_id_int
                     '''            
                     if len(radius_id_ext)>0:
                         popt_sum = np.zeros(n_len)                  #Fourier Coefficients
@@ -10787,7 +11207,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                         difr_short= ( (difx_bub )**2 + (dify_bub)**2)**0.5#( (difx_bub )**2 + (dify_bub)**2)**0.5#10000000.
                                         difr_bub = ( (difx_bub )**2 + (dify_bub)**2)**0.5
                                         difr_trad= ( (difx_trad )**2 + (dify_trad)**2)**0.5
-                                                                    
+                                        difx_short = np.abs(difx_bub)
+                                        dify_short = np.abs(dify_bub)                            
                                         x_norm_unitv_trad = (difx_trad) / difr_trad
                                         y_norm_unitv_trad = (dify_trad) / difr_trad
                                         
@@ -10825,6 +11246,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                         #If this distance is the shortest calculated thus far, replace the value with it
                                                         if difr<difr_short:
                                                             difr_short=difr
+                                                            difx_short = np.abs(difx_width)
+                                                            dify_short = np.abs(dify_width)
                                                             x_norm_unitv = difx_width / difr
                                                             y_norm_unitv = dify_width / difr
                                         elif bub_size_id_arr[m] == bub_size_id_arr[1]:
@@ -10858,6 +11281,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                         #If this distance is the shortest calculated thus far, replace the value with it
                                                         if difr<difr_short:
                                                             difr_short=difr
+                                                            difx_short = np.abs(difx_width)
+                                                            dify_short = np.abs(dify_width)
                                                             x_norm_unitv = difx_width / difr
                                                             y_norm_unitv = dify_width / difr
                                         elif bub_size_id_arr[m] == bub_size_id_arr[2]:
@@ -10891,6 +11316,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                         #If this distance is the shortest calculated thus far, replace the value with it
                                                         if difr<difr_short:
                                                             difr_short=difr
+                                                            difx_short = np.abs(difx_width)
+                                                            dify_short = np.abs(dify_width)
                                                             x_norm_unitv = difx_width / difr
                                                             y_norm_unitv = dify_width / difr        
                                         elif bub_size_id_arr[m] == bub_size_id_arr[3]: 
@@ -10924,6 +11351,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                         #If this distance is the shortest calculated thus far, replace the value with it
                                                         if difr<difr_short:
                                                             difr_short=difr
+                                                            difx_short = np.abs(difx_width)
+                                                            dify_short = np.abs(dify_width)
                                                             x_norm_unitv = difx_width / difr
                                                             y_norm_unitv = dify_width / difr
                                         elif bub_size_id_arr[m] == bub_size_id_arr[4]:
@@ -10957,6 +11386,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                         #If this distance is the shortest calculated thus far, replace the value with it
                                                         if difr<difr_short:
                                                             difr_short=difr
+                                                            difx_short = np.abs(difx_width)
+                                                            dify_short = np.abs(dify_width)
                                                             x_norm_unitv = difx_width / difr
                                                             y_norm_unitv = dify_width / difr        
                                         difr_short_ext[ix][iy] = difr_short
@@ -10972,8 +11403,12 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                 #Calculate alignment towards CoM  
                                                 if difr_short == difr_bub:
                                                     r_dot_p = (-x_norm_unitv * px) + (-y_norm_unitv * py)
+                                                    x_dot_p = (-x_norm_unitv * px)
+                                                    y_dot_p = (-y_norm_unitv * py)
                                                 else:
                                                     r_dot_p = (x_norm_unitv * px) + (y_norm_unitv * py)
+                                                    x_dot_p = (x_norm_unitv * px)
+                                                    y_dot_p = (y_norm_unitv * py)
                                                 r_dot_p_trad = (-x_norm_unitv_trad * px) + (-y_norm_unitv_trad * py)
                                                 #Sum x,y orientation over each bin
                                                 
@@ -10981,6 +11416,21 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                 new_align_num[ix][iy]+= 1
                                                 new_align_trad[ix][iy] += r_dot_p_trad
                                                 new_align_num_trad[ix][iy]+= 1
+                                                part_align[binParts[ix][iy][h]] = r_dot_p
+                                                if typ[binParts[ix][iy][h]]==0:
+                                                    fa_all_x_tot[ix][iy]+=x_dot_p*peA*difx_short
+                                                    fa_all_y_tot[ix][iy]+=y_dot_p*peA*dify_short
+                                                    fa_all_tot[ix][iy]+=r_dot_p*peA*difr_short
+                                                    fa_all_num[ix][iy]+=1
+                                                    fa_slow_tot[ix][iy]+=r_dot_p*peA*difr_short
+                                                    fa_slow_num[ix][iy]+=1
+                                                else:
+                                                    fa_all_x_tot[ix][iy]+=x_dot_p*peB*difx_short
+                                                    fa_all_y_tot[ix][iy]+=y_dot_p*peB*dify_short
+                                                    fa_all_tot[ix][iy]+=r_dot_p*peB*difr_short
+                                                    fa_all_num[ix][iy]+=1
+                                                    fa_fast_tot[ix][iy]+=r_dot_p*peB*difr_short
+                                                    fa_fast_num[ix][iy]+=1
                                                 if typ[binParts[ix][iy][h]]==0:
                                                     new_align0[ix][iy] += r_dot_p
                                                     new_align_num0[ix][iy]+= 1
@@ -11040,7 +11490,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                         difr_short= ( (difx_bub )**2 + (dify_bub)**2)**0.5#( (difx_bub )**2 + (dify_bub)**2)**0.5#10000000.
                                         difr_bub = ( (difx_bub )**2 + (dify_bub)**2)**0.5
                                         difr_trad= ( (difx_trad )**2 + (dify_trad)**2)**0.5
-                                                                    
+                                        difx_short = np.abs(difx_bub)
+                                        dify_short = np.abs(dify_bub)                            
                                         x_norm_unitv_trad = (difx_trad) / difr_trad
                                         y_norm_unitv_trad = (dify_trad) / difr_trad
                                         
@@ -11078,6 +11529,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                         #If this distance is the shortest calculated thus far, replace the value with it
                                                         if difr<difr_short:
                                                             difr_short=difr
+                                                            difx_short = np.abs(difx_width)
+                                                            dify_short = np.abs(dify_width)
                                                             x_norm_unitv = difx_width / difr
                                                             y_norm_unitv = dify_width / difr
                                         elif bub_size_id_arr[m] == bub_size_id_arr[1]:  
@@ -11111,6 +11564,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                         #If this distance is the shortest calculated thus far, replace the value with it
                                                         if difr<difr_short:
                                                             difr_short=difr
+                                                            difx_short = np.abs(difx_width)
+                                                            dify_short = np.abs(dify_width)
                                                             x_norm_unitv = difx_width / difr
                                                             y_norm_unitv = dify_width / difr
                                         elif bub_size_id_arr[m] == bub_size_id_arr[2]:  
@@ -11144,6 +11599,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                         #If this distance is the shortest calculated thus far, replace the value with it
                                                         if difr<difr_short:
                                                             difr_short=difr
+                                                            difx_short = np.abs(difx_width)
+                                                            dify_short = np.abs(dify_width)
                                                             x_norm_unitv = difx_width / difr
                                                             y_norm_unitv = dify_width / difr        
                                         elif bub_size_id_arr[m] == bub_size_id_arr[3]:
@@ -11177,6 +11634,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                         #If this distance is the shortest calculated thus far, replace the value with it
                                                         if difr<difr_short:
                                                             difr_short=difr
+                                                            difx_short = np.abs(difx_width)
+                                                            dify_short = np.abs(dify_width)
                                                             x_norm_unitv = difx_width / difr
                                                             y_norm_unitv = dify_width / difr
                                         elif bub_size_id_arr[m] == bub_size_id_arr[4]:  
@@ -11210,6 +11669,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                         #If this distance is the shortest calculated thus far, replace the value with it
                                                         if difr<difr_short:
                                                             difr_short=difr
+                                                            difx_short = np.abs(difx_width)
+                                                            dify_short = np.abs(dify_width)
                                                             x_norm_unitv = difx_width / difr
                                                             y_norm_unitv = dify_width / difr        
                                         if len(binParts[ix][iy])>0:
@@ -11224,12 +11685,29 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                 #Calculate alignment towards CoM 
                                                 
                                                 r_dot_p = (-x_norm_unitv * px) + (-y_norm_unitv * py)
+                                                x_dot_p = (-x_norm_unitv * px)
+                                                y_dot_p = (-y_norm_unitv * py)
                                                 r_dot_p_trad = (-x_norm_unitv_trad * px) + (-y_norm_unitv_trad * py)
                                                 #Sum x,y orientation over each bin
                                                 new_align[ix][iy] += r_dot_p
                                                 new_align_num[ix][iy]+= 1
                                                 new_align_trad[ix][iy] += r_dot_p_trad
                                                 new_align_num_trad[ix][iy]+= 1
+                                                part_align[binParts[ix][iy][h]] = r_dot_p
+                                                if typ[binParts[ix][iy][h]]==0:
+                                                    fa_all_x_tot[ix][iy]+=x_dot_p*peA*difx_short
+                                                    fa_all_y_tot[ix][iy]+=y_dot_p*peA*dify_short
+                                                    fa_all_tot[ix][iy]+=r_dot_p*peA*difr_short
+                                                    fa_all_num[ix][iy]+=1
+                                                    fa_slow_tot[ix][iy]+=r_dot_p*peA*difr_short
+                                                    fa_slow_num[ix][iy]+=1
+                                                else:
+                                                    fa_all_x_tot[ix][iy]+=x_dot_p*peB*difx_short
+                                                    fa_all_y_tot[ix][iy]+=y_dot_p*peB*dify_short
+                                                    fa_all_tot[ix][iy]+=r_dot_p*peB*difr_short
+                                                    fa_all_num[ix][iy]+=1
+                                                    fa_fast_tot[ix][iy]+=r_dot_p*peB*difr_short
+                                                    fa_fast_num[ix][iy]+=1
                                                 if typ[binParts[ix][iy][h]]==0:
                                                     new_align0[ix][iy] += r_dot_p
                                                     new_align_num0[ix][iy]+= 1
@@ -11293,7 +11771,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                         difr_short= ( (difx_bub )**2 + (dify_bub)**2)**0.5#( (difx_bub )**2 + (dify_bub)**2)**0.5#10000000.
                                         difr_bub = ( (difx_bub )**2 + (dify_bub)**2)**0.5
                                         difr_trad= ( (difx_trad )**2 + (dify_trad)**2)**0.5
-                                                                    
+                                        difx_short = np.abs(difx_bub)
+                                        dify_short = np.abs(dify_bub)                            
                                         x_norm_unitv_trad = (difx_trad) / difr_trad
                                         y_norm_unitv_trad = (dify_trad) / difr_trad
                                         
@@ -11331,6 +11810,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                         #If this distance is the shortest calculated thus far, replace the value with it
                                                         if difr<difr_short:
                                                             difr_short=difr
+                                                            difx_short = np.abs(difx_width)
+                                                            dify_short = np.abs(dify_width)
                                                             x_norm_unitv = difx_width / difr
                                                             y_norm_unitv = dify_width / difr
                                         elif bub_size_id_arr[m] == bub_size_id_arr[1]:
@@ -11364,6 +11845,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                         #If this distance is the shortest calculated thus far, replace the value with it
                                                         if difr<difr_short:
                                                             difr_short=difr
+                                                            difx_short = np.abs(difx_width)
+                                                            dify_short = np.abs(dify_width)
                                                             x_norm_unitv = difx_width / difr
                                                             y_norm_unitv = dify_width / difr
                                         elif bub_size_id_arr[m] == bub_size_id_arr[2]:
@@ -11397,6 +11880,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                         #If this distance is the shortest calculated thus far, replace the value with it
                                                         if difr<difr_short:
                                                             difr_short=difr
+                                                            difx_short = np.abs(difx_width)
+                                                            dify_short = np.abs(dify_width)
                                                             x_norm_unitv = difx_width / difr
                                                             y_norm_unitv = dify_width / difr        
                                         elif bub_size_id_arr[m] == bub_size_id_arr[3]: 
@@ -11430,6 +11915,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                         #If this distance is the shortest calculated thus far, replace the value with it
                                                         if difr<difr_short:
                                                             difr_short=difr
+                                                            difx_short = np.abs(difx_width)
+                                                            dify_short = np.abs(dify_width)
                                                             x_norm_unitv = difx_width / difr
                                                             y_norm_unitv = dify_width / difr
                                         elif bub_size_id_arr[m] == bub_size_id_arr[4]:
@@ -11463,6 +11950,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                         #If this distance is the shortest calculated thus far, replace the value with it
                                                         if difr<difr_short:
                                                             difr_short=difr
+                                                            difx_short = np.abs(difx_width)
+                                                            dify_short = np.abs(dify_width)
                                                             x_norm_unitv = difx_width / difr
                                                             y_norm_unitv = dify_width / difr        
                                         difr_short_ext[ix][iy] = difr_short
@@ -11477,6 +11966,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                 #print(y_norm_unitv)
                                                 #Calculate alignment towards CoM  
                                                 r_dot_p = (-x_norm_unitv * px) + (-y_norm_unitv * py)
+                                                x_dot_p = (-x_norm_unitv * px)
+                                                y_dot_p = (-y_norm_unitv * py)
                                                 r_dot_p_trad = (-x_norm_unitv_trad * px) + (-y_norm_unitv_trad * py)
                                                 #Sum x,y orientation over each bin
                                                 
@@ -11484,6 +11975,21 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                 new_align_num[ix][iy]+= 1
                                                 new_align_trad[ix][iy] += r_dot_p_trad
                                                 new_align_num_trad[ix][iy]+= 1
+                                                part_align[binParts[ix][iy][h]] = r_dot_p
+                                                if typ[binParts[ix][iy][h]]==0:
+                                                    fa_all_x_tot[ix][iy]+=x_dot_p*peA*difx_short
+                                                    fa_all_y_tot[ix][iy]+=y_dot_p*peA*dify_short
+                                                    fa_all_tot[ix][iy]+=r_dot_p*peA*difr_short
+                                                    fa_all_num[ix][iy]+=1
+                                                    fa_slow_tot[ix][iy]+=r_dot_p*peA*difr_short
+                                                    fa_slow_num[ix][iy]+=1
+                                                else:
+                                                    fa_all_x_tot[ix][iy]+=x_dot_p*peB*difx_short
+                                                    fa_all_y_tot[ix][iy]+=y_dot_p*peB*dify_short
+                                                    fa_all_tot[ix][iy]+=r_dot_p*peB*difr_short
+                                                    fa_all_num[ix][iy]+=1
+                                                    fa_fast_tot[ix][iy]+=r_dot_p*peB*difr_short
+                                                    fa_fast_num[ix][iy]+=1
                                                 if typ[binParts[ix][iy][h]]==0:
                                                     new_align0[ix][iy] += r_dot_p
                                                     new_align_num0[ix][iy]+= 1
@@ -11543,7 +12049,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                         difr_short= ( (difx_bub )**2 + (dify_bub)**2)**0.5#( (difx_bub )**2 + (dify_bub)**2)**0.5#10000000.
                                         difr_bub = ( (difx_bub )**2 + (dify_bub)**2)**0.5
                                         difr_trad= ( (difx_trad )**2 + (dify_trad)**2)**0.5
-                                                                    
+                                        difx_short = np.abs(difx_bub)
+                                        dify_short = np.abs(dify_bub)   
+                                        
                                         x_norm_unitv_trad = (difx_trad) / difr_trad
                                         y_norm_unitv_trad = (dify_trad) / difr_trad
                                         
@@ -11581,6 +12089,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                         #If this distance is the shortest calculated thus far, replace the value with it
                                                         if difr<difr_short:
                                                             difr_short=difr
+                                                            difx_short = np.abs(difx_width)
+                                                            dify_short = np.abs(dify_width)
                                                             x_norm_unitv = difx_width / difr
                                                             y_norm_unitv = dify_width / difr
                                         elif bub_size_id_arr[m] == bub_size_id_arr[1]:  
@@ -11614,6 +12124,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                         #If this distance is the shortest calculated thus far, replace the value with it
                                                         if difr<difr_short:
                                                             difr_short=difr
+                                                            difx_short = np.abs(difx_width)
+                                                            dify_short = np.abs(dify_width)
                                                             x_norm_unitv = difx_width / difr
                                                             y_norm_unitv = dify_width / difr
                                         elif bub_size_id_arr[m] == bub_size_id_arr[2]:  
@@ -11647,6 +12159,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                         #If this distance is the shortest calculated thus far, replace the value with it
                                                         if difr<difr_short:
                                                             difr_short=difr
+                                                            difx_short = np.abs(difx_width)
+                                                            dify_short = np.abs(dify_width)
                                                             x_norm_unitv = difx_width / difr
                                                             y_norm_unitv = dify_width / difr        
                                         elif bub_size_id_arr[m] == bub_size_id_arr[3]:
@@ -11680,6 +12194,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                         #If this distance is the shortest calculated thus far, replace the value with it
                                                         if difr<difr_short:
                                                             difr_short=difr
+                                                            difx_short = np.abs(difx_width)
+                                                            dify_short = np.abs(dify_width)
                                                             x_norm_unitv = difx_width / difr
                                                             y_norm_unitv = dify_width / difr
                                         elif bub_size_id_arr[m] == bub_size_id_arr[4]:  
@@ -11713,6 +12229,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                         #If this distance is the shortest calculated thus far, replace the value with it
                                                         if difr<difr_short:
                                                             difr_short=difr
+                                                            difx_short = np.abs(difx_width)
+                                                            dify_short = np.abs(dify_width)
                                                             x_norm_unitv = difx_width / difr
                                                             y_norm_unitv = dify_width / difr        
                                         if len(binParts[ix][iy])>0:
@@ -11727,14 +12245,33 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                 #Calculate alignment towards CoM 
                                                 if difr_short == difr_bub:
                                                     r_dot_p = (-x_norm_unitv * px) + (-y_norm_unitv * py)
+                                                    x_dot_p = (-x_norm_unitv * px)
+                                                    y_dot_p = (-y_norm_unitv * py)
                                                 else:
                                                     r_dot_p = (x_norm_unitv * px) + (y_norm_unitv * py)
+                                                    x_dot_p = (x_norm_unitv * px)
+                                                    y_dot_p = (y_norm_unitv * py)
                                                 r_dot_p_trad = (-x_norm_unitv_trad * px) + (-y_norm_unitv_trad * py)
                                                 #Sum x,y orientation over each bin
                                                 new_align[ix][iy] += r_dot_p
                                                 new_align_num[ix][iy]+= 1
                                                 new_align_trad[ix][iy] += r_dot_p_trad
                                                 new_align_num_trad[ix][iy]+= 1
+                                                part_align[binParts[ix][iy][h]] = r_dot_p
+                                                if typ[binParts[ix][iy][h]]==0:
+                                                    fa_all_x_tot[ix][iy]+=x_dot_p*peA*difx_short
+                                                    fa_all_y_tot[ix][iy]+=y_dot_p*peA*dify_short
+                                                    fa_all_tot[ix][iy]+=r_dot_p*peA*difr_short
+                                                    fa_all_num[ix][iy]+=1
+                                                    fa_slow_tot[ix][iy]+=r_dot_p*peA*difr_short
+                                                    fa_slow_num[ix][iy]+=1
+                                                else:
+                                                    fa_all_x_tot[ix][iy]+=x_dot_p*peB*difx_short
+                                                    fa_all_y_tot[ix][iy]+=y_dot_p*peB*dify_short
+                                                    fa_all_tot[ix][iy]+=r_dot_p*peB*difr_short
+                                                    fa_all_num[ix][iy]+=1
+                                                    fa_fast_tot[ix][iy]+=r_dot_p*peB*difr_short
+                                                    fa_fast_num[ix][iy]+=1
                                                 if typ[binParts[ix][iy][h]]==0:
                                                     new_align0[ix][iy] += r_dot_p
                                                     new_align_num0[ix][iy]+= 1
@@ -13212,6 +13749,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                                 r_dot_p = (x_norm_unitv * px) + (y_norm_unitv * py)
                                                         r_dot_p_trad = (-x_norm_unitv_trad * px) + (-y_norm_unitv_trad * py)
                                                         #Sum x,y orientation over each bin
+                                                        part_align[binParts[ix][iy][h]] = r_dot_p
                                                         new_align[ix][iy] += r_dot_p
                                                         new_align_num[ix][iy]+= 1
                                                         new_align_trad[ix][iy] += r_dot_p_trad
@@ -13657,6 +14195,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                 r_dot_p = (x_norm_unitv * px) + (y_norm_unitv * py)
                             r_dot_p_trad = (-x_norm_unitv_trad * px) + (-y_norm_unitv_trad * py)
                             #Sum x,y orientation over each bin
+                            part_align[binParts[ix][iy][h]] = r_dot_p
                             new_align[ix][iy] += r_dot_p
                             new_align_num[ix][iy]+= 1
                             new_align_trad[ix][iy] += r_dot_p_trad
@@ -13817,9 +14356,94 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     bulk_interpart_press_sum += (SigXX_arr[ix][iy] + SigYY_arr[ix][iy]) / (2*binArea)
                     bulk_interpart_press_num +=1 
                 #Press_arr[ix][iy] += (fa_all_tot[ix][iy])# / binArea)
-                #fa_all_avg[ix][iy] = (fa_all_x_tot[ix][iy] + fa_all_y_tot[ix][iy]) / (2*binArea)
+                fa_all_avg[ix][iy] = (fa_all_x_tot[ix][iy]**2 + fa_all_y_tot[ix][iy]**2)**0.5
                 #fa_slow_avg[ix][iy] = (fa_slow_tot[ix][iy] / fa_slow_num[ix][iy])
                 #fa_fast_avg[ix][iy] = (fa_fast_tot[ix][iy] / fa_fast_num[ix][iy])
+        total_align_force = 0
+                
+        total_surface_area=0
+        for ix in range(0, len(occParts)):
+            for iy in range(0, len(occParts)):
+                if edge_id[ix][iy]==interface_id:
+                    total_align_force += fa_all_avg[ix][iy]
+                    total_surface_area += sizeBin**2
+        align_force_across = total_align_force/((np.max(surface_area_ext) + np.max(surface_area_int))/2)
+        
+        '''
+        for m in range(0, len(bub_id_arr)):
+            
+            theta_id_ext = []
+            radius_id_ext = []
+            
+            theta_id_int = []
+            radius_id_int = []
+            
+            edge_width = []
+            
+            #Always true
+            if if_bub_id_arr[m]==1:
+                if bub_size_id_arr[m] == bub_size_id_arr[0]: 
+                        if bub_large >= 1:
+                            if exterior_bin > 0:
+                                if interior_bin > 0:
+                                    for n in range(0, len(xn2)):
+                                        difr_short=10000000                                                                                        
+                                        #Calculate (x,y) position of bin
+                                        pos_box_x1 = xn2_pos[n]
+                                        pos_box_y1 = yn2_pos[n]
+                                        
+                                        for o in range(0, len(xn)):
+        
+                                            #Calculate (x,y) position of bin
+                                            pos_box_x2 = xn_pos[o]
+                                            pos_box_y2 = yn_pos[o]
+                                            
+                                            #Calculate x distance from mth interface structure's center of mass
+                                            bub_rad_tmp_x = (pos_box_x1-pos_box_x2)
+                                            bub_rad_tmp_x_abs = np.abs(pos_box_x1-pos_box_x2)
+                                        
+                                            #Enforce periodic boundary conditions
+                                            if bub_rad_tmp_x_abs>=h_box:
+                                                if bub_rad_tmp_x < -h_box:
+                                                    bub_rad_tmp_x += l_box
+                                                else:
+                                                    bub_rad_tmp_x -= l_box
+                                                    
+                                            #Calculate y distance from mth interface structure's center of mass
+                                            bub_rad_tmp_y = (pos_box_y1-pos_box_y2)
+                                            bub_rad_tmp_y_abs = np.abs(pos_box_y1-pos_box_y2)
+                                            
+                                            #Enforce periodic boundary conditions
+                                            if bub_rad_tmp_y_abs>=h_box:
+                                                if bub_rad_tmp_y < -h_box:
+                                                    bub_rad_tmp_y += l_box
+                                                else:
+                                                    bub_rad_tmp_y -= l_box
+                                                    
+                                            #Calculate magnitude of distance from center of mass of mth interface structure
+                                            bub_rad_tmp = (bub_rad_tmp_x**2 + bub_rad_tmp_y**2)**0.5
+                                        
+                                        
+                                            if bub_rad_tmp<difr_short:
+                                                difr_short=bub_rad_tmp
+                                                ext_start_x = xn2_pos[n]
+                                                ext_start_y = yn2_pos[n]
+                                                int_start_x = xn_pos[o]
+                                                int_start_y = yn_pos[o]
+                                                difx_short = np.abs(difx_width)
+                                                dify_short = np.abs(dify_width)
+                                                x_norm_unitv = difx_width / difr
+                                                y_norm_unitv = dify_width / difr
+                                        # for ix in range(0, len(occParts)):
+                                        #    for iy in range(0, len(occParts)):
+                                        #         if 
+                                        x_arr = np.arange(ext_start_x, int_start_x+np.abs(int_start_x-ext_start_x)/40, np.abs(int_start_x-ext_start_x)/40)
+                                        y_arr = np.arange(ext_start_y, int_start_y+np.abs(int_start_x-ext_start_x)/40, np.abs(int_start_y-ext_start_y)/40)
+                                        #
+                                        #for p in range(0, len(x_arr)):
+                                            
+                                        #            asodfijaosidfjoasdfj
+        '''
         bulk_interpart_press_std_sum = 0
         bulk_interpart_press_std_num = 0
         if bulk_interpart_press_num > 0:
@@ -13836,67 +14460,109 @@ with hoomd.open(name=inFile, mode='rb') as t:
             bulk_interpart_press_std_avg = (bulk_interpart_press_std_sum / bulk_interpart_press_std_num ) **0.5
         else:
             bulk_interpart_press_std_avg = 0
+          
+        pos_bin_final = []
+        force_bin_final = []
+        
+        edge_id_plot = np.where(edgePhase==interface_id)[0]     #Largest gas-dense interface
+        int_id_plot = np.where(partPhase==1)[0]         #All interfaces
+        bulk_int_id_plot = np.where(partPhase!=2)[0]
+
+        if len(bulk_ids)>0:
+            bub_id_plot = np.where((edgePhase!=interface_id) & (edgePhase!=bulk_id))[0]     #All interfaces excluding the largest gas-dense interface
+        else:
+            bub_id_plot = []
+        gas_id = np.where(partPhase==2)[0]  
+        '''
+        for m in range(0, len(bub_id_arr)):
+            if if_bub_id_arr[m]==1:
+                if bub_size_id_arr[m] == interface_id:#bub_size_id_arr[0]: 
+                    if bub_large >= 1:
+                        for ix in range(0, len(phaseBin)):
+                            for iy in range(0, len(phaseBin)):
+                                if edge_id[ix][iy] == bub_size_id_arr[m]:
+                                    if int_edge_id[ix][iy]==1:
+                                        pos_bin_final.append(0.0)
+                                        force_bin_final.append(new_align_avg[ix][iy]*num_dens3[ix][iy])#fa_all_avg[ix][iy])
+                                    else:
+                                        pos_x = (ix+0.5)*sizeBin
+                                        pos_y = (iy+0.5)*sizeBin
+                                        shortest_r = 1000000
+                                        shortest_xid = 1000000
+                                        shortest_yid = 1000000
+                                        for ix2 in range(0, len(phaseBin)):
+                                            for iy2 in range(0, len(phaseBin)):
+                                                if edge_id[ix2][iy2] == interface_id:#bub_size_id_arr[m]:
+                                                    if int_edge_id[ix2][iy2] == 1:
+                                                        pos_x2 = (ix2+0.5)*sizeBin
+                                                        pos_y2 = (iy2+0.5)*sizeBin
+                                                        
+                                                        difx = pos_x - pos_x2
+                                                        dify = pos_y - pos_y2
+                                                        
+                                                        #Enforce periodic boundary conditions
+                                                        difx_abs = np.abs(difx)
+                                                        if difx_abs>=h_box:
+                                                            if difx < -h_box:
+                                                                difx += l_box
+                                                            else:
+                                                                difx -= l_box
+                                                        
+                                                        #Enforce periodic boundary conditions
+                                                        dify_abs = np.abs(dify)
+                                                        if dify_abs>=h_box:
+                                                            if dify < -h_box:
+                                                                dify += l_box
+                                                            else:
+                                                                dify -= l_box       
+                                                                
+                                                        difr_val = (difx**2 + dify**2)**0.5
+                                                        if difr_val < shortest_r:
+                                                            shortest_r = difr_val
+                                                            shortest_xid = ix2
+                                                            shortest_yid = iy2
+                                        pos_bin_final.append(shortest_r)
+                                        force_bin_final.append(new_align_avg[ix][iy]*num_dens3[ix][iy])#fa_all_avg[ix][ix])
+                        
+                        print(np.max(pos_bin_final))
+                        print(np.min(pos_bin_final))
+
+                        list1, list2 = zip(*sorted(zip(pos_bin_final, force_bin_final)))
+                        list1=np.array(list1)
+                        list2=np.array(list2)
+                        list1_avg = np.array([])
+                        list2_avg = np.array([])
+                        for i in range(0, len(list1)):
+                            if list1[i] not in list1_avg:
+                                list_id = np.where(list1==list1[i])[0]
+                                print(list_id)
+                                list2_avg = np.append(list2_avg, np.mean(list2[list_id]))
+                                list1_avg = np.append(list1_avg, list1[i])
+                        
+                        print(np.min(list1))
+                        print(np.max(list2))
+                        plt.scatter(list1, list2)
+                        plt.show()
+                        plt.scatter(list1_avg, list2_avg)
+                        plt.show()
+                        r = np.arange(np.min(list1), np.max(list1), 3.0)
+                        list2_final_avg = np.zeros(len(r)-1)
+                        for i in range(1, len(r)):
+                            avg_id = np.where((list1_avg>=r[i-1]) & (list1_avg<=r[i]))[0]
+                            list2_final_avg[i-1] = np.mean(list2_avg[avg_id])
+                        f = interpolate.interp1d(r, list2_final_avg)
+
+                        
+                        print(r)
+                        ynew = f(r)
+                        plt.plot(r, ynew)
+                        plt.show()
+                        stop
+                                    
+        '''            
         bulk_int_pos = pos[bulk_int_id_plot]
         bulk_pos = pos[bulk_id_plot]
         int_pos = pos[edge_id_plot]
-        #Compute cluster parameters using system_all neighbor list
-        system_bulk = freud.AABBQuery(f_box, bulk_int_pos)
-        nlist = system_bulk.query(bulk_pos, {'r_max': r_cut}).toNeighborList()
-        #for i,j in nlist[]:
-        difr = np.array([])
-        point_ind_arr = np.array([])
-        point_query_arr = np.array([])
-        for i,j in nlist[:]:
-            difx = bulk_pos[i,0] - bulk_int_pos[j,0]
-            dify = bulk_pos[i,1] - bulk_int_pos[j,1]
-            
-            #Enforce periodic boundary conditions
-            difx_abs = np.abs(difx)
-            if difx_abs>=h_box:
-                if difx < -h_box:
-                    difx += l_box
-                else:
-                    difx -= l_box
-            
-            #Enforce periodic boundary conditions
-            dify_abs = np.abs(dify)
-            if dify_abs>=h_box:
-                if dify < -h_box:
-                    dify += l_box
-                else:
-                    dify -= l_box            
-            difr_val = (difx**2 + dify**2)**0.5
-            if difr_val > 0:
-                #if difr_val <= r_cut:
-                difr = np.append(difr, difr_val)
-                point_ind_arr = np.append(point_ind_arr, i)
-                point_query_arr = np.append(point_query_arr, j)
-
-        lat_mean_arr = np.array([])#zeros(len(bulk_id_plot))
-        lat_std_arr = np.array([])#np.zeros(len(bulk_id_plot))
-        for i in range(0, len(bulk_id_plot)):
-            pair_ids = np.where(point_ind_arr==bulk_id_plot[i])[0]
-            if len(pair_ids)>0:
-                difr_pair_ids = difr[pair_ids]
-                while len(difr_pair_ids) > 6:
-                    max_dist = np.max(difr_pair_ids)
-                    id_max_dist = np.where(difr_pair_ids==max_dist)[0]
-                    difr_pair_ids = np.delete(difr_pair_ids, id_max_dist)
-                if len(difr_pair_ids)>0:
-                    lat_mean_val = np.mean(difr_pair_ids)
-                    lat_mean_arr = np.append(lat_mean_arr, lat_mean_val)
-                    lat_std_num = 0
-                    for k in range(0, len(difr_pair_ids)):
-                        lat_std_num += (difr_pair_ids[k]-lat_mean_val)**2
-                    lat_std_arr = np.append(lat_std_arr, (lat_std_num/len(difr_pair_ids))**0.5)        
-        if len(lat_mean_arr) >0:
-            lat_mean_final = np.mean(lat_mean_arr)
-        else:
-            lat_mean_final = 0
-        if len(lat_std_arr)>0:
-            lat_std_final = np.mean(lat_std_arr)
-        else:
-            lat_std_final = 0
         
         bulk_num_dens_sum = 0
         bulk_num_dens_num = 0
@@ -13969,6 +14635,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     gas_num_dens_std_sum += ((len(binParts[ix][iy])/sizeBin**2) - (gas_avg))**2
                     gas_num_dens_std_num +=1   
                     
+                    
+                    
         if bulk_num_dens_std_num > 0:
             bulk_std = (bulk_num_dens_std_sum/bulk_num_dens_std_num)**0.5   
         else:
@@ -13990,8 +14658,6 @@ with hoomd.open(name=inFile, mode='rb') as t:
         g.write('{0:.2f}'.format(tst).center(20) + ' ')
         g.write('{0:.6f}'.format(sizeBin).center(20) + ' ')
         g.write('{0:.0f}'.format(np.amax(clust_size)).center(20) + ' ')
-        g.write('{0:.6f}'.format(lat_mean_final).center(20) + ' ')
-        g.write('{0:.6f}'.format(lat_std_final).center(20) + ' ')
         g.write('{0:.6f}'.format(bulk_area).center(20) + ' ')
         g.write('{0:.6f}'.format(bulk_avg).center(20) + ' ')
         g.write('{0:.6f}'.format(bulk_std).center(20) + ' ')
@@ -14007,6 +14673,360 @@ with hoomd.open(name=inFile, mode='rb') as t:
         g.write('{0:.6f}'.format(gas_avg).center(20) + ' ')
         g.write('{0:.6f}'.format(gas_std).center(20) + '\n')
         g.close()
+        '''
+        com_tmp_posX = query_points[0] + h_box
+        com_tmp_posY = query_points[1] + h_box
+        pos2 = snap.particles.position               # position
+        pos2[:,-1] = 0.0                             # 2D system
+        
+        radius=np.arange(0,h_box+3.0, 3.0)
+
+        num_sights_len=20
+        num_sights=np.arange(0, 360+int(360/num_sights_len),int(360/num_sights_len))
+        
+        #Plot particles colorized by bond orientation angle
+        fig = plt.figure(figsize=(7,6))
+        ax = fig.add_subplot(111)
+        div_min = -3
+        min_n = np.min(part_align)
+        max_n = np.max(part_align)
+        levels_text=40
+        level_boundaries = np.linspace(min_n, max_n, levels_text + 1)
+        im = plt.scatter(pos2[:,0], pos2[:,1], c=part_align, s=0.7, vmin=0.0, vmax=np.pi/3, cmap='viridis')
+        norm= matplotlib.colors.Normalize(vmin=0.0, vmax=np.pi/3)
+        sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
+        sm.set_array([])
+        tick_lev = np.arange(min_n, max_n+max_n/10, (max_n-min_n)/10)
+        clb = fig.colorbar(sm)
+        clb.ax.tick_params(labelsize=16)
+        clb.set_label(r'$\theta$', labelpad=-38, y=1.05, rotation=0, fontsize=18)
+        #clb.locator     = matplotlib.ticker.FixedLocator(tick_locs)
+        #clb.formatter   = matplotlib.ticker.FixedFormatter(tick_labels)
+        #clb.update_ticks()
+        
+        plt.xlim(-h_box, h_box)
+        plt.ylim(-h_box, h_box)
+
+        plt.tick_params(axis='both', which='both',
+                        bottom=False, top=False, left=False, right=False,
+                        labelbottom=False, labeltop=False, labelleft=False, labelright=False)
+                       
+        plt.text(0.663, 0.04, s=r'$\tau$' + ' = ' + '{:.1f}'.format(3*tst) + ' ' + r'$\tau_\mathrm{r}$',
+                fontsize=18, transform = ax.transAxes,
+                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+
+        ax.axis('off')
+        plt.tight_layout()
+        pad = str(j).zfill(4)
+        plt.savefig(outPath + 'test_' + out + pad + ".png", dpi=100)
+        plt.close()
+        '''
+        """
+        area_slice=np.zeros(len(radius)-1)
+        for f in range(0,len(radius)-1):
+            area_slice[f]=((num_sights[1]-num_sights[0])/360)*math.pi*(radius[f+1]**2-radius[f]**2)
+        
+        for k in range(1,len(num_sights)):
+            pos_new_x=np.array([])
+            pos_new_y=np.array([])
+            losBin = [[0 for b in range(NBins)] for a in range(NBins)]
+            if len(interface_radius_ext_loc)>0:
+                ext_rad_loc = np.where((np.array(interface_theta_ext_loc)>=num_sights[k-1]) & (np.array(interface_theta_ext_loc)<=num_sights[k]))[0]
+                if len(ext_rad_loc)>0:
+                    ext_rad_avg = np.max(np.array(interface_radius_ext_loc)[ext_rad_loc])
+                else:
+                    ext_rad_avg = 0
+            if len(interface_radius_int_loc)>0:
+                int_rad_loc = np.where((np.array(interface_theta_int_loc)>=num_sights[k-1]) & (np.array(interface_theta_int_loc)<=num_sights[k]))[0]
+                if len(int_rad_loc)>0:
+                    int_rad_avg = np.min(np.array(interface_radius_int_loc)[int_rad_loc])
+                else:
+                    int_rad_avg = 0
+            for ix in range(0, len(occParts)):
+                for iy in range(0, len(occParts)):
+                    x_min_ref=ix*sizeBin#+com_tmp_posX
+                    x_max_ref=(ix+1)*sizeBin#+com_tmp_posX
+                    y_min_ref=iy*sizeBin# +com_tmp_posY
+                    y_max_ref=(iy+1)*sizeBin#+com_tmp_posY
+
+                    dif_x_min = (x_min_ref-com_tmp_posX)
+                    difx_min_abs = np.abs(dif_x_min)
+
+                    if difx_min_abs>=h_box:
+                        if dif_x_min < -h_box:
+                            dif_x_min += l_box
+                        else:
+                            dif_x_min -= l_box
+                    dif_x_max = (x_max_ref-com_tmp_posX)
+
+                    difx_max_abs = np.abs(dif_x_max)
+                    if difx_max_abs>=h_box:
+                        if dif_x_max < -h_box:
+                            dif_x_max += l_box
+                        else:
+                            dif_x_max -= l_box
+                    dif_y_min = (y_min_ref-com_tmp_posY)
+
+                    dify_min_abs = np.abs(dif_y_min)
+                    if dify_min_abs>=h_box:
+                        if dif_y_min < -h_box:
+                            dif_y_min += l_box
+                        else:
+                            dif_y_min -= l_box
+                    dif_y_max = (y_max_ref-com_tmp_posY)
+
+                    dify_max_abs = np.abs(dif_y_max)
+                    if dify_max_abs>=h_box:
+                        if dif_y_max < -h_box:
+                            dif_y_max += l_box
+                        else:
+                            dif_y_max -= l_box
+                        
+                    if ((ix!=com_x_ind) or (iy!=com_y_ind)):
+
+                        if ((dif_x_min>=0) and (dif_x_max>=0)):
+                            if ((dif_y_min>=0) and (dif_y_max>=0)):
+                                min_ref=np.array([x_min_ref, y_max_ref])
+                                min_quad=1
+                                max_ref=np.array([x_max_ref, y_min_ref])
+                                max_quad=1
+                                max_angle=(np.arctan(np.abs(dif_y_max)/np.abs(dif_x_min)))*180/np.pi+(min_quad-1)*90
+                                min_angle=(np.arctan(np.abs(dif_y_min)/np.abs(dif_x_max)))*180/np.pi+(min_quad-1)*90
+                            elif ((dif_y_min<=0) and (dif_y_max<=0)):
+                                min_ref=np.array([x_min_ref, y_min_ref])
+                                min_quad=4
+                                max_ref=np.array([x_max_ref, y_max_ref])
+                                max_quad=4
+                                min_angle=(np.arctan(np.abs(dif_x_min)/np.abs(dif_y_min)))*180/np.pi+(min_quad-1)*90
+                                max_angle=(np.arctan(np.abs(dif_x_max)/np.abs(dif_y_max)))*180/np.pi+(max_quad-1)*90
+                            elif (((dif_y_min<=0) and (dif_y_max>=0)) or ((dif_y_min>=0) and (dif_y_max<=0))):
+                                min_ref=np.array([x_min_ref, y_min_ref])
+                                min_quad=4
+                                max_ref=np.array([x_min_ref, y_max_ref])
+                                max_quad=1
+
+                                max_angle=(np.arctan(np.abs(dif_x_min)/np.abs(dif_y_min)))*180/np.pi+(min_quad-1)*90
+                                min_angle=(np.arctan(np.abs(dif_y_max)/np.abs(dif_x_min)))*180/np.pi+(max_quad-1)*90
+                        elif ((dif_x_min<0) and (dif_x_max<0)):
+                            if ((dif_y_min>0) and (dif_y_max>0)):
+                                min_ref=np.array([x_min_ref, y_min_ref])
+                                min_quad=2
+                                max_ref=np.array([x_max_ref, y_max_ref])
+                                max_quad=2
+                                max_angle=((np.arctan(np.abs(dif_x_min)/np.abs(dif_y_min)))*(180/np.pi))+(min_quad-1)*90
+                                min_angle=((np.arctan(np.abs(dif_x_max)/np.abs(dif_y_max)))*(180/np.pi))+(max_quad-1)*90
+                            elif ((dif_y_min<0) and (dif_y_max<0)):
+                                min_ref=np.array([x_min_ref, y_max_ref])
+                                min_quad=3
+                                max_ref=np.array([x_max_ref, y_min_ref])
+                                max_quad=3
+                                min_angle=(np.arctan(np.abs(dif_y_max)/np.abs(dif_x_min)))*180/np.pi+(min_quad-1)*90
+                                max_angle=(np.arctan(np.abs(dif_y_min)/np.abs(dif_x_max)))*180/np.pi+(max_quad-1)*90
+                            elif (((dif_y_min<0) and (dif_y_max>0)) or ((dif_y_min>0) and (dif_y_max<0))):
+                                min_ref=np.array([x_max_ref, y_min_ref])
+                                min_quad=3
+                                max_ref=np.array([x_max_ref, y_max_ref])
+                                max_quad=2
+                                max_angle=(np.arctan(np.abs(dif_y_min)/np.abs(dif_x_max)))*180/np.pi+(min_quad-1)*90
+                                min_angle=(np.arctan(np.abs(dif_x_max)/np.abs(dif_y_max)))*180/np.pi+(max_quad-1)*90
+                        elif (((dif_x_min<0) and (dif_x_max>0)) or ((dif_x_min>0) and (dif_x_max<0))):
+                            if ((dif_y_min>0) and (dif_y_max>0)):
+                                min_ref=np.array([x_min_ref, y_min_ref])
+                                min_quad=2
+                                max_ref=np.array([x_max_ref, y_min_ref])
+                                max_quad=1
+                                max_angle=(np.arctan(np.abs(dif_x_min)/np.abs(dif_y_min)))*180/np.pi+(min_quad-1)*90
+                                min_angle=(np.arctan(np.abs(dif_y_min)/np.abs(dif_x_max)))*180/np.pi+(max_quad-1)*90
+                            elif ((dif_y_min<0) and (dif_y_max<0)):
+                                min_ref=np.array([x_min_ref, y_max_ref])
+                                min_quad=3
+                                max_ref=np.array([x_max_ref, y_max_ref])
+                                max_quad=4
+                                min_angle=(np.arctan(np.abs(dif_y_max)/np.abs(dif_x_min)))*180/np.pi+(min_quad-1)*90
+                                max_angle=(np.arctan(np.abs(dif_x_max)/np.abs(dif_y_max)))*180/np.pi+(max_quad-1)*90
+                            elif (((dif_y_min<0) and (dif_y_max>0)) or ((dif_y_min>0) and (dif_y_max<0))):
+
+                                max_angle=45.1
+                                min_angle=44.9
+
+                        #if min_angle<=
+                        if min_angle<=90 and max_angle>=270:
+                            if 0<=num_sights[k-1]<=min_angle:
+                                losBin[ix][iy]=1
+                            elif 0<=num_sights[k]<=min_angle:
+                                losBin[ix][iy]=1
+                            elif num_sights[k-1]<=min_angle<=num_sights[k-1]:
+                                losBin[ix][iy]=1
+                            elif max_angle<=num_sights[k-1]<=360:
+                                losBin[ix][iy]=1
+                            elif max_angle<=num_sights[k]<=360:
+                                losBin[ix][iy]=1
+                            elif num_sights[k-1]<=max_angle<=num_sights[k-1]:
+                                losBin[ix][iy]=1
+                        elif min_angle<=num_sights[k-1]<=max_angle:
+                            losBin[ix][iy]=1
+                        elif min_angle<=num_sights[k]<=max_angle:
+                            losBin[ix][iy]=1
+                        elif num_sights[k-1]<=min_angle<=num_sights[k]:
+                            losBin[ix][iy]=1
+                        elif num_sights[k-1]<=max_angle<=num_sights[k]:
+                            losBin[ix][iy]=1
+                                
+                        
+                    elif ((ix==com_x_ind) and (iy==com_y_ind)):
+                        losBin[ix][iy]=1
+            
+            rad_bin=np.zeros(len(radius)-1)
+            align_rad=np.zeros(len(radius)-1)
+            pressure_vp = np.zeros(len(radius)-1)
+            press_num = np.zeros(len(radius)-1)
+            lat_space = np.zeros(len(radius)-1)
+            for ix in range(0, len(occParts)):
+                for iy in range(0, len(occParts)):
+                    if losBin[ix][iy]==1:
+                        if len(binParts[ix][iy])!=0:
+                            
+                            for h in range(0,len(binParts[ix][iy])):
+                                x_pos=pos2[binParts[ix][iy]][h][0]+h_box
+                                    
+                                y_pos=pos2[binParts[ix][iy]][h][1]+h_box
+                                    
+                                difx=x_pos-com_tmp_posX
+                                difx_abs = np.abs(difx)
+                                if difx_abs>=h_box:
+                                    if difx < -h_box:
+                                        difx += l_box
+                                    else:
+                                        difx -= l_box
+                                dify=y_pos-com_tmp_posY
+                                dify_abs = np.abs(dify)
+                                if dify_abs>=h_box:
+                                    if dify < -h_box:
+                                        dify += l_box
+                                    else:
+                                        dify -= l_box
+    
+                                if (difx)>0:
+                                    if (dify)>0:
+                                        part_quad=1
+                                        part_angle=(np.arctan(np.abs(dify)/np.abs(difx)))*180/np.pi+(part_quad-1)*90
+                                    elif (dify)<0:
+                                        part_quad=4
+                                        part_angle=(np.arctan(np.abs(difx)/np.abs(dify)))*180/np.pi+(part_quad-1)*90
+                                    elif (dify)==0:
+                                        part_angle=0
+                                elif (difx)<0:
+                                    if (dify)>0:
+                                        part_quad=2
+                                        part_angle=(np.arctan(np.abs(difx)/np.abs(dify)))*180/np.pi+(part_quad-1)*90
+                                    elif (dify)<0:
+                                        part_quad=3
+                                        part_angle=(np.arctan(np.abs(dify)/np.abs(difx)))*180/np.pi+(part_quad-1)*90
+                                    elif (dify)==0:
+                                        part_angle=180
+                                elif (difx)==0:
+                                    if (dify)>0:
+                                        part_angle=90
+                                    elif (dify)<0:
+                                        part_angle=270
+                                    elif (dify)==0:
+                                        part_angle=(num_sights[k]+num_sights[k-1])/2
+                                if num_sights[k-1]<=part_angle<=num_sights[k]:
+                                    
+                                    pos_new_x=np.append(pos_new_x, x_pos)
+                                    pos_new_y=np.append(pos_new_y, y_pos)
+                                    
+                                    difr=(difx**2+dify**2)**0.5
+    
+                                    for l in range(1,len(radius)):
+                                        if radius[l-1]<=difr<=radius[l]:
+                                            
+                                            
+                                            rad_bin[l-1]+=1
+                                            
+                                            '''
+                                            if ix==0:
+                                                ix_new_range = [len(occParts)-1, 0, 1]
+                                            elif ix==len(occParts)-1:
+                                                ix_new_range = [len(occParts)-2, len(occParts)-1, 0]
+                                            else:
+                                                ix_new_range = [ix-1, ix, ix+1]
+                                            
+                                            if iy==0:
+                                                iy_new_range = [len(occParts)-1, 0, 1]
+                                            elif iy==len(occParts)-1:
+                                                iy_new_range = [len(occParts)-2, len(occParts)-1, 0]
+                                            else:
+                                                iy_new_range = [iy-1, iy, iy+1]
+                                            for ix2 in ix_new_range:
+                                                for iy2 in iy_new_range:
+                                                    if len(binParts[ix2][iy2])!=0:
+                            
+                                                        for h2 in range(0,len(binParts[ix2][iy2])):
+                                                            if binParts[ix2][iy2][h2] != binParts[ix][iy][h]:
+                                                                x_pos_new=pos2[binParts[ix2][iy2]][h2][0]+h_box
+                                        
+                                                                y_pos_new=pos2[binParts[ix2][iy2]][h2][1]+h_box
+                                        
+                                                                difx2=x_pos-x_pos_new
+                                                                difx_abs2 = np.abs(difx2)
+                                                                if difx_abs2>=h_box:
+                                                                    if difx2 < -h_box:
+                                                                        difx2 += l_box
+                                                                    else:
+                                                                        difx2 -= l_box
+                                                                dify2=y_pos-y_pos_new
+                                                                dify_abs2 = np.abs(dify2)
+                                                                if dify_abs2>=h_box:
+                                                                    if dify2 < -h_box:
+                                                                        dify2 += l_box
+                                                                    else:
+                                                                        dify2 -= l_box
+                                                                
+                                                                difr2=(difx2**2+dify2**2)**0.5
+                                                                
+                                                                if 0.1<=difr2<=r_cut:
+                                                                    fx, fy = computeFLJ(difr2, x_pos_new, y_pos_new, x_pos, y_pos, eps)
+                                                                    # Compute the x force times x distance
+                                                                    sigx = fx * (difx2)
+                                                                    # Likewise for y
+                                                                    sigy = fy * (dify2)
+                                                                    press_num[l-1] += 1
+                                                                    pressure_vp[l-1] += ((sigx + sigy) / 2.)
+                                                                    lat_space[l-1] += difr2
+                                                            
+                                                            
+                                                            
+                                                         
+                                            px = np.sin(ang[binParts[ix][iy][h]])
+                                            px = np.sin(ang[binParts[ix][iy][h]])
+                                            py = -np.cos(ang[binParts[ix][iy][h]])
+                                            
+                                            
+                                            
+                                            r_dot_p = (-difx * px) + (-dify * py)
+                                            align=r_dot_p/difr
+                                            '''
+                                            align_rad[l-1]+=part_align[binParts[ix][iy][h]]#align
+            num_dens=np.zeros(len(radius)-1)
+            align_tot=np.zeros(len(radius)-1)
+            lat_space_avg=np.zeros(len(radius)-1)
+            pressure_vp_avg=np.zeros(len(radius)-1)
+            for f in range(0, len(align_rad)):
+                if rad_bin[f]!=0:
+                    align_tot[f]=(align_rad[f]/rad_bin[f])
+            for f in range(0, len(radius)-1):
+                num_dens[f]=rad_bin[f]/area_slice[f]
+                
+            radius_norm = radius/ext_rad_avg
+            '''
+            #for f in range(0, len(lat_space_avg)):
+            #    if rad_bin[f]!=0:
+            #        lat_space_avg[f]=(lat_space[f]/rad_bin[f]) 
+            #for f in range(0, len(pressure_vp)):
+            #    pressure_vp_avg[f]=(pressure_vp[f]/area_slice[f])
+        
+        """
         #Loop over interfaces
         fig = plt.figure(figsize=(7,6))
         ax = fig.add_subplot(111)
@@ -14098,7 +15118,8 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         mag_max=2
         mag_min=0
         new_green = '#39FF14'
-
+        
+        
         
         fig = plt.figure(figsize=(7,6))
         ax = fig.add_subplot(111)
