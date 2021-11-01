@@ -14,11 +14,6 @@ import numpy as np
 import random
 import matplotlib
 
-if hoomdPath == '/nas/longleaf/home/njlauers/hoomd-blue/build':
-    matplotlib.use('Agg')
-else:
-    pass
-
 import matplotlib.pyplot as plt
 import matplotlib.collections
 from matplotlib.patches import Circle
@@ -177,9 +172,9 @@ def areaType(Nx, latx):
     return Ax
 
 #Slow activities interested in
-pe_a = [0, 50, 100, 150, 200, 250, 300, 350, 400, 450, 500]
+pe_a = [50, 100, 150, 200, 250, 300, 350, 400, 450, 500]
 #Fast activities interested in
-pe_b = [0, 50, 100, 150, 200, 250, 300, 350, 400, 450, 500]
+pe_b = [50, 100, 150, 200, 250, 300, 350, 400, 450, 500]
 
 #Particle fraction of slow activities
 xA = 50./100.0
@@ -211,7 +206,8 @@ int_width_fast = np.array([])
 int_width_theory = np.array([])
 int_width_predict_fastd = np.array([])
 int_width_predict_slowd = np.array([])
-
+int_width_fast_int_arr = np.array([])
+int_width_slow_int_arr = np.array([])
 #Loop over slow activities
 for i in range(0, len(pe_a)): 
     
@@ -256,7 +252,11 @@ for i in range(0, len(pe_a)):
             # The area is the sum of the particle areas (normalized by close packing density of spheres)
             Al = (Nl * np.pi * (latNet)**2) / (4*phiCP)
             As = (Ns * np.pi * (latNet)**2) / (4*phiCP)
+            if As > Al:
+                As = Al
             Af = (Nf * np.pi * (latNet)**2) / (4*phiCP)
+            if Af > Al:
+                Af = Al
             
             # The area for instantiated liquid cluster
             Al_real=Al
@@ -269,14 +269,15 @@ for i in range(0, len(pe_a)):
             #The interface width is the difference between the 100% bulk species radius and the total cluster radius
             int_width_fast_int = Rl-Rs
             int_width_slow_int = Rl-Rf
-            
+            int_width_fast_int_arr = np.append(int_width_fast_int_arr, int_width_fast_int)
+            int_width_slow_int_arr = np.append(int_width_slow_int_arr, int_width_slow_int)
             #Calculate interface aligned active pressure from theory
             press_fast_int = np.append(press_fast_int, int_width_fast_int * nF_theory * 1.0 * pe_b[j])
             press_slow_int = np.append(press_slow_int, int_width_slow_int * nS_theory * 1.0 * pe_a[i])
             
             #Calculate bulk interparticle pressure from theory
-            press_slow_dense_val = 4.0 * np.sqrt(3) * pe_a[i] / latS
-            press_fast_dense_val = 4.0 * np.sqrt(3) * pe_b[j] / latF
+            press_slow_dense_val = 4.0 * np.sqrt(3) * pe_a[i] / latNet
+            press_fast_dense_val = 4.0 * np.sqrt(3) * pe_b[j] / latNet
             
             #Append pressures to array
             press_slow_dense = np.append(press_slow_dense, press_slow_dense_val)
@@ -301,18 +302,21 @@ for i in range(0, len(pe_a)):
             int_width = (np.sqrt(3)/(2*alpha_max)) * (curPLJ/peNet) * (latNet **2) * I_arr
             int_width_theory = np.append(int_width_theory, int_width)
 
+plt.scatter(pnet_pair, press_slow_dense, c='red')
+plt.scatter(pnet_pair, press_fast_dense, c='blue')
+plt.show()
 #Plot difference in fast bulk phase pressure and slow interface pressure as a function of fast and slow activities
 fig = plt.figure(figsize=(10,7))
 ax = fig.add_subplot(111)
 div_min = -3
-min_n = -1000
-max_n = 1000
+min_n = -20000
+max_n = 20000
 levels_text=40
 level_boundaries = np.linspace(min_n, max_n, levels_text + 1)
 tick_locs   = [0.0,np.pi/6,np.pi/3]
 tick_labels = ['0',r'$\pi/6$',r'$\pi/3$']
 
-im = plt.scatter(pa_pair, pb_pair, c=press_fast_dense-press_slow_int, s=15.0, vmin=min_n, vmax=max_n, cmap='seismic')
+im = plt.scatter(pa_pair, pb_pair, c=press_fast_dense-press_slow_int, linewidths=1.0, edgecolor='black', s=60.0, vmin=min_n, vmax=max_n, cmap='seismic')
 norm= matplotlib.colors.Normalize(vmin=min_n, vmax=max_n)
 
 sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
@@ -322,7 +326,7 @@ clb = fig.colorbar(sm, ticks=tick_lev, boundaries=level_boundaries,
 values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStrFormatter('%.2f'))
 
 clb.ax.tick_params(labelsize=16)
-clb.set_label(r'$\Pi_\mathrm{dense}-\Pi_\mathrm{int}$', labelpad=20, y=0.5, rotation=-90, fontsize=18)
+clb.set_label(r'$\Pi_\mathrm{dense}^\mathrm{F}-\Pi_\mathrm{int}^\mathrm{S}$', labelpad=20, y=0.5, rotation=-90, fontsize=18)
 plt.xlabel(r'$\mathrm{Pe}_\mathrm{Slow}$', fontsize=20)
 plt.ylabel(r'$\mathrm{Pe}_\mathrm{Fast}$', fontsize=20)              
 plt.tight_layout()
@@ -333,14 +337,14 @@ plt.show()
 fig = plt.figure(figsize=(10,7))
 ax = fig.add_subplot(111)
 div_min = -3
-min_n = -1000
-max_n = 1000
+min_n = -20000
+max_n = 20000
 levels_text=40
 level_boundaries = np.linspace(min_n, max_n, levels_text + 1)
 tick_locs   = [0.0,np.pi/6,np.pi/3]
 tick_labels = ['0',r'$\pi/6$',r'$\pi/3$']
 
-im = plt.scatter(pa_pair, pb_pair, c=press_slow_dense-press_fast_int, s=15.0, vmin=min_n, vmax=max_n, cmap='seismic')
+im = plt.scatter(pa_pair, pb_pair, c=press_slow_dense-press_fast_int, linewidths=1.0, edgecolor='black', s=60.0, vmin=min_n, vmax=max_n, cmap='seismic')
 norm= matplotlib.colors.Normalize(vmin=min_n, vmax=max_n)
 
 sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
@@ -350,7 +354,7 @@ clb = fig.colorbar(sm, ticks=tick_lev, boundaries=level_boundaries,
 values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStrFormatter('%.2f'))
 
 clb.ax.tick_params(labelsize=16)
-clb.set_label(r'$\Pi_\mathrm{dense}-\Pi_\mathrm{int}$', labelpad=20, y=0.5, rotation=-90, fontsize=18)
+clb.set_label(r'$\Pi_\mathrm{dense}^\mathrm{S}-\Pi_\mathrm{int}^\mathrm{F}$', labelpad=20, y=0.5, rotation=-90, fontsize=18)
                
 plt.xlabel(r'$\mathrm{Pe}_\mathrm{Slow}$', fontsize=20)
 plt.ylabel(r'$\mathrm{Pe}_\mathrm{Fast}$', fontsize=20)
@@ -363,13 +367,13 @@ fig = plt.figure(figsize=(10,7))
 ax = fig.add_subplot(111)
 div_min = -3
 min_n = 0
-max_n = 50
+max_n = 8
 levels_text=40
 level_boundaries = np.linspace(min_n, max_n, levels_text + 1)
 tick_locs   = [0.0,np.pi/6,np.pi/3]
 tick_labels = ['0',r'$\pi/6$',r'$\pi/3$']
 
-im = plt.scatter(pa_pair, pb_pair, c=int_width_predict_slowd, s=15.0, vmin=min_n, vmax=max_n, cmap='seismic')
+im = plt.scatter(pa_pair, pb_pair, c=int_width_predict_slowd, s=60.0, linewidths = 1.0, edgecolors='black', vmin=min_n, vmax=max_n, cmap='cool')
 norm= matplotlib.colors.Normalize(vmin=min_n, vmax=max_n)
 
 sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
@@ -379,7 +383,7 @@ clb = fig.colorbar(sm, ticks=tick_lev, boundaries=level_boundaries,
 values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStrFormatter('%.2f'))
 
 clb.ax.tick_params(labelsize=16)
-clb.set_label(r'$h$', labelpad=20, y=0.5, rotation=-90, fontsize=18)
+clb.set_label(r'$h^\mathrm{S}$', labelpad=20, y=0.5, rotation=-90, fontsize=18)
                
 plt.xlabel(r'$\mathrm{Pe}_\mathrm{Slow}$', fontsize=20)
 plt.ylabel(r'$\mathrm{Pe}_\mathrm{Fast}$', fontsize=20)
@@ -397,7 +401,7 @@ level_boundaries = np.linspace(min_n, max_n, levels_text + 1)
 tick_locs   = [0.0,np.pi/6,np.pi/3]
 tick_labels = ['0',r'$\pi/6$',r'$\pi/3$']
 
-im = plt.scatter(pa_pair, pb_pair, c=int_width_predict_fastd, s=15.0, vmin=min_n, vmax=max_n, cmap='seismic')
+im = plt.scatter(pa_pair, pb_pair, c=int_width_predict_fastd, linewidths=1.0, edgecolor='black', s=60.0, vmin=min_n, vmax=max_n, cmap='cool')
 norm= matplotlib.colors.Normalize(vmin=min_n, vmax=max_n)
 
 sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
@@ -407,9 +411,58 @@ clb = fig.colorbar(sm, ticks=tick_lev, boundaries=level_boundaries,
 values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStrFormatter('%.2f'))
 
 clb.ax.tick_params(labelsize=16)
-clb.set_label(r'$h$', labelpad=20, y=0.5, rotation=-90, fontsize=18)
+clb.set_label(r'$h^\mathrm{F}$', labelpad=20, y=0.5, rotation=-90, fontsize=18)
                
 plt.xlabel(r'$\mathrm{Pe}_\mathrm{Slow}$', fontsize=20)
 plt.ylabel(r'$\mathrm{Pe}_\mathrm{Fast}$', fontsize=20)
+plt.tight_layout()
+plt.show()
+
+
+#Plot interface width with fast bulk as a function of fast and slow activities
+fig = plt.figure(figsize=(10,7))
+ax = fig.add_subplot(111)
+div_min = -3
+min_n = 0
+max_n = 20
+levels_text=40
+level_boundaries = np.linspace(min_n, max_n, levels_text + 1)
+tick_locs   = [0.0,np.pi/6,np.pi/3]
+tick_labels = ['0',r'$\pi/6$',r'$\pi/3$']
+
+im = plt.scatter(pnet_pair, int_width_predict_fastd, linewidths=1.0, edgecolor='black', facecolor='red', s=60.0)
+im = plt.scatter(pnet_pair, int_width_slow_int_arr, linewidths=1.0, edgecolor='black', facecolor='blue', s=60.0)
+         
+yellow_patch = mpatches.Patch(color='blue', label='Actual')
+red_patch = mpatches.Patch(color='red', label='Pressure Balance')
+plt.legend(handles=[yellow_patch, red_patch], fancybox=True, framealpha=0.75, ncol=1, fontsize=12, loc='upper left',labelspacing=0.1, handletextpad=0.1)
+
+    
+plt.xlabel(r'$\mathrm{Pe}_\mathrm{Net}$', fontsize=20)
+plt.ylabel(r'$h^\mathrm{S}$', fontsize=20)
+plt.tight_layout()
+plt.show()
+
+#Plot interface width with fast bulk as a function of fast and slow activities
+fig = plt.figure(figsize=(10,7))
+ax = fig.add_subplot(111)
+div_min = -3
+min_n = 0
+max_n = 20
+levels_text=40
+level_boundaries = np.linspace(min_n, max_n, levels_text + 1)
+tick_locs   = [0.0,np.pi/6,np.pi/3]
+tick_labels = ['0',r'$\pi/6$',r'$\pi/3$']
+
+im = plt.scatter(pnet_pair, int_width_predict_slowd, linewidths=1.0, edgecolor='black', facecolor='red', s=60.0)
+im = plt.scatter(pnet_pair, int_width_fast_int_arr, linewidths=1.0, edgecolor='black', facecolor='blue', s=60.0)
+         
+yellow_patch = mpatches.Patch(color='blue', label='Actual')
+red_patch = mpatches.Patch(color='red', label='Pressure Balance')
+plt.legend(handles=[yellow_patch, red_patch], fancybox=True, framealpha=0.75, ncol=1, fontsize=12, loc='upper left',labelspacing=0.1, handletextpad=0.1)
+
+    
+plt.xlabel(r'$\mathrm{Pe}_\mathrm{Net}$', fontsize=20)
+plt.ylabel(r'$h^\mathrm{F}$', fontsize=20)
 plt.tight_layout()
 plt.show()
