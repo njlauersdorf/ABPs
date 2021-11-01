@@ -3648,7 +3648,6 @@ with hoomd.open(name=inFile, mode='rb') as t:
         SigYY_arr = [[0 for b in range(NBins)] for a in range(NBins)]
         for ix in range(0, len(occParts)):
                 for iy in range(0, len(occParts)):
-                    if phaseBin[ix][iy]==0:
                         x_ind = ix
                         y_ind = iy
                         if (x_ind + 1) != NBins:
@@ -3826,3 +3825,42 @@ with hoomd.open(name=inFile, mode='rb') as t:
         g.write('{0:.6f}'.format(bulk_interpart_press_avg).center(20) + ' ')
         g.write('{0:.6f}'.format(bulk_interpart_press_std_avg).center(20) + '\n')
         g.close()
+        
+        #Loop over interfaces
+        fig = plt.figure(figsize=(7,6))
+        ax = fig.add_subplot(111)
+        div_min = -3
+        min_n = 0.0
+        max_n = np.max(Press_arr)
+        levels_text=40
+        level_boundaries = np.linspace(min_n, max_n, levels_text + 1)
+        im = plt.contourf(pos_box_x, pos_box_y, Press_arr, level_boundaries, vmin=min_n, vmax=max_n, cmap='Blues', extend='both')
+        norm= matplotlib.colors.Normalize(vmin=min_n, vmax=max_n)
+        #plt.plot(xn_pos, yn_pos, c='orange', lw=4.0)
+        #if interior_bin>0:
+            
+        sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
+        sm.set_array([])
+        tick_lev = np.arange(min_n, max_n+max_n/10, (max_n-min_n)/10)
+        clb = fig.colorbar(sm, ticks=tick_lev, boundaries=level_boundaries,
+values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStrFormatter('%.2f'))
+        clb.ax.tick_params(labelsize=16)
+        clb.set_label(r'$n$', labelpad=-40, y=1.07, rotation=0, fontsize=20)
+
+        #plt.quiver(pos_box_x, pos_box_y, align_norm_x, align_norm_y, color='black')
+        
+        plt.xlim(0, l_box)
+        plt.ylim(0, l_box)
+
+        plt.tick_params(axis='both', which='both',
+                        bottom=False, top=False, left=False, right=False,
+                        labelbottom=False, labeltop=False, labelleft=False, labelright=False)
+                       
+        plt.text(0.663, 0.04, s=r'$\tau$' + ' = ' + '{:.1f}'.format(3*tst) + ' ' + r'$\tau_\mathrm{r}$',
+                fontsize=18, transform = ax.transAxes,
+                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+
+        ax.axis('off')
+        plt.tight_layout()
+        plt.savefig(outPath + 'interpart_press_' + out + pad + ".png", dpi=100)
+        plt.close()
