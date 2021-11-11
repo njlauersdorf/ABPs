@@ -12462,7 +12462,6 @@ with hoomd.open(name=inFile, mode='rb') as t:
         for ix in range(0, len(occParts)):
             for iy in range(0, len(occParts)): 
                 #If bin is an exterior bin of mth interface structure, continue...
-                #if int_edge_id[ix][iy]==0:
                     if new_align_num[ix][iy]>0:
                     #    if new_align_avg[ix][iy]==0:
                             new_align_avg[ix][iy] = new_align[ix][iy] / new_align_num[ix][iy]
@@ -12482,7 +12481,6 @@ with hoomd.open(name=inFile, mode='rb') as t:
                             if new_align_num_trad1[ix][iy]>0:
                                 new_align_avg_trad1[ix][iy] = new_align_trad1[ix][iy] / new_align_num_trad1[ix][iy]                                                                
         
-        #plt.show()
         
         '''
         for m in range(0, len(bub_id_arr)):
@@ -13221,21 +13219,21 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 if new_align_num_trad[ix][iy]>0:
                         new_align_avg_trad[ix][iy] = new_align_trad[ix][iy] / new_align_num_trad[ix][iy]
         '''
-        #new_align = [[0 for b in range(NBins)] for a in range(NBins)]
+        
+        #Initiate empty arrays
         new_align_num = [[0 for b in range(NBins)] for a in range(NBins)]
         new_align_num0 = [[0 for b in range(NBins)] for a in range(NBins)]
         new_align_num1 = [[0 for b in range(NBins)] for a in range(NBins)]
-        #new_align_avg = [[0 for b in range(NBins)] for a in range(NBins)]
-        #new_align_trad = [[0 for b in range(NBins)] for a in range(NBins)]
         new_align_num_trad = [[0 for b in range(NBins)] for a in range(NBins)]
         new_align_num_trad0 = [[0 for b in range(NBins)] for a in range(NBins)]
         new_align_num_trad1 = [[0 for b in range(NBins)] for a in range(NBins)]
-        #new_align_avg_trad = [[0 for b in range(NBins)] for a in range(NBins)]
 
         new_align_num_copy = np.copy(new_align_num)
         
         x_com_bub_arr = np.array([])
         y_com_bub_arr = np.array([])
+        
+        #Loop over all interfaces identified
         for n in range(0, len(bub_id_arr)):
                                         
             #Always true
@@ -13305,8 +13303,12 @@ with hoomd.open(name=inFile, mode='rb') as t:
                         
                     x_com_bub_arr = np.append(x_com_bub_arr, x_com_bub)
                     y_com_bub_arr = np.append(y_com_bub_arr, y_com_bub)
-                                
+       
+        #Calculate alignment of bulk particles    
+        #Loop over all bulk bins identified                    
         for m in range(0, len(bulk_id_arr)):
+            
+            #If bulk bin, continue...
             if if_bulk_id_arr[m]==1:
                 
                 #Find which particles belong to mth interface structure
@@ -13728,16 +13730,15 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                                 y_norm_unitv = dify_width / difr 
                                                                 interior_bin_short = 1
                                                                 exterior_bin_short = 0
+                                                #If particles in bin, continue...
                                                 if len(binParts[ix][iy])>0:
+                                                    #Loop over all particles in bin
                                                     for h in range(0, len(binParts[ix][iy])):
                                                         #Calculate x and y orientation of active force
-                                                        #px = np.cos(ang[binParts[ix][iy][h]])
-                                                        #py = np.sin(ang[binParts[ix][iy][h]])
                                                         px = np.sin(ang[binParts[ix][iy][h]])
                                                         py = -np.cos(ang[binParts[ix][iy][h]])
-                                                        #print(x_norm_unitv)
-                                                        #print(y_norm_unitv)
-                                                        #Calculate alignment towards CoM           
+                                                        
+                                                        #Calculate alignment of single particle with nearest surface
                                                         if difr_short == difr_bub:
                                                             r_dot_p = (-x_norm_unitv * px) + (-y_norm_unitv * py)
                                                         else:
@@ -13745,18 +13746,27 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                                 r_dot_p = (-x_norm_unitv * px) + (-y_norm_unitv * py)
                                                             elif exterior_bin_short == 1:
                                                                 r_dot_p = (x_norm_unitv * px) + (y_norm_unitv * py)
+                                                                
+                                                        #Calculate alignment of single particle with cluster's Center of mass        
                                                         r_dot_p_trad = (-x_norm_unitv_trad * px) + (-y_norm_unitv_trad * py)
-                                                        #Sum x,y orientation over each bin
+
+                                                        #Save alignment of each particle                                                        
                                                         part_align[binParts[ix][iy][h]] = r_dot_p
+                                                        
+                                                        #Calculate alignment of all particles per bin
                                                         new_align[ix][iy] += r_dot_p
                                                         new_align_num[ix][iy]+= 1
                                                         new_align_trad[ix][iy] += r_dot_p_trad
                                                         new_align_num_trad[ix][iy]+= 1
+                                                        
+                                                        #if particle type is B, add to total alignment
                                                         if typ[binParts[ix][iy][h]]==0:
                                                             new_align0[ix][iy] += r_dot_p
                                                             new_align_num0[ix][iy]+= 1
                                                             new_align_trad0[ix][iy] += r_dot_p_trad
                                                             new_align_num_trad0[ix][iy]+= 1
+                                                        
+                                                        #if particle type is B, add to total alignment
                                                         elif typ[binParts[ix][iy][h]]==1:
                                                             new_align1[ix][iy] += r_dot_p
                                                             new_align_num1[ix][iy]+= 1
@@ -13764,12 +13774,14 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                             new_align_num_trad1[ix][iy]+= 1
         
         
+        #Calculate average alignment of bulk bins
         #Loop over bins in system
         for ix in range(0, len(occParts)):
             for iy in range(0, len(occParts)): 
+                #If particle is notpart of an interface, continue
                 if edge_id[ix][iy]==0:
+                    #If summed alignment with nearest surface greater than zero (non-gas), continue...
                     if new_align_num[ix][iy]>0:
-                    #    if new_align_avg[ix][iy]==0:
                             new_align_avg[ix][iy] = new_align[ix][iy] / new_align_num[ix][iy]
                             if new_align_num0[ix][iy]>0:
                                 new_align_avg0[ix][iy] = new_align0[ix][iy] / new_align_num0[ix][iy]
@@ -13778,9 +13790,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                             if new_align_num1[ix][iy]>0:
                                 if new_align_num0[ix][iy]>0:
                                     new_align_avg_dif[ix][iy] = np.abs(new_align_avg1[ix][iy]) - np.abs(new_align_avg0[ix][iy])
-
+                    #If summer alignment with CoM greater than zero (non-gas), continue...
                     if new_align_num_trad[ix][iy]>0:
-                        #if new_align_avg_trad[ix][iy]==0:
                             new_align_avg_trad[ix][iy] = new_align_trad[ix][iy] / new_align_num_trad[ix][iy]
                             if new_align_num_trad0[ix][iy]>0:
                                 new_align_avg_trad0[ix][iy] = new_align_trad0[ix][iy] / new_align_num_trad0[ix][iy]
@@ -13791,11 +13802,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                 
         
-        #x_com_bub = com_tmp_posX
-        #y_com_bub = com_tmp_posY
-        
-        #x_com_bub = x_com_bub + h_box
-        #y_com_bub = y_com_bub + h_box
+        #Calculate alignment of gas bins
         #Loop over bins in system
         for ix in range(0, len(occParts)):
             for iy in range(0, len(occParts)): 
@@ -14177,65 +14184,80 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                     y_norm_unitv = dify_width / difr
                                     interior_bin_short = 1
                                     exterior_bin_short = 0
+                                    
+                    #If particles in bin, continue...
                     if len(binParts[ix][iy])>0:
+                        #Loop over particles in bin
                         for h in range(0, len(binParts[ix][iy])):
-                            #Calculate x and y orientation of active force
-                            #px = np.cos(ang[binParts[ix][iy][h]])
-                            #py = np.sin(ang[binParts[ix][iy][h]])
+                            
+                            #Calculate x and y orientation of reference particle's active force
                             px = np.sin(ang[binParts[ix][iy][h]])
                             py = -np.cos(ang[binParts[ix][iy][h]])
-                            #print(x_norm_unitv)
-                            #print(y_norm_unitv)
-                            #Calculate alignment towards CoM  
+                            
+                            #If nearest surface is exterior surface, calculate alignment with that surface
                             if exterior_bin_short == 1:
                                 r_dot_p = (-x_norm_unitv * px) + (-y_norm_unitv * py)
+                            
+                            #If nearest surface is interior surface, calculate alignment with that surface
                             elif interior_bin_short == 1:
                                 r_dot_p = (x_norm_unitv * px) + (y_norm_unitv * py)
+                            
+                            #Calculate alignment towards CoM  
                             r_dot_p_trad = (-x_norm_unitv_trad * px) + (-y_norm_unitv_trad * py)
-                            #Sum x,y orientation over each bin
+                            
+                            #Calculate total alignment and number of particles per bin for all particles
+
                             part_align[binParts[ix][iy][h]] = r_dot_p
                             new_align[ix][iy] += r_dot_p
                             new_align_num[ix][iy]+= 1
                             new_align_trad[ix][iy] += r_dot_p_trad
                             new_align_num_trad[ix][iy]+= 1
+                            
+                            #Calculate total alignment and number of particles per bin for type A particles
                             if typ[binParts[ix][iy][h]]==0:
                                 new_align0[ix][iy] += r_dot_p
                                 new_align_num0[ix][iy]+= 1
                                 new_align_trad0[ix][iy] += r_dot_p_trad
                                 new_align_num_trad0[ix][iy]+= 1
+                                
+                            #Calculate total alignment and number of particles per bin for type B particles
                             elif typ[binParts[ix][iy][h]]==1:
                                 new_align1[ix][iy] += r_dot_p
                                 new_align_num1[ix][iy]+= 1
                                 new_align_trad1[ix][iy] += r_dot_p_trad
                                 new_align_num_trad1[ix][iy]+= 1
         
+        
+        #Calculate average alignment per bin
         #Loop over bins in system
         for ix in range(0, len(occParts)):
             for iy in range(0, len(occParts)): 
                 if new_align_avg[ix][iy]==0:
-                    #If bin is an exterior bin of mth interface structure, continue...
-                    #if int_edge_id[ix][iy]==0:
+                    
+                    #Calculate alignment with nearest interfacial surface
+                    #If denominator is non-zero, continue...
                     if new_align_num[ix][iy]>0:
-                    #    if new_align_avg[ix][iy]==0:
-                            new_align_avg[ix][iy] = new_align[ix][iy] / new_align_num[ix][iy]
+                        new_align_avg[ix][iy] = new_align[ix][iy] / new_align_num[ix][iy]
+                        if new_align_num0[ix][iy]>0:
+                            new_align_avg0[ix][iy] = new_align0[ix][iy] / new_align_num0[ix][iy]
+                        if new_align_num1[ix][iy]>0:
+                            new_align_avg1[ix][iy] = new_align1[ix][iy] / new_align_num1[ix][iy]
+                        if new_align_num1[ix][iy]>0:
                             if new_align_num0[ix][iy]>0:
-                                new_align_avg0[ix][iy] = new_align0[ix][iy] / new_align_num0[ix][iy]
-                            if new_align_num1[ix][iy]>0:
-                                new_align_avg1[ix][iy] = new_align1[ix][iy] / new_align_num1[ix][iy]
-                            if new_align_num1[ix][iy]>0:
-                                if new_align_num0[ix][iy]>0:
-                                    new_align_avg_dif[ix][iy] = np.abs(new_align_avg1[ix][iy]) - np.abs(new_align_avg0[ix][iy])
-
+                                new_align_avg_dif[ix][iy] = np.abs(new_align_avg1[ix][iy]) - np.abs(new_align_avg0[ix][iy])
+                   
+                    #Calculate alignment with center of mass
+                    #If denominator is non-zero, continue...
                     if new_align_num_trad[ix][iy]>0:
-                        #if new_align_avg_trad[ix][iy]==0:
-                            new_align_avg_trad[ix][iy] = new_align_trad[ix][iy] / new_align_num_trad[ix][iy]
-                            if new_align_num_trad0[ix][iy]>0:
-                                new_align_avg_trad0[ix][iy] = new_align_trad0[ix][iy] / new_align_num_trad0[ix][iy]
-                            if new_align_num_trad1[ix][iy]>0:
-                                new_align_avg_trad1[ix][iy] = new_align_trad1[ix][iy] / new_align_num_trad1[ix][iy]
+                        new_align_avg_trad[ix][iy] = new_align_trad[ix][iy] / new_align_num_trad[ix][iy]
+                        if new_align_num_trad0[ix][iy]>0:
+                            new_align_avg_trad0[ix][iy] = new_align_trad0[ix][iy] / new_align_num_trad0[ix][iy]
+                        if new_align_num_trad1[ix][iy]>0:
+                            new_align_avg_trad1[ix][iy] = new_align_trad1[ix][iy] / new_align_num_trad1[ix][iy]
 
         binArea = sizeBin**2
         
+        #IDs of particles participating in each phase
         edge_id_plot = np.where(edgePhase==interface_id)[0]     #Largest gas-dense interface
         int_id_plot = np.where(partPhase==1)[0]         #All interfaces
         bulk_int_id_plot = np.where(partPhase!=2)[0]
@@ -14246,10 +14268,12 @@ with hoomd.open(name=inFile, mode='rb') as t:
             bub_id_plot = []
         gas_id = np.where(partPhase==2)[0]  
                  
+        #Determine positions of particles in each phase
         bulk_int_pos = pos[bulk_int_id_plot]
         bulk_pos = pos[bulk_id_plot]
         int_pos = pos[edge_id_plot]
         
+        #Initiate zero values
         bulk_num_dens_sum = 0
         bulk_num_dens_num = 0
         int_num_dens_sum = 0
@@ -14259,7 +14283,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
         gas_num_dens_sum = 0
         gas_num_dens_num = 0
         
-        
+        #Calculate components for mean of number density per phase
         for ix in range(0, len(phaseBin)):
             for iy in range(0, len(phaseBin)):
                 if phaseBin[ix][iy]==0:
@@ -14275,6 +14299,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     gas_num_dens_sum += len(binParts[ix][iy])/sizeBin**2
                     gas_num_dens_num +=1
         
+        #Calculate mean number density per phase
         if bulk_num_dens_num > 0:
             bulk_avg = (bulk_num_dens_sum/bulk_num_dens_num) 
         else:
@@ -14292,11 +14317,13 @@ with hoomd.open(name=inFile, mode='rb') as t:
         else:
             gas_avg = 0
         
+        #Calculate area of each phase
         bulk_area = bulk_num_dens_num * sizeBin**2
         int_area = int_num_dens_num * sizeBin**2
         bub_area = bub_num_dens_num * sizeBin**2
         gas_area = gas_num_dens_num * sizeBin**2
         
+        #Initiate empty values for standard deviation calculation
         bulk_num_dens_std_sum = 0
         bulk_num_dens_std_num = 0
         int_num_dens_std_sum = 0
@@ -14306,6 +14333,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
         gas_num_dens_std_sum = 0
         gas_num_dens_std_num = 0
         
+        #Calculate components for standard deviations of number density per phase 
         for ix in range(0, len(phaseBin)):
             for iy in range(0, len(phaseBin)):
                 if phaseBin[ix][iy]==0:
@@ -14322,7 +14350,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     gas_num_dens_std_num +=1   
                     
                     
-                    
+        #Calculate standard deviation of number density for each phase            
         if bulk_num_dens_std_num > 0:
             bulk_std = (bulk_num_dens_std_sum/bulk_num_dens_std_num)**0.5   
         else:
@@ -14340,6 +14368,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
         else:
             gas_std = 0
         
+        #Output means and standard deviations of number density for each phase
         g = open(outPath2+outTxt_num_dens, 'a')
         g.write('{0:.2f}'.format(tst).center(20) + ' ')
         g.write('{0:.6f}'.format(sizeBin).center(20) + ' ')
@@ -14357,363 +14386,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
         g.write('{0:.6f}'.format(gas_avg).center(20) + ' ')
         g.write('{0:.6f}'.format(gas_std).center(20) + '\n')
         g.close()
-        
-        
-        '''
-        com_tmp_posX = query_points[0] + h_box
-        com_tmp_posY = query_points[1] + h_box
-        pos2 = snap.particles.position               # position
-        pos2[:,-1] = 0.0                             # 2D system
-        
-        radius=np.arange(0,h_box+3.0, 3.0)
 
-        num_sights_len=20
-        num_sights=np.arange(0, 360+int(360/num_sights_len),int(360/num_sights_len))
-        
-        #Plot particles colorized by bond orientation angle
-        fig = plt.figure(figsize=(7,6))
-        ax = fig.add_subplot(111)
-        div_min = -3
-        min_n = np.min(part_align)
-        max_n = np.max(part_align)
-        levels_text=40
-        level_boundaries = np.linspace(min_n, max_n, levels_text + 1)
-        im = plt.scatter(pos2[:,0], pos2[:,1], c=part_align, s=0.7, vmin=0.0, vmax=np.pi/3, cmap='viridis')
-        norm= matplotlib.colors.Normalize(vmin=0.0, vmax=np.pi/3)
-        sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
-        sm.set_array([])
-        tick_lev = np.arange(min_n, max_n+max_n/10, (max_n-min_n)/10)
-        clb = fig.colorbar(sm)
-        clb.ax.tick_params(labelsize=16)
-        clb.set_label(r'$\theta$', labelpad=-38, y=1.05, rotation=0, fontsize=18)
-        #clb.locator     = matplotlib.ticker.FixedLocator(tick_locs)
-        #clb.formatter   = matplotlib.ticker.FixedFormatter(tick_labels)
-        #clb.update_ticks()
-        
-        plt.xlim(-h_box, h_box)
-        plt.ylim(-h_box, h_box)
-
-        plt.tick_params(axis='both', which='both',
-                        bottom=False, top=False, left=False, right=False,
-                        labelbottom=False, labeltop=False, labelleft=False, labelright=False)
-                       
-        plt.text(0.663, 0.04, s=r'$\tau$' + ' = ' + '{:.1f}'.format(3*tst) + ' ' + r'$\tau_\mathrm{r}$',
-                fontsize=18, transform = ax.transAxes,
-                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
-
-        ax.axis('off')
-        plt.tight_layout()
-        pad = str(j).zfill(4)
-        plt.savefig(outPath + 'test_' + out + pad + ".png", dpi=100)
-        plt.close()
-        '''
-        """
-        area_slice=np.zeros(len(radius)-1)
-        for f in range(0,len(radius)-1):
-            area_slice[f]=((num_sights[1]-num_sights[0])/360)*math.pi*(radius[f+1]**2-radius[f]**2)
-        
-        for k in range(1,len(num_sights)):
-            pos_new_x=np.array([])
-            pos_new_y=np.array([])
-            losBin = [[0 for b in range(NBins)] for a in range(NBins)]
-            if len(interface_radius_ext_loc)>0:
-                ext_rad_loc = np.where((np.array(interface_theta_ext_loc)>=num_sights[k-1]) & (np.array(interface_theta_ext_loc)<=num_sights[k]))[0]
-                if len(ext_rad_loc)>0:
-                    ext_rad_avg = np.max(np.array(interface_radius_ext_loc)[ext_rad_loc])
-                else:
-                    ext_rad_avg = 0
-            if len(interface_radius_int_loc)>0:
-                int_rad_loc = np.where((np.array(interface_theta_int_loc)>=num_sights[k-1]) & (np.array(interface_theta_int_loc)<=num_sights[k]))[0]
-                if len(int_rad_loc)>0:
-                    int_rad_avg = np.min(np.array(interface_radius_int_loc)[int_rad_loc])
-                else:
-                    int_rad_avg = 0
-            for ix in range(0, len(occParts)):
-                for iy in range(0, len(occParts)):
-                    x_min_ref=ix*sizeBin#+com_tmp_posX
-                    x_max_ref=(ix+1)*sizeBin#+com_tmp_posX
-                    y_min_ref=iy*sizeBin# +com_tmp_posY
-                    y_max_ref=(iy+1)*sizeBin#+com_tmp_posY
-
-                    dif_x_min = (x_min_ref-com_tmp_posX)
-                    difx_min_abs = np.abs(dif_x_min)
-
-                    if difx_min_abs>=h_box:
-                        if dif_x_min < -h_box:
-                            dif_x_min += l_box
-                        else:
-                            dif_x_min -= l_box
-                    dif_x_max = (x_max_ref-com_tmp_posX)
-
-                    difx_max_abs = np.abs(dif_x_max)
-                    if difx_max_abs>=h_box:
-                        if dif_x_max < -h_box:
-                            dif_x_max += l_box
-                        else:
-                            dif_x_max -= l_box
-                    dif_y_min = (y_min_ref-com_tmp_posY)
-
-                    dify_min_abs = np.abs(dif_y_min)
-                    if dify_min_abs>=h_box:
-                        if dif_y_min < -h_box:
-                            dif_y_min += l_box
-                        else:
-                            dif_y_min -= l_box
-                    dif_y_max = (y_max_ref-com_tmp_posY)
-
-                    dify_max_abs = np.abs(dif_y_max)
-                    if dify_max_abs>=h_box:
-                        if dif_y_max < -h_box:
-                            dif_y_max += l_box
-                        else:
-                            dif_y_max -= l_box
-                        
-                    if ((ix!=com_x_ind) or (iy!=com_y_ind)):
-
-                        if ((dif_x_min>=0) and (dif_x_max>=0)):
-                            if ((dif_y_min>=0) and (dif_y_max>=0)):
-                                min_ref=np.array([x_min_ref, y_max_ref])
-                                min_quad=1
-                                max_ref=np.array([x_max_ref, y_min_ref])
-                                max_quad=1
-                                max_angle=(np.arctan(np.abs(dif_y_max)/np.abs(dif_x_min)))*180/np.pi+(min_quad-1)*90
-                                min_angle=(np.arctan(np.abs(dif_y_min)/np.abs(dif_x_max)))*180/np.pi+(min_quad-1)*90
-                            elif ((dif_y_min<=0) and (dif_y_max<=0)):
-                                min_ref=np.array([x_min_ref, y_min_ref])
-                                min_quad=4
-                                max_ref=np.array([x_max_ref, y_max_ref])
-                                max_quad=4
-                                min_angle=(np.arctan(np.abs(dif_x_min)/np.abs(dif_y_min)))*180/np.pi+(min_quad-1)*90
-                                max_angle=(np.arctan(np.abs(dif_x_max)/np.abs(dif_y_max)))*180/np.pi+(max_quad-1)*90
-                            elif (((dif_y_min<=0) and (dif_y_max>=0)) or ((dif_y_min>=0) and (dif_y_max<=0))):
-                                min_ref=np.array([x_min_ref, y_min_ref])
-                                min_quad=4
-                                max_ref=np.array([x_min_ref, y_max_ref])
-                                max_quad=1
-
-                                max_angle=(np.arctan(np.abs(dif_x_min)/np.abs(dif_y_min)))*180/np.pi+(min_quad-1)*90
-                                min_angle=(np.arctan(np.abs(dif_y_max)/np.abs(dif_x_min)))*180/np.pi+(max_quad-1)*90
-                        elif ((dif_x_min<0) and (dif_x_max<0)):
-                            if ((dif_y_min>0) and (dif_y_max>0)):
-                                min_ref=np.array([x_min_ref, y_min_ref])
-                                min_quad=2
-                                max_ref=np.array([x_max_ref, y_max_ref])
-                                max_quad=2
-                                max_angle=((np.arctan(np.abs(dif_x_min)/np.abs(dif_y_min)))*(180/np.pi))+(min_quad-1)*90
-                                min_angle=((np.arctan(np.abs(dif_x_max)/np.abs(dif_y_max)))*(180/np.pi))+(max_quad-1)*90
-                            elif ((dif_y_min<0) and (dif_y_max<0)):
-                                min_ref=np.array([x_min_ref, y_max_ref])
-                                min_quad=3
-                                max_ref=np.array([x_max_ref, y_min_ref])
-                                max_quad=3
-                                min_angle=(np.arctan(np.abs(dif_y_max)/np.abs(dif_x_min)))*180/np.pi+(min_quad-1)*90
-                                max_angle=(np.arctan(np.abs(dif_y_min)/np.abs(dif_x_max)))*180/np.pi+(max_quad-1)*90
-                            elif (((dif_y_min<0) and (dif_y_max>0)) or ((dif_y_min>0) and (dif_y_max<0))):
-                                min_ref=np.array([x_max_ref, y_min_ref])
-                                min_quad=3
-                                max_ref=np.array([x_max_ref, y_max_ref])
-                                max_quad=2
-                                max_angle=(np.arctan(np.abs(dif_y_min)/np.abs(dif_x_max)))*180/np.pi+(min_quad-1)*90
-                                min_angle=(np.arctan(np.abs(dif_x_max)/np.abs(dif_y_max)))*180/np.pi+(max_quad-1)*90
-                        elif (((dif_x_min<0) and (dif_x_max>0)) or ((dif_x_min>0) and (dif_x_max<0))):
-                            if ((dif_y_min>0) and (dif_y_max>0)):
-                                min_ref=np.array([x_min_ref, y_min_ref])
-                                min_quad=2
-                                max_ref=np.array([x_max_ref, y_min_ref])
-                                max_quad=1
-                                max_angle=(np.arctan(np.abs(dif_x_min)/np.abs(dif_y_min)))*180/np.pi+(min_quad-1)*90
-                                min_angle=(np.arctan(np.abs(dif_y_min)/np.abs(dif_x_max)))*180/np.pi+(max_quad-1)*90
-                            elif ((dif_y_min<0) and (dif_y_max<0)):
-                                min_ref=np.array([x_min_ref, y_max_ref])
-                                min_quad=3
-                                max_ref=np.array([x_max_ref, y_max_ref])
-                                max_quad=4
-                                min_angle=(np.arctan(np.abs(dif_y_max)/np.abs(dif_x_min)))*180/np.pi+(min_quad-1)*90
-                                max_angle=(np.arctan(np.abs(dif_x_max)/np.abs(dif_y_max)))*180/np.pi+(max_quad-1)*90
-                            elif (((dif_y_min<0) and (dif_y_max>0)) or ((dif_y_min>0) and (dif_y_max<0))):
-
-                                max_angle=45.1
-                                min_angle=44.9
-
-                        #if min_angle<=
-                        if min_angle<=90 and max_angle>=270:
-                            if 0<=num_sights[k-1]<=min_angle:
-                                losBin[ix][iy]=1
-                            elif 0<=num_sights[k]<=min_angle:
-                                losBin[ix][iy]=1
-                            elif num_sights[k-1]<=min_angle<=num_sights[k-1]:
-                                losBin[ix][iy]=1
-                            elif max_angle<=num_sights[k-1]<=360:
-                                losBin[ix][iy]=1
-                            elif max_angle<=num_sights[k]<=360:
-                                losBin[ix][iy]=1
-                            elif num_sights[k-1]<=max_angle<=num_sights[k-1]:
-                                losBin[ix][iy]=1
-                        elif min_angle<=num_sights[k-1]<=max_angle:
-                            losBin[ix][iy]=1
-                        elif min_angle<=num_sights[k]<=max_angle:
-                            losBin[ix][iy]=1
-                        elif num_sights[k-1]<=min_angle<=num_sights[k]:
-                            losBin[ix][iy]=1
-                        elif num_sights[k-1]<=max_angle<=num_sights[k]:
-                            losBin[ix][iy]=1
-                                
-                        
-                    elif ((ix==com_x_ind) and (iy==com_y_ind)):
-                        losBin[ix][iy]=1
-            
-            rad_bin=np.zeros(len(radius)-1)
-            align_rad=np.zeros(len(radius)-1)
-            pressure_vp = np.zeros(len(radius)-1)
-            press_num = np.zeros(len(radius)-1)
-            lat_space = np.zeros(len(radius)-1)
-            for ix in range(0, len(occParts)):
-                for iy in range(0, len(occParts)):
-                    if losBin[ix][iy]==1:
-                        if len(binParts[ix][iy])!=0:
-                            
-                            for h in range(0,len(binParts[ix][iy])):
-                                x_pos=pos2[binParts[ix][iy]][h][0]+h_box
-                                    
-                                y_pos=pos2[binParts[ix][iy]][h][1]+h_box
-                                    
-                                difx=x_pos-com_tmp_posX
-                                difx_abs = np.abs(difx)
-                                if difx_abs>=h_box:
-                                    if difx < -h_box:
-                                        difx += l_box
-                                    else:
-                                        difx -= l_box
-                                dify=y_pos-com_tmp_posY
-                                dify_abs = np.abs(dify)
-                                if dify_abs>=h_box:
-                                    if dify < -h_box:
-                                        dify += l_box
-                                    else:
-                                        dify -= l_box
-    
-                                if (difx)>0:
-                                    if (dify)>0:
-                                        part_quad=1
-                                        part_angle=(np.arctan(np.abs(dify)/np.abs(difx)))*180/np.pi+(part_quad-1)*90
-                                    elif (dify)<0:
-                                        part_quad=4
-                                        part_angle=(np.arctan(np.abs(difx)/np.abs(dify)))*180/np.pi+(part_quad-1)*90
-                                    elif (dify)==0:
-                                        part_angle=0
-                                elif (difx)<0:
-                                    if (dify)>0:
-                                        part_quad=2
-                                        part_angle=(np.arctan(np.abs(difx)/np.abs(dify)))*180/np.pi+(part_quad-1)*90
-                                    elif (dify)<0:
-                                        part_quad=3
-                                        part_angle=(np.arctan(np.abs(dify)/np.abs(difx)))*180/np.pi+(part_quad-1)*90
-                                    elif (dify)==0:
-                                        part_angle=180
-                                elif (difx)==0:
-                                    if (dify)>0:
-                                        part_angle=90
-                                    elif (dify)<0:
-                                        part_angle=270
-                                    elif (dify)==0:
-                                        part_angle=(num_sights[k]+num_sights[k-1])/2
-                                if num_sights[k-1]<=part_angle<=num_sights[k]:
-                                    
-                                    pos_new_x=np.append(pos_new_x, x_pos)
-                                    pos_new_y=np.append(pos_new_y, y_pos)
-                                    
-                                    difr=(difx**2+dify**2)**0.5
-    
-                                    for l in range(1,len(radius)):
-                                        if radius[l-1]<=difr<=radius[l]:
-                                            
-                                            
-                                            rad_bin[l-1]+=1
-                                            
-                                            '''
-                                            if ix==0:
-                                                ix_new_range = [len(occParts)-1, 0, 1]
-                                            elif ix==len(occParts)-1:
-                                                ix_new_range = [len(occParts)-2, len(occParts)-1, 0]
-                                            else:
-                                                ix_new_range = [ix-1, ix, ix+1]
-                                            
-                                            if iy==0:
-                                                iy_new_range = [len(occParts)-1, 0, 1]
-                                            elif iy==len(occParts)-1:
-                                                iy_new_range = [len(occParts)-2, len(occParts)-1, 0]
-                                            else:
-                                                iy_new_range = [iy-1, iy, iy+1]
-                                            for ix2 in ix_new_range:
-                                                for iy2 in iy_new_range:
-                                                    if len(binParts[ix2][iy2])!=0:
-                            
-                                                        for h2 in range(0,len(binParts[ix2][iy2])):
-                                                            if binParts[ix2][iy2][h2] != binParts[ix][iy][h]:
-                                                                x_pos_new=pos2[binParts[ix2][iy2]][h2][0]+h_box
-                                        
-                                                                y_pos_new=pos2[binParts[ix2][iy2]][h2][1]+h_box
-                                        
-                                                                difx2=x_pos-x_pos_new
-                                                                difx_abs2 = np.abs(difx2)
-                                                                if difx_abs2>=h_box:
-                                                                    if difx2 < -h_box:
-                                                                        difx2 += l_box
-                                                                    else:
-                                                                        difx2 -= l_box
-                                                                dify2=y_pos-y_pos_new
-                                                                dify_abs2 = np.abs(dify2)
-                                                                if dify_abs2>=h_box:
-                                                                    if dify2 < -h_box:
-                                                                        dify2 += l_box
-                                                                    else:
-                                                                        dify2 -= l_box
-                                                                
-                                                                difr2=(difx2**2+dify2**2)**0.5
-                                                                
-                                                                if 0.1<=difr2<=r_cut:
-                                                                    fx, fy = computeFLJ(difr2, x_pos_new, y_pos_new, x_pos, y_pos, eps)
-                                                                    # Compute the x force times x distance
-                                                                    sigx = fx * (difx2)
-                                                                    # Likewise for y
-                                                                    sigy = fy * (dify2)
-                                                                    press_num[l-1] += 1
-                                                                    pressure_vp[l-1] += ((sigx + sigy) / 2.)
-                                                                    lat_space[l-1] += difr2
-                                                            
-                                                            
-                                                            
-                                                         
-                                            px = np.sin(ang[binParts[ix][iy][h]])
-                                            px = np.sin(ang[binParts[ix][iy][h]])
-                                            py = -np.cos(ang[binParts[ix][iy][h]])
-                                            
-                                            
-                                            
-                                            r_dot_p = (-difx * px) + (-dify * py)
-                                            align=r_dot_p/difr
-                                            '''
-                                            align_rad[l-1]+=part_align[binParts[ix][iy][h]]#align
-            num_dens=np.zeros(len(radius)-1)
-            align_tot=np.zeros(len(radius)-1)
-            lat_space_avg=np.zeros(len(radius)-1)
-            pressure_vp_avg=np.zeros(len(radius)-1)
-            for f in range(0, len(align_rad)):
-                if rad_bin[f]!=0:
-                    align_tot[f]=(align_rad[f]/rad_bin[f])
-            for f in range(0, len(radius)-1):
-                num_dens[f]=rad_bin[f]/area_slice[f]
-                
-            radius_norm = radius/ext_rad_avg
-            '''
-            #for f in range(0, len(lat_space_avg)):
-            #    if rad_bin[f]!=0:
-            #        lat_space_avg[f]=(lat_space[f]/rad_bin[f]) 
-            #for f in range(0, len(pressure_vp)):
-            #    pressure_vp_avg[f]=(pressure_vp[f]/area_slice[f])
-        
-        """
-        #Loop over interfaces
+        #Contour plot of the number density of all particles per bin
         fig = plt.figure(figsize=(7,6))
         ax = fig.add_subplot(111)
         div_min = -3
@@ -14723,8 +14397,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
         level_boundaries = np.linspace(min_n, max_n, levels_text + 1)
         im = plt.contourf(pos_box_x, pos_box_y, num_dens3, level_boundaries, vmin=min_n, vmax=max_n, cmap='Blues', extend='both')
         norm= matplotlib.colors.Normalize(vmin=min_n, vmax=max_n)
-        #plt.plot(xn_pos, yn_pos, c='orange', lw=4.0)
-        #if interior_bin>0:
+
         if bub_large >=1:
             if interior_bin>0:
                 plt.scatter(xn_pos, yn_pos, c='black', s=3.0)
@@ -14760,8 +14433,6 @@ with hoomd.open(name=inFile, mode='rb') as t:
 values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStrFormatter('%.2f'))
         clb.ax.tick_params(labelsize=16)
         clb.set_label(r'$n$', labelpad=-40, y=1.07, rotation=0, fontsize=20)
-
-        #plt.quiver(pos_box_x, pos_box_y, align_norm_x, align_norm_y, color='black')
         
         plt.xlim(0, l_box)
         plt.ylim(0, l_box)
@@ -14780,8 +14451,6 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         plt.close()
         
         
-        #plt.show()
-
         div_max = 3
         div_min_n = -2
         div_max_n = 2
@@ -14806,7 +14475,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         new_green = '#39FF14'
         
         
-        
+        #Contour plot of the number density of type A particles per bin
         fig = plt.figure(figsize=(7,6))
         ax = fig.add_subplot(111)
         div_min = -3
@@ -14814,8 +14483,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         level_boundaries = np.linspace(min_n, max_n, levels_text + 1)
         im = plt.contourf(pos_box_x, pos_box_y, num_dens3A, level_boundaries, vmin=min_n, vmax=max_n, cmap='Blues', extend='both')
         norm= matplotlib.colors.Normalize(vmin=min_n, vmax=max_n)
-        #plt.plot(xn_pos, yn_pos, c='orange', lw=4.0)
-        #if interior_bin>0:
+
         if bub_large >=1:
             if interior_bin>0:
                 plt.scatter(xn_pos, yn_pos, c='black', s=3.0)
@@ -14851,8 +14519,6 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStrFormatter('%.2f'))
         clb.ax.tick_params(labelsize=16)
         clb.set_label(r'$n_\mathrm{A}$', labelpad=-40, y=1.07, rotation=0, fontsize=20)
-
-        #plt.quiver(pos_box_x, pos_box_y, align_norm_x, align_norm_y, color='black')
         
         plt.xlim(0, l_box)
         plt.ylim(0, l_box)
@@ -14871,6 +14537,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         plt.savefig(outPath + 'num_densA_' + out + pad + ".png", dpi=100)
         plt.close()
 
+        #Contour plot of the number density of type B particles per bin
         fig = plt.figure(figsize=(7,6))
         ax = fig.add_subplot(111)
         div_min = -3
@@ -14878,8 +14545,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         level_boundaries = np.linspace(min_n, max_n, levels_text + 1)
         im = plt.contourf(pos_box_x, pos_box_y, num_dens3B, level_boundaries, vmin=min_n, vmax=max_n, cmap='Blues', extend='both')
         norm= matplotlib.colors.Normalize(vmin=min_n, vmax=max_n)
-        #plt.plot(xn_pos, yn_pos, c='orange', lw=4.0)
-        #if interior_bin>0:
+
         if bub_large >=1:
             if interior_bin>0:
                 plt.scatter(xn_pos, yn_pos, c='black', s=3.0)
@@ -14915,8 +14581,6 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStrFormatter('%.2f'))
         clb.ax.tick_params(labelsize=16)
         clb.set_label(r'$n_\mathrm{B}$', labelpad=-40, y=1.07, rotation=0, fontsize=20)
-
-        #plt.quiver(pos_box_x, pos_box_y, align_norm_x, align_norm_y, color='black')
         
         plt.xlim(0, l_box)
         plt.ylim(0, l_box)
@@ -14941,6 +14605,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
             min_n = -np.abs(np.min(num_densDif))
             max_n = np.abs(np.min(num_densDif))
         
+        #Contour plot of the difference in number density of type B to type A per bin
         fig = plt.figure(figsize=(7,6))
         ax = fig.add_subplot(111)
         div_min = -3
@@ -14948,8 +14613,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         level_boundaries = np.linspace(min_n, max_n, levels_text + 1)
         im = plt.contourf(pos_box_x, pos_box_y, num_densDif, level_boundaries, vmin=min_n, vmax=max_n, cmap='seismic', extend='both')
         norm= matplotlib.colors.Normalize(vmin=min_n, vmax=max_n)
-        #plt.plot(xn_pos, yn_pos, c='orange', lw=4.0)
-        #if interior_bin>0:
+
         if bub_large >=1:
             if interior_bin>0:
                 plt.scatter(xn_pos, yn_pos, c='black', s=3.0)
@@ -14985,8 +14649,6 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStrFormatter('%.2f'))
         clb.ax.tick_params(labelsize=16)
         clb.set_label(r'$n_\mathrm{B}-n_\mathrm{A}$', labelpad=-40, y=1.07, rotation=0, fontsize=20)
-
-        #plt.quiver(pos_box_x, pos_box_y, align_norm_x, align_norm_y, color='black')
         
         plt.xlim(0, l_box)
         plt.ylim(0, l_box)
@@ -15004,7 +14666,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         plt.savefig(outPath + 'num_densDif_' + out + pad + ".png", dpi=100)
         plt.close()
         
-        #Loop over interfaces
+        #Plot the magnitude of the net active force normal to nearest interfacial surface (positive is toward, negative is away)
         fig = plt.figure(figsize=(7,6))
         ax = fig.add_subplot(111)
         div_min = -3
@@ -15014,8 +14676,8 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         level_boundaries = np.linspace(min_n, max_n, levels_text + 1)
         im = plt.contourf(pos_box_x, pos_box_y, fa_all_tot, level_boundaries, vmin=min_n, vmax=max_n, cmap='seismic', extend='both')
         norm= matplotlib.colors.Normalize(vmin=min_n, vmax=max_n)
-        #plt.plot(xn_pos, yn_pos, c='orange', lw=4.0)
-        #if interior_bin>0:
+
+        #Plot interior and exterior interface surfaces
         if bub_large >=1:
             if interior_bin>0:
                 plt.scatter(xn_pos, yn_pos, c='black', s=3.0)
@@ -15051,8 +14713,6 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStrFormatter('%.2f'))
         clb.ax.tick_params(labelsize=16)
         clb.set_label(r'$F^\mathrm{a}$', labelpad=-40, y=1.07, rotation=0, fontsize=20)
-
-        #plt.quiver(pos_box_x, pos_box_y, align_norm_x, align_norm_y, color='black')
         
         plt.xlim(0, l_box)
         plt.ylim(0, l_box)
@@ -15069,569 +14729,4 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         plt.tight_layout()
         plt.savefig(outPath + 'fa_' + out + pad + ".png", dpi=100)
         plt.close()
-        
-        
-        '''
-        new_align = [[0 for b in range(NBins)] for a in range(NBins)]
-        new_align_num = [[0 for b in range(NBins)] for a in range(NBins)]
-        new_align_avg = [[0 for b in range(NBins)] for a in range(NBins)]
-        new_align_trad = [[0 for b in range(NBins)] for a in range(NBins)]
-        new_align_num_trad = [[0 for b in range(NBins)] for a in range(NBins)]
-        new_align_avg_trad = [[0 for b in range(NBins)] for a in range(NBins)]
-        for m in range(0, len(bulk_id_arr)):
-            #Always true
-            if if_bulk_id_arr[m]==1:
-                
-                #Find which particles belong to mth interface structure
-                bulk_parts = np.where((bulkPhase==bulk_size_id_arr[m]))[0] 
-                
-                #If particles belong to mth interface structure, continue...
-                if len(bulk_parts)>0:
-
-                    #neg_x = np.where(pos[edge_parts,0]<0)[0]
-                    #neg_y = np.where(pos[edge_parts,1]<0)[0]
-
-                    #shift_pos[edge_parts,0][neg_x] = shift_pos[edge_parts,0][neg_x] + h_box
-                    #shift_pos[edge_parts,1][neg_y] = shift_pos[edge_parts,1][neg_y] + h_box
-                    
-                    x_com_bub = com_tmp_posX
-                    y_com_bub = com_tmp_posY
-                    
-                    #x_com_bub = x_com_bub + h_box
-                    #y_com_bub = y_com_bub + h_box
-                    #Loop over bins in system
-                    for ix in range(0, len(occParts)):
-                        for iy in range(0, len(occParts)): 
-                            
-                            #If bin is part of mth interface structure, continue...
-                            if new_align_num[ix][iy]==0:
-                                #Calculate position of exterior edge bin
-                                pos_box_x1 = (ix+0.5)*sizeBin
-                                pos_box_y1 = (iy+0.5)*sizeBin
-                                
-                                difx_trad = pos_box_x1 - com_tmp_posX
-                                difx_trad_abs = np.abs(difx_trad)
-                                if difx_trad_abs>=h_box:
-                                    if difx_trad < -h_box:
-                                        difx_trad += l_box
-                                    else:
-                                        difx_trad -= l_box
-                                        
-                                dify_trad = pos_box_y1 - com_tmp_posY
-                                dify_trad_abs = np.abs(dify_trad)
-                                if dify_trad_abs>=h_box:
-                                    if dify_trad < -h_box:
-                                        dify_trad += l_box
-                                    else:
-                                        dify_trad -= l_box
-                                        
-                                difx_bub = pos_box_x1 - x_com_bub
-                                difx_bub_abs = np.abs(difx_bub)
-                                if difx_bub_abs>=h_box:
-                                    if difx_bub < -h_box:
-                                        difx_bub += l_box
-                                    else:
-                                        difx_bub -= l_box
-                                        
-                                dify_bub = pos_box_y1 - y_com_bub
-                                dify_bub_abs = np.abs(dify_bub)
-                                if dify_bub_abs>=h_box:
-                                    if dify_bub < -h_box:
-                                        dify_bub += l_box
-                                    else:
-                                        dify_bub -= l_box
-                                        
-                                #Very large initial distance to calculate closest interior edge bin to this exterior edge bin
-                                difr_short= ( (difx_bub )**2 + (dify_bub)**2)**0.5#10000000.
-                                difr_trad= ( (difx_trad )**2 + (dify_trad)**2)**0.5
-                                difr_bub= ( (difx_bub )**2 + (dify_bub)**2)**0.5#10000000.
-                                
-                                x_norm_unitv = difx_bub / difr_short
-                                y_norm_unitv = dify_bub / difr_short
-                                                            
-                                x_norm_unitv_trad = (difx_trad) / difr_trad
-                                y_norm_unitv_trad = (dify_trad) / difr_trad
-                                #Loop over bins of system                                      
-                                for ix2 in range(0, len(occParts)):
-                                    for iy2 in range(0, len(occParts)):
-                                        if (ix != ix2) & (iy !=iy2):
-                                            if edge_id[ix2][iy2]==interface_id:
-                                                #If bin is an interior edge bin for mth interface structure, continue...
-                                                if (int_edge_id[ix2][iy2]==1) | (ext_edge_id[ix2][iy2]==1):
-                                                    
-                                                        #Calculate position of interior edge bin
-                                                        pos_box_x2 = (ix2+0.5)*sizeBin
-                                                        pos_box_y2 = (iy2+0.5)*sizeBin
-                                                        
-                                                        difx_width = pos_box_x1-pos_box_x2
-                                                        difx_width_abs = np.abs(difx_width)
-                                                        if difx_width_abs>=h_box:
-                                                            if difx_width < -h_box:
-                                                                difx_width += l_box
-                                                            else:
-                                                                difx_width -= l_box
-                                                                
-                                                        dify_width = pos_box_y1-pos_box_y2
-                                                        dify_width_abs = np.abs(dify_width)
-                                                        if dify_width_abs>=h_box:
-                                                            if dify_width < -h_box:
-                                                                dify_width += l_box
-                                                            else:
-                                                                dify_width -= l_box
-                                                                
-                                                        #Calculate distance from interior edge bin to exterior edge bin
-                                                        difr = ( (difx_width)**2 + (dify_width)**2)**0.5
-                                                        
-                                                        #If this distance is the shortest calculated thus far, replace the value with it
-                                                        if difr<difr_short:
-                                                            difr_short=difr
-                                                            x_norm_unitv = difx_width / difr
-                                                            y_norm_unitv = dify_width / difr
-                                                        
-                                if len(binParts[ix][iy])>0:
-                                    for h in range(0, len(binParts[ix][iy])):
-                                        #Calculate x and y orientation of active force
-                                        #px = np.cos(ang[binParts[ix][iy][h]])
-                                        #py = np.sin(ang[binParts[ix][iy][h]])
-                                        px = np.sin(ang[binParts[ix][iy][h]])
-                                        py = -np.cos(ang[binParts[ix][iy][h]])
-                                        #print(x_norm_unitv)
-                                        #print(y_norm_unitv)
-                                        #Calculate alignment towards CoM           
-                                        if difr_short == difr_bub:
-                                            r_dot_p = (-x_norm_unitv * px) + (-y_norm_unitv * py)
-                                        else:
-                                            r_dot_p = (x_norm_unitv * px) + (y_norm_unitv * py)
-                                        r_dot_p_trad = (-x_norm_unitv_trad * px) + (-y_norm_unitv_trad * py)
-                                        #Sum x,y orientation over each bin
-                                        new_align[ix][iy] += r_dot_p
-                                        new_align_num[ix][iy]+= 1
-                                        new_align_trad[ix][iy] += r_dot_p_trad
-                                        new_align_num_trad[ix][iy]+= 1
-    
-        #Loop over bins in system
-        for ix in range(0, len(occParts)):
-            for iy in range(0, len(occParts)): 
-                #If bin is an exterior bin of mth interface structure, continue...
-                #if int_edge_id[ix][iy]==0:
-                if new_align_num[ix][iy]>0:
-                    if new_align_avg[ix][iy]==0:
-                        new_align_avg[ix][iy] = new_align[ix][iy] / new_align_num[ix][iy]
-                if new_align_num_trad[ix][iy]>0:
-                    if new_align_avg_trad[ix][iy]==0:
-                        new_align_avg_trad[ix][iy] = new_align_trad[ix][iy] / new_align_num_trad[ix][iy]
-        '''                
-        
-        '''
-        fig = plt.figure(figsize=(8.5,8))
-        ax = fig.add_subplot(111)
-
-        myEps = [1., 0.1, 0.01, 0.001, 0.0001]
-        plt.scatter(pos[bulk_id_plot,0]+h_box, pos[bulk_id_plot,1]+h_box, s=1, marker='.', c=green)
-        plt.scatter(pos[gas_id,0]+h_box, pos[gas_id,1]+h_box, s=1, marker='.', c=red)
-        plt.scatter(pos[edge_id_plot,0]+h_box, pos[edge_id_plot,1]+h_box, s=1, marker='.', c=yellow)
-        if len(bub_id_plot)>0:
-            plt.scatter(pos[bub_id_plot,0]+h_box, pos[bub_id_plot,1]+h_box, s=1, marker='.', c=purple)         
-
-        if bub_large >= 1:
-            if exterior_bin > 0:
-                plt.plot(xn_pos2, yn_pos2, c=new_brown, lw=4.0)
-        if bub_large >= 2:
-            if exterior_bin_bub1 > 0:
-                plt.plot(xn_pos2_bub2, yn_pos2_bub2, c=new_brown, lw=4.0)
-        if bub_large >= 3:
-            if exterior_bin_bub2 > 0:
-                plt.plot(xn_pos2_bub3, yn_pos2_bub3, c=new_brown, lw=4.0)
-        if bub_large >= 4:
-            if exterior_bin_bub3 > 0:
-                plt.plot(xn_pos2_bub4, yn_pos2_bub4, c=new_brown, lw=4.0)
-        if bub_large >= 5:
-            if exterior_bin_bub4 > 0:
-                plt.plot(xn_pos2_bub5, yn_pos2_bub5, c=new_brown, lw=4.0)
-        
-        if bub_large >= 1:    
-            if interior_bin > 0:
-                plt.plot(xn_pos, yn_pos, c=new_brown, lw=4.0)
-        if bub_large >= 2:
-            if interior_bin_bub1 > 0:
-                plt.plot(xn_pos_bub2, yn_pos_bub2, c=new_brown, lw=4.0)
-        if bub_large >= 3:
-            if interior_bin_bub2 > 0:
-                plt.plot(xn_pos_bub3, yn_pos_bub3, c=new_brown, lw=4.0)
-        if bub_large >= 4:
-            if interior_bin_bub3 > 0:
-                plt.plot(xn_pos_bub4, yn_pos_bub4, c=new_brown, lw=4.0)
-        if bub_large >= 5:
-            if interior_bin_bub4 > 0:
-                plt.plot(xn_pos_bub5, yn_pos_bub5, c=new_brown, lw=4.0)
-                
-        plt.quiver(pos_box_x_plot, pos_box_y_plot, p_plot_x, p_plot_y)
-        plt.xticks(pos_box_start)
-        plt.yticks(pos_box_start)
-        plt.tick_params(
-                                axis='x',          # changes apply to the x-axis
-                                which='both',      # both major and minor ticks are affected
-                                bottom=False,      # ticks along the bottom edge are off
-                                top=False,         # ticks along the top edge are off
-                                labelbottom=False,
-                                labelleft=False)
-        plt.tick_params(
-                                axis='y',          # changes apply to the x-axis
-                                which='both',      # both major and minor ticks are affected
-                                right=False,      # ticks along the bottom edge are off
-                                left=False,         # ticks along the top edge are off
-                                labelbottom=False,
-                                labelleft=False)
-
-        plt.ylim((0, l_box))
-        plt.xlim((0, l_box))
-        plt.tick_params(axis='both', which='both',
-                        bottom=False, top=False, left=False, right=False,
-                        labelbottom=False, labeltop=False, labelleft=False, labelright=False)
-               
-        plt.text(0.8, 0.04, s=r'$\tau$' + ' = ' + '{:.1f}'.format(tst) + ' ' + r'$\tau_\mathrm{r}$',
-                fontsize=18,transform = ax.transAxes,
-                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
-
-        eps_leg=[]
-        mkSz = [0.1, 0.1, 0.15, 0.1, 0.1]
-        msz=40
-        red_patch = mpatches.Patch(color=red, label='Dilute')
-        green_patch = mpatches.Patch(color=green, label='Bulk')
-        yellow_patch = mpatches.Patch(color=yellow, label='Interface')
-        purple_patch = mpatches.Patch(color=purple, label='Bubble')
-        plt.legend(handles=[green_patch, yellow_patch, red_patch, purple_patch], fancybox=True, framealpha=0.75, ncol=1, fontsize=12, loc='upper left',labelspacing=0.1, handletextpad=0.1)
-        plt.title(r'$\mathrm{Pe}_\mathrm{A}$' + ' = ' + str(int(peA)) + ', ' + r'$\mathrm{Pe}_\mathrm{B}$' + ' = ' + str(int(peB)) + ', ' + r'$\chi_\mathrm{A}$' + ' = ' + str(parFrac/100) + ', ' + r'$\phi$' + ' = ' + str(phi) + ', ' + r'$\epsilon$' + ' = ' + r'$10^{{{}}}$'.format(int(np.log10(eps))), fontsize=18)
-        plt.tight_layout()
-        plt.savefig(outPath + 'interface_acc_' + out + pad + ".png", dpi=150)
-        plt.close()
-        
-        #Gradient of pressure
-        pgrad = np.gradient(new_align_avg) 
-        pgradA = np.gradient(new_align_avg0) 
-        pgradB = np.gradient(new_align_avg1) 
-        pgradDif = np.gradient(new_align_avg_dif) 
-
-        #Magnitude of pressure gradient
-        fulgrad = np.sqrt(pgrad[0]**2 + pgrad[1]**2)
-        fulgradA = np.sqrt(pgradA[0]**2 + pgradA[1]**2)
-        fulgradB = np.sqrt(pgradB[0]**2 + pgradB[1]**2)
-        fulgradDif = np.sqrt(pgradDif[0]**2 + pgradDif[1]**2)
-        
-        pgrad_norm_x  = np.zeros((len(fulgradDif), len(fulgradDif)))
-        pgradA_norm_x  = np.zeros((len(fulgradDif), len(fulgradDif)))
-        pgradB_norm_x  = np.zeros((len(fulgradDif), len(fulgradDif)))
-        pgradDif_norm_x  = np.zeros((len(fulgradDif), len(fulgradDif)))
-        
-        pgrad_norm_y  = np.zeros((len(fulgradDif), len(fulgradDif)))
-        pgradA_norm_y  = np.zeros((len(fulgradDif), len(fulgradDif)))
-        pgradB_norm_y  = np.zeros((len(fulgradDif), len(fulgradDif)))
-        pgradDif_norm_y  = np.zeros((len(fulgradDif), len(fulgradDif)))
-
-        for ix in range(0, len(fulgradDif)):
-            for iy in range(0, len(fulgradDif)):
-                if fulgradDif[ix][iy] > 0:
-                    pgradDif_norm_x[ix][iy]=pgradDif[0][ix][iy] / fulgradDif[ix][iy]
-                    pgradDif_norm_y[ix][iy]=pgradDif[1][ix][iy] / fulgradDif[ix][iy]
-                else:
-                    pgradDif_norm_x[ix][iy]=0.0
-                    pgradDif_norm_y[ix][iy]=0.0
-                    
-                if fulgrad[ix][iy] > 0:
-                    pgrad_norm_x[ix][iy]=pgrad[0][ix][iy] / fulgrad[ix][iy]
-                    pgrad_norm_y[ix][iy]=pgrad[1][ix][iy] / fulgrad[ix][iy]
-                else:
-                    pgrad_norm_x[ix][iy]=0.0
-                    pgrad_norm_y[ix][iy]=0.0
-                    
-                if fulgradA[ix][iy] > 0:
-                    pgradA_norm_x[ix][iy]=pgradA[0][ix][iy] / fulgradA[ix][iy]
-                    pgradA_norm_y[ix][iy]=pgradA[1][ix][iy] / fulgradA[ix][iy]
-                else:
-                    pgradA_norm_x[ix][iy]=0.0
-                    pgradA_norm_y[ix][iy]=0.0
-                
-                if fulgradB[ix][iy] > 0:
-                    pgradB_norm_x[ix][iy]=pgradB[0][ix][iy] / fulgradB[ix][iy]
-                    pgradB_norm_y[ix][iy]=pgradB[1][ix][iy] / fulgradB[ix][iy]
-                else:
-                    pgradB_norm_y[ix][iy]=0.0
-                    pgradB_norm_x[ix][iy]=0.0
-
-        min_n = 0.0
-        max_n = 0.5
-        
-        fig = plt.figure(figsize=(7,6))
-        ax = fig.add_subplot(111)
-        
-        levels_text=40
-        level_boundaries = np.linspace(min_n, max_n, levels_text + 1)
-        im = plt.contourf(pos_box_x, pos_box_y, fulgrad, level_boundaries, vmin=min_n, vmax=max_n, cmap='Blues', extend='both')
-        norm= matplotlib.colors.Normalize(vmin=min_n, vmax=max_n)
-        #plt.plot(xn_pos, yn_pos, c='orange', lw=4.0)
-        #if interior_bin>0:
-        if bub_large >= 1:
-            if exterior_bin > 0:
-                plt.plot(xn_pos2, yn_pos2, c=new_brown, lw=4.0)
-        if bub_large >= 2:
-            if exterior_bin_bub1 > 0:
-                plt.plot(xn_pos2_bub2, yn_pos2_bub2, c=new_brown, lw=4.0)
-        if bub_large >= 3:
-            if exterior_bin_bub2 > 0:
-                plt.plot(xn_pos2_bub3, yn_pos2_bub3, c=new_brown, lw=4.0)
-        if bub_large >= 4:
-            if exterior_bin_bub3 > 0:
-                plt.plot(xn_pos2_bub4, yn_pos2_bub4, c=new_brown, lw=4.0)
-        if bub_large >= 5:
-            if exterior_bin_bub4 > 0:
-                plt.plot(xn_pos2_bub5, yn_pos2_bub5, c=new_brown, lw=4.0)
-        
-        if bub_large >= 1:    
-            if interior_bin > 0:
-                plt.plot(xn_pos, yn_pos, c=new_brown, lw=4.0)
-        if bub_large >= 2:
-            if interior_bin_bub1 > 0:
-                plt.plot(xn_pos_bub2, yn_pos_bub2, c=new_brown, lw=4.0)
-        if bub_large >= 3:
-            if interior_bin_bub2 > 0:
-                plt.plot(xn_pos_bub3, yn_pos_bub3, c=new_brown, lw=4.0)
-        if bub_large >= 4:
-            if interior_bin_bub3 > 0:
-                plt.plot(xn_pos_bub4, yn_pos_bub4, c=new_brown, lw=4.0)
-        if bub_large >= 5:
-            if interior_bin_bub4 > 0:
-                plt.plot(xn_pos_bub5, yn_pos_bub5, c=new_brown, lw=4.0)
-            
-        plt.scatter(h_box, h_box, s=15, c='yellow')
-        sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
-        sm.set_array([])
-        tick_lev = np.arange(min_n, max_n+max_n/10, (max_n-min_n)/10)
-        clb = fig.colorbar(sm, ticks=tick_lev, boundaries=level_boundaries,
-values=(level_boundaries[:-1] + level_boundaries[1:]) / 2)
-        clb.ax.tick_params(labelsize=16)
-        clb.ax.set_title(r'$\nabla\alpha$', fontsize=16)
-        plt.quiver(pos_box_x, pos_box_y, pgrad_norm_x, pgrad_norm_y, color='black')
-        
-        plt.xlim(0, l_box)
-        plt.ylim(0, l_box)
-
-        plt.tick_params(axis='both', which='both',
-                        bottom=False, top=False, left=False, right=False,
-                        labelbottom=False, labeltop=False, labelleft=False, labelright=False)
-                       
-        plt.text(0.7, 0.04, s=r'$\tau$' + ' = ' + '{:.1f}'.format(tst) + ' ' + r'$\tau_\mathrm{r}$',
-                fontsize=18, transform = ax.transAxes,
-                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
-
-        ax.axis('off')
-        plt.title(r'$\mathrm{Pe}_\mathrm{A}$' + ' = ' + str(int(peA)) + ', ' + r'$\mathrm{Pe}_\mathrm{B}$' + ' = ' + str(int(peB)) + ', ' + r'$\chi_\mathrm{A}$' + ' = ' + str(parFrac/100) + ', ' + r'$\phi$' + ' = ' + str(phi) + ', ' + r'$\epsilon$' + ' = ' + r'$10^{{{}}}$'.format(int(np.log10(eps))), fontsize=14)
-        plt.tight_layout()
-        plt.savefig(outPath + 'aligngrad_' + out + pad + ".png", dpi=150)
-        plt.close()
-        
-        fig = plt.figure(figsize=(7,6))
-        ax = fig.add_subplot(111)
-        
-        levels_text=40
-        level_boundaries = np.linspace(min_n, max_n, levels_text + 1)
-        im = plt.contourf(pos_box_x, pos_box_y, fulgradA, level_boundaries, vmin=min_n, vmax=max_n, cmap='Blues', extend='both')
-        norm= matplotlib.colors.Normalize(vmin=min_n, vmax=max_n)
-        #plt.plot(xn_pos, yn_pos, c='orange', lw=4.0)
-        #if interior_bin>0:
-        if bub_large >= 1:
-            if exterior_bin > 0:
-                plt.plot(xn_pos2, yn_pos2, c=new_brown, lw=4.0)
-        if bub_large >= 2:
-            if exterior_bin_bub1 > 0:
-                plt.plot(xn_pos2_bub2, yn_pos2_bub2, c=new_brown, lw=4.0)
-        if bub_large >= 3:
-            if exterior_bin_bub2 > 0:
-                plt.plot(xn_pos2_bub3, yn_pos2_bub3, c=new_brown, lw=4.0)
-        if bub_large >= 4:
-            if exterior_bin_bub3 > 0:
-                plt.plot(xn_pos2_bub4, yn_pos2_bub4, c=new_brown, lw=4.0)
-        if bub_large >= 5:
-            if exterior_bin_bub4 > 0:
-                plt.plot(xn_pos2_bub5, yn_pos2_bub5, c=new_brown, lw=4.0)
-        
-        if bub_large >= 1:    
-            if interior_bin > 0:
-                plt.plot(xn_pos, yn_pos, c=new_brown, lw=4.0)
-        if bub_large >= 2:
-            if interior_bin_bub1 > 0:
-                plt.plot(xn_pos_bub2, yn_pos_bub2, c=new_brown, lw=4.0)
-        if bub_large >= 3:
-            if interior_bin_bub2 > 0:
-                plt.plot(xn_pos_bub3, yn_pos_bub3, c=new_brown, lw=4.0)
-        if bub_large >= 4:
-            if interior_bin_bub3 > 0:
-                plt.plot(xn_pos_bub4, yn_pos_bub4, c=new_brown, lw=4.0)
-        if bub_large >= 5:
-            if interior_bin_bub4 > 0:
-                plt.plot(xn_pos_bub5, yn_pos_bub5, c=new_brown, lw=4.0)
-            
-        plt.scatter(h_box, h_box, s=15, c='yellow')
-        sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
-        sm.set_array([])
-        tick_lev = np.arange(min_n, max_n+max_n/10, (max_n-min_n)/10)
-        clb = fig.colorbar(sm, ticks=tick_lev, boundaries=level_boundaries,
-values=(level_boundaries[:-1] + level_boundaries[1:]) / 2)
-        clb.ax.tick_params(labelsize=16)
-        clb.ax.set_title(r'$\nabla\alpha_\mathrm{A}$', fontsize=16)
-        plt.quiver(pos_box_x, pos_box_y, pgradA_norm_x, pgradA_norm_y, color='black')
-        
-        plt.xlim(0, l_box)
-        plt.ylim(0, l_box)
-
-        plt.tick_params(axis='both', which='both',
-                        bottom=False, top=False, left=False, right=False,
-                        labelbottom=False, labeltop=False, labelleft=False, labelright=False)
-                       
-        plt.text(0.7, 0.04, s=r'$\tau$' + ' = ' + '{:.1f}'.format(tst) + ' ' + r'$\tau_\mathrm{r}$',
-                fontsize=18, transform = ax.transAxes,
-                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
-
-        ax.axis('off')
-        plt.title(r'$\mathrm{Pe}_\mathrm{A}$' + ' = ' + str(int(peA)) + ', ' + r'$\mathrm{Pe}_\mathrm{B}$' + ' = ' + str(int(peB)) + ', ' + r'$\chi_\mathrm{A}$' + ' = ' + str(parFrac/100) + ', ' + r'$\phi$' + ' = ' + str(phi) + ', ' + r'$\epsilon$' + ' = ' + r'$10^{{{}}}$'.format(int(np.log10(eps))), fontsize=14)
-        plt.tight_layout()
-        plt.savefig(outPath + 'alignAgrad_' + out + pad + ".png", dpi=150)
-        plt.close()
-        
-        fig = plt.figure(figsize=(7,6))
-        ax = fig.add_subplot(111)
-        
-        levels_text=40
-        level_boundaries = np.linspace(min_n, max_n, levels_text + 1)
-        im = plt.contourf(pos_box_x, pos_box_y, fulgradB, level_boundaries, vmin=min_n, vmax=max_n, cmap='Blues', extend='both')
-        norm= matplotlib.colors.Normalize(vmin=min_n, vmax=max_n)
-        #plt.plot(xn_pos, yn_pos, c='orange', lw=4.0)
-        #if interior_bin>0:
-        if bub_large >= 1:
-            if exterior_bin > 0:
-                plt.plot(xn_pos2, yn_pos2, c=new_brown, lw=4.0)
-        if bub_large >= 2:
-            if exterior_bin_bub1 > 0:
-                plt.plot(xn_pos2_bub2, yn_pos2_bub2, c=new_brown, lw=4.0)
-        if bub_large >= 3:
-            if exterior_bin_bub2 > 0:
-                plt.plot(xn_pos2_bub3, yn_pos2_bub3, c=new_brown, lw=4.0)
-        if bub_large >= 4:
-            if exterior_bin_bub3 > 0:
-                plt.plot(xn_pos2_bub4, yn_pos2_bub4, c=new_brown, lw=4.0)
-        if bub_large >= 5:
-            if exterior_bin_bub4 > 0:
-                plt.plot(xn_pos2_bub5, yn_pos2_bub5, c=new_brown, lw=4.0)
-        
-        if bub_large >= 1:    
-            if interior_bin > 0:
-                plt.plot(xn_pos, yn_pos, c=new_brown, lw=4.0)
-        if bub_large >= 2:
-            if interior_bin_bub1 > 0:
-                plt.plot(xn_pos_bub2, yn_pos_bub2, c=new_brown, lw=4.0)
-        if bub_large >= 3:
-            if interior_bin_bub2 > 0:
-                plt.plot(xn_pos_bub3, yn_pos_bub3, c=new_brown, lw=4.0)
-        if bub_large >= 4:
-            if interior_bin_bub3 > 0:
-                plt.plot(xn_pos_bub4, yn_pos_bub4, c=new_brown, lw=4.0)
-        if bub_large >= 5:
-            if interior_bin_bub4 > 0:
-                plt.plot(xn_pos_bub5, yn_pos_bub5, c=new_brown, lw=4.0)
-            
-        plt.scatter(h_box, h_box, s=15, c='yellow')
-        sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
-        sm.set_array([])
-        tick_lev = np.arange(min_n, max_n+max_n/10, (max_n-min_n)/10)
-        clb = fig.colorbar(sm, ticks=tick_lev, boundaries=level_boundaries,
-values=(level_boundaries[:-1] + level_boundaries[1:]) / 2)
-        clb.ax.tick_params(labelsize=16)
-        clb.ax.set_title(r'$\nabla\alpha_\mathrm{B}$', fontsize=16)
-        plt.quiver(pos_box_x, pos_box_y, pgradB_norm_x, pgradB_norm_y, color='black')
-        
-        plt.xlim(0, l_box)
-        plt.ylim(0, l_box)
-
-        plt.tick_params(axis='both', which='both',
-                        bottom=False, top=False, left=False, right=False,
-                        labelbottom=False, labeltop=False, labelleft=False, labelright=False)
-                       
-        plt.text(0.7, 0.04, s=r'$\tau$' + ' = ' + '{:.1f}'.format(tst) + ' ' + r'$\tau_\mathrm{r}$',
-                fontsize=18, transform = ax.transAxes,
-                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
-
-        ax.axis('off')
-        plt.title(r'$\mathrm{Pe}_\mathrm{A}$' + ' = ' + str(int(peA)) + ', ' + r'$\mathrm{Pe}_\mathrm{B}$' + ' = ' + str(int(peB)) + ', ' + r'$\chi_\mathrm{A}$' + ' = ' + str(parFrac/100) + ', ' + r'$\phi$' + ' = ' + str(phi) + ', ' + r'$\epsilon$' + ' = ' + r'$10^{{{}}}$'.format(int(np.log10(eps))), fontsize=14)
-        plt.tight_layout()
-        plt.savefig(outPath + 'alignBgrad_' + out + pad + ".png", dpi=150)
-        plt.close()
-        '''
-        '''
-        fig = plt.figure(figsize=(7,6))
-        ax = fig.add_subplot(111)
-        
-        levels_text=40
-        level_boundaries = np.linspace(min_n, max_n, levels_text + 1)
-        im = plt.contourf(pos_box_x, pos_box_y, fulgradDif, level_boundaries, vmin=min_n, vmax=max_n, cmap='Blues', extend='both')
-        norm= matplotlib.colors.Normalize(vmin=min_n, vmax=max_n)
-        #plt.plot(xn_pos, yn_pos, c='orange', lw=4.0)
-        #if interior_bin>0:
-        if bub_large >= 1:
-            if exterior_bin > 0:
-                plt.plot(xn_pos2, yn_pos2, c=new_brown, lw=4.0)
-        if bub_large >= 2:
-            if exterior_bin_bub1 > 0:
-                plt.plot(xn_pos2_bub2, yn_pos2_bub2, c=new_brown, lw=4.0)
-        if bub_large >= 3:
-            if exterior_bin_bub2 > 0:
-                plt.plot(xn_pos2_bub3, yn_pos2_bub3, c=new_brown, lw=4.0)
-        if bub_large >= 4:
-            if exterior_bin_bub3 > 0:
-                plt.plot(xn_pos2_bub4, yn_pos2_bub4, c=new_brown, lw=4.0)
-        if bub_large >= 5:
-            if exterior_bin_bub4 > 0:
-                plt.plot(xn_pos2_bub5, yn_pos2_bub5, c=new_brown, lw=4.0)
-        
-        if bub_large >= 1:    
-            if interior_bin > 0:
-                plt.plot(xn_pos, yn_pos, c=new_brown, lw=4.0)
-        if bub_large >= 2:
-            if interior_bin_bub1 > 0:
-                plt.plot(xn_pos_bub2, yn_pos_bub2, c=new_brown, lw=4.0)
-        if bub_large >= 3:
-            if interior_bin_bub2 > 0:
-                plt.plot(xn_pos_bub3, yn_pos_bub3, c=new_brown, lw=4.0)
-        if bub_large >= 4:
-            if interior_bin_bub3 > 0:
-                plt.plot(xn_pos_bub4, yn_pos_bub4, c=new_brown, lw=4.0)
-        if bub_large >= 5:
-            if interior_bin_bub4 > 0:
-                plt.plot(xn_pos_bub5, yn_pos_bub5, c=new_brown, lw=4.0)
-            
-        plt.scatter(h_box, h_box, s=15, c='yellow')
-        sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
-        sm.set_array([])
-        tick_lev = np.arange(min_n, max_n+max_n/10, (max_n-min_n)/10)
-        clb = fig.colorbar(sm, ticks=tick_lev, boundaries=level_boundaries,
-values=(level_boundaries[:-1] + level_boundaries[1:]) / 2)
-        clb.ax.tick_params(labelsize=16)
-        clb.ax.set_title(r'$\nabla(|\alpha_\mathrm{B}|-|\alpha_\mathrm{A}|)$', fontsize=16)
-        plt.quiver(pos_box_x, pos_box_y, pgradDif_norm_x, pgradDif_norm_y, color='black')
-        
-        plt.xlim(0, l_box)
-        plt.ylim(0, l_box)
-
-        plt.tick_params(axis='both', which='both',
-                        bottom=False, top=False, left=False, right=False,
-                        labelbottom=False, labeltop=False, labelleft=False, labelright=False)
-                       
-        plt.text(0.7, 0.04, s=r'$\tau$' + ' = ' + '{:.1f}'.format(tst) + ' ' + r'$\tau_\mathrm{r}$',
-                fontsize=18, transform = ax.transAxes,
-                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
-
-        ax.axis('off')
-        plt.title(r'$\mathrm{Pe}_\mathrm{A}$' + ' = ' + str(int(peA)) + ', ' + r'$\mathrm{Pe}_\mathrm{B}$' + ' = ' + str(int(peB)) + ', ' + r'$\chi_\mathrm{A}$' + ' = ' + str(parFrac/100) + ', ' + r'$\phi$' + ' = ' + str(phi) + ', ' + r'$\epsilon$' + ' = ' + r'$10^{{{}}}$'.format(int(np.log10(eps))), fontsize=14)
-        plt.tight_layout()
-        plt.savefig(outPath + 'alignDifgrad_' + out + pad + ".png", dpi=150)
-        plt.close()
-        '''
         
