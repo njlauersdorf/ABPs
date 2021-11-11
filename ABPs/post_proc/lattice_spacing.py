@@ -453,8 +453,12 @@ g = open(outPath2+outTxt_lat, 'w+') # write file headings
 g.write('tauB'.center(20) + ' ' +\
                         'sizeBin'.center(20) + ' ' +\
                         'clust_size'.center(20) + ' ' +\
-                        'lat_mean'.center(20) + ' ' +\
-                        'lat_std'.center(20) + '\n')
+                        'lat_mean_bulk'.center(20) + ' ' +\
+                        'lat_mean_int'.center(20) + ' ' +\
+                        'lat_mean_all'.center(20) + ' ' +\
+                        'lat_std_bulk'.center(20) + ' ' +\
+                        'lat_std_int'.center(20) + ' ' +\
+                        'lat_std_all'.center(20) + '\n')
 g.close()
 
 with hoomd.open(name=inFile, mode='rb') as t:
@@ -1045,35 +1049,14 @@ with hoomd.open(name=inFile, mode='rb') as t:
                         align_avg_xB[ix][iy]=0
                         align_avg_yB[ix][iy]=0
                         
-                        
-        '''    
-        #Calculate average alignment in each bin or set to zero if bin empty
-        for ix in range(0, NBins):
-                for iy in range(0, NBins):
-                        
-                        #Average x,y orientation of particles per bin
-                        align_avg_x[ix][iy]= p_avg_x[ix][iy]#align_tot_x[ix][iy]/align_avg_num[ix][iy]
-                        align_avg_y[ix][iy] = p_avg_y[ix][iy]#align_tot_y[ix][iy]/align_avg_num[ix][iy]
-                        
-                        #Average x,y orientation of type A particles per bin
-                        align_avg_xA[ix][iy]= p_avg_xA[ix][iy]#align_tot_xA[ix][iy]/align_avg_num[ix][iy]
-                        align_avg_yA[ix][iy] = p_avg_yA[ix][iy]#align_tot_yA[ix][iy]/align_avg_num[ix][iy]
-                        
-                        #Average x,y orientation of type B particles per bin
-                        align_avg_xB[ix][iy]=p_avg_xB[ix][iy]#align_tot_xB[ix][iy]/align_avg_num[ix][iy]
-                        align_avg_yB[ix][iy] = p_avg_yB[ix][iy]#align_tot_yB[ix][iy]/align_avg_num[ix][iy]
-                        
-                        #Average difference in x,y orientation between type A and B particles
-                        align_avg_xDif[ix][iy] = p_avg_xB[ix][iy]-p_avg_xA[ix][iy]#(align_tot_xB[ix][iy]-align_tot_xA[ix][iy])/align_avg_num[ix][iy]
-                        align_avg_yDif[ix][iy] = p_avg_yB[ix][iy]-p_avg_yA[ix][iy]#(align_tot_yB[ix][iy]-align_tot_yA[ix][iy])/align_avg_num[ix][iy]
-        '''
+        #Initiate empty arrays                
         align_combined = np.zeros((len(v_avg_x), len(v_avg_y),2))
         align_combinedA = np.zeros((len(v_avg_x), len(v_avg_y),2))
         align_combinedB = np.zeros((len(v_avg_x), len(v_avg_y),2))
         align_combinedDif = np.zeros((len(v_avg_x), len(v_avg_y),2))
-        
         pos_box_combined_align = np.zeros((len(v_avg_x), len(v_avg_y),2))
-            
+        
+        #Loop over bins and save calculated alignment to a (:,:,2) array instead of (:,:)
         for ix in range(0, len(align_avg_x)):
             for iy in range(0, len(align_avg_y)):
                     
@@ -1092,53 +1075,64 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     pos_box_combined_align[ix][iy][0]=pos_box_x[ix][iy]
                     pos_box_combined_align[ix][iy][1]=pos_box_y[ix][iy]
 
+        #Calculate gradient of alignment over x (axis=0) and y (axis=1) directions
         alignx_grad = np.gradient(align_combined, axis=0)
         aligny_grad = np.gradient(align_combined, axis=1)
         
+        #Calculate gradient of type A alignment over x (axis=0) and y (axis=1) directions
         alignx_gradA = np.gradient(align_combinedA, axis=0)
         aligny_gradA = np.gradient(align_combinedA, axis=1)
         
+        #Calculate gradient of type B alignment over x (axis=0) and y (axis=1) directions
         alignx_gradB = np.gradient(align_combinedB, axis=0)
         aligny_gradB = np.gradient(align_combinedB, axis=1)
         
+        #Calculate gradient of alignment difference over x (axis=0) and y (axis=1) directions
         alignx_gradDif = np.gradient(align_combinedDif, axis=0)
         aligny_gradDif = np.gradient(align_combinedDif, axis=1)
         
+        #Calculate gradient of number density over x (axis=0) and y (axis=1) directions
         num_densx_grad = np.gradient(num_dens3, axis=0)
         num_densy_grad = np.gradient(num_dens3, axis=1)
         
-        align_gradx_x = alignx_grad[:,:,0]
-        align_gradx_y = alignx_grad[:,:,1]
-        align_grady_x = aligny_grad[:,:,0]
-        align_grady_y = aligny_grad[:,:,1]
+        align_gradx_x = alignx_grad[:,:,0]      #Calculate gradient of x-alignment over x direction
+        align_gradx_y = alignx_grad[:,:,1]      #Calculate gradient of y-alignment over x direction
+        align_grady_x = aligny_grad[:,:,0]      #Calculate gradient of x-alignment over y direction
+        align_grady_y = aligny_grad[:,:,1]      #Calculate gradient of y-alignment over y direction
         
-        align_gradx_xA = alignx_gradA[:,:,0]
-        align_gradx_yA = alignx_gradA[:,:,1]
-        align_grady_xA = aligny_gradA[:,:,0]
-        align_grady_yA = aligny_gradA[:,:,1]
+        align_gradx_xA = alignx_gradA[:,:,0]    #Calculate gradient of x-alignment of type A particles over x direction
+        align_gradx_yA = alignx_gradA[:,:,1]    #Calculate gradient of y-alignment of type A particles over x direction
+        align_grady_xA = aligny_gradA[:,:,0]    #Calculate gradient of x-alignment of type A particles over y direction
+        align_grady_yA = aligny_gradA[:,:,1]    #Calculate gradient of y-alignment of type A particles over y direction
         
-        align_gradx_xB = alignx_gradB[:,:,0]
-        align_gradx_yB = alignx_gradB[:,:,1]
-        align_grady_xB = aligny_gradB[:,:,0]
-        align_grady_yB = aligny_gradB[:,:,1]
+        align_gradx_xB = alignx_gradB[:,:,0]    #Calculate gradient of x-alignment of type B particles over x direction
+        align_gradx_yB = alignx_gradB[:,:,1]    #Calculate gradient of y-alignment of type B particles over x direction
+        align_grady_xB = aligny_gradB[:,:,0]    #Calculate gradient of x-alignment of type B particles over y direction
+        align_grady_yB = aligny_gradB[:,:,1]    #Calculate gradient of y-alignment of type B particles over y direction
         
-        align_gradx_xDif = alignx_gradDif[:,:,0]
-        align_gradx_yDif = alignx_gradDif[:,:,1]
-        align_grady_xDif = aligny_gradDif[:,:,0]
-        align_grady_yDif = aligny_gradDif[:,:,1]
-                        
+        
+        align_gradx_xDif = alignx_gradDif[:,:,0]    #Calculate gradient of x-alignment difference over x direction
+        align_gradx_yDif = alignx_gradDif[:,:,1]    #Calculate gradient of y-alignment difference over x direction
+        align_grady_xDif = aligny_gradDif[:,:,0]    #Calculate gradient of x-alignment difference over y direction
+        align_grady_yDif = aligny_gradDif[:,:,1]    #Calculate gradient of y-alignment difference over y direction
+                   
+        #Calculate divergence of all alignment
         div_align = align_gradx_x + align_grady_y
         curl_align = -align_grady_x + align_gradx_y
         
+        #Calculate divergence of type A alignment
         div_alignA = align_gradx_xA + align_grady_yA
         curl_alignA = -align_grady_xA + align_gradx_yA
         
+        #Calculate divergence of type B alignment
         div_alignB = align_gradx_xB + align_grady_yB
         curl_alignB = -align_grady_xB + align_gradx_yB
         
+        #Calculate divergence of alignment difference between type B and A particles
         div_alignDif = align_gradx_xDif + align_grady_yDif
         curl_alignDif = -align_grady_xDif + align_gradx_yDif
         
+        #Calculate divergence of number density
         div_num_dens = num_densx_grad + num_densy_grad
         div_num_dens2 = np.gradient(num_dens3)
                      
@@ -1179,32 +1173,64 @@ with hoomd.open(name=inFile, mode='rb') as t:
         press_binA = [[0 for b in range(NBins)] for a in range(NBins)]
         press_binB = [[0 for b in range(NBins)] for a in range(NBins)]
         press_binDif = [[0 for b in range(NBins)] for a in range(NBins)]
+        
         #Calculate weighted alignment/num density product for determining highly aligned interface
         for ix in range(0, len(occParts)):
                 for iy in range(0, len(occParts)):
+                    
+                    #Pressure integrand (number density times alignment) per bin
                     press_int[ix][iy] = num_dens3[ix][iy]*(align_avg_x[ix][iy]**2+align_avg_y[ix][iy]**2)**0.5
+                    
+                    #Alignment of all particles per bin
                     align_mag[ix][iy] = (align_avg_x[ix][iy]**2+align_avg_y[ix][iy]**2)**0.5
+                    
+                    #Alignment of type A particles per bin
                     align_magA[ix][iy] = (align_avg_xA[ix][iy]**2+align_avg_yA[ix][iy]**2)**0.5
+                    
+                    #Alignment of type B particles per bin
                     align_magB[ix][iy] = (align_avg_xB[ix][iy]**2+align_avg_yB[ix][iy]**2)**0.5
+                    
+                    #Difference in alignment of type B to type A particles per bin
                     align_magDif[ix][iy] = (align_magB[ix][iy]-align_magA[ix][iy])#(align_avg_xDif[ix][iy]**2+align_avg_yDif[ix][iy]**2)**0.5
+                    
+                    #If 2nd time step or higher, continue...
                     if j>(start*time_step):
+                        
+                        #Velocity of all particles per bin
                         vel_mag[ix][iy] = ((v_avg_x[ix][iy]**2+v_avg_y[ix][iy]**2)**0.5)#/peB
+                        
+                        #Velocity of type A particles per bin
                         vel_magA[ix][iy] = ((v_avg_xA[ix][iy]**2+v_avg_yA[ix][iy]**2)**0.5)#/peA
+                        
+                        #Velocity of type B particles per bin
                         vel_magB[ix][iy] = ((v_avg_xB[ix][iy]**2+v_avg_yB[ix][iy]**2)**0.5)#/peB
+                        
+                        #Difference in velocity of type B to type A particles per bin
                         vel_magDif[ix][iy] = (vel_magB[ix][iy]*peB-vel_magA[ix][iy]*peA)#(align_avg_xDif[ix][iy]**2+align_avg_yDif[ix][iy]**2)**0.5
+                    
+                    #Pressure integrand (number density times alignment) of all particles per bin
                     press_bin[ix][iy] = num_dens3[ix][iy]*align_mag[ix][iy]#*Binpe[ix][iy]
+                    
+                    #Pressure integrand (number density times alignment) of type A particles per bin
                     press_binA[ix][iy] = num_dens3A[ix][iy]*align_magA[ix][iy]#*peA
+                    
+                    #Pressure integrand (number density times alignment) of type B particles per bin
                     press_binB[ix][iy] = num_dens3B[ix][iy]*align_magB[ix][iy]#*peB
+                    
+                    #Difference in pressure integrand of type B to type A particles per bin
                     press_binDif[ix][iy] = (num_dens3B[ix][iy]*align_magB[ix][iy])-(num_dens3A[ix][iy]*align_magA[ix][iy])
 
+                    #Calculate x,y-components of normalized alignment (0 to 1) with surface normal of all particles per bin
                     if align_mag[ix][iy]>0:
                         align_norm_x[ix][iy] = align_avg_x[ix][iy] / align_mag[ix][iy]
                         align_norm_y[ix][iy] = align_avg_y[ix][iy] / align_mag[ix][iy]
                 
+                    #Calculate x,y-components normalized alignment (0 to 1) of type A particles per bin
                     if align_magA[ix][iy]>0:
                         align_norm_xA[ix][iy] = align_avg_xA[ix][iy] / align_magA[ix][iy]
                         align_norm_yA[ix][iy] = align_avg_yA[ix][iy] / align_magA[ix][iy]
                     
+                    #Calculate x,y-components normalized alignment (0 to 1) of type B particles per bin
                     if align_magB[ix][iy]>0:
                         align_norm_xB[ix][iy] = align_avg_xB[ix][iy] / align_magB[ix][iy]
                         align_norm_yB[ix][iy] = align_avg_yB[ix][iy] / align_magB[ix][iy]
@@ -1216,6 +1242,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
         numdensgrad = np.gradient(num_dens3)
         numdensgradA = np.gradient(num_dens3A)
         numdensgradB = np.gradient(num_dens3B)
+        
         #Gradient of pressure
         pgrad = np.gradient(press_int) 
 
@@ -1692,7 +1719,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                 partTyp[binParts[ix][iy][h]]=typ[binParts[ix][iy][h]]
                         
         
-                           
+        #Initiate empty arrays                   
         bub_id = []
 
         bub_fast_comp = np.array([])
@@ -1839,6 +1866,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
         bub_slow_arr = np.array([], dtype=int)
         if_bub_id_arr = np.array([], dtype=int)
         
+        #Sort interface structures by size with largest cluster corresponding to first bulk phase and decending in size until, at most, the fifth largest bulk is labeled
+
         #If 5 or more interface structures, continue...
         if bub_large>=5:
                 if len(int_poss_ids)>0:
@@ -2315,6 +2344,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
         bulk_slow_arr = np.array([], dtype=int)
         if_bulk_id_arr = np.array([], dtype=int)
         
+        #Sort bulk structures by size with largest cluster corresponding to first bulk phase and decending in size until, at most, the fifth largest bulk is labeled
         #If 5 or more bulk phase structure...
         if bulk_large>=5:
                 
@@ -2864,12 +2894,11 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 for iy in range(0, len(occParts)):  
                     if len(binParts[ix][iy])>0:
                         for h in range(0, len(binParts[ix][iy])):
-                            
                             extedgePhase[binParts[ix][iy][h]]=ext_edge_id[ix][iy]
                             intedgePhase[binParts[ix][iy][h]]=int_edge_id[ix][iy]  
                             
         
-        #Save positions of external and internal edges
+        #Initiate empty arrays
         ext_pos_box_x_arr=np.array([])
         ext_pos_box_y_arr=np.array([])
         int_pos_box_x_arr=np.array([])
@@ -2884,31 +2913,24 @@ with hoomd.open(name=inFile, mode='rb') as t:
         
         #Save positions of interior and exterior edge bins
         for ix in range(0, len(occParts)):
-                for iy in range(0, len(occParts)): 
-                            if ext_edge_id[ix][iy]==1:
-                                ext_pos_box_x_arr=np.append(ext_pos_box_x_arr, (ix+0.5)*sizeBin)
-                                ext_pos_box_y_arr=np.append(ext_pos_box_y_arr, (iy+0.5)*sizeBin)
-                                #if len(ext_vert_x)==0:
-                                    #ext_vert_x = np.append(ext_vert_x, (ix+0.5)*sizeBin)
-                                    #ext_vert_y = np.append(ext_vert_y, (iy+0.5)*sizeBin)
-                                            
+            for iy in range(0, len(occParts)): 
+                if ext_edge_id[ix][iy]==1:
+                    ext_pos_box_x_arr=np.append(ext_pos_box_x_arr, (ix+0.5)*sizeBin)
+                    ext_pos_box_y_arr=np.append(ext_pos_box_y_arr, (iy+0.5)*sizeBin)
+                    
+                elif int_edge_id[ix][iy]==1:
+                    int_pos_box_x_arr=np.append(int_pos_box_x_arr, (ix+0.5)*sizeBin)
+                    int_pos_box_y_arr=np.append(int_pos_box_y_arr, (iy+0.5)*sizeBin)
                                 
-                                #ext_codes = np.append(ext_codes, Path.LINETO)
-                            elif int_edge_id[ix][iy]==1:
-                                int_pos_box_x_arr=np.append(int_pos_box_x_arr, (ix+0.5)*sizeBin)
-                                int_pos_box_y_arr=np.append(int_pos_box_y_arr, (iy+0.5)*sizeBin)
-                                #int_vert_x = np.append(int_vert_x, (ix+0.5)*sizeBin)
-                                #int_vert_y = np.append(int_vert_y, (iy+0.5)*sizeBin)                                
-                                #int_codes = np.append(int_codes, Path.LINETO)
+        #Sort arrays of points defining exterior and interior surfaces of interface so adjacent points are next to eachother in array
         
-        #ext_vert_x = np.append(ext_vert_x, ext_pos_box_x_arr[0])
-        #ext_vert_y = np.append(ext_vert_y, ext_pos_box_y_arr[0])
-        
-        #ext_pos_box_x_arr = np.delete(ext_pos_box_x_arr, 0)
-        #ext_pos_box_y_arr = np.delete(ext_pos_box_y_arr, 0)
-        
+        #if 2nd time step or higher, continue...
         if j>(start*time_step):
+            
+            #Sort points defining exterior surface of interface
             while len(ext_pos_box_x_arr)>0: 
+                
+                #If no particles in the sorted array, append the first point of unsorted array (this will be starting point to determine adjacent points)
                 if len(ext_vert_x)==0:
                     ext_vert_x = np.append(ext_vert_x, ext_pos_box_x_arr[0])
                     ext_vert_y = np.append(ext_vert_y, ext_pos_box_y_arr[0])
@@ -2917,9 +2939,15 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     ext_pos_box_y_arr = np.delete(ext_pos_box_y_arr, 0)
                     
                     ext_codes = np.append(ext_codes, Path.MOVETO)
-                else:
+                
+                #If at least one point in sorted array, find next nearest point
+                else: 
                     shortest_length = 100000
+                    
+                    #Loop over all points in exterior surface to find next closest point to most recently appended sorted point
                     for iy in range(0, len(ext_pos_box_y_arr)): 
+                        
+                        #Difference in x,y positions
                         difx = ext_vert_x[-1]-ext_pos_box_x_arr[iy]
                         dify = ext_vert_y[-1]-ext_pos_box_y_arr[iy]
                         
@@ -2938,13 +2966,18 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                     dify += l_box
                                 else:
                                     dify -= l_box
-                                    
+                        
+                        #distance between points
                         difr = (difx**2 + dify**2)**0.5
+                        
+                        #If distance between points lesser than previously determined shortest distance, replace these values
                         if difr < shortest_length:
                             shortest_length = difr
                             shortest_xlength = difx
                             shortest_ylength = dify
                             shortest_id = iy
+                            
+                        #If the distance is equal, favor points to right (greater x or y values) of reference point
                         elif difr == shortest_length:
                             if (difx<0) or (dify<0):
                                 if (shortest_xlength <0) or (shortest_ylength<0):
@@ -2956,14 +2989,18 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                     pass
                             else:
                                 pass
-                                
+                            
+                    #Save nearest point of exterior surface of interface determined by loop             
                     ext_vert_x = np.append(ext_vert_x, ext_pos_box_x_arr[shortest_id])
                     ext_vert_y = np.append(ext_vert_y, ext_pos_box_y_arr[shortest_id])
                     
                     ext_pos_box_x_arr = np.delete(ext_pos_box_x_arr, shortest_id)
                     ext_pos_box_y_arr = np.delete(ext_pos_box_y_arr, shortest_id)
-                            
+           
+            #Sort points defining interior surface of interface
             while len(int_pos_box_x_arr)>0: 
+                
+                #If no particles in the sorted array, append the first point of unsorted array (this will be starting point to determine adjacent points)
                 if len(int_vert_x)==0:
                     int_vert_x = np.append(int_vert_x, int_pos_box_x_arr[0])
                     int_vert_y = np.append(int_vert_y, int_pos_box_y_arr[0])
@@ -2972,9 +3009,15 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     int_pos_box_y_arr = np.delete(int_pos_box_y_arr, 0)
                     
                     int_codes = np.append(int_codes, Path.MOVETO)
+                
+                #If at least one point in sorted array, find next nearest point
                 else:
                     shortest_length = 100000
+                    
+                    #Loop over all points in interior surface to find next closest point to most recently appended sorted point
                     for iy in range(0, len(int_pos_box_y_arr)): 
+                        
+                        #Difference in x,y positions
                         difx = int_vert_x[-1]-int_pos_box_x_arr[iy]
                         dify = int_vert_y[-1]-int_pos_box_y_arr[iy]
                         
@@ -2994,13 +3037,17 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                 else:
                                     dify -= l_box
                                     
+                        #distance between points
                         difr = (difx**2 + dify**2)**0.5
+                        
+                        #If distance between points lesser than previously determined shortest distance, replace these values
                         if difr < shortest_length:
                             shortest_length = difr
                             shortest_xlength = difx
                             shortest_ylength = dify
                             shortest_id = iy
                         
+                        #If the distance is equal, favor points to right (greater x or y values) of reference point
                         elif difr == shortest_length:
                             if (difx<0) or (dify<0):
                                 if (shortest_xlength <0) or (shortest_ylength<0):
@@ -3012,20 +3059,12 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                     pass
                             else:
                                 pass
-                        
+                     
+                    #Save nearest point of interior surface of interface determined by loop             
                     int_vert_x = np.append(int_vert_x, int_pos_box_x_arr[shortest_id])
                     int_vert_y = np.append(int_vert_y, int_pos_box_y_arr[shortest_id])
                     int_pos_box_x_arr = np.delete(int_pos_box_x_arr, shortest_id)
                     int_pos_box_y_arr = np.delete(int_pos_box_y_arr, shortest_id)
-            
-            
-            
-            
-            #np.reshape(int_vert )
-    
-            #int_codes[0]=Path.MOVETO
-            #ext_codes[0]=Path.MOVETO
-            
             
         
         #If there is an interface (bubble), find the mid-point of the cluster's edges
@@ -3119,198 +3158,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                             
                             #Save radius from CoM of bin
                             radius_id = np.append(radius_id, (difx**2 + dify**2)**0.5)
-        '''
-        #Measures radius and width of each interface
-        edge_width = []
-        bub_width_ext = []
-        bub_width_int = []
-        bub_width = []
 
-        id_step = 0
-
-        #Loop over interfaces
-        for m in range(0, len(bub_id_arr)):
-            
-            #Always true
-            if if_bub_id_arr[m]==1:
-                
-                #Find which particles belong to mth interface structure
-                edge_parts = np.where((edgePhase==bub_size_id_arr[m]))[0] 
-                
-                #If particles belong to mth interface structure, continue...
-                if len(edge_parts)>0:
-                    
-                    #Initiate empty arrays
-                    shortest_r=np.array([])
-                    bub_rad_int=np.array([])
-                    bub_rad_ext=np.array([])
-                    
-                    #Find interior and exterior particles of interface
-                    int_bub_id_tmp = np.where((edgePhase==bub_size_id_arr[m]) & (intedgePhase==1))[0] 
-                    ext_bub_id_tmp = np.where((edgePhase==bub_size_id_arr[m]) & (extedgePhase==1))[0] 
-                    
-                    #Calculate (x,y) center of mass of interface
-                    x_com_bub = np.mean(pos[edge_parts,0]+h_box)
-                    y_com_bub = np.mean(pos[edge_parts,1]+h_box)
-
-                    #Loop over bins in system
-                    for ix in range(0, len(occParts)):
-                                for iy in range(0, len(occParts)): 
-                                    
-                                    #If bin belongs to mth interface structure, continue...
-                                    if edge_id[ix][iy]==bub_size_id_arr[m]:
-                                        
-                                        #If bin is an exterior particle of mth interface structure, continue...
-                                        if ext_edge_id[ix][iy]==1:
-                                            
-                                            #Calculate (x,y) position of bin
-                                            pos_box_x1 = (ix+0.5)*sizeBin
-                                            pos_box_y1 = (iy+0.5)*sizeBin
-                                            
-                                            #Calculate x distance from mth interface structure's center of mass
-                                            bub_rad_tmp_x = (pos_box_x1-x_com_bub)
-                                            bub_rad_tmp_x_abs = np.abs(pos_box_x1-x_com_bub)
-                                            
-                                            #Enforce periodic boundary conditions
-                                            if bub_rad_tmp_x_abs>=h_box:
-                                                if bub_rad_tmp_x < -h_box:
-                                                    bub_rad_tmp_x += l_box
-                                                else:
-                                                    bub_rad_tmp_x -= l_box
-                                                    
-                                            #Calculate y distance from mth interface structure's center of mass
-                                            bub_rad_tmp_y = (pos_box_y1-y_com_bub)
-                                            bub_rad_tmp_y_abs = np.abs(pos_box_y1-y_com_bub)
-                                            
-                                            #Enforce periodic boundary conditions
-                                            if bub_rad_tmp_y_abs>=h_box:
-                                                if bub_rad_tmp_y < -h_box:
-                                                    bub_rad_tmp_y += l_box
-                                                else:
-                                                    bub_rad_tmp_y -= l_box
-                                            
-                                            #Calculate magnitude of distance from center of mass of mth interface structure
-                                            bub_rad_tmp = (bub_rad_tmp_x**2 + bub_rad_tmp_y**2)**0.5
-                                            
-                                            #Save this interface's radius to array
-                                            bub_rad_ext = np.append(bub_rad_ext, bub_rad_tmp+(sizeBin/2))
-                                        
-                                        #If bin is interior particle of mth interface structure, continue
-                                        if int_edge_id[ix][iy]==1:
-                                            
-                                            #Calculate (x,y) position of bin
-                                            pos_box_x1 = (ix+0.5)*sizeBin
-                                            pos_box_y1 = (iy+0.5)*sizeBin
-                                            
-                                            #Calculate x distance from mth interface structure's center of mass
-                                            bub_rad_tmp_x = (pos_box_x1-x_com_bub)
-                                            bub_rad_tmp_x_abs = np.abs(pos_box_x1-x_com_bub)
-                                            
-                                            #Enforce periodic boundary conditions
-                                            if bub_rad_tmp_x_abs>=h_box:
-                                                if bub_rad_tmp_x < -h_box:
-                                                    bub_rad_tmp_x += l_box
-                                                else:
-                                                    bub_rad_tmp_x -= l_box
-                                                    
-                                            #Calculate y distance from mth interface structure's center of mass
-                                            bub_rad_tmp_y = (pos_box_y1-y_com_bub)
-                                            bub_rad_tmp_y_abs = np.abs(pos_box_y1-y_com_bub)
-                                            
-                                            #Enforce periodic boundary conditions
-                                            if bub_rad_tmp_y_abs>=h_box:
-                                                if bub_rad_tmp_y < -h_box:
-                                                    bub_rad_tmp_y += l_box
-                                                else:
-                                                    bub_rad_tmp_y -= l_box
-                                            
-                                            #Calculate magnitude of distance to mth interface structure's center of mass
-                                            bub_rad_tmp = (bub_rad_tmp_x**2 + bub_rad_tmp_y**2)**0.5
-                                            
-                                            #Save this interface's interior radius to array
-                                            bub_rad_int = np.append(bub_rad_int, bub_rad_tmp+(sizeBin/2))
-                    #if there were interior bins found, calculate the average interior radius of mth interface structure
-                    if len(bub_rad_int)>0:
-                        bub_width_int.append(np.mean(bub_rad_int)+sizeBin/2)
-                    else:
-                        bub_width_int.append(0)
-                        
-                    #if there were exterior bins found, calculate the average exterior radius of mth interface structure
-                    if len(bub_rad_ext)>0:
-                        bub_width_ext.append(np.mean(bub_rad_ext)+sizeBin/2)
-                    else:
-                        bub_width_ext.append(0)
-                    
-                    #Use whichever is larger to calculate the true radius of the mth interface structure
-                    if bub_width_ext[id_step]>bub_width_int[id_step]:   
-                        bub_width.append(bub_width_ext[id_step])
-                    else:
-                        bub_width.append(bub_width_int[id_step])
-                    
-                    #If both interior and exterior particles were identified, continue...
-                    if (len(int_bub_id_tmp)>0) & (len(ext_bub_id_tmp)>0):
-                        
-                            #Loop over bins in system
-                            for ix in range(0, len(occParts)):
-                                for iy in range(0, len(occParts)): 
-                                    
-                                    #If bin is part of mth interface structure, continue...
-                                    if edge_id[ix][iy]==bub_size_id_arr[m]:
-                                        
-                                        #If bin is an exterior bin of mth interface structure, continue...
-                                        if ext_edge_id[ix][iy]==1:
-                                            
-                                            #Very large initial distance to calculate closest interior edge bin to this exterior edge bin
-                                            difr_short=10000000.
-                                            
-                                            #Calculate position of exterior edge bin
-                                            pos_box_x1 = (ix+0.5)*sizeBin
-                                            pos_box_y1 = (iy+0.5)*sizeBin
-                                            
-                                            #Loop over bins of system                                      
-                                            for ix2 in range(0, len(occParts)):
-                                                for iy2 in range(0, len(occParts)):
-                                                    
-                                                    #If bin belongs to mth interface structure, continue...
-                                                    if edge_id[ix2][iy2]==bub_size_id_arr[m]:
-                                                        
-                                                        #If bin is an interior edge bin for mth interface structure, continue...
-                                                        if int_edge_id[ix2][iy2]==1:
-                                                            
-                                                                #Calculate position of interior edge bin
-                                                                pos_box_x2 = (ix2+0.5)*sizeBin
-                                                                pos_box_y2 = (iy2+0.5)*sizeBin
-                                                                
-                                                                #Calculate distance from interior edge bin to exterior edge bin
-                                                                difr = ( (pos_box_x1-pos_box_x2)**2 + (pos_box_y1-pos_box_y2)**2)**0.5
-                                                                
-                                                                #If this distance is the shortest calculated thus far, replace the value with it
-                                                                if difr<difr_short:
-                                                                    difr_short=difr
-                                            #Save each shortest distance to an interior edge bin calculated for each exterior edge bin
-                                            shortest_r = np.append(shortest_r, difr_short)
-                            
-                            #Calculate and save the average shortest-distance between each interior edge and exterior edge bins for the mth interface structure
-                            edge_width.append(np.mean(shortest_r)+sizeBin)
-                            
-                    #If both an interior and exterior edge were not identified, save the cluster radius instead for the edge width
-                    else:
-                        edge_width.append(bub_width[id_step])
-                        
-                    #Step for number of bins with identified edge width
-                    id_step +=1 
-                
-                #If no particles in interface, save zeros for radius and width
-                else:
-                    edge_width.append(0)
-                    bub_width.append(0)
-                    
-            #Never true
-            else:
-                edge_width.append(0)
-                bub_width.append(0)
-        '''
-        
         #Initiate counts of phases/structures
         bulkBin=0
         gasBin=0
@@ -3500,12 +3348,15 @@ with hoomd.open(name=inFile, mode='rb') as t:
         div = [[0 for b in range(NBins)] for a in range(NBins)]
         
         v_combined = np.zeros((len(v_avg_x), len(v_avg_y),2))
-        
+
         align_combined = np.zeros((len(v_avg_x), len(v_avg_y),2))
 
         pos_box_combined = np.zeros((len(v_avg_x), len(v_avg_y),2))
+        
+        #if currently 2nd time step or higher, continue
         if j>(start*time_step):
             
+            #Combine previously calculated arrays to a higher dimension matrix (:,:,2) instead of (:,:)
             for ix in range(0, len(v_avg_x)):
                 for iy in range(0, len(v_avg_y)):
                     v_combined[ix][iy][0]=v_avg_x[ix][iy]
@@ -3516,16 +3367,21 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     
                     pos_box_combined[ix][iy][0]=pos_box_x[ix][iy]
                     pos_box_combined[ix][iy][1]=pos_box_y[ix][iy]
+                    
+            #Calculate spatial gradient of x,y-velocities in x (axis=0) and y (axis=1) directions
             vx_grad = np.gradient(v_combined, axis=0)
             vy_grad = np.gradient(v_combined, axis=1)
-
-            #v_grad = np.gradient
-            #vx_grad = np.gradient(v_avg_x_no_gas, pos_box_x)   #central diff. du_dx
-            #vy_grad = np.gradient(v_avg_y_no_gas, pos_box_y)  #central diff. dv_dy
             
+            #Calculates gradient of v_x in x direction
             vel_gradx_x = vx_grad[:,:,0]
+            
+            #Calculates gradient of v_x in y direction
             vel_gradx_y = vx_grad[:,:,1]
+            
+            #Calculates gradient of v_y in x direction
             vel_grady_x = vy_grad[:,:,0]
+            
+            #Calculates gradient of v_y in y direction
             vel_grady_y = vy_grad[:,:,1]
                         
             div = vel_gradx_x + vel_grady_y
@@ -3548,16 +3404,20 @@ with hoomd.open(name=inFile, mode='rb') as t:
                         
             
 
-        #Counts number of different particles belonging to each phase
+        #Calculates various normalized velocity of each bin
         for ix in range(0, len(occParts)):
                 for iy in range(0, len(occParts)):
                     if j>(start*time_step):
+                        
+                        #velocity of all particles in bin
                         if vel_mag[ix][iy]>0:
                             vel_normx[ix][iy] = v_avg_x[ix][iy] / vel_mag[ix][iy]
                             vel_normy[ix][iy] = v_avg_y[ix][iy] / vel_mag[ix][iy]
                         else:
                             vel_normx[ix][iy]=0
                             vel_normy[ix][iy]=0
+                            
+                        #velocity of type A particles in bin
                         if vel_magA[ix][iy]>0:
                             vel_normxA[ix][iy] = v_avg_xA[ix][iy] / vel_magA[ix][iy]
                             vel_normyA[ix][iy] = v_avg_yA[ix][iy] / vel_magA[ix][iy]
@@ -3565,6 +3425,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                             vel_normxA[ix][iy] = 0
                             vel_normyA[ix][iy] = 0
                         
+                        #velocity of type B particles in bin
                         if vel_magB[ix][iy]>0:
                             vel_normxB[ix][iy] = v_avg_xB[ix][iy] / vel_magB[ix][iy]
                             vel_normyB[ix][iy] = v_avg_yB[ix][iy] / vel_magB[ix][iy]
@@ -3614,13 +3475,12 @@ with hoomd.open(name=inFile, mode='rb') as t:
         red = ("#ff6961")           #Gas phase
         purple = ("#cab2d6")        #Bubble or small gas-dense interfaces
 
-        #If bulk/gas exist, calculate the structure ID for the gas/bulk
-        
+        #Find ids of which particles belong to each phase
         bulk_id_plot = np.where(partPhase==0)[0]        #Bulk phase structure(s)
         edge_id_plot = np.where(edgePhase==interface_id)[0]     #Largest gas-dense interface
         int_id_plot = np.where(partPhase==1)[0]         #All interfaces
-        bulk_int_id_plot = np.where(partPhase!=2)[0]
-
+        bulk_int_id_plot = np.where((partPhase!=2) | (edgePhase==interface_id))[0]
+        
         if len(bulk_ids)>0:
             bub_id_plot = np.where((edgePhase!=interface_id) & (edgePhase!=bulk_id))[0]     #All interfaces excluding the largest gas-dense interface
         else:
@@ -3629,75 +3489,207 @@ with hoomd.open(name=inFile, mode='rb') as t:
         
         #label previous positions for velocity calculation
         pos_prev = pos.copy()
-
         
         
+        #Positions of particles in each phase
         bulk_int_pos = pos[bulk_int_id_plot]
         bulk_pos = pos[bulk_id_plot]
         int_pos = pos[edge_id_plot]
-        #Compute cluster parameters using system_all neighbor list
-        system_bulk = freud.AABBQuery(f_box, bulk_int_pos)
-        nlist = system_bulk.query(bulk_pos, {'r_max': r_cut}).toNeighborList()
-        #for i,j in nlist[]:
-        difr = np.array([])
+        
+        #Compute neighbor list for 6-nearest neighbors given particle positions
+        system_all = freud.AABBQuery(f_box, f_box.wrap(pos))
+        nlist2 = system_all.query(f_box.wrap(bulk_int_pos), dict(num_neighbors=6, exclude_ii=True))
+        
+        #Set empty arrays
         point_ind_arr = np.array([])
         point_query_arr = np.array([])
-        for i,j in nlist[:]:
-            difx = bulk_pos[i,0] - bulk_int_pos[j,0]
-            dify = bulk_pos[i,1] - bulk_int_pos[j,1]
-            
-            #Enforce periodic boundary conditions
-            difx_abs = np.abs(difx)
-            if difx_abs>=h_box:
-                if difx < -h_box:
-                    difx += l_box
-                else:
-                    difx -= l_box
-            
-            #Enforce periodic boundary conditions
-            dify_abs = np.abs(dify)
-            if dify_abs>=h_box:
-                if dify < -h_box:
-                    dify += l_box
-                else:
-                    dify -= l_box            
-            difr_val = (difx**2 + dify**2)**0.5
-            if difr_val > 0:
-                #if difr_val <= r_cut:
-                difr = np.append(difr, difr_val)
-                point_ind_arr = np.append(point_ind_arr, i)
-                point_query_arr = np.append(point_query_arr, j)
-
-        lat_mean_arr = np.array([])#zeros(len(bulk_id_plot))
-        lat_std_arr = np.array([])#np.zeros(len(bulk_id_plot))
-        for i in range(0, len(bulk_id_plot)):
-            pair_ids = np.where(point_ind_arr==bulk_id_plot[i])[0]
-            if len(pair_ids)>0:
-                difr_pair_ids = difr[pair_ids]
-                while len(difr_pair_ids) > 6:
-                    max_dist = np.max(difr_pair_ids)
-                    id_max_dist = np.where(difr_pair_ids==max_dist)[0]
-                    difr_pair_ids = np.delete(difr_pair_ids, id_max_dist)
-                if len(difr_pair_ids)>0:
-                    lat_mean_val = np.mean(difr_pair_ids)
-                    lat_mean_arr = np.append(lat_mean_arr, lat_mean_val)
-                    lat_std_num = 0
-                    for k in range(0, len(difr_pair_ids)):
-                        lat_std_num += (difr_pair_ids[k]-lat_mean_val)**2
-                    lat_std_arr = np.append(lat_std_arr, (lat_std_num/len(difr_pair_ids))**0.5)        
-        if len(lat_mean_arr) >0:
-            lat_mean_final = np.mean(lat_mean_arr)
-        else:
-            lat_mean_final = 0
-        if len(lat_std_arr)>0:
-            lat_std_final = np.mean(lat_std_arr)
-        else:
-            lat_std_final = 0
+        difr = np.array([])
         
+        #Save neighbor indices and distances from neighbor list to array
+        for bond in nlist2:
+            point_ind_arr = np.append(point_ind_arr, bond[0])
+            point_query_arr = np.append(point_query_arr, bond[1])
+            difr = np.append(difr, bond[2])
+        
+
+        #Set empty arrays
+        lat_mean_indiv_arr_bulk = np.array([])
+        lat_mean_indiv_arr_gas = np.array([])
+        lat_mean_indiv_arr_int = np.array([])
+        lat_mean_indiv_arr = np.array([])
+        pos_x_bulk = np.array([])
+        pos_y_bulk = np.array([])
+        pos_x_int = np.array([])
+        pos_y_int = np.array([])
+        pos_x_gas = np.array([])
+        pos_y_gas = np.array([])
+        lat_mean_arr = np.array([])
+        lat_std_arr_bulk = np.array([])
+        lat_std_arr_int = np.array([])
+        lat_std_arr_gas = np.array([])
+        
+        for i in range(0, len(bulk_int_id_plot)):
+            pair_ids = np.where(point_ind_arr==i)[0]
+            
+            #If reference bulk or interface particle identified in neighbor list, continue
+            if len(pair_ids)>0:
+                
+                #Distance to six nearest neighbor from reference bulk or interface particle
+                difr_pair_ids = difr[pair_ids]
+                
+                #Calculate and save mean lattice spacing
+                lat_mean_val = np.mean(difr_pair_ids)
+                lat_mean_indiv_arr = np.append(lat_mean_indiv_arr, lat_mean_val)
+                
+                #If bulk particle, save lattice spacing and positions to array
+                if partPhase[bulk_int_id_plot[i]]==0:
+                    lat_mean_indiv_arr_bulk = np.append(lat_mean_indiv_arr_bulk, lat_mean_val)
+                    pos_x_bulk = np.append(pos_x_bulk, pos[bulk_int_id_plot[i],0])
+                    pos_y_bulk = np.append(pos_y_bulk, pos[bulk_int_id_plot[i],1])
+
+                #If interface particle, save lattice spacing and positions to array
+                elif partPhase[bulk_int_id_plot[i]]==1:
+                    lat_mean_indiv_arr_int = np.append(lat_mean_indiv_arr_int, lat_mean_val)
+                    pos_x_int = np.append(pos_x_int, pos[bulk_int_id_plot[i],0])
+                    pos_y_int = np.append(pos_y_int, pos[bulk_int_id_plot[i],1])
+
+                #If gas particle (should not be currently), save lattice spacing and positions to array
+                elif partPhase[bulk_int_id_plot[i]]==2:
+                    lat_mean_indiv_arr_gas = np.append(lat_mean_indiv_arr_gas, lat_mean_val)
+                    pos_x_gas = np.append(pos_x_gas, pos[bulk_int_id_plot[i],0])
+                    pos_y_gas = np.append(pos_y_gas, pos[bulk_int_id_plot[i],1])
+
+            #If reference particle is not in neighbor list, save 0 lattice spacing
+            else:
+                lat_mean_indiv_arr_bulk = np.append(lat_mean_indiv_arr_bulk, 0)
+                lat_mean_indiv_arr_int = np.append(lat_mean_indiv_arr_int, 0)
+                lat_mean_indiv_arr_gas = np.append(lat_mean_indiv_arr_gas, 0)
+                lat_mean_indiv_arr = np.append(lat_mean_indiv_arr, 0)
+        
+        #Calculate standard deviation of bulk lattice spacings
+        if len(lat_mean_indiv_arr_bulk) >0:
+            lat_std_num = 0
+            lat_std_val = 0
+            lat_mean_bulk = np.mean(lat_mean_indiv_arr_bulk)
+            for k in range(0, len(lat_mean_indiv_arr_bulk)):
+                lat_std_val += (lat_mean_indiv_arr_bulk[k]-lat_mean_bulk)**2
+                lat_std_num += 1
+            std_dev_bulk = (lat_std_val / lat_std_num)**0.5
+        else:
+            lat_mean_bulk=0
+            std_dev_bulk=0
+        
+        #Calculate standard deviation of interface lattice spacings
+        if len(lat_mean_indiv_arr_int) >0:
+            lat_std_num = 0
+            lat_std_val = 0
+            lat_mean_int = np.mean(lat_mean_indiv_arr_int)
+            for k in range(0, len(lat_mean_indiv_arr_int)):
+                lat_std_val += (lat_mean_indiv_arr_int[k]-lat_mean_int)**2
+                lat_std_num += 1
+            std_dev_int = (lat_std_val / lat_std_num)**0.5
+        else:
+            lat_mean_int=0
+            std_dev_int=0
+        
+        #Calculate standard deviation of all lattice spacings
+        if len(lat_mean_indiv_arr) >0:
+            lat_std_num = 0
+            lat_std_val = 0
+            lat_mean_all = np.mean(lat_mean_indiv_arr)
+            for k in range(0, len(lat_mean_indiv_arr)):
+                lat_std_val += (lat_mean_indiv_arr[k]-lat_mean_all)**2
+                lat_std_num += 1
+            std_dev_all = (lat_std_val / lat_std_num)**0.5
+        else:
+            lat_mean_all=0
+            std_dev_all=0
+        
+        #Save lattice spacing means and standard deviations of each phase to txt file
         g = open(outPath2+outTxt_lat, 'a')
         g.write('{0:.2f}'.format(tst).center(20) + ' ')
         g.write('{0:.6f}'.format(sizeBin).center(20) + ' ')
         g.write('{0:.0f}'.format(np.amax(clust_size)).center(20) + ' ')
-        g.write('{0:.6f}'.format(lat_mean_final).center(20) + ' ')
-        g.write('{0:.6f}'.format(lat_std_final).center(20) + '\n')
+        g.write('{0:.6f}'.format(lat_mean_bulk).center(20) + ' ')
+        g.write('{0:.6f}'.format(lat_mean_int).center(20) + ' ')
+        g.write('{0:.6f}'.format(lat_mean_all).center(20) + ' ')
+        g.write('{0:.6f}'.format(std_dev_bulk).center(20) + ' ')
+        g.write('{0:.6f}'.format(std_dev_int).center(20) + ' ')
+        g.write('{0:.6f}'.format(std_dev_all).center(20) + '\n')
         g.close()
+        
+        
+        #Plot scatter plot of bulk and interface particles color-coded by lattice spacing
+        
+        #If bulk or interface particles identified, continue
+        if (len(lat_mean_indiv_arr_bulk)>0) or (len(lat_mean_indiv_arr_int)>0):
+            pad = str(j).zfill(4)
+            x_pos_plot = np.append(pos_x_bulk+h_box, pos_x_int+h_box)
+            y_pos_plot = np.append(pos_y_bulk+h_box, pos_y_int+h_box)
+            lat_mean_plot = np.append(lat_mean_indiv_arr_bulk, lat_mean_indiv_arr_int)
+            
+            vmin_num = np.min(lat_mean_plot)
+            vmax_num = np.max(lat_mean_plot)
+
+            fig = plt.figure(figsize=(8,6))
+            im = plt.scatter(x_pos_plot, y_pos_plot, s=0.7, c=lat_mean_plot, vmin=vmin_num, vmax=vmax_num, cmap='viridis')
+
+            norm= matplotlib.colors.Normalize(vmin=vmin_num, vmax=vmax_num)
+
+            sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
+            sm.set_array([])
+            tick_lev = np.arange(vmin_num, vmax_num+vmax_num/10, (vmax_num-vmin_num)/10)
+            clb = fig.colorbar(sm, ticks=tick_lev)#ticks=[0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0], ax=ax2)
+            
+            clb.ax.set_title(r'$a$', fontsize=15)
+    
+            
+            plt.xlim(0, l_box)
+            plt.ylim(0, l_box)
+            
+            plt.text(270.0, 20., s=r'$\tau$' + ' = ' + '{:.1f}'.format(tst*3) + ' ' + r'$\tau_\mathrm{r}$',
+                fontsize=18,
+                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+    
+            plt.axis('off')
+            plt.title(r'$\mathrm{Pe}$' + ' = ' + str(int(peA)) + ', ' + r'$\phi$' + ' = ' + str(phi) + ', ' + r'$\epsilon$' + ' = ' + r'$10^{{{}}}$'.format(int(np.log10(eps))), fontsize=17)
+            plt.tight_layout()
+            plt.savefig(outPath + 'lat_map_' + out + pad + ".png", dpi=200)
+            plt.close()
+    
+    
+            #Plot histogram of the average lattice spacing of bulk (green) and interface (yellow) particle and their six nearest neighbors
+            
+            #continue if any lattice spacings measured
+            if (len(lat_mean_indiv_arr_int)>0) or (len(lat_mean_indiv_arr_bulk)>0):
+            
+                xmin = 0.5
+                xmax = 1.0
+                
+                fig = plt.figure(figsize=(8,6))
+
+                #Remove bulk particles that are outside plot's xrange
+                if (len(lat_mean_indiv_arr_bulk)>0):
+                    bulk_id = np.where((lat_mean_indiv_arr_bulk > xmax) | (lat_mean_indiv_arr_bulk < xmin))[0]
+                    lat_mean_indiv_arr_bulk = np.delete(lat_mean_indiv_arr_bulk, bulk_id)
+                
+                    plt.hist(lat_mean_indiv_arr_bulk, alpha = 1.0, bins=200, color=green)
+                
+                #If interface particle measured, continue
+                if (len(lat_mean_indiv_arr_int)>0):
+                    int_id = np.where((lat_mean_indiv_arr_int > xmax) | (lat_mean_indiv_arr_int < xmin))[0]
+                    lat_mean_indiv_arr_int = np.delete(lat_mean_indiv_arr_int, int_id)
+    
+                    plt.hist(lat_mean_indiv_arr_int, alpha = 0.8, bins=200, color=yellow)
+                
+                green_patch = mpatches.Patch(color=green, label='Bulk')
+                yellow_patch = mpatches.Patch(color=yellow, label='Interface')
+                plt.legend(handles=[green_patch, yellow_patch], fancybox=True, framealpha=0.75, ncol=1, fontsize=12, loc='upper right',labelspacing=0.1, handletextpad=0.1)
+    
+                plt.xlabel(r'lattice spacing ($a$)', fontsize=20)
+                plt.ylabel('Number of particles', fontsize=20) 
+                plt.xlim([xmin,xmax])
+                plt.title(r'$\tau$' + ' = ' + '{:.1f}'.format(tst*3) + ' ' + r'$\tau_\mathrm{r}$', fontsize=22)
+                plt.tight_layout()
+                plt.savefig(outPath + 'lat_histo_' + out + pad + ".png", dpi=200)
+                plt.close()
