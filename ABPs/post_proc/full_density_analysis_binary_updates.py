@@ -517,8 +517,6 @@ g.write('tauB'.center(20) + ' ' +\
                         'bulk_area'.center(20) + ' ' +\
                         'bulk_ndens'.center(20) + ' ' +\
                         'bulk_ndens_std'.center(20) + ' ' +\
-                        'press'.center(20) + ' ' +\
-                        'press_std'.center(20) + ' ' +\
                         'int_area'.center(20) + ' ' +\
                         'int_ndens'.center(20) + ' ' +\
                         'int_ndens_std'.center(20) + ' ' +\
@@ -14359,6 +14357,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
         g.write('{0:.6f}'.format(gas_avg).center(20) + ' ')
         g.write('{0:.6f}'.format(gas_std).center(20) + '\n')
         g.close()
+        
+        
         '''
         com_tmp_posX = query_points[0] + h_box
         com_tmp_posY = query_points[1] + h_box
@@ -15003,6 +15003,73 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         plt.tight_layout()
         plt.savefig(outPath + 'num_densDif_' + out + pad + ".png", dpi=100)
         plt.close()
+        
+        #Loop over interfaces
+        fig = plt.figure(figsize=(7,6))
+        ax = fig.add_subplot(111)
+        div_min = -3
+        min_n = -np.max(np.abs(fa_all_tot))
+        max_n = np.max(np.abs(fa_all_tot))
+        levels_text=40
+        level_boundaries = np.linspace(min_n, max_n, levels_text + 1)
+        im = plt.contourf(pos_box_x, pos_box_y, fa_all_tot, level_boundaries, vmin=min_n, vmax=max_n, cmap='seismic', extend='both')
+        norm= matplotlib.colors.Normalize(vmin=min_n, vmax=max_n)
+        #plt.plot(xn_pos, yn_pos, c='orange', lw=4.0)
+        #if interior_bin>0:
+        if bub_large >=1:
+            if interior_bin>0:
+                plt.scatter(xn_pos, yn_pos, c='black', s=3.0)
+            if exterior_bin>0:
+                plt.scatter(xn2_pos, yn2_pos, c='black', s=3.0)
+                
+        if bub_large >=2:
+            if interior_bin_bub1>0:
+                plt.scatter(xn_bub2_pos, yn_bub2_pos, c='black', s=3.0)
+            if exterior_bin_bub1>0:
+                plt.scatter(xn2_bub2_pos, yn2_bub2_pos, c='black', s=3.0)
+        if bub_large >=3:
+            if interior_bin_bub2>0:
+                plt.scatter(xn_bub3_pos, yn_bub3_pos, c='black', s=3.0)
+            if exterior_bin_bub2>0:
+                plt.scatter(xn2_bub3_pos, yn2_bub3_pos, c='black', s=3.0)
+        
+        if bub_large >=4:
+            if interior_bin_bub3>0:
+                plt.scatter(xn_bub4_pos, yn_bub4_pos, c='black', s=3.0)
+            if exterior_bin_bub3>0:
+                plt.scatter(xn2_bub4_pos, yn2_bub4_pos, c='black', s=3.0)
+        if bub_large >=5:
+            if interior_bin_bub4>0:
+                plt.scatter(xn_bub5_pos, yn_bub5_pos, c='black', s=3.0)
+            if exterior_bin_bub4>0:
+                plt.scatter(xn2_bub5_pos, yn2_bub5_pos, c='black', s=3.0)
+            
+        sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
+        sm.set_array([])
+        tick_lev = np.arange(min_n, max_n+max_n/10, (max_n-min_n)/10)
+        clb = fig.colorbar(sm, ticks=tick_lev, boundaries=level_boundaries,
+values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStrFormatter('%.2f'))
+        clb.ax.tick_params(labelsize=16)
+        clb.set_label(r'$F^\mathrm{a}$', labelpad=-40, y=1.07, rotation=0, fontsize=20)
+
+        #plt.quiver(pos_box_x, pos_box_y, align_norm_x, align_norm_y, color='black')
+        
+        plt.xlim(0, l_box)
+        plt.ylim(0, l_box)
+
+        plt.tick_params(axis='both', which='both',
+                        bottom=False, top=False, left=False, right=False,
+                        labelbottom=False, labeltop=False, labelleft=False, labelright=False)
+                       
+        plt.text(0.663, 0.04, s=r'$\tau$' + ' = ' + '{:.1f}'.format(3*tst) + ' ' + r'$\tau_\mathrm{r}$',
+                fontsize=18, transform = ax.transAxes,
+                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+
+        ax.axis('off')
+        plt.tight_layout()
+        plt.savefig(outPath + 'fa_' + out + pad + ".png", dpi=100)
+        plt.close()
+        
         
         '''
         new_align = [[0 for b in range(NBins)] for a in range(NBins)]

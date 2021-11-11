@@ -64,6 +64,8 @@ phi=${pass[5]}
 clust=${pass[6]}
 # This is the timestep size (in Brownian time)
 dtau=${pass[7]}
+# This is the system size
+pNum=${pass[8]}
 
 echo 'fname'
 echo $fname
@@ -144,11 +146,14 @@ echo $dtau
 #python3 $script_path/full_video_analysis_binary.py $fname $pa $pb $xa $ep $phi $tau
 #python3 $script_path/bulk_trace.py $fname $pa $pb $xa $ep $phi $tau
 #python3 $script_path/Sim_frame_image_com.py $fname $pa $pb $xa $ep $phi $tau
+declare -i pa2=0
 if (( ${pe%%.*} > ${pa%%.*} )); then
-    pa = $pe
+    pa2=${pe%%.*}
+else
+    pa2=${pa%%.*}
 fi
 
-python3 $script_path/full_density_analysis_binary.py $fname $pa $pb $xa $ep $phi $dtau $bin $step $hoomd_path $txt_path $pic_path
+python3 $script_path/full_density_analysis_binary_updates.py $fname $pa2 $pb $xa $ep $phi $dtau $bin $step $hoomd_path $txt_path $pic_path
 
 #python3 $script_path/2activepartg_cluster.py $fname $pe $pb $xa $ep $phi $tau
 #python3 $script_path/getRDF.py $pe $pb $xa $hoomd_path $gsd_path $ep
@@ -166,108 +171,34 @@ pNum=${pNum%.*}
 
 #Start
 
-ffmpeg -start_number 0 -framerate 10 -i "$pic_path"num_dens_pa${pa}_pb${pb}_xa${xa}_eps${eps}_phi${phi}_pNum100000_bin6_time1_frame_%04d.png\
+ffmpeg -start_number 0 -framerate 10 -i "$pic_path"num_dens_pa${pa2}_pb${pb}_xa${xa}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_%04d.png\
  -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
- "$vid_path"num_dens_pa${pa}_pb${pb}_xa${xa}_eps${eps}_phi${phi}_pNum100000_bin6_time1.mp4
+ "$vid_path"num_dens_pa${pa2}_pb${pb}_xa${xa}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}.mp4
 
-  rm -rf "$pic_path"num_dens_pa${pa}_pb${pb}_xa${xa}_eps${eps}_phi${phi}_pNum100000_bin6_time1_frame_*
+  rm -rf "$pic_path"num_dens_pa${pa2}_pb${pb}_xa${xa}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_*
 
-  ffmpeg -start_number 0 -framerate 10 -i "$pic_path"num_densB_pa${pa}_pb${pb}_xa${xa}_eps${eps}_phi${phi}_pNum100000_bin6_time1_frame_%04d.png\
+  ffmpeg -start_number 0 -framerate 10 -i "$pic_path"num_densB_pa${pa2}_pb${pb}_xa${xa}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_%04d.png\
  -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
- "$vid_path"num_densB_pa${pa}_pb${pb}_xa${xa}_eps${eps}_phi${phi}_pNum100000_bin6_time1.mp4
+ "$vid_path"num_densB_pa${pa2}_pb${pb}_xa${xa}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}.mp4
 
-  rm -rf "$pic_path"num_densB_pa${pa}_pb${pb}_xa${xa}_eps${eps}_phi${phi}_pNum100000_bin6_time1_frame_*
+  rm -rf "$pic_path"num_densB_pa${pa2}_pb${pb}_xa${xa}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_*
  
-  ffmpeg -start_number 0 -framerate 10 -i "$pic_path"num_densA_pa${pa}_pb${pb}_xa${xa}_eps${eps}_phi${phi}_pNum100000_bin6_time1_frame_%04d.png\
+  ffmpeg -start_number 0 -framerate 10 -i "$pic_path"num_densA_pa${pa2}_pb${pb}_xa${xa}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_%04d.png\
  -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
- "$vid_path"num_densA_pa${pa}_pb${pb}_xa${xa}_eps${eps}_phi${phi}_pNum100000_bin6_time1.mp4
+ "$vid_path"num_densA_pa${pa2}_pb${pb}_xa${xa}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}.mp4
 
-  rm -rf "$pic_path"num_densA_pa${pa}_pb${pb}_xa${xa}_eps${eps}_phi${phi}_pNum100000_bin6_time1_frame_*
+  rm -rf "$pic_path"num_densA_pa${pa2}_pb${pb}_xa${xa}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_*
  
-  ffmpeg -start_number 0 -framerate 10 -i "$pic_path"num_densDif_pa${pa}_pb${pb}_xa${xa}_eps${eps}_phi${phi}_pNum100000_bin6_time1_frame_%04d.png\
+  ffmpeg -start_number 0 -framerate 10 -i "$pic_path"num_densDif_pa${pa2}_pb${pb}_xa${xa}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_%04d.png\
  -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
- "$vid_path"num_densDif_pa${pa}_pb${pb}_xa${xa}_eps${eps}_phi${phi}_pNum100000_bin6_time1.mp4
+ "$vid_path"num_densDif_pa${pa2}_pb${pb}_xa${xa}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}.mp4
 
-  rm -rf "$pic_path"num_densDif_pa${pa}_pb${pb}_xa${xa}_eps${eps}_phi${phi}_pNum100000_bin6_time1_frame_*
- 
-  
- 
-  ffmpeg -start_number 0 -framerate 10 -i "$pic_path"press_pa${pa}_pb${pb}_xa${xa}_eps${eps}_phi${phi}_pNum100000_bin6_time1_frame_%04d.png\
+  rm -rf "$pic_path"num_densDif_pa${pa2}_pb${pb}_xa${xa}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_*
+
+  ffmpeg -start_number 0 -framerate 10 -i "$pic_path"fa_pa${pa2}_pb${pb}_xa${xa}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_%04d.png\
  -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
- "$vid_path"press_pa${pa}_pb${pb}_xa${xa}_eps${eps}_phi${phi}_pNum100000_bin6_time1.mp4
+ "$vid_path"fa_pa${pa2}_pb${pb}_xa${xa}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}.mp4
 
-  rm -rf "$pic_path"press_pa${pa}_pb${pb}_xa${xa}_eps${eps}_phi${phi}_pNum100000_bin6_time1_frame_*
-
-  ffmpeg -start_number 0 -framerate 10 -i "$pic_path"pressB_pa${pa}_pb${pb}_xa${xa}_eps${eps}_phi${phi}_pNum100000_bin6_time1_frame_%04d.png\
- -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
- "$vid_path"pressB_pa${pa}_pb${pb}_xa${xa}_eps${eps}_phi${phi}_pNum100000_bin6_time1.mp4
-
-  rm -rf "$pic_path"pressB_pa${pa}_pb${pb}_xa${xa}_eps${eps}_phi${phi}_pNum100000_bin6_time1_frame_*
- 
-  ffmpeg -start_number 0 -framerate 10 -i "$pic_path"pressA_pa${pa}_pb${pb}_xa${xa}_eps${eps}_phi${phi}_pNum100000_bin6_time1_frame_%04d.png\
- -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
- "$vid_path"pressA_pa${pa}_pb${pb}_xa${xa}_eps${eps}_phi${phi}_pNum100000_bin6_time1.mp4
-
-  rm -rf "$pic_path"pressA_pa${pa}_pb${pb}_xa${xa}_eps${eps}_phi${phi}_pNum100000_bin6_time1_frame_*
-
-  ffmpeg -start_number 0 -framerate 10 -i "$pic_path"pressDif_pa${pa}_pb${pb}_xa${xa}_eps${eps}_phi${phi}_pNum100000_bin6_time1_frame_%04d.png\
- -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
- "$vid_path"pressDif_pa${pa}_pb${pb}_xa${xa}_eps${eps}_phi${phi}_pNum100000_bin6_time1.mp4
-
-  rm -rf "$pic_path"pressDif_pa${pa}_pb${pb}_xa${xa}_eps${eps}_phi${phi}_pNum100000_bin6_time1_frame_*
-
-
-
-
-  ffmpeg -start_number 0 -framerate 10 -i "$pic_path"grad_num_dens_pa${pa}_pb${pb}_xa${xa}_eps${eps}_phi${phi}_pNum100000_bin6_time1_frame_%04d.png\
- -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
- "$vid_path"grad_num_dens_pa${pa}_pb${pb}_xa${xa}_eps${eps}_phi${phi}_pNum100000_bin6_time1.mp4
-
-  rm -rf "$pic_path"grad_num_dens_pa${pa}_pb${pb}_xa${xa}_eps${eps}_phi${phi}_pNum100000_bin6_time1_frame_*
-
-  ffmpeg -start_number 0 -framerate 10 -i "$pic_path"grad_num_densB_pa${pa}_pb${pb}_xa${xa}_eps${eps}_phi${phi}_pNum100000_bin6_time1_frame_%04d.png\
- -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
- "$vid_path"grad_num_densB_pa${pa}_pb${pb}_xa${xa}_eps${eps}_phi${phi}_pNum100000_bin6_time1.mp4
-
-  rm -rf "$pic_path"grad_num_densB_pa${pa}_pb${pb}_xa${xa}_eps${eps}_phi${phi}_pNum100000_bin6_time1_frame_*
- 
-  ffmpeg -start_number 0 -framerate 10 -i "$pic_path"grad_num_densA_pa${pa}_pb${pb}_xa${xa}_eps${eps}_phi${phi}_pNum100000_bin6_time1_frame_%04d.png\
- -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
- "$vid_path"grad_num_densA_pa${pa}_pb${pb}_xa${xa}_eps${eps}_phi${phi}_pNum100000_bin6_time1.mp4
-
-  rm -rf "$pic_path"grad_num_densA_pa${pa}_pb${pb}_xa${xa}_eps${eps}_phi${phi}_pNum100000_bin6_time1_frame_*
- 
-  ffmpeg -start_number 0 -framerate 10 -i "$pic_path"grad_num_densDif_pa${pa}_pb${pb}_xa${xa}_eps${eps}_phi${phi}_pNum100000_bin6_time1_frame_%04d.png\
- -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
- "$vid_path"grad_num_densDif_pa${pa}_pb${pb}_xa${xa}_eps${eps}_phi${phi}_pNum100000_bin6_time1.mp4
-
-  rm -rf "$pic_path"grad_num_densDif_pa${pa}_pb${pb}_xa${xa}_eps${eps}_phi${phi}_pNum100000_bin6_time1_frame_*
- 
- 
- 
-  ffmpeg -start_number 0 -framerate 10 -i "$pic_path"grad_press_pa${pa}_pb${pb}_xa${xa}_eps${eps}_phi${phi}_pNum100000_bin6_time1_frame_%04d.png\
- -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
- "$vid_path"grad_press_pa${pa}_pb${pb}_xa${xa}_eps${eps}_phi${phi}_pNum100000_bin6_time1.mp4
-
-  rm -rf "$pic_path"grad_press_pa${pa}_pb${pb}_xa${xa}_eps${eps}_phi${phi}_pNum100000_bin6_time1_frame_*
-
-  ffmpeg -start_number 0 -framerate 10 -i "$pic_path"grad_pressB_pa${pa}_pb${pb}_xa${xa}_eps${eps}_phi${phi}_pNum100000_bin6_time1_frame_%04d.png\
- -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
- "$vid_path"grad_pressB_pa${pa}_pb${pb}_xa${xa}_eps${eps}_phi${phi}_pNum100000_bin6_time1.mp4
-
-  rm -rf "$pic_path"grad_pressB_pa${pa}_pb${pb}_xa${xa}_eps${eps}_phi${phi}_pNum100000_bin6_time1_frame_*
- 
-  ffmpeg -start_number 0 -framerate 10 -i "$pic_path"grad_pressA_pa${pa}_pb${pb}_xa${xa}_eps${eps}_phi${phi}_pNum100000_bin6_time1_frame_%04d.png\
- -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
- "$vid_path"grad_pressA_pa${pa}_pb${pb}_xa${xa}_eps${eps}_phi${phi}_pNum100000_bin6_time1.mp4
-
-  rm -rf "$pic_path"grad_pressA_pa${pa}_pb${pb}_xa${xa}_eps${eps}_phi${phi}_pNum100000_bin6_time1_frame_*
-
-  ffmpeg -start_number 0 -framerate 10 -i "$pic_path"grad_pressDif_pa${pa}_pb${pb}_xa${xa}_eps${eps}_phi${phi}_pNum100000_bin6_time1_frame_%04d.png\
- -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
- "$vid_path"grad_pressDif_pa${pa}_pb${pb}_xa${xa}_eps${eps}_phi${phi}_pNum100000_bin6_time1.mp4
-
-  rm -rf "$pic_path"grad_pressDif_pa${pa}_pb${pb}_xa${xa}_eps${eps}_phi${phi}_pNum100000_bin6_time1_frame_*
-
+  rm -rf "$pic_path"fa_pa${pa2}_pb${pb}_xa${xa}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_*
 
 exit 0
