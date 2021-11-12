@@ -11782,6 +11782,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                             y_norm_unitv = dify_width / difr
                                         elif bub_size_id_arr[m] == bub_size_id_arr[4]:  
                                             if bub_large >=5: 
+                                                
+                                                #If 4th largest interface defined, continue...
                                                 if interior_bin_bub4 > 0:
                                                     for id2 in range(0, len(xn_bub5)):
                                                                         
@@ -11789,7 +11791,10 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                         pos_box_x2 = xn_bub5_pos[id2]
                                                         pos_box_y2 = yn_bub5_pos[id2]
                                                         
+                                                        #Calculate difference in x position between reference particle and interior surface point
                                                         difx_width = pos_box_x1-pos_box_x2
+                                                        
+                                                        #Enforce periodic boundary conditions
                                                         difx_width_abs = np.abs(difx_width)
                                                         if difx_width_abs>=h_box:
                                                             if difx_width < -h_box:
@@ -11797,7 +11802,10 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                             else:
                                                                 difx_width -= l_box
                                                                 
+                                                        #Calculate difference in y position between reference particle and interior surface point
                                                         dify_width = pos_box_y1-pos_box_y2
+                                                        
+                                                        #Enforce periodic boundary conditions
                                                         dify_width_abs = np.abs(dify_width)
                                                         if dify_width_abs>=h_box:
                                                             if dify_width < -h_box:
@@ -11816,21 +11824,20 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                             x_norm_unitv = difx_width / difr
                                                             y_norm_unitv = dify_width / difr     
                                         
+                                        #If particles in reference bin, continue...
                                         if len(binParts[ix][iy])>0:
+                                            
+                                            #Loop over all particles in reference bin
                                             for h in range(0, len(binParts[ix][iy])):
-                                                #Calculate x and y orientation of active force
-                                                #px = np.cos(ang[binParts[ix][iy][h]])
-                                                #py = np.sin(ang[binParts[ix][iy][h]])
-                                                
-                                                
-                                                #shift reference frame to center of mass of cluster   
-                                                
-                                                
-                                                
+
+                                                #Calculate x,y position of reference particle
                                                 pos_box_x1 = pos[binParts[ix][iy][h],0] + h_box
                                                 pos_box_y1 = pos[binParts[ix][iy][h],1] + h_box
                                                 
+                                                #Calculate difference in x position between reference particle and interface's CoM
                                                 difx_bub = pos_box_x1 - x_com_bub
+                                                
+                                                #Enforce periodic boundary conditions
                                                 difx_bub_abs = np.abs(difx_trad)
                                                 if difx_bub_abs>=h_box:
                                                     if difx_bub < -h_box:
@@ -11838,7 +11845,10 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                     else:
                                                         difx_bub -= l_box
                                                         
+                                                #Calculate difference in y position between reference bin and interface's CoM
                                                 dify_bub = pos_box_y1 - y_com_bub
+                                                
+                                                #Enforce periodic boundary conditions
                                                 dify_bub_abs = np.abs(dify_trad)
                                                 if dify_bub_abs>=h_box:
                                                     if dify_bub < -h_box:
@@ -11848,8 +11858,14 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                                                                                             
                                                 #Very large initial distance to calculate closest interior edge bin to this exterior edge bin
                                                 difr_short= ( (difx_bub )**2 + (dify_bub)**2)**0.5
+                                                
+                                                #If mth interface belongs to largest interface, continue...
                                                 if bub_size_id_arr[m] == bub_size_id_arr[0]:  
+                                                    
+                                                    #If largest interface defined, continue...
                                                     if bub_large >=1: 
+                                                        
+                                                        #If interior surface defined, continue...
                                                         if interior_bin > 0:
                                                             for id2 in range(0, len(xn)):
                                                                                 
@@ -11857,7 +11873,10 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                                 pos_box_x2 = xn_pos[id2]
                                                                 pos_box_y2 = yn_pos[id2]
                                                                 
+                                                                #Calculate difference in x position between reference bin and interior surface point
                                                                 difx_width = pos_box_x1-pos_box_x2
+                                                                
+                                                                #Enforce periodic boundary conditions
                                                                 difx_width_abs = np.abs(difx_width)
                                                                 if difx_width_abs>=h_box:
                                                                     if difx_width < -h_box:
@@ -11865,7 +11884,10 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                                     else:
                                                                         difx_width -= l_box
                                                                         
+                                                                #Calculate difference in y position between reference bin and interior surface point
                                                                 dify_width = pos_box_y1-pos_box_y2
+                                                                
+                                                                #Enforce periodic boundary conditions
                                                                 dify_width_abs = np.abs(dify_width)
                                                                 if dify_width_abs>=h_box:
                                                                     if dify_width < -h_box:
@@ -11880,8 +11902,13 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                                 if difr<difr_short:
                                                                     difr_short=difr
                                                                     
+                                                #If mth interface belongs to 2nd largest interface, continue...
                                                 elif bub_size_id_arr[m] == bub_size_id_arr[1]:  
+                                                    
+                                                    #If 2nd largest interface defined, continue...
                                                     if bub_large >=2: 
+                                                        
+                                                        #If interior surface defined, continue...
                                                         if interior_bin_bub1 > 0:
                                                             for id2 in range(0, len(xn_bub2)):
                                                                                 
@@ -11889,7 +11916,10 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                                 pos_box_x2 = xn_bub2_pos[id2]
                                                                 pos_box_y2 = yn_bub2_pos[id2]
                                                                 
+                                                                #Calculate difference in x position between reference bin and interior surface point
                                                                 difx_width = pos_box_x1-pos_box_x2
+                                                                
+                                                                #Enforce periodic boundary conditions
                                                                 difx_width_abs = np.abs(difx_width)
                                                                 if difx_width_abs>=h_box:
                                                                     if difx_width < -h_box:
@@ -11897,7 +11927,10 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                                     else:
                                                                         difx_width -= l_box
                                                                         
+                                                                #Calculate difference in y position between reference bin and interior surface point
                                                                 dify_width = pos_box_y1-pos_box_y2
+                                                                
+                                                                #Enforce periodic boundary conditions
                                                                 dify_width_abs = np.abs(dify_width)
                                                                 if dify_width_abs>=h_box:
                                                                     if dify_width < -h_box:
@@ -11912,8 +11945,13 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                                 if difr<difr_short:
                                                                     difr_short=difr
                                                                     
+                                                #If mth interface belongs to 3rd largest interface, continue..
                                                 elif bub_size_id_arr[m] == bub_size_id_arr[2]:  
+                                                    
+                                                    #If 3rd largest interface defined, continue...
                                                     if bub_large >=3: 
+                                                        
+                                                        #If interior surface defined, continue...
                                                         if interior_bin_bub2 > 0:
                                                             for id2 in range(0, len(xn_bub3)):
                                                                                 
@@ -11921,7 +11959,10 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                                 pos_box_x2 = xn_bub3_pos[id2]
                                                                 pos_box_y2 = yn_bub3_pos[id2]
                                                                 
+                                                                #Calculate difference in x position between reference bin and interior surface point
                                                                 difx_width = pos_box_x1-pos_box_x2
+                                                                
+                                                                #Enforce periodic boundary conditions
                                                                 difx_width_abs = np.abs(difx_width)
                                                                 if difx_width_abs>=h_box:
                                                                     if difx_width < -h_box:
@@ -11929,7 +11970,10 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                                     else:
                                                                         difx_width -= l_box
                                                                         
+                                                                #Calculate difference in y position between reference bin and interior surface point
                                                                 dify_width = pos_box_y1-pos_box_y2
+                                                                
+                                                                #Enforce periodic boundary conditions
                                                                 dify_width_abs = np.abs(dify_width)
                                                                 if dify_width_abs>=h_box:
                                                                     if dify_width < -h_box:
@@ -11944,8 +11988,13 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                                 if difr<difr_short:
                                                                     difr_short=difr
                                                                           
+                                                #If mth interface belongs to 4th largest interface, continue...                    
                                                 elif bub_size_id_arr[m] == bub_size_id_arr[3]:
+                                                    
+                                                    #If 4th largest interface defined, continue...
                                                     if bub_large >=4: 
+                                                        
+                                                        #If interior surface defined, continue...
                                                         if interior_bin_bub3 > 0:
                                                             for id2 in range(0, len(xn_bub4)):
                                                                                 
@@ -11953,7 +12002,10 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                                 pos_box_x2 = xn_bub4_pos[id2]
                                                                 pos_box_y2 = yn_bub4_pos[id2]
                                                                 
+                                                                #Calculate difference in x position between reference bin and interior surface point
                                                                 difx_width = pos_box_x1-pos_box_x2
+                                                                
+                                                                #Enforce periodic boundary conditions
                                                                 difx_width_abs = np.abs(difx_width)
                                                                 if difx_width_abs>=h_box:
                                                                     if difx_width < -h_box:
@@ -11961,7 +12013,10 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                                     else:
                                                                         difx_width -= l_box
                                                                         
+                                                                #Calculate difference in y position between reference bin and interior surface point
                                                                 dify_width = pos_box_y1-pos_box_y2
+                                                                
+                                                                #Enforce periodic boundary conditions
                                                                 dify_width_abs = np.abs(dify_width)
                                                                 if dify_width_abs>=h_box:
                                                                     if dify_width < -h_box:
@@ -11976,8 +12031,13 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                                 if difr<difr_short:
                                                                     difr_short=difr
                                                                     
+                                                #If mth interface belongs to 5th largest interface, continue...
                                                 elif bub_size_id_arr[m] == bub_size_id_arr[4]:  
+                                                    
+                                                    #If 5th largest interface defined, continue...
                                                     if bub_large >=5: 
+                                                        
+                                                        #If interior surface defined, continue...
                                                         if interior_bin_bub4 > 0:
                                                             for id2 in range(0, len(xn_bub5)):
                                                                                 
@@ -11985,7 +12045,10 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                                 pos_box_x2 = xn_bub5_pos[id2]
                                                                 pos_box_y2 = yn_bub5_pos[id2]
                                                                 
+                                                                #Calculate difference in x position between reference bin and interior surface point
                                                                 difx_width = pos_box_x1-pos_box_x2
+                                                                
+                                                                #Enforce periodic boundary conditions
                                                                 difx_width_abs = np.abs(difx_width)
                                                                 if difx_width_abs>=h_box:
                                                                     if difx_width < -h_box:
@@ -11993,7 +12056,10 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                                     else:
                                                                         difx_width -= l_box
                                                                         
+                                                                #Calculate difference in y position between reference bin and interior surface point
                                                                 dify_width = pos_box_y1-pos_box_y2
+                                                                
+                                                                #Enforce periodic boundary conditions
                                                                 dify_width_abs = np.abs(dify_width)
                                                                 if dify_width_abs>=h_box:
                                                                     if dify_width < -h_box:
@@ -12008,122 +12074,169 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                                 if difr<difr_short:
                                                                     difr_short=difr
                                                                     
-                                                                    
+                                                #Calculate active force orientation                    
                                                 px = np.sin(ang[binParts[ix][iy][h]])
                                                 py = -np.cos(ang[binParts[ix][iy][h]])
-                                                #print(x_norm_unitv)
-                                                #print(y_norm_unitv)
-                                                #Calculate alignment towards CoM 
                                                 
+                                                #Calculate alignment with nearest surface's normal
                                                 r_dot_p = (-x_norm_unitv * px) + (-y_norm_unitv * py)
                                                 x_dot_p = (-x_norm_unitv * px)
                                                 y_dot_p = (-y_norm_unitv * py)
+                                                
+                                                #Calculate alignment toward CoM
                                                 r_dot_p_trad = (-x_norm_unitv_trad * px) + (-y_norm_unitv_trad * py)
-                                                #Sum x,y orientation over each bin
+                                                
+                                                #Sum alignment with nearest surface's normal
                                                 new_align[ix][iy] += r_dot_p
                                                 new_align_num[ix][iy]+= 1
+                                                
+                                                #Sum alignment toward CoM
                                                 new_align_trad[ix][iy] += r_dot_p_trad
                                                 new_align_num_trad[ix][iy]+= 1
+                                                
+                                                #If particle is of type A, continue...
                                                 if typ[binParts[ix][iy][h]]==0:
+                                                    
+                                                    #Save active force component in direction normal to surface
                                                     fa_all_tot_test=np.append(fa_all_tot_test, r_dot_p*peA)
+                                                    
+                                                    #Save distance from particle to nearest surface
                                                     r_dist_tot_test = np.append(r_dist_tot_test, difr_short)
+                                                    
+                                                    #If belongs to largest interface, save active force component in direction normal to surface and distance to surface
                                                     if bub_size_id_arr[m] == bub_size_id_arr[0]:  
                                                         if bub_large >=1: 
                                                             fa_all_tot_bub1=np.append(fa_all_tot_bub1, r_dot_p*peA)
                                                             r_dist_tot_bub1 = np.append(r_dist_tot_bub1, difr_short)
                                                             activity_all_bub1=np.append(activity_all_bub1, peA)
                                                             partid_all_bub1=np.append(partid_all_bub1, binParts[ix][iy][h])
+                                                    
+                                                    #If belongs to 2nd largest interface, save active force component in direction normal to surface and distance to surface
                                                     elif bub_size_id_arr[m] == bub_size_id_arr[1]:  
                                                         if bub_large >=2: 
                                                             fa_all_tot_bub2=np.append(fa_all_tot_bub2, r_dot_p*peA)
                                                             r_dist_tot_bub2 = np.append(r_dist_tot_bub2, difr_short)
                                                             activity_all_bub2=np.append(activity_all_bub2, peA)
                                                             partid_all_bub2=np.append(partid_all_bub2, binParts[ix][iy][h])
+                                                    
+                                                    #If belongs to 3rd largest interface, save active force component in direction normal to surface and distance to surface
                                                     elif bub_size_id_arr[m] == bub_size_id_arr[2]:  
                                                         if bub_large >=3: 
                                                             fa_all_tot_bub3=np.append(fa_all_tot_bub3, r_dot_p*peA)
                                                             r_dist_tot_bub3 = np.append(r_dist_tot_bub3, difr_short)
                                                             activity_all_bub3=np.append(activity_all_bub3, peA)
                                                             partid_all_bub3=np.append(partid_all_bub3, binParts[ix][iy][h])
+                                                    
+                                                    #If belongs to 4th largest interface, save active force component in direction normal to surface and distance to surface
                                                     elif bub_size_id_arr[m] == bub_size_id_arr[3]:  
                                                         if bub_large >=4: 
                                                             fa_all_tot_bub4=np.append(fa_all_tot_bub4, r_dot_p*peA)
                                                             r_dist_tot_bub4 = np.append(r_dist_tot_bub4, difr_short)
                                                             activity_all_bub4=np.append(activity_all_bub4, peA)
                                                             partid_all_bub4=np.append(partid_all_bub4, binParts[ix][iy][h])
+                                                    
+                                                    #If belongs to 5th largest interface, save active force component in direction normal to surface and distance to surface
                                                     elif bub_size_id_arr[m] == bub_size_id_arr[4]:  
                                                         if bub_large >=5: 
                                                             fa_all_tot_bub5=np.append(fa_all_tot_bub5, r_dot_p*peA)
                                                             r_dist_tot_bub5 = np.append(r_dist_tot_bub5, difr_short)
                                                             activity_all_bub5=np.append(activity_all_bub5, peA)
                                                             partid_all_bub5=np.append(partid_all_bub5, binParts[ix][iy][h])
+                                                
+                                                #If particle is of type B, continue...
                                                 else:
+                                                    
+                                                    #Save active force component in direction normal to surface
                                                     fa_all_tot_test=np.append(fa_all_tot_test, r_dot_p*peB)
+                                                    
+                                                    #Save distance from particle to nearest surface
                                                     r_dist_tot_test = np.append(r_dist_tot_test, difr_short)
+                                                    
+                                                    #If belongs to largest interface, save active force component in direction normal to surface and distance to surface
                                                     if bub_size_id_arr[m] == bub_size_id_arr[0]:  
                                                         if bub_large >=1: 
                                                             fa_all_tot_bub1=np.append(fa_all_tot_bub1, r_dot_p*peB)
                                                             r_dist_tot_bub1 = np.append(r_dist_tot_bub1, difr_short)
                                                             activity_all_bub1=np.append(activity_all_bub1, peB)
                                                             partid_all_bub1=np.append(partid_all_bub1, binParts[ix][iy][h])
+                                                    
+                                                    #If belongs to 2nd largest interface, save active force component in direction normal to surface and distance to surface
                                                     elif bub_size_id_arr[m] == bub_size_id_arr[1]:  
                                                         if bub_large >=2: 
                                                             fa_all_tot_bub2=np.append(fa_all_tot_bub2, r_dot_p*peB)
                                                             r_dist_tot_bub2 = np.append(r_dist_tot_bub2, difr_short)
                                                             activity_all_bub2=np.append(activity_all_bub2, peB)
                                                             partid_all_bub2=np.append(partid_all_bub2, binParts[ix][iy][h])
+                                                    
+                                                    #If belongs to 3rd largest interface, save active force component in direction normal to surface and distance to surface
                                                     elif bub_size_id_arr[m] == bub_size_id_arr[2]:  
                                                         if bub_large >=3: 
                                                             fa_all_tot_bub3=np.append(fa_all_tot_bub3, r_dot_p*peB)
                                                             r_dist_tot_bub3 = np.append(r_dist_tot_bub3, difr_short)
                                                             activity_all_bub3=np.append(activity_all_bub3, peB)
                                                             partid_all_bub3=np.append(partid_all_bub3, binParts[ix][iy][h])
+                                                    
+                                                    #If belongs to 4th largest interface, save active force component in direction normal to surface and distance to surface
                                                     elif bub_size_id_arr[m] == bub_size_id_arr[3]:  
                                                         if bub_large >=4: 
                                                             fa_all_tot_bub4=np.append(fa_all_tot_bub4, r_dot_p*peB)
                                                             r_dist_tot_bub4 = np.append(r_dist_tot_bub4, difr_short)
                                                             activity_all_bub4=np.append(activity_all_bub4, peB)
                                                             partid_all_bub4=np.append(partid_all_bub4, binParts[ix][iy][h])
+                                                            
+                                                    #If belongs to 5th largest interface, save active force component in direction normal to surface and distance to surface
                                                     elif bub_size_id_arr[m] == bub_size_id_arr[4]:  
                                                         if bub_large >=5: 
                                                             fa_all_tot_bub5=np.append(fa_all_tot_bub5, r_dot_p*peB)
                                                             r_dist_tot_bub5 = np.append(r_dist_tot_bub5, difr_short)
                                                             activity_all_bub5=np.append(activity_all_bub5, peB)
                                                             partid_all_bub5=np.append(partid_all_bub5, binParts[ix][iy][h])
+                                                
+                                                #If particle is of type A, sum alignments
                                                 if typ[binParts[ix][iy][h]]==0:
                                                     new_align0[ix][iy] += r_dot_p
                                                     new_align_num0[ix][iy]+= 1
                                                     new_align_trad0[ix][iy] += r_dot_p_trad
                                                     new_align_num_trad0[ix][iy]+= 1
+                                                    
+                                                #If particle is of type B, sum alignments
                                                 elif typ[binParts[ix][iy][h]]==1:
                                                     new_align1[ix][iy] += r_dot_p
                                                     new_align_num1[ix][iy]+= 1
                                                     new_align_trad1[ix][iy] += r_dot_p_trad
                                                     new_align_num_trad1[ix][iy]+= 1
                                     
+                    #If distance from CoM to interior surface is greater than that to exterior surface, continue...
                     else:
+                        #Loop over bins in system
                         for ix in range(0, len(occParts)):
                             for iy in range(0, len(occParts)): 
                                 
                                 #If bin is part of mth interface structure, continue...
                                 if edge_id[ix][iy]==bub_size_id_arr[m]:
                                     
+                                    #If bin is not an external edge, continue...
                                     if ext_edge_id[ix][iy]==0:
-                                        
                                         
                                         #Calculate position of exterior edge bin
                                         pos_box_x1 = (ix+0.5)*sizeBin
                                         pos_box_y1 = (iy+0.5)*sizeBin
                                         
+                                        #Calculate difference in x position between reference bin and interface's CoM
                                         difx_trad = pos_box_x1 - h_box#com_tmp_posX
+                                        
+                                        #Enforce periodic boundary conditions
                                         difx_trad_abs = np.abs(difx_trad)
                                         if difx_trad_abs>=h_box:
                                             if difx_trad < -h_box:
                                                 difx_trad += l_box
                                             else:
                                                 difx_trad -= l_box
-                                                
+                                        
+                                        #Calculate difference in y position between reference bin and system's CoM
                                         dify_trad = pos_box_y1 - h_box#com_tmp_posY
+                                        
+                                        #Enforce periodic boundary conditions
                                         dify_trad_abs = np.abs(dify_trad)
                                         if dify_trad_abs>=h_box:
                                             if dify_trad < -h_box:
@@ -12131,15 +12244,21 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                             else:
                                                 dify_trad -= l_box
                                                 
+                                        #Calculate difference in x position between reference bin and interface's CoM
                                         difx_bub = pos_box_x1 - x_com_bub
+                                        
+                                        #Enforce periodic boundary conditions
                                         difx_bub_abs = np.abs(difx_trad)
                                         if difx_bub_abs>=h_box:
                                             if difx_bub < -h_box:
                                                 difx_bub += l_box
                                             else:
                                                 difx_bub -= l_box
-                                                
+                                        
+                                        #Calculate difference in y position between reference bin and interface's CoM
                                         dify_bub = pos_box_y1 - y_com_bub
+                                        
+                                        #Enforce periodic boundary conditions
                                         dify_bub_abs = np.abs(dify_trad)
                                         if dify_bub_abs>=h_box:
                                             if dify_bub < -h_box:
@@ -12155,15 +12274,22 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                         difr_bub = ( (difx_bub )**2 + (dify_bub)**2)**0.5
                                         difr_trad= ( (difx_trad )**2 + (dify_trad)**2)**0.5
                                         difx_short = np.abs(difx_bub)
-                                        dify_short = np.abs(dify_bub)                            
+                                        dify_short = np.abs(dify_bub)    
+                                        
+                                        #x and y unit vectors toward CoM
                                         x_norm_unitv_trad = (difx_trad) / difr_trad
                                         y_norm_unitv_trad = (dify_trad) / difr_trad
                                         
                                         x_norm_unitv = (difx_bub) / difr_bub
                                         y_norm_unitv = (dify_bub) / difr_bub
-                                        #Loop over bins of system                                      
+                                        
+                                        #If mth interface belongs to largest interface, continue...
                                         if bub_size_id_arr[m] == bub_size_id_arr[0]: 
+                                            
+                                            #If largest interface defined, continue...
                                             if bub_large >= 1:
+                                                
+                                                #If exterior surface defined, continue...
                                                 if exterior_bin > 0:
                                                     for id2 in range(0, len(xn2)):
                                                                         
@@ -12171,7 +12297,10 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                         pos_box_x2 = xn2_pos[id2]
                                                         pos_box_y2 = yn2_pos[id2]
                                                         
+                                                        #Calculate difference in x position between reference bin and exterior surface point
                                                         difx_width = pos_box_x1-pos_box_x2
+                                                        
+                                                        #Enforce periodic boundary conditions
                                                         difx_width_abs = np.abs(difx_width)
                                                         if difx_width_abs>=h_box:
                                                             if difx_width < -h_box:
@@ -12179,7 +12308,10 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                             else:
                                                                 difx_width -= l_box
                                                                 
+                                                        #Calculate difference in y position between reference bin and exterior surface point
                                                         dify_width = pos_box_y1-pos_box_y2
+                                                        
+                                                        #Enforce periodic boundary conditions
                                                         dify_width_abs = np.abs(dify_width)
                                                         if dify_width_abs>=h_box:
                                                             if dify_width < -h_box:
@@ -12197,8 +12329,14 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                             dify_short = np.abs(dify_width)
                                                             x_norm_unitv = difx_width / difr
                                                             y_norm_unitv = dify_width / difr
+                                        
+                                        #If mth interface belongs to 2nd largest interface, continue...
                                         elif bub_size_id_arr[m] == bub_size_id_arr[1]:
+                                            
+                                            #If 2nd largest interface defined, continue...
                                             if bub_large >= 2:
+                                                
+                                                #If exterior surface defined, continue...
                                                 if exterior_bin_bub1 > 0:
                                                     for id2 in range(0, len(xn2_bub2)):
                                                                         
@@ -12206,15 +12344,21 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                         pos_box_x2 = xn2_bub2_pos[id2]
                                                         pos_box_y2 = yn2_bub2_pos[id2]
                                                         
+                                                        #Calculate difference in x position between reference bin and exterior surface point
                                                         difx_width = pos_box_x1-pos_box_x2
+                                                        
+                                                        #Enforce periodic boundary conditions
                                                         difx_width_abs = np.abs(difx_width)
                                                         if difx_width_abs>=h_box:
                                                             if difx_width < -h_box:
                                                                 difx_width += l_box
                                                             else:
                                                                 difx_width -= l_box
-                                                                
+                                                        
+                                                        #Calculate difference in y position between reference bin and exterior surface point
                                                         dify_width = pos_box_y1-pos_box_y2
+                                                        
+                                                        #Enforce periodic boundary conditions
                                                         dify_width_abs = np.abs(dify_width)
                                                         if dify_width_abs>=h_box:
                                                             if dify_width < -h_box:
@@ -12232,8 +12376,13 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                             dify_short = np.abs(dify_width)
                                                             x_norm_unitv = difx_width / difr
                                                             y_norm_unitv = dify_width / difr
+                                        #If mth interface belongs to 3rd largest interface, continue...
                                         elif bub_size_id_arr[m] == bub_size_id_arr[2]:
+                                            
+                                            #If 3rd largest interface defined, continue...
                                             if bub_large >= 3:
+                                                
+                                                #If exterior surface defined, continue...
                                                 if exterior_bin_bub2 > 0:
                                                     for id2 in range(0, len(xn2_bub3)):
                                                                         
@@ -12241,7 +12390,10 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                         pos_box_x2 = xn2_bub3_pos[id2]
                                                         pos_box_y2 = yn2_bub3_pos[id2]
                                                         
+                                                        #Calculate difference in x position between reference bin and exterior surface point
                                                         difx_width = pos_box_x1-pos_box_x2
+                                                        
+                                                        #Enforce periodic boundary conditions
                                                         difx_width_abs = np.abs(difx_width)
                                                         if difx_width_abs>=h_box:
                                                             if difx_width < -h_box:
@@ -12249,7 +12401,10 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                             else:
                                                                 difx_width -= l_box
                                                                 
+                                                        #Calculate difference in y position between reference bin and exterior surface point
                                                         dify_width = pos_box_y1-pos_box_y2
+                                                        
+                                                        #Enforce periodic boundary conditions
                                                         dify_width_abs = np.abs(dify_width)
                                                         if dify_width_abs>=h_box:
                                                             if dify_width < -h_box:
@@ -12267,8 +12422,14 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                             dify_short = np.abs(dify_width)
                                                             x_norm_unitv = difx_width / difr
                                                             y_norm_unitv = dify_width / difr        
+                                        
+                                        #If mth interface belongs to 4th largest interface, continue...
                                         elif bub_size_id_arr[m] == bub_size_id_arr[3]: 
+                                            
+                                            #If 4th largest interface defined, continue...
                                             if bub_large >= 4:
+                                                
+                                                #If exterior surface defined, continue...
                                                 if exterior_bin_bub3 > 0:
                                                     for id2 in range(0, len(xn2_bub4)):
                                                                         
@@ -12276,7 +12437,10 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                         pos_box_x2 = xn2_bub4_pos[id2]
                                                         pos_box_y2 = yn2_bub4_pos[id2]
                                                         
+                                                        #Calculate difference in x position between reference bin and exterior surface point
                                                         difx_width = pos_box_x1-pos_box_x2
+                                                        
+                                                        #Enforce periodic boundary conditions
                                                         difx_width_abs = np.abs(difx_width)
                                                         if difx_width_abs>=h_box:
                                                             if difx_width < -h_box:
@@ -12284,7 +12448,10 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                             else:
                                                                 difx_width -= l_box
                                                                 
+                                                        #Calculate difference in y position between reference bin and exterior surface point
                                                         dify_width = pos_box_y1-pos_box_y2
+                                                        
+                                                        #Enforce periodic boundary conditions
                                                         dify_width_abs = np.abs(dify_width)
                                                         if dify_width_abs>=h_box:
                                                             if dify_width < -h_box:
@@ -12302,8 +12469,14 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                             dify_short = np.abs(dify_width)
                                                             x_norm_unitv = difx_width / difr
                                                             y_norm_unitv = dify_width / difr
+                                        
+                                        #If mth interface belongs to 5th largest interface, continue...
                                         elif bub_size_id_arr[m] == bub_size_id_arr[4]:
+                                            
+                                            #If 5th largest interface defined, continue...
                                             if bub_large >= 5:
+                                                
+                                                #If exterior surface defined, continue...
                                                 if exterior_bin_bub4 > 0:
                                                     for id2 in range(0, len(xn2_bub5)):
                                                                         
@@ -12311,7 +12484,10 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                         pos_box_x2 = xn2_bub5_pos[id2]
                                                         pos_box_y2 = yn2_bub5_pos[id2]
                                                         
+                                                        #Calculate difference in x position between reference bin and exterior surface point
                                                         difx_width = pos_box_x1-pos_box_x2
+                                                        
+                                                        #Enforce periodic boundary conditions
                                                         difx_width_abs = np.abs(difx_width)
                                                         if difx_width_abs>=h_box:
                                                             if difx_width < -h_box:
@@ -12319,7 +12495,10 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                             else:
                                                                 difx_width -= l_box
                                                                 
+                                                        #Calculate difference in x position between reference bin and exterior surface point
                                                         dify_width = pos_box_y1-pos_box_y2
+                                                        
+                                                        #Enforce periodic boundary conditions
                                                         dify_width_abs = np.abs(dify_width)
                                                         if dify_width_abs>=h_box:
                                                             if dify_width < -h_box:
@@ -12337,8 +12516,14 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                             dify_short = np.abs(dify_width)
                                                             x_norm_unitv = difx_width / difr
                                                             y_norm_unitv = dify_width / difr        
+                                        
+                                        #If mth interface belongs to largest interface, continue...
                                         if bub_size_id_arr[m] == bub_size_id_arr[0]:  
+                                            
+                                            #If largest interface defined, continue...
                                             if bub_large >=1: 
+                                                
+                                                #If interior surface defined, continue...
                                                 if interior_bin > 0:
                                                     for id2 in range(0, len(xn)):
                                                                         
@@ -12346,7 +12531,10 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                         pos_box_x2 = xn_pos[id2]
                                                         pos_box_y2 = yn_pos[id2]
                                                         
+                                                        #Calculate difference in x position between reference bin and interior surface point
                                                         difx_width = pos_box_x1-pos_box_x2
+                                                        
+                                                        #Enforce periodic boundary conditions
                                                         difx_width_abs = np.abs(difx_width)
                                                         if difx_width_abs>=h_box:
                                                             if difx_width < -h_box:
@@ -12354,7 +12542,10 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                             else:
                                                                 difx_width -= l_box
                                                                 
+                                                        #Calculate difference in x position between reference bin and interior surface point
                                                         dify_width = pos_box_y1-pos_box_y2
+                                                        
+                                                        #Enforce periodic boundary conditions
                                                         dify_width_abs = np.abs(dify_width)
                                                         if dify_width_abs>=h_box:
                                                             if dify_width < -h_box:
@@ -12369,8 +12560,13 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                         if difr<difr_short:
                                                             difr_short=difr
                                                             
+                                        #If mth interface belongs to 2nd largest interface, continue...
                                         elif bub_size_id_arr[m] == bub_size_id_arr[1]:  
+                                            
+                                            #If 2nd largest interface defined, continue...
                                             if bub_large >=2: 
+                                                
+                                                #If interior surface defined, continue...
                                                 if interior_bin_bub1 > 0:
                                                     for id2 in range(0, len(xn_bub2)):
                                                                         
@@ -12378,7 +12574,10 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                         pos_box_x2 = xn_bub2_pos[id2]
                                                         pos_box_y2 = yn_bub2_pos[id2]
                                                         
+                                                        #Calculate difference in x position between reference bin and interior surface point
                                                         difx_width = pos_box_x1-pos_box_x2
+                                                        
+                                                        #Enforce periodic boundary conditions
                                                         difx_width_abs = np.abs(difx_width)
                                                         if difx_width_abs>=h_box:
                                                             if difx_width < -h_box:
@@ -12386,7 +12585,10 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                             else:
                                                                 difx_width -= l_box
                                                                 
+                                                        #Calculate difference in y position between reference bin and interior surface point
                                                         dify_width = pos_box_y1-pos_box_y2
+                                                        
+                                                        #Enforce periodic boundary conditions
                                                         dify_width_abs = np.abs(dify_width)
                                                         if dify_width_abs>=h_box:
                                                             if dify_width < -h_box:
@@ -12401,8 +12603,13 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                         if difr<difr_short:
                                                             difr_short=difr
                                                             
-                                        elif bub_size_id_arr[m] == bub_size_id_arr[2]:  
+                                        #If mth interface belongs to 3rd largest interface, continue...
+                                        elif bub_size_id_arr[m] == bub_size_id_arr[2]:
+                                            
+                                            #If 3rd largest interface defined, continue...
                                             if bub_large >=3: 
+                                                
+                                                #If interior surface defined, continue...
                                                 if interior_bin_bub2 > 0:
                                                     for id2 in range(0, len(xn_bub3)):
                                                                         
@@ -12410,7 +12617,10 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                         pos_box_x2 = xn_bub3_pos[id2]
                                                         pos_box_y2 = yn_bub3_pos[id2]
                                                         
+                                                        #Calculate difference in x position between reference bin and interior surface point
                                                         difx_width = pos_box_x1-pos_box_x2
+                                                        
+                                                        #Enforce periodic boundary conditions
                                                         difx_width_abs = np.abs(difx_width)
                                                         if difx_width_abs>=h_box:
                                                             if difx_width < -h_box:
@@ -12418,71 +12628,10 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                             else:
                                                                 difx_width -= l_box
                                                                 
+                                                        #Calculate difference in y position between reference bin and interior surface point
                                                         dify_width = pos_box_y1-pos_box_y2
-                                                        dify_width_abs = np.abs(dify_width)
-                                                        if dify_width_abs>=h_box:
-                                                            if dify_width < -h_box:
-                                                                dify_width += l_box
-                                                            else:
-                                                                dify_width -= l_box
-                                                                
-                                                        #Calculate distance from interior edge bin to exterior edge bin
-                                                        difr = ( (difx_width)**2 + (dify_width)**2)**0.5
                                                         
-                                                        #If this distance is the shortest calculated thus far, replace the value with it
-                                                        if difr<difr_short:
-                                                            difr_short=difr
-                                                                  
-                                        elif bub_size_id_arr[m] == bub_size_id_arr[3]:
-                                            if bub_large >=4: 
-                                                if interior_bin_bub3 > 0:
-                                                    for id2 in range(0, len(xn_bub4)):
-                                                                        
-                                                        #Calculate position of interior edge bin
-                                                        pos_box_x2 = xn_bub4_pos[id2]
-                                                        pos_box_y2 = yn_bub4_pos[id2]
-                                                        
-                                                        difx_width = pos_box_x1-pos_box_x2
-                                                        difx_width_abs = np.abs(difx_width)
-                                                        if difx_width_abs>=h_box:
-                                                            if difx_width < -h_box:
-                                                                difx_width += l_box
-                                                            else:
-                                                                difx_width -= l_box
-                                                                
-                                                        dify_width = pos_box_y1-pos_box_y2
-                                                        dify_width_abs = np.abs(dify_width)
-                                                        if dify_width_abs>=h_box:
-                                                            if dify_width < -h_box:
-                                                                dify_width += l_box
-                                                            else:
-                                                                dify_width -= l_box
-                                                                
-                                                        #Calculate distance from interior edge bin to exterior edge bin
-                                                        difr = ( (difx_width)**2 + (dify_width)**2)**0.5
-                                                        
-                                                        #If this distance is the shortest calculated thus far, replace the value with it
-                                                        if difr<difr_short:
-                                                            difr_short=difr
-                                                            
-                                        elif bub_size_id_arr[m] == bub_size_id_arr[4]:  
-                                            if bub_large >=5: 
-                                                if interior_bin_bub4 > 0:
-                                                    for id2 in range(0, len(xn_bub5)):
-                                                                        
-                                                        #Calculate position of interior edge bin
-                                                        pos_box_x2 = xn_bub5_pos[id2]
-                                                        pos_box_y2 = yn_bub5_pos[id2]
-                                                        
-                                                        difx_width = pos_box_x1-pos_box_x2
-                                                        difx_width_abs = np.abs(difx_width)
-                                                        if difx_width_abs>=h_box:
-                                                            if difx_width < -h_box:
-                                                                difx_width += l_box
-                                                            else:
-                                                                difx_width -= l_box
-                                                                
-                                                        dify_width = pos_box_y1-pos_box_y2
+                                                        #Enforce periodic boundary conditions
                                                         dify_width_abs = np.abs(dify_width)
                                                         if dify_width_abs>=h_box:
                                                             if dify_width < -h_box:
@@ -12497,22 +12646,117 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                         if difr<difr_short:
                                                             difr_short=difr
                                         
+                                        #If mth interface belongs to 4th largest interface, continue...
+                                        elif bub_size_id_arr[m] == bub_size_id_arr[3]:
+                                            
+                                            #If 4th largest interface defined, continue...
+                                            if bub_large >=4: 
+                                                
+                                                #If interior surface defined, continue...
+                                                if interior_bin_bub3 > 0:
+                                                    for id2 in range(0, len(xn_bub4)):
+                                                                        
+                                                        #Calculate position of interior edge bin
+                                                        pos_box_x2 = xn_bub4_pos[id2]
+                                                        pos_box_y2 = yn_bub4_pos[id2]
+                                                        
+                                                        #Calculate difference in x position between reference bin and interior surface point
+                                                        difx_width = pos_box_x1-pos_box_x2
+                                                        
+                                                        #Enforce periodic boundary conditions
+                                                        difx_width_abs = np.abs(difx_width)
+                                                        if difx_width_abs>=h_box:
+                                                            if difx_width < -h_box:
+                                                                difx_width += l_box
+                                                            else:
+                                                                difx_width -= l_box
+                                                                
+                                                        #Calculate difference in y position between reference bin and interior surface point
+                                                        dify_width = pos_box_y1-pos_box_y2
+                                                        
+                                                        #Enforce periodic boundary conditions
+                                                        dify_width_abs = np.abs(dify_width)
+                                                        if dify_width_abs>=h_box:
+                                                            if dify_width < -h_box:
+                                                                dify_width += l_box
+                                                            else:
+                                                                dify_width -= l_box
+                                                                
+                                                        #Calculate distance from interior edge bin to exterior edge bin
+                                                        difr = ( (difx_width)**2 + (dify_width)**2)**0.5
+                                                        
+                                                        #If this distance is the shortest calculated thus far, replace the value with it
+                                                        if difr<difr_short:
+                                                            difr_short=difr
+                                        #If mth interface belongs to 5th largest interface, continue...     
+                                        elif bub_size_id_arr[m] == bub_size_id_arr[4]:  
+                                            
+                                            #If 5th largest interface defined, continue...
+                                            if bub_large >=5: 
+                                                #If interior surface defined, continue...
+                                                if interior_bin_bub4 > 0:
+                                                    for id2 in range(0, len(xn_bub5)):
+                                                                        
+                                                        #Calculate position of interior edge bin
+                                                        pos_box_x2 = xn_bub5_pos[id2]
+                                                        pos_box_y2 = yn_bub5_pos[id2]
+                                                        
+                                                        #Calculate difference in x position between reference bin and interior surface point
+                                                        difx_width = pos_box_x1-pos_box_x2
+                                                        
+                                                        #Enforce periodic boundary conditions
+                                                        difx_width_abs = np.abs(difx_width)
+                                                        if difx_width_abs>=h_box:
+                                                            if difx_width < -h_box:
+                                                                difx_width += l_box
+                                                            else:
+                                                                difx_width -= l_box
+                                                           
+                                                        #Calculate difference in y position between reference bin and interior surface point
+                                                        dify_width = pos_box_y1-pos_box_y2
+                                                        
+                                                        #Enforce periodic boundary conditions
+                                                        dify_width_abs = np.abs(dify_width)
+                                                        if dify_width_abs>=h_box:
+                                                            if dify_width < -h_box:
+                                                                dify_width += l_box
+                                                            else:
+                                                                dify_width -= l_box
+                                                                
+                                                        #Calculate distance from interior edge bin to exterior edge bin
+                                                        difr = ( (difx_width)**2 + (dify_width)**2)**0.5
+                                                        
+                                                        #If this distance is the shortest calculated thus far, replace the value with it
+                                                        if difr<difr_short:
+                                                            difr_short=difr
+                                       
                                         difr_short_ext[ix][iy] = difr_short
+                                        
+                                        #If particles in bin, continue...
                                         if len(binParts[ix][iy])>0:
+                                            
+                                            #Loop over particles in bin
                                             for h in range(0, len(binParts[ix][iy])):
         
+                                                #x,y position of reference particle
                                                 pos_box_x1 = pos[binParts[ix][iy][h],0] + h_box
                                                 pos_box_y1 = pos[binParts[ix][iy][h],1] + h_box
-                                                                                                
+                                                           
+                                                #Calculate difference in x position between reference particle and cluster's CoM
                                                 difx_bub = pos_box_x1 - x_com_bub
+                                                
+                                                #Enforce periodic boundary conditions
                                                 difx_bub_abs = np.abs(difx_trad)
                                                 if difx_bub_abs>=h_box:
                                                     if difx_bub < -h_box:
                                                         difx_bub += l_box
                                                     else:
                                                         difx_bub -= l_box
-                                                        
+                                                
+                                                #Calculate difference in y position between reference particle and cluster's CoM
                                                 dify_bub = pos_box_y1 - y_com_bub
+                                                
+                                                #Enforce periodic boundary conditions
                                                 dify_bub_abs = np.abs(dify_trad)
                                                 if dify_bub_abs>=h_box:
                                                     if dify_bub < -h_box:
@@ -12522,8 +12766,14 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                                                                                             
                                                 #Very large initial distance to calculate closest interior edge bin to this exterior edge bin
                                                 difr_short= ( (difx_bub )**2 + (dify_bub)**2)**0.5
+                                                
+                                                #If mth interface belongs to largest interface, continue...
                                                 if bub_size_id_arr[m] == bub_size_id_arr[0]:  
+                                                    
+                                                    #If largest interface defined, continue...
                                                     if bub_large >=1: 
+                                                        
+                                                        #If interior surface defined, continue...
                                                         if interior_bin > 0:
                                                             for id2 in range(0, len(xn)):
                                                                                 
@@ -12531,15 +12781,21 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                                 pos_box_x2 = xn_pos[id2]
                                                                 pos_box_y2 = yn_pos[id2]
                                                                 
+                                                                #Calculate difference in y position between reference bin and interior surface point
                                                                 difx_width = pos_box_x1-pos_box_x2
+                                                                
+                                                                #Enforce periodic boundary conditions
                                                                 difx_width_abs = np.abs(difx_width)
                                                                 if difx_width_abs>=h_box:
                                                                     if difx_width < -h_box:
                                                                         difx_width += l_box
                                                                     else:
                                                                         difx_width -= l_box
-                                                                        
+                                                                
+                                                                #Calculate difference in y position between reference bin and interior surface point
                                                                 dify_width = pos_box_y1-pos_box_y2
+                                                                
+                                                                #Enforce periodic boundary conditions
                                                                 dify_width_abs = np.abs(dify_width)
                                                                 if dify_width_abs>=h_box:
                                                                     if dify_width < -h_box:
@@ -12554,8 +12810,13 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                                 if difr<difr_short:
                                                                     difr_short=difr
                                                                     
+                                                #If mth interface belongs to second largest interface, continue...
                                                 elif bub_size_id_arr[m] == bub_size_id_arr[1]:  
+                                                    
+                                                    #If 2nd largest interface defined, continue...
                                                     if bub_large >=2: 
+                                                        
+                                                        #If interior surface defined, continue...
                                                         if interior_bin_bub1 > 0:
                                                             for id2 in range(0, len(xn_bub2)):
                                                                                 
@@ -12563,15 +12824,21 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                                 pos_box_x2 = xn_bub2_pos[id2]
                                                                 pos_box_y2 = yn_bub2_pos[id2]
                                                                 
+                                                                #Calculate difference in x position between reference bin and interior surface point
                                                                 difx_width = pos_box_x1-pos_box_x2
+                                                                
+                                                                #Enforce periodic boundary conditions
                                                                 difx_width_abs = np.abs(difx_width)
                                                                 if difx_width_abs>=h_box:
                                                                     if difx_width < -h_box:
                                                                         difx_width += l_box
                                                                     else:
                                                                         difx_width -= l_box
-                                                                        
+                                                                
+                                                                #Calculate difference in y position between reference bin and interior surface point
                                                                 dify_width = pos_box_y1-pos_box_y2
+                                                                
+                                                                #Enforce periodic boundary conditions
                                                                 dify_width_abs = np.abs(dify_width)
                                                                 if dify_width_abs>=h_box:
                                                                     if dify_width < -h_box:
@@ -12585,9 +12852,13 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                                 #If this distance is the shortest calculated thus far, replace the value with it
                                                                 if difr<difr_short:
                                                                     difr_short=difr
-                                                                    
-                                                elif bub_size_id_arr[m] == bub_size_id_arr[2]:  
+                                                #If mth interface is 3rd largest interface, continue...                    
+                                                elif bub_size_id_arr[m] == bub_size_id_arr[2]: 
+                                                    
+                                                    #If 3rd largest interface defined, continue...
                                                     if bub_large >=3: 
+                                                        
+                                                        #If interior surface defined, continue...
                                                         if interior_bin_bub2 > 0:
                                                             for id2 in range(0, len(xn_bub3)):
                                                                                 
@@ -12595,7 +12866,10 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                                 pos_box_x2 = xn_bub3_pos[id2]
                                                                 pos_box_y2 = yn_bub3_pos[id2]
                                                                 
+                                                                #Calculate difference in x position between reference bin and interior surface point
                                                                 difx_width = pos_box_x1-pos_box_x2
+                                                                
+                                                                #Enforce periodic boundary conditions
                                                                 difx_width_abs = np.abs(difx_width)
                                                                 if difx_width_abs>=h_box:
                                                                     if difx_width < -h_box:
@@ -12603,39 +12877,10 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                                     else:
                                                                         difx_width -= l_box
                                                                         
+                                                                #Calculate difference in y position between reference bin and interior surface point
                                                                 dify_width = pos_box_y1-pos_box_y2
-                                                                dify_width_abs = np.abs(dify_width)
-                                                                if dify_width_abs>=h_box:
-                                                                    if dify_width < -h_box:
-                                                                        dify_width += l_box
-                                                                    else:
-                                                                        dify_width -= l_box
-                                                                        
-                                                                #Calculate distance from interior edge bin to exterior edge bin
-                                                                difr = ( (difx_width)**2 + (dify_width)**2)**0.5
                                                                 
-                                                                #If this distance is the shortest calculated thus far, replace the value with it
-                                                                if difr<difr_short:
-                                                                    difr_short=difr
-                                                                          
-                                                elif bub_size_id_arr[m] == bub_size_id_arr[3]:
-                                                    if bub_large >=4: 
-                                                        if interior_bin_bub3 > 0:
-                                                            for id2 in range(0, len(xn_bub4)):
-                                                                                
-                                                                #Calculate position of interior edge bin
-                                                                pos_box_x2 = xn_bub4_pos[id2]
-                                                                pos_box_y2 = yn_bub4_pos[id2]
-                                                                
-                                                                difx_width = pos_box_x1-pos_box_x2
-                                                                difx_width_abs = np.abs(difx_width)
-                                                                if difx_width_abs>=h_box:
-                                                                    if difx_width < -h_box:
-                                                                        difx_width += l_box
-                                                                    else:
-                                                                        difx_width -= l_box
-                                                                        
-                                                                dify_width = pos_box_y1-pos_box_y2
+                                                                #Enforce periodic boundary conditions
                                                                 dify_width_abs = np.abs(dify_width)
                                                                 if dify_width_abs>=h_box:
                                                                     if dify_width < -h_box:
@@ -12650,16 +12895,24 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                                 if difr<difr_short:
                                                                     difr_short=difr
                                                                     
-                                                elif bub_size_id_arr[m] == bub_size_id_arr[4]:  
-                                                    if bub_large >=5: 
-                                                        if interior_bin_bub4 > 0:
-                                                            for id2 in range(0, len(xn_bub5)):
+                                                #If mth interface belongs to 4th largest interface, continue...                          
+                                                elif bub_size_id_arr[m] == bub_size_id_arr[3]:
+                                                    
+                                                    #If 4th largest interface defined, continue...
+                                                    if bub_large >=4: 
+                                                        
+                                                        #If interior surface defined, continue..
+                                                        if interior_bin_bub3 > 0:
+                                                            for id2 in range(0, len(xn_bub4)):
                                                                                 
                                                                 #Calculate position of interior edge bin
-                                                                pos_box_x2 = xn_bub5_pos[id2]
-                                                                pos_box_y2 = yn_bub5_pos[id2]
+                                                                pos_box_x2 = xn_bub4_pos[id2]
+                                                                pos_box_y2 = yn_bub4_pos[id2]
                                                                 
+                                                                #Calculate difference in x position between reference bin and interior surface point
                                                                 difx_width = pos_box_x1-pos_box_x2
+                                                                
+                                                                #Enforce periodic boundary conditions
                                                                 difx_width_abs = np.abs(difx_width)
                                                                 if difx_width_abs>=h_box:
                                                                     if difx_width < -h_box:
@@ -12667,7 +12920,10 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                                     else:
                                                                         difx_width -= l_box
                                                                         
+                                                                #Calculate difference in y position between reference bin and interior surface point
                                                                 dify_width = pos_box_y1-pos_box_y2
+                                                                
+                                                                #Enforce periodic boundary conditions
                                                                 dify_width_abs = np.abs(dify_width)
                                                                 if dify_width_abs>=h_box:
                                                                     if dify_width < -h_box:
@@ -12681,103 +12937,183 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                                 #If this distance is the shortest calculated thus far, replace the value with it
                                                                 if difr<difr_short:
                                                                     difr_short=difr
+                                                                    
+                                                #If mth interface belongs to 5th largest interface, continue...                    
+                                                elif bub_size_id_arr[m] == bub_size_id_arr[4]: 
+                                                    
+                                                    #If 5th largest interface defined, continue...
+                                                    if bub_large >=5: 
+                                                        
+                                                        #If interior surface defined, continue...
+                                                        if interior_bin_bub4 > 0:
+                                                            for id2 in range(0, len(xn_bub5)):
+                                                                                
+                                                                #Calculate position of interior edge bin
+                                                                pos_box_x2 = xn_bub5_pos[id2]
+                                                                pos_box_y2 = yn_bub5_pos[id2]
+                                                                
+                                                                #Calculate difference in x position between reference bin and interior surface point
+                                                                difx_width = pos_box_x1-pos_box_x2
+                                                                
+                                                                #Enforce periodic boundary conditions
+                                                                difx_width_abs = np.abs(difx_width)
+                                                                if difx_width_abs>=h_box:
+                                                                    if difx_width < -h_box:
+                                                                        difx_width += l_box
+                                                                    else:
+                                                                        difx_width -= l_box
+                                                                        
+                                                                #Calculate difference in y position between reference bin and interior surface point
+                                                                dify_width = pos_box_y1-pos_box_y2
+                                                                
+                                                                #Enforce periodic boundary conditions
+                                                                dify_width_abs = np.abs(dify_width)
+                                                                if dify_width_abs>=h_box:
+                                                                    if dify_width < -h_box:
+                                                                        dify_width += l_box
+                                                                    else:
+                                                                        dify_width -= l_box
+                                                                        
+                                                                #Calculate distance from interior edge bin to exterior edge bin
+                                                                difr = ( (difx_width)**2 + (dify_width)**2)**0.5
+                                                                
+                                                                #If this distance is the shortest calculated thus far, replace the value with it
+                                                                if difr<difr_short:
+                                                                    difr_short=difr
+                                                
                                                 #Calculate x and y orientation of active force
-                                                #px = np.cos(ang[binParts[ix][iy][h]])
-                                                #py = np.sin(ang[binParts[ix][iy][h]])
                                                 px = np.sin(ang[binParts[ix][iy][h]])
                                                 py = -np.cos(ang[binParts[ix][iy][h]])
-                                                #print(x_norm_unitv)
-                                                #print(y_norm_unitv)
-                                                #Calculate alignment towards CoM  
+
+                                                #Calculate alignment with nearest surface norma 
                                                 r_dot_p = (-x_norm_unitv * px) + (-y_norm_unitv * py)
                                                 x_dot_p = (-x_norm_unitv * px)
                                                 y_dot_p = (-y_norm_unitv * py)
-                                                r_dot_p_trad = (-x_norm_unitv_trad * px) + (-y_norm_unitv_trad * py)
-                                                #Sum x,y orientation over each bin
                                                 
+                                                #Calculate alignment toward CoM
+                                                r_dot_p_trad = (-x_norm_unitv_trad * px) + (-y_norm_unitv_trad * py)
+                                                
+                                                #Sum alignment with nearest surface's normal
                                                 new_align[ix][iy] += r_dot_p
                                                 new_align_num[ix][iy]+= 1
+                                                
+                                                #Sum alignment toward CoM
                                                 new_align_trad[ix][iy] += r_dot_p_trad
                                                 new_align_num_trad[ix][iy]+= 1
+                                                
+                                                #If particle of type A, continue...
                                                 if typ[binParts[ix][iy][h]]==0:
+                                                    
+                                                    #Save active force component in direction normal to surface
                                                     fa_all_tot_test=np.append(fa_all_tot_test, r_dot_p*peA)
+                                                    
+                                                    #Save distance from nearest surface
                                                     r_dist_tot_test = np.append(r_dist_tot_test, difr_short)
+                                                    
+                                                    #If belongs to largest interface, save active force component in direction normal to surface and distance to surface
                                                     if bub_size_id_arr[m] == bub_size_id_arr[0]:  
                                                         if bub_large >=1: 
                                                             fa_all_tot_bub1=np.append(fa_all_tot_bub1, r_dot_p*peA)
                                                             r_dist_tot_bub1 = np.append(r_dist_tot_bub1, difr_short)
                                                             activity_all_bub1=np.append(activity_all_bub1, peA)
                                                             partid_all_bub1=np.append(partid_all_bub1, binParts[ix][iy][h])
+                                                    
+                                                    #If belongs to 2nd largest interface, save active force component in direction normal to surface and distance to surface
                                                     elif bub_size_id_arr[m] == bub_size_id_arr[1]:  
                                                         if bub_large >=2: 
                                                             fa_all_tot_bub2=np.append(fa_all_tot_bub2, r_dot_p*peA)
                                                             r_dist_tot_bub2 = np.append(r_dist_tot_bub2, difr_short)
                                                             activity_all_bub2=np.append(activity_all_bub2, peA)
                                                             partid_all_bub2=np.append(partid_all_bub2, binParts[ix][iy][h])
+                                                    
+                                                    #If belongs to 3rd largest interface, save active force component in direction normal to surface and distance to surface
                                                     elif bub_size_id_arr[m] == bub_size_id_arr[2]:  
                                                         if bub_large >=3: 
                                                             fa_all_tot_bub3=np.append(fa_all_tot_bub3, r_dot_p*peA)
                                                             r_dist_tot_bub3 = np.append(r_dist_tot_bub3, difr_short)
                                                             activity_all_bub3=np.append(activity_all_bub3, peA)
                                                             partid_all_bub3=np.append(partid_all_bub3, binParts[ix][iy][h])
+                                                    
+                                                    #If belongs to 4th largest interface, save active force component in direction normal to surface and distance to surface
                                                     elif bub_size_id_arr[m] == bub_size_id_arr[3]:  
                                                         if bub_large >=4: 
                                                             fa_all_tot_bub4=np.append(fa_all_tot_bub4, r_dot_p*peA)
                                                             r_dist_tot_bub4 = np.append(r_dist_tot_bub4, difr_short)
                                                             activity_all_bub4=np.append(activity_all_bub4, peA)
                                                             partid_all_bub4=np.append(partid_all_bub4, binParts[ix][iy][h])
+                                                    
+                                                    #If belongs to 5th largest interface, save active force component in direction normal to surface and distance to surface
                                                     elif bub_size_id_arr[m] == bub_size_id_arr[4]:  
                                                         if bub_large >=5: 
                                                             fa_all_tot_bub5=np.append(fa_all_tot_bub5, r_dot_p*peA)
                                                             r_dist_tot_bub5 = np.append(r_dist_tot_bub5, difr_short)
                                                             activity_all_bub5=np.append(activity_all_bub5, peA)
                                                             partid_all_bub5=np.append(partid_all_bub5, binParts[ix][iy][h])
+                                                
+                                                #If partice of type B, continue...
                                                 else:
+                                                    
+                                                    #Save active force component in direction normal to surface
                                                     fa_all_tot_test=np.append(fa_all_tot_test, r_dot_p*peB)
+                                                    
+                                                    #Save distance from nearest surface
                                                     r_dist_tot_test = np.append(r_dist_tot_test, difr_short)
+                                                    
+                                                    #If belongs to largest interface, save active force component in direction normal to surface and distance to surface
                                                     if bub_size_id_arr[m] == bub_size_id_arr[0]:  
                                                         if bub_large >=1: 
                                                             fa_all_tot_bub1=np.append(fa_all_tot_bub1, r_dot_p*peB)
                                                             r_dist_tot_bub1 = np.append(r_dist_tot_bub1, difr_short)
                                                             activity_all_bub1=np.append(activity_all_bub1, peB)
                                                             partid_all_bub1=np.append(partid_all_bub1, binParts[ix][iy][h])
+                                                    
+                                                    #If belongs to 2nd largest interface, save active force component in direction normal to surface and distance to surface
                                                     elif bub_size_id_arr[m] == bub_size_id_arr[1]:  
                                                         if bub_large >=2: 
                                                             fa_all_tot_bub2=np.append(fa_all_tot_bub2, r_dot_p*peB)
                                                             r_dist_tot_bub2 = np.append(r_dist_tot_bub2, difr_short)
                                                             activity_all_bub2=np.append(activity_all_bub2, peB)
                                                             partid_all_bub2=np.append(partid_all_bub2, binParts[ix][iy][h])
+                                                    
+                                                    #If belongs to 3rd largest interface, save active force component in direction normal to surface and distance to surface
                                                     elif bub_size_id_arr[m] == bub_size_id_arr[2]:  
                                                         if bub_large >=3: 
                                                             fa_all_tot_bub3=np.append(fa_all_tot_bub3, r_dot_p*peB)
                                                             r_dist_tot_bub3 = np.append(r_dist_tot_bub3, difr_short)
                                                             activity_all_bub3=np.append(activity_all_bub3, peB)
                                                             partid_all_bub3=np.append(partid_all_bub3, binParts[ix][iy][h])
+                                                    
+                                                    #If belongs to 4th largest interface, save active force component in direction normal to surface and distance to surface
                                                     elif bub_size_id_arr[m] == bub_size_id_arr[3]:  
                                                         if bub_large >=4: 
                                                             fa_all_tot_bub4=np.append(fa_all_tot_bub4, r_dot_p*peB)
                                                             r_dist_tot_bub4 = np.append(r_dist_tot_bub4, difr_short)
                                                             activity_all_bub4=np.append(activity_all_bub4, peB)
                                                             partid_all_bub4=np.append(partid_all_bub4, binParts[ix][iy][h])
+                                                    
+                                                    #If belongs to 5th largest interface, save active force component in direction normal to surface and distance to surface
                                                     elif bub_size_id_arr[m] == bub_size_id_arr[4]:  
                                                         if bub_large >=5: 
                                                             fa_all_tot_bub5=np.append(fa_all_tot_bub5, r_dot_p*peB)
                                                             r_dist_tot_bub5 = np.append(r_dist_tot_bub5, difr_short)
                                                             activity_all_bub5=np.append(activity_all_bub5, peB)
                                                             partid_all_bub5=np.append(partid_all_bub5, binParts[ix][iy][h])
+                                                
+                                                #If particle of type A, sum alignment
                                                 if typ[binParts[ix][iy][h]]==0:
                                                     new_align0[ix][iy] += r_dot_p
                                                     new_align_num0[ix][iy]+= 1
                                                     new_align_trad0[ix][iy] += r_dot_p_trad
                                                     new_align_num_trad0[ix][iy]+= 1
+                                                
+                                                #If particle of type B, sum alignment
                                                 elif typ[binParts[ix][iy][h]]==1:
                                                     new_align1[ix][iy] += r_dot_p
                                                     new_align_num1[ix][iy]+= 1
                                                     new_align_trad1[ix][iy] += r_dot_p_trad
-                                                    new_align_num_trad1[ix][iy]+= 1
-                                    #if ext_edge_id[ix][iy]==0:
-                            
+                                                    new_align_num_trad1[ix][iy]+= 1                            
                                     
+                                    #If bin is an external edge of interface, continue...
                                     elif ext_edge_id[ix][iy]==1:
                                         
                                         
@@ -12785,7 +13121,10 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                         pos_box_x1 = (ix+0.5)*sizeBin
                                         pos_box_y1 = (iy+0.5)*sizeBin
                                         
-                                        difx_trad = pos_box_x1 - h_box#com_tmp_posX
+                                        #Difference in bin's x position with system's CoM
+                                        difx_trad = pos_box_x1 - h_box
+                                        
+                                        #Enforce periodic boundary conditions
                                         difx_trad_abs = np.abs(difx_trad)
                                         if difx_trad_abs>=h_box:
                                             if difx_trad < -h_box:
@@ -12793,30 +13132,41 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                             else:
                                                 difx_trad -= l_box
                                                 
-                                        dify_trad = pos_box_y1 - h_box#com_tmp_posY
+                                        #Difference in bin's x position with system's CoM
+                                        dify_trad = pos_box_y1 - h_box
+                                        
+                                        #Enforce periodic boundary conditions
                                         dify_trad_abs = np.abs(dify_trad)
                                         if dify_trad_abs>=h_box:
                                             if dify_trad < -h_box:
                                                 dify_trad += l_box
                                             else:
                                                 dify_trad -= l_box
-                                                
+                                        
+                                        
+                                        #Difference in bin's x position with CoM
                                         difx_bub = pos_box_x1 - x_com_bub
+                                        
+                                        #Enforce periodic boundary conditions
                                         difx_bub_abs = np.abs(difx_trad)
                                         if difx_bub_abs>=h_box:
                                             if difx_bub < -h_box:
                                                 difx_bub += l_box
                                             else:
                                                 difx_bub -= l_box
-                                                
+                                        
+                                        #Difference in bin's y position with CoM
                                         dify_bub = pos_box_y1 - y_com_bub
+                                        
+                                        #Enforce periodic boundary conditions
                                         dify_bub_abs = np.abs(dify_trad)
                                         if dify_bub_abs>=h_box:
                                             if dify_bub < -h_box:
                                                 dify_bub += l_box
                                             else:
                                                 dify_bub -= l_box
-                                                
+                                        
+                                        #Initiate zero values for x and y unit vectors        
                                         x_norm_unitv = 0
                                         y_norm_unitv = 0
                                                                     
@@ -12827,14 +13177,21 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                         difx_short = np.abs(difx_bub)
                                         dify_short = np.abs(dify_bub)   
                                         
+                                        #X and Y unit vectors toward CoM
                                         x_norm_unitv_trad = (difx_trad) / difr_trad
                                         y_norm_unitv_trad = (dify_trad) / difr_trad
                                         
+                                        #X and Y unit vectors toward CoM
                                         x_norm_unitv = (difx_bub) / difr_bub
                                         y_norm_unitv = (dify_bub) / difr_bub
-                                        #Loop over bins of system                                      
+                                        
+                                        #If bin belongs to largest interface, continue...
                                         if bub_size_id_arr[m] == bub_size_id_arr[0]:  
+                                            
+                                            #If largest interface defined, continue...
                                             if bub_large >=1: 
+                                                
+                                                #If interior surface defined, continue...
                                                 if interior_bin > 0:
                                                     for id2 in range(0, len(xn)):
                                                                         
@@ -12868,8 +13225,14 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                             dify_short = np.abs(dify_width)
                                                             x_norm_unitv = difx_width / difr
                                                             y_norm_unitv = dify_width / difr
+                                        
+                                        #If bin belongs to 2nd largest interface, continue...
                                         elif bub_size_id_arr[m] == bub_size_id_arr[1]:  
+                                            
+                                            #If 2nd largest interface defined, continue...
                                             if bub_large >=2: 
+                                                
+                                                #If interior surface defined, continue...
                                                 if interior_bin_bub1 > 0:
                                                     for id2 in range(0, len(xn_bub2)):
                                                                         
@@ -12903,8 +13266,14 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                             dify_short = np.abs(dify_width)
                                                             x_norm_unitv = difx_width / difr
                                                             y_norm_unitv = dify_width / difr
+                                        
+                                        #If bin belongs to 3rd largest interface, continue...
                                         elif bub_size_id_arr[m] == bub_size_id_arr[2]:  
+                                            
+                                            #If 3rd largest bubble defined, continue...
                                             if bub_large >=3: 
+                                                
+                                                #If interior surface defined, continue...
                                                 if interior_bin_bub2 > 0:
                                                     for id2 in range(0, len(xn_bub3)):
                                                                         
@@ -12938,8 +13307,14 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                             dify_short = np.abs(dify_width)
                                                             x_norm_unitv = difx_width / difr
                                                             y_norm_unitv = dify_width / difr        
+                                       
+                                        #If bin belongs to 4th largest interface, continue...
                                         elif bub_size_id_arr[m] == bub_size_id_arr[3]:
+                                            
+                                            #If 4th largest bubble defined, continue...
                                             if bub_large >=4: 
+                                                
+                                                #If interior surface defined, continue...
                                                 if interior_bin_bub3 > 0:
                                                     for id2 in range(0, len(xn_bub4)):
                                                                         
@@ -12973,8 +13348,14 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                             dify_short = np.abs(dify_width)
                                                             x_norm_unitv = difx_width / difr
                                                             y_norm_unitv = dify_width / difr
+                                        
+                                        #If bin belongs to 5th largest interface, continue...
                                         elif bub_size_id_arr[m] == bub_size_id_arr[4]:  
+                                            
+                                            #If 5th largest interface defined, continue...
                                             if bub_large >=5: 
+                                                
+                                                #If interior surface defined, continue..
                                                 if interior_bin_bub4 > 0:
                                                     for id2 in range(0, len(xn_bub5)):
                                                                         
@@ -13170,16 +13551,19 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                             difr_short=difr
                                                             
                                         '''
+                                        
+                                        #If particles in bin, continue...
                                         if len(binParts[ix][iy])>0:
+                                            
+                                            #Loop over all particles in bin
                                             for h in range(0, len(binParts[ix][iy])):
+                                                
                                                 #Calculate x and y orientation of active force
-                                                #px = np.cos(ang[binParts[ix][iy][h]])
-                                                #py = np.sin(ang[binParts[ix][iy][h]])
                                                 px = np.sin(ang[binParts[ix][iy][h]])
                                                 py = -np.cos(ang[binParts[ix][iy][h]])
-                                                #print(x_norm_unitv)
-                                                #print(y_norm_unitv)
-                                                #Calculate alignment towards CoM 
+                                                
+                                                
+                                                #Calculate alignment with nearest surface's normal
                                                 if difr_short == difr_bub:
                                                     r_dot_p = (-x_norm_unitv * px) + (-y_norm_unitv * py)
                                                     x_dot_p = (-x_norm_unitv * px)
@@ -13188,72 +13572,109 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                     r_dot_p = (x_norm_unitv * px) + (y_norm_unitv * py)
                                                     x_dot_p = (x_norm_unitv * px)
                                                     y_dot_p = (y_norm_unitv * py)
+                                                    
+                                                #Calculate alignment towards CoM 
                                                 r_dot_p_trad = (-x_norm_unitv_trad * px) + (-y_norm_unitv_trad * py)
-                                                #Sum x,y orientation over each bin
+                                                
+                                                #Sum alignment with nearest surface's normal
                                                 new_align[ix][iy] += r_dot_p
                                                 new_align_num[ix][iy]+= 1
+                                                
+                                                #Sum alignment toward CoM
                                                 new_align_trad[ix][iy] += r_dot_p_trad
                                                 new_align_num_trad[ix][iy]+= 1
+                                                
+                                                #If particle is of type A, continue...
                                                 if typ[binParts[ix][iy][h]]==0:
+                                                    
+                                                    #Save active force component in direction normal to surface
                                                     fa_all_tot_test=np.append(fa_all_tot_test, r_dot_p*peA)
+                                                    
+                                                    #Save distance from surface 
                                                     r_dist_tot_test = np.append(r_dist_tot_test, difr_short)
+                                                    
+                                                    #If belongs to largest interface, save active force component in direction normal to surface and distance to surface
                                                     if bub_size_id_arr[m] == bub_size_id_arr[0]:  
                                                         if bub_large >=1: 
                                                             fa_all_tot_bub1=np.append(fa_all_tot_bub1, r_dot_p*peA)
                                                             r_dist_tot_bub1 = np.append(r_dist_tot_bub1, difr_short)
                                                             activity_all_bub1=np.append(activity_all_bub1, peA)
                                                             partid_all_bub1=np.append(partid_all_bub1, binParts[ix][iy][h])
+                                                    
+                                                    #If belongs to 2nd largest interface, save active force component in direction normal to surface and distance to surface
                                                     elif bub_size_id_arr[m] == bub_size_id_arr[1]:  
                                                         if bub_large >=2: 
                                                             fa_all_tot_bub2=np.append(fa_all_tot_bub2, r_dot_p*peA)
                                                             r_dist_tot_bub2 = np.append(r_dist_tot_bub2, difr_short)
                                                             activity_all_bub2=np.append(activity_all_bub2, peA)
                                                             partid_all_bub2=np.append(partid_all_bub2, binParts[ix][iy][h])
+                                                    
+                                                    #If belongs to 3rd largest interface, save active force component in direction normal to surface and distance to surface
                                                     elif bub_size_id_arr[m] == bub_size_id_arr[2]:  
                                                         if bub_large >=3: 
                                                             fa_all_tot_bub3=np.append(fa_all_tot_bub3, r_dot_p*peA)
                                                             r_dist_tot_bub3 = np.append(r_dist_tot_bub3, difr_short)
                                                             activity_all_bub3=np.append(activity_all_bub3, peA)
                                                             partid_all_bub3=np.append(partid_all_bub3, binParts[ix][iy][h])
+                                                    
+                                                    #If belongs to 4th largest interface, save active force component in direction normal to surface and distance to surface
                                                     elif bub_size_id_arr[m] == bub_size_id_arr[3]:  
                                                         if bub_large >=4: 
                                                             fa_all_tot_bub4=np.append(fa_all_tot_bub4, r_dot_p*peA)
                                                             r_dist_tot_bub4 = np.append(r_dist_tot_bub4, difr_short)
                                                             activity_all_bub4=np.append(activity_all_bub4, peA)
                                                             partid_all_bub4=np.append(partid_all_bub4, binParts[ix][iy][h])
+                                                    
+                                                    #If belongs to 5th largest interface, save active force component in direction normal to surface and distance to surface
                                                     elif bub_size_id_arr[m] == bub_size_id_arr[4]:  
                                                         if bub_large >=5: 
                                                             fa_all_tot_bub5=np.append(fa_all_tot_bub5, r_dot_p*peA)
                                                             r_dist_tot_bub5 = np.append(r_dist_tot_bub5, difr_short)
                                                             activity_all_bub5=np.append(activity_all_bub5, peA)
                                                             partid_all_bub5=np.append(partid_all_bub5, binParts[ix][iy][h])
+                                                
+                                                #If particle is of type B, continue...
                                                 else:
+                                                    
+                                                    #Save active force component in direction normal to surface
                                                     fa_all_tot_test=np.append(fa_all_tot_test, r_dot_p*peB)
+                                                    
+                                                    #Save distance from surface 
                                                     r_dist_tot_test = np.append(r_dist_tot_test, difr_short)
+                                                    
+                                                    #If belongs to largest interface, save active force component in direction normal to surface and distance to surface
                                                     if bub_size_id_arr[m] == bub_size_id_arr[0]:  
                                                         if bub_large >=1: 
                                                             fa_all_tot_bub1=np.append(fa_all_tot_bub1, r_dot_p*peB)
                                                             r_dist_tot_bub1 = np.append(r_dist_tot_bub1, difr_short)
                                                             activity_all_bub1=np.append(activity_all_bub1, peB)
                                                             partid_all_bub1=np.append(partid_all_bub1, binParts[ix][iy][h])
+                                                            
+                                                    #If belongs to 2nd largest interface, save active force component in direction normal to surface and distance to surface
                                                     elif bub_size_id_arr[m] == bub_size_id_arr[1]:  
                                                         if bub_large >=2: 
                                                             fa_all_tot_bub2=np.append(fa_all_tot_bub2, r_dot_p*peB)
                                                             r_dist_tot_bub2 = np.append(r_dist_tot_bub2, difr_short)
                                                             activity_all_bub2=np.append(activity_all_bub2, peB)
                                                             partid_all_bub2=np.append(partid_all_bub2, binParts[ix][iy][h])
+                                                    
+                                                    #If belongs to 3rd largest interface, save active force component in direction normal to surface and distance to surface
                                                     elif bub_size_id_arr[m] == bub_size_id_arr[2]:  
                                                         if bub_large >=3: 
                                                             fa_all_tot_bub3=np.append(fa_all_tot_bub3, r_dot_p*peB)
                                                             r_dist_tot_bub3 = np.append(r_dist_tot_bub3, difr_short)
                                                             activity_all_bub3=np.append(activity_all_bub3, peB)
                                                             partid_all_bub3=np.append(partid_all_bub3, binParts[ix][iy][h])
+                                                    
+                                                    #If belongs to 4th largest interface, save active force component in direction normal to surface and distance to surface
                                                     elif bub_size_id_arr[m] == bub_size_id_arr[3]:  
                                                         if bub_large >=4: 
                                                             fa_all_tot_bub4=np.append(fa_all_tot_bub4, r_dot_p*peB)
                                                             r_dist_tot_bub4 = np.append(r_dist_tot_bub4, difr_short)
                                                             activity_all_bub4=np.append(activity_all_bub4, peB)
                                                             partid_all_bub4=np.append(partid_all_bub4, binParts[ix][iy][h])
+                                                    
+                                                    #If belongs to 5th largest interface, save active force component in direction normal to surface and distance to surface
                                                     elif bub_size_id_arr[m] == bub_size_id_arr[4]:  
                                                         if bub_large >=5: 
                                                             fa_all_tot_bub5=np.append(fa_all_tot_bub5, r_dot_p*peB)
@@ -13428,30 +13849,40 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 edge_width_arr_sd.append(0)
                 bub_width.append(0)  
                 bub_width_sd.append(0)
-        
+                
+        #Loop over all bins to calculate average alignment of interface bins
         for ix in range(0, len(occParts)):
             for iy in range(0, len(occParts)): 
-                #If bin is an exterior bin of mth interface structure, continue...
-                #if int_edge_id[ix][iy]==0:
-                    if new_align_num[ix][iy]>0:
-                    #    if new_align_avg[ix][iy]==0:
-                            new_align_avg[ix][iy] = new_align[ix][iy] / new_align_num[ix][iy]
+                #If average alignment with nearest surface's normal isn't calculated, continue... 
+                if new_align_num[ix][iy]>0:
+                        new_align_avg[ix][iy] = new_align[ix][iy] / new_align_num[ix][iy]
+                        
+                        #Average alignment for type A particles
+                        if new_align_num0[ix][iy]>0:
+                            new_align_avg0[ix][iy] = new_align0[ix][iy] / new_align_num0[ix][iy]
+                        
+                        #Average alignment for type B particles
+                        if new_align_num1[ix][iy]>0:
+                            new_align_avg1[ix][iy] = new_align1[ix][iy] / new_align_num1[ix][iy]
+                        
+                        #Average alignment difference between type B and type A particles
+                        if new_align_num1[ix][iy]>0:
                             if new_align_num0[ix][iy]>0:
-                                new_align_avg0[ix][iy] = new_align0[ix][iy] / new_align_num0[ix][iy]
-                            if new_align_num1[ix][iy]>0:
-                                new_align_avg1[ix][iy] = new_align1[ix][iy] / new_align_num1[ix][iy]
-                            if new_align_num1[ix][iy]>0:
-                                if new_align_num0[ix][iy]>0:
-                                    new_align_avg_dif[ix][iy] = np.abs(new_align_avg1[ix][iy]) - np.abs(new_align_avg0[ix][iy])
-
-                    if new_align_num_trad[ix][iy]>0:
-                        #if new_align_avg_trad[ix][iy]==0:
-                            new_align_avg_trad[ix][iy] = new_align_trad[ix][iy] / new_align_num_trad[ix][iy]
-                            if new_align_num_trad0[ix][iy]>0:
-                                new_align_avg_trad0[ix][iy] = new_align_trad0[ix][iy] / new_align_num_trad0[ix][iy]
-                            if new_align_num_trad1[ix][iy]>0:
-                                new_align_avg_trad1[ix][iy] = new_align_trad1[ix][iy] / new_align_num_trad1[ix][iy]                                                                
-        
+                                new_align_avg_dif[ix][iy] = np.abs(new_align_avg1[ix][iy]) - np.abs(new_align_avg0[ix][iy])
+                #If average alignment toward CoM isn't calculated, continue...
+                if new_align_num_trad[ix][iy]>0:
+                    
+                        #Average alignment for all particles
+                        new_align_avg_trad[ix][iy] = new_align_trad[ix][iy] / new_align_num_trad[ix][iy]
+                        
+                        #Average alignment for type A particles
+                        if new_align_num_trad0[ix][iy]>0:
+                            new_align_avg_trad0[ix][iy] = new_align_trad0[ix][iy] / new_align_num_trad0[ix][iy]
+                        
+                        #Average alignment for type B particles
+                        if new_align_num_trad1[ix][iy]>0:
+                            new_align_avg_trad1[ix][iy] = new_align_trad1[ix][iy] / new_align_num_trad1[ix][iy]                                                                
+    
         #plt.show()
         
         '''
@@ -14191,78 +14622,117 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 if new_align_num_trad[ix][iy]>0:
                         new_align_avg_trad[ix][iy] = new_align_trad[ix][iy] / new_align_num_trad[ix][iy]
         '''
-        #new_align = [[0 for b in range(NBins)] for a in range(NBins)]
+        
+        #Initiate empty arrays
         new_align_num = [[0 for b in range(NBins)] for a in range(NBins)]
         new_align_num0 = [[0 for b in range(NBins)] for a in range(NBins)]
         new_align_num1 = [[0 for b in range(NBins)] for a in range(NBins)]
-        #new_align_avg = [[0 for b in range(NBins)] for a in range(NBins)]
-        #new_align_trad = [[0 for b in range(NBins)] for a in range(NBins)]
         new_align_num_trad = [[0 for b in range(NBins)] for a in range(NBins)]
         new_align_num_trad0 = [[0 for b in range(NBins)] for a in range(NBins)]
         new_align_num_trad1 = [[0 for b in range(NBins)] for a in range(NBins)]
-        #new_align_avg_trad = [[0 for b in range(NBins)] for a in range(NBins)]
 
         new_align_num_copy = np.copy(new_align_num)
         
         x_com_bub_arr = np.array([])
         y_com_bub_arr = np.array([])
+        
+        #Loop over all interfaces to calculate their CoMs
         for n in range(0, len(bub_id_arr)):
                                         
             #Always true
             if if_bub_id_arr[n]==1:
+                
                 #Find which particles belong to mth interface structure
                 edge_parts = np.where((edgePhase==bub_size_id_arr[n]))[0] 
+                
                 #If particles belong to mth interface structure, continue...
                 if len(edge_parts)>0:
                     
-                    #Initiate empty arrays 
+                    #Start CoM as center of box 
                     x_com_bub = h_box
                     y_com_bub = h_box
+                    
+                    #If n is largest bubble, continue...
                     if bub_size_id_arr[n] == bub_size_id_arr[0]: 
+                        
+                        #If largest bubble defined, continue...
                         if bub_large >= 1:
+                            
+                            #If interior bins defined, calculated average position (CoM) of interior surface points
                             if interior_bin > 0:
                                 x_com_bub = np.mean(xn_pos_non_per)
                                 y_com_bub = np.mean(yn_pos_non_per)
+                                
+                            #Otherwise, calculate average position (CoM) of exterior surface points
                             elif exterior_bin > 0:
                                 x_com_bub = np.mean(xn2_pos_non_per)
                                 y_com_bub = np.mean(yn2_pos_non_per)
+                                
+                    #If n is 2nd largest bubble, continue...
                     elif bub_size_id_arr[n] == bub_size_id_arr[1]: 
+                        
+                        #If 2nd largest bubble defined, continue...
                         if bub_large >= 2:
                             
+                            #If interior bins defined, calculated average position (CoM) of interior surface points
                             if interior_bin_bub1 > 0:
                                 x_com_bub = np.mean(xn_bub2_pos_non_per)
                                 y_com_bub = np.mean(yn_bub2_pos_non_per)
+                                
+                            #Otherwise, calculate average position (CoM) of exterior surface points
                             elif exterior_bin_bub1 > 0:
                                 x_com_bub = np.mean(xn2_bub2_pos_non_per)
                                 y_com_bub = np.mean(yn2_bub2_pos_non_per)
+                                
+                    #If n is 3rd largest bubble, continue...
                     elif bub_size_id_arr[n] == bub_size_id_arr[2]: 
+                        
+                        #If 3rd largest bubble defined, continue...
                         if bub_large >= 3:
                             
+                            #If interior bins defined, calculated average position (CoM) of interior surface points
                             if interior_bin_bub2 > 0:
                                 x_com_bub = np.mean(xn_bub3_pos_non_per)
                                 y_com_bub = np.mean(yn_bub3_pos_non_per)
+                                
+                            #Otherwise, calculate average position (CoM) of exterior surface points
                             elif exterior_bin_bub2 > 0:
                                 x_com_bub = np.mean(xn2_bub3_pos_non_per)
                                 y_com_bub = np.mean(yn2_bub3_pos_non_per)
+                                
+                    #If n is 4th largest bubble, continue...
                     elif bub_size_id_arr[n] == bub_size_id_arr[3]: 
+                        
+                        #If 4th largest bubble defined, continue...
                         if bub_large >= 4:
                             
+                            #If interior bins defined, calculated average position (CoM) of interior surface points
                             if interior_bin_bub3 > 0:
                                 x_com_bub = np.mean(xn_bub4_pos_non_per)
                                 y_com_bub = np.mean(yn_bub4_pos_non_per)
+                                
+                            #Otherwise, calculate average position (CoM) of exterior surface points
                             elif exterior_bin_bub3 > 0:
                                 x_com_bub = np.mean(xn2_bub4_pos_non_per)
                                 y_com_bub = np.mean(yn2_bub4_pos_non_per)
+                    
+                    #If n is 5th largest bubble, continue...
                     elif bub_size_id_arr[n] == bub_size_id_arr[4]: 
+                        
+                        #If 5th largest bubble defined, continue...
                         if bub_large >= 5:
                             
+                            #If interior bins defined, calculated average position (CoM) of interior surface points
                             if interior_bin_bub4 > 0:
                                 x_com_bub = np.mean(xn_bub5_pos_non_per)
                                 y_com_bub = np.mean(yn_bub5_pos_non_per)
+                                
+                            #Otherwise, calculate average position (CoM) of exterior surface points
                             elif exterior_bin_bub4 > 0:
                                 x_com_bub = np.mean(xn2_bub5_pos_non_per)
                                 y_com_bub = np.mean(yn2_bub5_pos_non_per)
-                                
+                          
+                    #Enforce periodic boundary conditions
                     if x_com_bub < 0:
                         x_com_bub+=l_box
                     if x_com_bub>=l_box:
@@ -14272,54 +14742,69 @@ with hoomd.open(name=inFile, mode='rb') as t:
                         y_com_bub+=l_box
                     if y_com_bub>=l_box:
                         y_com_bub-=l_box
-                        
+                    
+                    #Append x and y positions of each interface's CoM
                     x_com_bub_arr = np.append(x_com_bub_arr, x_com_bub)
                     y_com_bub_arr = np.append(y_com_bub_arr, y_com_bub)
-                                
+                    
+        #Loop over all bulk structures identified
         for m in range(0, len(bulk_id_arr)):
+            
+            #If structure is indeed bulk, continue...
             if if_bulk_id_arr[m]==1:
                 
-                #Find which particles belong to mth interface structure
+                #Find which particles belong to mth bulk structure
                 bulk_parts = np.where((bulkPhase==bulk_size_id_arr[m]))[0] 
                 
-                #If particles belong to mth interface structure, continue...
+                #If particles belong to mth bulk structure, continue...
                 if len(bulk_parts)>0:
-                    #Always true
-                    
-                                #x_com_bub = com_tmp_posX
-                                #y_com_bub = com_tmp_posY
-                                
-                                #x_com_bub = x_com_bub + h_box
-                                #y_com_bub = y_com_bub + h_box
+
                                 #Loop over bins in system
                                 for ix in range(0, len(occParts)):
                                     for iy in range(0, len(occParts)): 
+                                        
+                                        #If bulk bin belongs to mth bulk structure
                                         if bulk_id2[ix][iy] == bulk_size_id_arr[m]:
-                                            #If bin is part of mth interface structure, continue...
+                                            #If alignment hasn't been calculated yet for this bin, continue...
                                             if new_align_num[ix][iy]==0:
-                                                #Calculate position of exterior edge bin
+                                                
+                                                #Large difference in distance initially
                                                 difr_short = 100000
+                                                
+                                                #Position of bin
                                                 pos_box_x1 = (ix+0.5)*sizeBin
                                                 pos_box_y1 = (iy+0.5)*sizeBin
                                                 
-                                                difx_trad = pos_box_x1 - h_box#com_tmp_posX
+                                                #Calculate difference in x position with CoM
+                                                difx_trad = pos_box_x1 - h_box
+                                                
+                                                #Enforce periodic boundary conditions
                                                 difx_trad_abs = np.abs(difx_trad)
                                                 if difx_trad_abs>=h_box:
                                                     if difx_trad < -h_box:
                                                         difx_trad += l_box
                                                     else:
                                                         difx_trad -= l_box
-                                                        
-                                                dify_trad = pos_box_y1 - h_box#com_tmp_posY
+                                                
+                                                #Calculate difference in y position with CoM
+                                                dify_trad = pos_box_y1 - h_box
+                                                
+                                                #Enforce periodic boundary conditions
                                                 dify_trad_abs = np.abs(dify_trad)
                                                 if dify_trad_abs>=h_box:
                                                     if dify_trad < -h_box:
                                                         dify_trad += l_box
                                                     else:
                                                         dify_trad -= l_box
+                                                        
+                                                #Total difference in distance of bin with CoM
                                                 difr_trad= ( (difx_trad )**2 + (dify_trad)**2)**0.5
                                                 difr_bub= ( (difx_trad )**2 + (dify_trad)**2)**0.5
+                                                
+                                                #Large initial difference in distance
                                                 difr_short= 1000000
+                                                
+                                                #X and Y distances from CoM
                                                 x_norm_unitv = difx_trad / difr_trad
                                                 y_norm_unitv = dify_trad / difr_trad
                                                 
@@ -14327,9 +14812,16 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                 x_norm_unitv_trad = (difx_trad) / difr_trad
                                                 y_norm_unitv_trad = (dify_trad) / difr_trad
                                                 
+                                                #If positions of CoM of bubbles defined, continue...
                                                 if len(y_com_bub_arr)>0:
-                                                    for v in range(0, len(y_com_bub_arr)):        
+                                                    
+                                                    #Loop over all CoMs of bubbles to find nearest
+                                                    for v in range(0, len(y_com_bub_arr)):
+                                                        
+                                                        #Calculate difference in x position to vth CoM
                                                         difx_bub = pos_box_x1 - x_com_bub_arr[v]
+                                                        
+                                                        #Enforce periodic boundary conditions
                                                         difx_bub_abs = np.abs(difx_bub)
                                                         if difx_bub_abs>=h_box:
                                                             if difx_bub < -h_box:
@@ -14337,14 +14829,21 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                             else:
                                                                 difx_bub -= l_box
                                                                 
+                                                        #Calculate difference in y position with vth CoM
                                                         dify_bub = pos_box_y1 - y_com_bub_arr[v]
+                                                        
+                                                        #Enforce periodic boundary conditions
                                                         dify_bub_abs = np.abs(dify_bub)
                                                         if dify_bub_abs>=h_box:
                                                             if dify_bub < -h_box:
                                                                 dify_bub += l_box
                                                             else:
                                                                 dify_bub -= l_box
+                                                                
+                                                        #Calculate total distance to CoM
                                                         difr_bub_tmp= ( (difx_bub )**2 + (dify_bub)**2)**0.5
+                                                        
+                                                        #If less than previously calculated values, replace and save smallest value for later
                                                         if difr_bub_tmp < difr_short:
                                                             difr_bub= ( (difx_bub )**2 + (dify_bub)**2)**0.5
                                                             difr_short= ( (difx_bub )**2 + (dify_bub)**2)**0.5
@@ -14352,8 +14851,10 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                             y_norm_unitv = dify_bub / difr_short
                                                     
                                                 
-                                                #Loop over bins of system                                      
+                                                #If largest interface defined, continue...                                    
                                                 if bub_large >= 1:  
+                                                    
+                                                    #If exterior surface defined, continue...
                                                     if exterior_bin > 0:  
                                                         for id2 in range(0, len(xn2)):
                                                             #If bin is an interior edge bin for mth interface structure, continue...
@@ -14389,6 +14890,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                                 interior_bin_short = 0
                                                                 exterior_bin_short = 1
                                                                 bub1_short = 1
+                                                    
+                                                    #If interior surface defined, continue...
                                                     if interior_bin > 0:  
                                                         for id2 in range(0, len(xn)):
                                                             #If bin is an interior edge bin for mth interface structure, continue...
@@ -14424,7 +14927,10 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                                 interior_bin_short = 1
                                                                 exterior_bin_short = 0
                                                                 bub1_short = 1
+                                                #If 2nd largest interface defined, continue...
                                                 if bub_large >= 2:  
+                                                    
+                                                    #If exterior surface defined, continue...
                                                     if exterior_bin_bub1 > 0:  
                                                         for id2 in range(0, len(xn2_bub2)):
                                                             #If bin is an interior edge bin for mth interface structure, continue...
@@ -14460,6 +14966,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                                 interior_bin_short = 0
                                                                 exterior_bin_short = 1
                                                                 bub2_short = 1
+                                                                
+                                                    #If interior surface defined, continue...
                                                     if interior_bin_bub1 > 0:  
                                                         for id2 in range(0, len(xn_bub2)):
                                                             #If bin is an interior edge bin for mth interface structure, continue...
@@ -14495,7 +15003,11 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                                 interior_bin_short = 1
                                                                 exterior_bin_short = 0
                                                                 bub2_short = 1
+                                                                
+                                                #If 3rd largest bubble defined, continue...
                                                 if bub_large >= 3: 
+                                                    
+                                                    #If exterior surface defined, continue...
                                                     if exterior_bin_bub2 > 0:  
                                                         for id2 in range(0, len(xn2_bub3)):
                                                             #If bin is an interior edge bin for mth interface structure, continue...
@@ -14531,6 +15043,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                                 interior_bin_short = 0
                                                                 exterior_bin_short = 1
                                                                 bub3_short = 1
+                                                                
+                                                    #If interior surface defined, continue...
                                                     if interior_bin_bub2 > 0:  
                                                         for id2 in range(0, len(xn_bub3)):
                                                             #If bin is an interior edge bin for mth interface structure, continue...
@@ -14566,7 +15080,11 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                                 interior_bin_short = 1
                                                                 exterior_bin_short = 0
                                                                 bub3_short = 1
+                                                                
+                                                #If 4th largest bubble defined, continue...
                                                 if bub_large >= 4:  
+                                                    
+                                                    #If exterior surface defined, continue...
                                                     if exterior_bin_bub3 > 0:  
                                                         for id2 in range(0, len(xn2_bub4)):
                                                             #If bin is an interior edge bin for mth interface structure, continue...
@@ -14602,6 +15120,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                                 interior_bin_short = 0
                                                                 exterior_bin_short = 1
                                                                 bub4_short = 1
+                                                                
+                                                    #If interior surface defined, continue...
                                                     if interior_bin_bub3 > 0:  
                                                         for id2 in range(0, len(xn_bub4)):
                                                             #If bin is an interior edge bin for mth interface structure, continue...
@@ -14637,7 +15157,11 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                                 interior_bin_short = 1
                                                                 exterior_bin_short = 0
                                                                 bub4_short = 1
+                                                                
+                                                #If 5th largest interface defined, continue..
                                                 if bub_large >= 5:  
+                                                    
+                                                    #If exterior surface defined, continue..
                                                     if exterior_bin_bub4 > 0:  
                                                         for id2 in range(0, len(xn2_bub5)):
                                                             #If bin is an interior edge bin for mth interface structure, continue...
@@ -14673,6 +15197,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                                 interior_bin_short = 0
                                                                 exterior_bin_short = 1
                                                                 bub5_short = 1
+                                                                
+                                                    #If interior surface defined, continue..
                                                     if interior_bin_bub4 > 0:  
                                                         for id2 in range(0, len(xn_bub5)):
                                                             #If bin is an interior edge bin for mth interface structure, continue...
@@ -14708,16 +15234,18 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                                 interior_bin_short = 1
                                                                 exterior_bin_short = 0
                                                                 bub5_short = 1
+                                                
+                                                #If particles in bin, continue...
                                                 if len(binParts[ix][iy])>0:
+                                                    
+                                                    #Loop over all particles in bin
                                                     for h in range(0, len(binParts[ix][iy])):
+                                                        
                                                         #Calculate x and y orientation of active force
-                                                        #px = np.cos(ang[binParts[ix][iy][h]])
-                                                        #py = np.sin(ang[binParts[ix][iy][h]])
                                                         px = np.sin(ang[binParts[ix][iy][h]])
                                                         py = -np.cos(ang[binParts[ix][iy][h]])
-                                                        #print(x_norm_unitv)
-                                                        #print(y_norm_unitv)
-                                                        #Calculate alignment towards CoM           
+                                                        
+                                                        #Calculate alignment towards nearest surface's normal         
                                                         if difr_short == difr_bub:
                                                             r_dot_p = (-x_norm_unitv * px) + (-y_norm_unitv * py)
                                                         else:
@@ -14725,18 +15253,27 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                                 r_dot_p = (-x_norm_unitv * px) + (-y_norm_unitv * py)
                                                             elif exterior_bin_short == 1:
                                                                 r_dot_p = (x_norm_unitv * px) + (y_norm_unitv * py)
+                                                                
+                                                        #Alignment toward CoM
                                                         r_dot_p_trad = (-x_norm_unitv_trad * px) + (-y_norm_unitv_trad * py)
-                                                        #Sum x,y orientation over each bin
+                                                        
+                                                        
+                                                        #Sum alignment toward nearest surface's normal for all particles
                                                         new_align[ix][iy] += r_dot_p
                                                         new_align_num[ix][iy]+= 1
+                                                        
+                                                        #Sum  alignment toward CoM for all particles
                                                         new_align_trad[ix][iy] += r_dot_p_trad
                                                         new_align_num_trad[ix][iy]+= 1
                                                         
+                                                        #If particle of type A, add their alignment to sum
                                                         if typ[binParts[ix][iy][h]]==0:
                                                             new_align0[ix][iy] += r_dot_p
                                                             new_align_num0[ix][iy]+= 1
                                                             new_align_trad0[ix][iy] += r_dot_p_trad
                                                             new_align_num_trad0[ix][iy]+= 1
+                                                            
+                                                        #If particle of type B, add their alignment to sum
                                                         elif typ[binParts[ix][iy][h]]==1:
                                                             new_align1[ix][iy] += r_dot_p
                                                             new_align_num1[ix][iy]+= 1
@@ -14747,39 +15284,36 @@ with hoomd.open(name=inFile, mode='rb') as t:
         #Loop over bins in system
         for ix in range(0, len(occParts)):
             for iy in range(0, len(occParts)): 
-                if edge_id[ix][iy]==0:
-                    if new_align_num[ix][iy]>0:
-                    #    if new_align_avg[ix][iy]==0:
-                            new_align_avg[ix][iy] = new_align[ix][iy] / new_align_num[ix][iy]
-                            if new_align_num0[ix][iy]>0:
-                                new_align_avg0[ix][iy] = new_align0[ix][iy] / new_align_num0[ix][iy]
-                            if new_align_num1[ix][iy]>0:
-                                new_align_avg1[ix][iy] = new_align1[ix][iy] / new_align_num1[ix][iy]
-                            if new_align_num1[ix][iy]>0:
-                                if new_align_num0[ix][iy]>0:
-                                    new_align_avg_dif[ix][iy] = np.abs(new_align_avg1[ix][iy]) - np.abs(new_align_avg0[ix][iy])
-
-                    if new_align_num_trad[ix][iy]>0:
-                        #if new_align_avg_trad[ix][iy]==0:
-                            new_align_avg_trad[ix][iy] = new_align_trad[ix][iy] / new_align_num_trad[ix][iy]
-                            if new_align_num_trad0[ix][iy]>0:
-                                new_align_avg_trad0[ix][iy] = new_align_trad0[ix][iy] / new_align_num_trad0[ix][iy]
-                            if new_align_num_trad1[ix][iy]>0:
-                                new_align_avg_trad1[ix][iy] = new_align_trad1[ix][iy] / new_align_num_trad1[ix][iy]        
-        
-        
-
                 
-        
-        #x_com_bub = com_tmp_posX
-        #y_com_bub = com_tmp_posY
-        
-        #x_com_bub = x_com_bub + h_box
-        #y_com_bub = y_com_bub + h_box
-        #Loop over bins in system
+                #If bin does not belong to an interface, continue... 
+                if edge_id[ix][iy]==0:
+                    
+                    #calculate average alignment with nearest surface normal 
+                    if new_align_num[ix][iy]>0:
+                        new_align_avg[ix][iy] = new_align[ix][iy] / new_align_num[ix][iy]
+                        if new_align_num0[ix][iy]>0:
+                            new_align_avg0[ix][iy] = new_align0[ix][iy] / new_align_num0[ix][iy]
+                        if new_align_num1[ix][iy]>0:
+                            new_align_avg1[ix][iy] = new_align1[ix][iy] / new_align_num1[ix][iy]
+                        if new_align_num1[ix][iy]>0:
+                            if new_align_num0[ix][iy]>0:
+                                new_align_avg_dif[ix][iy] = np.abs(new_align_avg1[ix][iy]) - np.abs(new_align_avg0[ix][iy])
+
+                    #calculate average alignment toward CoM
+                    if new_align_num_trad[ix][iy]>0:
+                        new_align_avg_trad[ix][iy] = new_align_trad[ix][iy] / new_align_num_trad[ix][iy]
+                        if new_align_num_trad0[ix][iy]>0:
+                            new_align_avg_trad0[ix][iy] = new_align_trad0[ix][iy] / new_align_num_trad0[ix][iy]
+                        if new_align_num_trad1[ix][iy]>0:
+                            new_align_avg_trad1[ix][iy] = new_align_trad1[ix][iy] / new_align_num_trad1[ix][iy]        
+    
+        #Loop over all bins
         for ix in range(0, len(occParts)):
             for iy in range(0, len(occParts)): 
+                
+                #If average alignment not defined yet (bulk bin)
                 if new_align_avg[ix][iy]==0:
+                    
                     #Calculate position of exterior edge bin
                     pos_box_x1 = (ix+0.5)*sizeBin
                     pos_box_y1 = (iy+0.5)*sizeBin
@@ -14788,21 +15322,26 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     #Loop over bins of system  
                     if bub_large == 0:   
                         
-                        difx_trad = pos_box_x1 - h_box#com_tmp_posX
+                        #Calculate difference in bin's position with CoM at h_box
+                        difx_trad = pos_box_x1 - h_box
+                        
+                        #Enforce periodic boundary conditions
                         difx_trad_abs = np.abs(difx_trad)
                         if difx_trad_abs>=h_box:
                             if difx_trad < -h_box:
                                 difx_trad += l_box
                             else:
                                 difx_trad -= l_box
-                                
-                        dify_trad = pos_box_y1 - h_box#com_tmp_posY
+                        
+                        #Enforce periodic boundary conditions
+                        dify_trad = pos_box_y1 - h_box
                         dify_trad_abs = np.abs(dify_trad)
                         if dify_trad_abs>=h_box:
                             if dify_trad < -h_box:
                                 dify_trad += l_box
                             else:
                                 dify_trad -= l_box
+                                
                         #Very large initial distance to calculate closest interior edge bin to this exterior edge bin
                         difr_trad= ( (difx_trad )**2 + (dify_trad)**2)**0.5
                         difr_bub= ( (difx_trad )**2 + (dify_trad)**2)**0.5#10000000.
@@ -14812,7 +15351,11 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                     
                         x_norm_unitv_trad = (difx_trad) / difr_trad
                         y_norm_unitv_trad = (dify_trad) / difr_trad
+                    
+                    #If largest interface defined
                     if bub_large >= 1:   
+                        
+                        #If exterior surface defined
                         if exterior_bin > 0:                             
                             for id2 in range(0, len(xn2)):
                                 #If bin is an interior edge bin for mth interface structure, continue...
@@ -14847,6 +15390,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                     y_norm_unitv = dify_width / difr
                                     interior_bin_short = 0
                                     exterior_bin_short = 1
+                        
+                        #If interior surface defined
                         if interior_bin > 0:                             
                             for id2 in range(0, len(xn)):
                                 #If bin is an interior edge bin for mth interface structure, continue...
@@ -14881,7 +15426,11 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                     y_norm_unitv = dify_width / difr
                                     interior_bin_short = 1
                                     exterior_bin_short = 0
+                    
+                    #If 2nd largest interface defined
                     if bub_large >= 2:
+                        
+                        #If exterior surface defined
                         if exterior_bin_bub1 > 0:  
                             for id2 in range(0, len(xn2_bub2)):
                                 #If bin is an interior edge bin for mth interface structure, continue...
@@ -14916,6 +15465,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                     y_norm_unitv = dify_width / difr
                                     interior_bin_short = 0
                                     exterior_bin_short = 1
+                                    
+                        #If interior surface defined
                         if interior_bin_bub1 > 0:  
                             for id2 in range(0, len(xn_bub2)):
                                 #If bin is an interior edge bin for mth interface structure, continue...
@@ -14950,7 +15501,11 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                     y_norm_unitv = dify_width / difr
                                     interior_bin_short = 1
                                     exterior_bin_short = 0
+                    
+                    #If 3rd largest interface defined
                     if bub_large >=3:
+                        
+                        #If exterior surface defined
                         if exterior_bin_bub2 > 0:  
                             for id2 in range(0, len(xn2_bub3)):
                                 #If bin is an interior edge bin for mth interface structure, continue...
@@ -14985,6 +15540,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                     y_norm_unitv = dify_width / difr
                                     interior_bin_short = 0
                                     exterior_bin_short = 1
+                        
+                        #If interior surface defined
                         if interior_bin_bub2 > 0:  
                             for id2 in range(0, len(xn_bub3)):
                                 #If bin is an interior edge bin for mth interface structure, continue...
@@ -15019,7 +15576,11 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                     y_norm_unitv = dify_width / difr
                                     interior_bin_short = 1
                                     exterior_bin_short = 0
-                    if bub_large >= 4:    
+                    
+                    #If 4th largest interface defined
+                    if bub_large >= 4:  
+                        
+                        #If exterior surface defined
                         if exterior_bin_bub3 > 0:  
                             for id2 in range(0, len(xn2_bub4)):
                                 #If bin is an interior edge bin for mth interface structure, continue...
@@ -15054,6 +15615,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                     y_norm_unitv = dify_width / difr
                                     interior_bin_short = 0
                                     exterior_bin_short = 1
+                                    
+                        #If interior surface defined
                         if interior_bin_bub3 > 0:  
                             for id2 in range(0, len(xn_bub4)):
                                 #If bin is an interior edge bin for mth interface structure, continue...
@@ -15088,7 +15651,11 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                     y_norm_unitv = dify_width / difr
                                     interior_bin_short = 1
                                     exterior_bin_short = 0
-                    if bub_large == 5:       
+                    
+                    #If 5th largest interface defined
+                    if bub_large == 5:    
+                        
+                        #If exterior surface defined
                         if exterior_bin_bub4 > 0:  
                             for id2 in range(0, len(xn2_bub5)):
                                 #If bin is an interior edge bin for mth interface structure, continue...
@@ -15123,6 +15690,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                     y_norm_unitv = dify_width / difr
                                     interior_bin_short = 0
                                     exterior_bin_short = 1
+                                    
+                        #If interior interface defined
                         if interior_bin_bub4 > 0:  
                             for id2 in range(0, len(xn_bub5)):
                                 #If bin is an interior edge bin for mth interface structure, continue...
@@ -15157,31 +15726,42 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                     y_norm_unitv = dify_width / difr
                                     interior_bin_short = 1
                                     exterior_bin_short = 0
+                    
+                    #If particles in bin, continue...
                     if len(binParts[ix][iy])>0:
+                        
+                        #Loop over all particles in bin
                         for h in range(0, len(binParts[ix][iy])):
+                            
                             #Calculate x and y orientation of active force
-                            #px = np.cos(ang[binParts[ix][iy][h]])
-                            #py = np.sin(ang[binParts[ix][iy][h]])
                             px = np.sin(ang[binParts[ix][iy][h]])
                             py = -np.cos(ang[binParts[ix][iy][h]])
-                            #print(x_norm_unitv)
-                            #print(y_norm_unitv)
-                            #Calculate alignment towards CoM  
+
+                            #Calculate alignment with nearest surface's normal
                             if exterior_bin_short == 1:
                                 r_dot_p = (-x_norm_unitv * px) + (-y_norm_unitv * py)
                             elif interior_bin_short == 1:
                                 r_dot_p = (x_norm_unitv * px) + (y_norm_unitv * py)
+                                
+                            #Calculate alignment towards CoM
                             r_dot_p_trad = (-x_norm_unitv_trad * px) + (-y_norm_unitv_trad * py)
-                            #Sum x,y orientation over each bin
+                            
+                            #Add alignment with nearest surface's normal for average calculation of all particles
                             new_align[ix][iy] += r_dot_p
                             new_align_num[ix][iy]+= 1
+                            
+                            #Add alignment with CoM for average calculation of all particles
                             new_align_trad[ix][iy] += r_dot_p_trad
                             new_align_num_trad[ix][iy]+= 1
+                            
+                            #If particle is of type A, add alignment with nearest surface's normal for average calculation
                             if typ[binParts[ix][iy][h]]==0:
                                 new_align0[ix][iy] += r_dot_p
                                 new_align_num0[ix][iy]+= 1
                                 new_align_trad0[ix][iy] += r_dot_p_trad
                                 new_align_num_trad0[ix][iy]+= 1
+                                
+                            #If particle is of type B, add alignment with nearest surface's normal for average calculation
                             elif typ[binParts[ix][iy][h]]==1:
                                 new_align1[ix][iy] += r_dot_p
                                 new_align_num1[ix][iy]+= 1
@@ -15191,34 +15771,34 @@ with hoomd.open(name=inFile, mode='rb') as t:
         #Loop over bins in system
         for ix in range(0, len(occParts)):
             for iy in range(0, len(occParts)): 
+                
+                #If the average alignment hasn't been calculated before (gas phase)
                 if new_align_avg[ix][iy]==0:
+                    
                     #If bin is an exterior bin of mth interface structure, continue...
-                    #if int_edge_id[ix][iy]==0:
+                    #Calculate average alignment with nearest surface's normal per bin
                     if new_align_num[ix][iy]>0:
-                    #    if new_align_avg[ix][iy]==0:
-                            new_align_avg[ix][iy] = new_align[ix][iy] / new_align_num[ix][iy]
+                        new_align_avg[ix][iy] = new_align[ix][iy] / new_align_num[ix][iy]
+                        if new_align_num0[ix][iy]>0:
+                            new_align_avg0[ix][iy] = new_align0[ix][iy] / new_align_num0[ix][iy]
+                        if new_align_num1[ix][iy]>0:
+                            new_align_avg1[ix][iy] = new_align1[ix][iy] / new_align_num1[ix][iy]
+                        if new_align_num1[ix][iy]>0:
                             if new_align_num0[ix][iy]>0:
-                                new_align_avg0[ix][iy] = new_align0[ix][iy] / new_align_num0[ix][iy]
-                            if new_align_num1[ix][iy]>0:
-                                new_align_avg1[ix][iy] = new_align1[ix][iy] / new_align_num1[ix][iy]
-                            if new_align_num1[ix][iy]>0:
-                                if new_align_num0[ix][iy]>0:
-                                    new_align_avg_dif[ix][iy] = np.abs(new_align_avg1[ix][iy]) - np.abs(new_align_avg0[ix][iy])
-
+                                new_align_avg_dif[ix][iy] = np.abs(new_align_avg1[ix][iy]) - np.abs(new_align_avg0[ix][iy])
+                
+                    #Calculate average alignment with CoM per bin
                     if new_align_num_trad[ix][iy]>0:
-                        #if new_align_avg_trad[ix][iy]==0:
                             new_align_avg_trad[ix][iy] = new_align_trad[ix][iy] / new_align_num_trad[ix][iy]
                             if new_align_num_trad0[ix][iy]>0:
                                 new_align_avg_trad0[ix][iy] = new_align_trad0[ix][iy] / new_align_num_trad0[ix][iy]
                             if new_align_num_trad1[ix][iy]>0:
                                 new_align_avg_trad1[ix][iy] = new_align_trad1[ix][iy] / new_align_num_trad1[ix][iy]
-
-        binArea = sizeBin**2
-  
-            
-        pos_bin_final = []
-        force_bin_final = []
         
+        #Area per bin
+        binArea = sizeBin**2
+          
+        #Particle IDs for each phase
         edge_id_plot = np.where(edgePhase==interface_id)[0]     #Largest gas-dense interface
         int_id_plot = np.where(partPhase==1)[0]         #All interfaces
         bulk_int_id_plot = np.where(partPhase!=2)[0]
@@ -15228,94 +15808,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
         else:
             bub_id_plot = []
         gas_id = np.where(partPhase==2)[0]  
-        '''
-        for m in range(0, len(bub_id_arr)):
-            if if_bub_id_arr[m]==1:
-                if bub_size_id_arr[m] == interface_id:#bub_size_id_arr[0]: 
-                    if bub_large >= 1:
-                        for ix in range(0, len(phaseBin)):
-                            for iy in range(0, len(phaseBin)):
-                                if edge_id[ix][iy] == bub_size_id_arr[m]:
-                                    if int_edge_id[ix][iy]==1:
-                                        pos_bin_final.append(0.0)
-                                        force_bin_final.append(new_align_avg[ix][iy]*num_dens3[ix][iy])#fa_all_avg[ix][iy])
-                                    else:
-                                        pos_x = (ix+0.5)*sizeBin
-                                        pos_y = (iy+0.5)*sizeBin
-                                        shortest_r = 1000000
-                                        shortest_xid = 1000000
-                                        shortest_yid = 1000000
-                                        for ix2 in range(0, len(phaseBin)):
-                                            for iy2 in range(0, len(phaseBin)):
-                                                if edge_id[ix2][iy2] == interface_id:#bub_size_id_arr[m]:
-                                                    if int_edge_id[ix2][iy2] == 1:
-                                                        pos_x2 = (ix2+0.5)*sizeBin
-                                                        pos_y2 = (iy2+0.5)*sizeBin
-                                                        
-                                                        difx = pos_x - pos_x2
-                                                        dify = pos_y - pos_y2
-                                                        
-                                                        #Enforce periodic boundary conditions
-                                                        difx_abs = np.abs(difx)
-                                                        if difx_abs>=h_box:
-                                                            if difx < -h_box:
-                                                                difx += l_box
-                                                            else:
-                                                                difx -= l_box
-                                                        
-                                                        #Enforce periodic boundary conditions
-                                                        dify_abs = np.abs(dify)
-                                                        if dify_abs>=h_box:
-                                                            if dify < -h_box:
-                                                                dify += l_box
-                                                            else:
-                                                                dify -= l_box       
-                                                                
-                                                        difr_val = (difx**2 + dify**2)**0.5
-                                                        if difr_val < shortest_r:
-                                                            shortest_r = difr_val
-                                                            shortest_xid = ix2
-                                                            shortest_yid = iy2
-                                        pos_bin_final.append(shortest_r)
-                                        force_bin_final.append(new_align_avg[ix][iy]*num_dens3[ix][iy])#fa_all_avg[ix][ix])
-                        
-                        print(np.max(pos_bin_final))
-                        print(np.min(pos_bin_final))
 
-                        list1, list2 = zip(*sorted(zip(pos_bin_final, force_bin_final)))
-                        list1=np.array(list1)
-                        list2=np.array(list2)
-                        list1_avg = np.array([])
-                        list2_avg = np.array([])
-                        for i in range(0, len(list1)):
-                            if list1[i] not in list1_avg:
-                                list_id = np.where(list1==list1[i])[0]
-                                print(list_id)
-                                list2_avg = np.append(list2_avg, np.mean(list2[list_id]))
-                                list1_avg = np.append(list1_avg, list1[i])
-                        
-                        print(np.min(list1))
-                        print(np.max(list2))
-                        plt.scatter(list1, list2)
-                        plt.show()
-                        plt.scatter(list1_avg, list2_avg)
-                        plt.show()
-                        r = np.arange(np.min(list1), np.max(list1), 3.0)
-                        list2_final_avg = np.zeros(len(r)-1)
-                        for i in range(1, len(r)):
-                            avg_id = np.where((list1_avg>=r[i-1]) & (list1_avg<=r[i]))[0]
-                            list2_final_avg[i-1] = np.mean(list2_avg[avg_id])
-                        f = interpolate.interp1d(r, list2_final_avg)
-
-                        print(r)
-                        ynew = f(r)
-                        plt.plot(r, ynew)
-                        plt.show()
-                        stop
-                        
-        '''     
-
-                
+               
+        #Initiate empty values of summed number density
         bulk_num_dens_sum = 0
         bulk_num_dens_num = 0
         int_num_dens_sum = 0
@@ -15325,6 +15820,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
         gas_num_dens_sum = 0
         gas_num_dens_num = 0
         
+        #Sum total number density per bin to average
         for ix in range(0, len(phaseBin)):
             for iy in range(0, len(phaseBin)):
                 if phaseBin[ix][iy]==0:
@@ -15340,6 +15836,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     gas_num_dens_sum += len(binParts[ix][iy])/sizeBin**2
                     gas_num_dens_num +=1
         
+        
+        #Average number density in each phase
         if bulk_num_dens_num > 0:
             bulk_avg = (bulk_num_dens_sum/bulk_num_dens_num) 
         else:
@@ -15358,112 +15856,101 @@ with hoomd.open(name=inFile, mode='rb') as t:
             gas_avg = 0
         
         
+        #Area of each phase
         bulk_area = bulk_num_dens_num * sizeBin**2
         int_area = int_num_dens_num * sizeBin**2
         bub_area = bub_num_dens_num * sizeBin**2
-        gas_area = gas_num_dens_num * sizeBin**2    
+        gas_area = gas_num_dens_num * sizeBin**2  
+        
+        #Initiate empty values for integral of pressures across interfaces
         int_sum_bub1 = 0
         int_sum_bub2 = 0
         int_sum_bub3 = 0
         int_sum_bub4 = 0
         int_sum_bub5 = 0
         int_sum_test = 0
-        print('test')
-        interior_rad = bub_width[0]-edge_width_arr[0]
-        #if np.floor(np.min(r_dist_tot_bub1))<= 0.0:  
                                                  
-        xint = np.linspace(0, np.ceil(np.max(r_dist_tot_test)), num=int((int(np.ceil(np.ceil(np.max(r_dist_tot_test))))+1)))
-        yfinal = np.zeros(len(xint))
-        if len(surface_area_ext)>0:
-            if len(surface_area_int)>0:
-                tan_theta = (np.max(surface_area_ext)-np.max(surface_area_int))/np.max(edge_width_arr)
-                area_rect_prev = 0
-                area_tri_prev = 0
-
-                for i in range(1, len(xint)):
-                    binx_nodup=np.array([])
-                    biny_nodup=np.array([])
-                    min_range = xint[i-1]
-                    max_range = xint[i]   
-                    area_rect = (np.max(surface_area_int) * xint[i]) - area_rect_prev
-                    area_rect_prev = (np.max(surface_area_int) * xint[i])
-                    dif_sa = tan_theta * xint[i]
-                    area_tri = (dif_sa * xint[i])/2
-                    area_poly = area_tri - area_tri_prev
-                    area_tri_prev = (dif_sa * xint[i])/2
-                    area_slice = area_poly + area_rect
-                                
-                    points = np.where((min_range<=r_dist_tot_test) & (r_dist_tot_test<=max_range))[0]  
-                    if len(points)>0:
-                        points2 = np.logical_not(np.isnan(fa_all_tot_test[points]))
-                        if len(points2)>0:
-                            yfinal[i-1] = np.sum(fa_all_tot_test[points][points2])
-                            if len(surface_area_ext)==0:
-                                area_slice = np.pi * ((interior_rad +xint[i])**2-(interior_rad + xint[i-1])**2)
-                            if len(surface_area_int)==0:
-                                area_slice = np.pi * ((interior_rad +xint[i])**2-(interior_rad + xint[i-1])**2)
-                            if area_slice != 0:
-                                
-                                
-                                yfinal[i-1] = yfinal[i-1]/area_slice
-                            else:
-                                yfinal[i-1] = 0
-                        else:
-                            yfinal[i-1]=0
-                    else:
-                        yfinal[i-1]=0
-
-                #max_id = np.where(xfinal==0.0)[0][0]
-                #xint = xfinal[max_id-1:]
-                yint = yfinal
-                #min_id = np.where(yint<=0)[0][0]
-                xint_final = xint#[:min_id]
-                yint_final = yint#[:min_id]
-                #int_trap = np.traps(yint, x=xint)
-                for o in range(1, len(xint_final)):
-                    int_sum_test += ((xint_final[o]-xint_final[o-1])/2)*(yint_final[o]+yint_final[o-1])
-        print(int_sum_test)                            
+        #Loop over all interfaces/bubbles                           
         for m in range(0, len(bub_id_arr)):
-            #Always true
+            #If is truly a bubble, continue... (Always true)
             if if_bub_id_arr[m]==1:
+                
+                #If interface belongs to bubble 2, continue...
                 if bub_size_id_arr[m] == bub_size_id_arr[0]:  
                     if bub_large >=1: 
+                        
+                        #Calculate location of interior surface from CoM
                         interior_rad = bub_width[0]-edge_width_arr[0]
-                        #if np.floor(np.min(r_dist_tot_bub1))<= 0.0:  
-                                                                 
+
+                        #X locations across interface for integration
                         xint = np.linspace(0, np.ceil(np.max(r_dist_tot_bub1)), num=int((int(np.ceil(np.ceil(np.max(r_dist_tot_bub1))))+1)))
+                        
+                        #Pressure integrand components for each value of X
                         yfinal = np.zeros(len(xint))
+                        
+                        #If exterior and interior surfaces defined, continue...
                         if len(surface_area_ext)>0:
                             if len(surface_area_int)>0:
+                                
+                                #Flatten exterior and interior surfaces and line 2 ends up. Theta defines angle from y axis to overshot of exterior surface of interior surface
                                 tan_theta = (surface_area_ext[0]-surface_area_int[0])/edge_width_arr[0]
+                                
+                                #Can simplify geometric area into two components: rectangle which is defined as the product of interior surface length and the current step size across the interface (x)
+                                #and triangle which accounts for the overlap of the exterior surface with the interior surface, which is defined as the product of the overlap length (exterior length - interior length) and half of the current step size across the interface (x)  
                                 area_rect_prev = 0
                                 area_tri_prev = 0
                 
+                                #For each step across interface, calculate pressure in that step's area (averaged over angle from CoM)
                                 for i in range(1, len(xint)):
                                     binx_nodup=np.array([])
                                     biny_nodup=np.array([])
+                                    
+                                    #Min and max location across interface of current step
                                     min_range = xint[i-1]
                                     max_range = xint[i]   
+                                    
+                                    #Calculate area of rectangle for current step
                                     area_rect = (surface_area_int[0] * xint[i]) - area_rect_prev
+                                    
+                                    #Save total area of previous step sizes
                                     area_rect_prev = (surface_area_int[0] * xint[i])
+                                    
+                                    #Calculate the overshot length of current step
                                     dif_sa = tan_theta * xint[i]
+                                    
+                                    #Calculate area of triangle from overshot of exterior surface with interior surface
                                     area_tri = (dif_sa * xint[i])/2
+                                    
+                                    #Subtract total area of triangle from previous steps
                                     area_poly = area_tri - area_tri_prev
+                                    
+                                    #Save total area of previous step sizes
                                     area_tri_prev = (dif_sa * xint[i])/2
+                                    
+                                    #Total area of slice we're calculating pressure over
                                     area_slice = area_poly + area_rect
-                                                
+                                     
+                                    #Find particles that are housed within current slice
                                     points = np.where((min_range<=r_dist_tot_bub1) & (r_dist_tot_bub1<=max_range))[0]  
+                                    
+                                    #If at least 1 particle in slice, continue...
                                     if len(points)>0:
+                                        
+                                        #If the force is defined, continue...
                                         points2 = np.logical_not(np.isnan(fa_all_tot_bub1[points]))
                                         if len(points2)>0:
+                                            
+                                            #Calculate total active force normal to interface in slice
                                             yfinal[i-1] = np.sum(fa_all_tot_bub1[points][points2])
+                                            
+                                            #If either exterior or interior surface area failed to calculate, use the radii
                                             if len(surface_area_ext)==0:
                                                 area_slice = np.pi * ((interior_rad +xint[i])**2-(interior_rad + xint[i-1])**2)
                                             if len(surface_area_int)==0:
                                                 area_slice = np.pi * ((interior_rad +xint[i])**2-(interior_rad + xint[i-1])**2)
+                                            
+                                            #If area of slice is non-zero, calculate the pressure [F/A]
                                             if area_slice != 0:
-                                                
-                                                
                                                 yfinal[i-1] = yfinal[i-1]/area_slice
                                             else:
                                                 yfinal[i-1] = 0
@@ -15472,50 +15959,90 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                     else:
                                         yfinal[i-1]=0
                 
-                                #max_id = np.where(xfinal==0.0)[0][0]
-                                #xint = xfinal[max_id-1:]
+                                #Renaming variables
                                 yint = yfinal
-                                #min_id = np.where(yint<=0)[0][0]
-                                xint_final = xint#[:min_id]
-                                yint_final = yint#[:min_id]
-                                #int_trap = np.traps(yint, x=xint)
+                                xint_final = xint
+                                yint_final = yint
+                                
+                                #Integrate force across interface using trapezoidal rule
                                 for o in range(1, len(xint_final)):
                                     int_sum_bub1 += ((xint_final[o]-xint_final[o-1])/2)*(yint_final[o]+yint_final[o-1])
+                
+                #If interface belongs to bubble 2, continue...
                 elif bub_size_id_arr[m] == bub_size_id_arr[1]:  
                     if bub_large >=2: 
+                        
+                        #Calculate location of interior surface from CoM
                         interior_rad = bub_width[1]-edge_width_arr[1]
-                        #if np.floor(np.min(r_dist_tot_bub2))<= 0.0:  
                                                                  
+                        #X locations across interface for integration
                         xint = np.linspace(0, np.ceil(np.max(r_dist_tot_bub2)), num=int((int(np.ceil(np.ceil(np.max(r_dist_tot_bub2))))+1)))
+                        
+                        #Pressure integrand components for each value of X
                         yfinal = np.zeros(len(xint))
+                        
+                        #If exterior and interior surfaces defined, continue...
                         if len(surface_area_ext)>0:
                             if len(surface_area_int)>0:
+                                
+                                #Flatten exterior and interior surfaces and line 2 ends up. Theta defines angle from y axis to overshot of exterior surface of interior surface
                                 tan_theta = (surface_area_ext[1]-surface_area_int[1])/edge_width_arr[1]
+                                
+                                #Can simplify geometric area into two components: rectangle which is defined as the product of interior surface length and the current step size across the interface (x)
+                                #and triangle which accounts for the overlap of the exterior surface with the interior surface, which is defined as the product of the overlap length (exterior length - interior length) and half of the current step size across the interface (x)  
                                 area_rect_prev = 0
                                 area_tri_prev = 0
                 
+                                #For each step across interface, calculate pressure in that step's area (averaged over angle from CoM)
                                 for i in range(1, len(xint)):
                                     binx_nodup=np.array([])
                                     biny_nodup=np.array([])
+                                    
+                                    #Min and max location across interface of current step
                                     min_range = xint[i-1]
                                     max_range = xint[i]   
+                                    
+                                    #Calculate area of rectangle for current step
                                     area_rect = (surface_area_int[1] * xint[i]) - area_rect_prev
+                                    
+                                    #Save total area of previous step sizes
                                     area_rect_prev = (surface_area_int[1] * xint[i])
+                                    
+                                    #Calculate the overshot length of current step
                                     dif_sa = tan_theta * xint[i]
+                                    
+                                    #Calculate area of triangle from overshot of exterior surface with interior surface
                                     area_tri = (dif_sa * xint[i])/2
+                                    
+                                    #Subtract total area of triangle from previous steps
                                     area_poly = area_tri - area_tri_prev
+                                    
+                                    #Save total area of previous step sizes
                                     area_tri_prev = (dif_sa * xint[i])/2
+                                    
+                                    #Total area of slice we're calculating pressure over
                                     area_slice = area_poly + area_rect
                                                  
+                                    #Find particles that are housed within current slice
                                     points = np.where((min_range<=r_dist_tot_bub2) & (r_dist_tot_bub2<=max_range))[0]  
+                                    
+                                    #If at least 1 particle in slice, continue...
                                     if len(points)>0:
+                                        
+                                        #If the force is defined, continue...
                                         points2 = np.logical_not(np.isnan(fa_all_tot_bub2[points]))
                                         if len(points2)>0:
+                                            
+                                            #Calculate total active force normal to interface in slice
                                             yfinal[i-1] = np.sum(fa_all_tot_bub2[points][points2])
+                                            
+                                            #If either exterior or interior surface area failed to calculate, use the radii
                                             if len(surface_area_ext)==0:
                                                 area_slice = np.pi * ((interior_rad +xint[i])**2-(interior_rad + xint[i-1])**2)
                                             if len(surface_area_int)==0:
                                                 area_slice = np.pi * ((interior_rad +xint[i])**2-(interior_rad + xint[i-1])**2)
+                                            
+                                            #If area of slice is non-zero, calculate the pressure [F/A]
                                             if area_slice != 0:
                                                 yfinal[i-1] = yfinal[i-1]/area_slice
                                             else:
@@ -15525,50 +16052,90 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                     else:
                                         yfinal[i-1]=0
                 
-                                #max_id = np.where(xfinal==0.0)[0][0]
-                                #xint = xfinal[max_id-1:]
+                                #Renaming variables
                                 yint = yfinal
-                                #min_id = np.where(yint<=0)[0][0]
-                                xint_final = xint#[:min_id]
-                                yint_final = yint#[:min_id]
-                                #int_trap = np.traps(yint, x=xint)
+                                xint_final = xint
+                                yint_final = yint
+                                
+                                #Integrate force across interface using trapezoidal rule
                                 for o in range(1, len(xint_final)):
                                     int_sum_bub2 += ((xint_final[o]-xint_final[o-1])/2)*(yint_final[o]+yint_final[o-1])
+                
+                #If interface belongs to bubble 3, continue...
                 elif bub_size_id_arr[m] == bub_size_id_arr[2]:  
                     if bub_large >=3: 
+                        
+                        #Calculate location of interior surface from CoM
                         interior_rad = bub_width[2]-edge_width_arr[2]
-                        #if np.floor(np.min(r_dist_tot_bub3))<= 0.0:  
                                                                  
+                        #X locations across interface for integration
                         xint = np.linspace(0, np.ceil(np.max(r_dist_tot_bub3)), num=int((int(np.ceil(np.ceil(np.max(r_dist_tot_bub3))))+1)))
+                        
+                        #Pressure integrand components for each value of X
                         yfinal = np.zeros(len(xint))
+                        
+                        #If exterior and interior surfaces defined, continue...
                         if len(surface_area_ext)>0:
                             if len(surface_area_int)>0:
+                                
+                                #Flatten exterior and interior surfaces and line 2 ends up. Theta defines angle from y axis to overshot of exterior surface of interior surface
                                 tan_theta = (surface_area_ext[2]-surface_area_int[2])/edge_width_arr[2]
+                                
+                                #Can simplify geometric area into two components: rectangle which is defined as the product of interior surface length and the current step size across the interface (x)
+                                #and triangle which accounts for the overlap of the exterior surface with the interior surface, which is defined as the product of the overlap length (exterior length - interior length) and half of the current step size across the interface (x)  
                                 area_rect_prev = 0
                                 area_tri_prev = 0
-                
+                                
+                                #For each step across interface, calculate pressure in that step's area (averaged over angle from CoM)
                                 for i in range(1, len(xint)):
                                     binx_nodup=np.array([])
                                     biny_nodup=np.array([])
+                                    
+                                    #Min and max location across interface of current step
                                     min_range = xint[i-1]
                                     max_range = xint[i]   
+                                    
+                                    #Calculate area of rectangle for current step
                                     area_rect = (surface_area_int[2] * xint[i]) - area_rect_prev
+                                    
+                                    #Save total area of previous step sizes
                                     area_rect_prev = (surface_area_int[2] * xint[i])
+                                    
+                                    #Calculate the overshot length of current step
                                     dif_sa = tan_theta * xint[i]
+                                    
+                                    #Calculate area of triangle from overshot of exterior surface with interior surface
                                     area_tri = (dif_sa * xint[i])/2
+                                    
+                                    #Subtract total area of triangle from previous steps
                                     area_poly = area_tri - area_tri_prev
+                                    
+                                    #Save total area of previous step sizes
                                     area_tri_prev = (dif_sa * xint[i])/2
+                                    
+                                    #Total area of slice we're calculating pressure over
                                     area_slice = area_poly + area_rect
                                                  
+                                    #Find particles that are housed within current slice
                                     points = np.where((min_range<=r_dist_tot_bub3) & (r_dist_tot_bub3<=max_range))[0]  
+                                    
+                                    #If at least 1 particle in slice, continue...
                                     if len(points)>0:
+                                        
+                                        #If the force is defined, continue...
                                         points2 = np.logical_not(np.isnan(fa_all_tot_bub3[points]))
                                         if len(points2)>0:
+                                            
+                                            #Calculate total active force normal to interface in slice
                                             yfinal[i-1] = np.sum(fa_all_tot_bub3[points][points2])
+                                            
+                                            #If either exterior or interior surface area failed to calculate, use the radii
                                             if len(surface_area_ext)==0:
                                                 area_slice = np.pi * ((interior_rad +xint[i])**2-(interior_rad + xint[i-1])**2)
                                             if len(surface_area_int)==0:
                                                 area_slice = np.pi * ((interior_rad +xint[i])**2-(interior_rad + xint[i-1])**2)
+                                            
+                                            #If area of slice is non-zero, calculate the pressure [F/A]
                                             if area_slice != 0:
                                                 yfinal[i-1] = yfinal[i-1]/area_slice
                                             else:
@@ -15578,50 +16145,90 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                     else:
                                         yfinal[i-1]=0
                 
-                                #max_id = np.where(xfinal==0.0)[0][0]
-                                #xint = xfinal[max_id-1:]
+                                #Renaming variables
                                 yint = yfinal
-                                #min_id = np.where(yint<=0)[0][0]
-                                xint_final = xint#[:min_id]
-                                yint_final = yint#[:min_id]
-                                #int_trap = np.traps(yint, x=xint)
+                                xint_final = xint
+                                yint_final = yint
+                                
+                                #Integrate force across interface using trapezoidal rule
                                 for o in range(1, len(xint_final)):
                                     int_sum_bub3 += ((xint_final[o]-xint_final[o-1])/2)*(yint_final[o]+yint_final[o-1])
+                
+                #If interface belongs to bubble 4, continue...
                 elif bub_size_id_arr[m] == bub_size_id_arr[3]:  
                     if bub_large >=4: 
+                        
+                        #Calculate location of interior surface from CoM
                         interior_rad = bub_width[3]-edge_width_arr[3]
-                        #if np.floor(np.min(r_dist_tot_bub4))<= 0.0:  
-                                                                 
+
+                        #X locations across interface for integration
                         xint = np.linspace(0, np.ceil(np.max(r_dist_tot_bub4)), num=int((int(np.ceil(np.ceil(np.max(r_dist_tot_bub4))))+1)))
+                        
+                        #Pressure integrand components for each value of X
                         yfinal = np.zeros(len(xint))
+                        
+                        #If exterior and interior surfaces defined, continue...
                         if len(surface_area_ext)>0:
                             if len(surface_area_int)>0:
+                                
+                                #Flatten exterior and interior surfaces and line 2 ends up. Theta defines angle from y axis to overshot of exterior surface of interior surface
                                 tan_theta = (surface_area_ext[3]-surface_area_int[3])/edge_width_arr[3]
+                                
+                                #Can simplify geometric area into two components: rectangle which is defined as the product of interior surface length and the current step size across the interface (x)
+                                #and triangle which accounts for the overlap of the exterior surface with the interior surface, which is defined as the product of the overlap length (exterior length - interior length) and half of the current step size across the interface (x)  
                                 area_rect_prev = 0
                                 area_tri_prev = 0
-                
+                                
+                                #For each step across interface, calculate pressure in that step's area (averaged over angle from CoM)
                                 for i in range(1, len(xint)):
                                     binx_nodup=np.array([])
                                     biny_nodup=np.array([])
+                                    
+                                    #Min and max location across interface of current step
                                     min_range = xint[i-1]
-                                    max_range = xint[i]   
+                                    max_range = xint[i] 
+                                    
+                                    #Calculate area of rectangle for current step
                                     area_rect = (surface_area_int[3] * xint[i]) - area_rect_prev
+                                    
+                                    #Save total area of previous step sizes
                                     area_rect_prev = (surface_area_int[3] * xint[i])
+                                    
+                                    #Calculate the overshot length of current step
                                     dif_sa = tan_theta * xint[i]
+                                    
+                                    #Calculate area of triangle from overshot of exterior surface with interior surface
                                     area_tri = (dif_sa * xint[i])/2
+                                    
+                                    #Subtract total area of triangle from previous steps
                                     area_poly = area_tri - area_tri_prev
+                                    
+                                    #Save total area of previous step sizes
                                     area_tri_prev = (dif_sa * xint[i])/2
+                                    
+                                    #Total area of slice we're calculating pressure over
                                     area_slice = area_poly + area_rect
                                                  
+                                    #Find particles that are housed within current slice
                                     points = np.where((min_range<=r_dist_tot_bub4) & (r_dist_tot_bub4<=max_range))[0]  
+                                    
+                                    #If at least 1 particle in slice, continue...
                                     if len(points)>0:
+                                        
+                                        #If the force is defined, continue...
                                         points2 = np.logical_not(np.isnan(fa_all_tot_bub4[points]))
                                         if len(points2)>0:
+                                            
+                                            #Calculate total active force normal to interface in slice
                                             yfinal[i-1] = np.sum(fa_all_tot_bub4[points][points2])
+                                            
+                                            #If either exterior or interior surface area failed to calculate, use the radii
                                             if len(surface_area_ext)==0:
                                                 area_slice = np.pi * ((interior_rad +xint[i])**2-(interior_rad + xint[i-1])**2)
                                             if len(surface_area_int)==0:
                                                 area_slice = np.pi * ((interior_rad +xint[i])**2-(interior_rad + xint[i-1])**2)
+                                            
+                                            #If area of slice is non-zero, calculate the pressure [F/A]
                                             if area_slice != 0:
                                                 yfinal[i-1] = yfinal[i-1]/area_slice
                                             else:
@@ -15630,51 +16237,91 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                             yfinal[i-1]=0
                                     else:
                                         yfinal[i-1]=0
-        
-                                #max_id = np.where(xfinal==0.0)[0][0]
-                                #xint = xfinal[max_id-1:]
+                                        
+                                #Renaming variables
                                 yint = yfinal
-                                #min_id = np.where(yint<=0)[0][0]
-                                xint_final = xint#[:min_id]
-                                yint_final = yint#[:min_id]
-                                #int_trap = np.traps(yint, x=xint)
+                                xint_final = xint
+                                yint_final = yint
+                                
+                                #Integrate force across interface using trapezoidal rule
                                 for o in range(1, len(xint_final)):
                                     int_sum_bub4 += ((xint_final[o]-xint_final[o-1])/2)*(yint_final[o]+yint_final[o-1])
+                
+                #If interface belongs to bubble 5, continue...
                 elif bub_size_id_arr[m] == bub_size_id_arr[4]:  
                     if bub_large >=5: 
+                        
+                        #Calculate location of interior surface from CoM
                         interior_rad = bub_width[4]-edge_width_arr[4]
-                        #if np.floor(np.min(r_dist_tot_bub5))<= 0.0:  
-                                                                 
+                        
+                        #X locations across interface for integration
                         xint = np.linspace(0, np.ceil(np.max(r_dist_tot_bub5)), num=int((int(np.ceil(np.ceil(np.max(r_dist_tot_bub5))))+1)))
+                        
+                        #Pressure integrand components for each value of X
                         yfinal = np.zeros(len(xint))
+                        
+                        #If exterior and interior surfaces defined, continue...
                         if len(surface_area_ext)>0:
                             if len(surface_area_int)>0:
+                                
+                                #Flatten exterior and interior surfaces and line 2 ends up. Theta defines angle from y axis to overshot of exterior surface of interior surface
                                 tan_theta = (surface_area_ext[4]-surface_area_int[4])/edge_width_arr[4]
+                                
+                                #Can simplify geometric area into two components: rectangle which is defined as the product of interior surface length and the current step size across the interface (x)
+                                #and triangle which accounts for the overlap of the exterior surface with the interior surface, which is defined as the product of the overlap length (exterior length - interior length) and half of the current step size across the interface (x)  
                                 area_rect_prev = 0
                                 area_tri_prev = 0
-                
+                                
+                                #For each step across interface, calculate pressure in that step's area (averaged over angle from CoM)
                                 for i in range(1, len(xint)):
                                     binx_nodup=np.array([])
                                     biny_nodup=np.array([])
+                                    
+                                    #Min and max location across interface of current step
                                     min_range = xint[i-1]
-                                    max_range = xint[i]   
+                                    max_range = xint[i]  
+                                    
+                                    #Calculate area of rectangle for current step
                                     area_rect = (surface_area_int[4] * xint[i]) - area_rect_prev
+                                    
+                                    #Save total area of previous step sizes
                                     area_rect_prev = (surface_area_int[4] * xint[i])
+                                    
+                                    #Calculate the overshot length of current step
                                     dif_sa = tan_theta * xint[i]
+                                    
+                                    #Calculate area of triangle from overshot of exterior surface with interior surface
                                     area_tri = (dif_sa * xint[i])/2
+                                    
+                                    #Subtract total area of triangle from previous steps
                                     area_poly = area_tri - area_tri_prev
+                                    
+                                    #Save total area of previous step sizes
                                     area_tri_prev = (dif_sa * xint[i])/2
+                                    
+                                    #Total area of slice we're calculating pressure over
                                     area_slice = area_poly + area_rect
                                                  
+                                    #Find particles that are housed within current slice
                                     points = np.where((min_range<=r_dist_tot_bub5) & (r_dist_tot_bub5<=max_range))[0]  
+                                    
+                                    #If at least 1 particle in slice, continue...
                                     if len(points)>0:
+                                        
+                                        #If the force is defined, continue...
                                         points2 = np.logical_not(np.isnan(fa_all_tot_bub5[points]))
                                         if len(points2)>0:
+                                            
+                                            #Calculate total active force normal to interface in slice
                                             yfinal[i-1] = np.sum(fa_all_tot_bub5[points][points2])
+                                            
+                                            #If either exterior or interior surface area failed to calculate, use the radii
                                             if len(surface_area_ext)==0:
                                                 area_slice = np.pi * ((interior_rad +xint[i])**2-(interior_rad + xint[i-1])**2)
                                             if len(surface_area_int)==0:
                                                 area_slice = np.pi * ((interior_rad +xint[i])**2-(interior_rad + xint[i-1])**2)
+                                            
+                                            #If area of slice is non-zero, calculate the pressure [F/A]
                                             if area_slice != 0:
                                                 yfinal[i-1] = yfinal[i-1]/area_slice
                                             else:
@@ -15683,17 +16330,17 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                             yfinal[i-1]=0
                                     else:
                                         yfinal[i-1]=0
-        
-                                #max_id = np.where(xfinal==0.0)[0][0]
-                                #xint = xfinal[max_id-1:]
+                                
+                                #Renaming of variables
                                 yint = yfinal
-                                #min_id = np.where(yint<=0)[0][0]
-                                xint_final = xint#[:min_id]
-                                yint_final = yint#[:min_id]
-                                #int_trap = np.traps(yint, x=xint)
+                                xint_final = xint
+                                yint_final = yint
+                                
+                                #Integrate force across interface using trapezoidal rule
                                 for o in range(1, len(xint_final)):
                                     int_sum_bub5 += ((xint_final[o]-xint_final[o-1])/2)*(yint_final[o]+yint_final[o-1])
-
+        
+        #Save active pressure of each interface
         g = open(outPath2+outTxt_align_press, 'a')
         g.write('{0:.2f}'.format(tst).center(20) + ' ')
         g.write('{0:.6f}'.format(sizeBin).center(20) + ' ')
