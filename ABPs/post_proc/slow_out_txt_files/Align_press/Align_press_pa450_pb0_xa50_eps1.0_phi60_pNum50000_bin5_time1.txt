@@ -1,0 +1,2 @@
+        tauB               sizeBin             clust_size          interface_id       press_align_bub1     press_align_bub2     press_align_bub3     press_align_bub4     press_align_bub5  
+        0.00               5.016308              41134                  1                18.859740            159.651515            0.000000             0.000000             0.000000      

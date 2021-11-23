@@ -1,0 +1,2 @@
+      tauB          sizeBin        clust_size        int_id          bub_id            Na              Nb            radius        radius_err        sa_ext          sa_int        edge_width    edge_width_err       NBin     
+      0.00          5.016308         38490             1               1              7736           14392         91.479928        1.913412       601.219907      409.049494      29.472812        5.200399          691      

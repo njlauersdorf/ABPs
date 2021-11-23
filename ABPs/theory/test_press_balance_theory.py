@@ -276,8 +276,8 @@ for i in range(0, len(pe_a)):
             press_slow_int = np.append(press_slow_int, int_width_slow_int * nS_theory * 1.0 * pe_a[i])
             
             #Calculate bulk interparticle pressure from theory
-            press_slow_dense_val = 4.0 * np.sqrt(3) * pe_a[i] / latNet
-            press_fast_dense_val = 4.0 * np.sqrt(3) * pe_b[j] / latNet
+            press_slow_dense_val = 4.0 * np.sqrt(3) * peNet / latNet
+            press_fast_dense_val = 4.0 * np.sqrt(3) * peNet / latNet
             
             #Append pressures to array
             press_slow_dense = np.append(press_slow_dense, press_slow_dense_val)
@@ -305,6 +305,53 @@ for i in range(0, len(pe_a)):
 plt.scatter(pnet_pair, press_slow_dense, c='red')
 plt.scatter(pnet_pair, press_fast_dense, c='blue')
 plt.show()
+
+fig = plt.figure(figsize=(10,7))
+ax = fig.add_subplot(111)
+div_min = -3
+min_n = 0
+max_n = 20
+levels_text=40
+level_boundaries = np.linspace(min_n, max_n, levels_text + 1)
+tick_locs   = [0.0,np.pi/6,np.pi/3]
+tick_labels = ['0',r'$\pi/6$',r'$\pi/3$']
+
+im = plt.scatter(pnet_pair, press_slow_dense, linewidths=1.0, edgecolor='black', facecolor='green', s=60.0)
+im = plt.scatter(pnet_pair, press_fast_int, linewidths=1.0, edgecolor='black', facecolor='yellow', s=60.0)
+         
+yellow_patch = mpatches.Patch(color='yellow', label='Fast Interface')
+red_patch = mpatches.Patch(color='green', label='Slow Bulk')
+plt.legend(handles=[yellow_patch, red_patch], fancybox=True, framealpha=0.75, ncol=1, fontsize=12, loc='upper left',labelspacing=0.1, handletextpad=0.1)
+
+    
+plt.xlabel(r'$\mathrm{Pe}_\mathrm{Net}$', fontsize=20)
+plt.ylabel(r'Initial Pressure ($\Pi$)', fontsize=20)
+plt.tight_layout()
+plt.show()
+
+fig = plt.figure(figsize=(10,7))
+ax = fig.add_subplot(111)
+div_min = -3
+min_n = 0
+max_n = 20
+levels_text=40
+level_boundaries = np.linspace(min_n, max_n, levels_text + 1)
+tick_locs   = [0.0,np.pi/6,np.pi/3]
+tick_labels = ['0',r'$\pi/6$',r'$\pi/3$']
+
+im = plt.scatter(pnet_pair, press_fast_dense, linewidths=1.0, edgecolor='black', facecolor='green', s=60.0)
+im = plt.scatter(pnet_pair, press_slow_int, linewidths=1.0, edgecolor='black', facecolor='yellow', s=60.0)
+         
+yellow_patch = mpatches.Patch(color='yellow', label='Slow Interface')
+red_patch = mpatches.Patch(color='green', label='Fast Bulk')
+plt.legend(handles=[yellow_patch, red_patch], fancybox=True, framealpha=0.75, ncol=1, fontsize=12, loc='upper left',labelspacing=0.1, handletextpad=0.1)
+
+    
+plt.xlabel(r'$\mathrm{Pe}_\mathrm{Net}$', fontsize=20)
+plt.ylabel(r'Initial Pressure ($\Pi$)', fontsize=20)
+plt.tight_layout()
+plt.show()
+
 #Plot difference in fast bulk phase pressure and slow interface pressure as a function of fast and slow activities
 fig = plt.figure(figsize=(10,7))
 ax = fig.add_subplot(111)

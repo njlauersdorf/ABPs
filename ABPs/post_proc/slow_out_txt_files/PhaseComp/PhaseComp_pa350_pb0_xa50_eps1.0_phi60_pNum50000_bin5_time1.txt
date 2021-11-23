@@ -1,0 +1,2 @@
+      tauB          sizeBin        clust_size       Na_bulk         Nb_bulk        NBin_bulk         Na_gas          Nb_gas         NBin_gas         Na_int          Nb_int         NBin_int         Na_bub          Nb_bub         NBin_bub   
+      0.00          5.016308         38490           17237             0              432              0             10635            1478            7736           14392            691              0               0               0       
