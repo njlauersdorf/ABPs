@@ -321,7 +321,7 @@ with hoomd.open(name=infile, mode='rb') as t:
                 leg = ax.legend(handles=[ells0[0]], labels=[r'$\mathrm{Pe} = $'+str(int(peA)), r'$\mathrm{Pe} = $'+str(int(peA))], loc='upper right', prop={'size': 15}, markerscale=8.0)
                 leg.legendHandles[0].set_color(slowCol)
             plt.tight_layout()
-            plt.savefig(outPath+out + pad + ".png", dpi=250, transparent=False)
+            plt.savefig(outPath+out + pad + ".png", dpi=150, transparent=False)
             plt.close()
             
         elif mono == 1:
@@ -369,7 +369,7 @@ with hoomd.open(name=infile, mode='rb') as t:
                 leg = ax.legend(handles=[ells0[0]], labels=[r'$\mathrm{Pe} = $'+str(int(peA))], loc='upper right', prop={'size': 15}, markerscale=8.0)
                 leg.legendHandles[0].set_color(slowCol)
                 plt.tight_layout()
-                plt.savefig(outPath+out + pad + ".png", dpi=250, transparent=False)
+                plt.savefig(outPath+out + pad + ".png", dpi=150, transparent=False)
                 plt.close()
             elif mono_type == 1:
                 #Local each particle's positions
@@ -415,7 +415,7 @@ with hoomd.open(name=infile, mode='rb') as t:
                 leg = ax.legend(handles=[ells0[0]], labels=[r'$\mathrm{Pe} = $'+str(int(peB))], loc='upper right', prop={'size': 15}, markerscale=8.0)
                 leg.legendHandles[0].set_color(slowCol)
                 plt.tight_layout()
-                plt.savefig(outPath+out + pad + ".png", dpi=250, transparent=False)
+                plt.savefig(outPath+out + pad + ".png", dpi=150, transparent=False)
                 plt.close()
             elif mono_type == 2:
                 #Local each particle's positions
@@ -466,5 +466,5 @@ with hoomd.open(name=infile, mode='rb') as t:
                 leg = ax.legend(handles=[ells0[0]], labels=[r'$\mathrm{Pe} = $'+str(int(peB))], loc='upper right', prop={'size': 15}, markerscale=8.0)
                 leg.legendHandles[0].set_color(slowCol)
                 plt.tight_layout()
-                plt.savefig(outPath+out + pad + ".png", dpi=250, transparent=False)
+                plt.savefig(outPath+out + pad + ".png", dpi=150, transparent=False)
                 plt.close()
