@@ -310,8 +310,12 @@ with hoomd.open(name=infile, mode='rb') as t:
             #Create legend for binary system
             if parFrac<100.0:
                 leg = ax.legend(handles=[ells0[0], ells1[1]], labels=[r'$\mathrm{Pe}_\mathrm{A} = $'+str(int(peA)), r'$\mathrm{Pe}_\mathrm{B} = $'+str(int(peB))], loc='upper right', prop={'size': 15}, markerscale=8.0)
-                leg.legendHandles[0].set_color(slowCol)
-                leg.legendHandles[1].set_color(fastCol)
+                if peA <= peB:
+                    leg.legendHandles[0].set_color(slowCol)
+                    leg.legendHandles[1].set_color(fastCol)
+                else:
+                    leg.legendHandles[0].set_color(fastCol)
+                    leg.legendHandles[1].set_color(slowCol)
             #Create legend for monodisperse system
             else:
                 leg = ax.legend(handles=[ells0[0]], labels=[r'$\mathrm{Pe} = $'+str(int(peA)), r'$\mathrm{Pe} = $'+str(int(peA))], loc='upper right', prop={'size': 15}, markerscale=8.0)
@@ -319,6 +323,7 @@ with hoomd.open(name=infile, mode='rb') as t:
             plt.tight_layout()
             plt.savefig(outPath+out + pad + ".png", dpi=250, transparent=False)
             plt.close()
+            
         elif mono == 1:
             if mono_type == 0:
                 #Local each particle's positions
