@@ -80,6 +80,21 @@ if parFrac_orig<1.0:
     parFrac=parFrac_orig*100.
 else:
     parFrac=parFrac_orig
+ 
+if (parFrac == 100.):
+    mono=1
+    mono_activity=peA
+    mono_type = 0
+elif (parFrac == 0.):
+    mono = 1
+    mono_activity=peB
+    mono_type = 1
+elif peA==peB:
+    mono=1
+    mono_activity=peA
+    mono_type = 2
+else:
+    mono=0
     
 eps = float(sys.argv[5])                                #Softness, coefficient of interparticle repulsion (epsilon)
 
@@ -220,9 +235,10 @@ with hoomd.open(name=infile, mode='rb') as t:
         large_clust_ind_all=np.where(clust_size>min_size)           #Find IDs of clusters with size larger than minimum limit
         
         query_points=clp_all.centers[lcID]                          #Find CoM of largest cluster
-        com_tmp_posX = query_points[0]# + h_box                     #X position of largest cluster's CoM
-        com_tmp_posY = query_points[1]# + h_box                     #Y position of largest cluster's CoM
-        
+        #com_tmp_posX = query_points[0]# + h_box                     #X position of largest cluster's CoM
+        #com_tmp_posY = query_points[1]# + h_box                     #Y position of largest cluster's CoM
+        com_tmp_posX = np.mean(pos[:,0])
+        com_tmp_posY = np.mean(pos[:,1])
         #Shift origin (0,0) to cluster's CoM
         pos[:,0]= pos[:,0]-com_tmp_posX                             
         pos[:,1]= pos[:,1]-com_tmp_posY
@@ -238,63 +254,212 @@ with hoomd.open(name=infile, mode='rb') as t:
                 pos[i,1]=pos[i,1]-l_box
             elif pos[i,1]<-h_box:
                 pos[i,1]=pos[i,1]+l_box
-        
-        #Local each particle's positions
-        pos0=pos[typ0ind]                               # Find positions of type 0 particles
-        pos1=pos[typ1ind]
-        
-        # Create frame pad for images
-        pad = str(j).zfill(4)
-        
-        #Plot each particle as a point color-coded by activity and labeled by their activity
-        fig = plt.figure(figsize=(6.5,6)) 
-        ax = fig.add_subplot(111)  
-        
-        
+        if mono==0:
+            #Local each particle's positions
+            pos0=pos[typ0ind]                               # Find positions of type 0 particles
+            pos1=pos[typ1ind]
+            
+            # Create frame pad for images
+            pad = str(j).zfill(4)
+            
+            #Plot each particle as a point color-coded by activity and labeled by their activity
+            fig = plt.figure(figsize=(6.5,6)) 
+            ax = fig.add_subplot(111)  
             
             
-        sz = 0.75
-        #Assign type 0 particles to plot
-        ells0 = [Ellipse(xy=pos0[i,:],
-                width=sz, height=sz, label='PeA: '+str(peA))
-        for i in range(0,len(typ0ind))]
-        
-        #Assign type 1 particles to plot
-        ells1 = [Ellipse(xy=pos1[i,:],
-                width=sz, height=sz, label='PeB: '+str(peB))
-        for i in range(0,len(typ1ind))]
-        
-        # Plot position colored by neighbor number
-        slowGroup = mc.PatchCollection(ells0, facecolors=slowCol)
-        fastGroup = mc.PatchCollection(ells1,facecolors=fastCol)
-        ax.add_collection(slowGroup)
-        ax.add_collection(fastGroup)
-        
-        #Label time step
-        ax.text(0.95, 0.025, s=r'$\tau$' + ' = ' + '{:.1f}'.format(tst) + ' ' + r'$\tau_\mathrm{r}$',
-                horizontalalignment='right', verticalalignment='bottom',
-                transform=ax.transAxes,
-                fontsize=18,
-                bbox=dict(facecolor=(1,1,1,0.5), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
-        
-        #Set axes parameters
-        ax.set_xlim(-h_box, h_box)
-        ax.set_ylim(-h_box, h_box)
-        ax.axes.set_xticks([])
-        ax.axes.set_yticks([])
-        ax.axes.set_xticklabels([])
-        ax.axes.set_yticks([])
-        ax.set_aspect('equal')
-        
-        #Create legend for binary system
-        if parFrac<100.0:
-            leg = ax.legend(handles=[ells0[0], ells1[1]], labels=[r'$\mathrm{Pe}_\mathrm{A} = $'+str(int(peA)), r'$\mathrm{Pe}_\mathrm{B} = $'+str(int(peB))], loc='upper right', prop={'size': 15}, markerscale=8.0)
-            leg.legendHandles[0].set_color(slowCol)
-            leg.legendHandles[1].set_color(fastCol)
-        #Create legend for monodisperse system
-        else:
-            leg = ax.legend(handles=[ells0[0]], labels=[r'$\mathrm{Pe} = $'+str(int(peA)), r'$\mathrm{Pe} = $'+str(int(peA))], loc='upper right', prop={'size': 15}, markerscale=8.0)
-            leg.legendHandles[0].set_color(slowCol)
-        plt.tight_layout()
-        plt.savefig(outPath+out + pad + ".png", dpi=250, transparent=False)
-        plt.close()
+                
+                
+            sz = 0.75
+            #Assign type 0 particles to plot
+            
+            ells0 = [Ellipse(xy=pos0[i,:],
+                    width=sz, height=sz, label='PeA: '+str(peA))
+            for i in range(0,len(typ0ind))]
+            
+            #Assign type 1 particles to plot
+            ells1 = [Ellipse(xy=pos1[i,:],
+                    width=sz, height=sz, label='PeB: '+str(peB))
+            for i in range(0,len(typ1ind))]
+            
+            # Plot position colored by neighbor number
+            if peA <= peB:
+                slowGroup = mc.PatchCollection(ells0, facecolors=slowCol)
+                fastGroup = mc.PatchCollection(ells1,facecolors=fastCol)
+            else:
+                slowGroup = mc.PatchCollection(ells1, facecolors=slowCol)
+                fastGroup = mc.PatchCollection(ells0,facecolors=fastCol)
+            ax.add_collection(slowGroup)
+            ax.add_collection(fastGroup)
+            
+            #Label time step
+            ax.text(0.95, 0.025, s=r'$\tau$' + ' = ' + '{:.1f}'.format(tst) + ' ' + r'$\tau_\mathrm{r}$',
+                    horizontalalignment='right', verticalalignment='bottom',
+                    transform=ax.transAxes,
+                    fontsize=18,
+                    bbox=dict(facecolor=(1,1,1,0.5), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+            
+            #Set axes parameters
+            ax.set_xlim(-h_box, h_box)
+            ax.set_ylim(-h_box, h_box)
+            ax.axes.set_xticks([])
+            ax.axes.set_yticks([])
+            ax.axes.set_xticklabels([])
+            ax.axes.set_yticks([])
+            ax.set_aspect('equal')
+            
+            #Create legend for binary system
+            if parFrac<100.0:
+                leg = ax.legend(handles=[ells0[0], ells1[1]], labels=[r'$\mathrm{Pe}_\mathrm{A} = $'+str(int(peA)), r'$\mathrm{Pe}_\mathrm{B} = $'+str(int(peB))], loc='upper right', prop={'size': 15}, markerscale=8.0)
+                leg.legendHandles[0].set_color(slowCol)
+                leg.legendHandles[1].set_color(fastCol)
+            #Create legend for monodisperse system
+            else:
+                leg = ax.legend(handles=[ells0[0]], labels=[r'$\mathrm{Pe} = $'+str(int(peA)), r'$\mathrm{Pe} = $'+str(int(peA))], loc='upper right', prop={'size': 15}, markerscale=8.0)
+                leg.legendHandles[0].set_color(slowCol)
+            plt.tight_layout()
+            plt.savefig(outPath+out + pad + ".png", dpi=250, transparent=False)
+            plt.close()
+        elif mono == 1:
+            if mono_type == 0:
+                #Local each particle's positions
+                pos0=pos[typ0ind]                               # Find positions of type 0 particles
+                
+                # Create frame pad for images
+                pad = str(j).zfill(4)
+                
+                #Plot each particle as a point color-coded by activity and labeled by their activity
+                fig = plt.figure(figsize=(6.5,6)) 
+                ax = fig.add_subplot(111)  
+                
+                
+                    
+                    
+                sz = 0.75
+                #Assign type 0 particles to plot
+                ells0 = [Ellipse(xy=pos0[i,:],
+                        width=sz, height=sz, label='Pe: '+str(peA))
+                for i in range(0,len(typ0ind))]
+                
+                # Plot position colored by neighbor number
+                slowGroup = mc.PatchCollection(ells0, facecolors=slowCol)
+                ax.add_collection(slowGroup)
+                
+                #Label time step
+                ax.text(0.95, 0.025, s=r'$\tau$' + ' = ' + '{:.1f}'.format(tst) + ' ' + r'$\tau_\mathrm{r}$',
+                        horizontalalignment='right', verticalalignment='bottom',
+                        transform=ax.transAxes,
+                        fontsize=18,
+                        bbox=dict(facecolor=(1,1,1,0.5), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+                
+                #Set axes parameters
+                ax.set_xlim(-h_box, h_box)
+                ax.set_ylim(-h_box, h_box)
+                ax.axes.set_xticks([])
+                ax.axes.set_yticks([])
+                ax.axes.set_xticklabels([])
+                ax.axes.set_yticks([])
+                ax.set_aspect('equal')
+                
+
+                leg = ax.legend(handles=[ells0[0]], labels=[r'$\mathrm{Pe} = $'+str(int(peA))], loc='upper right', prop={'size': 15}, markerscale=8.0)
+                leg.legendHandles[0].set_color(slowCol)
+                plt.tight_layout()
+                plt.savefig(outPath+out + pad + ".png", dpi=250, transparent=False)
+                plt.close()
+            elif mono_type == 1:
+                #Local each particle's positions
+                pos0=pos[typ1ind]                               # Find positions of type 0 particles
+                
+                # Create frame pad for images
+                pad = str(j).zfill(4)
+                
+                #Plot each particle as a point color-coded by activity and labeled by their activity
+                fig = plt.figure(figsize=(6.5,6)) 
+                ax = fig.add_subplot(111)  
+                
+                
+                    
+                    
+                sz = 0.75
+                #Assign type 0 particles to plot
+                ells0 = [Ellipse(xy=pos0[i,:],
+                        width=sz, height=sz, label='Pe: '+str(peB))
+                for i in range(0,len(typ0ind))]
+                
+                # Plot position colored by neighbor number
+                slowGroup = mc.PatchCollection(ells0, facecolors=slowCol)
+                ax.add_collection(slowGroup)
+                
+                #Label time step
+                ax.text(0.95, 0.025, s=r'$\tau$' + ' = ' + '{:.1f}'.format(tst) + ' ' + r'$\tau_\mathrm{r}$',
+                        horizontalalignment='right', verticalalignment='bottom',
+                        transform=ax.transAxes,
+                        fontsize=18,
+                        bbox=dict(facecolor=(1,1,1,0.5), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+                
+                #Set axes parameters
+                ax.set_xlim(-h_box, h_box)
+                ax.set_ylim(-h_box, h_box)
+                ax.axes.set_xticks([])
+                ax.axes.set_yticks([])
+                ax.axes.set_xticklabels([])
+                ax.axes.set_yticks([])
+                ax.set_aspect('equal')
+                
+
+                leg = ax.legend(handles=[ells0[0]], labels=[r'$\mathrm{Pe} = $'+str(int(peB))], loc='upper right', prop={'size': 15}, markerscale=8.0)
+                leg.legendHandles[0].set_color(slowCol)
+                plt.tight_layout()
+                plt.savefig(outPath+out + pad + ".png", dpi=250, transparent=False)
+                plt.close()
+            elif mono_type == 2:
+                #Local each particle's positions
+                pos0=pos[typ0ind]                               # Find positions of type 0 particles
+                pos1=pos[typ1ind]  
+                # Create frame pad for images
+                pad = str(j).zfill(4)
+                
+                #Plot each particle as a point color-coded by activity and labeled by their activity
+                fig = plt.figure(figsize=(6.5,6)) 
+                ax = fig.add_subplot(111)  
+                
+                
+                    
+                    
+                sz = 0.75
+                #Assign type 0 particles to plot
+                ells0 = [Ellipse(xy=pos0[i,:],
+                        width=sz, height=sz, label='Pe: '+str(peA))
+                for i in range(0,len(typ0ind))]
+                ells1 = [Ellipse(xy=pos1[i,:],
+                        width=sz, height=sz, label='Pe: '+str(peB))
+                for i in range(0,len(typ1ind))]
+                
+                # Plot position colored by neighbor number
+                slowGroup = mc.PatchCollection(ells0, facecolors=slowCol)
+                ax.add_collection(slowGroup)
+                fastGroup = mc.PatchCollection(ells1, facecolors=slowCol)
+                ax.add_collection(fastGroup)
+                
+                #Label time step
+                ax.text(0.95, 0.025, s=r'$\tau$' + ' = ' + '{:.1f}'.format(tst) + ' ' + r'$\tau_\mathrm{r}$',
+                        horizontalalignment='right', verticalalignment='bottom',
+                        transform=ax.transAxes,
+                        fontsize=18,
+                        bbox=dict(facecolor=(1,1,1,0.5), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+                
+                #Set axes parameters
+                ax.set_xlim(-h_box, h_box)
+                ax.set_ylim(-h_box, h_box)
+                ax.axes.set_xticks([])
+                ax.axes.set_yticks([])
+                ax.axes.set_xticklabels([])
+                ax.axes.set_yticks([])
+                ax.set_aspect('equal')
+                
+
+                leg = ax.legend(handles=[ells0[0]], labels=[r'$\mathrm{Pe} = $'+str(int(peB))], loc='upper right', prop={'size': 15}, markerscale=8.0)
+                leg.legendHandles[0].set_color(slowCol)
+                plt.tight_layout()
+                plt.savefig(outPath+out + pad + ".png", dpi=250, transparent=False)
+                plt.close()
