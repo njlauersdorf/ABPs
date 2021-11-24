@@ -172,9 +172,9 @@ def areaType(Nx, latx):
     return Ax
 
 #Slow activities interested in
-pe_a = [50, 100, 150, 200, 250, 300, 350, 400, 450, 500]
+pe_a = [0, 100, 150, 200, 250, 350, 450]
 #Fast activities interested in
-pe_b = [50, 100, 150, 200, 250, 300, 350, 400, 450, 500]
+pe_b = [0, 100, 150, 200, 250, 350, 450]
 
 #Particle fraction of slow activities
 xA = 50./100.0

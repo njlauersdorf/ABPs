@@ -341,9 +341,31 @@ def getLat(peNet, eps):
 def computeFLJ(r, x1, y1, x2, y2, eps):
     sig = 1.
     f = (24. * eps / r) * ( (2*((sig/r)**12)) - ((sig/r)**6) )
-    fx = f * (x2 - x1) / r
-    fy = f * (y2 - y1) / r
+    
+    #Difference in x,y positions
+    difx = x2-x1
+    dify = y2-y1
+    
+    #Enforce periodic boundary conditions
+    difx_abs = np.abs(difx)
+    if difx_abs>=h_box:
+        if difx < -h_box:
+            difx += l_box
+        else:
+            difx -= l_box
+    
+    #Enforce periodic boundary conditions
+    dify_abs = np.abs(dify)
+    if dify_abs>=h_box:
+        if dify < -h_box:
+            dify += l_box
+        else:
+            dify -= l_box
+                            
+    fx = f * (difx) / r
+    fy = f * (dify) / r
     return fx, fy
+
 #Calculate activity-softness dependent variables
 lat=getLat(peNet,eps)
 tauLJ=computeTauLJ(eps)
@@ -455,9 +477,11 @@ g.write('tauB'.center(20) + ' ' +\
                         'clust_size'.center(20) + ' ' +\
                         'lat_mean_bulk'.center(20) + ' ' +\
                         'lat_mean_int'.center(20) + ' ' +\
+                        'lat_mean_bub'.center(20) + ' ' +\
                         'lat_mean_all'.center(20) + ' ' +\
                         'lat_std_bulk'.center(20) + ' ' +\
                         'lat_std_int'.center(20) + ' ' +\
+                        'lat_std_bub'.center(20) + ' ' +\
                         'lat_std_all'.center(20) + '\n')
 g.close()
 
@@ -686,11 +710,11 @@ with hoomd.open(name=inFile, mode='rb') as t:
                         p_plot_y[ix][iy] = p_all_y[ix][iy]/len(binParts[ix][iy])
                         
             
-        #Define colors for plots    
-        yellow = ("#fdfd96")
-        green = ("#77dd77")
-        red = ("#ff6961")
-        purple = ("#cab2d6")
+        #Colors for plotting each phase
+        yellow = ("#fdfd96")        #Largest gas-dense interface
+        green = ("#77dd77")         #Bulk phase
+        red = ("#ff6961")           #Gas phase
+        purple = ("#cab2d6")        #Bubble or small gas-dense interfaces
                
         #Re-create bins for true measurement (txt file output)
         NBins = getNBins(l_box, bin_width)
@@ -1814,7 +1838,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                         
                         #Count number of significant structures
                         bub_large+=1
-
+        
         #Initiate empty arrays
         bulk_fast_comp = np.array([])
         bulk_slow_comp = np.array([])
@@ -1848,7 +1872,81 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     bulk_large_ids = np.append(bulk_large_ids, m)
                 
                     bulk_large+=1
+        '''
+        bulkSigXX = np.zeros(5)
+        bulkSigYY = np.zeros(5)
+        bulkSigXY = np.zeros(5)
+        bulkSigYX = np.zeros(5)
+        bulk_area_arr = np.zeros(5)
+        binArea = sizeBin * sizeBin
+        if len(bulk_large_ids)>0:
+            for m in range(0, len(bulk_large_ids)):
+                for ix in range(0, len(bulk_id2)):
+                    for iy in range(0, len(bulk_id2)):
+                        if bulk_id2[ix][iy]==bulk_large_ids[m]:
+                            bulk_area_arr[m]+=1
+                bulk_area_arr[m] = bulk_area_arr[m] * binArea
+        
+        if len(bulk_large_ids)>0:
+            for m in range(0, len(bulk_large_ids)):
+                
+                bulk_temp = np.where(bulkPhase==bulk_large_ids[m])[0]
+                
+                bulk_pos = pos[bulk_temp,:]
+                #Compute neighbor list for 6-nearest neighbors given particle positions
+                
+                system_all = freud.AABBQuery(f_box, f_box.wrap(bulk_pos))
+                nlist2 = system_all.query(f_box.wrap(bulk_pos), dict(r_max=r_cut, exclude_ii=True))
+                
+                #Set empty arrays
+                point_ind_arr = np.array([])
+                point_query_arr = np.array([])
+                difr = np.array([])
+                
+                #Save neighbor indices and distances from neighbor list to array
+                for bond in nlist2:
                     
+                        
+                    #Difference in x,y positions
+                    difx = pos[bond[1],0]-pos[bond[0],0]
+                    dify = pos[bond[1],1]-pos[bond[0],1]
+                    
+                    #Enforce periodic boundary conditions
+                    difx_abs = np.abs(difx)
+                    if difx_abs>=h_box:
+                        if difx < -h_box:
+                            difx += l_box
+                        else:
+                            difx -= l_box
+                    
+                    #Enforce periodic boundary conditions
+                    dify_abs = np.abs(dify)
+                    if dify_abs>=h_box:
+                        if dify < -h_box:
+                            dify += l_box
+                        else:
+                            dify -= l_box
+                    
+                    #distance between points
+                    difr = (difx**2 + dify**2)**0.5
+                    
+                    if 0.1 < difr <= r_cut:
+                        
+                        # Compute the x and y components of force
+                        fx, fy = computeFLJ(difr, pos[bond[0],0], pos[bond[0],1], pos[bond[1],0], pos[bond[1],0], eps)
+                        # This will go into the bulk pressure
+                        bulkSigXX[m] += (fx * (difx))
+                        bulkSigYY[m] += (fy * (dify))
+                        bulkSigXY[m] += (fx * (dify))
+                        bulkSigYX[m] += (fy * (difx))
+        bulkTrace = ((bulkSigXX + bulkSigYY)/2)
+        bulkPress = np.zeros(5)
+        for k in range(0, len(bulkTrace)):
+            if bulk_area_arr[k]>0:
+                bulkPress[m] = (bulkTrace[m]/bulk_area_arr[m])/2
+        print(bulkPress)
+        stop
+        '''
         #Identify which of the largest bubbles is a possible gas-dense interface
         int_poss_ids = []
         for k in range(0, len(possible_interface_ids)):
@@ -3468,7 +3566,23 @@ with hoomd.open(name=inFile, mode='rb') as t:
         #Slow/fast composition of all interface
         slow_bub_num = len(np.where((partPhase==1) & (partTyp==0))[0]) - slow_int_num
         fast_bub_num = len(np.where((partPhase==1) & (partTyp==1))[0]) - fast_int_num
-        
+        bub1_parts = np.array([])
+        bub2_parts = np.array([])
+        bub3_parts = np.array([])
+        bub4_parts = np.array([])
+        bub5_parts = np.array([])
+        for m in range(0, len(bub_large_ids)):
+            if m==0:
+                bub1_parts = np.where(edgePhase==bub_large_ids[m])[0]
+            elif m==1:
+                bub2_parts = np.where(edgePhase==bub_large_ids[m])[0]
+            elif m==2:
+                bub3_parts = np.where(edgePhase==bub_large_ids[m])[0]
+            elif m==3:
+                bub4_parts = np.where(edgePhase==bub_large_ids[m])[0]
+            elif m==4:
+                bub5_parts = np.where(edgePhase==bub_large_ids[m])[0]
+                
         #Colors for plotting each phase
         yellow = ("#fdfd96")        #Largest gas-dense interface
         green = ("#77dd77")         #Bulk phase
@@ -3516,6 +3630,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
         lat_mean_indiv_arr_bulk = np.array([])
         lat_mean_indiv_arr_gas = np.array([])
         lat_mean_indiv_arr_int = np.array([])
+        lat_mean_indiv_arr_bub = np.array([])
         lat_mean_indiv_arr = np.array([])
         pos_x_bulk = np.array([])
         pos_y_bulk = np.array([])
@@ -3523,6 +3638,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
         pos_y_int = np.array([])
         pos_x_gas = np.array([])
         pos_y_gas = np.array([])
+        pos_x_bub = np.array([])
+        pos_y_bub = np.array([])
         lat_mean_arr = np.array([])
         lat_std_arr_bulk = np.array([])
         lat_std_arr_int = np.array([])
@@ -3549,9 +3666,14 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                 #If interface particle, save lattice spacing and positions to array
                 elif partPhase[bulk_int_id_plot[i]]==1:
-                    lat_mean_indiv_arr_int = np.append(lat_mean_indiv_arr_int, lat_mean_val)
-                    pos_x_int = np.append(pos_x_int, pos[bulk_int_id_plot[i],0])
-                    pos_y_int = np.append(pos_y_int, pos[bulk_int_id_plot[i],1])
+                    if edgePhase[bulk_int_id_plot[i]]==interface_id:
+                        lat_mean_indiv_arr_int = np.append(lat_mean_indiv_arr_int, lat_mean_val)
+                        pos_x_int = np.append(pos_x_int, pos[bulk_int_id_plot[i],0])
+                        pos_y_int = np.append(pos_y_int, pos[bulk_int_id_plot[i],1])
+                    else:
+                        lat_mean_indiv_arr_bub = np.append(lat_mean_indiv_arr_bub, lat_mean_val)
+                        pos_x_bub = np.append(pos_x_bub, pos[bulk_int_id_plot[i],0])
+                        pos_y_bub = np.append(pos_y_bub, pos[bulk_int_id_plot[i],1])
 
                 #If gas particle (should not be currently), save lattice spacing and positions to array
                 elif partPhase[bulk_int_id_plot[i]]==2:
@@ -3564,6 +3686,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 lat_mean_indiv_arr_bulk = np.append(lat_mean_indiv_arr_bulk, 0)
                 lat_mean_indiv_arr_int = np.append(lat_mean_indiv_arr_int, 0)
                 lat_mean_indiv_arr_gas = np.append(lat_mean_indiv_arr_gas, 0)
+                lat_mean_indiv_arr_bub = np.append(lat_mean_indiv_arr_bub, 0)
                 lat_mean_indiv_arr = np.append(lat_mean_indiv_arr, 0)
         
         #Calculate standard deviation of bulk lattice spacings
@@ -3591,6 +3714,19 @@ with hoomd.open(name=inFile, mode='rb') as t:
         else:
             lat_mean_int=0
             std_dev_int=0
+            
+        #Calculate standard deviation of bubble lattice spacings
+        if len(lat_mean_indiv_arr_bub) >0:
+            lat_std_num = 0
+            lat_std_val = 0
+            lat_mean_bub = np.mean(lat_mean_indiv_arr_bub)
+            for k in range(0, len(lat_mean_indiv_arr_bub)):
+                lat_std_val += (lat_mean_indiv_arr_bub[k]-lat_mean_bub)**2
+                lat_std_num += 1
+            std_dev_bub = (lat_std_val / lat_std_num)**0.5
+        else:
+            lat_mean_bub=0
+            std_dev_bub=0
         
         #Calculate standard deviation of all lattice spacings
         if len(lat_mean_indiv_arr) >0:
@@ -3612,9 +3748,11 @@ with hoomd.open(name=inFile, mode='rb') as t:
         g.write('{0:.0f}'.format(np.amax(clust_size)).center(20) + ' ')
         g.write('{0:.6f}'.format(lat_mean_bulk).center(20) + ' ')
         g.write('{0:.6f}'.format(lat_mean_int).center(20) + ' ')
+        g.write('{0:.6f}'.format(lat_mean_bub).center(20) + ' ')
         g.write('{0:.6f}'.format(lat_mean_all).center(20) + ' ')
         g.write('{0:.6f}'.format(std_dev_bulk).center(20) + ' ')
         g.write('{0:.6f}'.format(std_dev_int).center(20) + ' ')
+        g.write('{0:.6f}'.format(std_dev_bub).center(20) + ' ')
         g.write('{0:.6f}'.format(std_dev_all).center(20) + '\n')
         g.close()
         
@@ -3628,8 +3766,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
             y_pos_plot = np.append(pos_y_bulk+h_box, pos_y_int+h_box)
             lat_mean_plot = np.append(lat_mean_indiv_arr_bulk, lat_mean_indiv_arr_int)
             
-            vmin_num = np.min(lat_mean_plot)
-            vmax_num = np.max(lat_mean_plot)
+            vmin_num = np.min(lat_mean_indiv_arr_bulk)
+            vmax_num = np.max(lat_mean_indiv_arr_bulk)
 
             fig = plt.figure(figsize=(8,6))
             im = plt.scatter(x_pos_plot, y_pos_plot, s=0.7, c=lat_mean_plot, vmin=vmin_num, vmax=vmax_num, cmap='viridis')
@@ -3673,14 +3811,20 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     bulk_id = np.where((lat_mean_indiv_arr_bulk > xmax) | (lat_mean_indiv_arr_bulk < xmin))[0]
                     lat_mean_indiv_arr_bulk = np.delete(lat_mean_indiv_arr_bulk, bulk_id)
                 
-                    plt.hist(lat_mean_indiv_arr_bulk, alpha = 1.0, bins=200, color=green)
+                    plt.hist(lat_mean_indiv_arr_bulk, alpha = 1.0, bins=50, color=green)
                 
                 #If interface particle measured, continue
                 if (len(lat_mean_indiv_arr_int)>0):
                     int_id = np.where((lat_mean_indiv_arr_int > xmax) | (lat_mean_indiv_arr_int < xmin))[0]
                     lat_mean_indiv_arr_int = np.delete(lat_mean_indiv_arr_int, int_id)
     
-                    plt.hist(lat_mean_indiv_arr_int, alpha = 0.8, bins=200, color=yellow)
+                    plt.hist(lat_mean_indiv_arr_int, alpha = 0.8, bins=50, color=yellow)
+                
+                if (len(lat_mean_indiv_arr_bub)>0):
+                    bub_id = np.where((lat_mean_indiv_arr_bub > xmax) | (lat_mean_indiv_arr_bub < xmin))[0]
+                    lat_mean_indiv_arr_int = np.delete(lat_mean_indiv_arr_bub, bub_id)
+    
+                    plt.hist(lat_mean_indiv_arr_bub, alpha = 0.4, bins=50, color=purple)
                 
                 green_patch = mpatches.Patch(color=green, label='Bulk')
                 yellow_patch = mpatches.Patch(color=yellow, label='Interface')
@@ -3693,3 +3837,66 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 plt.tight_layout()
                 plt.savefig(outPath + 'lat_histo_' + out + pad + ".png", dpi=200)
                 plt.close()
+            
+            fig = plt.figure(figsize=(8.5,8))
+            ax = fig.add_subplot(111)
+        
+            myEps = [1., 0.1, 0.01, 0.001, 0.0001]
+            plt.scatter(pos[bulk_id_plot,0]+h_box, pos[bulk_id_plot,1]+h_box, s=0.75, marker='.', c=green)
+            plt.scatter(pos[gas_id,0]+h_box, pos[gas_id,1]+h_box, s=0.75, marker='.', c=red)
+            plt.scatter(pos[edge_id_plot,0]+h_box, pos[edge_id_plot,1]+h_box, s=0.75, marker='.', c=yellow)
+            
+            if len(bub_id_plot)>0:
+                plt.scatter(pos[bub_id_plot,0]+h_box, pos[bub_id_plot,1]+h_box, s=0.75, marker='.', c=purple)         
+            '''
+            if len(bub1_parts)>0:
+                plt.scatter(pos[bub1_parts,0]+h_box, pos[bub1_parts,1]+h_box, s=0.75, marker='.', c=purple)     
+            if len(bub2_parts)>0:
+                plt.scatter(pos[bub2_parts,0]+h_box, pos[bub2_parts,1]+h_box, s=0.75, marker='.', c=purple) 
+            if len(bub3_parts)>0:
+                plt.scatter(pos[bub3_parts,0]+h_box, pos[bub3_parts,1]+h_box, s=0.75, marker='.', c=purple) 
+            if len(bub4_parts)>0:
+                plt.scatter(pos[bub4_parts,0]+h_box, pos[bub4_parts,1]+h_box, s=0.75, marker='.', c=purple) 
+            if len(bub5_parts)>0:
+                plt.scatter(pos[bub5_parts,0]+h_box, pos[bub5_parts,1]+h_box, s=0.75, marker='.', c=purple) 
+            '''
+
+            plt.quiver(pos_box_x_plot, pos_box_y_plot, p_plot_x, p_plot_y)
+            plt.xticks(pos_box_start)
+            plt.yticks(pos_box_start)
+            plt.tick_params(
+                                    axis='x',          # changes apply to the x-axis
+                                    which='both',      # both major and minor ticks are affected
+                                    bottom=False,      # ticks along the bottom edge are off
+                                    top=False,         # ticks along the top edge are off
+                                    labelbottom=False,
+                                    labelleft=False)
+            plt.tick_params(
+                                    axis='y',          # changes apply to the x-axis
+                                    which='both',      # both major and minor ticks are affected
+                                    right=False,      # ticks along the bottom edge are off
+                                    left=False,         # ticks along the top edge are off
+                                    labelbottom=False,
+                                    labelleft=False)
+        
+            plt.ylim((0, l_box))
+            plt.xlim((0, l_box))
+            plt.tick_params(axis='both', which='both',
+                            bottom=False, top=False, left=False, right=False,
+                            labelbottom=False, labeltop=False, labelleft=False, labelright=False)
+                   
+            plt.text(0.77, 0.04, s=r'$\tau$' + ' = ' + '{:.1f}'.format(3*tst) + ' ' + r'$\tau_\mathrm{r}$',
+                    fontsize=18,transform = ax.transAxes,
+                    bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+        
+            eps_leg=[]
+            mkSz = [0.1, 0.1, 0.15, 0.1, 0.1]
+            msz=40
+            red_patch = mpatches.Patch(color=red, label='Dilute')
+            green_patch = mpatches.Patch(color=green, label='Bulk')
+            yellow_patch = mpatches.Patch(color=yellow, label='Interface')
+            purple_patch = mpatches.Patch(color=purple, label='Bubble')
+            plt.legend(handles=[green_patch, yellow_patch, red_patch, purple_patch], fancybox=True, framealpha=0.75, ncol=1, fontsize=16, loc='upper left',labelspacing=0.1, handletextpad=0.1)
+            plt.tight_layout()
+            plt.savefig(outPath + 'interface_acc_' + out + pad + ".png", dpi=100)
+            plt.close()

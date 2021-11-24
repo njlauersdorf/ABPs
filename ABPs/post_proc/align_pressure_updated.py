@@ -473,6 +473,22 @@ g.write('tauB'.center(20) + ' ' +\
                         'press_align_bub5'.center(20) + '\n')
 g.close()
 
+outTxt_radial = 'Radial_int_' + outfile + '.txt'
+
+g = open(outPath2+outTxt_radial, 'w+') # write file headings
+g.write('tauB'.center(20) + ' ' +\
+                        'sizeBin'.center(20) + ' ' +\
+                        'clust_size'.center(20) + ' ' +\
+                        'interface_id'.center(20) + ' ' +\
+                        'bub_id'.center(20) + ' ' +\
+                        'r_min'.center(20) + ' ' +\
+                        'r_max'.center(20) + ' ' +\
+                        'align'.center(20) + ' ' +\
+                        'num_dens'.center(20) + ' ' +\
+                        'press'.center(20) + '\n')
+g.close()
+
+                                
 with hoomd.open(name=inFile, mode='rb') as t:
     
     start = int(0/time_step)#205                                             # first frame to process
@@ -788,29 +804,46 @@ with hoomd.open(name=inFile, mode='rb') as t:
                         
         fa_all_tot_bub1 = np.array([])#[[0 for b in range(NBins)] for a in range(NBins)]
         r_dist_tot_bub1 = np.array([])#[[0 for b in range(NBins)] for a in range(NBins)]
+        fa_all_tot_bub1_trad = np.array([])#[[0 for b in range(NBins)] for a in range(NBins)]
+        r_dist_tot_bub1_trad = np.array([])#[[0 for b in range(NBins)] for a in range(NBins)]
         activity_all_bub1=np.array([])
         partid_all_bub1=np.array([])
+        align_all_tot_bub1=np.array([])
         
         fa_all_tot_bub2 = np.array([])#[[0 for b in range(NBins)] for a in range(NBins)]
         r_dist_tot_bub2 = np.array([])#[[0 for b in range(NBins)] for a in range(NBins)]
+        fa_all_tot_bub2_trad = np.array([])#[[0 for b in range(NBins)] for a in range(NBins)]
+        r_dist_tot_bub2_trad = np.array([])#[[0 for b in range(NBins)] for a in range(NBins)]
         activity_all_bub2=np.array([])
         partid_all_bub2=np.array([])
+        align_all_tot_bub2=np.array([])
         
         fa_all_tot_bub3 = np.array([])#[[0 for b in range(NBins)] for a in range(NBins)]
         r_dist_tot_bub3 = np.array([])#[[0 for b in range(NBins)] for a in range(NBins)]
+        fa_all_tot_bub3_trad = np.array([])#[[0 for b in range(NBins)] for a in range(NBins)]
+        r_dist_tot_bub3_trad = np.array([])#[[0 for b in range(NBins)] for a in range(NBins)]
         activity_all_bub3=np.array([])
         partid_all_bub3=np.array([])
+        align_all_tot_bub3=np.array([])
         
         fa_all_tot_bub4 = np.array([])#[[0 for b in range(NBins)] for a in range(NBins)]
         r_dist_tot_bub4 = np.array([])#[[0 for b in range(NBins)] for a in range(NBins)]
+        fa_all_tot_bub4_trad = np.array([])#[[0 for b in range(NBins)] for a in range(NBins)]
+        r_dist_tot_bub4_trad = np.array([])#[[0 for b in range(NBins)] for a in range(NBins)]
         activity_all_bub4=np.array([])
         partid_all_bub4=np.array([])
+        align_all_tot_bub4=np.array([])
         
         fa_all_tot_bub5 = np.array([])#[[0 for b in range(NBins)] for a in range(NBins)]
         r_dist_tot_bub5 = np.array([])#[[0 for b in range(NBins)] for a in range(NBins)]
+        fa_all_tot_bub5_trad = np.array([])#[[0 for b in range(NBins)] for a in range(NBins)]
+        r_dist_tot_bub5_trad = np.array([])#[[0 for b in range(NBins)] for a in range(NBins)]
         activity_all_bub5=np.array([])
         partid_all_bub5=np.array([])
+        align_all_tot_bub5=np.array([])
         
+        fa_all_tot_trad = np.array([])#[[0 for b in range(NBins)] for a in range(NBins)]
+        r_dist_tot_trad = np.array([])
         fa_all_tot_test = np.array([])
         r_dist_tot_test = np.array([])
         
@@ -11510,66 +11543,100 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                 if typ[binParts[ix][iy][h]]==0:
                                                     fa_all_tot_test=np.append(fa_all_tot_test, r_dot_p*peA)
                                                     r_dist_tot_test = np.append(r_dist_tot_test, difr_short)
+                                                    fa_all_tot_trad=np.append(fa_all_tot_trad, r_dot_p_trad*peA)
+                                                    r_dist_tot_trad = np.append(r_dist_tot_trad, difr_trad)
                                                     if bub_size_id_arr[m] == bub_size_id_arr[0]:  
                                                         if bub_large >=1: 
                                                             fa_all_tot_bub1=np.append(fa_all_tot_bub1, r_dot_p*peA)
+                                                            align_all_tot_bub1=np.append(align_all_tot_bub1, r_dot_p)
+                                                            fa_all_tot_bub1_trad=np.append(fa_all_tot_bub1_trad, r_dot_p_trad*peA)
+                                                            r_dist_tot_bub1_trad = np.append(r_dist_tot_bub1_trad, difr_trad)
                                                             r_dist_tot_bub1 = np.append(r_dist_tot_bub1, difr_short)
                                                             activity_all_bub1=np.append(activity_all_bub1, peA)
                                                             partid_all_bub1=np.append(partid_all_bub1, binParts[ix][iy][h])
                                                     elif bub_size_id_arr[m] == bub_size_id_arr[1]:  
                                                         if bub_large >=2: 
                                                             fa_all_tot_bub2=np.append(fa_all_tot_bub2, r_dot_p*peA)
+                                                            align_all_tot_bub2=np.append(align_all_tot_bub2, r_dot_p)
+                                                            fa_all_tot_bub2_trad=np.append(fa_all_tot_bub2_trad, r_dot_p_trad*peA)
+                                                            r_dist_tot_bub2_trad = np.append(r_dist_tot_bub2_trad, difr_trad)
                                                             r_dist_tot_bub2 = np.append(r_dist_tot_bub2, difr_short)
                                                             activity_all_bub2=np.append(activity_all_bub2, peA)
                                                             partid_all_bub2=np.append(partid_all_bub2, binParts[ix][iy][h])
                                                     elif bub_size_id_arr[m] == bub_size_id_arr[2]:  
                                                         if bub_large >=3: 
                                                             fa_all_tot_bub3=np.append(fa_all_tot_bub3, r_dot_p*peA)
+                                                            align_all_tot_bub3=np.append(align_all_tot_bub3, r_dot_p)
+                                                            fa_all_tot_bub3_trad=np.append(fa_all_tot_bub3_trad, r_dot_p_trad*peA)
+                                                            r_dist_tot_bub3_trad = np.append(r_dist_tot_bub3_trad, difr_trad)
                                                             r_dist_tot_bub3 = np.append(r_dist_tot_bub3, difr_short)
                                                             activity_all_bub3=np.append(activity_all_bub3, peA)
                                                             partid_all_bub3=np.append(partid_all_bub3, binParts[ix][iy][h])
                                                     elif bub_size_id_arr[m] == bub_size_id_arr[3]:  
                                                         if bub_large >=4: 
                                                             fa_all_tot_bub4=np.append(fa_all_tot_bub4, r_dot_p*peA)
+                                                            align_all_tot_bub4=np.append(align_all_tot_bub4, r_dot_p)
+                                                            fa_all_tot_bub4_trad=np.append(fa_all_tot_bub4_trad, r_dot_p_trad*peA)
+                                                            r_dist_tot_bub4_trad = np.append(r_dist_tot_bub4_trad, difr_trad)
                                                             r_dist_tot_bub4 = np.append(r_dist_tot_bub4, difr_short)
                                                             activity_all_bub4=np.append(activity_all_bub4, peA)
                                                             partid_all_bub4=np.append(partid_all_bub4, binParts[ix][iy][h])
                                                     elif bub_size_id_arr[m] == bub_size_id_arr[4]:  
                                                         if bub_large >=5: 
                                                             fa_all_tot_bub5=np.append(fa_all_tot_bub5, r_dot_p*peA)
+                                                            align_all_tot_bub5=np.append(align_all_tot_bub5, r_dot_p)
+                                                            fa_all_tot_bub5_trad=np.append(fa_all_tot_bub5_trad, r_dot_p_trad*peA)
+                                                            r_dist_tot_bub5_trad = np.append(r_dist_tot_bub5_trad, difr_trad)
                                                             r_dist_tot_bub5 = np.append(r_dist_tot_bub5, difr_short)
                                                             activity_all_bub5=np.append(activity_all_bub5, peA)
                                                             partid_all_bub5=np.append(partid_all_bub5, binParts[ix][iy][h])
                                                 else:
                                                     fa_all_tot_test=np.append(fa_all_tot_test, r_dot_p*peB)
+                                                    fa_all_tot_trad=np.append(fa_all_tot_trad, r_dot_p_trad*peB)
+                                                    r_dist_tot_trad = np.append(r_dist_tot_trad, difr_trad)
                                                     r_dist_tot_test = np.append(r_dist_tot_test, difr_short)
                                                     if bub_size_id_arr[m] == bub_size_id_arr[0]:  
                                                         if bub_large >=1: 
                                                             fa_all_tot_bub1=np.append(fa_all_tot_bub1, r_dot_p*peB)
+                                                            align_all_tot_bub1=np.append(align_all_tot_bub1, r_dot_p)
+                                                            fa_all_tot_bub1_trad=np.append(fa_all_tot_bub1_trad, r_dot_p_trad*peB)
+                                                            r_dist_tot_bub1_trad = np.append(r_dist_tot_bub1_trad, difr_trad)
                                                             r_dist_tot_bub1 = np.append(r_dist_tot_bub1, difr_short)
                                                             activity_all_bub1=np.append(activity_all_bub1, peB)
                                                             partid_all_bub1=np.append(partid_all_bub1, binParts[ix][iy][h])
                                                     elif bub_size_id_arr[m] == bub_size_id_arr[1]:  
                                                         if bub_large >=2: 
                                                             fa_all_tot_bub2=np.append(fa_all_tot_bub2, r_dot_p*peB)
+                                                            align_all_tot_bub2=np.append(align_all_tot_bub2, r_dot_p)
+                                                            fa_all_tot_bub2_trad=np.append(fa_all_tot_bub2_trad, r_dot_p_trad*peB)
+                                                            r_dist_tot_bub2_trad = np.append(r_dist_tot_bub2_trad, difr_trad)
                                                             r_dist_tot_bub2 = np.append(r_dist_tot_bub2, difr_short)
                                                             activity_all_bub2=np.append(activity_all_bub2, peB)
                                                             partid_all_bub2=np.append(partid_all_bub2, binParts[ix][iy][h])
                                                     elif bub_size_id_arr[m] == bub_size_id_arr[2]:  
                                                         if bub_large >=3: 
                                                             fa_all_tot_bub3=np.append(fa_all_tot_bub3, r_dot_p*peB)
+                                                            align_all_tot_bub3=np.append(align_all_tot_bub3, r_dot_p)
+                                                            fa_all_tot_bub3_trad=np.append(fa_all_tot_bub3_trad, r_dot_p_trad*peB)
+                                                            r_dist_tot_bub3_trad = np.append(r_dist_tot_bub3_trad, difr_trad)
                                                             r_dist_tot_bub3 = np.append(r_dist_tot_bub3, difr_short)
                                                             activity_all_bub3=np.append(activity_all_bub3, peB)
                                                             partid_all_bub3=np.append(partid_all_bub3, binParts[ix][iy][h])
                                                     elif bub_size_id_arr[m] == bub_size_id_arr[3]:  
                                                         if bub_large >=4: 
                                                             fa_all_tot_bub4=np.append(fa_all_tot_bub4, r_dot_p*peB)
+                                                            align_all_tot_bub4=np.append(align_all_tot_bub4, r_dot_p)
+                                                            fa_all_tot_bub4_trad=np.append(fa_all_tot_bub4_trad, r_dot_p_trad*peB)
+                                                            r_dist_tot_bub4_trad = np.append(r_dist_tot_bub4_trad, difr_trad)
                                                             r_dist_tot_bub4 = np.append(r_dist_tot_bub4, difr_short)
                                                             activity_all_bub4=np.append(activity_all_bub4, peB)
                                                             partid_all_bub4=np.append(partid_all_bub4, binParts[ix][iy][h])
                                                     elif bub_size_id_arr[m] == bub_size_id_arr[4]:  
                                                         if bub_large >=5: 
                                                             fa_all_tot_bub5=np.append(fa_all_tot_bub5, r_dot_p*peB)
+                                                            align_all_tot_bub5=np.append(align_all_tot_bub5, r_dot_p)
+                                                            fa_all_tot_bub5_trad=np.append(fa_all_tot_bub5_trad, r_dot_p_trad*peB)
+                                                            r_dist_tot_bub5_trad = np.append(r_dist_tot_bub5_trad, difr_trad)
                                                             r_dist_tot_bub5 = np.append(r_dist_tot_bub5, difr_short)
                                                             activity_all_bub5=np.append(activity_all_bub5, peB)
                                                             partid_all_bub5=np.append(partid_all_bub5, binParts[ix][iy][h])
@@ -12099,7 +12166,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                     
                                                     #Save active force component in direction normal to surface
                                                     fa_all_tot_test=np.append(fa_all_tot_test, r_dot_p*peA)
-                                                    
+                                                    fa_all_tot_trad=np.append(fa_all_tot_trad, r_dot_p_trad*peA)
+                                                    r_dist_tot_trad = np.append(r_dist_tot_trad, difr_trad)
                                                     #Save distance from particle to nearest surface
                                                     r_dist_tot_test = np.append(r_dist_tot_test, difr_short)
                                                     
@@ -12107,6 +12175,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                     if bub_size_id_arr[m] == bub_size_id_arr[0]:  
                                                         if bub_large >=1: 
                                                             fa_all_tot_bub1=np.append(fa_all_tot_bub1, r_dot_p*peA)
+                                                            align_all_tot_bub1=np.append(align_all_tot_bub1, r_dot_p)
+                                                            fa_all_tot_bub1_trad=np.append(fa_all_tot_bub1_trad, r_dot_p_trad*peA)
+                                                            r_dist_tot_bub1_trad = np.append(r_dist_tot_bub1_trad, difr_trad)
                                                             r_dist_tot_bub1 = np.append(r_dist_tot_bub1, difr_short)
                                                             activity_all_bub1=np.append(activity_all_bub1, peA)
                                                             partid_all_bub1=np.append(partid_all_bub1, binParts[ix][iy][h])
@@ -12115,6 +12186,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                     elif bub_size_id_arr[m] == bub_size_id_arr[1]:  
                                                         if bub_large >=2: 
                                                             fa_all_tot_bub2=np.append(fa_all_tot_bub2, r_dot_p*peA)
+                                                            align_all_tot_bub2=np.append(align_all_tot_bub2, r_dot_p)
+                                                            fa_all_tot_bub2_trad=np.append(fa_all_tot_bub2_trad, r_dot_p_trad*peA)
+                                                            r_dist_tot_bub2_trad = np.append(r_dist_tot_bub2_trad, difr_trad)
                                                             r_dist_tot_bub2 = np.append(r_dist_tot_bub2, difr_short)
                                                             activity_all_bub2=np.append(activity_all_bub2, peA)
                                                             partid_all_bub2=np.append(partid_all_bub2, binParts[ix][iy][h])
@@ -12123,6 +12197,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                     elif bub_size_id_arr[m] == bub_size_id_arr[2]:  
                                                         if bub_large >=3: 
                                                             fa_all_tot_bub3=np.append(fa_all_tot_bub3, r_dot_p*peA)
+                                                            align_all_tot_bub3=np.append(align_all_tot_bub3, r_dot_p)
+                                                            fa_all_tot_bub3_trad=np.append(fa_all_tot_bub3_trad, r_dot_p_trad*peA)
+                                                            r_dist_tot_bub3_trad = np.append(r_dist_tot_bub3_trad, difr_trad)
                                                             r_dist_tot_bub3 = np.append(r_dist_tot_bub3, difr_short)
                                                             activity_all_bub3=np.append(activity_all_bub3, peA)
                                                             partid_all_bub3=np.append(partid_all_bub3, binParts[ix][iy][h])
@@ -12131,6 +12208,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                     elif bub_size_id_arr[m] == bub_size_id_arr[3]:  
                                                         if bub_large >=4: 
                                                             fa_all_tot_bub4=np.append(fa_all_tot_bub4, r_dot_p*peA)
+                                                            align_all_tot_bub4=np.append(align_all_tot_bub4, r_dot_p)
+                                                            fa_all_tot_bub4_trad=np.append(fa_all_tot_bub4_trad, r_dot_p_trad*peA)
+                                                            r_dist_tot_bub4_trad = np.append(r_dist_tot_bub4_trad, difr_trad)
                                                             r_dist_tot_bub4 = np.append(r_dist_tot_bub4, difr_short)
                                                             activity_all_bub4=np.append(activity_all_bub4, peA)
                                                             partid_all_bub4=np.append(partid_all_bub4, binParts[ix][iy][h])
@@ -12139,6 +12219,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                     elif bub_size_id_arr[m] == bub_size_id_arr[4]:  
                                                         if bub_large >=5: 
                                                             fa_all_tot_bub5=np.append(fa_all_tot_bub5, r_dot_p*peA)
+                                                            align_all_tot_bub5=np.append(align_all_tot_bub5, r_dot_p)
+                                                            fa_all_tot_bub5_trad=np.append(fa_all_tot_bub5_trad, r_dot_p_trad*peA)
+                                                            r_dist_tot_bub5_trad = np.append(r_dist_tot_bub5_trad, difr_trad)
                                                             r_dist_tot_bub5 = np.append(r_dist_tot_bub5, difr_short)
                                                             activity_all_bub5=np.append(activity_all_bub5, peA)
                                                             partid_all_bub5=np.append(partid_all_bub5, binParts[ix][iy][h])
@@ -12148,7 +12231,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                     
                                                     #Save active force component in direction normal to surface
                                                     fa_all_tot_test=np.append(fa_all_tot_test, r_dot_p*peB)
-                                                    
+                                                    fa_all_tot_trad=np.append(fa_all_tot_trad, r_dot_p_trad*peB)
+                                                    r_dist_tot_trad = np.append(r_dist_tot_trad, difr_trad)
                                                     #Save distance from particle to nearest surface
                                                     r_dist_tot_test = np.append(r_dist_tot_test, difr_short)
                                                     
@@ -12156,6 +12240,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                     if bub_size_id_arr[m] == bub_size_id_arr[0]:  
                                                         if bub_large >=1: 
                                                             fa_all_tot_bub1=np.append(fa_all_tot_bub1, r_dot_p*peB)
+                                                            align_all_tot_bub1=np.append(align_all_tot_bub1, r_dot_p)
+                                                            fa_all_tot_bub1_trad=np.append(fa_all_tot_bub1_trad, r_dot_p_trad*peB)
+                                                            r_dist_tot_bub1_trad = np.append(r_dist_tot_bub1_trad, difr_trad)
                                                             r_dist_tot_bub1 = np.append(r_dist_tot_bub1, difr_short)
                                                             activity_all_bub1=np.append(activity_all_bub1, peB)
                                                             partid_all_bub1=np.append(partid_all_bub1, binParts[ix][iy][h])
@@ -12164,6 +12251,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                     elif bub_size_id_arr[m] == bub_size_id_arr[1]:  
                                                         if bub_large >=2: 
                                                             fa_all_tot_bub2=np.append(fa_all_tot_bub2, r_dot_p*peB)
+                                                            align_all_tot_bub2=np.append(align_all_tot_bub2, r_dot_p)
+                                                            fa_all_tot_bub2_trad=np.append(fa_all_tot_bub2_trad, r_dot_p_trad*peB)
+                                                            r_dist_tot_bub2_trad = np.append(r_dist_tot_bub2_trad, difr_trad)
                                                             r_dist_tot_bub2 = np.append(r_dist_tot_bub2, difr_short)
                                                             activity_all_bub2=np.append(activity_all_bub2, peB)
                                                             partid_all_bub2=np.append(partid_all_bub2, binParts[ix][iy][h])
@@ -12172,6 +12262,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                     elif bub_size_id_arr[m] == bub_size_id_arr[2]:  
                                                         if bub_large >=3: 
                                                             fa_all_tot_bub3=np.append(fa_all_tot_bub3, r_dot_p*peB)
+                                                            align_all_tot_bub3=np.append(align_all_tot_bub3, r_dot_p)
+                                                            fa_all_tot_bub3_trad=np.append(fa_all_tot_bub3_trad, r_dot_p_trad*peB)
+                                                            r_dist_tot_bub3_trad = np.append(r_dist_tot_bub3_trad, difr_trad)
                                                             r_dist_tot_bub3 = np.append(r_dist_tot_bub3, difr_short)
                                                             activity_all_bub3=np.append(activity_all_bub3, peB)
                                                             partid_all_bub3=np.append(partid_all_bub3, binParts[ix][iy][h])
@@ -12180,6 +12273,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                     elif bub_size_id_arr[m] == bub_size_id_arr[3]:  
                                                         if bub_large >=4: 
                                                             fa_all_tot_bub4=np.append(fa_all_tot_bub4, r_dot_p*peB)
+                                                            align_all_tot_bub4=np.append(align_all_tot_bub4, r_dot_p)
+                                                            fa_all_tot_bub4_trad=np.append(fa_all_tot_bub4_trad, r_dot_p_trad*peB)
+                                                            r_dist_tot_bub4_trad = np.append(r_dist_tot_bub4_trad, difr_trad)
                                                             r_dist_tot_bub4 = np.append(r_dist_tot_bub4, difr_short)
                                                             activity_all_bub4=np.append(activity_all_bub4, peB)
                                                             partid_all_bub4=np.append(partid_all_bub4, binParts[ix][iy][h])
@@ -12188,6 +12284,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                     elif bub_size_id_arr[m] == bub_size_id_arr[4]:  
                                                         if bub_large >=5: 
                                                             fa_all_tot_bub5=np.append(fa_all_tot_bub5, r_dot_p*peB)
+                                                            align_all_tot_bub5=np.append(align_all_tot_bub5, r_dot_p)
+                                                            fa_all_tot_bub5_trad=np.append(fa_all_tot_bub5_trad, r_dot_p_trad*peB)
+                                                            r_dist_tot_bub5_trad = np.append(r_dist_tot_bub5_trad, difr_trad)
                                                             r_dist_tot_bub5 = np.append(r_dist_tot_bub5, difr_short)
                                                             activity_all_bub5=np.append(activity_all_bub5, peB)
                                                             partid_all_bub5=np.append(partid_all_bub5, binParts[ix][iy][h])
@@ -13006,7 +13105,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                     
                                                     #Save active force component in direction normal to surface
                                                     fa_all_tot_test=np.append(fa_all_tot_test, r_dot_p*peA)
-                                                    
+                                                    fa_all_tot_trad=np.append(fa_all_tot_trad, r_dot_p_trad*peA)
+                                                    r_dist_tot_trad = np.append(r_dist_tot_trad, difr_trad)
                                                     #Save distance from nearest surface
                                                     r_dist_tot_test = np.append(r_dist_tot_test, difr_short)
                                                     
@@ -13014,6 +13114,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                     if bub_size_id_arr[m] == bub_size_id_arr[0]:  
                                                         if bub_large >=1: 
                                                             fa_all_tot_bub1=np.append(fa_all_tot_bub1, r_dot_p*peA)
+                                                            align_all_tot_bub1=np.append(align_all_tot_bub1, r_dot_p)
+                                                            fa_all_tot_bub1_trad=np.append(fa_all_tot_bub1_trad, r_dot_p_trad*peA)
+                                                            r_dist_tot_bub1_trad = np.append(r_dist_tot_bub1_trad, difr_trad)
                                                             r_dist_tot_bub1 = np.append(r_dist_tot_bub1, difr_short)
                                                             activity_all_bub1=np.append(activity_all_bub1, peA)
                                                             partid_all_bub1=np.append(partid_all_bub1, binParts[ix][iy][h])
@@ -13022,6 +13125,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                     elif bub_size_id_arr[m] == bub_size_id_arr[1]:  
                                                         if bub_large >=2: 
                                                             fa_all_tot_bub2=np.append(fa_all_tot_bub2, r_dot_p*peA)
+                                                            align_all_tot_bub2=np.append(align_all_tot_bub2, r_dot_p)
+                                                            fa_all_tot_bub2_trad=np.append(fa_all_tot_bub2_trad, r_dot_p_trad*peA)
+                                                            r_dist_tot_bub2_trad = np.append(r_dist_tot_bub2_trad, difr_trad)
                                                             r_dist_tot_bub2 = np.append(r_dist_tot_bub2, difr_short)
                                                             activity_all_bub2=np.append(activity_all_bub2, peA)
                                                             partid_all_bub2=np.append(partid_all_bub2, binParts[ix][iy][h])
@@ -13030,6 +13136,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                     elif bub_size_id_arr[m] == bub_size_id_arr[2]:  
                                                         if bub_large >=3: 
                                                             fa_all_tot_bub3=np.append(fa_all_tot_bub3, r_dot_p*peA)
+                                                            align_all_tot_bub3=np.append(align_all_tot_bub3, r_dot_p)
+                                                            fa_all_tot_bub3_trad=np.append(fa_all_tot_bub3_trad, r_dot_p_trad*peA)
+                                                            r_dist_tot_bub3_trad = np.append(r_dist_tot_bub3_trad, difr_trad)
                                                             r_dist_tot_bub3 = np.append(r_dist_tot_bub3, difr_short)
                                                             activity_all_bub3=np.append(activity_all_bub3, peA)
                                                             partid_all_bub3=np.append(partid_all_bub3, binParts[ix][iy][h])
@@ -13038,6 +13147,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                     elif bub_size_id_arr[m] == bub_size_id_arr[3]:  
                                                         if bub_large >=4: 
                                                             fa_all_tot_bub4=np.append(fa_all_tot_bub4, r_dot_p*peA)
+                                                            align_all_tot_bub4=np.append(align_all_tot_bub4, r_dot_p)
+                                                            fa_all_tot_bub4_trad=np.append(fa_all_tot_bub4_trad, r_dot_p_trad*peA)
+                                                            r_dist_tot_bub4_trad = np.append(r_dist_tot_bub4_trad, difr_trad)
                                                             r_dist_tot_bub4 = np.append(r_dist_tot_bub4, difr_short)
                                                             activity_all_bub4=np.append(activity_all_bub4, peA)
                                                             partid_all_bub4=np.append(partid_all_bub4, binParts[ix][iy][h])
@@ -13046,6 +13158,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                     elif bub_size_id_arr[m] == bub_size_id_arr[4]:  
                                                         if bub_large >=5: 
                                                             fa_all_tot_bub5=np.append(fa_all_tot_bub5, r_dot_p*peA)
+                                                            align_all_tot_bub5=np.append(align_all_tot_bub5, r_dot_p)
+                                                            fa_all_tot_bub5_trad=np.append(fa_all_tot_bub5_trad, r_dot_p_trad*peA)
+                                                            r_dist_tot_bub5_trad = np.append(r_dist_tot_bub5_trad, difr_trad)
                                                             r_dist_tot_bub5 = np.append(r_dist_tot_bub5, difr_short)
                                                             activity_all_bub5=np.append(activity_all_bub5, peA)
                                                             partid_all_bub5=np.append(partid_all_bub5, binParts[ix][iy][h])
@@ -13055,7 +13170,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                     
                                                     #Save active force component in direction normal to surface
                                                     fa_all_tot_test=np.append(fa_all_tot_test, r_dot_p*peB)
-                                                    
+                                                    fa_all_tot_trad=np.append(fa_all_tot_trad, r_dot_p_trad*peB)
+                                                    r_dist_tot_trad = np.append(r_dist_tot_trad, difr_trad)
                                                     #Save distance from nearest surface
                                                     r_dist_tot_test = np.append(r_dist_tot_test, difr_short)
                                                     
@@ -13063,6 +13179,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                     if bub_size_id_arr[m] == bub_size_id_arr[0]:  
                                                         if bub_large >=1: 
                                                             fa_all_tot_bub1=np.append(fa_all_tot_bub1, r_dot_p*peB)
+                                                            align_all_tot_bub1=np.append(align_all_tot_bub1, r_dot_p)
+                                                            fa_all_tot_bub1_trad=np.append(fa_all_tot_bub1_trad, r_dot_p_trad*peB)
+                                                            r_dist_tot_bub1_trad = np.append(r_dist_tot_bub1_trad, difr_trad)
                                                             r_dist_tot_bub1 = np.append(r_dist_tot_bub1, difr_short)
                                                             activity_all_bub1=np.append(activity_all_bub1, peB)
                                                             partid_all_bub1=np.append(partid_all_bub1, binParts[ix][iy][h])
@@ -13071,6 +13190,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                     elif bub_size_id_arr[m] == bub_size_id_arr[1]:  
                                                         if bub_large >=2: 
                                                             fa_all_tot_bub2=np.append(fa_all_tot_bub2, r_dot_p*peB)
+                                                            align_all_tot_bub2=np.append(align_all_tot_bub2, r_dot_p)
+                                                            fa_all_tot_bub2_trad=np.append(fa_all_tot_bub2_trad, r_dot_p_trad*peB)
+                                                            r_dist_tot_bub2_trad = np.append(r_dist_tot_bub2_trad, difr_trad)
                                                             r_dist_tot_bub2 = np.append(r_dist_tot_bub2, difr_short)
                                                             activity_all_bub2=np.append(activity_all_bub2, peB)
                                                             partid_all_bub2=np.append(partid_all_bub2, binParts[ix][iy][h])
@@ -13079,6 +13201,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                     elif bub_size_id_arr[m] == bub_size_id_arr[2]:  
                                                         if bub_large >=3: 
                                                             fa_all_tot_bub3=np.append(fa_all_tot_bub3, r_dot_p*peB)
+                                                            align_all_tot_bub3=np.append(align_all_tot_bub3, r_dot_p)
+                                                            fa_all_tot_bub3_trad=np.append(fa_all_tot_bub3_trad, r_dot_p_trad*peB)
+                                                            r_dist_tot_bub3_trad = np.append(r_dist_tot_bub3_trad, difr_trad)
                                                             r_dist_tot_bub3 = np.append(r_dist_tot_bub3, difr_short)
                                                             activity_all_bub3=np.append(activity_all_bub3, peB)
                                                             partid_all_bub3=np.append(partid_all_bub3, binParts[ix][iy][h])
@@ -13087,6 +13212,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                     elif bub_size_id_arr[m] == bub_size_id_arr[3]:  
                                                         if bub_large >=4: 
                                                             fa_all_tot_bub4=np.append(fa_all_tot_bub4, r_dot_p*peB)
+                                                            align_all_tot_bub4=np.append(align_all_tot_bub4, r_dot_p)
+                                                            fa_all_tot_bub4_trad=np.append(fa_all_tot_bub4_trad, r_dot_p_trad*peB)
+                                                            r_dist_tot_bub4_trad = np.append(r_dist_tot_bub4_trad, difr_trad)
                                                             r_dist_tot_bub4 = np.append(r_dist_tot_bub4, difr_short)
                                                             activity_all_bub4=np.append(activity_all_bub4, peB)
                                                             partid_all_bub4=np.append(partid_all_bub4, binParts[ix][iy][h])
@@ -13095,6 +13223,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                     elif bub_size_id_arr[m] == bub_size_id_arr[4]:  
                                                         if bub_large >=5: 
                                                             fa_all_tot_bub5=np.append(fa_all_tot_bub5, r_dot_p*peB)
+                                                            align_all_tot_bub5=np.append(align_all_tot_bub5, r_dot_p)
+                                                            fa_all_tot_bub5_trad=np.append(fa_all_tot_bub5_trad, r_dot_p_trad*peB)
+                                                            r_dist_tot_bub5_trad = np.append(r_dist_tot_bub5_trad, difr_trad)
                                                             r_dist_tot_bub5 = np.append(r_dist_tot_bub5, difr_short)
                                                             activity_all_bub5=np.append(activity_all_bub5, peB)
                                                             partid_all_bub5=np.append(partid_all_bub5, binParts[ix][iy][h])
@@ -13586,7 +13717,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                 
                                                 #If particle is of type A, continue...
                                                 if typ[binParts[ix][iy][h]]==0:
-                                                    
+                                                    fa_all_tot_trad=np.append(fa_all_tot_trad, r_dot_p_trad*peA)
+                                                    r_dist_tot_trad = np.append(r_dist_tot_trad, difr_trad)
                                                     #Save active force component in direction normal to surface
                                                     fa_all_tot_test=np.append(fa_all_tot_test, r_dot_p*peA)
                                                     
@@ -13597,6 +13729,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                     if bub_size_id_arr[m] == bub_size_id_arr[0]:  
                                                         if bub_large >=1: 
                                                             fa_all_tot_bub1=np.append(fa_all_tot_bub1, r_dot_p*peA)
+                                                            align_all_tot_bub1=np.append(align_all_tot_bub1, r_dot_p)
+                                                            fa_all_tot_bub1_trad=np.append(fa_all_tot_bub1_trad, r_dot_p_trad*peA)
+                                                            r_dist_tot_bub1_trad = np.append(r_dist_tot_bub1_trad, difr_trad)
                                                             r_dist_tot_bub1 = np.append(r_dist_tot_bub1, difr_short)
                                                             activity_all_bub1=np.append(activity_all_bub1, peA)
                                                             partid_all_bub1=np.append(partid_all_bub1, binParts[ix][iy][h])
@@ -13605,6 +13740,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                     elif bub_size_id_arr[m] == bub_size_id_arr[1]:  
                                                         if bub_large >=2: 
                                                             fa_all_tot_bub2=np.append(fa_all_tot_bub2, r_dot_p*peA)
+                                                            align_all_tot_bub2=np.append(align_all_tot_bub2, r_dot_p)
+                                                            fa_all_tot_bub2_trad=np.append(fa_all_tot_bub2_trad, r_dot_p_trad*peA)
+                                                            r_dist_tot_bub2_trad = np.append(r_dist_tot_bub2_trad, difr_trad)
                                                             r_dist_tot_bub2 = np.append(r_dist_tot_bub2, difr_short)
                                                             activity_all_bub2=np.append(activity_all_bub2, peA)
                                                             partid_all_bub2=np.append(partid_all_bub2, binParts[ix][iy][h])
@@ -13613,6 +13751,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                     elif bub_size_id_arr[m] == bub_size_id_arr[2]:  
                                                         if bub_large >=3: 
                                                             fa_all_tot_bub3=np.append(fa_all_tot_bub3, r_dot_p*peA)
+                                                            align_all_tot_bub3=np.append(align_all_tot_bub3, r_dot_p)
+                                                            fa_all_tot_bub3_trad=np.append(fa_all_tot_bub3_trad, r_dot_p_trad*peA)
+                                                            r_dist_tot_bub3_trad = np.append(r_dist_tot_bub3_trad, difr_trad)
                                                             r_dist_tot_bub3 = np.append(r_dist_tot_bub3, difr_short)
                                                             activity_all_bub3=np.append(activity_all_bub3, peA)
                                                             partid_all_bub3=np.append(partid_all_bub3, binParts[ix][iy][h])
@@ -13621,6 +13762,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                     elif bub_size_id_arr[m] == bub_size_id_arr[3]:  
                                                         if bub_large >=4: 
                                                             fa_all_tot_bub4=np.append(fa_all_tot_bub4, r_dot_p*peA)
+                                                            align_all_tot_bub4=np.append(align_all_tot_bub4, r_dot_p)
+                                                            fa_all_tot_bub4_trad=np.append(fa_all_tot_bub4_trad, r_dot_p_trad*peA)
+                                                            r_dist_tot_bub4_trad = np.append(r_dist_tot_bub4_trad, difr_trad)
                                                             r_dist_tot_bub4 = np.append(r_dist_tot_bub4, difr_short)
                                                             activity_all_bub4=np.append(activity_all_bub4, peA)
                                                             partid_all_bub4=np.append(partid_all_bub4, binParts[ix][iy][h])
@@ -13629,12 +13773,18 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                     elif bub_size_id_arr[m] == bub_size_id_arr[4]:  
                                                         if bub_large >=5: 
                                                             fa_all_tot_bub5=np.append(fa_all_tot_bub5, r_dot_p*peA)
+                                                            align_all_tot_bub5=np.append(align_all_tot_bub5, r_dot_p)
+                                                            fa_all_tot_bub5_trad=np.append(fa_all_tot_bub5_trad, r_dot_p_trad*peA)
+                                                            r_dist_tot_bub5_trad = np.append(r_dist_tot_bub5_trad, difr_trad)
                                                             r_dist_tot_bub5 = np.append(r_dist_tot_bub5, difr_short)
                                                             activity_all_bub5=np.append(activity_all_bub5, peA)
                                                             partid_all_bub5=np.append(partid_all_bub5, binParts[ix][iy][h])
                                                 
                                                 #If particle is of type B, continue...
                                                 else:
+                                                    
+                                                    fa_all_tot_trad=np.append(fa_all_tot_trad, r_dot_p_trad*peB)
+                                                    r_dist_tot_trad = np.append(r_dist_tot_trad, difr_trad)
                                                     
                                                     #Save active force component in direction normal to surface
                                                     fa_all_tot_test=np.append(fa_all_tot_test, r_dot_p*peB)
@@ -13646,6 +13796,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                     if bub_size_id_arr[m] == bub_size_id_arr[0]:  
                                                         if bub_large >=1: 
                                                             fa_all_tot_bub1=np.append(fa_all_tot_bub1, r_dot_p*peB)
+                                                            align_all_tot_bub1=np.append(align_all_tot_bub1, r_dot_p)
+                                                            fa_all_tot_bub1_trad=np.append(fa_all_tot_bub1_trad, r_dot_p_trad*peB)
+                                                            r_dist_tot_bub1_trad = np.append(r_dist_tot_bub1_trad, difr_trad)
                                                             r_dist_tot_bub1 = np.append(r_dist_tot_bub1, difr_short)
                                                             activity_all_bub1=np.append(activity_all_bub1, peB)
                                                             partid_all_bub1=np.append(partid_all_bub1, binParts[ix][iy][h])
@@ -13654,6 +13807,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                     elif bub_size_id_arr[m] == bub_size_id_arr[1]:  
                                                         if bub_large >=2: 
                                                             fa_all_tot_bub2=np.append(fa_all_tot_bub2, r_dot_p*peB)
+                                                            align_all_tot_bub2=np.append(align_all_tot_bub2, r_dot_p)
+                                                            fa_all_tot_bub2_trad=np.append(fa_all_tot_bub2_trad, r_dot_p_trad*peB)
+                                                            r_dist_tot_bub2_trad = np.append(r_dist_tot_bub2_trad, difr_trad)
                                                             r_dist_tot_bub2 = np.append(r_dist_tot_bub2, difr_short)
                                                             activity_all_bub2=np.append(activity_all_bub2, peB)
                                                             partid_all_bub2=np.append(partid_all_bub2, binParts[ix][iy][h])
@@ -13662,6 +13818,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                     elif bub_size_id_arr[m] == bub_size_id_arr[2]:  
                                                         if bub_large >=3: 
                                                             fa_all_tot_bub3=np.append(fa_all_tot_bub3, r_dot_p*peB)
+                                                            align_all_tot_bub3=np.append(align_all_tot_bub3, r_dot_p)
+                                                            fa_all_tot_bub3_trad=np.append(fa_all_tot_bub3_trad, r_dot_p_trad*peB)
+                                                            r_dist_tot_bub3_trad = np.append(r_dist_tot_bub3_trad, difr_trad)
                                                             r_dist_tot_bub3 = np.append(r_dist_tot_bub3, difr_short)
                                                             activity_all_bub3=np.append(activity_all_bub3, peB)
                                                             partid_all_bub3=np.append(partid_all_bub3, binParts[ix][iy][h])
@@ -13670,6 +13829,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                     elif bub_size_id_arr[m] == bub_size_id_arr[3]:  
                                                         if bub_large >=4: 
                                                             fa_all_tot_bub4=np.append(fa_all_tot_bub4, r_dot_p*peB)
+                                                            align_all_tot_bub4=np.append(align_all_tot_bub4, r_dot_p)
+                                                            fa_all_tot_bub4_trad=np.append(fa_all_tot_bub4_trad, r_dot_p_trad*peB)
+                                                            r_dist_tot_bub4_trad = np.append(r_dist_tot_bub4_trad, difr_trad)
                                                             r_dist_tot_bub4 = np.append(r_dist_tot_bub4, difr_short)
                                                             activity_all_bub4=np.append(activity_all_bub4, peB)
                                                             partid_all_bub4=np.append(partid_all_bub4, binParts[ix][iy][h])
@@ -13678,9 +13840,13 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                     elif bub_size_id_arr[m] == bub_size_id_arr[4]:  
                                                         if bub_large >=5: 
                                                             fa_all_tot_bub5=np.append(fa_all_tot_bub5, r_dot_p*peB)
+                                                            align_all_tot_bub5=np.append(align_all_tot_bub5, r_dot_p)
+                                                            fa_all_tot_bub5_trad=np.append(fa_all_tot_bub5_trad, r_dot_p_trad*peB)
+                                                            r_dist_tot_bub5_trad = np.append(r_dist_tot_bub5_trad, difr_trad)
                                                             r_dist_tot_bub5 = np.append(r_dist_tot_bub5, difr_short)
                                                             activity_all_bub5=np.append(activity_all_bub5, peB)
                                                             partid_all_bub5=np.append(partid_all_bub5, binParts[ix][iy][h])
+                                                
                                                 if typ[binParts[ix][iy][h]]==0:
                                                     new_align0[ix][iy] += r_dot_p
                                                     new_align_num0[ix][iy]+= 1
@@ -15268,6 +15434,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                         
                                                         #If particle of type A, add their alignment to sum
                                                         if typ[binParts[ix][iy][h]]==0:
+                                                            fa_all_tot_trad=np.append(fa_all_tot_trad, r_dot_p_trad*peA)
+                                                            r_dist_tot_trad = np.append(r_dist_tot_trad, difr_trad)
                                                             new_align0[ix][iy] += r_dot_p
                                                             new_align_num0[ix][iy]+= 1
                                                             new_align_trad0[ix][iy] += r_dot_p_trad
@@ -15275,6 +15443,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                             
                                                         #If particle of type B, add their alignment to sum
                                                         elif typ[binParts[ix][iy][h]]==1:
+                                                            fa_all_tot_trad=np.append(fa_all_tot_trad, r_dot_p_trad*peB)
+                                                            r_dist_tot_trad = np.append(r_dist_tot_trad, difr_trad)
                                                             new_align1[ix][iy] += r_dot_p
                                                             new_align_num1[ix][iy]+= 1
                                                             new_align_trad1[ix][iy] += r_dot_p_trad
@@ -15756,6 +15926,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                             
                             #If particle is of type A, add alignment with nearest surface's normal for average calculation
                             if typ[binParts[ix][iy][h]]==0:
+                                fa_all_tot_trad=np.append(fa_all_tot_trad, r_dot_p_trad*peA)
+                                r_dist_tot_trad = np.append(r_dist_tot_trad, difr_trad)
                                 new_align0[ix][iy] += r_dot_p
                                 new_align_num0[ix][iy]+= 1
                                 new_align_trad0[ix][iy] += r_dot_p_trad
@@ -15763,6 +15935,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                 
                             #If particle is of type B, add alignment with nearest surface's normal for average calculation
                             elif typ[binParts[ix][iy][h]]==1:
+                                fa_all_tot_trad=np.append(fa_all_tot_trad, r_dot_p_trad*peB)
+                                r_dist_tot_trad = np.append(r_dist_tot_trad, difr_trad)
                                 new_align1[ix][iy] += r_dot_p
                                 new_align_num1[ix][iy]+= 1
                                 new_align_trad1[ix][iy] += r_dot_p_trad
@@ -15797,7 +15971,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
         
         #Area per bin
         binArea = sizeBin**2
-          
+        
         #Particle IDs for each phase
         edge_id_plot = np.where(edgePhase==interface_id)[0]     #Largest gas-dense interface
         int_id_plot = np.where(partPhase==1)[0]         #All interfaces
@@ -15869,7 +16043,65 @@ with hoomd.open(name=inFile, mode='rb') as t:
         int_sum_bub4 = 0
         int_sum_bub5 = 0
         int_sum_test = 0
-                                                 
+              
+
+        #X locations across interface for integration
+        xint = np.linspace(0, np.ceil(np.max(r_dist_tot_trad)), num=int((int(np.ceil(np.ceil(np.max(r_dist_tot_trad))))+1)))
+        
+        #Pressure integrand components for each value of X
+        yfinal = np.zeros(len(xint))
+        
+        #If exterior and interior surfaces defined, continue...
+                
+        #Flatten exterior and interior surfaces and line 2 ends up. Theta defines angle from y axis to overshot of exterior surface of interior surface
+        tan_theta = (surface_area_ext[0]-surface_area_int[0])/edge_width_arr[0]
+        
+        area_prev = 0
+        
+        #For each step across interface, calculate pressure in that step's area (averaged over angle from CoM)
+        for i in range(1, len(xint)):
+            binx_nodup=np.array([])
+            biny_nodup=np.array([])
+            
+            #Min and max location across interface of current step
+            min_range = xint[i-1]
+            max_range = xint[i]   
+            
+            #Calculate area of rectangle for current step
+            area = np.pi * (max_range ** 2) - area_prev
+            
+            #Save total area of previous step sizes
+            area_prev = np.pi * (max_range ** 2)
+             
+            #Find particles that are housed within current slice
+            points = np.where((min_range<=r_dist_tot_trad) & (r_dist_tot_trad<=max_range))[0]  
+            
+            #If at least 1 particle in slice, continue...
+            if len(points)>0:
+                
+                #If the force is defined, continue...
+                points2 = np.logical_not(np.isnan(fa_all_tot_trad[points]))
+                if len(points2)>0:
+                    
+                    #Calculate total active force normal to interface in slice
+                    yfinal[i-1] = np.sum(fa_all_tot_trad[points][points2])
+                    
+                    #If area of slice is non-zero, calculate the pressure [F/A]
+                    if area != 0:
+                        yfinal[i-1] = yfinal[i-1]/area
+                    else:
+                        yfinal[i-1] = 0
+                else:
+                    yfinal[i-1]=0
+            else:
+                yfinal[i-1]=0
+
+
+        int_sum_trad = 0
+        #Integrate force across interface using trapezoidal rule
+        for o in range(1, len(xint)):
+            int_sum_trad += ((xint[o]-xint[o-1])/2)*(yfinal[o]+yfinal[o-1])
+                                    
         #Loop over all interfaces/bubbles                           
         for m in range(0, len(bub_id_arr)):
             #If is truly a bubble, continue... (Always true)
@@ -15883,10 +16115,12 @@ with hoomd.open(name=inFile, mode='rb') as t:
                         interior_rad = bub_width[0]-edge_width_arr[0]
 
                         #X locations across interface for integration
-                        xint = np.linspace(0, np.ceil(np.max(r_dist_tot_bub1)), num=int((int(np.ceil(np.ceil(np.max(r_dist_tot_bub1))))+1)))
+                        xint = np.linspace(0, np.ceil(np.max(r_dist_tot_bub1)), num=int((int((int(np.ceil(np.ceil(np.max(r_dist_tot_bub1))))+1)))/3))
                         
                         #Pressure integrand components for each value of X
                         yfinal = np.zeros(len(xint))
+                        alignfinal = np.zeros(len(xint))
+                        densfinal = np.zeros(len(xint))
                         
                         #If exterior and interior surfaces defined, continue...
                         if len(surface_area_ext)>0:
@@ -15942,7 +16176,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                             
                                             #Calculate total active force normal to interface in slice
                                             yfinal[i-1] = np.sum(fa_all_tot_bub1[points][points2])
-                                            
+                                            alignfinal[i-1] = np.mean(align_all_tot_bub1[points][points2])
+                                            densfinal[i-1] = len(fa_all_tot_bub1[points][points2])
                                             #If either exterior or interior surface area failed to calculate, use the radii
                                             if len(surface_area_ext)==0:
                                                 area_slice = np.pi * ((interior_rad +xint[i])**2-(interior_rad + xint[i-1])**2)
@@ -15952,12 +16187,19 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                             #If area of slice is non-zero, calculate the pressure [F/A]
                                             if area_slice != 0:
                                                 yfinal[i-1] = yfinal[i-1]/area_slice
+                                                densfinal[i-1] = densfinal[i-1]/area_slice
                                             else:
                                                 yfinal[i-1] = 0
+                                                alignfinal[i-1] = 0
+                                                densfinal[i-1] = 0
                                         else:
                                             yfinal[i-1]=0
+                                            alignfinal[i-1] = 0
+                                            densfinal[i-1] = 0
                                     else:
                                         yfinal[i-1]=0
+                                        alignfinal[i-1] = 0
+                                        densfinal[i-1] = 0
                 
                                 #Renaming variables
                                 yint = yfinal
@@ -15967,7 +16209,20 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                 #Integrate force across interface using trapezoidal rule
                                 for o in range(1, len(xint_final)):
                                     int_sum_bub1 += ((xint_final[o]-xint_final[o-1])/2)*(yint_final[o]+yint_final[o-1])
-                
+                                #plt.plot(xint, yfinal, linestyle='-', label='b1 pres', color='black')
+                                g = open(outPath2+outTxt_radial, 'a')
+                                for p in range(0, len(yfinal)-1):
+                                    g.write('{0:.2f}'.format(tst).center(20) + ' ')
+                                    g.write('{0:.6f}'.format(sizeBin).center(20) + ' ')
+                                    g.write('{0:.0f}'.format(np.amax(clust_size)).center(20) + ' ')
+                                    g.write('{0:.0f}'.format(interface_id).center(20) + ' ')
+                                    g.write('{0:.0f}'.format(bub_size_id_arr[m]).center(20) + ' ')
+                                    g.write('{0:.6f}'.format(xint[p]).center(20) + ' ')
+                                    g.write('{0:.6f}'.format(xint[p+1]).center(20) + ' ')
+                                    g.write('{0:.6f}'.format(alignfinal[p]).center(20) + ' ')
+                                    g.write('{0:.6f}'.format(densfinal[p]).center(20) + ' ')
+                                    g.write('{0:.6f}'.format(yfinal[p]).center(20) + '\n')
+                                g.close()
                 #If interface belongs to bubble 2, continue...
                 elif bub_size_id_arr[m] == bub_size_id_arr[1]:  
                     if bub_large >=2: 
@@ -15976,10 +16231,12 @@ with hoomd.open(name=inFile, mode='rb') as t:
                         interior_rad = bub_width[1]-edge_width_arr[1]
                                                                  
                         #X locations across interface for integration
-                        xint = np.linspace(0, np.ceil(np.max(r_dist_tot_bub2)), num=int((int(np.ceil(np.ceil(np.max(r_dist_tot_bub2))))+1)))
+                        xint = np.linspace(0, np.ceil(np.max(r_dist_tot_bub2)), num=int((int((int(np.ceil(np.ceil(np.max(r_dist_tot_bub2))))+1)))/3))
                         
                         #Pressure integrand components for each value of X
                         yfinal = np.zeros(len(xint))
+                        alignfinal = np.zeros(len(xint))
+                        densfinal = np.zeros(len(xint))
                         
                         #If exterior and interior surfaces defined, continue...
                         if len(surface_area_ext)>0:
@@ -16035,6 +16292,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                             
                                             #Calculate total active force normal to interface in slice
                                             yfinal[i-1] = np.sum(fa_all_tot_bub2[points][points2])
+                                            alignfinal[i-1] = np.mean(align_all_tot_bub2[points][points2])
+                                            densfinal[i-1] = len(fa_all_tot_bub2[points][points2])
                                             
                                             #If either exterior or interior surface area failed to calculate, use the radii
                                             if len(surface_area_ext)==0:
@@ -16045,12 +16304,19 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                             #If area of slice is non-zero, calculate the pressure [F/A]
                                             if area_slice != 0:
                                                 yfinal[i-1] = yfinal[i-1]/area_slice
+                                                densfinal[i-1] = densfinal[i-1]/area_slice
                                             else:
                                                 yfinal[i-1] = 0
+                                                alignfinal[i-1] = 0
+                                                densfinal[i-1] = 0
                                         else:
                                             yfinal[i-1]=0
+                                            alignfinal[i-1] = 0
+                                            densfinal[i-1] = 0
                                     else:
                                         yfinal[i-1]=0
+                                        alignfinal[i-1] = 0
+                                        densfinal[i-1] = 0
                 
                                 #Renaming variables
                                 yint = yfinal
@@ -16060,7 +16326,20 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                 #Integrate force across interface using trapezoidal rule
                                 for o in range(1, len(xint_final)):
                                     int_sum_bub2 += ((xint_final[o]-xint_final[o-1])/2)*(yint_final[o]+yint_final[o-1])
-                
+                                #plt.plot(xint, yfinal, linestyle='-', label='b2 pres', color='blue')
+                                g = open(outPath2+outTxt_radial, 'a')
+                                for p in range(0, len(yfinal)-1):
+                                    g.write('{0:.2f}'.format(tst).center(20) + ' ')
+                                    g.write('{0:.6f}'.format(sizeBin).center(20) + ' ')
+                                    g.write('{0:.0f}'.format(np.amax(clust_size)).center(20) + ' ')
+                                    g.write('{0:.0f}'.format(interface_id).center(20) + ' ')
+                                    g.write('{0:.0f}'.format(bub_size_id_arr[m]).center(20) + ' ')
+                                    g.write('{0:.6f}'.format(xint[p]).center(20) + ' ')
+                                    g.write('{0:.6f}'.format(xint[p+1]).center(20) + ' ')
+                                    g.write('{0:.6f}'.format(alignfinal[p]).center(20) + ' ')
+                                    g.write('{0:.6f}'.format(densfinal[p]).center(20) + ' ')
+                                    g.write('{0:.6f}'.format(yfinal[p]).center(20) + '\n')
+                                g.close()
                 #If interface belongs to bubble 3, continue...
                 elif bub_size_id_arr[m] == bub_size_id_arr[2]:  
                     if bub_large >=3: 
@@ -16069,10 +16348,12 @@ with hoomd.open(name=inFile, mode='rb') as t:
                         interior_rad = bub_width[2]-edge_width_arr[2]
                                                                  
                         #X locations across interface for integration
-                        xint = np.linspace(0, np.ceil(np.max(r_dist_tot_bub3)), num=int((int(np.ceil(np.ceil(np.max(r_dist_tot_bub3))))+1)))
+                        xint = np.linspace(0, np.ceil(np.max(r_dist_tot_bub3)), num=int((int((int(np.ceil(np.ceil(np.max(r_dist_tot_bub3))))+1)))/3))
                         
                         #Pressure integrand components for each value of X
                         yfinal = np.zeros(len(xint))
+                        alignfinal = np.zeros(len(xint))
+                        densfinal = np.zeros(len(xint))
                         
                         #If exterior and interior surfaces defined, continue...
                         if len(surface_area_ext)>0:
@@ -16128,6 +16409,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                             
                                             #Calculate total active force normal to interface in slice
                                             yfinal[i-1] = np.sum(fa_all_tot_bub3[points][points2])
+                                            alignfinal[i-1] = np.mean(align_all_tot_bub3[points][points2])
+                                            densfinal[i-1] = len(fa_all_tot_bub3[points][points2])
                                             
                                             #If either exterior or interior surface area failed to calculate, use the radii
                                             if len(surface_area_ext)==0:
@@ -16138,12 +16421,19 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                             #If area of slice is non-zero, calculate the pressure [F/A]
                                             if area_slice != 0:
                                                 yfinal[i-1] = yfinal[i-1]/area_slice
+                                                densfinal[i-1] = densfinal[i-1]/area_slice
                                             else:
                                                 yfinal[i-1] = 0
+                                                alignfinal[i-1] = 0
+                                                densfinal[i-1] = 0
                                         else:
                                             yfinal[i-1]=0
+                                            alignfinal[i-1] = 0
+                                            densfinal[i-1] = 0
                                     else:
                                         yfinal[i-1]=0
+                                        alignfinal[i-1] = 0
+                                        densfinal[i-1] = 0
                 
                                 #Renaming variables
                                 yint = yfinal
@@ -16153,7 +16443,20 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                 #Integrate force across interface using trapezoidal rule
                                 for o in range(1, len(xint_final)):
                                     int_sum_bub3 += ((xint_final[o]-xint_final[o-1])/2)*(yint_final[o]+yint_final[o-1])
-                
+                                #plt.plot(xint, yfinal, linestyle='-', label='b3 pres', color='orange')
+                                g = open(outPath2+outTxt_radial, 'a')
+                                for p in range(0, len(yfinal)-1):
+                                    g.write('{0:.2f}'.format(tst).center(20) + ' ')
+                                    g.write('{0:.6f}'.format(sizeBin).center(20) + ' ')
+                                    g.write('{0:.0f}'.format(np.amax(clust_size)).center(20) + ' ')
+                                    g.write('{0:.0f}'.format(interface_id).center(20) + ' ')
+                                    g.write('{0:.0f}'.format(bub_size_id_arr[m]).center(20) + ' ')
+                                    g.write('{0:.6f}'.format(xint[p]).center(20) + ' ')
+                                    g.write('{0:.6f}'.format(xint[p+1]).center(20) + ' ')
+                                    g.write('{0:.6f}'.format(alignfinal[p]).center(20) + ' ')
+                                    g.write('{0:.6f}'.format(densfinal[p]).center(20) + ' ')
+                                    g.write('{0:.6f}'.format(yfinal[p]).center(20) + '\n')
+                                g.close()
                 #If interface belongs to bubble 4, continue...
                 elif bub_size_id_arr[m] == bub_size_id_arr[3]:  
                     if bub_large >=4: 
@@ -16162,10 +16465,12 @@ with hoomd.open(name=inFile, mode='rb') as t:
                         interior_rad = bub_width[3]-edge_width_arr[3]
 
                         #X locations across interface for integration
-                        xint = np.linspace(0, np.ceil(np.max(r_dist_tot_bub4)), num=int((int(np.ceil(np.ceil(np.max(r_dist_tot_bub4))))+1)))
+                        xint = np.linspace(0, np.ceil(np.max(r_dist_tot_bub4)), num=int((int((int(np.ceil(np.ceil(np.max(r_dist_tot_bub4))))+1)))/3))
                         
                         #Pressure integrand components for each value of X
                         yfinal = np.zeros(len(xint))
+                        alignfinal = np.zeros(len(xint))
+                        densfinal = np.zeros(len(xint))
                         
                         #If exterior and interior surfaces defined, continue...
                         if len(surface_area_ext)>0:
@@ -16221,6 +16526,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                             
                                             #Calculate total active force normal to interface in slice
                                             yfinal[i-1] = np.sum(fa_all_tot_bub4[points][points2])
+                                            alignfinal[i-1] = np.mean(align_all_tot_bub4[points][points2])
+                                            densfinal[i-1] = len(fa_all_tot_bub4[points][points2])
                                             
                                             #If either exterior or interior surface area failed to calculate, use the radii
                                             if len(surface_area_ext)==0:
@@ -16231,12 +16538,19 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                             #If area of slice is non-zero, calculate the pressure [F/A]
                                             if area_slice != 0:
                                                 yfinal[i-1] = yfinal[i-1]/area_slice
+                                                densfinal[i-1] = densfinal[i-1]/area_slice
                                             else:
                                                 yfinal[i-1] = 0
+                                                alignfinal[i-1] = 0
+                                                densfinal[i-1] = 0
                                         else:
                                             yfinal[i-1]=0
+                                            alignfinal[i-1] = 0
+                                            densfinal[i-1] = 0
                                     else:
                                         yfinal[i-1]=0
+                                        alignfinal[i-1] = 0
+                                        densfinal[i-1] = 0
                                         
                                 #Renaming variables
                                 yint = yfinal
@@ -16246,6 +16560,20 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                 #Integrate force across interface using trapezoidal rule
                                 for o in range(1, len(xint_final)):
                                     int_sum_bub4 += ((xint_final[o]-xint_final[o-1])/2)*(yint_final[o]+yint_final[o-1])
+                                #plt.plot(xint, yfinal, linestyle='-', label='b4 pres', color='green')
+                                g = open(outPath2+outTxt_radial, 'a')
+                                for p in range(0, len(yfinal)-1):
+                                    g.write('{0:.2f}'.format(tst).center(20) + ' ')
+                                    g.write('{0:.6f}'.format(sizeBin).center(20) + ' ')
+                                    g.write('{0:.0f}'.format(np.amax(clust_size)).center(20) + ' ')
+                                    g.write('{0:.0f}'.format(interface_id).center(20) + ' ')
+                                    g.write('{0:.0f}'.format(bub_size_id_arr[m]).center(20) + ' ')
+                                    g.write('{0:.6f}'.format(xint[p]).center(20) + ' ')
+                                    g.write('{0:.6f}'.format(xint[p+1]).center(20) + ' ')
+                                    g.write('{0:.6f}'.format(alignfinal[p]).center(20) + ' ')
+                                    g.write('{0:.6f}'.format(densfinal[p]).center(20) + ' ')
+                                    g.write('{0:.6f}'.format(yfinal[p]).center(20) + '\n')
+                                g.close()
                 
                 #If interface belongs to bubble 5, continue...
                 elif bub_size_id_arr[m] == bub_size_id_arr[4]:  
@@ -16255,10 +16583,12 @@ with hoomd.open(name=inFile, mode='rb') as t:
                         interior_rad = bub_width[4]-edge_width_arr[4]
                         
                         #X locations across interface for integration
-                        xint = np.linspace(0, np.ceil(np.max(r_dist_tot_bub5)), num=int((int(np.ceil(np.ceil(np.max(r_dist_tot_bub5))))+1)))
+                        xint = np.linspace(0, np.ceil(np.max(r_dist_tot_bub5)), num=int((int((int(np.ceil(np.ceil(np.max(r_dist_tot_bub5))))+1)))/3))
                         
                         #Pressure integrand components for each value of X
                         yfinal = np.zeros(len(xint))
+                        alignfinal = np.zeros(len(xint))
+                        densfinal = np.zeros(len(xint))
                         
                         #If exterior and interior surfaces defined, continue...
                         if len(surface_area_ext)>0:
@@ -16314,6 +16644,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                             
                                             #Calculate total active force normal to interface in slice
                                             yfinal[i-1] = np.sum(fa_all_tot_bub5[points][points2])
+                                            alignfinal[i-1] = np.mean(align_all_tot_bub5[points][points2])
+                                            densfinal[i-1] = len(fa_all_tot_bub5[points][points2])
                                             
                                             #If either exterior or interior surface area failed to calculate, use the radii
                                             if len(surface_area_ext)==0:
@@ -16324,12 +16656,18 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                             #If area of slice is non-zero, calculate the pressure [F/A]
                                             if area_slice != 0:
                                                 yfinal[i-1] = yfinal[i-1]/area_slice
+                                                densfinal[i-1] = densfinal[i-1]/area_slice
                                             else:
                                                 yfinal[i-1] = 0
+                                                densfinal[i-1] = 0
                                         else:
                                             yfinal[i-1]=0
+                                            alignfinal[i-1] = 0
+                                            densfinal[i-1] = 0
                                     else:
                                         yfinal[i-1]=0
+                                        alignfinal[i-1] = 0
+                                        densfinal[i-1] = 0
                                 
                                 #Renaming of variables
                                 yint = yfinal
@@ -16339,7 +16677,20 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                 #Integrate force across interface using trapezoidal rule
                                 for o in range(1, len(xint_final)):
                                     int_sum_bub5 += ((xint_final[o]-xint_final[o-1])/2)*(yint_final[o]+yint_final[o-1])
-        
+                                #plt.plot(xint, yfinal, linestyle='-', label='b5 pres', color='red')
+                                g = open(outPath2+outTxt_radial, 'a')
+                                for p in range(0, len(yfinal)-1):
+                                    g.write('{0:.2f}'.format(tst).center(20) + ' ')
+                                    g.write('{0:.6f}'.format(sizeBin).center(20) + ' ')
+                                    g.write('{0:.0f}'.format(clust_size[m]).center(20) + ' ')
+                                    g.write('{0:.0f}'.format(interface_id).center(20) + ' ')
+                                    g.write('{0:.0f}'.format(bub_size_id_arr[m]).center(20) + ' ')
+                                    g.write('{0:.6f}'.format(xint[p]).center(20) + ' ')
+                                    g.write('{0:.6f}'.format(xint[p+1]).center(20) + ' ')
+                                    g.write('{0:.6f}'.format(alignfinal[p]).center(20) + ' ')
+                                    g.write('{0:.6f}'.format(densfinal[p]).center(20) + ' ')
+                                    g.write('{0:.6f}'.format(yfinal[p]).center(20) + '\n')
+                                g.close()
         #Save active pressure of each interface
         g = open(outPath2+outTxt_align_press, 'a')
         g.write('{0:.2f}'.format(tst).center(20) + ' ')
