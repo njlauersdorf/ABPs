@@ -3763,8 +3763,11 @@ with hoomd.open(name=inFile, mode='rb') as t:
         if (len(lat_mean_indiv_arr_bulk)>0) or (len(lat_mean_indiv_arr_int)>0):
             pad = str(j).zfill(4)
             x_pos_plot = np.append(pos_x_bulk+h_box, pos_x_int+h_box)
+            x_pos_plot = np.append(x_pos_plot, pos_x_bub+h_box)
             y_pos_plot = np.append(pos_y_bulk+h_box, pos_y_int+h_box)
+            y_pos_plot = np.append(y_pos_plot, pos_y_bub+h_box)
             lat_mean_plot = np.append(lat_mean_indiv_arr_bulk, lat_mean_indiv_arr_int)
+            lat_mean_plot = np.append(lat_mean_plot, lat_mean_indiv_arr_bub)
             
             vmin_num = np.min(lat_mean_indiv_arr_bulk)
             vmax_num = np.max(lat_mean_indiv_arr_bulk)
@@ -3799,104 +3802,104 @@ with hoomd.open(name=inFile, mode='rb') as t:
             #Plot histogram of the average lattice spacing of bulk (green) and interface (yellow) particle and their six nearest neighbors
             
             #continue if any lattice spacings measured
-            if (len(lat_mean_indiv_arr_int)>0) or (len(lat_mean_indiv_arr_bulk)>0):
+        if (len(lat_mean_indiv_arr_int)>0) or (len(lat_mean_indiv_arr_bulk)>0):
+        
+            xmin = 0.5
+            xmax = 1.0
             
-                xmin = 0.5
-                xmax = 1.0
-                
-                fig = plt.figure(figsize=(8,6))
+            fig = plt.figure(figsize=(8,6))
 
-                #Remove bulk particles that are outside plot's xrange
-                if (len(lat_mean_indiv_arr_bulk)>0):
-                    bulk_id = np.where((lat_mean_indiv_arr_bulk > xmax) | (lat_mean_indiv_arr_bulk < xmin))[0]
-                    lat_mean_indiv_arr_bulk = np.delete(lat_mean_indiv_arr_bulk, bulk_id)
-                
-                    plt.hist(lat_mean_indiv_arr_bulk, alpha = 1.0, bins=50, color=green)
-                
-                #If interface particle measured, continue
-                if (len(lat_mean_indiv_arr_int)>0):
-                    int_id = np.where((lat_mean_indiv_arr_int > xmax) | (lat_mean_indiv_arr_int < xmin))[0]
-                    lat_mean_indiv_arr_int = np.delete(lat_mean_indiv_arr_int, int_id)
-    
-                    plt.hist(lat_mean_indiv_arr_int, alpha = 0.8, bins=50, color=yellow)
-                
-                if (len(lat_mean_indiv_arr_bub)>0):
-                    bub_id = np.where((lat_mean_indiv_arr_bub > xmax) | (lat_mean_indiv_arr_bub < xmin))[0]
-                    lat_mean_indiv_arr_int = np.delete(lat_mean_indiv_arr_bub, bub_id)
-    
-                    plt.hist(lat_mean_indiv_arr_bub, alpha = 0.4, bins=50, color=purple)
-                
-                green_patch = mpatches.Patch(color=green, label='Bulk')
-                yellow_patch = mpatches.Patch(color=yellow, label='Interface')
-                plt.legend(handles=[green_patch, yellow_patch], fancybox=True, framealpha=0.75, ncol=1, fontsize=12, loc='upper right',labelspacing=0.1, handletextpad=0.1)
-    
-                plt.xlabel(r'lattice spacing ($a$)', fontsize=20)
-                plt.ylabel('Number of particles', fontsize=20) 
-                plt.xlim([xmin,xmax])
-                plt.title(r'$\tau$' + ' = ' + '{:.1f}'.format(tst*3) + ' ' + r'$\tau_\mathrm{r}$', fontsize=22)
-                plt.tight_layout()
-                plt.savefig(outPath + 'lat_histo_' + out + pad + ".png", dpi=200)
-                plt.close()
+            #Remove bulk particles that are outside plot's xrange
+            if (len(lat_mean_indiv_arr_bulk)>0):
+                bulk_id = np.where((lat_mean_indiv_arr_bulk > xmax) | (lat_mean_indiv_arr_bulk < xmin))[0]
+                lat_mean_indiv_arr_bulk = np.delete(lat_mean_indiv_arr_bulk, bulk_id)
             
-            fig = plt.figure(figsize=(8.5,8))
-            ax = fig.add_subplot(111)
-        
-            myEps = [1., 0.1, 0.01, 0.001, 0.0001]
-            plt.scatter(pos[bulk_id_plot,0]+h_box, pos[bulk_id_plot,1]+h_box, s=0.75, marker='.', c=green)
-            plt.scatter(pos[gas_id,0]+h_box, pos[gas_id,1]+h_box, s=0.75, marker='.', c=red)
-            plt.scatter(pos[edge_id_plot,0]+h_box, pos[edge_id_plot,1]+h_box, s=0.75, marker='.', c=yellow)
+                plt.hist(lat_mean_indiv_arr_bulk, alpha = 1.0, bins=50, color=green)
             
-            if len(bub_id_plot)>0:
-                plt.scatter(pos[bub_id_plot,0]+h_box, pos[bub_id_plot,1]+h_box, s=0.75, marker='.', c=purple)         
-            '''
-            if len(bub1_parts)>0:
-                plt.scatter(pos[bub1_parts,0]+h_box, pos[bub1_parts,1]+h_box, s=0.75, marker='.', c=purple)     
-            if len(bub2_parts)>0:
-                plt.scatter(pos[bub2_parts,0]+h_box, pos[bub2_parts,1]+h_box, s=0.75, marker='.', c=purple) 
-            if len(bub3_parts)>0:
-                plt.scatter(pos[bub3_parts,0]+h_box, pos[bub3_parts,1]+h_box, s=0.75, marker='.', c=purple) 
-            if len(bub4_parts)>0:
-                plt.scatter(pos[bub4_parts,0]+h_box, pos[bub4_parts,1]+h_box, s=0.75, marker='.', c=purple) 
-            if len(bub5_parts)>0:
-                plt.scatter(pos[bub5_parts,0]+h_box, pos[bub5_parts,1]+h_box, s=0.75, marker='.', c=purple) 
-            '''
+            #If interface particle measured, continue
+            if (len(lat_mean_indiv_arr_int)>0):
+                int_id = np.where((lat_mean_indiv_arr_int > xmax) | (lat_mean_indiv_arr_int < xmin))[0]
+                lat_mean_indiv_arr_int = np.delete(lat_mean_indiv_arr_int, int_id)
 
-            plt.quiver(pos_box_x_plot, pos_box_y_plot, p_plot_x, p_plot_y)
-            plt.xticks(pos_box_start)
-            plt.yticks(pos_box_start)
-            plt.tick_params(
-                                    axis='x',          # changes apply to the x-axis
-                                    which='both',      # both major and minor ticks are affected
-                                    bottom=False,      # ticks along the bottom edge are off
-                                    top=False,         # ticks along the top edge are off
-                                    labelbottom=False,
-                                    labelleft=False)
-            plt.tick_params(
-                                    axis='y',          # changes apply to the x-axis
-                                    which='both',      # both major and minor ticks are affected
-                                    right=False,      # ticks along the bottom edge are off
-                                    left=False,         # ticks along the top edge are off
-                                    labelbottom=False,
-                                    labelleft=False)
-        
-            plt.ylim((0, l_box))
-            plt.xlim((0, l_box))
-            plt.tick_params(axis='both', which='both',
-                            bottom=False, top=False, left=False, right=False,
-                            labelbottom=False, labeltop=False, labelleft=False, labelright=False)
-                   
-            plt.text(0.77, 0.04, s=r'$\tau$' + ' = ' + '{:.1f}'.format(3*tst) + ' ' + r'$\tau_\mathrm{r}$',
-                    fontsize=18,transform = ax.transAxes,
-                    bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
-        
-            eps_leg=[]
-            mkSz = [0.1, 0.1, 0.15, 0.1, 0.1]
-            msz=40
-            red_patch = mpatches.Patch(color=red, label='Dilute')
+                plt.hist(lat_mean_indiv_arr_int, alpha = 0.8, bins=50, color=yellow)
+            
+            if (len(lat_mean_indiv_arr_bub)>0):
+                bub_id = np.where((lat_mean_indiv_arr_bub > xmax) | (lat_mean_indiv_arr_bub < xmin))[0]
+                lat_mean_indiv_arr_int = np.delete(lat_mean_indiv_arr_bub, bub_id)
+
+                plt.hist(lat_mean_indiv_arr_bub, alpha = 0.4, bins=50, color=purple)
+            
             green_patch = mpatches.Patch(color=green, label='Bulk')
             yellow_patch = mpatches.Patch(color=yellow, label='Interface')
-            purple_patch = mpatches.Patch(color=purple, label='Bubble')
-            plt.legend(handles=[green_patch, yellow_patch, red_patch, purple_patch], fancybox=True, framealpha=0.75, ncol=1, fontsize=16, loc='upper left',labelspacing=0.1, handletextpad=0.1)
+            plt.legend(handles=[green_patch, yellow_patch], fancybox=True, framealpha=0.75, ncol=1, fontsize=12, loc='upper right',labelspacing=0.1, handletextpad=0.1)
+
+            plt.xlabel(r'lattice spacing ($a$)', fontsize=20)
+            plt.ylabel('Number of particles', fontsize=20) 
+            plt.xlim([xmin,xmax])
+            plt.title(r'$\tau$' + ' = ' + '{:.1f}'.format(tst*3) + ' ' + r'$\tau_\mathrm{r}$', fontsize=22)
             plt.tight_layout()
-            plt.savefig(outPath + 'interface_acc_' + out + pad + ".png", dpi=100)
+            plt.savefig(outPath + 'lat_histo_' + out + pad + ".png", dpi=200)
             plt.close()
+            
+        fig = plt.figure(figsize=(8.5,8))
+        ax = fig.add_subplot(111)
+    
+        myEps = [1., 0.1, 0.01, 0.001, 0.0001]
+        plt.scatter(pos[bulk_id_plot,0]+h_box, pos[bulk_id_plot,1]+h_box, s=0.75, marker='.', c=green)
+        plt.scatter(pos[gas_id,0]+h_box, pos[gas_id,1]+h_box, s=0.75, marker='.', c=red)
+        plt.scatter(pos[edge_id_plot,0]+h_box, pos[edge_id_plot,1]+h_box, s=0.75, marker='.', c=yellow)
+        
+        if len(bub_id_plot)>0:
+            plt.scatter(pos[bub_id_plot,0]+h_box, pos[bub_id_plot,1]+h_box, s=0.75, marker='.', c=purple)         
+        '''
+        if len(bub1_parts)>0:
+            plt.scatter(pos[bub1_parts,0]+h_box, pos[bub1_parts,1]+h_box, s=0.75, marker='.', c=purple)     
+        if len(bub2_parts)>0:
+            plt.scatter(pos[bub2_parts,0]+h_box, pos[bub2_parts,1]+h_box, s=0.75, marker='.', c=purple) 
+        if len(bub3_parts)>0:
+            plt.scatter(pos[bub3_parts,0]+h_box, pos[bub3_parts,1]+h_box, s=0.75, marker='.', c=purple) 
+        if len(bub4_parts)>0:
+            plt.scatter(pos[bub4_parts,0]+h_box, pos[bub4_parts,1]+h_box, s=0.75, marker='.', c=purple) 
+        if len(bub5_parts)>0:
+            plt.scatter(pos[bub5_parts,0]+h_box, pos[bub5_parts,1]+h_box, s=0.75, marker='.', c=purple) 
+        '''
+
+        plt.quiver(pos_box_x_plot, pos_box_y_plot, p_plot_x, p_plot_y)
+        plt.xticks(pos_box_start)
+        plt.yticks(pos_box_start)
+        plt.tick_params(
+                                axis='x',          # changes apply to the x-axis
+                                which='both',      # both major and minor ticks are affected
+                                bottom=False,      # ticks along the bottom edge are off
+                                top=False,         # ticks along the top edge are off
+                                labelbottom=False,
+                                labelleft=False)
+        plt.tick_params(
+                                axis='y',          # changes apply to the x-axis
+                                which='both',      # both major and minor ticks are affected
+                                right=False,      # ticks along the bottom edge are off
+                                left=False,         # ticks along the top edge are off
+                                labelbottom=False,
+                                labelleft=False)
+    
+        plt.ylim((0, l_box))
+        plt.xlim((0, l_box))
+        plt.tick_params(axis='both', which='both',
+                        bottom=False, top=False, left=False, right=False,
+                        labelbottom=False, labeltop=False, labelleft=False, labelright=False)
+               
+        plt.text(0.77, 0.04, s=r'$\tau$' + ' = ' + '{:.1f}'.format(3*tst) + ' ' + r'$\tau_\mathrm{r}$',
+                fontsize=18,transform = ax.transAxes,
+                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+    
+        eps_leg=[]
+        mkSz = [0.1, 0.1, 0.15, 0.1, 0.1]
+        msz=40
+        red_patch = mpatches.Patch(color=red, label='Dilute')
+        green_patch = mpatches.Patch(color=green, label='Bulk')
+        yellow_patch = mpatches.Patch(color=yellow, label='Interface')
+        purple_patch = mpatches.Patch(color=purple, label='Bubble')
+        plt.legend(handles=[green_patch, yellow_patch, red_patch, purple_patch], fancybox=True, framealpha=0.75, ncol=1, fontsize=16, loc='upper left',labelspacing=0.1, handletextpad=0.1)
+        plt.tight_layout()
+        plt.savefig(outPath + 'interface_acc_' + out + pad + ".png", dpi=100)
+        plt.close()
