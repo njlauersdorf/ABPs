@@ -999,8 +999,12 @@ with hoomd.open(name=inFile, mode='rb') as t:
                         num_dens3[ix][iy] = (len(binParts[ix][iy])/(sizeBin**2))*(math.pi/4)        #Total number density
                         num_dens3A[ix][iy] = (typ0_temp/(sizeBin**2))*(math.pi/4)                   #Number density of type A particles
                         num_dens3B[ix][iy] = (typ1_temp/(sizeBin**2))*(math.pi/4)                   #Number density of type B particles
-                        num_densDif[ix][iy]=num_dens3B[ix][iy]-num_dens3A[ix][iy]                   #Difference in number density
-
+                        
+                        if peB >= peA:
+                            num_densDif[ix][iy]=num_dens3B[ix][iy]-num_dens3A[ix][iy]                   #Difference in number density
+                        else:
+                            num_densDif[ix][iy]=num_dens3A[ix][iy]-num_dens3B[ix][iy] 
+                        
                         #average x,y orientation per bin
                         p_avg_x[ix][iy] = p_all_x[ix][iy]/len(binParts[ix][iy])
                         p_avg_y[ix][iy] = p_all_y[ix][iy]/len(binParts[ix][iy])
@@ -3763,6 +3767,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
         new_align_num_trad1 = [[0 for b in range(NBins)] for a in range(NBins)]
         new_align_avg_trad0 = [[0 for b in range(NBins)] for a in range(NBins)]
         new_align_avg_trad1 = [[0 for b in range(NBins)] for a in range(NBins)]
+        new_align_avg_dif_trad = [[0 for b in range(NBins)] for a in range(NBins)]
         new_align_avg0 = [[0 for b in range(NBins)] for a in range(NBins)]
         new_align_avg1 = [[0 for b in range(NBins)] for a in range(NBins)]
         id_step = 0
@@ -9759,8 +9764,10 @@ with hoomd.open(name=inFile, mode='rb') as t:
         edge_width_arr = []
         edge_width_arr_sd = []
         bub_width_ext = []
+        edge_width_final = []
         bub_width_int = []
         bub_width = []
+        edge_width_final_sd = []
         bub_width_ext_sd = []
         bub_width_int_sd = []
         bub_width_sd = []
@@ -10916,17 +10923,34 @@ with hoomd.open(name=inFile, mode='rb') as t:
                         bub_width_ext.append(0)
                         bub_width_ext_sd.append(0)
                     
+                    #if there were exterior bins found, calculate the average exterior radius of mth interface structure
+                    if len(bub_rad_ext)>0:
+                        if len(bub_rad_int)>0:
+                            edge_widths = np.abs(bub_rad_ext-bub_rad_int)
+                            edge_width_final.append(np.mean(edge_widths))
+                            sd = 0
+                            for z in range(0, len(edge_widths)):
+                                sd+=(edge_widths[z]-np.mean(edge_widths))**2
+                            sd = (sd/len(edge_widths))**0.5
+                            edge_width_final_sd.append(sd)
+                        else:
+                            edge_width_final.append(0)
+                            edge_width_final_sd.append(0)
+                    else:
+                        edge_width_final.append(0)
+                        edge_width_final_sd.append(0)
+                        
                     #Use whichever is larger to calculate the true radius of the mth interface structure
                     if bub_width_ext[id_step]>bub_width_int[id_step]:   
                         bub_width.append(bub_width_ext[id_step])
                         bub_width_sd.append(bub_width_ext_sd[id_step])
-                        edge_width_arr.append(bub_width_ext[id_step] - bub_width_int[id_step])
-                        edge_width_arr_sd.append(bub_width_ext_sd[id_step] + bub_width_int_sd[id_step])
+                        edge_width_arr.append(edge_width_final[id_step])
+                        edge_width_arr_sd.append(edge_width_final_sd[id_step])
                     else:
                         bub_width.append(bub_width_int[id_step])
                         bub_width_sd.append(bub_width_int_sd[id_step])
-                        edge_width_arr.append(bub_width_int[id_step] - bub_width_ext[id_step])
-                        edge_width_arr_sd.append(bub_width_int_sd[id_step] + bub_width_ext_sd[id_step])
+                        edge_width_arr.append(edge_width_final[id_step])
+                        edge_width_arr_sd.append(edge_width_final_sd[id_step])
                     #if bub_size_id_arr[m]==interface_id:
                         #If both interior and exterior particles were identified, continue...
                     '''
@@ -12441,7 +12465,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
         #Output calculations/information for each interface structure
         g = open(outPath2+outTxt_bub_info, 'a')
-        for m in range(0, len(bub_id_arr)):
+        for m in range(0, len(bub_size_id_arr)):
             if if_bub_id_arr[m]!=0:
                 g.write('{0:.2f}'.format(tst).center(15) + ' ')
                 g.write('{0:.6f}'.format(sizeBin).center(15) + ' ')
@@ -14254,6 +14278,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
                             new_align_avg_trad0[ix][iy] = new_align_trad0[ix][iy] / new_align_num_trad0[ix][iy]
                         if new_align_num_trad1[ix][iy]>0:
                             new_align_avg_trad1[ix][iy] = new_align_trad1[ix][iy] / new_align_num_trad1[ix][iy]
+                        if new_align_num_trad1[ix][iy]>0:
+                            if new_align_num_trad0[ix][iy]>0:
+                                new_align_avg_dif_trad[ix][iy] = np.abs(new_align_avg_trad1[ix][iy]) - np.abs(new_align_avg_trad0[ix][iy])
 
         binArea = sizeBin**2
         
@@ -14611,6 +14638,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         div_min = -3
         levels_text=40
         level_boundaries = np.linspace(min_n, max_n, levels_text + 1)
+        
         im = plt.contourf(pos_box_x, pos_box_y, num_densDif, level_boundaries, vmin=min_n, vmax=max_n, cmap='seismic', extend='both')
         norm= matplotlib.colors.Normalize(vmin=min_n, vmax=max_n)
 
@@ -14648,7 +14676,11 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         clb = fig.colorbar(sm, ticks=tick_lev, boundaries=level_boundaries,
 values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStrFormatter('%.2f'))
         clb.ax.tick_params(labelsize=16)
-        clb.set_label(r'$n_\mathrm{B}-n_\mathrm{A}$', labelpad=-40, y=1.07, rotation=0, fontsize=20)
+        
+        if peB >= peA:
+            clb.set_label(r'$n_\mathrm{B}-n_\mathrm{A}$', labelpad=-40, y=1.07, rotation=0, fontsize=20)
+        else:
+            clb.set_label(r'$n_\mathrm{A}-n_\mathrm{B}$', labelpad=-40, y=1.07, rotation=0, fontsize=20)
         
         plt.xlim(0, l_box)
         plt.ylim(0, l_box)
