@@ -3903,20 +3903,21 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     
                     #Calculate total active force normal to interface in slice
                     yfinal[i-1] = np.sum(fa_all_tot_trad[points][points2])
-                    alignfinal[i-1] = np.sum(align_all_tot_trad[points][points2])
-                    densfinal[i-1] = len(fa_all_tot_trad[points][points2])
-                    
-                    #If area of slice is non-zero, calculate the pressure [F/A]
-                    if area != 0:
-                        yfinal[i-1] = yfinal[i-1]/area
-                        densfinal[i-1] = densfinal[i-1]/area
-                    else:
-                        yfinal[i-1] = 0
-                        densfinal[i-1] = 0
                 else:
                     yfinal[i-1]=0
-                    densfinal[i-1]=0
-                    alignfinal[i-1]=0
+                    
+                alignfinal[i-1] = np.mean(align_all_tot_trad[points])
+                densfinal[i-1] = len(points)
+                    
+                    #If area of slice is non-zero, calculate the pressure [F/A]
+                if area != 0:
+                    yfinal[i-1] = yfinal[i-1]/area
+                    densfinal[i-1] = densfinal[i-1]/area
+                else:
+                    yfinal[i-1] = 0
+                    densfinal[i-1] = 0
+                
+                    
             else:
                 yfinal[i-1]=0
                 densfinal[i-1]=0
