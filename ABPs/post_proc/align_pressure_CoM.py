@@ -465,7 +465,9 @@ g = open(outPath2+outTxt_align_press, 'w+') # write file headings
 g.write('tauB'.center(20) + ' ' +\
                         'sizeBin'.center(20) + ' ' +\
                         'clust_size'.center(20) + ' ' +\
-                        'press_align' + '\n')
+                        'press_align'.center(20) + ' ' +\
+                        'press_alignA'.center(20) + ' ' +\
+                        'press_alignB' + '\n')
 g.close()
 
 outTxt_radial = 'Radial_int_CoM_' + outfile + '.txt'
@@ -479,8 +481,14 @@ g.write('tauB'.center(20) + ' ' +\
                         'r_min'.center(20) + ' ' +\
                         'r_max'.center(20) + ' ' +\
                         'align'.center(20) + ' ' +\
+                        'alignA'.center(20) + ' ' +\
+                        'alignB'.center(20) + ' ' +\
                         'num_dens'.center(20) + ' ' +\
-                        'press'.center(20) + '\n')
+                        'num_densA'.center(20) + ' ' +\
+                        'num_densB'.center(20) + ' ' +\
+                        'press'.center(20) + ' ' +\
+                        'pressA'.center(20) + ' ' +\
+                        'pressB'.center(20) + '\n')
 g.close()
 
 with hoomd.open(name=inFile, mode='rb') as t:
@@ -834,6 +842,12 @@ with hoomd.open(name=inFile, mode='rb') as t:
         fa_all_tot_trad = np.array([])#[[0 for b in range(NBins)] for a in range(NBins)]
         align_all_tot_trad = np.array([])
         r_dist_tot_trad = np.array([])
+        fa_all_tot_tradA = np.array([])#[[0 for b in range(NBins)] for a in range(NBins)]
+        align_all_tot_tradA = np.array([])
+        r_dist_tot_tradA = np.array([])
+        fa_all_tot_tradB = np.array([])#[[0 for b in range(NBins)] for a in range(NBins)]
+        align_all_tot_tradB = np.array([])
+        r_dist_tot_tradB = np.array([])
         fa_all_tot_test = np.array([])
         r_dist_tot_test = np.array([])
         
@@ -3721,7 +3735,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
         new_align_num_trad = [[0 for b in range(NBins)] for a in range(NBins)]
         new_align_num_trad0 = [[0 for b in range(NBins)] for a in range(NBins)]
         new_align_num_trad1 = [[0 for b in range(NBins)] for a in range(NBins)]
-
+        id_trad = np.array([], dtype=int)
                     
         #Loop over all bins
         for ix in range(0, len(occParts)):
@@ -3779,22 +3793,79 @@ with hoomd.open(name=inFile, mode='rb') as t:
                             #Add alignment with CoM for average calculation of all particles
                             new_align_trad[ix][iy] += r_dot_p_trad
                             new_align_num_trad[ix][iy]+= 1
-                            align_all_tot_trad=np.append(align_all_tot_trad, r_dot_p_trad)
 
                             #If particle is of type A, add alignment with nearest surface's normal for average calculation
                             if typ[binParts[ix][iy][h]]==0:
-                                fa_all_tot_trad=np.append(fa_all_tot_trad, r_dot_p_trad*peA)
-                                r_dist_tot_trad = np.append(r_dist_tot_trad, difr_trad)
                                 new_align_trad0[ix][iy] += r_dot_p_trad
                                 new_align_num_trad0[ix][iy]+= 1
                                 
                             #If particle is of type B, add alignment with nearest surface's normal for average calculation
                             elif typ[binParts[ix][iy][h]]==1:
-                                fa_all_tot_trad=np.append(fa_all_tot_trad, r_dot_p_trad*peB)
-                                r_dist_tot_trad = np.append(r_dist_tot_trad, difr_trad)
                                 new_align_trad1[ix][iy] += r_dot_p_trad
                                 new_align_num_trad1[ix][iy]+= 1
-        
+        for h in range(0, len(pos)):
+            #Calculate position of exterior edge bin
+            pos_box_x1 = pos[h,0]+h_box
+            pos_box_y1 = pos[h,1]+h_box
+                                    
+            #Calculate difference in bin's position with CoM at h_box
+            difx_trad = pos_box_x1 - h_box
+            
+            #Enforce periodic boundary conditions
+            difx_trad_abs = np.abs(difx_trad)
+            if difx_trad_abs>=h_box:
+                if difx_trad < -h_box:
+                    difx_trad += l_box
+                else:
+                    difx_trad -= l_box
+            
+            #Enforce periodic boundary conditions
+            dify_trad = pos_box_y1 - h_box
+            dify_trad_abs = np.abs(dify_trad)
+            if dify_trad_abs>=h_box:
+                if dify_trad < -h_box:
+                    dify_trad += l_box
+                else:
+                    dify_trad -= l_box
+                    
+            #Very large initial distance to calculate closest interior edge bin to this exterior edge bin
+            difr_trad= ( (difx_trad )**2 + (dify_trad)**2)**0.5
+            
+            x_norm_unitv = difx_trad / difr_trad
+            y_norm_unitv = dify_trad / difr_trad
+                                        
+            x_norm_unitv_trad = (difx_trad) / difr_trad
+            y_norm_unitv_trad = (dify_trad) / difr_trad
+
+                    
+            #Calculate x and y orientation of active force
+            px = np.sin(ang[h])
+            py = -np.cos(ang[h])
+
+            #Calculate alignment towards CoM
+            r_dot_p_trad = (-x_norm_unitv_trad * px) + (-y_norm_unitv_trad * py)
+            
+            #Add alignment with CoM for average calculation of all particles
+            align_all_tot_trad=np.append(align_all_tot_trad, r_dot_p_trad)
+
+            #If particle is of type A, add alignment with nearest surface's normal for average calculation
+            if typ[h]==0:
+                fa_all_tot_trad=np.append(fa_all_tot_trad, r_dot_p_trad*peA)
+                fa_all_tot_tradA=np.append(fa_all_tot_tradA, r_dot_p_trad*peA)
+                r_dist_tot_trad = np.append(r_dist_tot_trad, difr_trad)
+                r_dist_tot_tradA = np.append(r_dist_tot_tradA, difr_trad)
+                align_all_tot_tradA=np.append(align_all_tot_tradA, r_dot_p_trad)
+                id_trad = np.append(id_trad, h)
+                
+            #If particle is of type B, add alignment with nearest surface's normal for average calculation
+            elif typ[h]==1:
+                fa_all_tot_trad=np.append(fa_all_tot_trad, r_dot_p_trad*peB)
+                fa_all_tot_tradB=np.append(fa_all_tot_tradB, r_dot_p_trad*peB)
+                r_dist_tot_trad = np.append(r_dist_tot_trad, difr_trad)
+                r_dist_tot_tradB = np.append(r_dist_tot_tradB, difr_trad)
+                align_all_tot_tradB=np.append(align_all_tot_tradB, r_dot_p_trad)
+                id_trad = np.append(id_trad, h)
+                
         #Loop over bins in system
         for ix in range(0, len(occParts)):
             for iy in range(0, len(occParts)): 
@@ -3863,18 +3934,27 @@ with hoomd.open(name=inFile, mode='rb') as t:
         
         #Initiate empty values for integral of pressures across interfaces
         int_sum_trad = 0
-              
+        int_sum_tradA = 0
+        int_sum_tradB = 0
 
         #X locations across interface for integration
-        xint = np.linspace(0, np.ceil(np.max(r_dist_tot_trad)), num=int((int((int(np.ceil(np.ceil(np.max(r_dist_tot_trad))))+1)))/3))
+        xint = np.linspace(0, h_box, num=int((int((int(np.ceil(h_box))+1)))/3))
         
         #Pressure integrand components for each value of X
         yfinal = np.zeros(len(xint))
         alignfinal = np.zeros(len(xint))
         densfinal = np.zeros(len(xint))
         
+        yfinalA = np.zeros(len(xint))
+        alignfinalA = np.zeros(len(xint))
+        densfinalA = np.zeros(len(xint))
+        
+        yfinalB = np.zeros(len(xint))
+        alignfinalB = np.zeros(len(xint))
+        densfinalB = np.zeros(len(xint))
+        
         #If exterior and interior surfaces defined, continue...
-                        
+        
         area_prev = 0
         #For each step across interface, calculate pressure in that step's area (averaged over angle from CoM)
         for i in range(1, len(xint)):
@@ -3886,46 +3966,81 @@ with hoomd.open(name=inFile, mode='rb') as t:
             max_range = xint[i]   
             
             #Calculate area of rectangle for current step
+            
             area = np.pi * (max_range ** 2) - area_prev
             
             #Save total area of previous step sizes
             area_prev = np.pi * (max_range ** 2)
+                
              
             #Find particles that are housed within current slice
             points = np.where((min_range<=r_dist_tot_trad) & (r_dist_tot_trad<=max_range))[0]  
-            
+            pointsA = np.where((min_range<=r_dist_tot_tradA) & (r_dist_tot_tradA<=max_range))[0]  
+            pointsB = np.where((min_range<=r_dist_tot_tradB) & (r_dist_tot_tradB<=max_range))[0]  
             #If at least 1 particle in slice, continue...
             if len(points)>0:
                 
                 #If the force is defined, continue...
                 points2 = np.logical_not(np.isnan(fa_all_tot_trad[points]))
+                points2A = np.logical_not(np.isnan(fa_all_tot_tradA[pointsA]))
+                points2B = np.logical_not(np.isnan(fa_all_tot_tradB[pointsB]))
+                
                 if len(points2)>0:
                     
                     #Calculate total active force normal to interface in slice
                     yfinal[i-1] = np.sum(fa_all_tot_trad[points][points2])
+                    yfinalA[i-1] = np.sum(fa_all_tot_tradA[pointsA][points2A])
+                    yfinalB[i-1] = np.sum(fa_all_tot_tradB[pointsB][points2B])
                 else:
                     yfinal[i-1]=0
-                    
+                    yfinalA[i-1]=0
+                    yfinalB[i-1]=0
+                
+                #Calculate average alignment 
                 alignfinal[i-1] = np.mean(align_all_tot_trad[points])
+                alignfinalA[i-1] = np.mean(align_all_tot_tradA[pointsA])
+                alignfinalB[i-1] = np.mean(align_all_tot_tradB[pointsB])
+                
+                #Calculate density
                 densfinal[i-1] = len(points)
+                densfinalA[i-1] = len(pointsA)
+                densfinalB[i-1] = len(pointsB)
                     
                     #If area of slice is non-zero, calculate the pressure [F/A]
                 if area != 0:
                     yfinal[i-1] = yfinal[i-1]/area
+                    yfinalA[i-1] = yfinalA[i-1]/area
+                    yfinalB[i-1] = yfinalB[i-1]/area
                     densfinal[i-1] = densfinal[i-1]/area
+                    densfinalA[i-1] = densfinalA[i-1]/area
+                    densfinalB[i-1] = densfinalB[i-1]/area
                 else:
                     yfinal[i-1] = 0
+                    yfinalA[i-1] = 0
+                    yfinalB[i-1] = 0
                     densfinal[i-1] = 0
+                    densfinalA[i-1] = 0
+                    densfinalB[i-1] = 0
                 
                     
             else:
                 yfinal[i-1]=0
+                yfinalA[i-1]=0
+                yfinalB[i-1]=0
                 densfinal[i-1]=0
                 alignfinal[i-1]=0
+                densfinalA[i-1]=0
+                alignfinalA[i-1]=0
+                densfinalB[i-1]=0
+                alignfinalB[i-1]=0
         
         #Integrate force across interface using trapezoidal rule
         for o in range(1, len(xint)):
                 int_sum_trad += ((xint[o]-xint[o-1])/2)*(yfinal[o]+yfinal[o-1])
+                int_sum_tradA += ((xint[o]-xint[o-1])/2)*(yfinalA[o]+yfinalA[o-1])
+                int_sum_tradB += ((xint[o]-xint[o-1])/2)*(yfinalB[o]+yfinalB[o-1])
+                
+        #Output values for radial measurements from CoM
         g = open(outPath2+outTxt_radial, 'a')
         for p in range(0, len(yfinal)-1):
             g.write('{0:.2f}'.format(tst).center(20) + ' ')
@@ -3936,14 +4051,23 @@ with hoomd.open(name=inFile, mode='rb') as t:
             g.write('{0:.6f}'.format(xint[p]).center(20) + ' ')
             g.write('{0:.6f}'.format(xint[p+1]).center(20) + ' ')
             g.write('{0:.6f}'.format(alignfinal[p]).center(20) + ' ')
+            g.write('{0:.6f}'.format(alignfinalA[p]).center(20) + ' ')
+            g.write('{0:.6f}'.format(alignfinalB[p]).center(20) + ' ')
             g.write('{0:.6f}'.format(densfinal[p]).center(20) + ' ')
-            g.write('{0:.6f}'.format(yfinal[p]).center(20) + '\n')
+            g.write('{0:.6f}'.format(densfinalA[p]).center(20) + ' ')
+            g.write('{0:.6f}'.format(densfinalB[p]).center(20) + ' ')
+            g.write('{0:.6f}'.format(yfinal[p]).center(20) + ' ')
+            g.write('{0:.6f}'.format(yfinalA[p]).center(20) + ' ')
+            g.write('{0:.6f}'.format(yfinalB[p]).center(20) + '\n')
         g.close()
-                #Save active pressure of each interface
+        
+        #Save active pressure of each interface
         g = open(outPath2+outTxt_align_press, 'a')
         g.write('{0:.2f}'.format(tst).center(20) + ' ')
         g.write('{0:.6f}'.format(sizeBin).center(20) + ' ')
         g.write('{0:.0f}'.format(np.amax(clust_size)).center(20) + ' ')
-        g.write('{0:.6f}'.format(int_sum_trad).center(20) + '\n')
+        g.write('{0:.6f}'.format(int_sum_trad).center(20) + ' ')
+        g.write('{0:.6f}'.format(int_sum_tradA).center(20) + ' ')
+        g.write('{0:.6f}'.format(int_sum_tradB).center(20) + '\n')
         g.close()
         

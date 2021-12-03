@@ -302,10 +302,13 @@ for i in range(0, len(pe_a)):
             int_width = (np.sqrt(3)/(2*alpha_max)) * (curPLJ/peNet) * (latNet **2) * I_arr
             int_width_theory = np.append(int_width_theory, int_width)
 
+fastCol = '#e31a1c'
+slowCol = '#081d58'
+
 plt.scatter(pnet_pair, press_slow_dense, c='red')
 plt.scatter(pnet_pair, press_fast_dense, c='blue')
 plt.show()
-
+fsize=20
 fig = plt.figure(figsize=(10,7))
 ax = fig.add_subplot(111)
 div_min = -3
@@ -316,19 +319,93 @@ level_boundaries = np.linspace(min_n, max_n, levels_text + 1)
 tick_locs   = [0.0,np.pi/6,np.pi/3]
 tick_labels = ['0',r'$\pi/6$',r'$\pi/3$']
 
-im = plt.scatter(pnet_pair, press_slow_dense, linewidths=1.0, edgecolor='black', facecolor='green', s=60.0)
-im = plt.scatter(pnet_pair, press_fast_int, linewidths=1.0, edgecolor='black', facecolor='yellow', s=60.0)
+im = plt.scatter(pnet_pair, press_slow_dense, linewidths=1.0, edgecolor='black', facecolor=slowCol, s=120.0, label='Bulk')
+im = plt.scatter(pnet_pair, press_fast_int, linewidths=1.0, marker = '*', edgecolor='black', facecolor=fastCol, s=300.0, label='Interface')
          
-yellow_patch = mpatches.Patch(color='yellow', label='Fast Interface')
-red_patch = mpatches.Patch(color='green', label='Slow Bulk')
-plt.legend(handles=[yellow_patch, red_patch], fancybox=True, framealpha=0.75, ncol=1, fontsize=12, loc='upper left',labelspacing=0.1, handletextpad=0.1)
-
+plt.legend(fancybox=True, framealpha=0.75, ncol=1, fontsize=24, loc='upper left',handletextpad=0.1)
+plt.tick_params(axis='x', labelsize=20)
+plt.tick_params(axis='y', labelsize=20)
     
-plt.xlabel(r'$\mathrm{Pe}_\mathrm{Net}$', fontsize=20)
-plt.ylabel(r'Initial Pressure ($\Pi$)', fontsize=20)
+plt.xlabel(r'$\mathrm{Pe}_\mathrm{Net}$', fontsize=28)
+plt.ylabel(r'Initial Pressure ($\Pi$)', fontsize=28)
 plt.tight_layout()
 plt.show()
 
+
+x_start = np.array([0, 0.79999999, 0.8, 1.0, 1.00000000001, 1.2])
+align_start = np.array([0, 0, 1, 1, 0, 0])
+dens_start = np.array([1, 1, 1, 1, 0, 0])
+
+fig, ax1 = plt.subplots(figsize=(12,5))
+plt.plot(x_start, align_start,lw=1.8*1.8)
+ax1.set_xlim(0.0, 1.2)        
+
+ax1.set_ylim(-0.05, 1.05) 
+import matplotlib.ticker as ticker
+
+fsize = 10
+ax1.set_xlabel(r'distance from CoM ($r$)', fontsize=fsize*2.8)
+
+
+
+ax1.set_ylabel(r'Alignment ($\alpha$)', fontsize=fsize*2.8)
+
+
+# Set all the x ticks for radial plots
+loc = ticker.MultipleLocator(base=0.2)
+ax1.xaxis.set_major_locator(loc)
+loc = ticker.MultipleLocator(base=0.1)
+ax1.xaxis.set_minor_locator(loc)
+
+
+# Set y ticks
+loc = ticker.MultipleLocator(base=0.2)
+ax1.yaxis.set_major_locator(loc)
+loc = ticker.MultipleLocator(base=0.1)
+ax1.yaxis.set_minor_locator(loc)
+# Left middle plot
+
+ax1.tick_params(axis='x', labelsize=fsize*2.5)
+ax1.tick_params(axis='y', labelsize=fsize*2.5)
+
+plt.tight_layout()
+plt.show()
+   
+fig, ax1 = plt.subplots(figsize=(12,5))
+plt.plot(x_start, dens_start,lw=1.8*1.8)
+ax1.set_xlim(0.0, 1.2)        
+
+ax1.set_ylim(-0.05, 1.05) 
+import matplotlib.ticker as ticker
+
+fsize = 10
+ax1.set_xlabel(r'distance from CoM ($r$)', fontsize=fsize*2.8)
+
+
+
+ax1.set_ylabel(r'Number Density ($n$)', fontsize=fsize*2.8)
+
+
+# Set all the x ticks for radial plots
+loc = ticker.MultipleLocator(base=0.2)
+ax1.xaxis.set_major_locator(loc)
+loc = ticker.MultipleLocator(base=0.1)
+ax1.xaxis.set_minor_locator(loc)
+
+
+# Set y ticks
+loc = ticker.MultipleLocator(base=0.2)
+ax1.yaxis.set_major_locator(loc)
+loc = ticker.MultipleLocator(base=0.1)
+ax1.yaxis.set_minor_locator(loc)
+# Left middle plot
+
+ax1.tick_params(axis='x', labelsize=fsize*2.5)
+ax1.tick_params(axis='y', labelsize=fsize*2.5)
+
+plt.tight_layout()
+plt.show()
+                                 
 fig = plt.figure(figsize=(10,7))
 ax = fig.add_subplot(111)
 div_min = -3
@@ -339,16 +416,15 @@ level_boundaries = np.linspace(min_n, max_n, levels_text + 1)
 tick_locs   = [0.0,np.pi/6,np.pi/3]
 tick_labels = ['0',r'$\pi/6$',r'$\pi/3$']
 
-im = plt.scatter(pnet_pair, press_fast_dense, linewidths=1.0, edgecolor='black', facecolor='green', s=60.0)
-im = plt.scatter(pnet_pair, press_slow_int, linewidths=1.0, edgecolor='black', facecolor='yellow', s=60.0)
-         
-yellow_patch = mpatches.Patch(color='yellow', label='Slow Interface')
-red_patch = mpatches.Patch(color='green', label='Fast Bulk')
-plt.legend(handles=[yellow_patch, red_patch], fancybox=True, framealpha=0.75, ncol=1, fontsize=12, loc='upper left',labelspacing=0.1, handletextpad=0.1)
+im = plt.scatter(pnet_pair, press_fast_dense, linewidths=1.0, edgecolor='black', facecolor=fastCol, s=120.0, label='Bulk')
+im = plt.scatter(pnet_pair, press_slow_int, marker = '*', linewidths=1.0, edgecolor='black', facecolor=slowCol, s=300.0, label='Interface')
 
+plt.legend(fancybox=True, framealpha=0.75, ncol=1, fontsize=24, loc='upper left',handletextpad=0.1)
+plt.tick_params(axis='x', labelsize=20)
+plt.tick_params(axis='y', labelsize=20)
     
-plt.xlabel(r'$\mathrm{Pe}_\mathrm{Net}$', fontsize=20)
-plt.ylabel(r'Initial Pressure ($\Pi$)', fontsize=20)
+plt.xlabel(r'$\mathrm{Pe}_\mathrm{Net}$', fontsize=28)
+plt.ylabel(r'Initial Pressure ($\Pi$)', fontsize=28)
 plt.tight_layout()
 plt.show()
 
