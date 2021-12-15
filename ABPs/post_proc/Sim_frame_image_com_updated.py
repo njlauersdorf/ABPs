@@ -64,15 +64,18 @@ from freud import density
 from freud import cluster
 
 
-#Set plot colors
-fastCol = '#e31a1c'
-slowCol = '#081d58'
+
 
 # Command line arguments
 infile = str(sys.argv[1])                               # Get infile (.gsd)
 peA = float(sys.argv[2])                                #Activity (Pe) for species A
 peB = float(sys.argv[3])                                #Activity (Pe) for species B
 
+
+#Set plot colors
+fastCol = '#e31a1c'
+slowCol = '#081d58'
+    
 parFrac_orig = float(sys.argv[4])                       #Fraction of system consists of species A (chi_A)
 
 #Convert particle fraction to a percent
@@ -254,6 +257,8 @@ with hoomd.open(name=infile, mode='rb') as t:
                 pos[i,1]=pos[i,1]-l_box
             elif pos[i,1]<-h_box:
                 pos[i,1]=pos[i,1]+l_box
+        print('mono')
+        print(mono)
         if mono==0:
             #Local each particle's positions
             pos0=pos[typ0ind]                               # Find positions of type 0 particles

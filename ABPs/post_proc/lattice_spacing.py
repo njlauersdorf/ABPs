@@ -487,7 +487,7 @@ g.close()
 
 with hoomd.open(name=inFile, mode='rb') as t:
     
-    start = int(0/time_step)#205                                             # first frame to process
+    start = int(10/time_step)#205                                             # first frame to process
     dumps = int(t.__len__())                                # get number of timesteps dumped
     end = int(dumps/time_step)-1                                             # final frame to process
     snap = t[0]                                             # Take first snap for box
@@ -3612,20 +3612,21 @@ with hoomd.open(name=inFile, mode='rb') as t:
         
         #Compute neighbor list for 6-nearest neighbors given particle positions
         system_all = freud.AABBQuery(f_box, f_box.wrap(pos))
-        nlist2 = system_all.query(f_box.wrap(bulk_int_pos), dict(num_neighbors=6, exclude_ii=True))
+        nlist2 = system_all.query(f_box.wrap(bulk_int_pos), dict(num_neighbors=7))
         
         #Set empty arrays
-        point_ind_arr = np.array([])
-        point_query_arr = np.array([])
+        point_ind_arr = np.array([], dtype=int)
+        point_query_arr = np.array([], dtype=int)
         difr = np.array([])
         
         #Save neighbor indices and distances from neighbor list to array
         for bond in nlist2:
-            point_ind_arr = np.append(point_ind_arr, bond[0])
-            point_query_arr = np.append(point_query_arr, bond[1])
-            difr = np.append(difr, bond[2])
+            if bond[2]>0:
+                point_ind_arr = np.append(point_ind_arr, bond[0])
+                point_query_arr = np.append(point_query_arr, bond[1])
+                difr = np.append(difr, bond[2])
+            
         
-
         #Set empty arrays
         lat_mean_indiv_arr_bulk = np.array([])
         lat_mean_indiv_arr_gas = np.array([])
@@ -3683,6 +3684,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
             #If reference particle is not in neighbor list, save 0 lattice spacing
             else:
+                
                 lat_mean_indiv_arr_bulk = np.append(lat_mean_indiv_arr_bulk, 0)
                 lat_mean_indiv_arr_int = np.append(lat_mean_indiv_arr_int, 0)
                 lat_mean_indiv_arr_gas = np.append(lat_mean_indiv_arr_gas, 0)
@@ -3763,17 +3765,21 @@ with hoomd.open(name=inFile, mode='rb') as t:
         if (len(lat_mean_indiv_arr_bulk)>0) or (len(lat_mean_indiv_arr_int)>0):
             pad = str(j).zfill(4)
             x_pos_plot = np.append(pos_x_bulk+h_box, pos_x_int+h_box)
-            x_pos_plot = np.append(x_pos_plot, pos_x_bub+h_box)
+            x_pos_final = np.append(x_pos_plot, pos_x_bub+h_box)
             y_pos_plot = np.append(pos_y_bulk+h_box, pos_y_int+h_box)
-            y_pos_plot = np.append(y_pos_plot, pos_y_bub+h_box)
+            y_pos_final = np.append(y_pos_plot, pos_y_bub+h_box)
             lat_mean_plot = np.append(lat_mean_indiv_arr_bulk, lat_mean_indiv_arr_int)
-            lat_mean_plot = np.append(lat_mean_plot, lat_mean_indiv_arr_bub)
+            lat_mean_final = np.append(lat_mean_plot, lat_mean_indiv_arr_bub)
             
             vmin_num = np.min(lat_mean_indiv_arr_bulk)
-            vmax_num = np.max(lat_mean_indiv_arr_bulk)
+            if np.max(lat_mean_indiv_arr_bulk)>r_cut:
+                vmax_num = r_cut
+            else:
+                vmax_num = np.max(lat_mean_indiv_arr_bulk)
 
             fig = plt.figure(figsize=(8,6))
-            im = plt.scatter(x_pos_plot, y_pos_plot, s=0.7, c=lat_mean_plot, vmin=vmin_num, vmax=vmax_num, cmap='viridis')
+            ax = fig.add_subplot(111)
+            im = plt.scatter(x_pos_final, y_pos_final, s=0.7, c=lat_mean_final, vmin=vmin_num, vmax=vmax_num, cmap='viridis')
 
             norm= matplotlib.colors.Normalize(vmin=vmin_num, vmax=vmax_num)
 
@@ -3788,12 +3794,12 @@ with hoomd.open(name=inFile, mode='rb') as t:
             plt.xlim(0, l_box)
             plt.ylim(0, l_box)
             
-            plt.text(270.0, 20., s=r'$\tau$' + ' = ' + '{:.1f}'.format(tst*3) + ' ' + r'$\tau_\mathrm{r}$',
-                fontsize=18,
+            plt.text(0.77, 0.04, s=r'$\tau$' + ' = ' + '{:.1f}'.format(3*tst) + ' ' + r'$\tau_\mathrm{r}$',
+                fontsize=18,transform = ax.transAxes,
                 bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
-    
-            plt.axis('off')
-            plt.title(r'$\mathrm{Pe}$' + ' = ' + str(int(peA)) + ', ' + r'$\phi$' + ' = ' + str(phi) + ', ' + r'$\epsilon$' + ' = ' + r'$10^{{{}}}$'.format(int(np.log10(eps))), fontsize=17)
+            ax.set_xticks([])
+            ax.set_yticks([])
+            #plt.axis('off')
             plt.tight_layout()
             plt.savefig(outPath + 'lat_map_' + out + pad + ".png", dpi=200)
             plt.close()
@@ -3808,7 +3814,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
             xmax = 1.0
             
             fig = plt.figure(figsize=(8,6))
-
+            ax = fig.add_subplot(111)
             #Remove bulk particles that are outside plot's xrange
             if (len(lat_mean_indiv_arr_bulk)>0):
                 bulk_id = np.where((lat_mean_indiv_arr_bulk > xmax) | (lat_mean_indiv_arr_bulk < xmin))[0]
@@ -3836,9 +3842,13 @@ with hoomd.open(name=inFile, mode='rb') as t:
             plt.xlabel(r'lattice spacing ($a$)', fontsize=20)
             plt.ylabel('Number of particles', fontsize=20) 
             plt.xlim([xmin,xmax])
-            plt.title(r'$\tau$' + ' = ' + '{:.1f}'.format(tst*3) + ' ' + r'$\tau_\mathrm{r}$', fontsize=22)
+            
+            plt.text(0.77, 0.04, s=r'$\tau$' + ' = ' + '{:.1f}'.format(3*tst) + ' ' + r'$\tau_\mathrm{r}$',
+                fontsize=18,transform = ax.transAxes,
+                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+    
             plt.tight_layout()
-            plt.savefig(outPath + 'lat_histo_' + out + pad + ".png", dpi=200)
+            plt.savefig(outPath + 'lat_histo_' + out + pad + ".png", dpi=150)
             plt.close()
             
         fig = plt.figure(figsize=(8.5,8))
