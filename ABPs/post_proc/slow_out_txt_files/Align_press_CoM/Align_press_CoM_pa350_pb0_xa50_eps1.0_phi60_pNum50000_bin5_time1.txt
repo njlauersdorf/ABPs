@@ -1,2 +1,0 @@
-        tauB               sizeBin             clust_size          press_align          press_alignA     press_alignB
-        0.00               5.016308              38490             -224.432900          -224.432900            0.000000      

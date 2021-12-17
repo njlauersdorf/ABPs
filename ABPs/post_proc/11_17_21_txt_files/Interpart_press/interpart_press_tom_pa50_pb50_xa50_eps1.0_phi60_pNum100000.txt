@@ -1,1 +1,0 @@
-    Timestep        gasArea         gasSigXX        gasSigXY        gasSigYX        gasSigYY        gasTrace        bulkArea       bulkSigXX       bulkSigXY       bulkSigYX       bulkSigYY       bulkTrace         Length          NDense    

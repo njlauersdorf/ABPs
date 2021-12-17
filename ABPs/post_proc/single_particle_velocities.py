@@ -440,10 +440,6 @@ with hoomd.open(name=infile, mode='rb') as t:
         min_size=int(partNum/8)                                     #Minimum cluster size for measurements to happen
         lcID = np.where(clust_size == np.amax(clust_size))[0][0]    #Identify largest cluster
         large_clust_ind_all=np.where(clust_size>min_size)           #Identify all clusters larger than minimum size
-        
-        j=int(p*time_step)
-        print('j')
-        print(j)
 
         snap = t[j]                                 #Take current frame
 
@@ -1315,7 +1311,7 @@ with hoomd.open(name=infile, mode='rb') as t:
             clb = fig.colorbar(sm, ax=ax, ticks=tick_lev, extend='both')
             #cbar = plt.colorbar(scatter)
             clb.ax.tick_params(labelsize=18)  
-            clb.set_label(r'$\mathrm{log}_{10}|\mathbf{v_\mathrm{B}}|$', rotation=270, labelpad=25, fontsize=20)
+            clb.set_label(r'$\mathrm{log}_{10}|\mathbf{v_\mathrm{A}}|$', rotation=270, labelpad=25, fontsize=20)
         
             # Limits and ticks
             viewBuff = buff / 2.0

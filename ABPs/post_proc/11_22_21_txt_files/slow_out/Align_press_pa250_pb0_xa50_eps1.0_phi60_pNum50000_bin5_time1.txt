@@ -1,2 +1,0 @@
-        tauB               sizeBin             clust_size      press_align
-        0.00               5.016308              33358             -113.136791     

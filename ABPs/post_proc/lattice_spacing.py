@@ -487,7 +487,7 @@ g.close()
 
 with hoomd.open(name=inFile, mode='rb') as t:
     
-    start = int(10/time_step)#205                                             # first frame to process
+    start = int(0/time_step)#205                                             # first frame to process
     dumps = int(t.__len__())                                # get number of timesteps dumped
     end = int(dumps/time_step)-1                                             # final frame to process
     snap = t[0]                                             # Take first snap for box

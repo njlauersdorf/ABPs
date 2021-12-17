@@ -307,6 +307,27 @@ def alignProbability(r, activity_net, activity_slow):
     
     return align_r
 
+def find_nearest(array, value):
+    array = np.asarray(array)
+    idx = (np.abs(array - value)).argmin()
+    return int(idx)
+
+def activityProbability(r, r_swap = [], probA = []):
+    "Using similar triangles to find sides"
+    if len(r_swap)>0:
+        prob_rA = np.zeros(len(r))
+        prob_rB = np.zeros(len(r))
+        for i in range(1, len(r_swap)):
+            r_min = find_nearest(r, r_swap[i-1])
+            r_max = find_nearest(r, r_swap[i])
+            
+            prob_rA[r_min:r_max+1]=probA[i]
+            prob_rB[r_min:r_max+1]=1.0-probA[i]
+    else:
+        prob_rA = np.ones(len(r)) * 0.5
+        prob_rB = np.ones(len(r)) - prob_rA
+    
+    return prob_rA, prob_rB
 # List of activities
 peList = [ peF, peS ]
 # List of ring radii
@@ -321,11 +342,12 @@ dens = densProbability(r, peNet, peS)
 align = alignProbability(r, peNet, peS)
 activity_distrib = np.zeros(len(r))
 
-def find_nearest(array, value):
-    array = np.asarray(array)
-    idx = (np.abs(array - value)).argmin()
-    return int(idx)
+prob_arr_A, prob_arr_B = activityProbability(r, r_swap = [0.0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0], probA = [1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0])
 
+plt.plot(r, prob_arr_A, color='red')
+plt.plot(r, prob_arr_B, color='blue')
+plt.show()
+stop
 end_fast = find_nearest(r, 0.4)
 end_slow = find_nearest(r, 0.7)
 activity_distrib[0:end_fast] = peF

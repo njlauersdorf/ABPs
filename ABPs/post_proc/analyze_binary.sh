@@ -107,8 +107,10 @@ if [ "$method" = "interface_pressure_com" ]; then
     python3 $script_path/align_pressure_CoM.py $fname $pa2 $pb $xa2 $ep $phi $dtau $bin $step $hoomd_path $txt_path $pic_path
 elif [ "$method" = "interface_pressure_surface" ]; then
     python3 $script_path/align_pressure_updated.py $fname $pa2 $pb $xa2 $ep $phi $dtau $bin $step $hoomd_path $txt_path $pic_path
-elif [ "$method" = "bulk_pressure" ]; then
+elif [ "$method" = "bulk_pressure_total" ]; then
     python3 $script_path/interparticle_pressure_true2.py $fname $pa2 $pb $xa2 $ep $phi $dtau $bin $step $hoomd_path $txt_path $pic_path
+elif [ "$method" = "bulk_pressure_phases" ]; then
+    python3 $script_path/interpart_press_updated.py $fname $pa2 $pb $xa2 $ep $phi $dtau $bin $step $hoomd_path $txt_path $pic_path
 elif [ "$method" = "lattice_spacing" ]; then
     python3 $script_path/lattice_spacing.py $fname $pa2 $pb $xa2 $ep $phi $dtau $bin $step $hoomd_path $txt_path $pic_path
     
@@ -116,7 +118,6 @@ elif [ "$method" = "lattice_spacing" ]; then
     pa=${pa%%.*}
     pb=${pb%.*}
     eps=${ep}
-    echo ${phi}
     phi=${phi%%.*}
     pNum=${pNum%.*}
 
@@ -144,7 +145,6 @@ elif [ "$method" = "number_density" ]; then
     pa=${pa%%.*}
     pb=${pb%.*}
     eps=${ep}
-    echo ${phi}
     phi=${phi%%.*}
     pNum=${pNum%.*}
 
@@ -177,6 +177,58 @@ elif [ "$method" = "number_density" ]; then
      "$vid_path"fa_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}.mp4
     
     rm -rf "$pic_path"fa_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_*
+elif [ "$method" = "alignment" ]; then
+    python3 $script_path/full_alignment_analysis_binary_updates.py $fname $pa2 $pb $xa2 $ep $phi $dtau $bin $step $hoomd_path $txt_path $pic_path
+
+    ffmpeg -start_number 0 -framerate 10 -i "$pic_path"align_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_%04d.png\
+     -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
+     "$vid_path"align_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}.mp4
+    
+    rm -rf "$pic_path"align_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum100000_bin${bin}_time${step}_frame_*
+    
+    ffmpeg -start_number 0 -framerate 10 -i "$pic_path"alignB_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_%04d.png\
+     -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
+     "$vid_path"alignB_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}.mp4
+    
+    rm -rf "$pic_path"alignB_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_*
+     
+    ffmpeg -start_number 0 -framerate 10 -i "$pic_path"alignA_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_%04d.png\
+     -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
+     "$vid_path"alignA_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}.mp4
+    
+    rm -rf "$pic_path"alignA_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_*
+     
+    ffmpeg -start_number 0 -framerate 10 -i "$pic_path"alignDif_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_%04d.png\
+     -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
+     "$vid_path"alignDif_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}.mp4
+    
+    rm -rf "$pic_path"alignDif_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_*
+    
+    ffmpeg -start_number 0 -framerate 10 -i "$pic_path"aligngrad_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_%04d.png\
+     -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
+     "$vid_path"aligngrad_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}.mp4
+    
+    rm -rf "$pic_path"aligngrad_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum100000_bin${bin}_time${step}_frame_*
+    
+    ffmpeg -start_number 0 -framerate 10 -i "$pic_path"alignBgrad_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_%04d.png\
+     -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
+     "$vid_path"alignBgrad_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}.mp4
+    
+    rm -rf "$pic_path"alignBgrad_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_*
+     
+    ffmpeg -start_number 0 -framerate 10 -i "$pic_path"alignAgrad_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_%04d.png\
+     -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
+     "$vid_path"alignAgrad_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}.mp4
+    
+    rm -rf "$pic_path"alignAgrad_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_*
+     
+    ffmpeg -start_number 0 -framerate 10 -i "$pic_path"alignDifgrad_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_%04d.png\
+     -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
+     "$vid_path"alignDifgrad_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}.mp4
+    
+    rm -rf "$pic_path"alignDifgrad_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_*
+
+
 elif [ "$method" = "simulation_frames" ]; then
     python3 $script_path/Sim_frame_image_com_updated.py $fname $pa2 $pb $xa2 $ep $phi $dtau $hoomd_path $txt_path $pic_path
 
@@ -184,7 +236,6 @@ elif [ "$method" = "simulation_frames" ]; then
     pa=${pa%%.*}
     pb=${pb%.*}
     eps=${ep}
-    echo ${phi}
     phi=${phi%%.*}
     pNum=${pNum%.*}
     
@@ -200,7 +251,6 @@ elif [ "$method" = "velocity" ]; then
     pa=${pa%%.*}
     pb=${pb%.*}
     eps=${ep}
-    echo ${phi}
     phi=${phi%%.*}
     pNum=${pNum%.*}
     
@@ -278,6 +328,13 @@ elif [ "$method" = "velocity" ]; then
 elif [ "$method" = "neighbors" ]; then
     python3 $script_path/mesh_nearest_neighbors.py $fname $pa2 $pb $xa2 $ep $phi $dtau $bin $step $hoomd_path $txt_path $pic_path
 
+    pe=${pe%%.*}
+    pa=${pa%%.*}
+    pb=${pb%.*}
+    eps=${ep}
+    phi=${phi%%.*}
+    pNum=${pNum%.*}
+    
     ffmpeg -start_number 1 -framerate 10 -i "$pic_path"defects_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_frame_%04d.png\
      -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
      "$vid_path"defects_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}.mp4
@@ -295,6 +352,96 @@ elif [ "$method" = "neighbors" ]; then
      "$vid_path"defectsA_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}.mp4
     
     rm -rf "$pic_path"defectsA_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_frame_*
+elif [ "$method" = "individual_velocities" ]; then
+    python3 $script_path/single_particle_velocities.py $fname $pa2 $pb $xa2 $ep $phi $dtau $bin $step $hoomd_path $txt_path $pic_path
+
+    pe=${pe%%.*}
+    pa=${pa%%.*}
+    pb=${pb%.*}
+    eps=${ep}
+    phi=${phi%%.*}
+    pNum=${pNum%.*}
+    
+    ffmpeg -start_number 1 -framerate 10 -i "$pic_path"single_v_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_%04d.png\
+     -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
+     "$vid_path"single_v_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}.mp4
+    
+    rm -rf "$pic_path"single_v_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_*
+    
+    ffmpeg -start_number 1 -framerate 10 -i "$pic_path"single_vA_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_%04d.png\
+     -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
+     "$vid_path"single_vA_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}.mp4
+    
+    rm -rf "$pic_path"single_vA_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_*
+     
+    ffmpeg -start_number 1 -framerate 10 -i "$pic_path"single_vB_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_%04d.png\
+     -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
+     "$vid_path"single_vB_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}.mp4
+    
+    rm -rf "$pic_path"single_vB_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_*
+elif [ "$method" = "pressure_map" ]; then
+    python3 $script_path/interparticle_pressure_map.py $fname $pa2 $pb $xa2 $ep $phi $dtau $bin $step $hoomd_path $txt_path $pic_path
+
+    pe=${pe%%.*}
+    pa=${pa%%.*}
+    pb=${pb%.*}
+    eps=${ep}
+    phi=${phi%%.*}
+    pNum=${pNum%.*}
+    
+    ffmpeg -start_number 0 -framerate 10 -i "$pic_path"interpart_press_cluster_pe${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_%04d.png\
+     -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
+     "$vid_path"interpart_press_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}.mp4
+
+    rm -rf "$pic_path"interpart_press_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_*
+elif [ "$method" = "bulk_trace" ]; then
+    python3 $script_path/bulk_trace.py $fname $pa2 $pb $xa2 $ep $phi $dtau $bin $step $hoomd_path $txt_path $pic_path
+
+    pe=${pe%%.*}
+    pa=${pa%%.*}
+    pb=${pb%.*}
+    eps=${ep}
+    phi=${phi%%.*}
+    pNum=${pNum%.*}
+    
+    ffmpeg -start_number 1 -framerate 10 -i "$pic_path"trace_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_%04d.png\
+     -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
+     "$vid_path"trace_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}.mp4
+    
+    rm -rf "$pic_path"trace_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_*
+elif [ "$method" = "order_parameters" ]; then
+    python3 $script_path/hexatic_order_parameter.py $fname $pa2 $pb $xa2 $ep $phi $dtau $bin $step $hoomd_path $txt_path $pic_path
+
+    pe=${pe%%.*}
+    pa=${pa%%.*}
+    pb=${pb%.*}
+    eps=${ep}
+    phi=${phi%%.*}
+    pNum=${pNum%.*}
+
+    ffmpeg -start_number 0 -framerate 10 -i "$pic_path"hexatic_order_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_%04d.png\
+     -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
+     "$vid_path"hexatic_order_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}.mp4
+    
+    rm -rf "$pic_path"hexatic_order_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_*
+    
+    ffmpeg -start_number 0 -framerate 10 -i "$pic_path"translational_order_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_%04d.png\
+     -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
+     "$vid_path"translational_order_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}.mp4
+    
+    rm -rf "$pic_path"translational_order_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_*
+     
+    ffmpeg -start_number 0 -framerate 10 -i "$pic_path"steinhardt_order_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_%04d.png\
+     -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
+     "$vid_path"steinhardt_order_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}.mp4
+    
+    rm -rf "$pic_path"steinhardt_order_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_*
+    
+    ffmpeg -start_number 0 -framerate 10 -i "$pic_path"relative_angle_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_%04d.png\
+     -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
+     "$vid_path"relative_angle_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}.mp4
+    
+    rm -rf "$pic_path"relative_angle_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_*
 
 else
     echo "specified analysis routine not found"

@@ -288,32 +288,47 @@ def alignProbability(r, activity_net, activity_slow):
     
     return align_r
 
+def find_nearest(array, value):
+    array = np.asarray(array)
+    idx = (np.abs(array - value)).argmin()
+    return int(idx)
+
+def activityProbability(r, r_swap = [], probA = []):
+    "Using similar triangles to find sides"
+    if len(r_swap)>0:
+        prob_rA = np.zeros(len(r))
+        prob_rB = np.zeros(len(r))
+        for i in range(1, len(r_swap)):
+            r_min = find_nearest(r, r_swap[i-1])
+            r_max = find_nearest(r, r_swap[i])
+            
+            prob_rA[r_min:r_max+1]=probA[i]
+            prob_rB[r_min:r_max+1]=1.0-probA[i]
+    
+    return prob_rA, prob_rB
+
 # List of activities
 peList = [ peS ]
 # List of ring radii
 rList = [ 0., Rl*1.3 ]
 # Depth of alignment
 #rAlign = 3.
-r = np.linspace(0, 2, num=400)
-dens = densProbability(r, peNet, peS)
-align = alignProbability(r, peNet, peS)
-press = dens * align * peNet
+r_arr = np.linspace(0, 2, num=400)
+
+prob_arr_A, prob_arr_B = activityProbability(r_arr, r_swap = [0.0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0], probA = [0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0])
+dens = densProbability(r_arr, peNet, peS)
+align = alignProbability(r_arr, peNet, peS)
+press = dens * align * (prob_arr_A * pa + prob_arr_B * pb)
 press_int = 0
 for i in range(1, len(press)):
-    press_int += ((press[i-1]+press[i])/2)*(r[i]-r[i-1]) * Rl
+    press_int += ((press[i-1]+press[i])/2)*(r_arr[i]-r_arr[i-1]) * Rl
 print(press_int)
 press_interpart = 4 * np.sqrt(3) * (peNet-50) / latNet
 print(press_interpart)
 stop
-dy = np.diff(dens)/(r[1]-r[0])
-print(np.max(dens))
-print(phi_theory / (np.pi/4))
+#dy = np.diff(dens)/(r_arr[1]-r_arr[0])
 #print(np.where(dy==0)[0])
 
-plt.plot(r, dens)
-plt.show()
-plt.plot(r[1:], dy)
-plt.show()
 rAlign = int_width#*(2/3)#3.#int_width
 # List to store particle positions and types
 pos = []
@@ -321,6 +336,152 @@ typ = []
 rOrient = []
 # z-value for simulation initialization
 z = 0.5
+
+rMin = rList[0]             # starting distance for particle placement
+rMax = rList[1]         # maximum distance for particle placement
+ver = np.sqrt(0.75) * latNet   # vertical shift between lattice rows
+hor = latNet / 2.0             # horizontal shift between lattice rows
+    
+typ_S = 0
+typ_F = 0
+
+x = 0.
+y = 0.
+shift = 0.
+while y <= rMax:
+    r = computeDistance(x, y)
+    align_prob = alignProbability(r/Rl, peNet, peS)
+    dens_prob = densProbability(r/Rl, peNet, peS)
+    
+    # Check if x-position is too large
+    if r > (rMax + (latNet/2.)):
+        y += ver
+        shift += 1
+        if shift % 2:
+            x = hor
+        else:
+            x = 0.
+        continue
+    
+    
+    dens_rand = random.random()
+    if dens_rand <= dens_prob:
+        # If the loop makes it this far, append
+        pos.append((x, y, z))
+        act_prob = prob_arr_A[find_nearest(r_arr,r/Rl)]
+        act_rand = random.random()
+        if act_rand <= act_prob:
+            typ.append(0)
+            typ_S+=1
+        else:
+            typ.append(1)
+            typ_F+=1
+        # Whether or not particle is oriented
+        align_rand = random.random()
+        if align_rand <= align_prob:
+            rOrient.append(1)
+        else:
+            rOrient.append(0)
+    
+    if x != 0. and y != 0.:
+        # Mirror positions, alignment and type
+        dens_rand = random.random()
+        if dens_rand <= dens_prob:
+            pos.append((-x, y, z))
+            act_prob = prob_arr_A[find_nearest(r_arr,r/Rl)]
+            act_rand = random.random()
+            if act_rand <= act_prob:
+                typ.append(0)
+                typ_S+=1
+            else:
+                typ.append(1)
+                typ_F+=1
+            # Whether or not particle is oriented
+            align_rand = random.random()
+            if align_rand <= align_prob:
+                rOrient.append(1)
+            else:
+                rOrient.append(0)
+        dens_rand = random.random()
+        if dens_rand <= dens_prob:
+            pos.append((-x, -y, z))
+            act_prob = prob_arr_A[find_nearest(r_arr,r/Rl)]
+            act_rand = random.random()
+            if act_rand <= act_prob:
+                typ.append(0)
+                typ_S+=1
+            else:
+                typ.append(1)
+                typ_F+=1
+            # Whether or not particle is oriented
+            align_rand = random.random()
+            if align_rand <= align_prob:
+                rOrient.append(1)
+            else:
+                rOrient.append(0)
+        dens_rand = random.random()
+        if dens_rand <= dens_prob:
+            pos.append((x, -y, z))
+            act_prob = prob_arr_A[find_nearest(r_arr,r/Rl)]
+            act_rand = random.random()
+            if act_rand <= act_prob:
+                typ.append(0)
+                typ_S+=1
+            else:
+                typ.append(1)
+                typ_F+=1
+            # Whether or not particle is oriented
+            align_rand = random.random()
+            if align_rand <= align_prob:
+                rOrient.append(1)
+            else:
+                rOrient.append(0)
+
+    # y must be zero
+    elif x != 0.:
+        dens_rand = random.random()
+        if dens_rand <= dens_prob:
+            pos.append((-x, y, z))
+            act_prob = prob_arr_A[find_nearest(r_arr,r/Rl)]
+            act_rand = random.random()
+            if act_rand <= act_prob:
+                typ.append(0)
+                typ_S+=1
+            else:
+                typ.append(1)
+                typ_F+=1
+            # Whether or not particle is oriented
+            align_rand = random.random()
+            if align_rand <= align_prob:
+                rOrient.append(1)
+            else:
+                rOrient.append(0)
+        
+    # x must be zero
+    elif y!= 0.:
+        dens_rand = random.random()
+        if dens_rand <= dens_prob:
+            pos.append((x, -y, z))
+            act_prob = prob_arr_A[find_nearest(r_arr,r/Rl)]
+            act_rand = random.random()
+            if act_rand <= act_prob:
+                typ.append(0)
+                typ_S+=1
+            else:
+                typ.append(1)
+                typ_F+=1
+        # Whether or not particle is oriented
+        align_rand = random.random()
+        if align_rand <= align_prob:
+            rOrient.append(1)
+        else:
+            rOrient.append(0)
+            
+        
+    # Increment counter
+    x += latNet
+        
+'''
 for i in range(0, len(peList)):
     rMin = rList[0]             # starting distance for particle placement
     rMax = rList[1]         # maximum distance for particle placement
@@ -350,6 +511,7 @@ for i in range(0, len(peList)):
         if dens_rand <= dens_prob:
             # If the loop makes it this far, append
             pos.append((x, y, z))
+            
             typ.append(i)
             # Whether or not particle is oriented
             align_rand = random.random()
@@ -419,11 +581,12 @@ for i in range(0, len(peList)):
             
         # Increment counter
         x += latNet
-
+'''
 # Update number of particles in gas and dense phase 
 
 NLiq = len(pos)
 NGas = partNum - NLiq
+'''
 typ_S=0
 typ_F=0
 
@@ -435,6 +598,7 @@ for i in range(0,len(typ)):
     else:
         typ[i]=1
         typ_S+=1
+'''
 gas_F=partNumF-typ_F
 gas_S=partNumS-typ_S
 
@@ -636,7 +800,7 @@ brownEquil = 10000
 
 hoomd.md.integrate.mode_standard(dt=dt)
 bd = hoomd.md.integrate.brownian(group=all, kT=kT, seed=seed1)
-hoomd.run(brownEquil)
+#hoomd.run(brownEquil)
 
 # Set activity of each group
 np.random.seed(seed2)                           # seed for random orientations
