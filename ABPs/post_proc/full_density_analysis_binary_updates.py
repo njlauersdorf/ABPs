@@ -505,6 +505,8 @@ g.write('tauB'.center(15) + ' ' +\
                         'sa_int'.center(15) + ' ' +\
                         'edge_width'.center(15) + ' ' +\
                         'edge_width_err'.center(15) + ' ' +\
+                        'edge_begin'.center(15) + ' ' +\
+                        'edge_end'.center(15) + ' ' +\
                         'NBin'.center(15) + '\n')
 g.close()
 
@@ -9762,9 +9764,13 @@ with hoomd.open(name=inFile, mode='rb') as t:
         '''
         id_step = 0
         edge_width_arr = []
+        edge_width_begin_arr = []
+        edge_width_end_arr = []
         edge_width_arr_sd = []
         bub_width_ext = []
         edge_width_final = []
+        edge_width_begin_final = []
+        edge_width_end_final = []
         bub_width_int = []
         bub_width = []
         edge_width_final_sd = []
@@ -10928,27 +10934,46 @@ with hoomd.open(name=inFile, mode='rb') as t:
                         if len(bub_rad_int)>0:
                             edge_widths = np.abs(bub_rad_ext-bub_rad_int)
                             edge_width_final.append(np.mean(edge_widths))
+                            if np.mean(np.abs(bub_rad_ext))>np.mean(np.abs(bub_rad_int)):
+                                edge_width_end_final.append(np.mean(np.abs(bub_rad_ext)))
+                                edge_width_begin_final.append(np.mean(np.abs(bub_rad_int)))
+                            else:
+                                edge_width_end_final.append(np.mean(np.abs(bub_rad_int)))
+                                edge_width_begin_final.append(np.mean(np.abs(bub_rad_ext)))
+                                
                             sd = 0
                             for z in range(0, len(edge_widths)):
                                 sd+=(edge_widths[z]-np.mean(edge_widths))**2
                             sd = (sd/len(edge_widths))**0.5
                             edge_width_final_sd.append(sd)
+
+                            
+                            
                         else:
                             edge_width_final.append(0)
+                            edge_width_begin_final.append(0)
+                            edge_width_end_final.append(0)
+                            
                             edge_width_final_sd.append(0)
                     else:
                         edge_width_final.append(0)
+                        edge_width_begin_final.append(0)
+                        edge_width_end_final.append(0)
                         edge_width_final_sd.append(0)
                         
                     #Use whichever is larger to calculate the true radius of the mth interface structure
                     if bub_width_ext[id_step]>bub_width_int[id_step]:   
                         bub_width.append(bub_width_ext[id_step])
                         bub_width_sd.append(bub_width_ext_sd[id_step])
+                        edge_width_begin_arr.append(edge_width_begin_final[id_step])
+                        edge_width_end_arr.append(edge_width_end_final[id_step])
                         edge_width_arr.append(edge_width_final[id_step])
                         edge_width_arr_sd.append(edge_width_final_sd[id_step])
                     else:
                         bub_width.append(bub_width_int[id_step])
                         bub_width_sd.append(bub_width_int_sd[id_step])
+                        edge_width_begin_arr.append(edge_width_begin_final[id_step])
+                        edge_width_end_arr.append(edge_width_end_final[id_step])
                         edge_width_arr.append(edge_width_final[id_step])
                         edge_width_arr_sd.append(edge_width_final_sd[id_step])
                     #if bub_size_id_arr[m]==interface_id:
@@ -12452,6 +12477,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 #If no particles in interface, save zeros for radius and width
                 else:
                     edge_width_arr.append(0)
+                    edge_width_begin_arr.append(0)
+                    edge_width_end_arr.append(0)
                     edge_width_arr_sd.append(0)
                     bub_width.append(0)
                     bub_width_sd.append(0)
@@ -12459,6 +12486,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
             #Never true
             else:
                 edge_width_arr.append(0)
+                edge_width_begin_arr.append(0)
+                edge_width_end_arr.append(0)
                 edge_width_arr_sd.append(0)
                 bub_width.append(0)  
                 bub_width_sd.append(0)
@@ -12480,6 +12509,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 g.write('{0:.6f}'.format(surface_area_int[m]).center(15) + ' ')
                 g.write('{0:.6f}'.format(edge_width_arr[m]).center(15) + ' ')
                 g.write('{0:.6f}'.format(edge_width_arr_sd[m]).center(15) + ' ')
+                g.write('{0:.6f}'.format(edge_width_begin_arr[m]).center(15) + ' ')
+                g.write('{0:.6f}'.format(edge_width_end_arr[m]).center(15) + ' ')
                 g.write('{0:.0f}'.format(bubBin[m]).center(15) + '\n')
         g.close()
         

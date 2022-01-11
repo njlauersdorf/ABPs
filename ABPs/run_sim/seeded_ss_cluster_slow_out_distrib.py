@@ -336,32 +336,229 @@ rList = [ 0, Rf, Rl ]
 # Depth of alignment
 #rAlign = 3.
 
+def ljForce(r, eps, sigma=1.):
+    div = (sigma/r)
+    dU = (24. * eps / sigma) * ((2*(div**13)) - (div)**7)
+    return dU
+
+def avgCollisionForce(pe, power=1.):
+    '''Computed from the integral of possible angles'''
+    peCritical = 40.
+    if pe < peCritical:
+        pe = 0
+    else:
+        pe -= peCritical
+    magnitude = 6.
+    # A vector sum of the six nearest neighbors
+    magnitude = np.sqrt(28)
+#     return (magnitude * (pe**power)) / (np.pi)
+#     return (pe * (1. + (8./(np.pi**2.))))
+    coeff = 1.874#3.0#1.92#2.03#3.5#2.03
+    #coeff= 0.4053
+    return (pe * coeff)
+
+def conForRClust(pe, eps):
+    out = []
+    r = 1.112
+    skip = [0.1, 0.01, 0.001, 0.0001, 0.00001, 0.000001, 0.0000001, 0.00000001]
+    for j in skip:
+        while ljForce(r, eps) < avgCollisionForce(pe):
+            r -= j
+        r += j
+    out = r
+    return out
+
 
 r = np.linspace(0, 2, num=400)
 dens = densProbability(r, peNet, peS)
 align = alignProbability(r, peNet, peS)
 activity_distrib = np.zeros(len(r))
 
-prob_arr_A, prob_arr_B = activityProbability(r, r_swap = [0.0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0], probA = [1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0])
 
-plt.plot(r, prob_arr_A, color='red')
-plt.plot(r, prob_arr_B, color='blue')
+prob_arr_A, prob_arr_B = activityProbability(r, r_swap = [0.0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0], probA = [1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0])#probA = [0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1]
+plt.plot(r, prob_arr_A, linewidth=1.8*1.8, color='black')
+plt.show()
+prod=align * dens
+prod = np.abs(np.gradient(align * dens)) * align
+
+min_ind = np.min(np.where(prod>0.05*np.max(prod))[0])
+max_ind = np.max(np.where(prod>0.05*np.max(prod))[0])
+tot_int_pe = np.zeros(len(dens[min_ind:max_ind]))
+area_loc = np.zeros(len(dens[min_ind:max_ind]))
+tot_parts = np.zeros(len(dens[min_ind:max_ind]))
+for i in range(0, len(dens[min_ind:max_ind])): 
+    area_loc[i] = (np.pi * ((r[min_ind:max_ind+1][i+1]*rList[-1])**2 - (r[min_ind:max_ind][i]*rList[-1])**2))
+    tot_parts[i] =  area_loc[i] * dens[min_ind:max_ind][i]# * (prob_arr_A[np.min(np.where(prod>0.02)[0]):np.max(np.where(prod>0.02)[0])][i] * pa + prob_arr_B[np.min(np.where(prod>0.02)[0]):np.max(np.where(prod>0.02)[0])][i] * pb)
+    tot_int_pe[i] = tot_parts[i] * (prob_arr_A[min_ind:max_ind][i] * pa + prob_arr_B[min_ind:max_ind][i] * pb)
+peNet_int = np.sum(tot_int_pe) / np.sum(tot_parts)
+print(peNet_int)
+#print(net_int_pe)
+x = np.array([r[min_ind], r[min_ind]+0.00000001])
+y = np.array([0, 1.0])
+x2 = np.array([r[max_ind], r[max_ind]+0.00000001])
+
+fig, ax1 = plt.subplots(figsize=(12,5))
+plt.plot(x, y, linestyle='--', linewidth=1.2, color='black')
+plt.plot(x2, y, linestyle='--', linewidth=1.2, color='black')
+#plt.plot(r, (align*dens)/np.max(align*dens), linestyle='-', linewidth=1.8*1.8, color='black')
+plt.plot(r, prod/np.max(prod), linestyle='-', linewidth=1.8*1.8, color='red')
+plt.xlabel(r'Distance from CoM ($r$)')
+plt.ylabel(r'$\nabla [\alpha (r)n(r)] \times \alpha (r)$')
+plt.show()
+
+'''
+#press = dens[min_ind:max_ind] * align[min_ind:max_ind] * (prob_arr_A[min_ind:max_ind] * pa + prob_arr_B[min_ind:max_ind] * pb)
+press2 = dens[min_ind:max_ind] * align[min_ind:max_ind] * (peNet_int-50)
+#press2 = dens * align * (peNet_int-50)
+
+#press_int = 0
+press_int2=0
+latInt = conForRClust(peNet_int-50, eps)
+for i in range(1, len(press2)):
+    #press_int += ((press[i-1]+press[i])/2)*(r[min_ind:max_ind][i]-r[min_ind:max_ind][i-1]) * Rl
+    press_int2 += ((press2[i-1]+press2[i])/2)*(r[min_ind:max_ind][i]-r[min_ind:max_ind][i-1]) * Rl
+    #press_int2 += ((press2[i-1]+press2[i])/2)*(r[i]-r[i-1]) * Rl
+press_interpart = 2 * 1.874 * np.sqrt(3) * (peNet_int-50) / latInt
+print(press_interpart)
+print(press_int2)
+stop
+'''
+peNet_int = np.linspace(51, 500, num=100)
+#peNet = np.linspace(51, 500, num=500)
+peA_arr = np.linspace(51, 500, num=100)
+peB_arr = np.linspace(51, 500, num=100)
+press_interpart = np.zeros(200)
+#press_int2 = np.zeros(200)
+#for k in range(0,len(peNet)):
+press_int2 = np.array([])
+press_interpart = np.array([])
+penet_arr = np.array([])
+penet_arr2 = np.array([])
+
+pdif_arr = np.array([])
+lat_arr = np.array([])
+for k in range(0,len(peB_arr)):
+    for j in range(0,len(peA_arr)):
+        if peA_arr[j]<=peB_arr[k]:
+            peS=peA_arr[j]
+            
+            peNet = peA_arr[j] * 0.5 + peB_arr[k] * 0.5
+            r = np.linspace(0, 2, num=400)
+            dens = densProbability(r, peNet, peS)
+            align = alignProbability(r, peNet, peS)        
+            
+            prob_arr_A, prob_arr_B = activityProbability(r)#, r_swap = [0.0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0], probA = [1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0])#probA = [0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1])##probA = [0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1]
+            
+            prod = np.abs(np.gradient(align * dens)) * align
+    
+            min_ind = np.min(np.where(prod>0.05*np.max(prod))[0])
+            max_ind = np.max(np.where(prod>0.05*np.max(prod))[0])
+            tot_int_pe = np.zeros(len(dens[min_ind:max_ind]))
+            area_loc = np.zeros(len(dens[min_ind:max_ind]))
+            tot_parts = np.zeros(len(dens[min_ind:max_ind]))
+            for i in range(0, len(dens[min_ind:max_ind])): 
+                area_loc[i] = (np.pi * ((r[min_ind:max_ind+1][i+1]*rList[-1])**2 - (r[min_ind:max_ind][i]*rList[-1])**2))
+                tot_parts[i] =  area_loc[i] * dens[min_ind:max_ind][i]# * (prob_arr_A[np.min(np.where(prod>0.02)[0]):np.max(np.where(prod>0.02)[0])][i] * pa + prob_arr_B[np.min(np.where(prod>0.02)[0]):np.max(np.where(prod>0.02)[0])][i] * pb)
+                tot_int_pe[i] = tot_parts[i] * (prob_arr_A[min_ind:max_ind][i] * peA_arr[j] + prob_arr_B[min_ind:max_ind][i] * peB_arr[k])
+            peNet_int = np.sum(tot_int_pe) / np.sum(tot_parts)
+            
+            #press = dens[min_ind:max_ind] * align[min_ind:max_ind] * (prob_arr_A[min_ind:max_ind] * pa + prob_arr_B[min_ind:max_ind] * pb)
+            #press2 = dens[min_ind:max_ind] * align[min_ind:max_ind] * (peNet_int-50)
+            press2 = dens * align * (peNet_int-50)
+            press_int2 = np.append(press_int2, 0)
+            latInt = conForRClust(peNet_int-50, eps)
+            for i in range(1, len(press2)):
+                #press_int += ((press[i-1]+press[i])/2)*(r[min_ind:max_ind][i]-r[min_ind:max_ind][i-1]) * Rl
+                #press_int2[-1] += ((press2[i-1]+press2[i])/2)*(r[min_ind:max_ind][i]-r[min_ind:max_ind][i-1]) * Rl
+                press_int2[-1] += ((press2[i-1]+press2[i])/2)*(r[i]-r[i-1]) * Rl
+            press_interpart = np.append(press_interpart, 2 * 1.874 * np.sqrt(3) * (peNet_int-50) / latInt)
+            penet_arr = np.append(penet_arr, peNet)
+            penet_arr2 = np.append(penet_arr2, peNet_int)
+            pdif_arr = np.append(pdif_arr, np.abs(peA_arr[j]-peB_arr[k]))
+            lat_arr = np.append(lat_arr, latInt)
+
+fig, ax1 = plt.subplots(figsize=(6,5))
+#plt.plot(peNet_int, press_int2, linestyle='-', linewidth=1.8*1.8, color=yellow, label='Interface')
+plt.scatter(penet_arr, lat_arr, c=pdif_arr, s=1.0)
+plt.colorbar()
+plt.ylabel(r'Lattice spacing ($a$)')
+plt.xlabel(r'Net Activity($\mathrm{Pe}_\mathrm{Net}$)')
+#plt.plot(peNet_int, press_int2 - press_interpart, linestyle='-', linewidth=1.8*1.8, color=red)
 plt.show()
 stop
-end_fast = find_nearest(r, 0.4)
-end_slow = find_nearest(r, 0.7)
-activity_distrib[0:end_fast] = peF
-activity_distrib[end_fast:end_slow] = peS
-activity_distrib[end_slow:-1] = peF
-press = dens * align * activity_distrib
-press_int = 0
+yellow = ("#fdfd96")
+green = ("#77dd77")
+red = ("#ff6961")
+purple = ("#cab2d6")
+fig, ax1 = plt.subplots(figsize=(6,5))
+#plt.plot(peNet_int, press_int2, linestyle='-', linewidth=1.8*1.8, color=yellow, label='Interface')
+plt.scatter(penet_arr, press_interpart, c=pdif_arr, s=1.0)
+plt.colorbar()
+plt.ylabel(r'Bulk Pressure ($\Pi_\mathrm{d}$)')
+plt.xlabel(r'Net Activity($\mathrm{Pe}_\mathrm{Net}$)')
+#plt.plot(peNet_int, press_int2 - press_interpart, linestyle='-', linewidth=1.8*1.8, color=red)
+plt.show()
+
+fig, ax1 = plt.subplots(figsize=(6,5))
+#plt.plot(peNet_int, press_int2, linestyle='-', linewidth=1.8*1.8, color=yellow, label='Interface')
+plt.scatter(penet_arr, penet_arr2, c=pdif_arr, s=1.0)
+plt.colorbar()
+plt.ylabel(r'Interface Net Activity$)')
+plt.xlabel(r'Net Activity of Interface ($\mathrm{Pe}_\mathrm{Net}^\mathrm{i}$)')
+#plt.plot(peNet_int, press_int2 - press_interpart, linestyle='-', linewidth=1.8*1.8, color=red)
+plt.show()
+
+yellow = ("#fdfd96")
+green = ("#77dd77")
+red = ("#ff6961")
+purple = ("#cab2d6")
+fig, ax1 = plt.subplots(figsize=(6,5))
+#plt.plot(peNet_int, press_int2, linestyle='-', linewidth=1.8*1.8, color=yellow, label='Interface')
+plt.scatter(penet_arr, press_int2, c=pdif_arr, s=1.0)
+plt.colorbar()
+plt.ylabel(r'Interface Pressure ($\Pi_\mathrm{i}$)')
+plt.xlabel(r'Net Activity ($\mathrm{Pe}_\mathrm{Net}$)')
+#plt.plot(peNet_int, press_int2 - press_interpart, linestyle='-', linewidth=1.8*1.8, color=red)
+plt.show()
+
+plt.scatter(penet_arr, press_int2-press_interpart, c=pdif_arr, s=1.0)
+plt.colorbar()
+plt.ylabel(r'Pressure Difference ($\Pi_\mathrm{int}-\Pi_\mathrm{bulk}$)')
+plt.xlabel(r'Net Activity($\mathrm{Pe}_\mathrm{Net}$)')
+plt.xlim([0, 550])
+plt.ylim([-500, 500])
+plt.show()
+stop
 
 
-for i in range(1, len(press)):
-    press_int += ((press[i-1]+press[i])/2)*(r[i]-r[i-1]) * Rl
-print(press_int)
-press_interpart = 4 * np.sqrt(3) * (peF-50) / latNet
 print(press_interpart)
+print(press_int2)
+yellow = ("#fdfd96")
+green = ("#77dd77")
+red = ("#ff6961")
+purple = ("#cab2d6")
+fig, ax1 = plt.subplots(figsize=(6,5))
+plt.plot(peNet_int, press_int2, linestyle='-', linewidth=1.8*1.8, color=yellow, label='Interface')
+plt.plot(peNet_int, press_interpart, linestyle='-', linewidth=1.8*1.8, color=green, label='Bulk')
+plt.ylabel(r'Pressure ($\Pi$)')
+plt.xlabel(r'Net Activity of Interface ($\mathrm{Pe}_\mathrm{Net}^\mathrm{i}$)')
+plt.legend(loc='upper left')
+#plt.plot(peNet_int, press_int2 - press_interpart, linestyle='-', linewidth=1.8*1.8, color=red)
+plt.show()
+x_arr = np.array([0, 500])
+y_arr = np.array([0,0])
+y_arr2 = np.array([-1000, 1000])
+x_arr2 = np.array([pa,pa])
+fig, ax1 = plt.subplots(figsize=(6,5))
+plt.plot(peNet_int, press_int2 - press_interpart, linestyle='-', linewidth=1.8*1.8, color=purple)
+plt.plot(x_arr, y_arr, linestyle='--', linewidth=1.2, color='black')
+plt.plot(x_arr2, y_arr2, linestyle='dotted', linewidth=1.2, color='black')
+
+plt.ylabel(r'Pressure Difference ($\Pi_\mathrm{int}-\Pi_\mathrm{bulk}$)')
+plt.xlabel(r'Net Activity of Interface ($\mathrm{Pe}_\mathrm{Net}^\mathrm{i}$)')
+plt.xlim([0, 500])
+plt.ylim([-300, 300])
+plt.show()
 stop
 
 rAlign = int_width#*(2/3)#3.#int_width

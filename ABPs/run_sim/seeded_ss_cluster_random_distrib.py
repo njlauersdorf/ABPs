@@ -158,100 +158,6 @@ def latToPhi(latIn):
     phiCP = np.pi / (2. * np.sqrt(3.))
     return phiCP / (latIn**2)
 
-### And here's an example of how to use these ###
-# Read in bash arguments
-runFor = ${runfor}              # simulation length (in tauLJ)
-dumpPerBrownian = ${dump_freq}  # how often to dump data
-pa=${pe_a}
-pb=${pe_b}
-if pa<=pb:
-    peS=pa
-    peF=pb
-else:   
-    peS = pb                  # activity of A particles
-    peF = pa      
-xA = ${part_frac_a}/100.0
-xF = ${part_frac_a}/100.0
-xS=1.0-xF
-
-partNum = ${part_num}           # total number of particles
-partNumS=xS*partNum
-partNumF=xF*partNum
-intPhi = ${phi}                 # system area fraction
-phi = float(intPhi)/100.0
-eps = ${ep}  
-
-# Compute parameters from activities
-tauLJ = computeTauLJ(eps)
-
-#epsA = (epsA if (epsA >= epsB) else epsB)   # use the larger epsilon
-#epsB = epsA                                 # make sure all use this
-#epsAB = epsA                                # make sure all use this
-dt = 0.000001 * tauLJ                        # timestep size
-simLength = runFor * tauBrown               # how long to run (in tauBrown)
-simTauLJ = simLength / tauLJ                # how long to run (in tauLJ)
-totTsteps = int(simLength / dt)             # how many tsteps to run
-numDumps = float(simLength / 0.1)           # dump data every 0.5 tauBrown
-dumpFreq = float(totTsteps / numDumps)      # normalized dump frequency
-dumpFreq = int(dumpFreq)                    # ensure this is an integer
-
-
-num_F=xF*partNum
-num_S=xS*partNum
-# Random seeds
-seed1 = ${seed1}                # integrator seed
-seed2 = ${seed2}                # orientation seed
-seed3 = ${seed3}                # activity seed
-
-peNet = compPeNet(xF, peS, peF)
-
-# Compute lattice spacing based on each activity
-latS = getLat(peS, eps)
-latF = getLat(peF, eps)
-latNet = getLat(peNet, eps)
-latF=latNet
-latS=latNet
-
-# Compute gas phase density, phiG
-phiG = compPhiG(peNet, latNet)
-phi_theory = latToPhi(latNet)
-
-Nl = int(round(partNum * ((phi_theory * (phiG - phi)) / (phi * (phiG - phi_theory)))))
-
-
-#Nls = int(Nl * (1. - xF))
-#Nlf = Nl - Nls
-
-
-  
-# Now you need to convert this to a cluster radius
-phiCP = np.pi / (2. * np.sqrt(3))
-
-# The area is the sum of the particle areas (normalized by close packing density of spheres)
-Al = (Nl * np.pi * (latNet)**2) / (4*phiCP)
-
-curPLJ = ljPress(latNet, peNet, eps)
-
-# The area for seed
-Al_real=Al
-
-# The cluster radius is the square root of liquid area divided by pi
-Rl = np.sqrt(Al_real / np.pi)
-
-alpha_max = 0.5
-I_arr = 3.0
-int_width = (np.sqrt(3)/(2*alpha_max)) * (curPLJ/peNet) * (latNet **2) * I_arr
-
-if int_width >= Rl:
-    int_width = Rl-1.0
-# Remember!!! This is a prediction of the EQUILIBRIUM size, reduce this to seed a cluster
-# MAKE SURE that the composition of the seed has the same composition of the system
-# e.g. for xF = 0.3 the initial seed should be 30% fast 70% slow
-
-
-#print(int_width)
-#stop
-
 # Use latNet to space your particles
 def computeDistance(x, y):
     return np.sqrt((x**2) + (y**2))
@@ -306,16 +212,184 @@ def activityProbability(r, r_swap = [], probA = []):
             prob_rB[r_min:r_max+1]=1.0-probA[i]
     
     return prob_rA, prob_rB
+### And here's an example of how to use these ###
+# Read in bash arguments
+runFor = ${runfor}              # simulation length (in tauLJ)
+dumpPerBrownian = ${dump_freq}  # how often to dump data
+pa=${pe_a}
+pb=${pe_b}
+if pa<=pb:
+    peS=pa
+    peF=pb
+else:   
+    peS = pb                  # activity of A particles
+    peF = pa      
+xA = ${part_frac_a}/100.0
+xF = ${part_frac_a}/100.0
+xS=1.0-xF
+
+partNum = ${part_num}           # total number of particles
+partNumS=xS*partNum
+partNumF=xF*partNum
+intPhi = ${phi}                 # system area fraction
+phi = float(intPhi)/100.0
+eps = ${ep}  
+
+# Compute parameters from activities
+tauLJ = computeTauLJ(eps)
+
+#epsA = (epsA if (epsA >= epsB) else epsB)   # use the larger epsilon
+#epsB = epsA                                 # make sure all use this
+#epsAB = epsA                                # make sure all use this
+dt = 0.000001 * tauLJ                        # timestep size
+simLength = runFor * tauBrown               # how long to run (in tauBrown)
+simTauLJ = simLength / tauLJ                # how long to run (in tauLJ)
+totTsteps = int(simLength / dt)             # how many tsteps to run
+numDumps = float(simLength / 0.1)           # dump data every 0.5 tauBrown
+dumpFreq = float(totTsteps / numDumps)      # normalized dump frequency
+dumpFreq = int(dumpFreq)                    # ensure this is an integer
+
+
+num_F=xF*partNum
+num_S=xS*partNum
+# Random seeds
+seed1 = ${seed1}                # integrator seed
+seed2 = ${seed2}                # orientation seed
+seed3 = ${seed3}                # activity seed
+
+peS_arr = np.linspace(50, 500, num=200)
+peF_arr = np.linspace(50, 500, num=200)
+
+peNet_int_arr = np.array([])
+peS_int_arr = np.array([])
+peF_int_arr = np.array([])
+
+press_int_arr = np.array([])
+for i in range(50, len(peS_arr)):
+    for j in range(50, len(peF_arr)):
+        peS = peS_arr[i]
+        print(i)
+        peF = peF_arr[j]
+        peNet = compPeNet(xF, peS, peF)
+
+    
+        # Compute lattice spacing based on each activity
+        latS = getLat(peS, eps)
+        latF = getLat(peF, eps)
+        latNet = getLat(peNet, eps)
+        latF=latNet
+        latS=latNet
+        
+        # Compute gas phase density, phiG
+        phiG = compPhiG(peNet, latNet)
+        phi_theory = latToPhi(latNet)
+
+        Nl = int(round(partNum * ((phi_theory * (phiG - phi)) / (phi * (phiG - phi_theory)))))
+
+        # Now you need to convert this to a cluster radius
+        phiCP = np.pi / (2. * np.sqrt(3))
+        
+        # The area is the sum of the particle areas (normalized by close packing density of spheres)
+        Al = (Nl * np.pi * (latNet)**2) / (4*phiCP)
+        
+        # The cluster radius is the square root of liquid area divided by pi
+        Rl = np.sqrt(Al / np.pi)
+
+        r_arr = np.linspace(0, 2, num=400)
+        
+        prob_arr_A, prob_arr_B = activityProbability(r_arr, r_swap = [0.0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0], probA = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0])
+        
+        plt.plot(r_arr, prob_arr_A, color='blue')
+        plt.plot(r_arr, prob_arr_B, color='red')
+        plt.show()
+        dens = densProbability(r_arr, peNet, peS)
+        align = alignProbability(r_arr, peNet, peS)
+        press = dens * align * (prob_arr_A * pa + prob_arr_B * pb)
+        press_int = 0
+        for k in range(1, len(press)):
+            press_int += ((press[k-1]+press[k])/2)*(r_arr[k]-r_arr[k-1]) * Rl
+            
+        press_int_arr = np.append(press_int_arr, press_int)
+        peS_int_arr = np.append(peS_int_arr, peS)
+        peF_int_arr = np.append(peF_int_arr, peF)
+        peNet_int_arr = np.append(peNet_int_arr, peNet)
+        #print(press_int)
+        #press_interpart = 4 * np.sqrt(3) * (peNet-50) / latNet
+        #print(press_interpart)
+        
+        
+                
+plt.scatter(peNet_int_arr, press_int_arr, s=1.0, color='black')
+plt.show()
+
+plt.scatter(peF_int_arr, press_int_arr, s=1.0, color='red')
+plt.show()
+
+plt.scatter(peS_int_arr, press_int_arr, s=1.0, color='blue')
+plt.show()
+stop        
+        
+        
+        
+        
+peNet = compPeNet(xF, peS, peF)
+
+# Compute lattice spacing based on each activity
+latS = getLat(peS, eps)
+latF = getLat(peF, eps)
+latNet = getLat(peNet, eps)
+latF=latNet
+latS=latNet
+
+# Compute gas phase density, phiG
+phiG = compPhiG(peNet, latNet)
+phi_theory = latToPhi(latNet)
+
+Nl = int(round(partNum * ((phi_theory * (phiG - phi)) / (phi * (phiG - phi_theory)))))
+
+
+#Nls = int(Nl * (1. - xF))
+#Nlf = Nl - Nls
+
+
+  
+# Now you need to convert this to a cluster radius
+phiCP = np.pi / (2. * np.sqrt(3))
+
+# The area is the sum of the particle areas (normalized by close packing density of spheres)
+Al = (Nl * np.pi * (latNet)**2) / (4*phiCP)
+
+curPLJ = ljPress(latNet, peNet, eps)
+
+# The area for seed
+Al_real=Al
+
+# The cluster radius is the square root of liquid area divided by pi
+Rl = np.sqrt(Al_real / np.pi)
+
+alpha_max = 0.5
+I_arr = 3.0
+int_width = (np.sqrt(3)/(2*alpha_max)) * (curPLJ/peNet) * (latNet **2) * I_arr
+
+if int_width >= Rl:
+    int_width = Rl-1.0
+# Remember!!! This is a prediction of the EQUILIBRIUM size, reduce this to seed a cluster
+# MAKE SURE that the composition of the seed has the same composition of the system
+# e.g. for xF = 0.3 the initial seed should be 30% fast 70% slow
+
+
+#print(int_width)
+#stop
 
 # List of activities
 peList = [ peS ]
 # List of ring radii
-rList = [ 0., Rl*1.3 ]
+rList = [ 0., Rl*1.15 ]
 # Depth of alignment
 #rAlign = 3.
 r_arr = np.linspace(0, 2, num=400)
 
-prob_arr_A, prob_arr_B = activityProbability(r_arr, r_swap = [0.0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0], probA = [0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0])
+prob_arr_A, prob_arr_B = activityProbability(r_arr, r_swap = [0.0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0], probA = [0.2, 0.2, 0.8, 0.8, 0.2, 0.2, 0.8, 0.8, 0.2, 0.2, 0.8])
 dens = densProbability(r_arr, peNet, peS)
 align = alignProbability(r_arr, peNet, peS)
 press = dens * align * (prob_arr_A * pa + prob_arr_B * pb)
@@ -325,7 +399,8 @@ for i in range(1, len(press)):
 print(press_int)
 press_interpart = 4 * np.sqrt(3) * (peNet-50) / latNet
 print(press_interpart)
-stop
+
+#stop
 #dy = np.diff(dens)/(r_arr[1]-r_arr[0])
 #print(np.where(dy==0)[0])
 
