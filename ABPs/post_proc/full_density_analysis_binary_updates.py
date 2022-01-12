@@ -3889,7 +3889,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
             if interior_bin > 0:
                 ix=int(int_x[0])
                 iy=int(int_y[0])
-                
+                shortest_idx_arr = np.array([])
+                shortest_idy_arr = np.array([])
                 int_bin_unorder_x = np.delete(int_bin_unorder_x, 0)
                 int_bin_unorder_y = np.delete(int_bin_unorder_y, 0)
                 fail=0
@@ -4085,7 +4086,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                             
                                             int_bin_unorder_x = np.delete(int_bin_unorder_x, loc_id)
                                             int_bin_unorder_y = np.delete(int_bin_unorder_y, loc_id)
-                                    else:
+                                    elif len(shortest_idx_arr)==1:
                                         
                                         ix = shortest_idx_arr[0]
                                         iy = shortest_idy_arr[0]
@@ -4097,6 +4098,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                         
                                         int_bin_unorder_x = np.delete(int_bin_unorder_x, loc_id)
                                         int_bin_unorder_y = np.delete(int_bin_unorder_y, loc_id)
+                                    else:
+                                        break
                                 if edge_id[ix][iy] == bub_size_id_arr[0]:
                                     if int_edge_id[ix][iy]==1:
                                         #Identify neighboring bin indices in x-direction
@@ -4204,7 +4207,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                 
                                                 int_bin_unorder_x = np.delete(int_bin_unorder_x, loc_id)
                                                 int_bin_unorder_y = np.delete(int_bin_unorder_y, loc_id)
-                                        else:
+                                        elif len(shortest_idx_arr)==1:
                                             
                                             ix = shortest_idx_arr[0]
                                             iy = shortest_idy_arr[0]
@@ -4216,6 +4219,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                             
                                             int_bin_unorder_x = np.delete(int_bin_unorder_x, loc_id)
                                             int_bin_unorder_y = np.delete(int_bin_unorder_y, loc_id)
+                                        else:
+                                            break
                                 past_size = current_size
                     
                     # append the starting x,y coordinates
@@ -4613,7 +4618,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                             
                                             ext_bin_unorder_x = np.delete(ext_bin_unorder_x, loc_id)
                                             ext_bin_unorder_y = np.delete(ext_bin_unorder_y, loc_id)
-                                    else:
+                                    elif len(shortest_idx_arr)==1:
                                         
                                         ix = shortest_idx_arr[0]
                                         iy = shortest_idy_arr[0]
@@ -4625,6 +4630,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 
                                         ext_bin_unorder_x = np.delete(ext_bin_unorder_x, loc_id)
                                         ext_bin_unorder_y = np.delete(ext_bin_unorder_y, loc_id)
+                                    else:
+                                        break
                                 if edge_id[ix][iy] == bub_size_id_arr[0]:
                                     if ext_edge_id[ix][iy]==1:
                                         #Identify neighboring bin indices in x-direction
@@ -4732,7 +4739,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                 
                                                 ext_bin_unorder_x = np.delete(ext_bin_unorder_x, loc_id)
                                                 ext_bin_unorder_y = np.delete(ext_bin_unorder_y, loc_id)
-                                        else:
+                                        elif len(shortest_idx_arr)==1:
                                             
                                             ix = shortest_idx_arr[0]
                                             iy = shortest_idy_arr[0]
@@ -4744,6 +4751,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                             
                                             ext_bin_unorder_x = np.delete(ext_bin_unorder_x, loc_id)
                                             ext_bin_unorder_y = np.delete(ext_bin_unorder_y, loc_id)
+                                        else:
+                                            break
                                 past_size = current_size
                         
                 
@@ -5238,7 +5247,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                             
                                             int_bin_unorder_x = np.delete(int_bin_unorder_x, loc_id)
                                             int_bin_unorder_y = np.delete(int_bin_unorder_y, loc_id)
-                                    else:
+                                    elif len(shortest_idx_arr)==1:
                                         
                                         ix = shortest_idx_arr[0]
                                         iy = shortest_idy_arr[0]
@@ -5250,6 +5259,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                         
                                         int_bin_unorder_x = np.delete(int_bin_unorder_x, loc_id)
                                         int_bin_unorder_y = np.delete(int_bin_unorder_y, loc_id)
+                                    else:
+                                        break
                                 if edge_id[ix][iy] == bub_size_id_arr[1]:
                                     if int_edge_id[ix][iy]==1:
                                         #Identify neighboring bin indices in x-direction
@@ -5357,7 +5368,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                 
                                                 int_bin_unorder_x = np.delete(int_bin_unorder_x, loc_id)
                                                 int_bin_unorder_y = np.delete(int_bin_unorder_y, loc_id)
-                                        else:
+                                        elif len(shortest_idx_arr)==1:
                                             
                                             ix = shortest_idx_arr[0]
                                             iy = shortest_idy_arr[0]
@@ -5369,6 +5380,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                             
                                             int_bin_unorder_x = np.delete(int_bin_unorder_x, loc_id)
                                             int_bin_unorder_y = np.delete(int_bin_unorder_y, loc_id)
+                                        else:
+                                            break
                                 past_size = current_size
                     
 
@@ -5767,7 +5780,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                             
                                             ext_bin_unorder_x = np.delete(ext_bin_unorder_x, loc_id)
                                             ext_bin_unorder_y = np.delete(ext_bin_unorder_y, loc_id)
-                                    else:
+                                    elif len(shortest_idx_arr)==1:
                                         
                                         ix = shortest_idx_arr[0]
                                         iy = shortest_idy_arr[0]
@@ -5779,6 +5792,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 
                                         ext_bin_unorder_x = np.delete(ext_bin_unorder_x, loc_id)
                                         ext_bin_unorder_y = np.delete(ext_bin_unorder_y, loc_id)
+                                    else:
+                                        break
                                 if edge_id[ix][iy] == bub_size_id_arr[1]:
                                     if ext_edge_id[ix][iy]==1:
                                         #Identify neighboring bin indices in x-direction
@@ -5886,7 +5901,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                 
                                                 ext_bin_unorder_x = np.delete(ext_bin_unorder_x, loc_id)
                                                 ext_bin_unorder_y = np.delete(ext_bin_unorder_y, loc_id)
-                                        else:
+                                        elif len(shortest_idx_arr)==1:
                                             
                                             ix = shortest_idx_arr[0]
                                             iy = shortest_idy_arr[0]
@@ -5898,6 +5913,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                             
                                             ext_bin_unorder_x = np.delete(ext_bin_unorder_x, loc_id)
                                             ext_bin_unorder_y = np.delete(ext_bin_unorder_y, loc_id)
+                                        else:
+                                            break
                                 past_size = current_size
         
                         
@@ -6399,7 +6416,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                             
                                             int_bin_unorder_x = np.delete(int_bin_unorder_x, loc_id)
                                             int_bin_unorder_y = np.delete(int_bin_unorder_y, loc_id)
-                                    else:
+                                    elif len(shortest_idx_arr)==1:
                                         
                                         ix = shortest_idx_arr[0]
                                         iy = shortest_idy_arr[0]
@@ -6411,6 +6428,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                         
                                         int_bin_unorder_x = np.delete(int_bin_unorder_x, loc_id)
                                         int_bin_unorder_y = np.delete(int_bin_unorder_y, loc_id)
+                                    else:
+                                        break
                                 if edge_id[ix][iy] == bub_size_id_arr[2]:
                                     if int_edge_id[ix][iy]==1:
                                         #Identify neighboring bin indices in x-direction
@@ -6518,7 +6537,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                 
                                                 int_bin_unorder_x = np.delete(int_bin_unorder_x, loc_id)
                                                 int_bin_unorder_y = np.delete(int_bin_unorder_y, loc_id)
-                                        else:
+                                        elif len(shortest_idx_arr)==1:
                                             
                                             ix = shortest_idx_arr[0]
                                             iy = shortest_idy_arr[0]
@@ -6530,6 +6549,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                             
                                             int_bin_unorder_x = np.delete(int_bin_unorder_x, loc_id)
                                             int_bin_unorder_y = np.delete(int_bin_unorder_y, loc_id)
+                                        else:
+                                            break
                                 past_size = current_size
                     # append the starting x,y coordinates
                     #int_x = np.r_[int_x, int_x[0]]
@@ -6925,7 +6946,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                             
                                             ext_bin_unorder_x = np.delete(ext_bin_unorder_x, loc_id)
                                             ext_bin_unorder_y = np.delete(ext_bin_unorder_y, loc_id)
-                                    else:
+                                    elif len(shortest_idx_arr)==1:
                                         
                                         ix = shortest_idx_arr[0]
                                         iy = shortest_idy_arr[0]
@@ -6937,6 +6958,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 
                                         ext_bin_unorder_x = np.delete(ext_bin_unorder_x, loc_id)
                                         ext_bin_unorder_y = np.delete(ext_bin_unorder_y, loc_id)
+                                    else:
+                                        break
                                 if edge_id[ix][iy] == bub_size_id_arr[2]:
                                     if ext_edge_id[ix][iy]==1:
                                         #Identify neighboring bin indices in x-direction
@@ -7044,7 +7067,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                 
                                                 ext_bin_unorder_x = np.delete(ext_bin_unorder_x, loc_id)
                                                 ext_bin_unorder_y = np.delete(ext_bin_unorder_y, loc_id)
-                                        else:
+                                        elif len(shortest_idx_arr)==1:
                                             
                                             ix = shortest_idx_arr[0]
                                             iy = shortest_idy_arr[0]
@@ -7056,6 +7079,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                             
                                             ext_bin_unorder_x = np.delete(ext_bin_unorder_x, loc_id)
                                             ext_bin_unorder_y = np.delete(ext_bin_unorder_y, loc_id)
+                                        else:
+                                            break
                                 past_size = current_size
 
                  
@@ -7559,7 +7584,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                             
                                             int_bin_unorder_x = np.delete(int_bin_unorder_x, loc_id)
                                             int_bin_unorder_y = np.delete(int_bin_unorder_y, loc_id)
-                                    else:
+                                    elif len(shortest_idx_arr)==1:
                                         
                                         ix = shortest_idx_arr[0]
                                         iy = shortest_idy_arr[0]
@@ -7571,6 +7596,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                         
                                         int_bin_unorder_x = np.delete(int_bin_unorder_x, loc_id)
                                         int_bin_unorder_y = np.delete(int_bin_unorder_y, loc_id)
+                                    else:
+                                        break
                                 if edge_id[ix][iy] == bub_size_id_arr[3]:
                                     if int_edge_id[ix][iy]==1:
                                         #Identify neighboring bin indices in x-direction
@@ -7678,7 +7705,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                 
                                                 int_bin_unorder_x = np.delete(int_bin_unorder_x, loc_id)
                                                 int_bin_unorder_y = np.delete(int_bin_unorder_y, loc_id)
-                                        else:
+                                        elif len(shortest_idx_arr)==1:
                                             
                                             ix = shortest_idx_arr[0]
                                             iy = shortest_idy_arr[0]
@@ -7690,6 +7717,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                             
                                             int_bin_unorder_x = np.delete(int_bin_unorder_x, loc_id)
                                             int_bin_unorder_y = np.delete(int_bin_unorder_y, loc_id)
+                                        else:
+                                            break
                                 past_size = current_size
                 
                 
@@ -8087,7 +8116,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                             
                                             ext_bin_unorder_x = np.delete(ext_bin_unorder_x, loc_id)
                                             ext_bin_unorder_y = np.delete(ext_bin_unorder_y, loc_id)
-                                    else:
+                                    elif len(shortest_idx_arr)==1:
                                         
                                         ix = shortest_idx_arr[0]
                                         iy = shortest_idy_arr[0]
@@ -8099,6 +8128,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 
                                         ext_bin_unorder_x = np.delete(ext_bin_unorder_x, loc_id)
                                         ext_bin_unorder_y = np.delete(ext_bin_unorder_y, loc_id)
+                                    else:
+                                        break
                                 if edge_id[ix][iy] == bub_size_id_arr[3]:
                                     if ext_edge_id[ix][iy]==1:
                                         #Identify neighboring bin indices in x-direction
@@ -8206,7 +8237,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                 
                                                 ext_bin_unorder_x = np.delete(ext_bin_unorder_x, loc_id)
                                                 ext_bin_unorder_y = np.delete(ext_bin_unorder_y, loc_id)
-                                        else:
+                                        elif len(shortest_idx_arr)==1:
                                             
                                             ix = shortest_idx_arr[0]
                                             iy = shortest_idy_arr[0]
@@ -8218,6 +8249,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                             
                                             ext_bin_unorder_x = np.delete(ext_bin_unorder_x, loc_id)
                                             ext_bin_unorder_y = np.delete(ext_bin_unorder_y, loc_id)
+                                        else:
+                                            break
                                 past_size = current_size
             
                         
@@ -8708,7 +8741,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                             
                                             int_bin_unorder_x = np.delete(int_bin_unorder_x, loc_id)
                                             int_bin_unorder_y = np.delete(int_bin_unorder_y, loc_id)
-                                    else:
+                                    elif len(shortest_idx_arr)==1:
                                         
                                         ix = shortest_idx_arr[0]
                                         iy = shortest_idy_arr[0]
@@ -8720,6 +8753,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                         
                                         int_bin_unorder_x = np.delete(int_bin_unorder_x, loc_id)
                                         int_bin_unorder_y = np.delete(int_bin_unorder_y, loc_id)
+                                    else:
+                                        break
                                 if edge_id[ix][iy] == bub_size_id_arr[4]:
                                     if int_edge_id[ix][iy]==1:
                                         #Identify neighboring bin indices in x-direction
@@ -8827,7 +8862,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                 
                                                 int_bin_unorder_x = np.delete(int_bin_unorder_x, loc_id)
                                                 int_bin_unorder_y = np.delete(int_bin_unorder_y, loc_id)
-                                        else:
+                                        elif len(shortest_idx_arr)==1:
                                             
                                             ix = shortest_idx_arr[0]
                                             iy = shortest_idy_arr[0]
@@ -8839,6 +8874,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                             
                                             int_bin_unorder_x = np.delete(int_bin_unorder_x, loc_id)
                                             int_bin_unorder_y = np.delete(int_bin_unorder_y, loc_id)
+                                        else:
+                                            break
                                 past_size = current_size
                 
                 # append the starting x,y coordinates
@@ -9238,7 +9275,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                             
                                             ext_bin_unorder_x = np.delete(ext_bin_unorder_x, loc_id)
                                             ext_bin_unorder_y = np.delete(ext_bin_unorder_y, loc_id)
-                                    else:
+                                    elif len(shortest_idx_arr)==1:
                                         
                                         ix = shortest_idx_arr[0]
                                         iy = shortest_idy_arr[0]
@@ -9250,6 +9287,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 
                                         ext_bin_unorder_x = np.delete(ext_bin_unorder_x, loc_id)
                                         ext_bin_unorder_y = np.delete(ext_bin_unorder_y, loc_id)
+                                    else:
+                                        break
                                 if edge_id[ix][iy] == bub_size_id_arr[4]:
                                     if ext_edge_id[ix][iy]==1:
                                         #Identify neighboring bin indices in x-direction
@@ -9357,7 +9396,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                 
                                                 ext_bin_unorder_x = np.delete(ext_bin_unorder_x, loc_id)
                                                 ext_bin_unorder_y = np.delete(ext_bin_unorder_y, loc_id)
-                                        else:
+                                        elif len(shortest_idx_arr)==1:
                                             
                                             ix = shortest_idx_arr[0]
                                             iy = shortest_idy_arr[0]
@@ -9369,6 +9408,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                             
                                             ext_bin_unorder_x = np.delete(ext_bin_unorder_x, loc_id)
                                             ext_bin_unorder_y = np.delete(ext_bin_unorder_y, loc_id)
+                                        else:
+                                            break
                                 past_size = current_size
 
                 for m in range(0, len(ext_x)):
