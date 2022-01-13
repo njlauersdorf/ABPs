@@ -3622,7 +3622,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                         vel_mag[ix][iy] = ((v_avg_x[ix][iy]**2+v_avg_y[ix][iy]**2)**0.5)    #Average velocity per bin of all particles relative to largest preferred velocity (peB)
                         vel_magA[ix][iy] = ((v_avg_xA[ix][iy]**2+v_avg_yA[ix][iy]**2)**0.5) #Average velocity per bin of type A particles relative to preferred velocity (peA)
                         vel_magB[ix][iy] = ((v_avg_xB[ix][iy]**2+v_avg_yB[ix][iy]**2)**0.5) #Average velocity per bin of type B particles relative to preferred velocity (peB)
-                        vel_magDif[ix][iy] = (vel_magB[ix][iy]/peB-vel_magA[ix][iy])        #Difference in magnitude of average velocity per bin between type B and A particles
+                        vel_magDif[ix][iy] = (vel_magB[ix][iy]-vel_magA[ix][iy])        #Difference in magnitude of average velocity per bin between type B and A particles
                         
                         vel_mag_no_gas[ix][iy] = ((v_avg_x_no_gas[ix][iy]**2+v_avg_y_no_gas[ix][iy]**2)**0.5)   #Average velocity per bin of all particles relative to largest preferred velocity (peB)
                         vel_magA_no_gas[ix][iy] = ((v_avg_xA_no_gas[ix][iy]**2+v_avg_yA_no_gas[ix][iy]**2)**0.5) #Average velocity per bin of type A particles relative to preferred velocity (peA)

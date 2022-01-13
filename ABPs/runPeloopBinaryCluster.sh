@@ -95,7 +95,7 @@ fi
 if [ $dont_run == "no" ]; then
     # Default values for simulations
     part_num=$(( 50000 ))
-    runfor=$(( 1 ))
+    runfor=$(( 100 ))
     dump_freq=$(( 20000 ))
     # Lists for activity of A and B species
     #pa=(0 5 10 15 20 25 30 35 40 45 50)

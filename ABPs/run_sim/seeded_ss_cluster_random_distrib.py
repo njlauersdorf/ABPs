@@ -240,8 +240,10 @@ tauLJ = computeTauLJ(eps)
 
 #epsA = (epsA if (epsA >= epsB) else epsB)   # use the larger epsilon
 #epsB = epsA                                 # make sure all use this
-#epsAB = epsA                                # make sure all use this
+#epsAB = epsA                               # make sure all use this
 dt = 0.000001 * tauLJ                        # timestep size
+print(runFor)
+print(tauBrown)
 simLength = runFor * tauBrown               # how long to run (in tauBrown)
 simTauLJ = simLength / tauLJ                # how long to run (in tauLJ)
 totTsteps = int(simLength / dt)             # how many tsteps to run
@@ -249,6 +251,8 @@ numDumps = float(simLength / 0.1)           # dump data every 0.5 tauBrown
 dumpFreq = float(totTsteps / numDumps)      # normalized dump frequency
 dumpFreq = int(dumpFreq)                    # ensure this is an integer
 
+print(dumpFreq)
+stop
 
 num_F=xF*partNum
 num_S=xS*partNum
