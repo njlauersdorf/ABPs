@@ -38,6 +38,20 @@ import matplotlib.patches as patches
 
 import numpy as np
 import matplotlib
+
+# Run locally
+hoomdPath=str(sys.argv[10])
+outPath2=str(sys.argv[11])
+outPath=str(sys.argv[12])
+
+# Add hoomd location to Path
+sys.path.insert(0,hoomdPath)
+
+if hoomdPath == '/nas/longleaf/home/njlauers/hoomd-blue/build':
+    matplotlib.use('Agg')
+else:
+    pass
+
 import matplotlib.pyplot as plt
 import matplotlib.collections
 from matplotlib.patches import Circle
@@ -45,18 +59,7 @@ from matplotlib import pyplot as plt
 from matplotlib.path import Path
 import matplotlib.colors as colors
 
-# Run locally
-hoomdPath=str(sys.argv[10])
-outPath2=str(sys.argv[11])
-outPath=str(sys.argv[12])
 
-if hoomdPath == '/nas/longleaf/home/njlauers/hoomd-blue/build':
-    matplotlib.use('Agg')
-else:
-    pass
-
-# Add hoomd location to Path
-sys.path.insert(0,hoomdPath)
 
 # Get infile and open
 inFile = str(sys.argv[1])
