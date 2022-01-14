@@ -4333,54 +4333,87 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     okay = np.where(np.abs(np.diff(adjacent_x_arr_new)) + np.abs(np.diff(adjacent_y_arr_new)) > 0)
                     int_x = np.r_[adjacent_x_arr_new[okay], adjacent_x_arr_new[-1], adjacent_x_arr_new[0]]
                     int_y = np.r_[adjacent_y_arr_new[okay], adjacent_y_arr_new[-1], adjacent_y_arr_new[0]]
-                    if len(int_x)==2:
-                        tck, u = interpolate.splprep([int_x, int_y], s=0, k=1, per=True)
-                    elif len(int_x)==3:
+
+                    if len(int_x)==3:
                         tck, u = interpolate.splprep([int_x, int_y], s=0, k=2, per=True)
-                    else:
+                    elif len(int_x)>3:
                         tck, u = interpolate.splprep([int_x, int_y], s=0, per=True)
-                    
-                    # evaluate the spline fits for 1000 evenly spaced distance values
-                    xi, yi = interpolate.splev(np.linspace(0, 1, 1000), tck)
-                    
-                    jump = np.sqrt(np.diff(xi)**2 + np.diff(yi)**2) 
-                    smooth_jump = ndimage.gaussian_filter1d(jump, 5, mode='wrap')  # window of size 5 is arbitrary
-                    limit = 2*np.median(smooth_jump)    # factor 2 is arbitrary
-                    xn, yn = xi[:-1], yi[:-1]
-                    xn = xn[(jump > 0) & (smooth_jump < limit)]
-                    yn = yn[(jump > 0) & (smooth_jump < limit)]
-                    
-                    xn_pos = np.copy(xn)
-                    yn_pos = np.copy(yn)
-                    xn_pos_non_per = np.copy(xn)
-                    yn_pos_non_per = np.copy(yn)
-    
+                    if len(int_x)>=3:
+                        # evaluate the spline fits for 1000 evenly spaced distance values
+                        xi, yi = interpolate.splev(np.linspace(0, 1, 1000), tck)
                         
-                    for m in range(0, len(xn)):
-                        xn_pos[m] = xn[m] * sizeBin
-                        yn_pos[m] = yn[m] * sizeBin
-                        xn_pos_non_per[m] = xn[m] * sizeBin
-                        yn_pos_non_per[m] = yn[m] * sizeBin
+                        jump = np.sqrt(np.diff(xi)**2 + np.diff(yi)**2) 
+                        smooth_jump = ndimage.gaussian_filter1d(jump, 5, mode='wrap')  # window of size 5 is arbitrary
+                        limit = 2*np.median(smooth_jump)    # factor 2 is arbitrary
+                        xn, yn = xi[:-1], yi[:-1]
+                        xn = xn[(jump > 0) & (smooth_jump < limit)]
+                        yn = yn[(jump > 0) & (smooth_jump < limit)]
                         
-                        if xn[m] < 0:
-                            xn[m]+=NBins
-                        if xn[m]>=NBins:
-                            xn[m]-=NBins
+                        xn_pos = np.copy(xn)
+                        yn_pos = np.copy(yn)
+                        xn_pos_non_per = np.copy(xn)
+                        yn_pos_non_per = np.copy(yn)
+        
                             
-                        if yn[m] < 0:
-                            yn[m]+=NBins
-                        if yn[m]>=NBins:
-                            yn[m]-=NBins
+                        for m in range(0, len(xn)):
+                            xn_pos[m] = xn[m] * sizeBin
+                            yn_pos[m] = yn[m] * sizeBin
+                            xn_pos_non_per[m] = xn[m] * sizeBin
+                            yn_pos_non_per[m] = yn[m] * sizeBin
                             
-                        if xn_pos[m] < 0:
-                            xn_pos[m]+=l_box
-                        if xn_pos[m]>=l_box:
-                            xn_pos[m]-=l_box
+                            if xn[m] < 0:
+                                xn[m]+=NBins
+                            if xn[m]>=NBins:
+                                xn[m]-=NBins
+                                
+                            if yn[m] < 0:
+                                yn[m]+=NBins
+                            if yn[m]>=NBins:
+                                yn[m]-=NBins
+                                
+                            if xn_pos[m] < 0:
+                                xn_pos[m]+=l_box
+                            if xn_pos[m]>=l_box:
+                                xn_pos[m]-=l_box
+                                
+                            if yn_pos[m] < 0:
+                                yn_pos[m]+=l_box
+                            if yn_pos[m]>=l_box:
+                                yn_pos[m]-=l_box
+                    else:
+                        xn = np.zeros(1)
+                        yn = np.zeros(1)
+                        xn_pos = np.zeros(1)
+                        yn_pos = np.zeros(1)
+                        xn_pos_non_per = np.zeros(1)
+                        yn_pos_non_per = np.zeros(1)
+                        
+                        xn_pos[0] = int_x[0]
+                        yn_pos[0] = int_y[0]
+                        xn_pos[0] = int_x[0] * sizeBin
+                        yn_pos[0] = int_y[0] * sizeBin
+                        xn_pos_non_per[0] = int_x[0] * sizeBin
+                        yn_pos_non_per[0] = int_y[0] * sizeBin
+                        if xn[0] < 0:
+                            xn[0]+=NBins
+                        if xn[0]>=NBins:
+                            xn[0]-=NBins
                             
-                        if yn_pos[m] < 0:
-                            yn_pos[m]+=l_box
-                        if yn_pos[m]>=l_box:
-                            yn_pos[m]-=l_box
+                        if yn[0] < 0:
+                            yn[0]+=NBins
+                        if yn[0]>=NBins:
+                            yn[0]-=NBins
+                            
+                        if xn_pos[0] < 0:
+                            xn_pos[0]+=l_box
+                        if xn_pos[0]>=l_box:
+                            xn_pos[0]-=l_box
+                            
+                        if yn_pos[0] < 0:
+                            yn_pos[0]+=l_box
+                        if yn_pos[0]>=l_box:
+                            yn_pos[0]-=l_box
+                        
                 else:
                     xn=np.array([int_x[0]])
                     yn=np.array([int_y[0]])
@@ -4863,54 +4896,85 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     ext_x = np.r_[adjacent_x_arr_new[okay], adjacent_x_arr_new[-1], adjacent_x_arr_new[0]]
                     ext_y = np.r_[adjacent_y_arr_new[okay], adjacent_y_arr_new[-1], adjacent_y_arr_new[0]]
     
-                    if len(ext_x)==2:
-                        tck2, u2 = interpolate.splprep([ext_x, ext_y], s=0, k=1, per=True)
-                    elif len(ext_x)==3:
+                    if len(ext_x)==3:
                         tck2, u2 = interpolate.splprep([ext_x, ext_y], s=0, k=2, per=True)
-                    else:
+                    elif len(ext_x)>3:
                         tck2, u2 = interpolate.splprep([ext_x, ext_y], s=0, per=True)
-                                            
-                    # evaluate the spline fits for 1000 evenly spaced distance values
-                    xi2, yi2 = interpolate.splev(np.linspace(0, 1, 1000), tck2)
-                    
-                    jump2 = np.sqrt(np.diff(xi2)**2 + np.diff(yi2)**2) 
-                    smooth_jump2 = ndimage.gaussian_filter1d(jump2, 5, mode='wrap')  # window of size 5 is arbitrary
-                    limit2 = 2*np.median(smooth_jump2)    # factor 2 is arbitrary
-                    xn2, yn2 = xi2[:-1], yi2[:-1]
-                    xn2 = xn2[(jump2 > 0) & (smooth_jump2 < limit2)]
-                    yn2 = yn2[(jump2 > 0) & (smooth_jump2 < limit2)]
-                    
-                    xn2_pos = np.copy(xn2)
-                    yn2_pos = np.copy(yn2)
-                    xn2_pos_non_per = np.copy(xn2)
-                    yn2_pos_non_per = np.copy(yn2)
-    
+                    if len(ext_x)>=3:                        
+                        # evaluate the spline fits for 1000 evenly spaced distance values
+                        xi2, yi2 = interpolate.splev(np.linspace(0, 1, 1000), tck2)
                         
-                    for m in range(0, len(xn2)):
-                        xn2_pos[m] = xn2[m] * sizeBin
-                        yn2_pos[m] = yn2[m] * sizeBin
-                        xn2_pos_non_per[m] = xn2[m] * sizeBin
-                        yn2_pos_non_per[m] = yn2[m] * sizeBin
+                        jump2 = np.sqrt(np.diff(xi2)**2 + np.diff(yi2)**2) 
+                        smooth_jump2 = ndimage.gaussian_filter1d(jump2, 5, mode='wrap')  # window of size 5 is arbitrary
+                        limit2 = 2*np.median(smooth_jump2)    # factor 2 is arbitrary
+                        xn2, yn2 = xi2[:-1], yi2[:-1]
+                        xn2 = xn2[(jump2 > 0) & (smooth_jump2 < limit2)]
+                        yn2 = yn2[(jump2 > 0) & (smooth_jump2 < limit2)]
                         
-                        if xn2[m] < 0:
-                            xn2[m]+=NBins
-                        if xn2[m]>=NBins:
-                            xn2[m]-=NBins
+                        xn2_pos = np.copy(xn2)
+                        yn2_pos = np.copy(yn2)
+                        xn2_pos_non_per = np.copy(xn2)
+                        yn2_pos_non_per = np.copy(yn2)
+        
                             
-                        if yn2[m] < 0:
-                            yn2[m]+=NBins
-                        if yn2[m]>=NBins:
-                            yn2[m]-=NBins
+                        for m in range(0, len(xn2)):
+                            xn2_pos[m] = xn2[m] * sizeBin
+                            yn2_pos[m] = yn2[m] * sizeBin
+                            xn2_pos_non_per[m] = xn2[m] * sizeBin
+                            yn2_pos_non_per[m] = yn2[m] * sizeBin
                             
-                        if xn2_pos[m] < 0:
-                            xn2_pos[m]+=l_box
-                        if xn2_pos[m]>=l_box:
-                            xn2_pos[m]-=l_box
+                            if xn2[m] < 0:
+                                xn2[m]+=NBins
+                            if xn2[m]>=NBins:
+                                xn2[m]-=NBins
+                                
+                            if yn2[m] < 0:
+                                yn2[m]+=NBins
+                            if yn2[m]>=NBins:
+                                yn2[m]-=NBins
+                                
+                            if xn2_pos[m] < 0:
+                                xn2_pos[m]+=l_box
+                            if xn2_pos[m]>=l_box:
+                                xn2_pos[m]-=l_box
+                                
+                            if yn2_pos[m] < 0:
+                                yn2_pos[m]+=l_box
+                            if yn2_pos[m]>=l_box:
+                                yn2_pos[m]-=l_box 
+                    else:
+                        xn2 = np.zeros(1)
+                        yn2 = np.zeros(1)
+                        xn2_pos = np.zeros(1)
+                        yn2_pos = np.zeros(1)
+                        xn2_pos_non_per = np.zeros(1)
+                        yn2_pos_non_per = np.zeros(1)
+                        
+                        xn2_pos[0] = ext_x[0]
+                        yn2_pos[0] = ext_y[0]
+                        xn2_pos[0] = ext_x[0] * sizeBin
+                        yn2_pos[0] = ext_y[0] * sizeBin
+                        xn2_pos_non_per[0] = ext_x[0] * sizeBin
+                        yn2_pos_non_per[0] = ext_y[0] * sizeBin
+                        if xn2[0] < 0:
+                            xn2[0]+=NBins
+                        if xn2[0]>=NBins:
+                            xn2[0]-=NBins
                             
-                        if yn2_pos[m] < 0:
-                            yn2_pos[m]+=l_box
-                        if yn2_pos[m]>=l_box:
-                            yn2_pos[m]-=l_box 
+                        if yn2[0] < 0:
+                            yn2[0]+=NBins
+                        if yn2[0]>=NBins:
+                            yn2[0]-=NBins
+                            
+                        if xn2_pos[0] < 0:
+                            xn2_pos[0]+=l_box
+                        if xn2_pos[0]>=l_box:
+                            xn2_pos[0]-=l_box
+                            
+                        if yn2_pos[0] < 0:
+                            yn2_pos[0]+=l_box
+                        if yn2_pos[0]>=l_box:
+                            yn2_pos[0]-=l_box
                 else:
                     xn2=np.array([ext_x[0]])
                     yn2=np.array([ext_y[0]])
@@ -5491,54 +5555,85 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     int_y = np.r_[adjacent_y_arr_new[okay], adjacent_y_arr_new[-1], adjacent_y_arr_new[0]]
                     
                     
-                    if len(int_x)==2:
-                        tck, u = interpolate.splprep([int_x, int_y], s=0, k=1, per=True)
-                    elif len(int_x)==3:
+                    if len(int_x)==3:
                         tck, u = interpolate.splprep([int_x, int_y], s=0, k=2, per=True)
-                    else:
+                    elif len(int_x)>3:
                         tck, u = interpolate.splprep([int_x, int_y], s=0, per=True)
-                    
-                    # evaluate the spline fits for 1000 evenly spaced distance values
-                    xi, yi = interpolate.splev(np.linspace(0, 1, 1000), tck)
-                    
-                    jump = np.sqrt(np.diff(xi)**2 + np.diff(yi)**2) 
-                    smooth_jump = ndimage.gaussian_filter1d(jump, 5, mode='wrap')  # window of size 5 is arbitrary
-                    limit = 2*np.median(smooth_jump)    # factor 2 is arbitrary
-                    xn_bub2, yn_bub2 = xi[:-1], yi[:-1]
-                    xn_bub2 = xn_bub2[(jump > 0) & (smooth_jump < limit)]
-                    yn_bub2 = yn_bub2[(jump > 0) & (smooth_jump < limit)]
-                    xn_bub2_pos = np.copy(xn_bub2)
-                    yn_bub2_pos = np.copy(yn_bub2)
-                    xn_bub2_pos_non_per = np.copy(xn_bub2)
-                    yn_bub2_pos_non_per = np.copy(yn_bub2)
-    
+                    if len(int_x)>=3:
+                        # evaluate the spline fits for 1000 evenly spaced distance values
+                        xi, yi = interpolate.splev(np.linspace(0, 1, 1000), tck)
                         
+                        jump = np.sqrt(np.diff(xi)**2 + np.diff(yi)**2) 
+                        smooth_jump = ndimage.gaussian_filter1d(jump, 5, mode='wrap')  # window of size 5 is arbitrary
+                        limit = 2*np.median(smooth_jump)    # factor 2 is arbitrary
+                        xn_bub2, yn_bub2 = xi[:-1], yi[:-1]
+                        xn_bub2 = xn_bub2[(jump > 0) & (smooth_jump < limit)]
+                        yn_bub2 = yn_bub2[(jump > 0) & (smooth_jump < limit)]
+                        xn_bub2_pos = np.copy(xn_bub2)
+                        yn_bub2_pos = np.copy(yn_bub2)
+                        xn_bub2_pos_non_per = np.copy(xn_bub2)
+                        yn_bub2_pos_non_per = np.copy(yn_bub2)
+        
+                            
+                            
+                        for m in range(0, len(xn_bub2)):
+                            xn_bub2_pos[m] = xn_bub2[m] * sizeBin
+                            yn_bub2_pos[m] = yn_bub2[m] * sizeBin
+                            xn_bub2_pos_non_per[m] = xn_bub2[m] * sizeBin
+                            yn_bub2_pos_non_per[m] = yn_bub2[m] * sizeBin
+                            
+                            if xn_bub2[m] < 0:
+                                xn_bub2[m]+=NBins
+                            if xn_bub2[m]>=NBins:
+                                xn_bub2[m]-=NBins
+                                
+                            if yn_bub2[m] < 0:
+                                yn_bub2[m]+=NBins
+                            if yn_bub2[m]>=NBins:
+                                yn_bub2[m]-=NBins
+                                
+                            if xn_bub2_pos[m] < 0:
+                                xn_bub2_pos[m]+=l_box
+                            if xn_bub2_pos[m]>=l_box:
+                                xn_bub2_pos[m]-=l_box
+                                
+                            if yn_bub2_pos[m] < 0:
+                                yn_bub2_pos[m]+=l_box
+                            if yn_bub2_pos[m]>=l_box:
+                                yn_bub2_pos[m]-=l_box
+                    else:
+                        xn_bub2 = np.zeros(1)
+                        yn_bub2 = np.zeros(1)
+                        xn_bub2_pos = np.zeros(1)
+                        yn_bub2_pos = np.zeros(1)
+                        xn_bub2_pos_non_per = np.zeros(1)
+                        yn_bub2_pos_non_per = np.zeros(1)
                         
-                    for m in range(0, len(xn_bub2)):
-                        xn_bub2_pos[m] = xn_bub2[m] * sizeBin
-                        yn_bub2_pos[m] = yn_bub2[m] * sizeBin
-                        xn_bub2_pos_non_per[m] = xn_bub2[m] * sizeBin
-                        yn_bub2_pos_non_per[m] = yn_bub2[m] * sizeBin
-                        
-                        if xn_bub2[m] < 0:
-                            xn_bub2[m]+=NBins
-                        if xn_bub2[m]>=NBins:
-                            xn_bub2[m]-=NBins
+                        xn_bub2_pos[0] = int_x[0]
+                        yn_bub2_pos[0] = int_y[0]
+                        xn_bub2_pos[0] = int_x[0] * sizeBin
+                        yn_bub2_pos[0] = int_y[0] * sizeBin
+                        xn_bub2_pos_non_per[0] = int_x[0] * sizeBin
+                        yn_bub2_pos_non_per[0] = int_y[0] * sizeBin
+                        if xn_bub2[0] < 0:
+                            xn_bub2[0]+=NBins
+                        if xn_bub2[0]>=NBins:
+                            xn_bub2[0]-=NBins
                             
-                        if yn_bub2[m] < 0:
-                            yn_bub2[m]+=NBins
-                        if yn_bub2[m]>=NBins:
-                            yn_bub2[m]-=NBins
+                        if yn_bub2[0] < 0:
+                            yn_bub2[0]+=NBins
+                        if yn_bub2[0]>=NBins:
+                            yn_bub2[0]-=NBins
                             
-                        if xn_bub2_pos[m] < 0:
-                            xn_bub2_pos[m]+=l_box
-                        if xn_bub2_pos[m]>=l_box:
-                            xn_bub2_pos[m]-=l_box
+                        if xn_bub2_pos[0] < 0:
+                            xn_bub2_pos[0]+=l_box
+                        if xn_bub2_pos[0]>=l_box:
+                            xn_bub2_pos[0]-=l_box
                             
-                        if yn_bub2_pos[m] < 0:
-                            yn_bub2_pos[m]+=l_box
-                        if yn_bub2_pos[m]>=l_box:
-                            yn_bub2_pos[m]-=l_box
+                        if yn_bub2_pos[0] < 0:
+                            yn_bub2_pos[0]+=l_box
+                        if yn_bub2_pos[0]>=l_box:
+                            yn_bub2_pos[0]-=l_box
                 else:
                     xn_bub2 = np.array([int_x[0]])
                     yn_bub2 = np.array([int_y[0]])
@@ -6025,55 +6120,91 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     okay = np.where(np.abs(np.diff(adjacent_x_arr_new)) + np.abs(np.diff(adjacent_y_arr_new)) > 0)
                     ext_x = np.r_[adjacent_x_arr_new[okay], adjacent_x_arr_new[-1], adjacent_x_arr_new[0]]
                     ext_y = np.r_[adjacent_y_arr_new[okay], adjacent_y_arr_new[-1], adjacent_y_arr_new[0]]
+                    print(ext_x)
+                    print(ext_y)
                     
-                    if len(ext_x)==2:
-                        tck2, u2 = interpolate.splprep([ext_x, ext_y], s=0, k=1, per=True)
-                    elif len(ext_x)==3:
+                    
+                    if len(ext_x)==3:
                         tck2, u2 = interpolate.splprep([ext_x, ext_y], s=0, k=2, per=True)
-                    else:
+                    elif len(ext_x)>3:
                         tck2, u2 = interpolate.splprep([ext_x, ext_y], s=0, per=True)
-                    
-                    # evaluate the spline fits for 1000 evenly spaced distance values
-                    xi2, yi2 = interpolate.splev(np.linspace(0, 1, 1000), tck2)
-                    
-                    jump2 = np.sqrt(np.diff(xi2)**2 + np.diff(yi2)**2) 
-                    smooth_jump2 = ndimage.gaussian_filter1d(jump2, 5, mode='wrap')  # window of size 5 is arbitrary
-                    limit2 = 2*np.median(smooth_jump2)    # factor 2 is arbitrary
-                    xn2_bub2, yn2_bub2 = xi2[:-1], yi2[:-1]
-                    xn2_bub2 = xn2_bub2[(jump2 > 0) & (smooth_jump2 < limit2)]
-                    yn2_bub2 = yn2_bub2[(jump2 > 0) & (smooth_jump2 < limit2)]
-                    xn2_bub2_pos = np.copy(xn2_bub2)
-                    yn2_bub2_pos = np.copy(yn2_bub2)
-                    xn2_bub2_pos_non_per = np.copy(xn2_bub2)
-                    yn2_bub2_pos_non_per = np.copy(yn2_bub2)
-    
+                    if len(ext_x)>=3:
+                        # evaluate the spline fits for 1000 evenly spaced distance values
+                        xi2, yi2 = interpolate.splev(np.linspace(0, 1, 1000), tck2)
+                        
+                        jump2 = np.sqrt(np.diff(xi2)**2 + np.diff(yi2)**2) 
+                        smooth_jump2 = ndimage.gaussian_filter1d(jump2, 5, mode='wrap')  # window of size 5 is arbitrary
+                        limit2 = 2*np.median(smooth_jump2)    # factor 2 is arbitrary
+                        xn2_bub2, yn2_bub2 = xi2[:-1], yi2[:-1]
+                        xn2_bub2 = xn2_bub2[(jump2 > 0) & (smooth_jump2 < limit2)]
+                        yn2_bub2 = yn2_bub2[(jump2 > 0) & (smooth_jump2 < limit2)]
+                        xn2_bub2_pos = np.copy(xn2_bub2)
+                        yn2_bub2_pos = np.copy(yn2_bub2)
+                        xn2_bub2_pos_non_per = np.copy(xn2_bub2)
+                        yn2_bub2_pos_non_per = np.copy(yn2_bub2)
+        
+                            
+                            
+                        for m in range(0, len(xn2_bub2)):
+                            xn2_bub2_pos[m] = xn2_bub2[m] * sizeBin
+                            yn2_bub2_pos[m] = yn2_bub2[m] * sizeBin
+                            xn2_bub2_pos_non_per[m] = xn2_bub2[m] * sizeBin
+                            yn2_bub2_pos_non_per[m] = yn2_bub2[m] * sizeBin
+                            
+                            if xn2_bub2[m] < 0:
+                                xn2_bub2[m]+=NBins
+                            if xn2_bub2[m]>=NBins:
+                                xn2_bub2[m]-=NBins
+                                
+                            if yn2_bub2[m] < 0:
+                                yn2_bub2[m]+=NBins
+                            if yn2_bub2[m]>=NBins:
+                                yn2_bub2[m]-=NBins
+                                
+                            if xn2_bub2_pos[m] < 0:
+                                xn2_bub2_pos[m]+=l_box
+                            if xn2_bub2_pos[m]>=l_box:
+                                xn2_bub2_pos[m]-=l_box
+                                
+                            if yn2_bub2_pos[m] < 0:
+                                yn2_bub2_pos[m]+=l_box
+                            if yn2_bub2_pos[m]>=l_box:
+                                yn2_bub2_pos[m]-=l_box
+                    else:
+                        xn2_bub2 = np.zeros(1)
+                        yn2_bub2 = np.zeros(1)
+                        xn2_bub2_pos = np.zeros(1)
+                        yn2_bub2_pos = np.zeros(1)
+                        xn2_bub2_pos_non_per = np.zeros(1)
+                        yn2_bub2_pos_non_per = np.zeros(1)
+                        
+                        xn2_bub2_pos[0] = ext_x[0]
+                        yn2_bub2_pos[0] = ext_y[0]
+                        xn2_bub2_pos[0] = ext_x[0] * sizeBin
+                        yn2_bub2_pos[0] = ext_y[0] * sizeBin
+                        xn2_bub2_pos_non_per[0] = ext_x[0] * sizeBin
+                        yn2_bub2_pos_non_per[0] = ext_y[0] * sizeBin
+                        if xn2_bub2[0] < 0:
+                            xn2_bub2[0]+=NBins
+                        if xn2_bub2[0]>=NBins:
+                            xn2_bub2[0]-=NBins
+                            
+                        if yn2_bub2[0] < 0:
+                            yn2_bub2[0]+=NBins
+                        if yn2_bub2[0]>=NBins:
+                            yn2_bub2[0]-=NBins
+                            
+                        if xn2_bub2_pos[0] < 0:
+                            xn2_bub2_pos[0]+=l_box
+                        if xn2_bub2_pos[0]>=l_box:
+                            xn2_bub2_pos[0]-=l_box
+                            
+                        if yn2_bub2_pos[0] < 0:
+                            yn2_bub2_pos[0]+=l_box
+                        if yn2_bub2_pos[0]>=l_box:
+                            yn2_bub2_pos[0]-=l_box
                         
                         
-                    for m in range(0, len(xn2_bub2)):
-                        xn2_bub2_pos[m] = xn2_bub2[m] * sizeBin
-                        yn2_bub2_pos[m] = yn2_bub2[m] * sizeBin
-                        xn2_bub2_pos_non_per[m] = xn2_bub2[m] * sizeBin
-                        yn2_bub2_pos_non_per[m] = yn2_bub2[m] * sizeBin
-                        
-                        if xn2_bub2[m] < 0:
-                            xn2_bub2[m]+=NBins
-                        if xn2_bub2[m]>=NBins:
-                            xn2_bub2[m]-=NBins
-                            
-                        if yn2_bub2[m] < 0:
-                            yn2_bub2[m]+=NBins
-                        if yn2_bub2[m]>=NBins:
-                            yn2_bub2[m]-=NBins
-                            
-                        if xn2_bub2_pos[m] < 0:
-                            xn2_bub2_pos[m]+=l_box
-                        if xn2_bub2_pos[m]>=l_box:
-                            xn2_bub2_pos[m]-=l_box
-                            
-                        if yn2_bub2_pos[m] < 0:
-                            yn2_bub2_pos[m]+=l_box
-                        if yn2_bub2_pos[m]>=l_box:
-                            yn2_bub2_pos[m]-=l_box
                 else:
                     xn2_bub2 = np.array([ext_x[0]])
                     yn2_bub2 = np.array([ext_y[0]])
@@ -6658,54 +6789,87 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     int_x = np.r_[adjacent_x_arr_new[okay], adjacent_x_arr_new[-1], adjacent_x_arr_new[0]]
                     int_y = np.r_[adjacent_y_arr_new[okay], adjacent_y_arr_new[-1], adjacent_y_arr_new[0]]
                     
-                    if len(int_x)==2:
-                        tck, u = interpolate.splprep([int_x, int_y], s=0, k=1, per=True)
-                    elif len(int_x)==3:
+                    if len(int_x)==3:
                         tck, u = interpolate.splprep([int_x, int_y], s=0, k=2, per=True)
-                    else:
+                    elif len(int_x)>3:
                         tck, u = interpolate.splprep([int_x, int_y], s=0, per=True)
                     
-                    # evaluate the spline fits for 1000 evenly spaced distance values
-                    xi, yi = interpolate.splev(np.linspace(0, 1, 1000), tck)
-                    
-                    jump = np.sqrt(np.diff(xi)**2 + np.diff(yi)**2) 
-                    smooth_jump = ndimage.gaussian_filter1d(jump, 5, mode='wrap')  # window of size 5 is arbitrary
-                    limit = 2*np.median(smooth_jump)    # factor 2 is arbitrary
-                    xn_bub3, yn_bub3 = xi[:-1], yi[:-1]
-                    xn_bub3 = xn_bub3[(jump > 0) & (smooth_jump < limit)]
-                    yn_bub3 = yn_bub3[(jump > 0) & (smooth_jump < limit)]
-                    
-                    xn_bub3_pos = np.copy(xn_bub3)
-                    yn_bub3_pos = np.copy(yn_bub3)
-                    xn_bub3_pos_non_per = np.copy(xn_bub3)
-                    yn_bub3_pos_non_per = np.copy(yn_bub3)
-    
+                    if len(int_x)>=3:
+                        # evaluate the spline fits for 1000 evenly spaced distance values
+                        xi, yi = interpolate.splev(np.linspace(0, 1, 1000), tck)
                         
-                    for m in range(0, len(xn_bub3)):
-                        xn_bub3_pos[m] = xn_bub3[m] * sizeBin
-                        yn_bub3_pos[m] = yn_bub3[m] * sizeBin
-                        xn_bub3_pos_non_per[m] = xn_bub3[m] * sizeBin
-                        yn_bub3_pos_non_per[m] = yn_bub3[m] * sizeBin
+                        jump = np.sqrt(np.diff(xi)**2 + np.diff(yi)**2) 
+                        smooth_jump = ndimage.gaussian_filter1d(jump, 5, mode='wrap')  # window of size 5 is arbitrary
+                        limit = 2*np.median(smooth_jump)    # factor 2 is arbitrary
+                        xn_bub3, yn_bub3 = xi[:-1], yi[:-1]
+                        xn_bub3 = xn_bub3[(jump > 0) & (smooth_jump < limit)]
+                        yn_bub3 = yn_bub3[(jump > 0) & (smooth_jump < limit)]
                         
-                        if xn_bub3[m] < 0:
-                            xn_bub3[m]+=NBins
-                        if xn_bub3[m]>=NBins:
-                            xn_bub3[m]-=NBins
+                        xn_bub3_pos = np.copy(xn_bub3)
+                        yn_bub3_pos = np.copy(yn_bub3)
+                        xn_bub3_pos_non_per = np.copy(xn_bub3)
+                        yn_bub3_pos_non_per = np.copy(yn_bub3)
+        
                             
-                        if yn_bub3[m] < 0:
-                            yn_bub3[m]+=NBins
-                        if yn_bub3[m]>=NBins:
-                            yn_bub3[m]-=NBins
+                        for m in range(0, len(xn_bub3)):
+                            xn_bub3_pos[m] = xn_bub3[m] * sizeBin
+                            yn_bub3_pos[m] = yn_bub3[m] * sizeBin
+                            xn_bub3_pos_non_per[m] = xn_bub3[m] * sizeBin
+                            yn_bub3_pos_non_per[m] = yn_bub3[m] * sizeBin
                             
-                        if xn_bub3_pos[m] < 0:
-                            xn_bub3_pos[m]+=l_box
-                        if xn_bub3_pos[m]>=l_box:
-                            xn_bub3_pos[m]-=l_box
+                            if xn_bub3[m] < 0:
+                                xn_bub3[m]+=NBins
+                            if xn_bub3[m]>=NBins:
+                                xn_bub3[m]-=NBins
+                                
+                            if yn_bub3[m] < 0:
+                                yn_bub3[m]+=NBins
+                            if yn_bub3[m]>=NBins:
+                                yn_bub3[m]-=NBins
+                                
+                            if xn_bub3_pos[m] < 0:
+                                xn_bub3_pos[m]+=l_box
+                            if xn_bub3_pos[m]>=l_box:
+                                xn_bub3_pos[m]-=l_box
+                                
+                            if yn_bub3_pos[m] < 0:
+                                yn_bub3_pos[m]+=l_box
+                            if yn_bub3_pos[m]>=l_box:
+                                yn_bub3_pos[m]-=l_box
+                    else:
+                        xn_bub3 = np.zeros(1)
+                        yn_bub3 = np.zeros(1)
+                        xn_bub3_pos = np.zeros(1)
+                        yn_bub3_pos = np.zeros(1)
+                        xn_bub3_pos_non_per = np.zeros(1)
+                        yn_bub3_pos_non_per = np.zeros(1)
+                        
+                        xn_bub3_pos[0] = int_x[0]
+                        yn_bub3_pos[0] = int_y[0]
+                        xn_bub3_pos[0] = int_x[0] * sizeBin
+                        yn_bub3_pos[0] = int_y[0] * sizeBin
+                        xn_bub3_pos_non_per[0] = int_x[0] * sizeBin
+                        yn_bub3_pos_non_per[0] = int_y[0] * sizeBin
+                        
+                        if xn_bub3[0] < 0:
+                            xn_bub3[0]+=NBins
+                        if xn_bub3[0]>=NBins:
+                            xn_bub3[0]-=NBins
                             
-                        if yn_bub3_pos[m] < 0:
-                            yn_bub3_pos[m]+=l_box
-                        if yn_bub3_pos[m]>=l_box:
-                            yn_bub3_pos[m]-=l_box
+                        if yn_bub3[0] < 0:
+                            yn_bub3[0]+=NBins
+                        if yn_bub3[0]>=NBins:
+                            yn_bub3[0]-=NBins
+                            
+                        if xn_bub3_pos[0] < 0:
+                            xn_bub3_pos[0]+=l_box
+                        if xn_bub3_pos[0]>=l_box:
+                            xn_bub3_pos[0]-=l_box
+                            
+                        if yn_bub3_pos[0] < 0:
+                            yn_bub3_pos[0]+=l_box
+                        if yn_bub3_pos[0]>=l_box:
+                            yn_bub3_pos[0]-=l_box
                 else:
                     
                     xn_bub3=np.array([int_x[0]])
@@ -7191,54 +7355,86 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     ext_x = np.r_[adjacent_x_arr_new[okay], adjacent_x_arr_new[-1], adjacent_x_arr_new[0]]
                     ext_y = np.r_[adjacent_y_arr_new[okay], adjacent_y_arr_new[-1], adjacent_y_arr_new[0]]
                     
-                    if len(ext_x)==2:
-                        tck2, u2 = interpolate.splprep([ext_x, ext_y], s=0, k=1, per=True)
-                    elif len(ext_x)==3:
+                    if len(ext_x)==3:
                         tck2, u2 = interpolate.splprep([ext_x, ext_y], s=0, k=2, per=True)
-                    else:
+                    elif len(ext_x)>3:
                         tck2, u2 = interpolate.splprep([ext_x, ext_y], s=0, per=True)
                     
-                    # evaluate the spline fits for 1000 evenly spaced distance values
-                    xi2, yi2 = interpolate.splev(np.linspace(0, 1, 1000), tck2)
-                    
-                    jump2 = np.sqrt(np.diff(xi2)**2 + np.diff(yi2)**2) 
-                    smooth_jump2 = ndimage.gaussian_filter1d(jump2, 5, mode='wrap')  # window of size 5 is arbitrary
-                    limit2 = 2*np.median(smooth_jump2)    # factor 2 is arbitrary
-                    xn2_bub3, yn2_bub3 = xi2[:-1], yi2[:-1]
-                    xn2_bub3 = xn2_bub3[(jump2 > 0) & (smooth_jump2 < limit2)]
-                    yn2_bub3 = yn2_bub3[(jump2 > 0) & (smooth_jump2 < limit2)]
-                    
-                    xn2_bub3_pos = np.copy(xn2_bub3)
-                    yn2_bub3_pos = np.copy(yn2_bub3)
-                    xn2_bub3_pos_non_per = np.copy(xn2_bub3)
-                    yn2_bub3_pos_non_per = np.copy(yn2_bub3)
-    
+                    if len(ext_x)>=3:
+                        # evaluate the spline fits for 1000 evenly spaced distance values
+                        xi2, yi2 = interpolate.splev(np.linspace(0, 1, 1000), tck2)
                         
-                    for m in range(0, len(xn2_bub3)):
-                        xn2_bub3_pos[m] = xn2_bub3[m] * sizeBin
-                        yn2_bub3_pos[m] = yn2_bub3[m] * sizeBin
-                        xn2_bub3_pos_non_per[m] = xn2_bub3[m] * sizeBin
-                        yn2_bub3_pos_non_per[m] = yn2_bub3[m] * sizeBin
+                        jump2 = np.sqrt(np.diff(xi2)**2 + np.diff(yi2)**2) 
+                        smooth_jump2 = ndimage.gaussian_filter1d(jump2, 5, mode='wrap')  # window of size 5 is arbitrary
+                        limit2 = 2*np.median(smooth_jump2)    # factor 2 is arbitrary
+                        xn2_bub3, yn2_bub3 = xi2[:-1], yi2[:-1]
+                        xn2_bub3 = xn2_bub3[(jump2 > 0) & (smooth_jump2 < limit2)]
+                        yn2_bub3 = yn2_bub3[(jump2 > 0) & (smooth_jump2 < limit2)]
                         
-                        if xn2_bub3[m] < 0:
-                            xn2_bub3[m]+=NBins
-                        if xn2_bub3[m]>=NBins:
-                            xn2_bub3[m]-=NBins
+                        xn2_bub3_pos = np.copy(xn2_bub3)
+                        yn2_bub3_pos = np.copy(yn2_bub3)
+                        xn2_bub3_pos_non_per = np.copy(xn2_bub3)
+                        yn2_bub3_pos_non_per = np.copy(yn2_bub3)
+        
                             
-                        if yn2_bub3[m] < 0:
-                            yn2_bub3[m]+=NBins
-                        if yn2_bub3[m]>=NBins:
-                            yn2_bub3[m]-=NBins
+                        for m in range(0, len(xn2_bub3)):
+                            xn2_bub3_pos[m] = xn2_bub3[m] * sizeBin
+                            yn2_bub3_pos[m] = yn2_bub3[m] * sizeBin
+                            xn2_bub3_pos_non_per[m] = xn2_bub3[m] * sizeBin
+                            yn2_bub3_pos_non_per[m] = yn2_bub3[m] * sizeBin
                             
-                        if xn2_bub3_pos[m] < 0:
-                            xn2_bub3_pos[m]+=l_box
-                        if xn2_bub3_pos[m]>=l_box:
-                            xn2_bub3_pos[m]-=l_box
+                            if xn2_bub3[m] < 0:
+                                xn2_bub3[m]+=NBins
+                            if xn2_bub3[m]>=NBins:
+                                xn2_bub3[m]-=NBins
+                                
+                            if yn2_bub3[m] < 0:
+                                yn2_bub3[m]+=NBins
+                            if yn2_bub3[m]>=NBins:
+                                yn2_bub3[m]-=NBins
+                                
+                            if xn2_bub3_pos[m] < 0:
+                                xn2_bub3_pos[m]+=l_box
+                            if xn2_bub3_pos[m]>=l_box:
+                                xn2_bub3_pos[m]-=l_box
+                                
+                            if yn2_bub3_pos[m] < 0:
+                                yn2_bub3_pos[m]+=l_box
+                            if yn2_bub3_pos[m]>=l_box:
+                                yn2_bub3_pos[m]-=l_box
+                    else:
+                        xn2_bub3 = np.zeros(1)
+                        yn2_bub3 = np.zeros(1)
+                        xn2_bub3_pos = np.zeros(1)
+                        yn2_bub3_pos = np.zeros(1)
+                        xn2_bub3_pos_non_per = np.zeros(1)
+                        yn2_bub3_pos_non_per = np.zeros(1)
+                        
+                        xn2_bub3_pos[0] = ext_x[0]
+                        yn2_bub3_pos[0] = ext_y[0]
+                        xn2_bub3_pos[0] = ext_x[0] * sizeBin
+                        yn2_bub3_pos[0] = ext_y[0] * sizeBin
+                        xn2_bub3_pos_non_per[0] = ext_x[0] * sizeBin
+                        yn2_bub3_pos_non_per[0] = ext_y[0] * sizeBin
+                        if xn2_bub3[0] < 0:
+                            xn2_bub3[0]+=NBins
+                        if xn2_bub3[0]>=NBins:
+                            xn2_bub3[0]-=NBins
                             
-                        if yn2_bub3_pos[m] < 0:
-                            yn2_bub3_pos[m]+=l_box
-                        if yn2_bub3_pos[m]>=l_box:
-                            yn2_bub3_pos[m]-=l_box
+                        if yn2_bub3[0] < 0:
+                            yn2_bub3[0]+=NBins
+                        if yn2_bub3[0]>=NBins:
+                            yn2_bub3[0]-=NBins
+                            
+                        if xn2_bub3_pos[0] < 0:
+                            xn2_bub3_pos[0]+=l_box
+                        if xn2_bub3_pos[0]>=l_box:
+                            xn2_bub3_pos[0]-=l_box
+                            
+                        if yn2_bub3_pos[0] < 0:
+                            yn2_bub3_pos[0]+=l_box
+                        if yn2_bub3_pos[0]>=l_box:
+                            yn2_bub3_pos[0]-=l_box
                 else:
                     
                     xn2_bub3=np.array([ext_x[0]])
@@ -7828,54 +8024,86 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     int_x = np.r_[adjacent_x_arr_new[okay], adjacent_x_arr_new[-1], adjacent_x_arr_new[0]]
                     int_y = np.r_[adjacent_y_arr_new[okay], adjacent_y_arr_new[-1], adjacent_y_arr_new[0]]
                     
-                    if len(int_x)==2:
-                        tck, u = interpolate.splprep([int_x, int_y], s=0, k=1, per=True)
-                    elif len(int_x)==3:
+                    if len(int_x)==3:
                         tck, u = interpolate.splprep([int_x, int_y], s=0, k=2, per=True)
-                    else:
+                    elif len(int_x)>3:
                         tck, u = interpolate.splprep([int_x, int_y], s=0, per=True)
                     
-                    # evaluate the spline fits for 1000 evenly spaced distance values
-                    xi, yi = interpolate.splev(np.linspace(0, 1, 1000), tck)
-                    
-                    jump = np.sqrt(np.diff(xi)**2 + np.diff(yi)**2) 
-                    smooth_jump = ndimage.gaussian_filter1d(jump, 5, mode='wrap')  # window of size 5 is arbitrary
-                    limit = 2*np.median(smooth_jump)    # factor 2 is arbitrary
-                    xn_bub4, yn_bub4 = xi[:-1], yi[:-1]
-                    xn_bub4 = xn_bub4[(jump > 0) & (smooth_jump < limit)]
-                    yn_bub4 = yn_bub4[(jump > 0) & (smooth_jump < limit)]
-                    
-                    xn_bub4_pos = np.copy(xn_bub4)
-                    yn_bub4_pos = np.copy(yn_bub4)
-                    xn_bub4_pos_non_per = np.copy(xn_bub4)
-                    yn_bub4_pos_non_per = np.copy(yn_bub4)
-    
+                    if len(int_x)>=3:
+                        # evaluate the spline fits for 1000 evenly spaced distance values
+                        xi, yi = interpolate.splev(np.linspace(0, 1, 1000), tck)
                         
-                    for m in range(0, len(xn_bub4)):
-                        xn_bub4_pos[m] = xn_bub4[m] * sizeBin
-                        yn_bub4_pos[m] = yn_bub4[m] * sizeBin
-                        xn_bub4_pos_non_per[m] = xn_bub4[m] * sizeBin
-                        yn_bub4_pos_non_per[m] = yn_bub4[m] * sizeBin
+                        jump = np.sqrt(np.diff(xi)**2 + np.diff(yi)**2) 
+                        smooth_jump = ndimage.gaussian_filter1d(jump, 5, mode='wrap')  # window of size 5 is arbitrary
+                        limit = 2*np.median(smooth_jump)    # factor 2 is arbitrary
+                        xn_bub4, yn_bub4 = xi[:-1], yi[:-1]
+                        xn_bub4 = xn_bub4[(jump > 0) & (smooth_jump < limit)]
+                        yn_bub4 = yn_bub4[(jump > 0) & (smooth_jump < limit)]
                         
-                        if xn_bub4[m] < 0:
-                            xn_bub4[m]+=NBins
-                        if xn_bub4[m]>=NBins:
-                            xn_bub4[m]-=NBins
+                        xn_bub4_pos = np.copy(xn_bub4)
+                        yn_bub4_pos = np.copy(yn_bub4)
+                        xn_bub4_pos_non_per = np.copy(xn_bub4)
+                        yn_bub4_pos_non_per = np.copy(yn_bub4)
+        
                             
-                        if yn_bub4[m] < 0:
-                            yn_bub4[m]+=NBins
-                        if yn_bub4[m]>=NBins:
-                            yn_bub4[m]-=NBins
+                        for m in range(0, len(xn_bub4)):
+                            xn_bub4_pos[m] = xn_bub4[m] * sizeBin
+                            yn_bub4_pos[m] = yn_bub4[m] * sizeBin
+                            xn_bub4_pos_non_per[m] = xn_bub4[m] * sizeBin
+                            yn_bub4_pos_non_per[m] = yn_bub4[m] * sizeBin
                             
-                        if xn_bub4_pos[m] < 0:
-                            xn_bub4_pos[m]+=l_box
-                        if xn_bub4_pos[m]>=l_box:
-                            xn_bub4_pos[m]-=l_box
+                            if xn_bub4[m] < 0:
+                                xn_bub4[m]+=NBins
+                            if xn_bub4[m]>=NBins:
+                                xn_bub4[m]-=NBins
+                                
+                            if yn_bub4[m] < 0:
+                                yn_bub4[m]+=NBins
+                            if yn_bub4[m]>=NBins:
+                                yn_bub4[m]-=NBins
+                                
+                            if xn_bub4_pos[m] < 0:
+                                xn_bub4_pos[m]+=l_box
+                            if xn_bub4_pos[m]>=l_box:
+                                xn_bub4_pos[m]-=l_box
+                                
+                            if yn_bub4_pos[m] < 0:
+                                yn_bub4_pos[m]+=l_box
+                            if yn_bub4_pos[m]>=l_box:
+                                yn_bub4_pos[m]-=l_box
+                    else:
+                        xn_bub4 = np.zeros(1)
+                        yn_bub4 = np.zeros(1)
+                        xn_bub4_pos = np.zeros(1)
+                        yn_bub4_pos = np.zeros(1)
+                        xn_bub4_pos_non_per = np.zeros(1)
+                        yn_bub4_pos_non_per = np.zeros(1)
+                        
+                        xn_bub4_pos[0] = int_x[0]
+                        yn_bub4_pos[0] = int_y[0]
+                        xn_bub4_pos[0] = int_x[0] * sizeBin
+                        yn_bub4_pos[0] = int_y[0] * sizeBin
+                        xn_bub4_pos_non_per[0] = int_x[0] * sizeBin
+                        yn_bub4_pos_non_per[0] = int_y[0] * sizeBin
+                        if xn_bub4[0] < 0:
+                            xn_bub4[0]+=NBins
+                        if xn_bub4[0]>=NBins:
+                            xn_bub4[0]-=NBins
                             
-                        if yn_bub4_pos[m] < 0:
-                            yn_bub4_pos[m]+=l_box
-                        if yn_bub4_pos[m]>=l_box:
-                            yn_bub4_pos[m]-=l_box
+                        if yn_bub4[0] < 0:
+                            yn_bub4[0]+=NBins
+                        if yn_bub4[0]>=NBins:
+                            yn_bub4[0]-=NBins
+                            
+                        if xn_bub4_pos[0] < 0:
+                            xn_bub4_pos[0]+=l_box
+                        if xn_bub4_pos[0]>=l_box:
+                            xn_bub4_pos[0]-=l_box
+                            
+                        if yn_bub4_pos[0] < 0:
+                            yn_bub4_pos[0]+=l_box
+                        if yn_bub4_pos[0]>=l_box:
+                            yn_bub4_pos[0]-=l_box
                 else:
                     
                     xn_bub4 = np.array([int_x[0]])
@@ -8362,52 +8590,84 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     ext_x = np.r_[adjacent_x_arr_new[okay], adjacent_x_arr_new[-1], adjacent_x_arr_new[0]]
                     ext_y = np.r_[adjacent_y_arr_new[okay], adjacent_y_arr_new[-1], adjacent_y_arr_new[0]]
                     
-                    if len(ext_x)==2:
-                        tck2, u2 = interpolate.splprep([ext_x, ext_y], s=0, k=1, per=True)
-                    elif len(ext_x)==3:
+                    if len(ext_x)==3:
                         tck2, u2 = interpolate.splprep([ext_x, ext_y], s=0, k=2, per=True)
-                    else:
+                    elif len(ext_x)>3:
                         tck2, u2 = interpolate.splprep([ext_x, ext_y], s=0, per=True)
-                    
-                    # evaluate the spline fits for 1000 evenly spaced distance values
-                    xi2, yi2 = interpolate.splev(np.linspace(0, 1, 1000), tck2)
-                    
-                    jump2 = np.sqrt(np.diff(xi2)**2 + np.diff(yi2)**2) 
-                    smooth_jump2 = ndimage.gaussian_filter1d(jump2, 5, mode='wrap')  # window of size 5 is arbitrary
-                    limit2 = 2*np.median(smooth_jump2)    # factor 2 is arbitrary
-                    xn2_bub4, yn2_bub4 = xi2[:-1], yi2[:-1]
-                    xn2_bub4 = xn2_bub4[(jump2 > 0) & (smooth_jump2 < limit2)]
-                    yn2_bub4 = yn2_bub4[(jump2 > 0) & (smooth_jump2 < limit2)]
-                    
-                    xn2_bub4_pos = np.copy(xn2_bub4)
-                    yn2_bub4_pos = np.copy(yn2_bub4)
-                    xn2_bub4_pos_non_per = np.copy(xn2_bub4)
-                    yn2_bub4_pos_non_per = np.copy(yn2_bub4)
-                    for m in range(0, len(xn2_bub4)):
-                        xn2_bub4_pos[m] = xn2_bub4[m] * sizeBin
-                        yn2_bub4_pos[m] = yn2_bub4[m] * sizeBin
-                        xn2_bub4_pos_non_per[m] = xn2_bub4[m] * sizeBin
-                        yn2_bub4_pos_non_per[m] = yn2_bub4[m] * sizeBin
                         
-                        if xn2_bub4[m] < 0:
-                            xn2_bub4[m]+=NBins
-                        if xn2_bub4[m]>=NBins:
-                            xn2_bub4[m]-=NBins
+                    if len(ext_x)>=3:
+                        # evaluate the spline fits for 1000 evenly spaced distance values
+                        xi2, yi2 = interpolate.splev(np.linspace(0, 1, 1000), tck2)
+                        
+                        jump2 = np.sqrt(np.diff(xi2)**2 + np.diff(yi2)**2) 
+                        smooth_jump2 = ndimage.gaussian_filter1d(jump2, 5, mode='wrap')  # window of size 5 is arbitrary
+                        limit2 = 2*np.median(smooth_jump2)    # factor 2 is arbitrary
+                        xn2_bub4, yn2_bub4 = xi2[:-1], yi2[:-1]
+                        xn2_bub4 = xn2_bub4[(jump2 > 0) & (smooth_jump2 < limit2)]
+                        yn2_bub4 = yn2_bub4[(jump2 > 0) & (smooth_jump2 < limit2)]
+                        
+                        xn2_bub4_pos = np.copy(xn2_bub4)
+                        yn2_bub4_pos = np.copy(yn2_bub4)
+                        xn2_bub4_pos_non_per = np.copy(xn2_bub4)
+                        yn2_bub4_pos_non_per = np.copy(yn2_bub4)
+                        for m in range(0, len(xn2_bub4)):
+                            xn2_bub4_pos[m] = xn2_bub4[m] * sizeBin
+                            yn2_bub4_pos[m] = yn2_bub4[m] * sizeBin
+                            xn2_bub4_pos_non_per[m] = xn2_bub4[m] * sizeBin
+                            yn2_bub4_pos_non_per[m] = yn2_bub4[m] * sizeBin
                             
-                        if yn2_bub4[m] < 0:
-                            yn2_bub4[m]+=NBins
-                        if yn2_bub4[m]>=NBins:
-                            yn2_bub4[m]-=NBins
+                            if xn2_bub4[m] < 0:
+                                xn2_bub4[m]+=NBins
+                            if xn2_bub4[m]>=NBins:
+                                xn2_bub4[m]-=NBins
+                                
+                            if yn2_bub4[m] < 0:
+                                yn2_bub4[m]+=NBins
+                            if yn2_bub4[m]>=NBins:
+                                yn2_bub4[m]-=NBins
+                                
+                            if xn2_bub4_pos[m] < 0:
+                                xn2_bub4_pos[m]+=l_box
+                            if xn2_bub4_pos[m]>=l_box:
+                                xn2_bub4_pos[m]-=l_box
+                                
+                            if yn2_bub4_pos[m] < 0:
+                                yn2_bub4_pos[m]+=l_box
+                            if yn2_bub4_pos[m]>=l_box:
+                                yn2_bub4_pos[m]-=l_box
+                    else:
+                        xn2_bub4 = np.zeros(1)
+                        yn2_bub4 = np.zeros(1)
+                        xn2_bub4_pos = np.zeros(1)
+                        yn2_bub4_pos = np.zeros(1)
+                        xn2_bub4_pos_non_per = np.zeros(1)
+                        yn2_bub4_pos_non_per = np.zeros(1)
+                        
+                        xn2_bub4_pos[0] = ext_x[0]
+                        yn2_bub4_pos[0] = ext_y[0]
+                        xn2_bub4_pos[0] = ext_x[0] * sizeBin
+                        yn2_bub4_pos[0] = ext_y[0] * sizeBin
+                        xn2_bub4_pos_non_per[0] = ext_x[0] * sizeBin
+                        yn2_bub4_pos_non_per[0] = ext_y[0] * sizeBin
+                        if xn2_bub4[0] < 0:
+                            xn2_bub4[0]+=NBins
+                        if xn2_bub4[0]>=NBins:
+                            xn2_bub4[0]-=NBins
                             
-                        if xn2_bub4_pos[m] < 0:
-                            xn2_bub4_pos[m]+=l_box
-                        if xn2_bub4_pos[m]>=l_box:
-                            xn2_bub4_pos[m]-=l_box
+                        if yn2_bub4[0] < 0:
+                            yn2_bub4[0]+=NBins
+                        if yn2_bub4[0]>=NBins:
+                            yn2_bub4[0]-=NBins
                             
-                        if yn2_bub4_pos[m] < 0:
-                            yn2_bub4_pos[m]+=l_box
-                        if yn2_bub4_pos[m]>=l_box:
-                            yn2_bub4_pos[m]-=l_box
+                        if xn2_bub4_pos[0] < 0:
+                            xn2_bub4_pos[0]+=l_box
+                        if xn2_bub4_pos[0]>=l_box:
+                            xn2_bub4_pos[0]-=l_box
+                            
+                        if yn2_bub4_pos[0] < 0:
+                            yn2_bub4_pos[0]+=l_box
+                        if yn2_bub4_pos[0]>=l_box:
+                            yn2_bub4_pos[0]-=l_box
                 else:
                     xn2_bub4 = np.array(ext_x[0])
                     yn2_bub4 = np.array(ext_y[0])
@@ -8985,56 +9245,88 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     int_x = np.r_[adjacent_x_arr_new[okay], adjacent_x_arr_new[-1], adjacent_x_arr_new[0]]
                     int_y = np.r_[adjacent_y_arr_new[okay], adjacent_y_arr_new[-1], adjacent_y_arr_new[0]]
                     
-                    if len(int_x)==2:
-                        tck, u = interpolate.splprep([int_x, int_y], s=0, k=1, per=True)
-                    elif len(int_x)==3:
+                    if len(int_x)==3:
                         tck, u = interpolate.splprep([int_x, int_y], s=0, k=2, per=True)
-                    else:
+                    elif len(int_x)>3:
                         tck, u = interpolate.splprep([int_x, int_y], s=0, per=True)
                     
-                    # evaluate the spline fits for 1000 evenly spaced distance values
-                    xi, yi = interpolate.splev(np.linspace(0, 1, 1000), tck)
-                    
-                    jump = np.sqrt(np.diff(xi)**2 + np.diff(yi)**2) 
-                    smooth_jump = ndimage.gaussian_filter1d(jump, 5, mode='wrap')  # window of size 5 is arbitrary
-                    limit = 2*np.median(smooth_jump)    # factor 2 is arbitrary
-                    
-                    xn_bub5, yn_bub5 = xi[:-1], yi[:-1]
-                    xn_bub5 = xn_bub5[(jump > 0) & (smooth_jump < limit)]
-                    yn_bub5 = yn_bub5[(jump > 0) & (smooth_jump < limit)]
-                    
-                    xn_bub5_pos = np.copy(xn_bub5)
-                    yn_bub5_pos = np.copy(yn_bub5)
-                    xn_bub5_pos_non_per = np.copy(xn_bub5)
-                    yn_bub5_pos_non_per = np.copy(yn_bub5)
-    
+                    if len(int_x)>=3:
+                        # evaluate the spline fits for 1000 evenly spaced distance values
+                        xi, yi = interpolate.splev(np.linspace(0, 1, 1000), tck)
                         
+                        jump = np.sqrt(np.diff(xi)**2 + np.diff(yi)**2) 
+                        smooth_jump = ndimage.gaussian_filter1d(jump, 5, mode='wrap')  # window of size 5 is arbitrary
+                        limit = 2*np.median(smooth_jump)    # factor 2 is arbitrary
                         
-                    for m in range(0, len(xn_bub5)):
-                        xn_bub5_pos[m] = xn_bub5[m] * sizeBin
-                        yn_bub5_pos[m] = yn_bub5[m] * sizeBin
-                        xn_bub5_pos_non_per[m] = xn_bub5[m] * sizeBin
-                        yn_bub5_pos_non_per[m] = yn_bub5[m] * sizeBin
+                        xn_bub5, yn_bub5 = xi[:-1], yi[:-1]
+                        xn_bub5 = xn_bub5[(jump > 0) & (smooth_jump < limit)]
+                        yn_bub5 = yn_bub5[(jump > 0) & (smooth_jump < limit)]
                         
-                        if xn_bub5[m] < 0:
-                            xn_bub5[m]+=NBins
-                        if xn_bub5[m]>=NBins:
-                            xn_bub5[m]-=NBins
+                        xn_bub5_pos = np.copy(xn_bub5)
+                        yn_bub5_pos = np.copy(yn_bub5)
+                        xn_bub5_pos_non_per = np.copy(xn_bub5)
+                        yn_bub5_pos_non_per = np.copy(yn_bub5)
+        
                             
-                        if yn_bub5[m] < 0:
-                            yn_bub5[m]+=NBins
-                        if yn_bub5[m]>=NBins:
-                            yn_bub5[m]-=NBins
                             
-                        if xn_bub5_pos[m] < 0:
-                            xn_bub5_pos[m]+=l_box
-                        if xn_bub5_pos[m]>=l_box:
-                            xn_bub5_pos[m]-=l_box
+                        for m in range(0, len(xn_bub5)):
+                            xn_bub5_pos[m] = xn_bub5[m] * sizeBin
+                            yn_bub5_pos[m] = yn_bub5[m] * sizeBin
+                            xn_bub5_pos_non_per[m] = xn_bub5[m] * sizeBin
+                            yn_bub5_pos_non_per[m] = yn_bub5[m] * sizeBin
                             
-                        if yn_bub5_pos[m] < 0:
-                            yn_bub5_pos[m]+=l_box
-                        if yn_bub5_pos[m]>=l_box:
-                            yn_bub5_pos[m]-=l_box
+                            if xn_bub5[m] < 0:
+                                xn_bub5[m]+=NBins
+                            if xn_bub5[m]>=NBins:
+                                xn_bub5[m]-=NBins
+                                
+                            if yn_bub5[m] < 0:
+                                yn_bub5[m]+=NBins
+                            if yn_bub5[m]>=NBins:
+                                yn_bub5[m]-=NBins
+                                
+                            if xn_bub5_pos[m] < 0:
+                                xn_bub5_pos[m]+=l_box
+                            if xn_bub5_pos[m]>=l_box:
+                                xn_bub5_pos[m]-=l_box
+                                
+                            if yn_bub5_pos[m] < 0:
+                                yn_bub5_pos[m]+=l_box
+                            if yn_bub5_pos[m]>=l_box:
+                                yn_bub5_pos[m]-=l_box
+                    else:
+                        xn_bub5 = np.zeros(1)
+                        yn_bub5 = np.zeros(1)
+                        xn_bub5_pos = np.zeros(1)
+                        yn_bub5_pos = np.zeros(1)
+                        xn_bub5_pos_non_per = np.zeros(1)
+                        yn_bub5_pos_non_per = np.zeros(1)
+                        
+                        xn_bub5_pos[0] = int_x[0]
+                        yn_bub5_pos[0] = int_y[0]
+                        xn_bub5_pos[0] = int_x[0] * sizeBin
+                        yn_bub5_pos[0] = int_y[0] * sizeBin
+                        xn_bub5_pos_non_per[0] = int_x[0] * sizeBin
+                        yn_bub5_pos_non_per[0] = int_y[0] * sizeBin
+                        if xn_bub5[0] < 0:
+                            xn_bub5[0]+=NBins
+                        if xn_bub5[0]>=NBins:
+                            xn_bub5[0]-=NBins
+                            
+                        if yn_bub5[0] < 0:
+                            yn_bub5[0]+=NBins
+                        if yn_bub5[0]>=NBins:
+                            yn_bub5[0]-=NBins
+                            
+                        if xn_bub5_pos[0] < 0:
+                            xn_bub5_pos[0]+=l_box
+                        if xn_bub5_pos[0]>=l_box:
+                            xn_bub5_pos[0]-=l_box
+                            
+                        if yn_bub5_pos[0] < 0:
+                            yn_bub5_pos[0]+=l_box
+                        if yn_bub5_pos[0]>=l_box:
+                            yn_bub5_pos[0]-=l_box
                 else:
                     xn_bub5 = np.array([int_x[0]])
                     yn_bub5 = np.array([int_y[0]])
@@ -9518,51 +9810,83 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     ext_x = np.r_[adjacent_x_arr_new[okay], adjacent_x_arr_new[-1], adjacent_x_arr_new[0]]
                     ext_y = np.r_[adjacent_y_arr_new[okay], adjacent_y_arr_new[-1], adjacent_y_arr_new[0]]
                     
-                    if len(ext_x)==2:
-                        tck2, u2 = interpolate.splprep([ext_x, ext_y], s=0, k=1, per=True)
-                    elif len(ext_x)==3:
+                    if len(ext_x)==3:
                         tck2, u2 = interpolate.splprep([ext_x, ext_y], s=0, k=2, per=True)
-                    else:
+                    elif len(ext_x)>3:
                         tck2, u2 = interpolate.splprep([ext_x, ext_y], s=0, per=True)
                     
-                    # evaluate the spline fits for 1000 evenly spaced distance values
-                    xi2, yi2 = interpolate.splev(np.linspace(0, 1, 1000), tck2)
-                    
-                    jump2 = np.sqrt(np.diff(xi2)**2 + np.diff(yi2)**2) 
-                    smooth_jump2 = ndimage.gaussian_filter1d(jump2, 5, mode='wrap')  # window of size 5 is arbitrary
-                    limit2 = 2*np.median(smooth_jump2)    # factor 2 is arbitrary
-                    xn2_bub5, yn2_bub5 = xi2[:-1], yi2[:-1]
-                    xn2_bub5 = xn2_bub5[(jump2 > 0) & (smooth_jump2 < limit2)]
-                    yn2_bub5 = yn2_bub5[(jump2 > 0) & (smooth_jump2 < limit2)]
-                    
-                    xn2_bub5_pos = np.copy(xn2_bub5)
-                    yn2_bub5_pos = np.copy(yn2_bub5)
-                    xn2_bub5_pos_non_per = np.copy(xn2_bub5)
-                    yn2_bub5_pos_non_per = np.copy(yn2_bub5)
-                    for m in range(0, len(xn2_bub5)):
-                        xn2_bub5_pos[m] = xn2_bub5[m] * sizeBin
-                        yn2_bub5_pos[m] = yn2_bub5[m] * sizeBin
-                        xn2_bub5_pos_non_per[m] = xn2_bub5[m] * sizeBin
-                        yn2_bub5_pos_non_per[m] = yn2_bub5[m] * sizeBin
-                        if xn2_bub5[m] < 0:
-                            xn2_bub5[m]+=NBins
-                        if xn2_bub5[m]>=NBins:
-                            xn2_bub5[m]-=NBins
+                    if len(ext_x)>=3:
+                        # evaluate the spline fits for 1000 evenly spaced distance values
+                        xi2, yi2 = interpolate.splev(np.linspace(0, 1, 1000), tck2)
+                        
+                        jump2 = np.sqrt(np.diff(xi2)**2 + np.diff(yi2)**2) 
+                        smooth_jump2 = ndimage.gaussian_filter1d(jump2, 5, mode='wrap')  # window of size 5 is arbitrary
+                        limit2 = 2*np.median(smooth_jump2)    # factor 2 is arbitrary
+                        xn2_bub5, yn2_bub5 = xi2[:-1], yi2[:-1]
+                        xn2_bub5 = xn2_bub5[(jump2 > 0) & (smooth_jump2 < limit2)]
+                        yn2_bub5 = yn2_bub5[(jump2 > 0) & (smooth_jump2 < limit2)]
+                        
+                        xn2_bub5_pos = np.copy(xn2_bub5)
+                        yn2_bub5_pos = np.copy(yn2_bub5)
+                        xn2_bub5_pos_non_per = np.copy(xn2_bub5)
+                        yn2_bub5_pos_non_per = np.copy(yn2_bub5)
+                        for m in range(0, len(xn2_bub5)):
+                            xn2_bub5_pos[m] = xn2_bub5[m] * sizeBin
+                            yn2_bub5_pos[m] = yn2_bub5[m] * sizeBin
+                            xn2_bub5_pos_non_per[m] = xn2_bub5[m] * sizeBin
+                            yn2_bub5_pos_non_per[m] = yn2_bub5[m] * sizeBin
+                            if xn2_bub5[m] < 0:
+                                xn2_bub5[m]+=NBins
+                            if xn2_bub5[m]>=NBins:
+                                xn2_bub5[m]-=NBins
+                                
+                            if yn2_bub5[m] < 0:
+                                yn2_bub5[m]+=NBins
+                            if yn2_bub5[m]>=NBins:
+                                yn2_bub5[m]-=NBins
+                                
+                            if xn2_bub5_pos[m] < 0:
+                                xn2_bub5_pos[m]+=l_box
+                            if xn2_bub5_pos[m]>=l_box:
+                                xn2_bub5_pos[m]-=l_box
+                                
+                            if yn2_bub5_pos[m] < 0:
+                                yn2_bub5_pos[m]+=l_box
+                            if yn2_bub5_pos[m]>=l_box:
+                                yn2_bub5_pos[m]-=l_box
+                    else:
+                        xn2_bub5 = np.zeros(1)
+                        yn2_bub5 = np.zeros(1)
+                        xn2_bub5_pos = np.zeros(1)
+                        yn2_bub5_pos = np.zeros(1)
+                        xn2_bub5_pos_non_per = np.zeros(1)
+                        yn2_bub5_pos_non_per = np.zeros(1)
+                        
+                        xn2_bub5_pos[0] = ext_x[0]
+                        yn2_bub5_pos[0] = ext_y[0]
+                        xn2_bub5_pos[0] = ext_x[0] * sizeBin
+                        yn2_bub5_pos[0] = ext_y[0] * sizeBin
+                        xn2_bub5_pos_non_per[0] = ext_x[0] * sizeBin
+                        yn2_bub5_pos_non_per[0] = ext_y[0] * sizeBin
+                        if xn2_bub5[0] < 0:
+                            xn2_bub5[0]+=NBins
+                        if xn2_bub5[0]>=NBins:
+                            xn2_bub5[0]-=NBins
                             
-                        if yn2_bub5[m] < 0:
-                            yn2_bub5[m]+=NBins
-                        if yn2_bub5[m]>=NBins:
-                            yn2_bub5[m]-=NBins
+                        if yn2_bub5[0] < 0:
+                            yn2_bub5[0]+=NBins
+                        if yn2_bub5[0]>=NBins:
+                            yn2_bub5[0]-=NBins
                             
-                        if xn2_bub5_pos[m] < 0:
-                            xn2_bub5_pos[m]+=l_box
-                        if xn2_bub5_pos[m]>=l_box:
-                            xn2_bub5_pos[m]-=l_box
+                        if xn2_bub5_pos[0] < 0:
+                            xn2_bub5_pos[0]+=l_box
+                        if xn2_bub5_pos[0]>=l_box:
+                            xn2_bub5_pos[0]-=l_box
                             
-                        if yn2_bub5_pos[m] < 0:
-                            yn2_bub5_pos[m]+=l_box
-                        if yn2_bub5_pos[m]>=l_box:
-                            yn2_bub5_pos[m]-=l_box
+                        if yn2_bub5_pos[0] < 0:
+                            yn2_bub5_pos[0]+=l_box
+                        if yn2_bub5_pos[0]>=l_box:
+                            yn2_bub5_pos[0]-=l_box
                 else:
                     xn2_bub5 = np.array([ext_x[0]])
                     yn2_bub5 = np.array([ext_y[0]])
