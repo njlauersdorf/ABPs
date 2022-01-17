@@ -230,7 +230,7 @@ elif [ "$method" = "alignment" ]; then
 
 
 elif [ "$method" = "simulation_frames" ]; then
-    python3 $script_path/Sim_frame_image_com_updated.py $fname $pa2 $pb $xa2 $ep $phi $dtau $hoomd_path $txt_path $pic_path
+    python3 $script_path/Sim_frame_image_com_updated.py $fname $pa2 $pb $xa2 $ep $phi $dtau $bin $step $hoomd_path $txt_path $pic_path
 
     pe=${pe%%.*}
     pa=${pa%%.*}
@@ -254,77 +254,77 @@ elif [ "$method" = "velocity" ]; then
     phi=${phi%%.*}
     pNum=${pNum%.*}
     
-    ffmpeg -start_number 1 -framerate 10 -i "$pic_path"velocity_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum100000_bin6_time1_frame_%04d.png\
+    ffmpeg -start_number 1 -framerate 10 -i "$pic_path"velocity_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_%04d.png\
      -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
-     "$vid_path"velocity_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum100000_bin6_time1.mp4
+     "$vid_path"velocity_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}.mp4
     
-    rm -rf "$pic_path"velocity_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum100000_bin6_time1_frame_*
+    rm -rf "$pic_path"velocity_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_*
     
-    ffmpeg -start_number 1 -framerate 10 -i "$pic_path"velocityB_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum100000_bin6_time1_frame_%04d.png\
+    ffmpeg -start_number 1 -framerate 10 -i "$pic_path"velocityB_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_%04d.png\
      -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
-     "$vid_path"velocityB_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum100000_bin6_time1.mp4
+     "$vid_path"velocityB_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}.mp4
     
-    rm -rf "$pic_path"velocityB_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum100000_bin6_time1_frame_*
+    rm -rf "$pic_path"velocityB_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_*
      
-    ffmpeg -start_number 1 -framerate 10 -i "$pic_path"velocityA_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum100000_bin6_time1_frame_%04d.png\
+    ffmpeg -start_number 1 -framerate 10 -i "$pic_path"velocityA_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_%04d.png\
      -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
-     "$vid_path"velocityA_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum100000_bin6_time1.mp4
+     "$vid_path"velocityA_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}.mp4
     
-   rm -rf "$pic_path"velocityA_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum100000_bin6_time1_frame_*
+   rm -rf "$pic_path"velocityA_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_*
     
-    ffmpeg -start_number 1 -framerate 10 -i "$pic_path"velocityDif_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum100000_bin6_time1_frame_%04d.png\
+    ffmpeg -start_number 1 -framerate 10 -i "$pic_path"velocityDif_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_%04d.png\
      -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
-     "$vid_path"velocityDif_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum100000_bin6_time1.mp4
+     "$vid_path"velocityDif_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}.mp4
     
-    rm -rf "$pic_path"velocityDif_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum100000_bin6_time1_frame_*
+    rm -rf "$pic_path"velocityDif_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_*
       
-    ffmpeg -start_number 1 -framerate 10 -i "$pic_path"divergence_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum100000_bin6_time1_frame_%04d.png\
+    ffmpeg -start_number 1 -framerate 10 -i "$pic_path"divergence_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_%04d.png\
      -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
-     "$vid_path"divergence_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum100000_bin6_time1.mp4
+     "$vid_path"divergence_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}.mp4
     
-    rm -rf "$pic_path"divergence_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum100000_bin6_time1_frame_*
+    rm -rf "$pic_path"divergence_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_*
      
-    ffmpeg -start_number 1 -framerate 10 -i "$pic_path"curl_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum100000_bin6_time1_frame_%04d.png\
+    ffmpeg -start_number 1 -framerate 10 -i "$pic_path"curl_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_%04d.png\
      -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
-     "$vid_path"curl_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum100000_bin6_time1.mp4
+     "$vid_path"curl_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}.mp4
     
-    rm -rf "$pic_path"curl_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum100000_bin6_time1_frame_*
+    rm -rf "$pic_path"curl_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_*
      
-    ffmpeg -start_number 1 -framerate 10 -i "$pic_path"divergenceA_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum100000_bin6_time1_frame_%04d.png\
+    ffmpeg -start_number 1 -framerate 10 -i "$pic_path"divergenceA_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_%04d.png\
      -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
-     "$vid_path"divergenceA_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum100000_bin6_time1.mp4
+     "$vid_path"divergenceA_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}.mp4
     
-    rm -rf "$pic_path"divergenceA_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum100000_bin6_time1_frame_*
+    rm -rf "$pic_path"divergenceA_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_*
      
-    ffmpeg -start_number 1 -framerate 10 -i "$pic_path"curlA_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum100000_bin6_time1_frame_%04d.png\
+    ffmpeg -start_number 1 -framerate 10 -i "$pic_path"curlA_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_%04d.png\
      -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
-     "$vid_path"curlA_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum100000_bin6_time1.mp4
+     "$vid_path"curlA_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}.mp4
     
-    rm -rf "$pic_path"curlA_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum100000_bin6_time1_frame_*
+    rm -rf "$pic_path"curlA_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_*
      
-    ffmpeg -start_number 1 -framerate 10 -i "$pic_path"divergenceB_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum100000_bin6_time1_frame_%04d.png\
+    ffmpeg -start_number 1 -framerate 10 -i "$pic_path"divergenceB_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_%04d.png\
      -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
-     "$vid_path"divergenceB_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum100000_bin6_time1.mp4
+     "$vid_path"divergenceB_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}.mp4
     
-    rm -rf "$pic_path"divergenceB_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum100000_bin6_time1_frame_*
+    rm -rf "$pic_path"divergenceB_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_*
      
-    ffmpeg -start_number 1 -framerate 10 -i "$pic_path"curlB_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum100000_bin6_time1_frame_%04d.png\
+    ffmpeg -start_number 1 -framerate 10 -i "$pic_path"curlB_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_%04d.png\
      -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
-     "$vid_path"curlB_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum100000_bin6_time1.mp4
+     "$vid_path"curlB_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}.mp4
     
-    rm -rf "$pic_path"curlB_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum100000_bin6_time1_frame_*
+    rm -rf "$pic_path"curlB_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_*
     
-    ffmpeg -start_number 1 -framerate 10 -i "$pic_path"divergenceDif_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum100000_bin6_time1_frame_%04d.png\
+    ffmpeg -start_number 1 -framerate 10 -i "$pic_path"divergenceDif_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_%04d.png\
      -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
-     "$vid_path"divergenceDif_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum100000_bin6_time1.mp4
+     "$vid_path"divergenceDif_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}.mp4
      
-    rm -rf "$pic_path"divergenceDif_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum100000_bin6_time1_frame_*
+    rm -rf "$pic_path"divergenceDif_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_*
     
-    ffmpeg -start_number 1 -framerate 10 -i "$pic_path"curlDif_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum100000_bin6_time1_frame_%04d.png\
+    ffmpeg -start_number 1 -framerate 10 -i "$pic_path"curlDif_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_%04d.png\
      -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
-     "$vid_path"curlDif_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum100000_bin6_time1.mp4
+     "$vid_path"curlDif_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}.mp4
       
-    rm -rf "$pic_path"curlDif_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum100000_bin6_time1_frame_*
+    rm -rf "$pic_path"curlDif_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_*
 elif [ "$method" = "neighbors" ]; then
     python3 $script_path/mesh_nearest_neighbors.py $fname $pa2 $pb $xa2 $ep $phi $dtau $bin $step $hoomd_path $txt_path $pic_path
 
@@ -335,23 +335,23 @@ elif [ "$method" = "neighbors" ]; then
     phi=${phi%%.*}
     pNum=${pNum%.*}
     
-    ffmpeg -start_number 1 -framerate 10 -i "$pic_path"defects_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_frame_%04d.png\
+    ffmpeg -start_number 1 -framerate 10 -i "$pic_path"defects_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_%04d.png\
      -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
-     "$vid_path"defects_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}.mp4
+     "$vid_path"defects_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}.mp4
     
-    rm -rf "$pic_path"defects_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_frame_*
+    rm -rf "$pic_path"defects_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_*
     
-    ffmpeg -start_number 1 -framerate 10 -i "$pic_path"defectsB_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_frame_%04d.png\
+    ffmpeg -start_number 1 -framerate 10 -i "$pic_path"defectsB_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_%04d.png\
      -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
-     "$vid_path"defectsB_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}.mp4
+     "$vid_path"defectsB_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}.mp4
     
-    rm -rf "$pic_path"defectsB_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_frame_*
+    rm -rf "$pic_path"defectsB_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_*
      
-    ffmpeg -start_number 1 -framerate 10 -i "$pic_path"defectsA_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_frame_%04d.png\
+    ffmpeg -start_number 1 -framerate 10 -i "$pic_path"defectsA_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_%04d.png\
      -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
-     "$vid_path"defectsA_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}.mp4
+     "$vid_path"defectsA_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}.mp4
     
-    rm -rf "$pic_path"defectsA_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_frame_*
+    rm -rf "$pic_path"defectsA_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_*
 elif [ "$method" = "individual_velocities" ]; then
     python3 $script_path/single_particle_velocities.py $fname $pa2 $pb $xa2 $ep $phi $dtau $bin $step $hoomd_path $txt_path $pic_path
 
