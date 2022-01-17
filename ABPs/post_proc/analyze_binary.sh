@@ -178,8 +178,17 @@ elif [ "$method" = "number_density" ]; then
     
     rm -rf "$pic_path"fa_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_*
 elif [ "$method" = "alignment" ]; then
+
+    
     python3 $script_path/full_alignment_analysis_binary_updates.py $fname $pa2 $pb $xa2 $ep $phi $dtau $bin $step $hoomd_path $txt_path $pic_path
 
+    pe=${pe%%.*}
+    pa=${pa%%.*}
+    pb=${pb%.*}
+    eps=${ep}
+    phi=${phi%%.*}
+    pNum=${pNum%.*}
+    
     ffmpeg -start_number 0 -framerate 10 -i "$pic_path"align_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_%04d.png\
      -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
      "$vid_path"align_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}.mp4
@@ -203,31 +212,6 @@ elif [ "$method" = "alignment" ]; then
      "$vid_path"alignDif_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}.mp4
     
     rm -rf "$pic_path"alignDif_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_*
-    
-    ffmpeg -start_number 0 -framerate 10 -i "$pic_path"aligngrad_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_%04d.png\
-     -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
-     "$vid_path"aligngrad_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}.mp4
-    
-    rm -rf "$pic_path"aligngrad_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum100000_bin${bin}_time${step}_frame_*
-    
-    ffmpeg -start_number 0 -framerate 10 -i "$pic_path"alignBgrad_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_%04d.png\
-     -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
-     "$vid_path"alignBgrad_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}.mp4
-    
-    rm -rf "$pic_path"alignBgrad_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_*
-     
-    ffmpeg -start_number 0 -framerate 10 -i "$pic_path"alignAgrad_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_%04d.png\
-     -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
-     "$vid_path"alignAgrad_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}.mp4
-    
-    rm -rf "$pic_path"alignAgrad_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_*
-     
-    ffmpeg -start_number 0 -framerate 10 -i "$pic_path"alignDifgrad_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_%04d.png\
-     -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
-     "$vid_path"alignDifgrad_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}.mp4
-    
-    rm -rf "$pic_path"alignDifgrad_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_*
-
 
 elif [ "$method" = "simulation_frames" ]; then
     python3 $script_path/Sim_frame_image_com_updated.py $fname $pa2 $pb $xa2 $ep $phi $dtau $bin $step $hoomd_path $txt_path $pic_path
