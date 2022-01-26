@@ -7,14 +7,14 @@ echo "Are you running on Longleaf (y/n)?"
 read answer
 
 if [ $answer == "y" ]; then
-    hoomd_path='/nas/longleaf/home/njlauers/hoomd-blue/build/'
-    script_path='/nas/longleaf/home/njlauers/hoomd-blue/build/run_specific/run_gpu.sh'
+    hoomd_path='~/hoomd-blue/build/'
+    script_path='~/klotsa/ABPs/run_sim/run_gpu.sh'
     
     echo "Do you want homogeneous cluster (y/n)?"
     read answer
     
     if [ $answer == "y" ]; then
-        tempOne='/nas/longleaf/home/njlauers/hoomd-blue/build/run_specific/seeded_ss_cluster_random_distrib.py'
+        tempOne='~/klotsa/ABPs/run_sim/seeded_ss_cluster_random_distrib.py'
         dont_run='no'
     else
         
@@ -22,7 +22,7 @@ if [ $answer == "y" ]; then
         read answer
         
         if [ $answer == "y" ]; then
-            tempOne='/nas/longleaf/home/njlauers/hoomd-blue/build/run_specific/seeded_ss_cluster_fast_out_distrib.py'
+            tempOne='~/klotsa/ABPs/run_sim/seeded_ss_cluster_fast_out_distrib.py'
             dont_run='no'
         else
     
@@ -30,7 +30,7 @@ if [ $answer == "y" ]; then
             read answer
             
             if [ $answer == "y" ]; then
-                tempOne='/nas/longleaf/home/njlauers/hoomd-blue/build/run_specific/seeded_ss_cluster_slow_out_distrib.py'
+                tempOne='~/klotsa/ABPs/run_sim/seeded_ss_cluster_slow_out_distrib.py'
                 dont_run='no'
             else
     
@@ -38,7 +38,7 @@ if [ $answer == "y" ]; then
                 read answer
                 
                 if [ $answer == "y" ]; then
-                    tempOne='/nas/longleaf/home/njlauers/hoomd-blue/build/run_specific/seeded_ss_cluster_half_distrib.py'
+                    tempOne='~/klotsa/ABPs/run_sim/seeded_ss_cluster_half_distrib.py'
                     dont_run='no'
                 else
                     dont_run='yes'

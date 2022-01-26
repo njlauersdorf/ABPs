@@ -4,8 +4,8 @@ echo "Are you running on Longleaf (y/n)?"
 read answer
 
 if [ $answer == "y" ]; then
-    hoomd_path='/nas/longleaf/home/njlauers/hoomd-blue/build'
-    script_path='/nas/longleaf/home/njlauers/hoomd-blue/build/post_proc'
+    hoomd_path='~/hoomd-blue/build'
+    script_path='~/klotsa/ABPs/post_proc'
     submit='sbatch'
 else
     hoomd_path='~/hoomd-blue/build'
