@@ -4210,17 +4210,23 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     
                     int_x_copy = np.copy(adjacent_x_arr_new)
                     int_y_copy = np.copy(adjacent_y_arr_new)
-                    for m in range(0, len(adjacent_x_arr_new)):
-                        if m==0:
-                            adjacent_x_arr_new[m] = (int_x_copy[-1] + int_x_copy[0] + int_x_copy[1])/3
-                            adjacent_y_arr_new[m] = (int_y_copy[-1] + int_y_copy[0] + int_y_copy[1])/3
-                        elif m==len(adjacent_x_arr_new)-1:
-                            adjacent_x_arr_new[m]= (int_x_copy[m] + int_x_copy[0] + int_x_copy[m-1])/3
-                            adjacent_y_arr_new[m]= (int_y_copy[m] + int_y_copy[0] + int_y_copy[m-1])/3
-                        else:
-                            adjacent_x_arr_new[m] = (int_x_copy[m-1] + int_x_copy[m] + int_x_copy[m+1])/3
-                            adjacent_y_arr_new[m] = (int_y_copy[m-1] + int_y_copy[m] + int_y_copy[m+1])/3
-    
+                    if len(adjacent_x_arr_new) >= 3:
+                        for m in range(0, len(adjacent_x_arr_new)):
+                            
+                            if m==0:
+                                adjacent_x_arr_new[m] = (int_x_copy[-1] + int_x_copy[0] + int_x_copy[1])/3
+                                adjacent_y_arr_new[m] = (int_y_copy[-1] + int_y_copy[0] + int_y_copy[1])/3
+                            elif m==len(adjacent_x_arr_new)-1:
+                                adjacent_x_arr_new[m]= (int_x_copy[m] + int_x_copy[0] + int_x_copy[m-1])/3
+                                adjacent_y_arr_new[m]= (int_y_copy[m] + int_y_copy[0] + int_y_copy[m-1])/3
+                            else:
+                                adjacent_x_arr_new[m] = (int_x_copy[m-1] + int_x_copy[m] + int_x_copy[m+1])/3
+                                adjacent_y_arr_new[m] = (int_y_copy[m-1] + int_y_copy[m] + int_y_copy[m+1])/3
+                    else:
+                        for m in range(0, len(adjacent_x_arr_new)):
+                            
+                            adjacent_x_arr_new[m] = np.mean(int_x_copy)
+                            adjacent_y_arr_new[m] = np.mean(int_y_copy)
                     okay = np.where(np.abs(np.diff(adjacent_x_arr_new)) + np.abs(np.diff(adjacent_y_arr_new)) > 0)
                     int_x = np.r_[adjacent_x_arr_new[okay], adjacent_x_arr_new[-1], adjacent_x_arr_new[0]]
                     int_y = np.r_[adjacent_y_arr_new[okay], adjacent_y_arr_new[-1], adjacent_y_arr_new[0]]
@@ -4774,16 +4780,23 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     
                     int_x_copy = np.copy(adjacent_x_arr_new)
                     int_y_copy = np.copy(adjacent_y_arr_new)
-                    for m in range(0, len(adjacent_x_arr_new)):
-                        if m==0:
-                            adjacent_x_arr_new[m] = (int_x_copy[-1] + int_x_copy[0] + int_x_copy[1])/3
-                            adjacent_y_arr_new[m] = (int_y_copy[-1] + int_y_copy[0] + int_y_copy[1])/3
-                        elif m==len(adjacent_x_arr_new)-1:
-                            adjacent_x_arr_new[m]= (int_x_copy[m] + int_x_copy[0] + int_x_copy[m-1])/3
-                            adjacent_y_arr_new[m]= (int_y_copy[m] + int_y_copy[0] + int_y_copy[m-1])/3
-                        else:
-                            adjacent_x_arr_new[m] = (int_x_copy[m-1] + int_x_copy[m] + int_x_copy[m+1])/3
-                            adjacent_y_arr_new[m] = (int_y_copy[m-1] + int_y_copy[m] + int_y_copy[m+1])/3
+                    if len(adjacent_x_arr_new) >= 3:
+                        for m in range(0, len(adjacent_x_arr_new)):
+                            
+                            if m==0:
+                                adjacent_x_arr_new[m] = (int_x_copy[-1] + int_x_copy[0] + int_x_copy[1])/3
+                                adjacent_y_arr_new[m] = (int_y_copy[-1] + int_y_copy[0] + int_y_copy[1])/3
+                            elif m==len(adjacent_x_arr_new)-1:
+                                adjacent_x_arr_new[m]= (int_x_copy[m] + int_x_copy[0] + int_x_copy[m-1])/3
+                                adjacent_y_arr_new[m]= (int_y_copy[m] + int_y_copy[0] + int_y_copy[m-1])/3
+                            else:
+                                adjacent_x_arr_new[m] = (int_x_copy[m-1] + int_x_copy[m] + int_x_copy[m+1])/3
+                                adjacent_y_arr_new[m] = (int_y_copy[m-1] + int_y_copy[m] + int_y_copy[m+1])/3
+                    else:
+                        for m in range(0, len(adjacent_x_arr_new)):
+                            
+                            adjacent_x_arr_new[m] = np.mean(int_x_copy)
+                            adjacent_y_arr_new[m] = np.mean(int_y_copy)
                             
                     okay = np.where(np.abs(np.diff(adjacent_x_arr_new)) + np.abs(np.diff(adjacent_y_arr_new)) > 0)
                     ext_x = np.r_[adjacent_x_arr_new[okay], adjacent_x_arr_new[-1], adjacent_x_arr_new[0]]
@@ -5434,16 +5447,23 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     
                     int_x_copy = np.copy(adjacent_x_arr_new)
                     int_y_copy = np.copy(adjacent_y_arr_new)
-                    for m in range(0, len(adjacent_x_arr_new)):
-                        if m==0:
-                            adjacent_x_arr_new[m] = (int_x_copy[-1] + int_x_copy[0] + int_x_copy[1])/3
-                            adjacent_y_arr_new[m] = (int_y_copy[-1] + int_y_copy[0] + int_y_copy[1])/3
-                        elif m==len(adjacent_x_arr_new)-1:
-                            adjacent_x_arr_new[m]= (int_x_copy[m] + int_x_copy[0] + int_x_copy[m-1])/3
-                            adjacent_y_arr_new[m]= (int_y_copy[m] + int_y_copy[0] + int_y_copy[m-1])/3
-                        else:
-                            adjacent_x_arr_new[m] = (int_x_copy[m-1] + int_x_copy[m] + int_x_copy[m+1])/3
-                            adjacent_y_arr_new[m] = (int_y_copy[m-1] + int_y_copy[m] + int_y_copy[m+1])/3
+                    if len(adjacent_x_arr_new) >= 3:
+                        for m in range(0, len(adjacent_x_arr_new)):
+                            
+                            if m==0:
+                                adjacent_x_arr_new[m] = (int_x_copy[-1] + int_x_copy[0] + int_x_copy[1])/3
+                                adjacent_y_arr_new[m] = (int_y_copy[-1] + int_y_copy[0] + int_y_copy[1])/3
+                            elif m==len(adjacent_x_arr_new)-1:
+                                adjacent_x_arr_new[m]= (int_x_copy[m] + int_x_copy[0] + int_x_copy[m-1])/3
+                                adjacent_y_arr_new[m]= (int_y_copy[m] + int_y_copy[0] + int_y_copy[m-1])/3
+                            else:
+                                adjacent_x_arr_new[m] = (int_x_copy[m-1] + int_x_copy[m] + int_x_copy[m+1])/3
+                                adjacent_y_arr_new[m] = (int_y_copy[m-1] + int_y_copy[m] + int_y_copy[m+1])/3
+                    else:
+                        for m in range(0, len(adjacent_x_arr_new)):
+                            
+                            adjacent_x_arr_new[m] = np.mean(int_x_copy)
+                            adjacent_y_arr_new[m] = np.mean(int_y_copy)
                             
                     okay = np.where(np.abs(np.diff(adjacent_x_arr_new)) + np.abs(np.diff(adjacent_y_arr_new)) > 0)
                     int_x = np.r_[adjacent_x_arr_new[okay], adjacent_x_arr_new[-1], adjacent_x_arr_new[0]]
@@ -6001,17 +6021,23 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     
                     int_x_copy = np.copy(adjacent_x_arr_new)
                     int_y_copy = np.copy(adjacent_y_arr_new)
-                    for m in range(0, len(adjacent_x_arr_new)):
-                        if m==0:
-                            adjacent_x_arr_new[m] = (int_x_copy[-1] + int_x_copy[0] + int_x_copy[1])/3
-                            adjacent_y_arr_new[m] = (int_y_copy[-1] + int_y_copy[0] + int_y_copy[1])/3
-                        elif m==len(adjacent_x_arr_new)-1:
-                            adjacent_x_arr_new[m]= (int_x_copy[m] + int_x_copy[0] + int_x_copy[m-1])/3
-                            adjacent_y_arr_new[m]= (int_y_copy[m] + int_y_copy[0] + int_y_copy[m-1])/3
-                        else:
-                            adjacent_x_arr_new[m] = (int_x_copy[m-1] + int_x_copy[m] + int_x_copy[m+1])/3
-                            adjacent_y_arr_new[m] = (int_y_copy[m-1] + int_y_copy[m] + int_y_copy[m+1])/3
-    
+                    if len(adjacent_x_arr_new) >= 3:
+                        for m in range(0, len(adjacent_x_arr_new)):
+                            
+                            if m==0:
+                                adjacent_x_arr_new[m] = (int_x_copy[-1] + int_x_copy[0] + int_x_copy[1])/3
+                                adjacent_y_arr_new[m] = (int_y_copy[-1] + int_y_copy[0] + int_y_copy[1])/3
+                            elif m==len(adjacent_x_arr_new)-1:
+                                adjacent_x_arr_new[m]= (int_x_copy[m] + int_x_copy[0] + int_x_copy[m-1])/3
+                                adjacent_y_arr_new[m]= (int_y_copy[m] + int_y_copy[0] + int_y_copy[m-1])/3
+                            else:
+                                adjacent_x_arr_new[m] = (int_x_copy[m-1] + int_x_copy[m] + int_x_copy[m+1])/3
+                                adjacent_y_arr_new[m] = (int_y_copy[m-1] + int_y_copy[m] + int_y_copy[m+1])/3
+                    else:
+                        for m in range(0, len(adjacent_x_arr_new)):
+                            
+                            adjacent_x_arr_new[m] = np.mean(int_x_copy)
+                            adjacent_y_arr_new[m] = np.mean(int_y_copy)
                     okay = np.where(np.abs(np.diff(adjacent_x_arr_new)) + np.abs(np.diff(adjacent_y_arr_new)) > 0)
                     ext_x = np.r_[adjacent_x_arr_new[okay], adjacent_x_arr_new[-1], adjacent_x_arr_new[0]]
                     ext_y = np.r_[adjacent_y_arr_new[okay], adjacent_y_arr_new[-1], adjacent_y_arr_new[0]]
@@ -6665,17 +6691,23 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     
                     int_x_copy = np.copy(adjacent_x_arr_new)
                     int_y_copy = np.copy(adjacent_y_arr_new)
-                    for m in range(0, len(adjacent_x_arr_new)):
-                        if m==0:
-                            adjacent_x_arr_new[m] = (int_x_copy[-1] + int_x_copy[0] + int_x_copy[1])/3
-                            adjacent_y_arr_new[m] = (int_y_copy[-1] + int_y_copy[0] + int_y_copy[1])/3
-                        elif m==len(adjacent_x_arr_new)-1:
-                            adjacent_x_arr_new[m]= (int_x_copy[m] + int_x_copy[0] + int_x_copy[m-1])/3
-                            adjacent_y_arr_new[m]= (int_y_copy[m] + int_y_copy[0] + int_y_copy[m-1])/3
-                        else:
-                            adjacent_x_arr_new[m] = (int_x_copy[m-1] + int_x_copy[m] + int_x_copy[m+1])/3
-                            adjacent_y_arr_new[m] = (int_y_copy[m-1] + int_y_copy[m] + int_y_copy[m+1])/3
+                    if len(adjacent_x_arr_new) >= 3:
+                        for m in range(0, len(adjacent_x_arr_new)):
                             
+                            if m==0:
+                                adjacent_x_arr_new[m] = (int_x_copy[-1] + int_x_copy[0] + int_x_copy[1])/3
+                                adjacent_y_arr_new[m] = (int_y_copy[-1] + int_y_copy[0] + int_y_copy[1])/3
+                            elif m==len(adjacent_x_arr_new)-1:
+                                adjacent_x_arr_new[m]= (int_x_copy[m] + int_x_copy[0] + int_x_copy[m-1])/3
+                                adjacent_y_arr_new[m]= (int_y_copy[m] + int_y_copy[0] + int_y_copy[m-1])/3
+                            else:
+                                adjacent_x_arr_new[m] = (int_x_copy[m-1] + int_x_copy[m] + int_x_copy[m+1])/3
+                                adjacent_y_arr_new[m] = (int_y_copy[m-1] + int_y_copy[m] + int_y_copy[m+1])/3
+                    else:
+                        for m in range(0, len(adjacent_x_arr_new)):
+                            
+                            adjacent_x_arr_new[m] = np.mean(int_x_copy)
+                            adjacent_y_arr_new[m] = np.mean(int_y_copy) 
                     okay = np.where(np.abs(np.diff(adjacent_x_arr_new)) + np.abs(np.diff(adjacent_y_arr_new)) > 0)
                     int_x = np.r_[adjacent_x_arr_new[okay], adjacent_x_arr_new[-1], adjacent_x_arr_new[0]]
                     int_y = np.r_[adjacent_y_arr_new[okay], adjacent_y_arr_new[-1], adjacent_y_arr_new[0]]
@@ -7229,17 +7261,23 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     
                     int_x_copy = np.copy(adjacent_x_arr_new)
                     int_y_copy = np.copy(adjacent_y_arr_new)
-                    for m in range(0, len(adjacent_x_arr_new)):
-                        if m==0:
-                            adjacent_x_arr_new[m] = (int_x_copy[-1] + int_x_copy[0] + int_x_copy[1])/3
-                            adjacent_y_arr_new[m] = (int_y_copy[-1] + int_y_copy[0] + int_y_copy[1])/3
-                        elif m==len(adjacent_x_arr_new)-1:
-                            adjacent_x_arr_new[m]= (int_x_copy[m] + int_x_copy[0] + int_x_copy[m-1])/3
-                            adjacent_y_arr_new[m]= (int_y_copy[m] + int_y_copy[0] + int_y_copy[m-1])/3
-                        else:
-                            adjacent_x_arr_new[m] = (int_x_copy[m-1] + int_x_copy[m] + int_x_copy[m+1])/3
-                            adjacent_y_arr_new[m] = (int_y_copy[m-1] + int_y_copy[m] + int_y_copy[m+1])/3
+                    if len(adjacent_x_arr_new) >= 3:
+                        for m in range(0, len(adjacent_x_arr_new)):
                             
+                            if m==0:
+                                adjacent_x_arr_new[m] = (int_x_copy[-1] + int_x_copy[0] + int_x_copy[1])/3
+                                adjacent_y_arr_new[m] = (int_y_copy[-1] + int_y_copy[0] + int_y_copy[1])/3
+                            elif m==len(adjacent_x_arr_new)-1:
+                                adjacent_x_arr_new[m]= (int_x_copy[m] + int_x_copy[0] + int_x_copy[m-1])/3
+                                adjacent_y_arr_new[m]= (int_y_copy[m] + int_y_copy[0] + int_y_copy[m-1])/3
+                            else:
+                                adjacent_x_arr_new[m] = (int_x_copy[m-1] + int_x_copy[m] + int_x_copy[m+1])/3
+                                adjacent_y_arr_new[m] = (int_y_copy[m-1] + int_y_copy[m] + int_y_copy[m+1])/3
+                    else:
+                        for m in range(0, len(adjacent_x_arr_new)):
+                            
+                            adjacent_x_arr_new[m] = np.mean(int_x_copy)
+                            adjacent_y_arr_new[m] = np.mean(int_y_copy)
                     okay = np.where(np.abs(np.diff(adjacent_x_arr_new)) + np.abs(np.diff(adjacent_y_arr_new)) > 0)
                     ext_x = np.r_[adjacent_x_arr_new[okay], adjacent_x_arr_new[-1], adjacent_x_arr_new[0]]
                     ext_y = np.r_[adjacent_y_arr_new[okay], adjacent_y_arr_new[-1], adjacent_y_arr_new[0]]
@@ -7893,17 +7931,23 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     
                     int_x_copy = np.copy(adjacent_x_arr_new)
                     int_y_copy = np.copy(adjacent_y_arr_new)
-                    for m in range(0, len(adjacent_x_arr_new)):
-                        if m==0:
-                            adjacent_x_arr_new[m] = (int_x_copy[-1] + int_x_copy[0] + int_x_copy[1])/3
-                            adjacent_y_arr_new[m] = (int_y_copy[-1] + int_y_copy[0] + int_y_copy[1])/3
-                        elif m==len(adjacent_x_arr_new)-1:
-                            adjacent_x_arr_new[m]= (int_x_copy[m] + int_x_copy[0] + int_x_copy[m-1])/3
-                            adjacent_y_arr_new[m]= (int_y_copy[m] + int_y_copy[0] + int_y_copy[m-1])/3
-                        else:
-                            adjacent_x_arr_new[m] = (int_x_copy[m-1] + int_x_copy[m] + int_x_copy[m+1])/3
-                            adjacent_y_arr_new[m] = (int_y_copy[m-1] + int_y_copy[m] + int_y_copy[m+1])/3
+                    if len(adjacent_x_arr_new) >= 3:
+                        for m in range(0, len(adjacent_x_arr_new)):
                             
+                            if m==0:
+                                adjacent_x_arr_new[m] = (int_x_copy[-1] + int_x_copy[0] + int_x_copy[1])/3
+                                adjacent_y_arr_new[m] = (int_y_copy[-1] + int_y_copy[0] + int_y_copy[1])/3
+                            elif m==len(adjacent_x_arr_new)-1:
+                                adjacent_x_arr_new[m]= (int_x_copy[m] + int_x_copy[0] + int_x_copy[m-1])/3
+                                adjacent_y_arr_new[m]= (int_y_copy[m] + int_y_copy[0] + int_y_copy[m-1])/3
+                            else:
+                                adjacent_x_arr_new[m] = (int_x_copy[m-1] + int_x_copy[m] + int_x_copy[m+1])/3
+                                adjacent_y_arr_new[m] = (int_y_copy[m-1] + int_y_copy[m] + int_y_copy[m+1])/3
+                    else:
+                        for m in range(0, len(adjacent_x_arr_new)):
+                            
+                            adjacent_x_arr_new[m] = np.mean(int_x_copy)
+                            adjacent_y_arr_new[m] = np.mean(int_y_copy)
                     okay = np.where(np.abs(np.diff(adjacent_x_arr_new)) + np.abs(np.diff(adjacent_y_arr_new)) > 0)
                     int_x = np.r_[adjacent_x_arr_new[okay], adjacent_x_arr_new[-1], adjacent_x_arr_new[0]]
                     int_y = np.r_[adjacent_y_arr_new[okay], adjacent_y_arr_new[-1], adjacent_y_arr_new[0]]
@@ -8456,18 +8500,23 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     
                     int_x_copy = np.copy(adjacent_x_arr_new)
                     int_y_copy = np.copy(adjacent_y_arr_new)
-                    for m in range(0, len(adjacent_x_arr_new)):
-                        if m==0:
-                            adjacent_x_arr_new[m] = (int_x_copy[-1] + int_x_copy[0] + int_x_copy[1])/3
-                            adjacent_y_arr_new[m] = (int_y_copy[-1] + int_y_copy[0] + int_y_copy[1])/3
-                        elif m==len(adjacent_x_arr_new)-1:
-                            adjacent_x_arr_new[m]= (int_x_copy[m] + int_x_copy[0] + int_x_copy[m-1])/3
-                            adjacent_y_arr_new[m]= (int_y_copy[m] + int_y_copy[0] + int_y_copy[m-1])/3
-                        else:
-                            adjacent_x_arr_new[m] = (int_x_copy[m-1] + int_x_copy[m] + int_x_copy[m+1])/3
-                            adjacent_y_arr_new[m] = (int_y_copy[m-1] + int_y_copy[m] + int_y_copy[m+1])/3
-                        
+                    if len(adjacent_x_arr_new) >= 3:
+                        for m in range(0, len(adjacent_x_arr_new)):
                             
+                            if m==0:
+                                adjacent_x_arr_new[m] = (int_x_copy[-1] + int_x_copy[0] + int_x_copy[1])/3
+                                adjacent_y_arr_new[m] = (int_y_copy[-1] + int_y_copy[0] + int_y_copy[1])/3
+                            elif m==len(adjacent_x_arr_new)-1:
+                                adjacent_x_arr_new[m]= (int_x_copy[m] + int_x_copy[0] + int_x_copy[m-1])/3
+                                adjacent_y_arr_new[m]= (int_y_copy[m] + int_y_copy[0] + int_y_copy[m-1])/3
+                            else:
+                                adjacent_x_arr_new[m] = (int_x_copy[m-1] + int_x_copy[m] + int_x_copy[m+1])/3
+                                adjacent_y_arr_new[m] = (int_y_copy[m-1] + int_y_copy[m] + int_y_copy[m+1])/3
+                    else:
+                        for m in range(0, len(adjacent_x_arr_new)):
+                            
+                            adjacent_x_arr_new[m] = np.mean(int_x_copy)
+                            adjacent_y_arr_new[m] = np.mean(int_y_copy)
                     okay = np.where(np.abs(np.diff(adjacent_x_arr_new)) + np.abs(np.diff(adjacent_y_arr_new)) > 0)
                     ext_x = np.r_[adjacent_x_arr_new[okay], adjacent_x_arr_new[-1], adjacent_x_arr_new[0]]
                     ext_y = np.r_[adjacent_y_arr_new[okay], adjacent_y_arr_new[-1], adjacent_y_arr_new[0]]
@@ -9115,17 +9164,23 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     
                     int_x_copy = np.copy(adjacent_x_arr_new)
                     int_y_copy = np.copy(adjacent_y_arr_new)
-                    for m in range(0, len(adjacent_x_arr_new)):
-                        if m==0:
-                            adjacent_x_arr_new[m] = (int_x_copy[-1] + int_x_copy[0] + int_x_copy[1])/3
-                            adjacent_y_arr_new[m] = (int_y_copy[-1] + int_y_copy[0] + int_y_copy[1])/3
-                        elif m==len(adjacent_x_arr_new)-1:
-                            adjacent_x_arr_new[m]= (int_x_copy[m] + int_x_copy[0] + int_x_copy[m-1])/3
-                            adjacent_y_arr_new[m]= (int_y_copy[m] + int_y_copy[0] + int_y_copy[m-1])/3
-                        else:
-                            adjacent_x_arr_new[m] = (int_x_copy[m-1] + int_x_copy[m] + int_x_copy[m+1])/3
-                            adjacent_y_arr_new[m] = (int_y_copy[m-1] + int_y_copy[m] + int_y_copy[m+1])/3
+                    if len(adjacent_x_arr_new) >= 3:
+                        for m in range(0, len(adjacent_x_arr_new)):
                             
+                            if m==0:
+                                adjacent_x_arr_new[m] = (int_x_copy[-1] + int_x_copy[0] + int_x_copy[1])/3
+                                adjacent_y_arr_new[m] = (int_y_copy[-1] + int_y_copy[0] + int_y_copy[1])/3
+                            elif m==len(adjacent_x_arr_new)-1:
+                                adjacent_x_arr_new[m]= (int_x_copy[m] + int_x_copy[0] + int_x_copy[m-1])/3
+                                adjacent_y_arr_new[m]= (int_y_copy[m] + int_y_copy[0] + int_y_copy[m-1])/3
+                            else:
+                                adjacent_x_arr_new[m] = (int_x_copy[m-1] + int_x_copy[m] + int_x_copy[m+1])/3
+                                adjacent_y_arr_new[m] = (int_y_copy[m-1] + int_y_copy[m] + int_y_copy[m+1])/3
+                    else:
+                        for m in range(0, len(adjacent_x_arr_new)):
+                            
+                            adjacent_x_arr_new[m] = np.mean(int_x_copy)
+                            adjacent_y_arr_new[m] = np.mean(int_y_copy)
                     okay = np.where(np.abs(np.diff(adjacent_x_arr_new)) + np.abs(np.diff(adjacent_y_arr_new)) > 0)
                     int_x = np.r_[adjacent_x_arr_new[okay], adjacent_x_arr_new[-1], adjacent_x_arr_new[0]]
                     int_y = np.r_[adjacent_y_arr_new[okay], adjacent_y_arr_new[-1], adjacent_y_arr_new[0]]
@@ -9678,17 +9733,23 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     
                     int_x_copy = np.copy(adjacent_x_arr_new)
                     int_y_copy = np.copy(adjacent_y_arr_new)
-                    for m in range(0, len(adjacent_x_arr_new)):
-                        if m==0:
-                            adjacent_x_arr_new[m] = (int_x_copy[-1] + int_x_copy[0] + int_x_copy[1])/3
-                            adjacent_y_arr_new[m] = (int_y_copy[-1] + int_y_copy[0] + int_y_copy[1])/3
-                        elif m==len(adjacent_x_arr_new)-1:
-                            adjacent_x_arr_new[m]= (int_x_copy[m] + int_x_copy[0] + int_x_copy[m-1])/3
-                            adjacent_y_arr_new[m]= (int_y_copy[m] + int_y_copy[0] + int_y_copy[m-1])/3
-                        else:
-                            adjacent_x_arr_new[m] = (int_x_copy[m-1] + int_x_copy[m] + int_x_copy[m+1])/3
-                            adjacent_y_arr_new[m] = (int_y_copy[m-1] + int_y_copy[m] + int_y_copy[m+1])/3
+                    if len(adjacent_x_arr_new) >= 3:
+                        for m in range(0, len(adjacent_x_arr_new)):
                             
+                            if m==0:
+                                adjacent_x_arr_new[m] = (int_x_copy[-1] + int_x_copy[0] + int_x_copy[1])/3
+                                adjacent_y_arr_new[m] = (int_y_copy[-1] + int_y_copy[0] + int_y_copy[1])/3
+                            elif m==len(adjacent_x_arr_new)-1:
+                                adjacent_x_arr_new[m]= (int_x_copy[m] + int_x_copy[0] + int_x_copy[m-1])/3
+                                adjacent_y_arr_new[m]= (int_y_copy[m] + int_y_copy[0] + int_y_copy[m-1])/3
+                            else:
+                                adjacent_x_arr_new[m] = (int_x_copy[m-1] + int_x_copy[m] + int_x_copy[m+1])/3
+                                adjacent_y_arr_new[m] = (int_y_copy[m-1] + int_y_copy[m] + int_y_copy[m+1])/3
+                    else:
+                        for m in range(0, len(adjacent_x_arr_new)):
+                            
+                            adjacent_x_arr_new[m] = np.mean(int_x_copy)
+                            adjacent_y_arr_new[m] = np.mean(int_y_copy)
                     okay = np.where(np.abs(np.diff(adjacent_x_arr_new)) + np.abs(np.diff(adjacent_y_arr_new)) > 0)
                     ext_x = np.r_[adjacent_x_arr_new[okay], adjacent_x_arr_new[-1], adjacent_x_arr_new[0]]
                     ext_y = np.r_[adjacent_y_arr_new[okay], adjacent_y_arr_new[-1], adjacent_y_arr_new[0]]

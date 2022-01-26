@@ -50,7 +50,7 @@ if [ $answer == "y" ]; then
     submit='sbatch'
 else
     hoomd_path='/Users/nicklauersdorf/hoomd-blue/build/'
-    script_path='/Users/nicklauersdorf/hoomd-blue/build/run_specific/run_gpu.sh'
+    script_path='/Users/nicklauersdorf/hoomd-blue/build/njlauersdorf/ABPs/run_sim/run_gpu.sh'
     
     echo "Do you want homogeneous cluster (y/n)?"
     read answer
