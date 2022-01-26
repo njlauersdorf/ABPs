@@ -49,14 +49,14 @@ if [ $answer == "y" ]; then
     sedtype='sed'
     submit='sbatch'
 else
-    hoomd_path='/Users/nicklauersdorf/hoomd-blue/build/'
-    script_path='/Users/nicklauersdorf/hoomd-blue/build/njlauersdorf/ABPs/run_sim/run_gpu.sh'
+    hoomd_path='~/hoomd-blue/build/'
+    script_path='~/klotsa/ABPs/run_sim/run_gpu.sh'
     
     echo "Do you want homogeneous cluster (y/n)?"
     read answer
     
     if [ $answer == "y" ]; then
-        tempOne='/Users/nicklauersdorf/hoomd-blue/build/njlauersdorf/ABPs/run_sim/seeded_ss_cluster_random_distrib.py'
+        tempOne='~/klotsa/ABPs/run_sim/seeded_ss_cluster_random_distrib.py'
         dont_run='no'
     else
         
@@ -64,7 +64,7 @@ else
         read answer
         
         if [ $answer == "y" ]; then
-            tempOne='/Users/nicklauersdorf/hoomd-blue/build/njlauersdorf/ABPs/run_sim/seeded_ss_cluster_fast_out_distrib.py'
+            tempOne='~/klotsa/ABPs/run_sim/seeded_ss_cluster_fast_out_distrib.py'
             dont_run='no'
         else
     
@@ -72,7 +72,7 @@ else
             read answer
             
             if [ $answer == "y" ]; then
-                tempOne='/Users/nicklauersdorf/hoomd-blue/build/njlauersdorf/ABPs/run_sim/seeded_ss_cluster_slow_out_distrib.py'
+                tempOne='~/klotsa/ABPs/run_sim/seeded_ss_cluster_slow_out_distrib.py'
                 dont_run='no'
             else
     
@@ -80,7 +80,7 @@ else
                 read answer
                 
                 if [ $answer == "y" ]; then
-                    tempOne='/Users/nicklauersdorf/hoomd-blue/build/njlauersdorf/ABPs/run_sim/seeded_ss_cluster_half_distrib.py'
+                    tempOne='~/klotsa/ABPs/run_sim/seeded_ss_cluster_half_distrib.py'
                     dont_run='no'
                 else
                     dont_run='yes'

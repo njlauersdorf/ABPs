@@ -8,8 +8,8 @@ if [ $answer == "y" ]; then
     script_path='/nas/longleaf/home/njlauers/hoomd-blue/build/post_proc'
     submit='sbatch'
 else
-    hoomd_path='/Users/nicklauersdorf/hoomd-blue/build'
-    script_path='/Users/nicklauersdorf/hoomd-blue/build/njlauersdorf/ABPs/post_proc'
+    hoomd_path='~/hoomd-blue/build'
+    script_path='~/klotsa/ABPs/post_proc'
     submit='sh'
 fi
 
