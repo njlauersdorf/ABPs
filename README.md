@@ -4,11 +4,11 @@
 ## Table of Contents
 1. [Introduction](#introduction)
 2. [ABPs](#abps)
- a. [General Info](#general-info)
- b. [Technologies](#technologies)
- c. [Installation](#installation)
- d. [Running Code](#running)
- e. [Collaboration](#collaboration)
+ 2.1 [General Info](#general-info)
+ 2.2 [Technologies](#technologies)
+ 2.3 [Installation](#installation)
+ 2.4 [Running Code](#running)
+ 2.5 [Collaboration](#collaboration)
 3. [Personal](#personal)
 
 ## Introduction
@@ -136,7 +136,7 @@ If running on Longleaf, be sure you are running these simulations in the /proj/ 
 ```Are you running on Longleaf (y/n)?```
 If true, answer `y` otherwise answer `n`. Answering this correctly will automatically specify the pathing to hoomd for you and proper slurm terminology for submitting a run to separate GPU nodes (as opposed to CPU nodes if ran locally). Your input is then followed by four yes-or-no questions in a row to specify the initial conditions
 ```
-Do you want homogeneous cluster (y/n)
+Do you want homogeneous cluster (y/n)?
 Do you want slow bulk, fast interface (y/n)?
 Do you want fast bulk, slow interface (y/n)?
 Do you want half slow, half fast cluster (y/n)?
