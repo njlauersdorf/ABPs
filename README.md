@@ -4,11 +4,11 @@
 ## Table of Contents
 1. [Introduction](#introduction)
 2. [ABPs](#abps)
- - [General Info](#general-info)
- - [Technologies](#technologies)
- - [Installation](#installation)
- - [Running Code](#running)
- - [Collaboration](#collaboration)
+   - [General Info](#general-info)
+   - [Technologies](#technologies)
+   - [Installation](#installation)
+   - [Running Code](#running)
+   - [Collaboration](#collaboration)
 3. [Personal](#personal)
 
 ## Introduction
@@ -133,7 +133,9 @@ $ sh ~/klotsa/ABPs/runPeloopBinaryCluster.sh
 ```
 
 If running on Longleaf, be sure you are running these simulations in the /proj/ (group workspace) or /pine/ (personal workspace) (note that /pine/ workspace has very limited storage compared to the group workspace). To determine which template python file to use, the user is prompted to answer a few questions that describe the initial conditions of the system and where the simulation is being run.
-```Are you running on Longleaf (y/n)?```
+
+> Are you running on Longleaf (y/n)?
+
 If true, answer `y` otherwise answer `n`. Answering this correctly will automatically specify the pathing to hoomd for you and proper slurm terminology for submitting a run to separate GPU nodes (as opposed to CPU nodes if ran locally). Your input is then followed by four yes-or-no questions in a row to specify the initial conditions
 
 > Do you want homogeneous cluster (y/n)?
