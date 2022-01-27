@@ -20,6 +20,7 @@ A list of technologies used within the project:
   * Shapely (https://pypi.org/project/Shapely/): Version 1.7.0
   * SciPy (https://scipy.org/): Version 1.3.1
 * Jupyter Notebook (https://jupyter-notebook.readthedocs.io/en/stable/changelog.html): Version 6.1.1
+* FFMPEG (https://www.ffmpeg.org/): Version 3.4
 
 ## Installation
 ***
