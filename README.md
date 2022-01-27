@@ -70,10 +70,12 @@ $ module save
 ```
 Download HOOMD-Blue version 2.9.7
 ```
+$ cd ~
 $ curl -O https://glotzerlab.engin.umich.edu/Downloads/hoomd/hoomd-v2.9.7.tar.gz
 ```
 or
 ```
+$ cd ~
 $ git clone --recursive https://github.com/glotzerlab/hoomd-blue
 ```
 Create and activate virtual environment for compiling HOOMD-Blue
