@@ -4,11 +4,11 @@
 ## Table of Contents
 1. [Introduction](#introduction)
 2. [ABPs](#abps)
- 1. [General Info](#general-info)
- 2. [Technologies](#technologies)
- 3. [Installation](#installation)
- 4. [Running Code](#running)
- 5. [Collaboration](#collaboration)
+ - [General Info](#general-info)
+ - [Technologies](#technologies)
+ - [Installation](#installation)
+ - [Running Code](#running)
+ - [Collaboration](#collaboration)
 3. [Personal](#personal)
 
 ## Introduction
@@ -137,8 +137,11 @@ If running on Longleaf, be sure you are running these simulations in the /proj/ 
 If true, answer `y` otherwise answer `n`. Answering this correctly will automatically specify the pathing to hoomd for you and proper slurm terminology for submitting a run to separate GPU nodes (as opposed to CPU nodes if ran locally). Your input is then followed by four yes-or-no questions in a row to specify the initial conditions
 
 > Do you want homogeneous cluster (y/n)?
+> 
 > Do you want slow bulk, fast interface (y/n)?
+> 
 > Do you want fast bulk, slow interface (y/n)?
+> 
 > Do you want half slow, half fast cluster (y/n)?
 
 Answering `y` to any of these will terminate the question asking process and choose that respective template python file for creating and submitting each simulation run. If `n` is answered to all of them, the submission will abort. Future initial conditions are planned to be added soon.
