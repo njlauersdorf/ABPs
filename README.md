@@ -7,7 +7,11 @@
    - [General Info](#general-info)
    - [Technologies](#technologies)
    - [Installation](#installation)
+     - [HOOMD-Blue](#HOOMD-Blue)
+     - [Klotsa Github Repository](#Klotsa-Github-Repository)
    - [Running Code](#running)
+     - [Submitting Simulation](#Submitting-Simulation)
+     - [Submitting Post-Processing](#Submitting-Post-Processing)
    - [Collaboration](#collaboration)
 3. [Personal](#personal)
 
