@@ -1,12 +1,22 @@
 # klotsa
 ***
 
-## Introduction
+## Table of Contents
+1. [General Info](#general-info)
+2. [Technologies](#technologies)
+3. [Installation](#installation)
+4. [Running Code](#running)
+5. [Collaboration](#collaboration)
+
+## General Info
 ***
-Collection of software and packages for simulating systems of active and passive Brownian particles in HOOMD-Blue using molecular dynamics.
+This github profile consists of 2 parts currently: a collection of software and packages for simulating systems of active and passive Brownian particles in HOOMD-Blue using molecular dynamics, located in the /klotsa/ABPs folder, and a collection of various projects to develop and demonstrate my skills in various languages and applications (both front-end and back-end software development), located in /klotsa/personal.
+
+# ABPs
+***
 
 ## Technologies
-***
+
 A list of technologies used within the project:
 * HOOMD-Blue (https://hoomd-blue.readthedocs.io/en/stable/installation.html): Version 2.9.7
   * Python (https://www.python.org/downloads/release/python-380/): Version 3.8.1
@@ -23,7 +33,7 @@ A list of technologies used within the project:
 * FFMPEG (https://www.ffmpeg.org/): Version 3.4
 
 ## Installation
-***
+
 It is highly recommended one install's both HOOMD-Blue and this github repository in their user's home directory due to the pathing in the analysis files. 
 
 ### HOOMD-Blue
@@ -106,4 +116,6 @@ $ ctest
 $ cd ~
 $ git clone https://github.com/njlauersdorf/klotsa.git
 ```
+## Collaboration
 
+To collaborate or ask questions, please contact me at: njlauers@live.unc.edu. If you wish to use any part of this package in your research, please supply my name in the acknowledgments or cite any of my publications.
