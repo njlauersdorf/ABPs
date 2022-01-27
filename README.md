@@ -4,11 +4,11 @@
 ## Table of Contents
 1. [Introduction](#introduction)
 2. [ABPs](#abps)
- 1 [General Info](#general-info)
- 2 [Technologies](#technologies)
- 3 [Installation](#installation)
- 4 [Running Code](#running)
- 5 [Collaboration](#collaboration)
+ 1. [General Info](#general-info)
+ 2. [Technologies](#technologies)
+ 3. [Installation](#installation)
+ 4. [Running Code](#running)
+ 5. [Collaboration](#collaboration)
 3. [Personal](#personal)
 
 ## Introduction
@@ -135,12 +135,11 @@ $ sh ~/klotsa/ABPs/runPeloopBinaryCluster.sh
 If running on Longleaf, be sure you are running these simulations in the /proj/ (group workspace) or /pine/ (personal workspace) (note that /pine/ workspace has very limited storage compared to the group workspace). To determine which template python file to use, the user is prompted to answer a few questions that describe the initial conditions of the system and where the simulation is being run.
 ```Are you running on Longleaf (y/n)?```
 If true, answer `y` otherwise answer `n`. Answering this correctly will automatically specify the pathing to hoomd for you and proper slurm terminology for submitting a run to separate GPU nodes (as opposed to CPU nodes if ran locally). Your input is then followed by four yes-or-no questions in a row to specify the initial conditions
-```
-Do you want homogeneous cluster (y/n)?
-Do you want slow bulk, fast interface (y/n)?
-Do you want fast bulk, slow interface (y/n)?
-Do you want half slow, half fast cluster (y/n)?
-```
+
+> Do you want homogeneous cluster (y/n)?
+> Do you want slow bulk, fast interface (y/n)?
+> Do you want fast bulk, slow interface (y/n)?
+> Do you want half slow, half fast cluster (y/n)?
 
 Answering `y` to any of these will terminate the question asking process and choose that respective template python file for creating and submitting each simulation run. If `n` is answered to all of them, the submission will abort. Future initial conditions are planned to be added soon.
 
