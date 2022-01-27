@@ -4,11 +4,11 @@
 ## Table of Contents
 1. [Introduction](#introduction)
 2. [ABPs](#abps)
- 2.1 [General Info](#general-info)
- 2.2 [Technologies](#technologies)
- 2.3 [Installation](#installation)
- 2.4 [Running Code](#running)
- 2.5 [Collaboration](#collaboration)
+ 1 [General Info](#general-info)
+ 2 [Technologies](#technologies)
+ 3 [Installation](#installation)
+ 4 [Running Code](#running)
+ 5 [Collaboration](#collaboration)
 3. [Personal](#personal)
 
 ## Introduction
