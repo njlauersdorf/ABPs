@@ -126,11 +126,11 @@ $ cd ~
 $ git clone https://github.com/njlauersdorf/klotsa.git
 ```
 
-## Running Simulations
+## Running Code
 This github project utilizes bash scripts to read in user's desired measurement/simulation type, select the desired python file to run (either for a simulation or post-processing) based on user input, and to read in the specified initial/system conditions into a template python file for a) post-processing of each .gsd file (simulation file) within the current directory or b) create a python file for instantiating a system and running that file to simulate each possible configuration of initial conditions inputted, which, in turn, outputs a .gsd file detailing the simulation at each time step.  
 
 
-**For submitting a simulation:**
+**Submitting simulations**
 The bash file used to submit a simulation is /klotsa/ABPs/runPeloopBinaryCluster.sh. Before submitting the bash file, one should manually input all desired possible physical conditions of each system to run as lists in each variable's location at the top of the page. The bash file will loop through all possible pairings of these variables and submit create and submit individual python files for each possible configuration based on template python files. Whether running on a cluster (i.e. Longleaf) or locally, one should submit this file as:
 ```
 $ sh ~/klotsa/ABPs/runPeloopBinaryCluster.sh
@@ -154,7 +154,7 @@ Answering `y` to any of these will terminate the question asking process and cho
 
 Once the file is submitted on Longleaf, a slurm-XXXXXXXXXXX.out file will be created that documents the progress of the run and which submission number it is (if ran on Longleaf). Be sure to check this to file to be sure the submission will take less than 11 days or else the simulation will be automatically aborted per Longleaf's maximum run length. Similarly, the slurm file is where to go to see if and what type of error occurred. There are two common errors: 1) a particle exits the simulation box, which occurs due to too great of particle overlap from too small of a time step (therefore, increase the time step and re-submit to fix this) and 2) the simulation finds a faulty GPU node. If the latter occurs, the simulation never starts and the slurm file remains empty despite the simulation queue (squeue -u <Longleaf username, i.e. Onyen>) saying the simulation is still running (and it will continue to take up a GPU node until it his the maximum time limit of 11:00:00 days unless cancelled beforehand (scancel <submission number>). If running locally, the estimated simulation time will be output to the terminal at a regular interval. In addition only the first error commonly occurs when you have too small of a time step. Testing a run locally (using the most active and hard spheres desired of your input systems) is a good method to find a good starting time step to use. Sometimes, a particle will exit the box later in the simulation, however, this is less common with the initial conditions being the main culprit for most errors.
 
-**For submitting post-processing:**
+**Submitting post-processing**
 
 
 ## Collaboration
