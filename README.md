@@ -136,7 +136,7 @@ The bash file used to submit a simulation is /klotsa/ABPs/runPeloopBinaryCluster
 $ sh ~/klotsa/ABPs/runPeloopBinaryCluster.sh
 ```
 
-If running on Longleaf, be sure you are running these simulations in the /proj/ (group workspace) or /pine/ (personal workspace) (note that /pine/ workspace has very limited storage compared to the group workspace). To determine which template python file to use, the user is prompted to answer a few questions that describe the initial conditions of the system and where the simulation is being run.
+If running on Longleaf, be sure you are running these simulations in the /proj/ (group workspace) or /pine/ (personal workspace) (note that /pine/ workspace has very limited storage compared to the group workspace). Upon submitting this bash file, a folder named /MM_DD_YYYY_parent, where MM is the month, DD is the day, and YYYY is the year, will be created where each python file for every run is created and saved. To determine which template python file to use, the user is prompted to answer a few questions that describe the initial conditions of the system and where the simulation is being run.
 
 > Are you running on Longleaf (y/n)?
 
@@ -155,7 +155,23 @@ Answering `y` to any of these will terminate the question asking process and cho
 Once the file is submitted on Longleaf, a slurm-XXXXXXXXXXX.out file will be created that documents the progress of the run and which submission number it is (if ran on Longleaf). Be sure to check this to file to be sure the submission will take less than 11 days or else the simulation will be automatically aborted per Longleaf's maximum run length. Similarly, the slurm file is where to go to see if and what type of error occurred. There are two common errors: 1) a particle exits the simulation box, which occurs due to too great of particle overlap from too small of a time step (therefore, increase the time step and re-submit to fix this) and 2) the simulation finds a faulty GPU node. If the latter occurs, the simulation never starts and the slurm file remains empty despite the simulation queue (squeue -u <Longleaf username, i.e. Onyen>) saying the simulation is still running (and it will continue to take up a GPU node until it his the maximum time limit of 11:00:00 days unless cancelled beforehand (scancel <submission number>). If running locally, the estimated simulation time will be output to the terminal at a regular interval. In addition only the first error commonly occurs when you have too small of a time step. Testing a run locally (using the most active and hard spheres desired of your input systems) is a good method to find a good starting time step to use. Sometimes, a particle will exit the box later in the simulation, however, this is less common with the initial conditions being the main culprit for most errors.
 
 ### Submitting post-processing
-
+The bash file used to submit a simulation is /klotsa/ABPs/post_proc_binary.sh. This file will submit the specified post processing routine for every simulation file (.gsd) in the current directory. Submit this bash file similarly to running a simulation:
+   
+```
+$ sh ~/klotsa/ABPs/post_proc_binary.sh
+```
+   
+   
+Upon submitting this bash file, three folders will be created: /MM_DD_YYYY_txt_files, /MM_DD_YYYY_pic_files, and /MM_DD_YYYY_vid_files, where they store the outputted .txt, .png, and .mp4 files respectively for all post-processing scripts started on that date (MM/DD/YYYY). In addition, there will be prompts to specify a few analytical details, such as:
+   
+> What is your bin size?
+> 
+> What is your step size?
+> 
+> What do you want to analyze?
+   
+   
+where it seeks the length of the bin for meshing the system (typically 5), the time step size to be analyzed (always 1 unless we care about velocity), and our post-processing method. A second bash script will be submitted for each .gsd file in the current directory where this information is passed to. There, a python post-processing file will be ran on each .gsd file separately that corresponds to our response to the third prompt. These post processing files typically output a series of .png files for each frame and a .txt file (located in the /MM_DD_YYYY_txt_files_folder) compiling certain information at each time step. Once the python script finishes running, the second bash file will compile each series of .png files (located in the /MM_DD_YYYY_pic_files folder) into a .mp4 (located in the /MM_DD_YYYY_vid_files folder). The bash script will proceed to delete all .png files that were created by that post-processing script. Therefore, what we're left with will always be .mp4 files. or.txt files unless an error occurs. These .txt files are typically read into certain jupyter notebook scripts to analyze them averaged over time and to identify trends over our input parameters.
 
 ## Collaboration
 
