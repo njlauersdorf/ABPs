@@ -120,7 +120,153 @@ Test your build. Since we built locally and do not have CUDA support, many tests
 $ ctest
 ```
 
-### Klotsa github repository
+### Setting up GitHub
+
+First, open your teerminal and navigate to your home directory and start the ssh-agent in the background:
+```
+$ cd ~
+$ eval "$(ssh-agent -s)"
+```
+
+This should output:
+
+> Agent pid #####
+
+where ##### is some combination of integers.
+
+
+Next, generate an ssh key with either of the following command while replacing your_email@example.com with the email you used for your Github profile:
+
+```
+$ ssh-keygen -t ed25519 -C "your_email@example.com"
+```
+
+If you are using a legacy system that doesn't support the Ed25519 algorithm you will get an output that reads:
+
+> command not found
+
+If that's the case, instead, use:
+
+```
+$ ssh-keygen -t rsa -b 4096 -C "your_email@example.com"
+```
+
+For me, either of these would read: 
+
+```
+$ ssh-keygen -t ed25519 -C "njlauersdorf@wisc.edu"
+```
+or
+```
+$ ssh-keygen -t rsa -b 4096 -C "njlauersdorf@wisc.edu"
+```
+
+Upon the succesful creation of an ssh key, the terminal should output: 
+
+> Generating public/private rsa key pair.
+
+and proceed with the following prompt: 
+
+> Enter a file in which to save the key (/Users/you/.ssh/id_rsa):
+
+I always just press the enter key and the ssh-keycode is generated in the default file location (/Users/you/.ssh/id_rsa). Alternatively, you can choose your own location in the /Users/you/.ssh folder. After responding to the above prompt, two more prompts will appear:
+
+> Enter passphrase (empty for no passphrase): [Type a passphrase]
+> Enter same passphrase again: [Type passphrase again]
+
+Similar to the prompt before, I simply press enter for both of these prompts and leave the passphrase blank. 
+
+##### Adding your SSH key to the ssh-agent
+
+Now that you have your ssh-keycode, you will want to save it in your ssh-agent. Start the ssh-agent in the background with the following prompt:
+
+```
+$ eval "$(ssh-agent -s)"
+```
+
+The terminal will output prompt like the following:
+
+> Agent pid 59566
+
+Depending on your environment, you may need to use a different command. For example, you may need to use root access by running sudo -s -H before starting the ssh-agent, or you may need to use exec ssh-agent bash or exec ssh-agent zsh to run the ssh-agent.
+
+Next, we have to verify the existence and contents of your ~/.ssh/config file.  
+
+```
+$ cd ~/.ssh
+$ ls
+```
+
+if you do not see the config file, create one:
+
+```
+$ touch ~/.ssh/config
+```
+
+Since you have a config file now, you want to open the file and modify its contents:
+
+```
+$ open ~/.ssh/config
+```
+
+Make sure the config file reads. If it does not, copy and paste these lines into your file, ensuring that the lines under `Host *` are indented. Furthermore, if you chose not to add a passphrase to your key, you should omit the UseKeychain line. If you created your key with a different name, or if you are adding an existing key that has a different name, replace id_rsa in the command with the name of your private key file.
+
+>Host *
+>  AddKeysToAgent yes
+>  UseKeychain yes
+>  IdentityFile ~/.ssh/id_rsa
+
+You may also choose to add additional lines such that your config file reads:
+
+>Host *
+>  ServerAliveInterval 60
+>  ServerAliveCountMax 30
+>  AddKeysToAgent yes
+>  UseKeychain yes
+>  IdentityFile ~/.ssh/id_rsa
+  
+These two additional lines refresh your connection to github (when uploading files) in case you have a large amount of data to upload or else the link to github will be automatically broken after a short amount of time.
+
+If you see an error later on, such as:
+
+> /Users/USER/.ssh/config: line 16: Bad configuration option: usekeychain
+
+Then you want to add the following line to your config file indented under `Host *`:
+
+```
+IgnoreUnknown AddKeysToAgent,UseKeychain
+```
+That line was necessary for Longleaf, but was not necessary for setting up Github on my local computer. Now, add your SSH private key to the ssh-agent and store your passphrase in the keychain. If you created your key with a different name, or if you are adding an existing key that has a different name, replace id_rsa in the command with the name of your private key file.
+  
+```
+$ ssh-add -K ~/.ssh/id_rsa
+```
+
+The -K option is Apple's standard version of ssh-add, which stores the passphrase in your keychain for you when you add an SSH key to the ssh-agent. If you chose not to add a passphrase to your key, run the command without the `-K` option. In MacOS Monterey (12.0), the -K and -A flags are deprecated and have been replaced by the --apple-use-keychain and --apple-load-keychain flags, respectively.
+
+Finally, now that you have the ssh-key fully set up on your local computer or on the cluster (Longleaf), you want to copy your ssh-keycode so that you can put it in your Github profile. 
+
+Next, is where Longleaf deviates from a local computer. On your local computer, copy the contents of the file to your clipboard that you saved your ssh-keycode in by inputting the following into your terminal (for a mac):
+```
+$ pbcopy < ~/.ssh/id_rsa.pub
+```
+If you want to set up your Github profile on Longleaf, simply download the file that you saved your ssh-keycode in to your local computer:
+
+```
+$ scp username@longleaf.unc.edu:~/.ssh/id_rsa.pub /~/Desktop/
+```
+
+Then, copy the contents of this file to your clipboard:
+
+```
+$ pbcopy < ~/Desktop/id_rsa.pub
+```
+
+With your ssh-key in your clipboard, navigate and login to Github. In the upper-right corner of any page, click your profile photo, then click Settings. In the user settings sidebar, click SSH and GPG keys. Click New SSH key or Add SSH key. In the "Title" field, add a descriptive label for the new key. For example, if you're using a personal Mac, you might call this key "Personal MacBook Air". Paste your key into the "Key" field. Click Add SSH key.
+> 
+#### Local installation
+To set up github, first navigate to your home directory
+####Klotsa github repository
 ```
 $ cd ~
 $ git clone https://github.com/njlauersdorf/klotsa.git
