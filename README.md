@@ -40,6 +40,7 @@ A list of technologies used within the project:
   * SciPy (https://scipy.org/): Version 1.3.1
 * Jupyter Notebook (https://jupyter-notebook.readthedocs.io/en/stable/changelog.html): Version 6.1.1
 * FFMPEG (https://www.ffmpeg.org/): Version 3.4
+* Anaconda (https://www.anaconda.com/): Version 4.11.0
 
 ## Installation
 
@@ -48,6 +49,30 @@ It is highly recommended one install's both HOOMD-Blue and this github repositor
 ### HOOMD-Blue
 
 **For installation on local desktop:**
+
+First, you must switch your computer's shell to BASH from ZSH. To do this on a mac, open your Terminal and in the command line, enter:
+
+```
+$ echo '/usr/local/bin/bash' | sudo tee -a /etc/shells;
+$ chsh -s /usr/local/bin/bash
+```
+
+Close your current terminal window and open a new one. To verify it worked, enter the following two lines. You should see similar outputs as shown below:
+
+```
+$ echo $SHELL
+/usr/local/bin/bash
+$ echo $BASH_VERSION
+4.2.37(2)-release
+```
+
+If your shell is still ZSH, then try to following instead, closing and reopening the command window to test your default shell (above):
+
+```
+$ chsh -s /bin/bash
+```
+Next, you need to make a virtual environment to install HOOMD prerequisite modules. To do this, download Anaconda.
+
 
 Install prerequisites.
 ```
