@@ -44,7 +44,7 @@ A list of technologies used within the project:
 
 ## Installation
 
-It is highly recommended one install's both HOOMD-Blue and this github repository in their user's home directory due to the pathing in the analysis files. 
+It is highly recommended one install's both HOOMD-Blue and this github repository in their user's home directory due to the pathing in the analysis files. Furthermore, this installation instruction and github repository is intended for use with HOOMD v2.9.7. This is not the most recent version. There is a beta release for v3.0.0. A large number of changes were made for how one submits simulations. The post processing should work similarly, however, simulation submission files need to be adjusted for use on newer HOOMD versions. One should reference the guide for the newest version (https://hoomd-blue.readthedocs.io/en/latest/) to determine how these submission files need to be modified.
 
 ### HOOMD-Blue
 
@@ -66,12 +66,16 @@ $ echo $BASH_VERSION
 4.2.37(2)-release
 ```
 
-If your shell is still ZSH, then try to following instead, closing and reopening the command window to test your default shell (above):
+Note, you should not see a path which ends in /zsh. However, if you do, your default shell is still ZSH, then perform the alternate steps noted here. First, close and reopen the command window. Then, input the following line: 
 
 ```
 $ chsh -s /bin/bash
 ```
-Next, you need to make a virtual environment to install HOOMD prerequisite modules. To do this, download Anaconda.
+Test your default shell as shown above. If it's now BASH, you are good to go! 
+
+Next, you need to make a virtual environment to install HOOMD prerequisite modules. To do this, download Anaconda. Open the Anaconda-Navigator and select 'create' under the listed environments. 
+
+
 
 
 Install prerequisites.
