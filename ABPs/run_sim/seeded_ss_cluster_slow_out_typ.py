@@ -7,7 +7,7 @@ import os
 #hoomdPath='/Users/nicklauersdorf/hoomd-blue/build/'
 
 # Run on cluster
-hoomdPath='/nas/longleaf/home/njlauers/hoomd-blue/build/'
+hoomdPath = "${hoomd_path}" # path to where you installed hoomd-blue '/.../hoomd-blue/build/'
 
 sys.path.insert(0,hoomdPath)
 

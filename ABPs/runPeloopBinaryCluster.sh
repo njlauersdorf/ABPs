@@ -3,60 +3,34 @@
 current=$( date "+%m_%d_%y" )
 this_path=$( pwd )
 
+
+hoomd_path="$HOME/hoomd-blue/build/"
+script_path="$HOME/klotsa/ABPs/run_sim/run_gpu.sh"
+
 echo "Are you running on Longleaf (y/n)?"
 read answer
 
 if [ $answer == "y" ]; then
-    hoomd_path='~/hoomd-blue/build/'
-    script_path='~/klotsa/ABPs/run_sim/run_gpu.sh'
-    
-    echo "Do you want homogeneous cluster (y/n)?"
-    read answer
-    
-    if [ $answer == "y" ]; then
-        tempOne='~/klotsa/ABPs/run_sim/seeded_ss_cluster_random_distrib.py'
-        dont_run='no'
-    else
-        
-        echo "Do you want slow bulk, fast interface (y/n)?"
-        read answer
-        
-        if [ $answer == "y" ]; then
-            tempOne='~/klotsa/ABPs/run_sim/seeded_ss_cluster_fast_out_distrib.py'
-            dont_run='no'
-        else
-    
-            echo "Do you want fast bulk, slow interface (y/n)?"
-            read answer
-            
-            if [ $answer == "y" ]; then
-                tempOne='~/klotsa/ABPs/run_sim/seeded_ss_cluster_slow_out_distrib.py'
-                dont_run='no'
-            else
-    
-                echo "Do you want half slow, half fast cluster (y/n)?"
-                read answer
-                
-                if [ $answer == "y" ]; then
-                    tempOne='~/klotsa/ABPs/run_sim/seeded_ss_cluster_half_distrib.py'
-                    dont_run='no'
-                else
-                    dont_run='yes'
-                fi
-            fi
-        fi
-    fi
     sedtype='sed'
     submit='sbatch'
 else
-    hoomd_path='~/hoomd-blue/build/'
-    script_path='~/klotsa/ABPs/run_sim/run_gpu.sh'
+    sedtype='gsed'
+    submit='sh'
+fi
+
+echo "Do you want random initial conditions (y/n)?"
+read answer
+
+if [ $answer == "y" ]; then
+    tempOne="$HOME/klotsa/ABPs/run_sim/epsilonKBT.py"
+    dont_run='no'
+else
     
     echo "Do you want homogeneous cluster (y/n)?"
     read answer
     
     if [ $answer == "y" ]; then
-        tempOne='~/klotsa/ABPs/run_sim/seeded_ss_cluster_random_distrib.py'
+        tempOne="$HOME/klotsa/ABPs/run_sim/seeded_ss_cluster_random_distrib.py"
         dont_run='no'
     else
         
@@ -64,7 +38,7 @@ else
         read answer
         
         if [ $answer == "y" ]; then
-            tempOne='~/klotsa/ABPs/run_sim/seeded_ss_cluster_fast_out_distrib.py'
+            tempOne="$HOME/klotsa/ABPs/run_sim/seeded_ss_cluster_fast_out_distrib.py"
             dont_run='no'
         else
     
@@ -72,7 +46,7 @@ else
             read answer
             
             if [ $answer == "y" ]; then
-                tempOne='~/klotsa/ABPs/run_sim/seeded_ss_cluster_slow_out_distrib.py'
+                tempOne="$HOME/klotsa/ABPs/run_sim/seeded_ss_cluster_slow_out_distrib.py"
                 dont_run='no'
             else
     
@@ -80,7 +54,7 @@ else
                 read answer
                 
                 if [ $answer == "y" ]; then
-                    tempOne='~/klotsa/ABPs/run_sim/seeded_ss_cluster_half_distrib.py'
+                    tempOne="$HOME/klotsa/ABPs/run_sim/seeded_ss_cluster_half_distrib.py"
                     dont_run='no'
                 else
                     dont_run='yes'
@@ -88,8 +62,6 @@ else
             fi
         fi
     fi
-    sedtype='gsed'
-    submit='sh'
 fi
 
 if [ $dont_run == "no" ]; then
