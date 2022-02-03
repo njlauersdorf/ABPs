@@ -5,7 +5,7 @@ this_path=$( pwd )
 
 
 hoomd_path="$HOME/hoomd-blue/build/"
-script_path="$HOME/klotsa/ABPs/run_sim/run_gpu.sh"
+
 
 echo "Are you running on Longleaf (y/n)?"
 read answer
@@ -13,9 +13,11 @@ read answer
 if [ $answer == "y" ]; then
     sedtype='sed'
     submit='sbatch'
+    script_path="$HOME/klotsa/ABPs/run_sim/run_gpu.sh"
 else
     sedtype='gsed'
     submit='sh'
+    script_path="$HOME/klotsa/ABPs/run_sim/run_local.sh"
 fi
 
 echo "Do you want random initial conditions (y/n)?"
