@@ -4,6 +4,22 @@
 #SBATCH --partition=gpu                     # partition to run on
 #SBATCH --time=11-00:00                     # time (D-HH:MM)
 
+echo $1
+echo $2
+echo $3
+echo $4
+echo $5
+echo $6
+echo $7
+echo $8
+echo $9
+echo ${10}
+echo ${11}
+echo ${12}
+echo ${13}
+echo ${14}
+echo ${15}
+
 inFile=$1  #Python template file 
 hoomdPath=$2  #Path to HOOMD (I hard-coded this into python file)
 gsdPath=$3  #Path you want to save the file (I manipulate this manually in python file)
