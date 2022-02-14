@@ -48,7 +48,7 @@ else
             read answer
             
             if [ $answer == "y" ]; then
-                tempOne="$HOME/klotsa/ABPs/run_sim/seeded_ss_cluster_slow_out_distrib.py"
+                tempOne="$HOME/klotsa/ABPs/run_sim/seeded_ss_cluster_slow_out_typ.py"
                 dont_run='no'
             else
     
@@ -74,8 +74,14 @@ if [ $dont_run == "no" ]; then
     # Lists for activity of A and B species
     #pa=(0 5 10 15 20 25 30 35 40 45 50)
     #pa=()
+<<<<<<< Updated upstream
     pa=(150 200 250 350 450)
     pb=(150 200 250 350 450)
+=======
+    pa=(0)
+    #(0 50 100 150 200 250 350 450)
+    pb=(500)
+>>>>>>> Stashed changes
     #(0 50 100 150 200 250 350 450)
     #pb=(50 500)
     # List for particle fraction
