@@ -505,7 +505,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
     f_box = box.Box(Lx=l_box, Ly=l_box, is2D=True)
     
     time_arr=np.zeros(dumps)                                  #time step array
-tSteps=np.linspace(0,dumps,dumps+1).astype(int)
+tSteps=np.linspace(100,dumps,dumps+1-100).astype(int)
 
 def lattice(p):
     j=int(p*time_step)
