@@ -3757,7 +3757,7 @@ def main():
     q = manager.Queue()
     print('cpu')
     print(mp.cpu_count())
-    pool = mp.Pool(8)
+    pool = mp.Pool(processes = mp.cpu_count(), maxtasksperchild=1)
 
     #put listener to work first
     watcher = pool.apply_async(listener, (q,))
