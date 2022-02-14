@@ -3752,10 +3752,6 @@ def listener(q):
 """
 def listener(q):
     '''listens for messages on the q, writes to file. '''
-    print('test2')
-    print(q)
-    print(type(q))
-    print(np.shape(q))
     with open(outPath2+outTxt_lat, 'a') as f:
         for i in range(0, len(q)):
             f.write('{0:.2f}'.format(q[i][0]).center(20) + ' ')
@@ -3770,6 +3766,7 @@ def listener(q):
             f.write('{0:.6f}'.format(q[i][9]).center(20) + ' ')
             f.write('{0:.6f}'.format(q[i][10]).center(20) + '\n')
             f.flush()
+tSteps=np.array([0, 1, 2, 3, 4, 5])
 def main():
     #must use Manager queue here, or will not work
     #manager = mp.Manager()
@@ -3777,7 +3774,7 @@ def main():
 
     #q = manager.Queue()
     with closing(mp.Pool(processes = mp.cpu_count(), maxtasksperchild=1)) as pool:
-
+        #mp.cpu_count()
         #put listener to work first
         watcher = pool.map_async(lattice, tSteps, callback=listener)
         watcher.wait()
