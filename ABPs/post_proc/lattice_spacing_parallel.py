@@ -3715,7 +3715,6 @@ def lattice(p):
     return_arr = [tst, sizeBin, np.amax(clust_size), lat_mean_bulk, lat_mean_int, lat_mean_bub, lat_mean_all, std_dev_bulk, std_dev_int, std_dev_bub, std_dev_all]
     return return_arr
     
-fn = '/Volumes/External/n100000test/temp.txt'
 def worker(arg, q):
     '''stupidly simulates long running process'''
     s = 'this is a test'
@@ -3726,6 +3725,7 @@ def worker(arg, q):
     res = return_arr[0], return_arr[1], return_arr[2], return_arr[3], return_arr[4], return_arr[5], return_arr[6], return_arr[7], return_arr[8], return_arr[9], return_arr[10]
     q.put(res)
     return res
+    
 def listener(q):
     '''listens for messages on the q, writes to file. '''
 
