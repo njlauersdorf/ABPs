@@ -44,6 +44,7 @@ from scipy.interpolate import interp1d
 from scipy import interpolate
 from scipy import ndimage
 
+from contextlib import closing
 import numpy as np
 import matplotlib
 
@@ -3725,7 +3726,7 @@ def worker(arg, q):
     res = return_arr[0], return_arr[1], return_arr[2], return_arr[3], return_arr[4], return_arr[5], return_arr[6], return_arr[7], return_arr[8], return_arr[9], return_arr[10]
     q.put(res)
     return res
-    
+"""
 def listener(q):
     '''listens for messages on the q, writes to file. '''
 
@@ -3748,7 +3749,53 @@ def listener(q):
             f.write('{0:.6f}'.format(m[9]).center(20) + ' ')
             f.write('{0:.6f}'.format(m[10]).center(20) + '\n')
             f.flush()
+"""
+def listener(q):
+    '''listens for messages on the q, writes to file. '''
+    print('test2')
+    print(q)
+    print(type(q))
+    print(np.shape(q))
+    with open(outPath2+outTxt_lat, 'a') as f:
+        for i in range(0, len(q)):
+            f.write('{0:.2f}'.format(q[i][0]).center(20) + ' ')
+            f.write('{0:.6f}'.format(q[i][1]).center(20) + ' ')
+            f.write('{0:.0f}'.format(q[i][2]).center(20) + ' ')
+            f.write('{0:.6f}'.format(q[i][3]).center(20) + ' ')
+            f.write('{0:.6f}'.format(q[i][4]).center(20) + ' ')
+            f.write('{0:.6f}'.format(q[i][5]).center(20) + ' ')
+            f.write('{0:.6f}'.format(q[i][6]).center(20) + ' ')
+            f.write('{0:.6f}'.format(q[i][7]).center(20) + ' ')
+            f.write('{0:.6f}'.format(q[i][8]).center(20) + ' ')
+            f.write('{0:.6f}'.format(q[i][9]).center(20) + ' ')
+            f.write('{0:.6f}'.format(q[i][10]).center(20) + '\n')
+            f.flush()
+def main():
+    #must use Manager queue here, or will not work
+    #manager = mp.Manager()
 
+
+    #q = manager.Queue()
+    with closing(mp.Pool(processes = mp.cpu_count(), maxtasksperchild=1)) as pool:
+
+        #put listener to work first
+        watcher = pool.map_async(lattice, tSteps, callback=listener)
+        watcher.wait()
+        #watcher = pool.apply_async(listener, (q,))
+
+        #fire off workers
+        #jobs = []
+        #for i in tSteps:
+        #    job = pool.apply_async(worker, (i, q))
+        #    jobs.append(job)
+        # collect results from the workers through the pool result queue
+        #for job in jobs:
+        #    job.get()
+
+        #now we are done, kill the listener
+        #q.put('kill')
+
+'''
 def main():
     #must use Manager queue here, or will not work
     manager = mp.Manager()
@@ -3774,7 +3821,7 @@ def main():
     #now we are done, kill the listener
     q.put('kill')
     pool.close()
-
+'''
 if __name__ == "__main__":
     main()
 
