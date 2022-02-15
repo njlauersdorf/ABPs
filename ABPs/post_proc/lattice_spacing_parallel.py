@@ -3766,14 +3766,14 @@ def listener(q):
             f.write('{0:.6f}'.format(q[i][9]).center(20) + ' ')
             f.write('{0:.6f}'.format(q[i][10]).center(20) + '\n')
             f.flush()
-tSteps=np.array([0, 1, 2, 3, 4, 5])
+tSteps=np.array([0, 1, 2, 3, 4, 5, 6, 7])
 def main():
     #must use Manager queue here, or will not work
     #manager = mp.Manager()
 
 
     #q = manager.Queue()
-    with closing(mp.Pool(processes = mp.cpu_count(), maxtasksperchild=1)) as pool:
+    with closing(mp.Pool(processes = 8, maxtasksperchild=1)) as pool:
         #mp.cpu_count()
         #put listener to work first
         watcher = pool.map_async(lattice, tSteps, callback=listener)
