@@ -3773,11 +3773,15 @@ def main():
 
 
     #q = manager.Queue()
-    with closing(mp.Pool(processes = 8, maxtasksperchild=1)) as pool:
+    #with closing(mp.Pool(processes = 8, maxtasksperchild=1)) as pool:
         #mp.cpu_count()
         #put listener to work first
-        watcher = pool.map_async(lattice, tSteps, callback=listener)
-        watcher.wait()
+        pool = mp.Pool(processes = mp.cpu_count(), maxtasksperchild=1)
+        
+        pool.map_async(lattice, tSteps, callback=listener)
+        #watcher.wait()
+        pool.close()
+        pool.join()
         #watcher = pool.apply_async(listener, (q,))
 
         #fire off workers
