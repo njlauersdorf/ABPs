@@ -3776,7 +3776,7 @@ def main():
     #with closing(mp.Pool(processes = 8, maxtasksperchild=1)) as pool:
         #mp.cpu_count()
         #put listener to work first
-        pool = mp.Pool(processes = 8, maxtasksperchild=1)
+        pool = mp.Pool(processes = mp.cpu_count(), maxtasksperchild=1)
         
         pool.map_async(lattice, tSteps, callback=listener)
         #watcher.wait()
