@@ -33,9 +33,17 @@ read time_step
 echo "What do you want to analyze?"
 read method
         
+echo "Do you want to use parallel processing, namely for lattice spacing (y/n)?"
+read parallel
+
 for file in $(ls *gsd)
 do
-
-    $submit $script_path/analyze_binary.sh $hoomd_path $txt_path $pic_path $vid_path $script_path $file $bin_size $time_step $method
+    if [ "$parallel" = "y" ]; then
+        $submit $script_path/analyze_binary_parallel.sh $hoomd_path $txt_path $pic_path $vid_path $script_path $file $bin_size $time_step $method
+    elif [ "$parallel" = "n" ]; then
+        $submit $script_path/analyze_binary.sh $hoomd_path $txt_path $pic_path $vid_path $script_path $file $bin_size $time_step $method
+    else
+        echo "did not recognize response to parallel processing"
+    fi
     
 done
