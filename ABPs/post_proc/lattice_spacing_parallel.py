@@ -3766,7 +3766,6 @@ def listener(q):
             f.write('{0:.6f}'.format(q[i][9]).center(20) + ' ')
             f.write('{0:.6f}'.format(q[i][10]).center(20) + '\n')
             f.flush()
-tSteps=np.linspace(0,60,60+1).astype(int)
 def main():
     #must use Manager queue here, or will not work
     #manager = mp.Manager()
