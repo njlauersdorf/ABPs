@@ -48,7 +48,50 @@ It is highly recommended one install's both HOOMD-Blue and this github repositor
 
 ### Step 1: Setting up your Mac to code
 
-First, navigate to the app store and install Xcode. You can use this as an IDE if you'd like. This should take a couple hours to install. While this is installing, navigate to anaconda.com to install Anaconda Individual Edition to get access to conda/miniconda. This will be used for installing hoomd/prerequisites. In addition, you can install Spyder through Anaconda for a different IDE. Open the Anaconda installer that was downloaded and follow the instructions. Once the Anaconda installation finishes, open it from your Applications and create a virtual environment.
+First, navigate to the app store and install Xcode. You can use this as an IDE if you'd like. This should take a couple hours to install. While this is installing, navigate to anaconda.com to install Anaconda Individual Edition to get access to conda/miniconda. This will be used for installing hoomd/prerequisites. In addition, you can install Spyder through Anaconda for a different IDE. Open the Anaconda installer that was downloaded and follow the instructions until the installation is complete. Once the installations for both Anaconda and Xcode finish (be sure Xcode installation is complete and has been launched at least once as Homebrew uses it), navigate to https://brew.sh and install Homebrew for your Mac. Per their webiste (though double check to be sure this command is up to date), open your Terminal and enter:
+
+```
+$ /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+```
+Once homebrew finishes its install, it's time to install BASH. In your Terminal, input:
+
+```
+brew install bash
+```
+
+
+
+
+Once the Anaconda installation finishes, open it from your Applications and create a virtual environment. Navigate to your base (root) environment in the Environments tab. Select the "Installed" dropdown and change it to "Not installed". Scroll down until you come across the "bash" package. Mark the bash module for install and click "Apply" and accept the download. 
+
+Once the bash download is finished, it's time to switch your default shell from ZSH to BASH. To verify which shell you are using, enter:
+
+```
+$ echo $SHELL
+```
+
+If the terminal output reads: `/usr/local/bin/bash`, then you're good to go! However, if the terminal output reads: `/bin/zsh`, which is the default shell for Mac computers, you must follow the below lines to install BASH and make it your default profile.
+
+To do this on a mac, open your Terminal and in the command line, enter the following line to identify the path to your BASH install:
+
+```
+$ echo '/usr/local/bin/bash' | sudo tee -a /etc/shells;
+```
+
+After entering your administrator's password, your terminal should output:
+
+```
+$ /usr/local/bin/bash
+```
+
+Now, it's time to change your default operating shell from ZSH to BASH. Before we do that, we must locate your BASH install. with the following command:
+
+```
+$ chsh -s /usr/local/bin/bash
+```
+
+
 
 [Contribution guidelines for this project](docs/CONTRIBUTING.md)
 
@@ -59,7 +102,7 @@ First, navigate to the app store and install Xcode. You can use this as an IDE i
 Installing Prerequisites:
 
 BASH
-First, you must switch your computer's shell to BASH from ZSH. To do this on a mac, open your Terminal and in the command line, enter:
+To do this on a mac, open your Terminal and in the command line, enter:
 
 ```
 $ echo '/usr/local/bin/bash' | sudo tee -a /etc/shells;
