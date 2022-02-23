@@ -50,6 +50,9 @@ It is highly recommended one install's both HOOMD-Blue and this github repositor
 
 **For installation on local desktop:**
 
+Installing Prerequisites:
+
+BASH
 First, you must switch your computer's shell to BASH from ZSH. To do this on a mac, open your Terminal and in the command line, enter:
 
 ```
@@ -73,17 +76,21 @@ $ chsh -s /bin/bash
 ```
 Test your default shell as shown above. If it's now BASH, you are good to go! 
 
+Homebrew
+
+Following the instructions at https://brew.sh/, in your command line, simply type the following:
+
+```
+$ /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+
 Next, you need to make a virtual environment to install HOOMD prerequisite modules. To do this, download Anaconda. Open the Anaconda-Navigator and select 'create' under the listed environments. 
-
-
-
 
 Install prerequisites.
 ```
 $ cd ~
 $ bash
-$ source active [Virtual Environment]
-$ conda install -c conda-forge sphinx git openmpi numpy cmake clang
+$ conda install -c conda-forge sphinx git numpy cmake clang
 ```
 Download HOOMD-Blue version 2.9.7
 ```
@@ -98,7 +105,7 @@ Configure HOOMD-Blue. When configuring locally, be sure `-DENABLE_CUDA=OFF` in t
 $ cd hoomd-blue
 $ mkdir build
 $ cd build
-$ cmake ../ -DCMAKE_INSTALL_PREFIX=`python3 -c "import site; print(site.getsitepackages()[0])"` -DCMAKE_CXX_FLAGS=-march=native -DCMAKE_C_FLAGS=-march=native -DENABLE_CUDA=OFF -DENABLE_MPI=ON
+$ cmake ../ -DCMAKE_INSTALL_PREFIX=`python3 -c "import site; print(site.getsitepackages()[0])"` -DCMAKE_CXX_FLAGS=-march=native -DCMAKE_C_FLAGS=-march=native -DENABLE_CUDA=OFF -DENABLE_MPI=OFF
 ```
 Compile:
 ```
@@ -118,6 +125,7 @@ $ module add git/2.33.0 cmake/3.18.0 clang/6.0 ffmpeg/3.4 geos/3.8.1 cuda/10.1 g
 $ module save
 ```
 Download HOOMD-Blue version 2.9.7
+
 ```
 $ cd ~
 $ curl -O https://glotzerlab.engin.umich.edu/Downloads/hoomd/hoomd-v2.9.7.tar.gz
@@ -133,7 +141,7 @@ $ python3 -m venv /path/to/new/virtual/environment --system-site-packages
 $ source /path/to/new/virtual/environment/bin/activate
 $ source activate <virtual environment>
 ```
-Configure HOOMD-Blue. When configuring on cluster, be sure `-DENABLE_CUDA=ON` in the `cmake` tags as you will be using GPUs. When configuring locally, let `-DENABLE_MPI=ON` in the `cmake` tags.
+Configure HOOMD-Blue. When configuring on cluster, be sure `-DENABLE_CUDA=ON` in the `cmake` tags as you will be using GPUs.
 ```
 $ cd hoomd-blue
 $ mkdir build
