@@ -46,7 +46,11 @@ A list of technologies used within the project:
 
 It is highly recommended one install's both HOOMD-Blue and this github repository in their user's home directory due to the pathing in the analysis files. Furthermore, this installation instruction and github repository is intended for use with HOOMD v2.9.7. This is not the most recent version. There is a beta release for v3.0.0. A large number of changes were made for how one submits simulations. The post processing should work similarly, however, simulation submission files need to be adjusted for use on newer HOOMD versions. One should reference the guide for the newest version (https://hoomd-blue.readthedocs.io/en/latest/) to determine how these submission files need to be modified.
 
-### Anaconda
+### Step 1: Setting up your Mac to code
+
+First, navigate to the app store and install Xcode. You can use this as an IDE if you'd like. This should take a couple hours to install. While this is installing, navigate to anaconda.com to install Anaconda Individual Edition to get access to conda/miniconda. This will be used for installing hoomd/prerequisites. In addition, you can install Spyder through Anaconda for a different IDE. Open the Anaconda installer that was downloaded and follow the instructions. Once the Anaconda installation finishes, open it from your Applications and create a virtual environment.
+
+[Contribution guidelines for this project](docs/CONTRIBUTING.md)
 
 ### HOOMD-Blue
 
