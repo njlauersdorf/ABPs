@@ -125,6 +125,14 @@ $ module avail
 $ module add git/2.33.0 cmake/3.18.0 clang/6.0 ffmpeg/3.4 geos/3.8.1 cuda/10.1 gcc/6.3.0 python/3.5.1
 $ module save
 ```
+
+Make it so HOOMD-Blue can find the correct Python later by changing the aliases to that on a Mac. This makes running uniform code much easier. Navigate to your .bash_profile and be sure it reads:
+```
+# User specific environment and startup programs
+alias python='/usr/bin/python2.7'
+alias python3='/usr/bin/python3.5'
+```
+
 Download HOOMD-Blue version 2.9.7
 
 ```
