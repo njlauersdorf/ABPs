@@ -115,7 +115,7 @@ Next, you need to make a virtual environment via Anaconda to install HOOMD prere
 $ cd ~
 $ bash
 $ source activate [virtual environment name]
-$ conda install -c conda-forge sphinx git numpy cmake clang openmpi gsd numpy matplotlib yaml llvm ipython gsd pybind11 eigen
+$ conda install -c conda-forge sphinx git numpy cmake clang openmpi gsd numpy matplotlib yaml llvm ipython gsd pybind11 eigen ffmpeg
 $ conda install -c anaconda conda-package-handling
 $ conda install -c omnia eigen3
 $ conda install -c conda-forge hoomd
