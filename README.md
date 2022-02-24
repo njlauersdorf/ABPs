@@ -48,12 +48,12 @@ It is highly recommended one install's both HOOMD-Blue and this github repositor
 
 ### Step 1: Setting up your Mac to code
 
-First, navigate to the app store and install Xcode. You can use this as an IDE if you'd like. This should take a couple hours to install. While this is installing, navigate to anaconda.com to install Anaconda Individual Edition to get access to conda/miniconda. This will be used for installing hoomd/prerequisites. In addition, you can install Spyder through Anaconda for a different IDE. Open the Anaconda installer that was downloaded and follow the instructions until the installation is complete. Once the installations for both Anaconda and Xcode finish (be sure Xcode installation is complete and has been launched at least once as Homebrew uses it), navigate to https://brew.sh and install Homebrew for your Mac. Per their webiste (though double check to be sure this command is up to date), open your Terminal and enter:
+First, navigate to the app store and install Xcode. You can use this as an IDE if you'd like. This should take a couple hours to install. While this is installing, navigate to anaconda.com to install Anaconda Individual Edition to get access to conda/miniconda. This will be used for installing hoomd/prerequisites. In addition, you can install Spyder through Anaconda for a different IDE. Open the Anaconda installer that was downloaded and follow the instructions until the installation is complete. Once the installations for both Anaconda and Xcode finish (be sure Xcode installation is complete and has been launched at least once as Homebrew uses it and it can help identify the Xcode command line tools, which are needed for Homebrew), navigate to https://brew.sh and install Homebrew for your Mac. Per their website (though double check to be sure this command is up to date), open your Terminal and enter:
 
 ```
 $ /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-
 ```
+
 Once homebrew finishes its install, it's time to install BASH. In your Terminal, input:
 
 ```
