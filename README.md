@@ -177,7 +177,7 @@ $ cmake ../ -DCMAKE_INSTALL_PREFIX=`python3 -c "import site; print(site.getsitep
 You can enter the following to enter a GUI to better see and verify that HOOMD was compiled properly. Namely, be sure MPI and CUDA were both identified. 
 
 ```
-ccmake .
+$ ccmake .
 ```
 
 If everything looks good, build HOOMD: 
@@ -200,7 +200,7 @@ Since we built locally on a Mac OS computer and, in turn, do not have CUDA suppo
 Login to Longleaf with SSH using your ONYEN as your username:
 
 ```
-ssh username@longleaf.unc.edu
+$ ssh username@longleaf.unc.edu
 ```
 
 If this is your first time loggin in from this computer, enter 'yes' to the prompt of remoting into a new computer. Then, type your password (current password for your ONYEN) and press enter. You will log into a log-in node located in your user's folder within the `/nas` directory. This is your home directory (`cd ~`). 
@@ -279,7 +279,7 @@ $ CC=gcc CXX=g++ cmake ../ -DCMAKE_INSTALL_PREFIX=`python3 -c "import site; prin
 You can enter the following to enter a GUI to better see and verify that HOOMD was compiled properly. Namely, be sure MPI and CUDA were both identified and that the CMAKE_INSTALL_PREFIX is equal to the path to your virtual environment's python3. 
 
 ```
-ccmake .
+$ ccmake .
 ```
 
 If everything looks good, you can either press 't' to enter advanced mode or 'q' to leave the GUI. Next, build HOOMD: 
@@ -299,7 +299,7 @@ I had a 51% pass rate. It is likely MPI is not linked properly for these tests, 
 Finally, install HOOMD-Blue into your Python environment:
 
 ```
-cmake install
+$ cmake install
 ```
 
 Before running HOOMD-Blue, be sure you always have `source ~/virtual_envs/hoomd297/bin/activate` included at the beginning of any bash scripts.
