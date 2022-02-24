@@ -125,6 +125,8 @@ $ conda install -c omnia eigen3
 
 ### Prerequisites
 
+### HOOMD-Blue
+
 #### Local install via conda
 
 This only works on your local computer. One downside to this is that if you need to compile anything special (i.e. the compile/cmake commands), you can't modify them.
