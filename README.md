@@ -234,12 +234,14 @@ or
 $ cd ~
 $ git clone --recursive https://github.com/glotzerlab/hoomd-blue
 ```
+
 Create and activate virtual environment for compiling HOOMD-Blue
 ```
-$ python3 -m venv /path/to/new/virtual/environment --system-site-packages
+$ pyvenv --system-site-packages /path/to/new/virtual/environment
 $ source /path/to/new/virtual/environment/bin/activate
 $ source activate <virtual environment>
 ```
+
 Configure HOOMD-Blue. When configuring on cluster, be sure `-DENABLE_CUDA=ON` in the `cmake` tags as you will be using CUDA-supported GPUs and MPI is enabled, allowing for use of a message passing interface for parallel programming.
 
 ```
