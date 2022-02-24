@@ -60,7 +60,13 @@ While Xcode is installing, navigate to anaconda.com to install Anaconda Individu
 $ /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 ```
 
-Once homebrew finishes its install, it's time to set the default shell to BASH. Select the apple symbol>System Preferences>Users & Groups. Click the lock and verify your account password to enable changes. Right click on your user and select Advanced Options. Under Login Shell, click the dropdown arrow and see if /bin/bash is available. If so, select it and press OK. Your default shell is now set to BASH, so any newly opened Terminal windows will operate with BASH. To verify which shell you are using, enter:
+Once homebrew finishes its install, install a few prerequisites with it:
+
+```
+brew install gnu-sed
+```
+
+Now, it's time to set the default shell to BASH. Select the apple symbol>System Preferences>Users & Groups. Click the lock and verify your account password to enable changes. Right click on your user and select Advanced Options. Under Login Shell, click the dropdown arrow and see if /bin/bash is available. If so, select it and press OK. Your default shell is now set to BASH, so any newly opened Terminal windows will operate with BASH. To verify which shell you are using, enter:
 
 ```
 $ echo $SHELL
@@ -103,15 +109,7 @@ The output should read similar to above. If you open the new Terminal window and
 
 **For installation on local desktop:**
 
-Once the Anaconda installation finishes, open it from your Applications and create a virtual environment. Navigate to your base (root) environment in the Environments tab. Select the "Installed" dropdown and change it to "Not installed". Scroll down until you come across the "bash" package. Mark the bash module for install and click "Apply" and accept the download. 
-
-Once the bash download is finished, it's time to switch your default shell from ZSH to BASH. To verify which shell you are using, enter:
-
-```
-$ echo $SHELL
-```
-
-Next, you need to make a virtual environment to install HOOMD prerequisite modules. To do this, download Anaconda. Open the Anaconda-Navigator and select 'create' under the listed environments. Enter a name for your environment and select Python 3.5.6 for your Python version (which is the same as on Longleaf). After your environment is created, open a terminal and download the HOOMD pre-requisites into this environment:
+Next, you need to make a virtual environment via Anaconda to install HOOMD prerequisite modules. To do this, download Anaconda. Open the Anaconda-Navigator and select 'create' under the listed environments. Enter a name for your environment and select Python 3.8.1 for your Python version (which is the same as on Longleaf). If this is not offered at the time of creating your virtual environment, downgrade afterwards. After your environment is created, open a terminal and download the HOOMD pre-requisites into this environment:
 
 ```
 $ cd ~
@@ -120,65 +118,20 @@ $ source activate [virtual environment name]
 $ conda install -c conda-forge sphinx git numpy cmake clang openmpi gsd numpy matplotlib yaml llvm ipython gsd pybind11 eigen
 $ conda install -c anaconda conda-package-handling
 $ conda install -c omnia eigen3
+$ conda install -c conda-forge hoomd
 ```
 
-Download HOOMD-Blue version 2.9.7
-```
-$ curl -O https://glotzerlab.engin.umich.edu/Downloads/hoomd/hoomd-v2.9.7.tar.gz
-```
-
-or you can run the following command to download the most recent version of HOOMD-Blue (v3.0.0 beta at the time of writing this). This download instruction and github is designed to be used for HOOMD-Blue version 2.9.7. If you use the following command:
+All done! That was easy! This conda command will configure HOOMD-Blue v2.9.7 for your computer. You can skip to the section titled "Setting Up Github" to test your HOOMD-Blue install. Simply clone the directory or download a ZIP file and unzip it. Run a HOOMD simulation by entering in your Terminal window:
 
 ```
-$ git clone --recursive https://github.com/glotzerlab/hoomd-blue
+$ bash
+$ source activate [virtual environment name]
+$ sh /Path/to/Klotsa/ABPs/runPeloopBinaryCluster.sh
 ```
 
-These instructions and git repository will not fully apply due to large modifications in HOOMD-Blue's prerequisites and how it is run. If you chose the former, proceed with these instructions by untarring the downloaded folder:
+Once the Brownian equilibration starts, you can close the Terminal window to cancel the run. A full simulation should work fine.
 
-```
-$ tar -xzvf hoomd-v2.9.7.tar.gz
-```
-
-Configure HOOMD-Blue. When configuring locally, be sure `-DENABLE_CUDA=OFF` in the `cmake` tags. When configuring locally, you installed Open MPI, let `-DENABLE_MPI=ON` in the `cmake` tags, allowing for use of a message passing interface for parallel programming.
-
-```
-$ cd hoomd-v2.9.7
-$ mkdir build
-$ cd build
-$ cmake ../ -DCMAKE_INSTALL_PREFIX=`python3 -c "import site; print(site.getsitepackages()[0])"` -DCMAKE_CXX_FLAGS=-march=native -DCMAKE_C_FLAGS=-march=native -DENABLE_CUDA=OFF -DENABLE_MPI=ON
-```
-
-Compile:
-
-```
-$ make -j4
-```
-
-Test your build. Since we built locally on a Mac OS computer and, in turn, do not have CUDA support, many tests will fail due to the requirement of a GPU.
-```
-$ ctest
-```
-
-[Contribution guidelines for this project](docs/CONTRIBUTING.md)
-
-### HOOMD-Blue
-
-**For installation on local desktop:**
-
-
-
-Configure HOOMD-Blue. When configuring locally, be sure `-DENABLE_CUDA=OFF` in the `cmake` tags. When configuring locally, you installed Open MPI, let `-DENABLE_MPI=ON` in the `cmake` tags, allowing for use of a message passing interface for parallel programming.
-
-```
-$ cd hoomd-blue
-$ mkdir build
-$ cd build
-$ cmake ../ -DCMAKE_INSTALL_PREFIX=`python3 -c "import site; print(site.getsitepackages()[0])"` -DCMAKE_CXX_FLAGS=-march=native -DCMAKE_C_FLAGS=-march=native -DENABLE_CUDA=OFF -DENABLE_MPI=ON
-```
-
-
-
-**For installation on computing cluster (i.e. UNC's Longleaf):**
+**For HOOMD installation on computing cluster (i.e. UNC's Longleaf):**
 
 Install and save prerequisites to future logins on cluster.
 ```
@@ -194,13 +147,89 @@ alias python='/usr/bin/python2.7'
 alias python3='/usr/bin/python3.5'
 ```
 
+[Contribution guidelines for this project](docs/CONTRIBUTING.md)
+
+**For installation on computing cluster (i.e. UNC's Longleaf):**
+
+Login to Longleaf with SSH using your ONYEN as your username:
+
+```
+ssh username@longleaf.unc.edu
+```
+
+If this is your first time loggin in from this computer, enter 'yes' to the prompt of remoting into a new computer. Then, type your password (current password for your ONYEN) and press enter. You will log into a log-in node located in your user's folder within the `/nas` directory. This is your home directory (`cd ~`).
+
+
+Install and save prerequisites to future logins on cluster.
+```
+$ module avail
+$ module add git/2.33.0 cmake/3.18.0 clang/6.0 ffmpeg/3.4 geos/3.8.1 cuda/10.1 gcc/6.3.0 python/3.5.1
+$ module save
+```
+
+For consistency with your local computer, make it so HOOMD-Blue can find the correct Python version by changing the aliases to that of a Mac by default. This makes writing code for both systems to be much easier and more uniform. If you are not already, navigate to your home directory and open your .bash_profile:
+
+```
+$ cd ~
+$ nano .bash_profile
+```
+
+Be sure it reads the following (and, if it does not, copy and paste it in at the bottom):
+
+```
+# User specific environment and startup programs
+alias python='/usr/bin/python2.7'
+alias python3='/usr/bin/python3.5'
+```
+
+Download HOOMD-Blue version 2.9.7:
+
+```
+$ curl -O https://glotzerlab.engin.umich.edu/Downloads/hoomd/hoomd-v2.9.7.tar.gz
+```
+
+or you can run the following command to download the most recent version of HOOMD-Blue (v3.0.0 beta at the time of writing this). This download instruction and github is designed to be used for HOOMD-Blue version 2.9.7:
+
+```
+$ git clone --recursive https://github.com/glotzerlab/hoomd-blue
+```
+
+If you use the following command, these instructions and git repository will not fully apply due to large modifications in HOOMD-Blue's prerequisites and how it is run. If you chose the former, proceed with these instructions by untarring the downloaded folder:
+
+```
+$ tar -xzvf hoomd-v2.9.7.tar.gz
+```
+
+Configure HOOMD-Blue. When configuring locally, be sure `-DENABLE_CUDA=OFF` in the `cmake` tags. When configuring locally, you installed Open MPI, let `-DENABLE_MPI=ON` in the `cmake` tags, allowing for use of a message passing interface for parallel programming.
+
+```
+$ cd hoomd-v2.9.7
+$ mkdir build
+$ cd build
+$ cmake ../ -DCMAKE_INSTALL_PREFIX=`python3 -c "import site; print(site.getsitepackages()[0])"` -DCMAKE_CXX_FLAGS=-march=native -DCMAKE_C_FLAGS=-march=native -DENABLE_CUDA=ON -DENABLE_MPI=ON
+```
+
+Compile:
+
+```
+$ make -j4
+```
+
+Test your build. Since we built locally on a Mac OS computer and, in turn, do not have CUDA support, many tests will fail due to the requirement of a GPU.
+
+```
+$ ctest
+```
+
 Download HOOMD-Blue version 2.9.7
 
 ```
 $ cd ~
 $ curl -O https://glotzerlab.engin.umich.edu/Downloads/hoomd/hoomd-v2.9.7.tar.gz
 ```
+
 or
+
 ```
 $ cd ~
 $ git clone --recursive https://github.com/glotzerlab/hoomd-blue
@@ -212,17 +241,22 @@ $ source /path/to/new/virtual/environment/bin/activate
 $ source activate <virtual environment>
 ```
 Configure HOOMD-Blue. When configuring on cluster, be sure `-DENABLE_CUDA=ON` in the `cmake` tags as you will be using CUDA-supported GPUs and MPI is enabled, allowing for use of a message passing interface for parallel programming.
+
 ```
 $ cd hoomd-blue
 $ mkdir build
 $ cd build
 $ cmake ../ -DCMAKE_INSTALL_PREFIX=`python3 -c "import site; print(site.getsitepackages()[0])"` -DCMAKE_CXX_FLAGS=-march=native -DCMAKE_C_FLAGS=-march=native -DENABLE_CUDA=ON -DENABLE_MPI=ON
 ```
+
 Compile:
+
 ```
 $ make -j4
 ```
+
 Test your build. Since we built locally and do not have CUDA support, many tests will fail due to the requirement of a GPU.
+
 ```
 $ ctest
 ```
@@ -230,6 +264,7 @@ $ ctest
 ### Setting up GitHub
 
 First, open your teerminal and navigate to your home directory and start the ssh-agent in the background:
+
 ```
 $ cd ~
 $ eval "$(ssh-agent -s)"
@@ -239,14 +274,18 @@ This should output:
 
 > Agent pid #####
 
-where ##### is some combination of integers.
+where ##### is some combination of integers. Depending on your environment, you may need to use a different command. For example, you may need to use root access by running sudo -s -H before starting the ssh-agent, or you may need to use exec ssh-agent bash or exec ssh-agent zsh to run the ssh-agent.
 
 
-Next, generate an ssh key with either of the following command while replacing your_email@example.com with the email you used for your Github profile:
+Next, generate an ssh key with either of the following command while replacing your_email@example.com held within the quotations (do not remove quotation marks!) with the email you used for your Github profile. The former command is intended for non-legacy systems (i.e. macOS Monterrey):
 
 ```
 $ ssh-keygen -t ed25519 -C "your_email@example.com"
 ```
+
+If you are using a non-legacy system (i.e. macOS Monterrey), you will see the following output:
+
+> Generating public/private ed25519 key pair.
 
 If you are using a legacy system that doesn't support the Ed25519 algorithm you will get an output that reads:
 
@@ -258,25 +297,15 @@ If that's the case, instead, use:
 $ ssh-keygen -t rsa -b 4096 -C "your_email@example.com"
 ```
 
-For me, either of these would read: 
-
-```
-$ ssh-keygen -t ed25519 -C "njlauersdorf@wisc.edu"
-```
-or
-```
-$ ssh-keygen -t rsa -b 4096 -C "njlauersdorf@wisc.edu"
-```
-
 Upon the succesful creation of an ssh key, the terminal should output: 
 
 > Generating public/private rsa key pair.
 
 and proceed with the following prompt: 
 
-> Enter a file in which to save the key (/Users/you/.ssh/id_rsa):
+> Enter a file in which to save the key (/Users/you/.ssh/id_XXX):
 
-I always just press the enter key and the ssh-keycode is generated in the default file location (/Users/you/.ssh/id_rsa). Alternatively, you can choose your own location in the /Users/you/.ssh folder. After responding to the above prompt, two more prompts will appear:
+XXX is replaced with the type of keypair you generated in the previous step. I always just press the enter key and the ssh-keycode is generated in the default file location, which is /Users/you/.ssh/id_rsa for the latter method (rsa key pair) or /Users/you/.ssh/id_ed25519 (ed25519 key pair). For now on, id_XXX will refer to either id_rsa or id_ed25519 depending on which key generation option you used. Alternatively, you can choose your own location in the /Users/you/.ssh folder. After responding to the above prompt, two more prompts will appear:
 
 > Enter passphrase (empty for no passphrase): [Type a passphrase]
 > Enter same passphrase again: [Type passphrase again]
@@ -285,17 +314,11 @@ Similar to the prompt before, I simply press enter for both of these prompts and
 
 ##### Adding your SSH key to the ssh-agent
 
-Now that you have your ssh-keycode, you will want to save it in your ssh-agent. Start the ssh-agent in the background with the following prompt:
+Now that you have your ssh-keycode, you will want to save it in your ssh-agent. Start the ssh-agent in the background again with the following prompt:
 
 ```
 $ eval "$(ssh-agent -s)"
 ```
-
-The terminal will output prompt like the following:
-
-> Agent pid 59566
-
-Depending on your environment, you may need to use a different command. For example, you may need to use root access by running sudo -s -H before starting the ssh-agent, or you may need to use exec ssh-agent bash or exec ssh-agent zsh to run the ssh-agent.
 
 Next, we have to verify the existence and contents of your ~/.ssh/config file.  
 
@@ -304,7 +327,7 @@ $ cd ~/.ssh
 $ ls
 ```
 
-if you do not see the config file, create one:
+If you do not see the config file, create one:
 
 ```
 $ touch ~/.ssh/config
@@ -316,12 +339,15 @@ Since you have a config file now, you want to open the file and modify its conte
 $ open ~/.ssh/config
 ```
 
-Make sure the config file reads. If it does not, copy and paste these lines into your file, ensuring that the lines under `Host *` are indented. Furthermore, if you chose not to add a passphrase to your key, you should omit the UseKeychain line. If you created your key with a different name, or if you are adding an existing key that has a different name, replace id_rsa in the command with the name of your private key file.
+Make sure the config file reads:
+
 
 >Host *
 >  AddKeysToAgent yes
 >  UseKeychain yes
->  IdentityFile ~/.ssh/id_rsa
+>  IdentityFile ~/.ssh/id_XXX
+
+If it does not, copy and paste these lines into your file, ensuring that the lines under `Host *` are indented. Furthermore, if you chose not to add a passphrase to your key, you can choose to omit the UseKeychain line. Be sure to replace id_XXX in the command with the name of your private key file generated earlier.
 
 You may also choose to add additional lines such that your config file reads:
 
@@ -330,7 +356,7 @@ You may also choose to add additional lines such that your config file reads:
 >  ServerAliveCountMax 30
 >  AddKeysToAgent yes
 >  UseKeychain yes
->  IdentityFile ~/.ssh/id_rsa
+>  IdentityFile ~/.ssh/id_XXX
   
 These two additional lines refresh your connection to github (when uploading files) in case you have a large amount of data to upload or else the link to github will be automatically broken after a short amount of time.
 
@@ -343,10 +369,11 @@ Then you want to add the following line to your config file indented under `Host
 ```
 IgnoreUnknown AddKeysToAgent,UseKeychain
 ```
-That line was necessary for Longleaf, but was not necessary for setting up Github on my local computer. Now, add your SSH private key to the ssh-agent and store your passphrase in the keychain. If you created your key with a different name, or if you are adding an existing key that has a different name, replace id_rsa in the command with the name of your private key file.
+
+For me, that line was necessary for Longleaf, but was not necessary for setting up Github on my local computer. Now, add your SSH private key to the ssh-agent and store your passphrase in the keychain. Be sure to replace id_XXX in the command with the name of your private key file.
   
 ```
-$ ssh-add -K ~/.ssh/id_rsa
+$ ssh-add -K ~/.ssh/id_XXX
 ```
 
 The -K option is Apple's standard version of ssh-add, which stores the passphrase in your keychain for you when you add an SSH key to the ssh-agent. If you chose not to add a passphrase to your key, run the command without the `-K` option. In MacOS Monterey (12.0), the -K and -A flags are deprecated and have been replaced by the --apple-use-keychain and --apple-load-keychain flags, respectively.
@@ -355,21 +382,22 @@ Finally, now that you have the ssh-key fully set up on your local computer or on
 
 Next, is where Longleaf deviates from a local computer. On your local computer, copy the contents of the file to your clipboard that you saved your ssh-keycode in by inputting the following into your terminal (for a mac):
 ```
-$ pbcopy < ~/.ssh/id_rsa.pub
+$ pbcopy < ~/.ssh/id_XXX.pub
 ```
 If you want to set up your Github profile on Longleaf, simply download the file that you saved your ssh-keycode in to your local computer:
 
 ```
-$ scp username@longleaf.unc.edu:~/.ssh/id_rsa.pub /~/Desktop/
+$ scp username@longleaf.unc.edu:~/.ssh/id_XXX.pub /~/Desktop/
 ```
 
 Then, copy the contents of this file to your clipboard:
 
 ```
-$ pbcopy < ~/Desktop/id_rsa.pub
+$ pbcopy < ~/Desktop/id_XXX.pub
 ```
 
-With your ssh-key in your clipboard, navigate and login to Github. In the upper-right corner of any page, click your profile photo, then click Settings. In the user settings sidebar, click SSH and GPG keys. Click New SSH key or Add SSH key. In the "Title" field, add a descriptive label for the new key. For example, if you're using a personal Mac, you might call this key "Personal MacBook Air". Paste your key into the "Key" field. Click Add SSH key.
+With your ssh-key in your clipboard, navigate and login to Github. In the upper-right corner of any page, click your profile photo, then click Settings. In the user settings sidebar, click SSH and GPG keys. Click New SSH key or Add SSH key. In the "Title" field, add a descriptive label for the new key. For example, if you're using a personal Mac, you might call this key "Personal MacBook Air". Paste your key into the "Key" field. Click Add SSH key. Now you can clone and upload to that repository.
+
 > 
 #### Local installation
 To set up github, first navigate to your home directory
