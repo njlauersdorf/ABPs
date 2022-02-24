@@ -199,7 +199,14 @@ ssh username@longleaf.unc.edu
 
 If this is your first time loggin in from this computer, enter 'yes' to the prompt of remoting into a new computer. Then, type your password (current password for your ONYEN) and press enter. You will log into a log-in node located in your user's folder within the `/nas` directory. This is your home directory (`cd ~`). 
 
-If you run your compile in the /nas directory, you will run it in your login node which can have memory limitations. Modify your ~/.bashrc file to enable quick login to a compile node (you can use one without graphics for compilation) for these steps, although you can also login to a GPU node. Put these commands in your .bashrc so that I have easy access to different options:
+If you run your compile in the /nas directory, you will run it in your login node which can have memory limitations. Modify your ~/.bashrc file to enable quick login to a compile node (you can use one without graphics for compilation) for these steps, although you can also login to a GPU node:
+
+```
+$ cd ~
+$ nano .bashrc
+```
+
+copy and paste these commands at the bottom of your .bashrc file so that I have easy access to different options:
 
 ```
 alias sinteractive="srun -t 8:00:00 -p interact -N 1 --mem=6G --x11=first --pty /bin/bash"
@@ -217,22 +224,7 @@ $ module save
 $ module list
 ```
 
-For consistency with your local computer, make it so HOOMD-Blue can find the correct Python version by changing the aliases to that of a Mac by default. This makes writing code for both systems to be much easier and more uniform. If you are not already, navigate to your home directory and open your .bash_profile:
-
-```
-$ cd ~
-$ nano .bash_profile
-```
-
-Make it so HOOMD-Blue can find the correct Python later by changing the aliases to that on a Mac. This makes running uniform code much easier. Navigate to your .bash_profile and be sure it reads:
-
-```
-# User specific environment and startup programs
-alias python='/usr/bin/python2.7'
-alias python3='/usr/bin/python3.5'
-```
-
-If not, copy and paste it at the bottom. Create a python virtual environment to load everything into with 'install' command later. 
+Create a python virtual environment to load everything into with 'install' command later. 
 
 ```
 $ cd ~
@@ -241,15 +233,10 @@ $ python3 -m venv virtual_envs/hoomd297
 $ source ~/virtual_envs/hoomd297/bin/activate
 ```
 
-An alternative to the above commands for creating a virtual environment are:
-```
-$ pyvenv --system-site-packages /path/to/new/virtual/environment
-$ source /path/to/new/virtual/environment/bin/activate
-```
-
 Next, download HOOMD-Blue version 2.9.7:
 
 ```
+$ cd ~
 $ curl -O https://glotzerlab.engin.umich.edu/Downloads/hoomd/hoomd-v2.9.7.tar.gz
 ```
 
@@ -265,38 +252,55 @@ If you use the following command, these instructions and git repository will not
 $ tar -xzvf hoomd-v2.9.7.tar.gz
 ```
 
-Configure HOOMD-Blue. When configuring on cluster, be sure `-DENABLE_CUDA=ON` and `-DENABLE_CUDA=ON` in the `cmake` tags. The former enables use of CUDA-enabled GPUs for very quick simulations. The latter enables use of MPI, allowing for use of a message passing interface for parallel programming.
+Configure HOOMD-Blue. First, activate a compile node for more memory. After you get the compile node, re-activate your virtual environment and ensure the python3 is pathed to your virtual environment's python3 before compiling:
 
 ```
 $ sinteractivecompile
+$ source ~/virtual_envs/hoomd297/bin/activate
+$ which python3
+~/virtual_envs/hoomd297/bin/python3
+```
+
+Next, compile the build. When configuring on cluster, be sure `-DENABLE_CUDA=ON` and `-DENABLE_CUDA=ON` in the `cmake` tags. The former enables use of CUDA-enabled GPUs for very quick simulations. The latter enables use of MPI, allowing for use of a message passing interface for parallel programming. The `CC=gcc CXX=g++` prefix specify your compilers. 
+
+```
 $ cd hoomd-v2.9.7
 $ mkdir build
 $ cd build
 $ CC=gcc CXX=g++ cmake ../ -DCMAKE_INSTALL_PREFIX=`python3 -c "import site; print(site.getsitepackages()[0])"` -DCMAKE_CXX_FLAGS=-march=native -DCMAKE_C_FLAGS=-march=native -DENABLE_CUDA=ON -DENABLE_MPI=ON
 ```
 
-You can enter the following to enter a GUI to better see and verify that HOOMD was compiled properly. Namely, be sure MPI and CUDA were both identified. 
+You can enter the following to enter a GUI to better see and verify that HOOMD was compiled properly. Namely, be sure MPI and CUDA were both identified and that the CMAKE_INSTALL_PREFIX is equal to the path to your virtual environment's python3. 
 
 ```
 ccmake .
 ```
 
-If everything looks good, build HOOMD: 
+If everything looks good, you can either press 't' to enter advanced mode or 'q' to leave the GUI. Next, build HOOMD: 
 
 ```
 $ cmake --build ./ -j4
 ```
 
-Test your build, first, exit the compile node, claim a gpu node, and use the built-in test command
+Test your build, first, exit the compile node, claim a gpu node, re-activate your virtual environment, and use the built-in test command.
 
 ```
 $ exit
 $ cd ~/hoomd-v2.9.7/build
 $ sinteractivevolta
+$ source ~/virtual_envs/hoomd297/bin/activate
 $ ctest
 ```
 
-Since we have both MPI and CUDA enabled, most tests should pass, however, a few still fail. That's not a big deal.
+I had a 51% pass rate. It is likely MPI is not linked properly for these tests, so a similar pass rate should be fine. Since we have both MPI and CUDA enabled, most tests should pass, however, a few still fail. That's not a big deal.
+
+Finally, install HOOMD-Blue into your Python environment:
+
+```
+cmake install
+```
+
+Before running HOOMD-Blue, be sure you always have `source ~/virtual_envs/hoomd297/bin/activate` included at the beginning of any bash scripts.
 
 ### Setting up GitHub
 
