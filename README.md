@@ -48,20 +48,60 @@ It is highly recommended one install's both HOOMD-Blue and this github repositor
 
 ### Step 1: Setting up your Mac to code
 
-First, navigate to the app store and install Xcode. You can use this as an IDE if you'd like. This should take a couple hours to install. While this is installing, navigate to anaconda.com to install Anaconda Individual Edition to get access to conda/miniconda. This will be used for installing hoomd/prerequisites. In addition, you can install Spyder through Anaconda for a different IDE. Open the Anaconda installer that was downloaded and follow the instructions until the installation is complete. Once the installations for both Anaconda and Xcode finish (be sure Xcode installation is complete and has been launched at least once as Homebrew uses it and it can help identify the Xcode command line tools, which are needed for Homebrew), navigate to https://brew.sh and install Homebrew for your Mac. Per their website (though double check to be sure this command is up to date), open your Terminal and enter:
+First, navigate to the app store and install Xcode. You can use this as an IDE if you'd like. This should take a couple hours to install. You can skip to the next step of installing Anaconda while it installs. Once Xcode installation is complete, open Xcode and agree to the license agreement. Alternatively, in a Terminal window, you can run: 
+
+```
+sudo xcodebuild -license
+```
+
+While Xcode is installing, navigate to anaconda.com to install Anaconda Individual Edition to get access to conda/miniconda. This will be used for installing hoomd/prerequisites. In addition, you can install Spyder through Anaconda for a different IDE. Open the Anaconda installer that was downloaded and follow the instructions until the installation is complete. Once the installations for both Anaconda and Xcode finish (be sure Xcode installation is complete and has been launched at least once as Homebrew uses it and it can help identify the Xcode command line tools, which are needed for Homebrew), navigate to https://brew.sh and install Homebrew for your Mac. Per their website (though double check to be sure this command is up to date), open your Terminal and enter:
 
 ```
 $ /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 ```
 
-Once homebrew finishes its install, it's time to install BASH. In your Terminal, input:
+Once homebrew finishes its install, it's time to set the default shell to BASH. Select the apple symbol>System Preferences>Users & Groups. Click the lock and verify your account password to enable changes. Right click on your user and select Advanced Options. Under Login Shell, click the dropdown arrow and see if /bin/bash is available. If so, select it and press OK. Your default shell is now set to BASH, so any newly opened Terminal windows will operate with BASH. To verify which shell you are using, enter:
+
+```
+$ echo $SHELL
+```
+
+If the terminal output reads: `/usr/local/bin/bash`, then you're good to go! However, if the terminal output reads: `/bin/zsh`, which is the default shell for Mac computers, or you do not see /bin/bash as an option, you must follow the below lines to install BASH and make it your default shell. In your Terminal, input:
 
 ```
 brew install bash
 ```
 
+Locate the new bash installation, which is probably either `/usr/local/bin/bash` or `/bin/bash`. To do this on a mac, open your Terminal and in the command line, enter the following line to identify the path to your BASH install:
 
+```
+$ echo '/path/to/bash' | sudo tee -a /etc/shells;
+```
 
+After entering your administrator's password, your terminal should output:
+
+```
+$ /path/to/bash
+```
+
+Now, it's time to change your default operating shell from ZSH to BASH with the following command:
+
+```
+$ chsh -s /path/to/bash
+```
+
+Now, open a new Terminal window and enter:
+
+```
+$ echo $SHELL
+/path/to/bash
+$ echo $BASH_VERSION
+X.X.XX(X)-release
+```
+
+The output should read similar to above. If you open the new Terminal window and see a [Process completed] in the output line and are unable to type anything, the shell/path to shell that you changed to does not exist. You must navigate to Apple icon>System Preferences>Users & Groups and follow the instructions above for changing your shell from the currently non-existent path back to the default `/bin/zsh` shell. Then, you must find the correct path to the BASH install and try again.
+
+**For installation on local desktop:**
 
 Once the Anaconda installation finishes, open it from your Applications and create a virtual environment. Navigate to your base (root) environment in the Environments tab. Select the "Installed" dropdown and change it to "Not installed". Scroll down until you come across the "bash" package. Mark the bash module for install and click "Apply" and accept the download. 
 
@@ -71,27 +111,53 @@ Once the bash download is finished, it's time to switch your default shell from 
 $ echo $SHELL
 ```
 
-If the terminal output reads: `/usr/local/bin/bash`, then you're good to go! However, if the terminal output reads: `/bin/zsh`, which is the default shell for Mac computers, you must follow the below lines to install BASH and make it your default profile.
-
-To do this on a mac, open your Terminal and in the command line, enter the following line to identify the path to your BASH install:
+Next, you need to make a virtual environment to install HOOMD prerequisite modules. To do this, download Anaconda. Open the Anaconda-Navigator and select 'create' under the listed environments. Enter a name for your environment and select Python 3.5.6 for your Python version (which is the same as on Longleaf). After your environment is created, open a terminal and download the HOOMD pre-requisites into this environment:
 
 ```
-$ echo '/usr/local/bin/bash' | sudo tee -a /etc/shells;
+$ cd ~
+$ bash
+$ source activate [virtual environment name]
+$ conda install -c conda-forge sphinx git numpy cmake clang openmpi gsd numpy matplotlib yaml llvm ipython gsd pybind11 eigen
+$ conda install -c anaconda conda-package-handling
+$ conda install -c omnia eigen3
 ```
 
-After entering your administrator's password, your terminal should output:
-
+Download HOOMD-Blue version 2.9.7
 ```
-$ /usr/local/bin/bash
-```
-
-Now, it's time to change your default operating shell from ZSH to BASH. Before we do that, we must locate your BASH install. with the following command:
-
-```
-$ chsh -s /usr/local/bin/bash
+$ curl -O https://glotzerlab.engin.umich.edu/Downloads/hoomd/hoomd-v2.9.7.tar.gz
 ```
 
+or you can run the following command to download the most recent version of HOOMD-Blue (v3.0.0 beta at the time of writing this). This download instruction and github is designed to be used for HOOMD-Blue version 2.9.7. If you use the following command:
 
+```
+$ git clone --recursive https://github.com/glotzerlab/hoomd-blue
+```
+
+These instructions and git repository will not fully apply due to large modifications in HOOMD-Blue's prerequisites and how it is run. If you chose the former, proceed with these instructions by untarring the downloaded folder:
+
+```
+$ tar -xzvf hoomd-v2.9.7.tar.gz
+```
+
+Configure HOOMD-Blue. When configuring locally, be sure `-DENABLE_CUDA=OFF` in the `cmake` tags. When configuring locally, you installed Open MPI, let `-DENABLE_MPI=ON` in the `cmake` tags, allowing for use of a message passing interface for parallel programming.
+
+```
+$ cd hoomd-v2.9.7
+$ mkdir build
+$ cd build
+$ cmake ../ -DCMAKE_INSTALL_PREFIX=`python3 -c "import site; print(site.getsitepackages()[0])"` -DCMAKE_CXX_FLAGS=-march=native -DCMAKE_C_FLAGS=-march=native -DENABLE_CUDA=OFF -DENABLE_MPI=ON
+```
+
+Compile:
+
+```
+$ make -j4
+```
+
+Test your build. Since we built locally on a Mac OS computer and, in turn, do not have CUDA support, many tests will fail due to the requirement of a GPU.
+```
+$ ctest
+```
 
 [Contribution guidelines for this project](docs/CONTRIBUTING.md)
 
@@ -99,56 +165,8 @@ $ chsh -s /usr/local/bin/bash
 
 **For installation on local desktop:**
 
-Installing Prerequisites:
 
-BASH
-To do this on a mac, open your Terminal and in the command line, enter:
 
-```
-$ echo '/usr/local/bin/bash' | sudo tee -a /etc/shells;
-$ chsh -s /usr/local/bin/bash
-```
-
-Close your current terminal window and open a new one. To verify it worked, enter the following two lines. You should see similar outputs as shown below:
-
-```
-$ echo $SHELL
-/usr/local/bin/bash
-$ echo $BASH_VERSION
-4.2.37(2)-release
-```
-
-Note, you should not see a path which ends in /zsh. However, if you do, your default shell is still ZSH, then perform the alternate steps noted here. First, close and reopen the command window. Then, input the following line: 
-
-```
-$ chsh -s /bin/bash
-```
-Test your default shell as shown above. If it's now BASH, you are good to go! 
-
-Homebrew
-
-Following the instructions at https://brew.sh/, in your command line, simply type the following:
-
-```
-$ /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-```
-
-Next, you need to make a virtual environment to install HOOMD prerequisite modules. To do this, download Anaconda. Open the Anaconda-Navigator and select 'create' under the listed environments. 
-
-Install prerequisites.
-```
-$ cd ~
-$ bash
-$ conda install -c conda-forge sphinx git numpy cmake clang
-```
-Download HOOMD-Blue version 2.9.7
-```
-$ curl -O https://glotzerlab.engin.umich.edu/Downloads/hoomd/hoomd-v2.9.7.tar.gz
-```
-or
-```
-$ git clone --recursive https://github.com/glotzerlab/hoomd-blue
-```
 Configure HOOMD-Blue. When configuring locally, be sure `-DENABLE_CUDA=OFF` in the `cmake` tags. When configuring locally, you installed Open MPI, let `-DENABLE_MPI=ON` in the `cmake` tags, allowing for use of a message passing interface for parallel programming.
 
 ```
@@ -157,14 +175,8 @@ $ mkdir build
 $ cd build
 $ cmake ../ -DCMAKE_INSTALL_PREFIX=`python3 -c "import site; print(site.getsitepackages()[0])"` -DCMAKE_CXX_FLAGS=-march=native -DCMAKE_C_FLAGS=-march=native -DENABLE_CUDA=OFF -DENABLE_MPI=ON
 ```
-Compile:
-```
-$ make -j4
-```
-Test your build. Since we built locally and do not have CUDA support, many tests will fail due to the requirement of a GPU.
-```
-$ ctest
-```
+
+
 
 **For installation on computing cluster (i.e. UNC's Longleaf):**
 
