@@ -123,7 +123,9 @@ $ conda install -c anaconda conda-package-handling
 $ conda install -c omnia eigen3
 ```
 
-### Local install via conda
+### Prerequisites
+
+#### Local install via conda
 
 This only works on your local computer. One downside to this is that if you need to compile anything special (i.e. the compile/cmake commands), you can't modify them.
 
@@ -141,7 +143,7 @@ $ sh /Path/to/Klotsa/ABPs/runPeloopBinaryCluster.sh
 
 Once the Brownian equilibration starts, you can close the Terminal window to cancel the run. A full simulation should work fine.
 
-### Local install via source
+#### Local install via source
 
 See the next section for installing HOOMD-Blue via source on the cluster. First, download HOOMD-Blue version 2.9.7:
 
@@ -191,7 +193,7 @@ $ ctest
 
 Since we built locally on a Mac OS computer and, in turn, do not have CUDA support, many tests will fail due to the requirement of a GPU.
 
-### Cluster install via source
+#### Cluster install via source
 
 Login to Longleaf with SSH using your ONYEN as your username:
 
