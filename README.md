@@ -107,7 +107,6 @@ X.X.XX(X)-release
 
 The output should read similar to above. If you open the new Terminal window and see a [Process completed] in the output line and are unable to type anything, the shell/path to shell that you changed to does not exist. You must navigate to Apple icon>System Preferences>Users & Groups and follow the instructions above for changing your shell from the currently non-existent path back to the default `/bin/zsh` shell. Then, you must find the correct path to the BASH install and try again.
 
-**For installation on local desktop:**
 
 Next, you need to make a virtual environment via Anaconda to install HOOMD prerequisite modules. To do this, download Anaconda. Open the Anaconda-Navigator and select 'create' under the listed environments. Enter a name for your environment and select Python 3.8.1 for your Python version (which is the same as on Longleaf). If this is not offered at the time of creating your virtual environment, downgrade afterwards. After your environment is created, open a terminal and download the HOOMD pre-requisites into this environment:
 
@@ -118,6 +117,13 @@ $ source activate [virtual environment name]
 $ conda install -c conda-forge sphinx git numpy cmake clang openmpi gsd numpy matplotlib yaml llvm ipython gsd pybind11 eigen ffmpeg
 $ conda install -c anaconda conda-package-handling
 $ conda install -c omnia eigen3
+```
+
+**Option 1: Conda installation (for installation on local desktop only!):**
+
+One downside to this is that if you need to compile anything special (i.e. the compile/cmake commands), you can't modify them.
+
+```
 $ conda install -c conda-forge hoomd
 ```
 
@@ -131,58 +137,9 @@ $ sh /Path/to/Klotsa/ABPs/runPeloopBinaryCluster.sh
 
 Once the Brownian equilibration starts, you can close the Terminal window to cancel the run. A full simulation should work fine.
 
-**For HOOMD installation on computing cluster (i.e. UNC's Longleaf):**
+**For HOOMD installation using source (local computer):**
 
-Install and save prerequisites to future logins on cluster.
-```
-$ module avail
-$ module add git/2.33.0 cmake/3.18.0 clang/6.0 ffmpeg/3.4 geos/3.8.1 cuda/10.1 gcc/6.3.0 python/3.5.1
-$ module save
-```
-
-Make it so HOOMD-Blue can find the correct Python later by changing the aliases to that on a Mac. This makes running uniform code much easier. Navigate to your .bash_profile and be sure it reads:
-```
-# User specific environment and startup programs
-alias python='/usr/bin/python2.7'
-alias python3='/usr/bin/python3.5'
-```
-
-[Contribution guidelines for this project](docs/CONTRIBUTING.md)
-
-**For installation on computing cluster (i.e. UNC's Longleaf):**
-
-Login to Longleaf with SSH using your ONYEN as your username:
-
-```
-ssh username@longleaf.unc.edu
-```
-
-If this is your first time loggin in from this computer, enter 'yes' to the prompt of remoting into a new computer. Then, type your password (current password for your ONYEN) and press enter. You will log into a log-in node located in your user's folder within the `/nas` directory. This is your home directory (`cd ~`).
-
-
-Install and save prerequisites to future logins on cluster.
-```
-$ module avail
-$ module add git/2.33.0 cmake/3.18.0 clang/6.0 ffmpeg/3.4 geos/3.8.1 cuda/10.1 gcc/6.3.0 python/3.5.1
-$ module save
-```
-
-For consistency with your local computer, make it so HOOMD-Blue can find the correct Python version by changing the aliases to that of a Mac by default. This makes writing code for both systems to be much easier and more uniform. If you are not already, navigate to your home directory and open your .bash_profile:
-
-```
-$ cd ~
-$ nano .bash_profile
-```
-
-Be sure it reads the following (and, if it does not, copy and paste it in at the bottom):
-
-```
-# User specific environment and startup programs
-alias python='/usr/bin/python2.7'
-alias python3='/usr/bin/python3.5'
-```
-
-Download HOOMD-Blue version 2.9.7:
+First, download HOOMD-Blue version 2.9.7:
 
 ```
 $ curl -O https://glotzerlab.engin.umich.edu/Downloads/hoomd/hoomd-v2.9.7.tar.gz
@@ -200,24 +157,117 @@ If you use the following command, these instructions and git repository will not
 $ tar -xzvf hoomd-v2.9.7.tar.gz
 ```
 
-Configure HOOMD-Blue. When configuring locally, be sure `-DENABLE_CUDA=OFF` in the `cmake` tags. When configuring locally, you installed Open MPI, let `-DENABLE_MPI=ON` in the `cmake` tags, allowing for use of a message passing interface for parallel programming.
+Configure HOOMD-Blue. When configuring locally, be sure `-DENABLE_CUDA=OFF` and `-DENABLE_MPI=OFF` in the `cmake` tags. 
 
 ```
 $ cd hoomd-v2.9.7
 $ mkdir build
 $ cd build
-$ cmake ../ -DCMAKE_INSTALL_PREFIX=`python3 -c "import site; print(site.getsitepackages()[0])"` -DCMAKE_CXX_FLAGS=-march=native -DCMAKE_C_FLAGS=-march=native -DENABLE_CUDA=ON -DENABLE_MPI=ON
+$ cmake ../ -DCMAKE_INSTALL_PREFIX=`python3 -c "import site; print(site.getsitepackages()[0])"` -DCMAKE_CXX_FLAGS=-march=native -DCMAKE_C_FLAGS=-march=native -DENABLE_CUDA=OFF -DENABLE_MPI=OFF
 ```
 
-Compile:
+
+If you're on your local computer, install the prerequisites as shown above with Conda.
+
+
+[Contribution guidelines for this project](docs/CONTRIBUTING.md)
+
+**For installation on computing cluster (i.e. UNC's Longleaf):**
+
+Login to Longleaf with SSH using your ONYEN as your username:
 
 ```
-$ make -j4
+ssh username@longleaf.unc.edu
+```
+
+If this is your first time loggin in from this computer, enter 'yes' to the prompt of remoting into a new computer. Then, type your password (current password for your ONYEN) and press enter. You will log into a log-in node located in your user's folder within the `/nas` directory. This is your home directory (`cd ~`). 
+
+If you run your compile in the /nas directory, you will run it in your login node which can have memory limitations. Modify your ~/.bashrc file to enable quick login to a compile node (you can use one without graphics for compilation) for these steps, although you can also login to a GPU node. Put these commands in your .bashrc so that I have easy access to different options:
+
+```
+alias sinteractive="srun -t 8:00:00 -p interact -N 1 --mem=6G --x11=first --pty /bin/bash"
+alias sinteractivecompile="srun --ntasks=1 --cpus-per-task=8 --mem=8G --time=8:00:00 --pty /bin/bash"
+alias sinteractivegpu="srun --ntasks=1 --cpus-per-task=8 --mem=8G --time=8:00:00 --partition=gpu --gres=gpu:1 --qos=gpu_access --pty /bin/bash"
+alias sinteractivevolta="srun --ntasks=1 --cpus-per-task=8 --mem=8G --time=8:00:00 --partition=volta-gpu --gres=gpu:1 --qos=gpu_access --pty /bin/bash"
+```
+
+Install prerequisite modules and save them for future logins on cluster. These are the versions I have currently installed, but you can install the most recent versions as well.
+
+```
+$ module avail
+$ module add git/2.33.0 cmake/3.18.0 clang/6.0 ffmpeg/3.4 geos/3.8.1 cuda/10.1 gcc/6.3.0 python/3.5.1
+$ module save
+$ module list
+```
+
+For consistency with your local computer, make it so HOOMD-Blue can find the correct Python version by changing the aliases to that of a Mac by default. This makes writing code for both systems to be much easier and more uniform. If you are not already, navigate to your home directory and open your .bash_profile:
+
+```
+$ cd ~
+$ nano .bash_profile
+```
+
+Make it so HOOMD-Blue can find the correct Python later by changing the aliases to that on a Mac. This makes running uniform code much easier. Navigate to your .bash_profile and be sure it reads:
+
+```
+# User specific environment and startup programs
+alias python='/usr/bin/python2.7'
+alias python3='/usr/bin/python3.5'
+```
+
+Create a python virtual environment to load everything into with 'install' command later. 
+
+```
+$ cd ~
+$ mkdir virtual_envs
+$ python3 -m venv virtual_envs/hoomd297
+$ source ~/virtual_envs/hoomd297/bin/activate
+```
+
+If not, copy and paste it at the bottom. Next, download HOOMD-Blue version 2.9.7:
+
+```
+$ curl -O https://glotzerlab.engin.umich.edu/Downloads/hoomd/hoomd-v2.9.7.tar.gz
+```
+
+or you can run the following command to download the most recent version of HOOMD-Blue (v3.0.0 beta at the time of writing this). This download instruction and github is designed to be used for HOOMD-Blue version 2.9.7:
+
+```
+$ git clone --recursive https://github.com/glotzerlab/hoomd-blue
+```
+
+If you use the following command, these instructions and git repository will not fully apply due to large modifications in HOOMD-Blue's prerequisites and how it is run. If you chose the former, proceed with these instructions by untarring the downloaded folder:
+
+```
+$ tar -xzvf hoomd-v2.9.7.tar.gz
+```
+
+Configure HOOMD-Blue. When configuring on cluster, be sure `-DENABLE_CUDA=ON` and `-DENABLE_CUDA=ON` in the `cmake` tags. The former enables use of CUDA-enabled GPUs for very quick simulations. The latter enables use of MPI, allowing for use of a message passing interface for parallel programming.
+
+```
+$ sinteractivecompile
+$ cd hoomd-v2.9.7
+$ mkdir build
+$ cd build
+$ CC=gcc CXX=g++ cmake ../ -DCMAKE_INSTALL_PREFIX=`python3 -c "import site; print(site.getsitepackages()[0])"` -DCMAKE_CXX_FLAGS=-march=native -DCMAKE_C_FLAGS=-march=native -DENABLE_CUDA=ON -DENABLE_MPI=ON
+```
+
+You can enter the following to enter a GUI to better see and verify that HOOMD was compiled properly. Namely, be sure MPI and CUDA were both identified. 
+
+```
+ccmake .
+```
+
+If everything looks good, build HOOMD: 
+
+```
+$ cmake --build ./ -j4
 ```
 
 Test your build. Since we built locally on a Mac OS computer and, in turn, do not have CUDA support, many tests will fail due to the requirement of a GPU.
 
 ```
+$ sinteractivegpu
 $ ctest
 ```
 
