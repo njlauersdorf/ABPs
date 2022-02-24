@@ -166,9 +166,26 @@ $ cd build
 $ cmake ../ -DCMAKE_INSTALL_PREFIX=`python3 -c "import site; print(site.getsitepackages()[0])"` -DCMAKE_CXX_FLAGS=-march=native -DCMAKE_C_FLAGS=-march=native -DENABLE_CUDA=OFF -DENABLE_MPI=OFF
 ```
 
+You can enter the following to enter a GUI to better see and verify that HOOMD was compiled properly. Namely, be sure MPI and CUDA were both identified. 
 
-If you're on your local computer, install the prerequisites as shown above with Conda.
+```
+ccmake .
+```
 
+If everything looks good, build HOOMD: 
+
+```
+$ cmake --build ./ -j4
+```
+
+Test your build, first, exit the compile node, claim a gpu node, and use the built-in test command
+
+```
+$ cd ~/hoomd-v2.9.7/build
+$ ctest
+```
+
+Since we built locally on a Mac OS computer and, in turn, do not have CUDA support, many tests will fail due to the requirement of a GPU.
 
 [Contribution guidelines for this project](docs/CONTRIBUTING.md)
 
@@ -215,7 +232,7 @@ alias python='/usr/bin/python2.7'
 alias python3='/usr/bin/python3.5'
 ```
 
-Create a python virtual environment to load everything into with 'install' command later. 
+If not, copy and paste it at the bottom. Create a python virtual environment to load everything into with 'install' command later. 
 
 ```
 $ cd ~
@@ -224,7 +241,13 @@ $ python3 -m venv virtual_envs/hoomd297
 $ source ~/virtual_envs/hoomd297/bin/activate
 ```
 
-If not, copy and paste it at the bottom. Next, download HOOMD-Blue version 2.9.7:
+An alternative to the above commands for creating a virtual environment are:
+```
+$ pyvenv --system-site-packages /path/to/new/virtual/environment
+$ source /path/to/new/virtual/environment/bin/activate
+```
+
+Next, download HOOMD-Blue version 2.9.7:
 
 ```
 $ curl -O https://glotzerlab.engin.umich.edu/Downloads/hoomd/hoomd-v2.9.7.tar.gz
@@ -264,54 +287,16 @@ If everything looks good, build HOOMD:
 $ cmake --build ./ -j4
 ```
 
-Test your build. Since we built locally on a Mac OS computer and, in turn, do not have CUDA support, many tests will fail due to the requirement of a GPU.
+Test your build, first, exit the compile node, claim a gpu node, and use the built-in test command
 
 ```
-$ sinteractivegpu
+$ exit
+$ cd ~/hoomd-v2.9.7/build
+$ sinteractivevolta
 $ ctest
 ```
 
-Download HOOMD-Blue version 2.9.7
-
-```
-$ cd ~
-$ curl -O https://glotzerlab.engin.umich.edu/Downloads/hoomd/hoomd-v2.9.7.tar.gz
-```
-
-or
-
-```
-$ cd ~
-$ git clone --recursive https://github.com/glotzerlab/hoomd-blue
-```
-
-Create and activate virtual environment for compiling HOOMD-Blue
-```
-$ pyvenv --system-site-packages /path/to/new/virtual/environment
-$ source /path/to/new/virtual/environment/bin/activate
-$ source activate <virtual environment>
-```
-
-Configure HOOMD-Blue. When configuring on cluster, be sure `-DENABLE_CUDA=ON` in the `cmake` tags as you will be using CUDA-supported GPUs and MPI is enabled, allowing for use of a message passing interface for parallel programming.
-
-```
-$ cd hoomd-blue
-$ mkdir build
-$ cd build
-$ cmake ../ -DCMAKE_INSTALL_PREFIX=`python3 -c "import site; print(site.getsitepackages()[0])"` -DCMAKE_CXX_FLAGS=-march=native -DCMAKE_C_FLAGS=-march=native -DENABLE_CUDA=ON -DENABLE_MPI=ON
-```
-
-Compile:
-
-```
-$ make -j4
-```
-
-Test your build. Since we built locally and do not have CUDA support, many tests will fail due to the requirement of a GPU.
-
-```
-$ ctest
-```
+Since we have both MPI and CUDA enabled, most tests should pass, however, a few still fail. That's not a big deal.
 
 ### Setting up GitHub
 
