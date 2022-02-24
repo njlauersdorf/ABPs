@@ -7,8 +7,12 @@
    - [General Info](#general-info)
    - [Technologies](#technologies)
    - [Installation](#installation)
+     - [Prerequisites](#prerequisites)
      - [HOOMD-Blue](#HOOMD-Blue)
-     - [Klotsa Github Repository](#Klotsa-Github-Repository)
+       - [Local install via conda](#local-install-via-conda)
+       - [Local install via source](#local-install-via-source)
+       - [Cluster install via source](#cluster-install-via-source)
+     - [Github](#Github)
    - [Running Code](#running-code)
      - [Submitting Simulations](#Submitting-Simulations)
      - [Submitting Post-Processing](#Submitting-Post-Processing)
@@ -46,7 +50,7 @@ A list of technologies used within the project:
 
 It is highly recommended one install's both HOOMD-Blue and this github repository in their user's home directory due to the pathing in the analysis files. Furthermore, this installation instruction and github repository is intended for use with HOOMD v2.9.7. This is not the most recent version. There is a beta release for v3.0.0. A large number of changes were made for how one submits simulations. The post processing should work similarly, however, simulation submission files need to be adjusted for use on newer HOOMD versions. One should reference the guide for the newest version (https://hoomd-blue.readthedocs.io/en/latest/) to determine how these submission files need to be modified.
 
-### Step 1: Setting up your Mac to code
+### Prerequisites
 
 First, navigate to the app store and install Xcode. You can use this as an IDE if you'd like. This should take a couple hours to install. You can skip to the next step of installing Anaconda while it installs. Once Xcode installation is complete, open Xcode and agree to the license agreement. Alternatively, in a Terminal window, you can run: 
 
@@ -119,15 +123,15 @@ $ conda install -c anaconda conda-package-handling
 $ conda install -c omnia eigen3
 ```
 
-**Option 1: Conda installation (for installation on local desktop only!):**
+### Local install via conda
 
-One downside to this is that if you need to compile anything special (i.e. the compile/cmake commands), you can't modify them.
+This only works on your local computer. One downside to this is that if you need to compile anything special (i.e. the compile/cmake commands), you can't modify them.
 
 ```
 $ conda install -c conda-forge hoomd
 ```
 
-All done! That was easy! This conda command will configure HOOMD-Blue v2.9.7 for your computer. You can skip to the section titled "Setting Up Github" to test your HOOMD-Blue install. Simply clone the directory or download a ZIP file and unzip it. Run a HOOMD simulation by entering in your Terminal window:
+All done! That was easy! This conda command will configure HOOMD-Blue v2.9.7 for your computer. You can skip to the section titled "Setting Up Github" to test your HOOMD-Blue install. Simply clone the directory or download a ZIP file and unzip it. Run a HOOMD simulation by entering the following in your Terminal window:
 
 ```
 $ bash
@@ -137,9 +141,9 @@ $ sh /Path/to/Klotsa/ABPs/runPeloopBinaryCluster.sh
 
 Once the Brownian equilibration starts, you can close the Terminal window to cancel the run. A full simulation should work fine.
 
-**For HOOMD installation using source (local computer):**
+### Local install via source
 
-First, download HOOMD-Blue version 2.9.7:
+See the next section for installing HOOMD-Blue via source on the cluster. First, download HOOMD-Blue version 2.9.7:
 
 ```
 $ curl -O https://glotzerlab.engin.umich.edu/Downloads/hoomd/hoomd-v2.9.7.tar.gz
@@ -187,9 +191,7 @@ $ ctest
 
 Since we built locally on a Mac OS computer and, in turn, do not have CUDA support, many tests will fail due to the requirement of a GPU.
 
-[Contribution guidelines for this project](docs/CONTRIBUTING.md)
-
-**For installation on computing cluster (i.e. UNC's Longleaf):**
+### Cluster install via source
 
 Login to Longleaf with SSH using your ONYEN as your username:
 
@@ -255,7 +257,7 @@ $ tar -xzvf hoomd-v2.9.7.tar.gz
 Configure HOOMD-Blue. First, activate a compile node for more memory. After you get the compile node, re-activate your virtual environment and ensure the python3 is pathed to your virtual environment's python3 before compiling:
 
 ```
-$ sinteractivecompile
+$ sinteractivevolta
 $ source ~/virtual_envs/hoomd297/bin/activate
 $ which python3
 ~/virtual_envs/hoomd297/bin/python3
@@ -282,17 +284,13 @@ If everything looks good, you can either press 't' to enter advanced mode or 'q'
 $ cmake --build ./ -j4
 ```
 
-Test your build, first, exit the compile node, claim a gpu node, re-activate your virtual environment, and use the built-in test command.
+To test your build use the built-in test command.
 
 ```
-$ exit
-$ cd ~/hoomd-v2.9.7/build
-$ sinteractivevolta
-$ source ~/virtual_envs/hoomd297/bin/activate
 $ ctest
 ```
 
-I had a 51% pass rate. It is likely MPI is not linked properly for these tests, so a similar pass rate should be fine. Since we have both MPI and CUDA enabled, most tests should pass, however, a few still fail. That's not a big deal.
+I had a 51% pass rate. It is likely MPI is not linked properly for these tests, so a similar pass rate should be fine. Since we have both MPI and CUDA enabled, more tests should pass than our local build.
 
 Finally, install HOOMD-Blue into your Python environment:
 
@@ -302,7 +300,7 @@ cmake install
 
 Before running HOOMD-Blue, be sure you always have `source ~/virtual_envs/hoomd297/bin/activate` included at the beginning of any bash scripts.
 
-### Setting up GitHub
+### Github
 
 First, open your teerminal and navigate to your home directory and start the ssh-agent in the background:
 
@@ -382,7 +380,6 @@ $ open ~/.ssh/config
 
 Make sure the config file reads:
 
-
 >Host *
 >  AddKeysToAgent yes
 >  UseKeychain yes
@@ -439,14 +436,13 @@ $ pbcopy < ~/Desktop/id_XXX.pub
 
 With your ssh-key in your clipboard, navigate and login to Github. In the upper-right corner of any page, click your profile photo, then click Settings. In the user settings sidebar, click SSH and GPG keys. Click New SSH key or Add SSH key. In the "Title" field, add a descriptive label for the new key. For example, if you're using a personal Mac, you might call this key "Personal MacBook Air". Paste your key into the "Key" field. Click Add SSH key. Now you can clone and upload to that repository.
 
-> 
-#### Local installation
-To set up github, first navigate to your home directory
-####Klotsa github repository
+After doing the above steps for setting up Github, you can download this current github by navigate to your home directory then entering the command below.
 ```
 $ cd ~
 $ git clone https://github.com/njlauersdorf/klotsa.git
 ```
+
+Now you're ready to run some code! 
 
 ## Running Code
 This github project utilizes bash scripts to read in user's desired measurement/simulation type, select the desired python file to run (either for a simulation or post-processing) based on user input, and to read in the specified initial/system conditions into a template python file for a) post-processing of each .gsd file (simulation file) within the current directory or b) create a python file for instantiating a system and running that file to simulate each possible configuration of initial conditions inputted, which, in turn, outputs a .gsd file detailing the simulation at each time step.  
