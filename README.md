@@ -13,7 +13,6 @@
        - [Local install via source](#local-install-via-source)
        - [Cluster install via source](#cluster-install-via-source)
      - [Github](#Github)
-   - [Using Longleaf](#using-longleaf)
    - [Running Code](#running-code)
      - [Submitting Simulations](#Submitting-Simulations)
      - [Submitting Post-Processing](#Submitting-Post-Processing)
@@ -505,7 +504,6 @@ The bash file used to submit a simulation is /klotsa/ABPs/post_proc_binary.sh. T
 $ sh ~/klotsa/ABPs/post_proc_binary.sh
 ```
    
-   
 Upon submitting this bash file, three folders will be created: /MM_DD_YYYY_txt_files, /MM_DD_YYYY_pic_files, and /MM_DD_YYYY_vid_files, where they store the outputted .txt, .png, and .mp4 files respectively for all post-processing scripts started on that date (MM/DD/YYYY). In addition, there will be prompts to specify a few analytical details, such as:
    
 > What is your bin size?
@@ -517,6 +515,20 @@ Upon submitting this bash file, three folders will be created: /MM_DD_YYYY_txt_f
    
 where it seeks the length of the bin for meshing the system (typically 5), the time step size to be analyzed (always 1 unless we care about velocity), and our post-processing method. A second bash script will be submitted for each .gsd file in the current directory where this information is passed to. There, a python post-processing file will be ran on each .gsd file separately that corresponds to our response to the third prompt. These post processing files typically output a series of .png files for each frame and a .txt file (located in the /MM_DD_YYYY_txt_files_folder) compiling certain information at each time step. Once the python script finishes running, the second bash file will compile each series of .png files (located in the /MM_DD_YYYY_pic_files folder) into a .mp4 (located in the /MM_DD_YYYY_vid_files folder). The bash script will proceed to delete all .png files that were created by that post-processing script. Therefore, what we're left with will always be .mp4 files. or.txt files unless an error occurs. These .txt files are typically read into certain jupyter notebook scripts to analyze them averaged over time and to identify trends over our input parameters.
 
+If you'd like to download a file from Longleaf to your local computer, you can input:
+   
+```
+scp [ONYEN]@longleaf.unc.edu:/path/to/file ~/Desktop/
+```
+   
+which will download a single file based on its path from Longleaf to your local Desktop. If you want to download a whole folder, you can modify it as below:
+   
+```
+$ scp -r [ONYEN]@longleaf.unc.edu:/path/to/folder ~/Desktop/
+```
+
+where the -r signifies a recursive method since there are multiple files in the folder.
+   
 ## Collaboration
 
 To collaborate or ask questions, please contact me at: njlauers@live.unc.edu. If you wish to use any part of this package in your research, please supply my name in the acknowledgments or cite any of my publications.
