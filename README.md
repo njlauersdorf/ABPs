@@ -72,46 +72,19 @@ Once homebrew finishes its install, install a few prerequisites with it:
 brew install gnu-sed
 ```
 
-Now, it's time to set the default shell to BASH. Select the apple symbol>System Preferences>Users & Groups. Click the lock and verify your account password to enable changes. Right click on your user and select Advanced Options. Under Login Shell, click the dropdown arrow and see if /bin/bash is available. If so, select it and press OK. Your default shell is now set to BASH, so any newly opened Terminal windows will operate with BASH. To verify which shell you are using, enter:
+Now, it's time to set the default shell to BASH. Select the apple symbol>System Preferences>Users & Groups. Click the lock and verify your account password to enable changes. Right click on your user and select Advanced Options. Under Login Shell, click the dropdown arrow and see if /bin/bash is available. If so, select it and press OK. Your default shell is now set to BASH, so any newly opened Terminal windows will operate with BASH. Close your Terminal window and re-open a new one. To verify which shell you are using, enter:
 
 ```
 $ echo $SHELL
 ```
 
-If the terminal output reads: `/usr/local/bin/bash`, then you're good to go! You can skip to the step of creating a virtual environment via Anaconda below. However, if the terminal output reads: `/bin/zsh`, which is the default shell for Mac computers, or you do not see /bin/bash as an option, you must follow the below lines to install BASH and make it your default shell. In your Terminal, input:
+If the terminal output reads: `/usr/local/bin/bash`, then you're good to go! If you open the new Terminal window and see a [Process completed] in the output line and are unable to type anything, the shell/path to shell that you changed to does not exist. You must navigate to Apple icon>System Preferences>Users & Groups and follow the instructions above for changing your shell from the currently non-existent path back to the default `/bin/zsh` shell or try installing your own bash using:
 
 ```
 brew install bash
 ```
 
-Locate the new bash installation, which is probably either `/usr/local/bin/bash` or `/bin/bash`. To do this on a mac, open your Terminal and in the command line, enter the following line to identify the path to your BASH install:
-
-```
-$ echo '/path/to/bash' | sudo tee -a /etc/shells;
-```
-
-After entering your administrator's password, your terminal should output:
-
-```
-$ /path/to/bash
-```
-
-Now, it's time to change your default operating shell from ZSH to BASH with the following command:
-
-```
-$ chsh -s /path/to/bash
-```
-
-Now, open a new Terminal window and enter:
-
-```
-$ echo $SHELL
-/path/to/bash
-$ echo $BASH_VERSION
-X.X.XX(X)-release
-```
-
-The output should read similar to above. If you open the new Terminal window and see a [Process completed] in the output line and are unable to type anything, the shell/path to shell that you changed to does not exist. You must navigate to Apple icon>System Preferences>Users & Groups and follow the instructions above for changing your shell from the currently non-existent path back to the default `/bin/zsh` shell. Then, you must find the correct path to the BASH install and try again.
+and switching your default shell to that version's path.
 
 Next, you need to make a virtual environment via Anaconda to install HOOMD and its prerequisite modules. To do this, download Anaconda. Open the Anaconda-Navigator and select 'create' under the listed environments. Enter a name for your environment and select Python 3.8 for your Python version (which is the same as on Longleaf). After your environment is created, open a terminal and download the HOOMD pre-requisites into this environment:
 
@@ -215,7 +188,7 @@ Login to Longleaf with SSH using your ONYEN as your username:
 $ ssh username@longleaf.unc.edu
 ```
 
-If this is your first time loggin in from this computer, enter 'yes' to the prompt of remoting into a new computer. Then, type your password (current password for your ONYEN) and press enter. You will log into a log-in node located in your user's folder within the `/nas` directory. This is your home directory (`cd ~`). 
+If this is your first time logging in from this computer, enter 'yes' to the prompt of remoting into a new computer. Then, type your password (current password for your ONYEN) and press enter. You will log into a log-in node located in your user's folder within the `/nas` directory. This is your home directory (`cd ~`). 
 
 If you run your compile in the /nas directory, you will run it in your login node which can have memory limitations. Modify your ~/.bashrc file to enable quick login to a compile node (you can use one without graphics for compilation) for these steps, although you can also login to a GPU node:
 
@@ -242,13 +215,13 @@ $ module save
 $ module list
 ```
 
-Create a python virtual environment to load everything into with 'install' command later. 
+Create a python virtual environment to load everything into with 'install' command later. Make sure it is the same name as your local virtual environment for uniformity between your local HOOMD and the Longleaf HOOMD codes.
 
 ```
 $ cd ~
 $ mkdir virtual_envs
-$ python3 -m venv virtual_envs/hoomd297
-$ source ~/virtual_envs/hoomd297/bin/activate
+$ python3 -m venv virtual_envs/[virtual environment name]
+$ source ~/virtual_envs/[virtual environment name]/bin/activate
 ```
 
 Next, download HOOMD-Blue version 2.9.7:
@@ -258,7 +231,14 @@ $ cd ~
 $ curl -O https://glotzerlab.engin.umich.edu/Downloads/hoomd/hoomd-v2.9.7.tar.gz
 ```
 
-or you can run the following command to download the most recent version of HOOMD-Blue (v3.0.0 beta at the time of writing this). This download instruction and github is designed to be used for HOOMD-Blue version 2.9.7:
+Proceed by untarring the downloaded folder:
+
+```
+$ tar -xzvf hoomd-v2.9.7.tar.gz
+```
+
+
+or you can download via Github:
 
 ```
 $ git clone --recursive https://github.com/glotzerlab/hoomd-blue
@@ -266,12 +246,6 @@ $ cd hoomd-blue
 $ git fetch --all --tags
 $ git checkout tags/v2.9.7
 $ python3 ./install-prereq-headers.py
-```
-
-If you use the following command, these instructions and git repository will not fully apply due to large modifications in HOOMD-Blue's prerequisites and how it is run. If you chose the former, proceed with these instructions by untarring the downloaded folder:
-
-```
-$ tar -xzvf hoomd-v2.9.7.tar.gz
 ```
 
 Configure HOOMD-Blue. First, activate a compile node for more memory. After you get the compile node, re-activate your virtual environment and ensure the python3 is pathed to your virtual environment's python3 before compiling:
