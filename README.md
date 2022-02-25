@@ -275,7 +275,7 @@ Next, compile the build. When configuring on cluster, be sure `-DENABLE_CUDA=ON`
 $ cd hoomd-v2.9.7
 $ mkdir build
 $ cd build
-$ CC=gcc CXX=g++ cmake ../ -DCMAKE_INSTALL_PREFIX=`python3 -c "import site; print(site.getsitepackages()[0])"` -DCMAKE_CXX_FLAGS=-march=native -DCMAKE_C_FLAGS=-march=native -DENABLE_CUDA=ON -DENABLE_MPI=ON
+$ CC=gcc CXX=g++ cmake ../ -DCMAKE_INSTALL_PREFIX=`python3 -c "import site; print(site.getsitepackages()[0])"` -DCMAKE_CXX_FLAGS=-march=native -DCMAKE_C_FLAGS=-march=native -DENABLE_CUDA=ON -DENABLE_MPI=OFF
 ```
 
 You can enter the following to enter a GUI to better see and verify that HOOMD was compiled properly. Namely, be sure MPI and CUDA were both identified and that the CMAKE_INSTALL_PREFIX is equal to the path to your virtual environment's python3. 
@@ -298,7 +298,7 @@ To test your build use the built-in test command.
 $ ctest
 ```
 
-I had a 51% pass rate. It is likely MPI is not linked properly for these tests, so a similar pass rate should be fine. Since we have both MPI and CUDA enabled, more tests should pass than our local build.
+I had a 51% pass rate since MPI is active in our build, so a similar pass rate should be fine. Since we have CUDA enabled (but not MPI), more tests should pass than our local build.
 
 Finally, install HOOMD-Blue into your Python environment:
 
