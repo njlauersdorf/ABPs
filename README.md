@@ -94,6 +94,9 @@ $ bash
 $ source activate [virtual environment name]
 $ conda install -c conda-forge sphinx git numpy cmake clang openmpi gsd numpy matplotlib yaml llvm ipython gsd pybind11 eigen ffmpeg
 $ conda install -c anaconda conda-package-handling
+$ python3 -m pip install gsd
+$ python3 -m pip install freud-analysis
+$ python3 -m pip install shapely
 ```
 
 ### Prerequisites
@@ -222,6 +225,14 @@ $ cd ~
 $ mkdir virtual_envs
 $ python3 -m venv virtual_envs/[virtual environment name]
 $ source ~/virtual_envs/[virtual environment name]/bin/activate
+```
+
+Install some useful tools for HOOMD post-processing:
+
+```
+$ python3 -m pip install gsd
+$ python3 -m pip install freud-analysis
+$ python3 -m pip install shapely
 ```
 
 Next, download HOOMD-Blue version 2.9.7:
