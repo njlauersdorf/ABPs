@@ -290,7 +290,9 @@ You can enter the following to enter a GUI to better see and verify that HOOMD w
 $ ccmake .
 ```
 
-If everything looks good, you can either press 't' to enter advanced mode or 'q' to leave the GUI. Next, build HOOMD: 
+If everything looks good, you can either press 't' to enter advanced mode or 'q' to leave the GUI. If you need to modify something, you can enter your changes then proceed to press 'c', which outputs text. Once that's done, you can press 'e' then 'g'.
+
+Next, build HOOMD: 
 
 ```
 $ cmake --build ./ -j4
@@ -307,7 +309,7 @@ I had a 51% pass rate. It is likely MPI is not linked properly for these tests, 
 Finally, install HOOMD-Blue into your Python environment:
 
 ```
-$ cmake install
+$ cmake --install .
 ```
 
 Before running HOOMD-Blue, be sure you always have `source ~/virtual_envs/hoomd297/bin/activate` included at the beginning of any bash scripts.
