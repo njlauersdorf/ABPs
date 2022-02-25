@@ -157,6 +157,10 @@ or you can run the following command to download the most recent version of HOOM
 
 ```
 $ git clone --recursive https://github.com/glotzerlab/hoomd-blue
+$ cd hoomd-blue
+$ git fetch --all --tags
+$ git checkout tags/v2.9.7
+$ python3 ./install-prereq-headers.py
 ```
 
 If you use the following command, these instructions and git repository will not fully apply due to large modifications in HOOMD-Blue's prerequisites and how it is run. If you chose the former, proceed with these instructions by untarring the downloaded folder:
@@ -250,6 +254,10 @@ or you can run the following command to download the most recent version of HOOM
 
 ```
 $ git clone --recursive https://github.com/glotzerlab/hoomd-blue
+$ cd hoomd-blue
+$ git fetch --all --tags
+$ git checkout tags/v2.9.7
+$ python3 ./install-prereq-headers.py
 ```
 
 If you use the following command, these instructions and git repository will not fully apply due to large modifications in HOOMD-Blue's prerequisites and how it is run. If you chose the former, proceed with these instructions by untarring the downloaded folder:
