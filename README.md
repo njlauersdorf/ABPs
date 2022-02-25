@@ -199,6 +199,14 @@ $ ctest
 
 Since we built locally on a Mac OS computer and, in turn, do not have CUDA support, many tests will fail due to the requirement of a GPU.
 
+Finally, install HOOMD-Blue into your Python environment:
+
+```
+$ cmake --install .
+```
+
+Before running HOOMD-Blue, be sure you always have `source ~/virtual_envs/hoomd297/bin/activate` included at the beginning of any bash scripts.
+
 #### Cluster install via source
 
 Login to Longleaf with SSH using your ONYEN as your username:
