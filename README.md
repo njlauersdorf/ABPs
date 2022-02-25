@@ -13,6 +13,7 @@
        - [Local install via source](#local-install-via-source)
        - [Cluster install via source](#cluster-install-via-source)
      - [Github](#Github)
+   - [Using Longleaf](#using-longleaf)
    - [Running Code](#running-code)
      - [Submitting Simulations](#Submitting-Simulations)
      - [Submitting Post-Processing](#Submitting-Post-Processing)
@@ -453,7 +454,7 @@ $ git clone https://github.com/njlauersdorf/klotsa.git
 Now you're ready to run some code! 
 
 ## Running Code
-This github project utilizes bash scripts to read in user's desired measurement/simulation type, select the desired python file to run (either for a simulation or post-processing) based on user input, and to read in the specified initial/system conditions into a template python file for a) post-processing of each .gsd file (simulation file) within the current directory or b) create a python file for instantiating a system and running that file to simulate each possible configuration of initial conditions inputted, which, in turn, outputs a .gsd file detailing the simulation at each time step.  
+Here we will discuss some basics of SLURM which is Longleaf's method of submitting and managing running of code. Longleaf uses BASH, similar to your Mac now, so you can easily submit code using the `sh` prefix before a bash script for defining variables and submitting individual runs for each specified set of initial conditions. This github project utilizes bash scripts to read in user's desired measurement/simulation type, select the desired python file to run (either for a simulation or post-processing) based on user input, and to read in the specified initial/system conditions into a template python file for a) post-processing of each .gsd file (simulation file) within the current directory or b) create a python file for instantiating a system and running that file to simulate each possible configuration of initial conditions inputted, which, in turn, outputs a .gsd file detailing the simulation at each time step.  
 
 
 ### Submitting simulations
@@ -477,10 +478,26 @@ If true, answer `y` otherwise answer `n`. Answering this correctly will automati
 > 
 > Do you want half slow, half fast cluster (y/n)?
 
-Answering `y` to any of these will terminate the question asking process and choose that respective template python file for creating and submitting each simulation run. If `n` is answered to all of them, the submission will abort. Future initial conditions are planned to be added soon.
+Answering `y` to any of these will terminate the question asking process and choose that respective template python file for creating and submitting each simulation run. If `n` is answered to all of them, the submission will abort. Future initial conditions are planned to be added soon. 
 
-Once the file is submitted on Longleaf, a slurm-XXXXXXXXXXX.out file will be created that documents the progress of the run and which submission number it is (if ran on Longleaf). Be sure to check this to file to be sure the submission will take less than 11 days or else the simulation will be automatically aborted per Longleaf's maximum run length. Similarly, the slurm file is where to go to see if and what type of error occurred. There are two common errors: 1) a particle exits the simulation box, which occurs due to too great of particle overlap from too small of a time step (therefore, increase the time step and re-submit to fix this) and 2) the simulation finds a faulty GPU node. If the latter occurs, the simulation never starts and the slurm file remains empty despite the simulation queue (squeue -u <Longleaf username, i.e. Onyen>) saying the simulation is still running (and it will continue to take up a GPU node until it his the maximum time limit of 11:00:00 days unless cancelled beforehand (scancel <submission number>). If running locally, the estimated simulation time will be output to the terminal at a regular interval. In addition only the first error commonly occurs when you have too small of a time step. Testing a run locally (using the most active and hard spheres desired of your input systems) is a good method to find a good starting time step to use. Sometimes, a particle will exit the box later in the simulation, however, this is less common with the initial conditions being the main culprit for most errors.
+At the end of that bash script, a second bash script, run_gpu.sh, will be submitted for each .gsd file in the current directory where this information is passed to. run_gpu.sh feeds the specified initial conditions into a template python file and saves that new python file in the parent directory, then submits the python file to Longleaf (using SLURM) or your local computer to run. This python file can be referenced later to verify initial conditions. 
 
+Once the python file is submitted on Longleaf, a slurm-XXXXXXXXXXX.out file will be created that documents the progress of the run and which submission number it is (if ran on Longleaf). Be sure to check this to file to be sure the submission will take less than 11 days or else the simulation will be automatically aborted per Longleaf's maximum run length. Similarly, the slurm file is where to go to see if and what type of error occurred. There are two common errors: 1) a particle exits the simulation box, which occurs due to too great of particle overlap from too small of a time step (therefore, increase the time step and re-submit to fix this) and 2) the simulation finds a faulty GPU node. If the latter occurs, the simulation never starts and the slurm file remains empty despite the simulation queue (squeue -u <Longleaf username, i.e. Onyen>) saying the simulation is still running (and it will continue to take up a GPU node until it his the maximum time limit of 11:00:00 days unless cancelled beforehand (scancel <submission number>). If running locally, the estimated simulation time will be output to the terminal at a regular interval. In addition only the first error commonly occurs when you have too small of a time step. Testing a run locally (using the most active and hard spheres desired of your input systems) is a good method to find a good starting time step to use. Sometimes, a particle will exit the box later in the simulation, however, this is less common with the initial conditions being the main culprit for most errors.
+   
+You can check the progress of your simulations using some basic slurm commands:
+   
+```
+squeue -u [ONYEN]   
+```
+
+If you need to cancel a simulation, you can run:
+   
+```
+$ scancel [SLURM RUN ID]   
+```
+   
+where SLURM RUN ID is the XXXXXXX simulation number in your slurm_XXXXXXX.out file or when you input `squeue`.
+   
 ### Submitting post-processing
 The bash file used to submit a simulation is /klotsa/ABPs/post_proc_binary.sh. This file will submit the specified post processing routine for every simulation file (.gsd) in the current directory. Submit this bash file similarly to running a simulation:
    
