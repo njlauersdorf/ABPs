@@ -55,7 +55,7 @@ It is highly recommended one install's both HOOMD-Blue and this github repositor
 First, navigate to the app store and install Xcode. You can use this as an IDE if you'd like. This should take a couple hours to install. Once Xcode installation is complete, open Xcode and agree to the license agreement. Alternatively, in a Terminal window, you can run: 
 
 ```
-sudo xcodebuild -license
+$ sudo xcodebuild -license
 ```
 
 While Xcode is installing, navigate to anaconda.com to install Anaconda Individual Edition to get access to conda/miniconda. This will be used for installing hoomd/prerequisites. In addition, you can install Spyder through Anaconda for a different IDE. Open the Anaconda installer that was downloaded and follow the instructions until the installation is complete. 
@@ -69,7 +69,7 @@ $ /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/
 Once homebrew finishes its install, install a few prerequisites with it:
 
 ```
-brew install gnu-sed
+$ brew install gnu-sed
 ```
 
 Now, it's time to set the default shell to BASH. Select the apple symbol>System Preferences>Users & Groups. Click the lock and verify your account password to enable changes. Right click on your user and select Advanced Options. Under Login Shell, click the dropdown arrow and see if /bin/bash is available. If so, select it and press OK. Your default shell is now set to BASH, so any newly opened Terminal windows will operate with BASH. Close your Terminal window and re-open a new one. To verify which shell you are using, enter:
@@ -81,7 +81,7 @@ $ echo $SHELL
 If the terminal output reads: `/usr/local/bin/bash`, then you're good to go! If you open the new Terminal window and see a [Process completed] in the output line and are unable to type anything, the shell/path to shell that you changed to does not exist. You must navigate to Apple icon>System Preferences>Users & Groups and follow the instructions above for changing your shell from the currently non-existent path back to the default `/bin/zsh` shell or try installing your own bash using:
 
 ```
-brew install bash
+$ brew install bash
 ```
 
 and switching your default shell to that version's path.
@@ -265,8 +265,9 @@ Configure HOOMD-Blue. First, activate a compile node for more memory. After you 
 $ sinteractivevolta
 $ source ~/virtual_envs/hoomd297/bin/activate
 $ which python3
-~/virtual_envs/hoomd297/bin/python3
 ```
+> ~/virtual_envs/hoomd297/bin/python3
+
 
 Next, compile the build. When configuring on cluster, be sure `-DENABLE_CUDA=ON` and `-DENABLE_CUDA=ON` in the `cmake` tags. The former enables use of CUDA-enabled GPUs for very quick simulations. The latter enables use of MPI, allowing for use of a message passing interface for parallel programming. The `CC=gcc CXX=g++` prefix specify your compilers. 
 
@@ -457,6 +458,7 @@ This github project utilizes bash scripts to read in user's desired measurement/
 
 ### Submitting simulations
 The bash file used to submit a simulation is /klotsa/ABPs/runPeloopBinaryCluster.sh. Before submitting the bash file, one should manually input all desired possible physical conditions of each system to run as lists in each variable's location at the top of the page. The bash file will loop through all possible pairings of these variables and submit create and submit individual python files for each possible configuration based on template python files. Whether running on a cluster (i.e. Longleaf) or locally, one should submit this file as:
+
 ```
 $ sh ~/klotsa/ABPs/runPeloopBinaryCluster.sh
 ```
