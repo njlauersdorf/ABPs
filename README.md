@@ -181,7 +181,7 @@ Finally, install HOOMD-Blue into your Python environment:
 $ cmake --install .
 ```
 
-Before running HOOMD-Blue, be sure you always have `source ~/virtual_envs/hoomd297/bin/activate` included at the beginning of any bash scripts.
+Before running HOOMD-Blue, be sure you always have `source ~/virtual_envs/[virtual environment name]/bin/activate` included at the beginning of any bash scripts.
 
 #### Cluster install via source
 
@@ -263,10 +263,10 @@ Configure HOOMD-Blue. First, activate a compile node for more memory. After you 
 
 ```
 $ sinteractivevolta
-$ source ~/virtual_envs/hoomd297/bin/activate
+$ source ~/virtual_envs/[virtual environment name]/bin/activate
 $ which python3
 ```
-> ~/virtual_envs/hoomd297/bin/python3
+> ~/virtual_envs/[virtual environment name]/bin/python3
 
 
 Next, compile the build. When configuring on cluster, be sure `-DENABLE_CUDA=ON` and `-DENABLE_CUDA=ON` in the `cmake` tags. The former enables use of CUDA-enabled GPUs for very quick simulations. The latter enables use of MPI, allowing for use of a message passing interface for parallel programming. The `CC=gcc CXX=g++` prefix specify your compilers. 
@@ -306,7 +306,7 @@ Finally, install HOOMD-Blue into your Python environment:
 $ cmake --install .
 ```
 
-Before running HOOMD-Blue, be sure you always have `source ~/virtual_envs/hoomd297/bin/activate` included at the beginning of any bash scripts.
+Before running HOOMD-Blue, be sure you always have `source ~/virtual_envs/[virtual environment name]/bin/activate` included at the beginning of any bash scripts.
 
 ### Github
 
