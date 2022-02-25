@@ -52,13 +52,15 @@ It is highly recommended one install's both HOOMD-Blue and this github repositor
 
 ### Prerequisites
 
-First, navigate to the app store and install Xcode. You can use this as an IDE if you'd like. This should take a couple hours to install. You can skip to the next step of installing Anaconda while it installs. Once Xcode installation is complete, open Xcode and agree to the license agreement. Alternatively, in a Terminal window, you can run: 
+First, navigate to the app store and install Xcode. You can use this as an IDE if you'd like. This should take a couple hours to install. Once Xcode installation is complete, open Xcode and agree to the license agreement. Alternatively, in a Terminal window, you can run: 
 
 ```
 sudo xcodebuild -license
 ```
 
-While Xcode is installing, navigate to anaconda.com to install Anaconda Individual Edition to get access to conda/miniconda. This will be used for installing hoomd/prerequisites. In addition, you can install Spyder through Anaconda for a different IDE. Open the Anaconda installer that was downloaded and follow the instructions until the installation is complete. Once the installations for both Anaconda and Xcode finish (be sure Xcode installation is complete and has been launched at least once as Homebrew uses it and it can help identify the Xcode command line tools, which are needed for Homebrew), navigate to https://brew.sh and install Homebrew for your Mac. Per their website (though double check to be sure this command is up to date), open your Terminal and enter:
+While Xcode is installing, navigate to anaconda.com to install Anaconda Individual Edition to get access to conda/miniconda. This will be used for installing hoomd/prerequisites. In addition, you can install Spyder through Anaconda for a different IDE. Open the Anaconda installer that was downloaded and follow the instructions until the installation is complete. 
+
+Once the installations for both Anaconda and Xcode finish (be sure Xcode installation is complete and has been launched at least once as Homebrew uses it and it can help identify the Xcode command line tools, which are needed for Homebrew), navigate to https://brew.sh and install Homebrew for your Mac. Per their website (though double check to be sure this command is up to date), open your Terminal and enter:
 
 ```
 $ /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
@@ -76,7 +78,7 @@ Now, it's time to set the default shell to BASH. Select the apple symbol>System 
 $ echo $SHELL
 ```
 
-If the terminal output reads: `/usr/local/bin/bash`, then you're good to go! However, if the terminal output reads: `/bin/zsh`, which is the default shell for Mac computers, or you do not see /bin/bash as an option, you must follow the below lines to install BASH and make it your default shell. In your Terminal, input:
+If the terminal output reads: `/usr/local/bin/bash`, then you're good to go! You can skip to the step of creating a virtual environment via Anaconda below. However, if the terminal output reads: `/bin/zsh`, which is the default shell for Mac computers, or you do not see /bin/bash as an option, you must follow the below lines to install BASH and make it your default shell. In your Terminal, input:
 
 ```
 brew install bash
@@ -111,8 +113,7 @@ X.X.XX(X)-release
 
 The output should read similar to above. If you open the new Terminal window and see a [Process completed] in the output line and are unable to type anything, the shell/path to shell that you changed to does not exist. You must navigate to Apple icon>System Preferences>Users & Groups and follow the instructions above for changing your shell from the currently non-existent path back to the default `/bin/zsh` shell. Then, you must find the correct path to the BASH install and try again.
 
-
-Next, you need to make a virtual environment via Anaconda to install HOOMD prerequisite modules. To do this, download Anaconda. Open the Anaconda-Navigator and select 'create' under the listed environments. Enter a name for your environment and select Python 3.8.1 for your Python version (which is the same as on Longleaf). If this is not offered at the time of creating your virtual environment, downgrade afterwards. After your environment is created, open a terminal and download the HOOMD pre-requisites into this environment:
+Next, you need to make a virtual environment via Anaconda to install HOOMD and its prerequisite modules. To do this, download Anaconda. Open the Anaconda-Navigator and select 'create' under the listed environments. Enter a name for your environment and select Python 3.8 for your Python version (which is the same as on Longleaf). After your environment is created, open a terminal and download the HOOMD pre-requisites into this environment:
 
 ```
 $ cd ~
@@ -120,7 +121,6 @@ $ bash
 $ source activate [virtual environment name]
 $ conda install -c conda-forge sphinx git numpy cmake clang openmpi gsd numpy matplotlib yaml llvm ipython gsd pybind11 eigen ffmpeg
 $ conda install -c anaconda conda-package-handling
-$ conda install -c omnia eigen3
 ```
 
 ### Prerequisites
@@ -129,7 +129,7 @@ $ conda install -c omnia eigen3
 
 #### Local install via conda
 
-This only works on your local computer. One downside to this is that if you need to compile anything special (i.e. the compile/cmake commands), you can't modify them.
+This only works on your local computer. One downside to this is that if you need to compile anything special (i.e. the compile/cmake commands), you can't modify them.  However, this is the easiest method as we'll mainly just be doing local testing before running on the cluster, so I suggest using this method of installing HOOMD.
 
 ```
 $ conda install -c conda-forge hoomd
