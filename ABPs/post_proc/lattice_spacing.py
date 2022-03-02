@@ -1189,10 +1189,6 @@ with hoomd.open(name=inFile, mode='rb') as t:
         align_magA = [[0 for b in range(NBins)] for a in range(NBins)]
         align_magB = [[0 for b in range(NBins)] for a in range(NBins)]
         align_magDif = [[0 for b in range(NBins)] for a in range(NBins)]
-        vel_mag = [[0 for b in range(NBins)] for a in range(NBins)]
-        vel_magA = [[0 for b in range(NBins)] for a in range(NBins)]
-        vel_magB = [[0 for b in range(NBins)] for a in range(NBins)]
-        vel_magDif = [[0 for b in range(NBins)] for a in range(NBins)]
         press_bin = [[0 for b in range(NBins)] for a in range(NBins)]
         press_binA = [[0 for b in range(NBins)] for a in range(NBins)]
         press_binB = [[0 for b in range(NBins)] for a in range(NBins)]
@@ -1216,21 +1212,6 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     
                     #Difference in alignment of type B to type A particles per bin
                     align_magDif[ix][iy] = (align_magB[ix][iy]-align_magA[ix][iy])#(align_avg_xDif[ix][iy]**2+align_avg_yDif[ix][iy]**2)**0.5
-                    
-                    #If 2nd time step or higher, continue...
-                    if j>(start*time_step):
-                        
-                        #Velocity of all particles per bin
-                        vel_mag[ix][iy] = ((v_avg_x[ix][iy]**2+v_avg_y[ix][iy]**2)**0.5)#/peB
-                        
-                        #Velocity of type A particles per bin
-                        vel_magA[ix][iy] = ((v_avg_xA[ix][iy]**2+v_avg_yA[ix][iy]**2)**0.5)#/peA
-                        
-                        #Velocity of type B particles per bin
-                        vel_magB[ix][iy] = ((v_avg_xB[ix][iy]**2+v_avg_yB[ix][iy]**2)**0.5)#/peB
-                        
-                        #Difference in velocity of type B to type A particles per bin
-                        vel_magDif[ix][iy] = (vel_magB[ix][iy]*peB-vel_magA[ix][iy]*peA)#(align_avg_xDif[ix][iy]**2+align_avg_yDif[ix][iy]**2)**0.5
                     
                     #Pressure integrand (number density times alignment) of all particles per bin
                     press_bin[ix][iy] = num_dens3[ix][iy]*align_mag[ix][iy]#*Binpe[ix][iy]
@@ -3298,150 +3279,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     if bulk_id2[ix][iy] == bulk_size_id_arr[m]:
                         bulkBin_arr[m] +=1
                             
-        #Initiate empty arrays for velocity outputs
-        v_all_x_no_gas = [[0 for b in range(NBins)] for a in range(NBins)]
-        v_all_y_no_gas = [[0 for b in range(NBins)] for a in range(NBins)]
-        
-        v_all_xA_no_gas = [[0 for b in range(NBins)] for a in range(NBins)]
-        v_all_yA_no_gas = [[0 for b in range(NBins)] for a in range(NBins)]
-        
-        v_all_xB_no_gas = [[0 for b in range(NBins)] for a in range(NBins)]
-        v_all_yB_no_gas = [[0 for b in range(NBins)] for a in range(NBins)]
-                        
-        v_avg_x_no_gas = [[0 for b in range(NBins)] for a in range(NBins)]
-        v_avg_y_no_gas = [[0 for b in range(NBins)] for a in range(NBins)]
-        
-        v_avg_xA_no_gas = [[0 for b in range(NBins)] for a in range(NBins)]
-        v_avg_yA_no_gas = [[0 for b in range(NBins)] for a in range(NBins)]
-        
-        v_avg_xB_no_gas = [[0 for b in range(NBins)] for a in range(NBins)]
-        v_avg_yB_no_gas = [[0 for b in range(NBins)] for a in range(NBins)]
-        
-        #Loop over system bins
-        for ix in range(0, len(occParts)):
-                for iy in range(0, len(occParts)):
-                    
-                    #If bin is not gas, continue...
-                    #if phaseBin[ix][iy]!=2:
-                        
-                        #Initiate count of particle type per bin
-                        typ0_temp=0
-                        typ1_temp=0
-                        
-                        #If particles in bin, proceed
-                        if len(binParts[ix][iy]) != 0:
-                            
-                            #Loop over particles per bin
-                            for h in range(0, len(binParts[ix][iy])):
-                                
-                                #If at least one time-frame measured before this step, continue...
-                                if j>(start*time_step):
-                                    
-                                    #x displacement of particle
-                                    vx = (pos_prev[binParts[ix][iy][h],0]-pos[binParts[ix][iy][h],0])
-                                    
-                                    #Enforce periodic boundary conditions
-                                    vx_abs = np.abs(vx)
-                                    if vx_abs>=h_box:
-                                        if vx < -h_box:
-                                            vx += l_box
-                                        else:
-                                            vx -= l_box
-                                    
-                                    #x velocity of particle
-                                    vx=vx/(time_arr[j]-time_arr[j-1])
-                                    
-                                    #y displacement of particle
-                                    vy = (pos_prev[binParts[ix][iy][h],1]-pos[binParts[ix][iy][h],1])
-                                    
-                                    
-                                    #Enforce periodic boundary conditions
-                                    vy_abs = np.abs(vy)
-                                    if vy_abs>=h_box:
-                                        if vy < -h_box:
-                                            vy += l_box
-                                        else:
-                                            vy -= l_box
-                                    
-                                    #y velocity of particle
-                                    vy=vy/(time_arr[j]-time_arr[j-1])
-                                
-                                if j>(start*time_step):
-                                    v_all_x_no_gas[ix][iy]+=vx
-                                    v_all_y_no_gas[ix][iy]+=vy
-                                
-                                #Add velocity and count of type A particles to bin
-                                if typ[binParts[ix][iy][h]]==0:
-                                    typ0_temp +=1               #Number of type A particles per bin
-                                    if j>(start*time_step):
-                                        v_all_xA_no_gas[ix][iy]+=vx
-                                        v_all_yA_no_gas[ix][iy]+=vy
-                                        
-                                #Add velocity and count of type B particles to bin
-                                elif typ[binParts[ix][iy][h]]==1:
-                                    typ1_temp +=1               #Number of type B particles per bin
-                                    if j>(start*time_step):
-                                        v_all_xB_no_gas[ix][iy]+=vx
-                                        v_all_yB_no_gas[ix][iy]+=vy
-                            
-                            #average x,y velocity per bin for A and B type particles (excluding gas phase)
-                            if j>(start * time_step):
-                                v_avg_x_no_gas[ix][iy] = v_all_x_no_gas[ix][iy]/len(binParts[ix][iy])
-                                v_avg_y_no_gas[ix][iy] = v_all_y_no_gas[ix][iy]/len(binParts[ix][iy])
-                                
-                            #average x,y velocity per bin for A type particles (excluding gas phase)
-                            if typ0_temp>0:
-                                if j>(start*time_step):
-                                    v_avg_xA_no_gas[ix][iy] = v_all_xA_no_gas[ix][iy]/typ0_temp
-                                    v_avg_yA_no_gas[ix][iy] = v_all_yA_no_gas[ix][iy]/typ0_temp
-                            else:
-                                if j>(start*time_step):
-                                    v_avg_xA_no_gas[ix][iy] = 0.0
-                                    v_avg_yA_no_gas[ix][iy] = 0.0
-                            
-                            #average x,y velocity per bin for B type particles (excluding gas phase)
-                            if typ1_temp>0:
-                                if j>(start*time_step):
-                                    v_avg_xB_no_gas[ix][iy] = v_all_xB_no_gas[ix][iy]/typ1_temp
-                                    v_avg_yB_no_gas[ix][iy] = v_all_yB_no_gas[ix][iy]/typ1_temp
-                            else:
-                                if j>(start*time_step):
-                                    v_avg_xB_no_gas[ix][iy] = 0.0
-                                    v_avg_yB_no_gas[ix][iy] = 0.0
-                                    
-        #Initiate empty arrays
-        vel_mag = [[0 for b in range(NBins)] for a in range(NBins)]
-        vel_magA = [[0 for b in range(NBins)] for a in range(NBins)]
-        vel_magB = [[0 for b in range(NBins)] for a in range(NBins)]
-        vel_magDif = [[0 for b in range(NBins)] for a in range(NBins)]
-        
-        vel_normx = [[0 for b in range(NBins)] for a in range(NBins)]
-        vel_normy = [[0 for b in range(NBins)] for a in range(NBins)]
 
-        vel_normxA = [[0 for b in range(NBins)] for a in range(NBins)]
-        vel_normyA = [[0 for b in range(NBins)] for a in range(NBins)]
-
-        vel_normxB = [[0 for b in range(NBins)] for a in range(NBins)]
-        vel_normyB = [[0 for b in range(NBins)] for a in range(NBins)]
-        
-        vel_normx_no_gas = [[0 for b in range(NBins)] for a in range(NBins)]
-        vel_normy_no_gas = [[0 for b in range(NBins)] for a in range(NBins)]
-
-        vel_normxA_no_gas = [[0 for b in range(NBins)] for a in range(NBins)]
-        vel_normyA_no_gas = [[0 for b in range(NBins)] for a in range(NBins)]
-
-        vel_normxB_no_gas = [[0 for b in range(NBins)] for a in range(NBins)]
-        vel_normyB_no_gas = [[0 for b in range(NBins)] for a in range(NBins)]
-
-        vel_normDif = [[0 for b in range(NBins)] for a in range(NBins)]
-        
-        vel_mag_no_gas = [[0 for b in range(NBins)] for a in range(NBins)]
-        vel_magA_no_gas = [[0 for b in range(NBins)] for a in range(NBins)]
-        vel_magB_no_gas = [[0 for b in range(NBins)] for a in range(NBins)]
-        vel_magDif_no_gas = [[0 for b in range(NBins)] for a in range(NBins)]
-        
-        vel_grad_x = [[0 for b in range(NBins)] for a in range(NBins)]
-        vel_grad_y = [[0 for b in range(NBins)] for a in range(NBins)]
         
         div = [[0 for b in range(NBins)] for a in range(NBins)]
         
@@ -3451,106 +3289,17 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
         pos_box_combined = np.zeros((len(v_avg_x), len(v_avg_y),2))
         
-        #if currently 2nd time step or higher, continue
-        if j>(start*time_step):
             
-            #Combine previously calculated arrays to a higher dimension matrix (:,:,2) instead of (:,:)
-            for ix in range(0, len(v_avg_x)):
-                for iy in range(0, len(v_avg_y)):
-                    v_combined[ix][iy][0]=v_avg_x[ix][iy]
-                    v_combined[ix][iy][1]=v_avg_y[ix][iy]
-                    
-                    align_combined[ix][iy][0]=align_avg_x[ix][iy]
-                    align_combined[ix][iy][1]=align_avg_y[ix][iy]
-                    
-                    pos_box_combined[ix][iy][0]=pos_box_x[ix][iy]
-                    pos_box_combined[ix][iy][1]=pos_box_y[ix][iy]
-                    
-            #Calculate spatial gradient of x,y-velocities in x (axis=0) and y (axis=1) directions
-            vx_grad = np.gradient(v_combined, axis=0)
-            vy_grad = np.gradient(v_combined, axis=1)
+        #Combine previously calculated arrays to a higher dimension matrix (:,:,2) instead of (:,:)
+        for ix in range(0, len(align_avg_x)):
+            for iy in range(0, len(align_avg_y)):
+                
+                align_combined[ix][iy][0]=align_avg_x[ix][iy]
+                align_combined[ix][iy][1]=align_avg_y[ix][iy]
+                
+                pos_box_combined[ix][iy][0]=pos_box_x[ix][iy]
+                pos_box_combined[ix][iy][1]=pos_box_y[ix][iy]
             
-            #Calculates gradient of v_x in x direction
-            vel_gradx_x = vx_grad[:,:,0]
-            
-            #Calculates gradient of v_x in y direction
-            vel_gradx_y = vx_grad[:,:,1]
-            
-            #Calculates gradient of v_y in x direction
-            vel_grady_x = vy_grad[:,:,0]
-            
-            #Calculates gradient of v_y in y direction
-            vel_grady_y = vy_grad[:,:,1]
-                        
-            div = vel_gradx_x + vel_grady_y
-            curl = -vel_grady_x + vel_gradx_y
-            
-        #Calculate average velocity per bin
-        if j>(start*time_step):
-            for ix in range(0, len(occParts)):
-                    for iy in range(0, len(occParts)):
-                    
-                        vel_mag[ix][iy] = ((v_avg_x[ix][iy]**2+v_avg_y[ix][iy]**2)**0.5)    #Average velocity per bin of all particles relative to largest preferred velocity (peB)
-                        vel_magA[ix][iy] = ((v_avg_xA[ix][iy]**2+v_avg_yA[ix][iy]**2)**0.5) #Average velocity per bin of type A particles relative to preferred velocity (peA)
-                        vel_magB[ix][iy] = ((v_avg_xB[ix][iy]**2+v_avg_yB[ix][iy]**2)**0.5) #Average velocity per bin of type B particles relative to preferred velocity (peB)
-                        vel_magDif[ix][iy] = (vel_magB[ix][iy]/peB-vel_magA[ix][iy])        #Difference in magnitude of average velocity per bin between type B and A particles
-                        
-                        vel_mag_no_gas[ix][iy] = ((v_avg_x_no_gas[ix][iy]**2+v_avg_y_no_gas[ix][iy]**2)**0.5)   #Average velocity per bin of all particles relative to largest preferred velocity (peB)
-                        vel_magA_no_gas[ix][iy] = ((v_avg_xA_no_gas[ix][iy]**2+v_avg_yA_no_gas[ix][iy]**2)**0.5) #Average velocity per bin of type A particles relative to preferred velocity (peA)
-                        vel_magB_no_gas[ix][iy] = ((v_avg_xB_no_gas[ix][iy]**2+v_avg_yB_no_gas[ix][iy]**2)**0.5) #Average velocity per bin of type B particles relative to preferred velocity (peB)
-                        vel_magDif_no_gas[ix][iy] = (vel_magB_no_gas[ix][iy]-vel_magA_no_gas[ix][iy])        #Difference in magnitude of average velocity per bin between type B and A particles
-                        
-            
-
-        #Calculates various normalized velocity of each bin
-        for ix in range(0, len(occParts)):
-                for iy in range(0, len(occParts)):
-                    if j>(start*time_step):
-                        
-                        #velocity of all particles in bin
-                        if vel_mag[ix][iy]>0:
-                            vel_normx[ix][iy] = v_avg_x[ix][iy] / vel_mag[ix][iy]
-                            vel_normy[ix][iy] = v_avg_y[ix][iy] / vel_mag[ix][iy]
-                        else:
-                            vel_normx[ix][iy]=0
-                            vel_normy[ix][iy]=0
-                            
-                        #velocity of type A particles in bin
-                        if vel_magA[ix][iy]>0:
-                            vel_normxA[ix][iy] = v_avg_xA[ix][iy] / vel_magA[ix][iy]
-                            vel_normyA[ix][iy] = v_avg_yA[ix][iy] / vel_magA[ix][iy]
-                        else:
-                            vel_normxA[ix][iy] = 0
-                            vel_normyA[ix][iy] = 0
-                        
-                        #velocity of type B particles in bin
-                        if vel_magB[ix][iy]>0:
-                            vel_normxB[ix][iy] = v_avg_xB[ix][iy] / vel_magB[ix][iy]
-                            vel_normyB[ix][iy] = v_avg_yB[ix][iy] / vel_magB[ix][iy]
-                        else:
-                            vel_normxB[ix][iy] = 0
-                            vel_normyB[ix][iy] = 0
-                            
-                        if vel_mag_no_gas[ix][iy]>0:
-                            vel_normx_no_gas[ix][iy] = v_avg_x_no_gas[ix][iy] / vel_mag_no_gas[ix][iy]
-                            vel_normy_no_gas[ix][iy] = v_avg_y_no_gas[ix][iy] / vel_mag_no_gas[ix][iy]
-                        else:
-                            vel_normx_no_gas[ix][iy]=0
-                            vel_normy_no_gas[ix][iy]=0
-                        if vel_magA_no_gas[ix][iy]>0:
-                            vel_normxA_no_gas[ix][iy] = v_avg_xA_no_gas[ix][iy] / vel_magA_no_gas[ix][iy]
-                            vel_normyA_no_gas[ix][iy] = v_avg_yA_no_gas[ix][iy] / vel_magA_no_gas[ix][iy]
-                        else:
-                            vel_normxA_no_gas[ix][iy] = 0
-                            vel_normyA_no_gas[ix][iy] = 0
-                        
-                        if vel_magB_no_gas[ix][iy]>0:
-                            vel_normxB_no_gas[ix][iy] = v_avg_xB_no_gas[ix][iy] / vel_magB_no_gas[ix][iy]
-                            vel_normyB_no_gas[ix][iy] = v_avg_yB_no_gas[ix][iy] / vel_magB_no_gas[ix][iy]
-                        else:
-                            vel_normxB_no_gas[ix][iy] = 0
-                            vel_normyB_no_gas[ix][iy] = 0
-        
         #Slow/fast composition of bulk phase
         slow_bulk_num = len(np.where((partPhase==0) & (partTyp==0))[0])
         fast_bulk_num = len(np.where((partPhase==0) & (partTyp==1))[0])
@@ -3600,9 +3349,6 @@ with hoomd.open(name=inFile, mode='rb') as t:
         else:
             bub_id_plot = []
         gas_id = np.where(partPhase==2)[0]  
-        
-        #label previous positions for velocity calculation
-        pos_prev = pos.copy()
         
         
         #Positions of particles in each phase
