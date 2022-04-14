@@ -140,6 +140,42 @@ elif [ "$method" = "velocity_new" ]; then
 
       rm -rf "$pic_path"velocity_B_map_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_*
 
+    ffmpeg -start_number 0 -framerate 10 -i "$pic_path"div_map_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_%04d.png\
+     -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
+     "$vid_path"div_map_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}.mp4
+
+      rm -rf "$pic_path"div_map_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_*
+
+    ffmpeg -start_number 0 -framerate 10 -i "$pic_path"div_A_map_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_%04d.png\
+     -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
+     "$vid_path"div_A_map_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}.mp4
+
+      rm -rf "$pic_path"div_A_map_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_*
+
+    ffmpeg -start_number 0 -framerate 10 -i "$pic_path"div_B_map_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_%04d.png\
+     -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
+     "$vid_path"div_B_map_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}.mp4
+
+      rm -rf "$pic_path"div_B_map_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_*
+
+    ffmpeg -start_number 0 -framerate 10 -i "$pic_path"curl_map_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_%04d.png\
+     -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
+     "$vid_path"curl_map_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}.mp4
+
+      rm -rf "$pic_path"curl_map_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_*
+
+    ffmpeg -start_number 0 -framerate 10 -i "$pic_path"curl_A_map_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_%04d.png\
+     -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
+     "$vid_path"curl_A_map_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}.mp4
+
+      rm -rf "$pic_path"curl_A_map_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_*
+
+    ffmpeg -start_number 0 -framerate 10 -i "$pic_path"curl_B_map_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_%04d.png\
+     -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
+     "$vid_path"curl_B_map_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}.mp4
+
+      rm -rf "$pic_path"curl_B_map_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_*
+
 elif [ "$method" = "lattice_spacing" ]; then
     python3 $script_path/lat_analysis_binary_updates.py $fname $pa2 $pb $xa2 $ep $phi $dtau $bin $step $hoomd_path $txt_path $pic_path
 

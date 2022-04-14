@@ -507,7 +507,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
     r = np.linspace(0.0,  5.0, 100)             # Define radius for x-axis of plot later
 
-    start = int(420/time_step)#205                                             # first frame to process
+    start = int(0/time_step)#205                                             # first frame to process
     dumps = int(t.__len__())                                # get number of timesteps dumped
     end = int(dumps/time_step)-1                                             # final frame to process
     snap = t[0]                                             # Take first snap for box
@@ -10130,124 +10130,133 @@ with hoomd.open(name=inFile, mode='rb') as t:
         pos_gas = pos[gas_id_plot]
         pos_bulk_int = pos[bulk_int_id_plot]
         pos_gas_int = pos[gas_int_id_plot]
+        if (len(bulk_id_plot)>0) & (len(fast_bulk_id_plot)>0) & (len(slow_bulk_id_plot)>0):
+            pe_tot_int = 0
+            pe_num_int = 0
+            for i in range(0, len(int_id_plot)):
 
-        pe_tot_int = 0
-        pe_num_int = 0
-        for i in range(0, len(int_id_plot)):
+                if typ[int_id_plot[i]]==0:
+                    pe_tot_int += peA
+                    pe_num_int += 1
+                else:
+                    pe_tot_int += peB
+                    pe_num_int += 1
+            pe_net_int = pe_tot_int / pe_num_int
 
-            if typ[int_id_plot[i]]==0:
-                pe_tot_int += peA
-                pe_num_int += 1
-            else:
-                pe_tot_int += peB
-                pe_num_int += 1
-        pe_net_int = pe_tot_int / pe_num_int
+            query_args = dict(mode='nearest', r_min = 0.1, num_neighbors=6, r_max=r_cut)
 
-        query_args = dict(mode='nearest', r_min = 0.1, num_neighbors=6, r_max=r_cut)
+            print('bulk neighbors')
 
-        print('bulk neighbors')
-        system_all_bulk = freud.AABBQuery(f_box, f_box.wrap(pos_bulk))
-        system_A_bulk = freud.AABBQuery(f_box, f_box.wrap(pos0_bulk))
-        system_B_bulk = freud.AABBQuery(f_box, f_box.wrap(pos1_bulk))
 
-        all_bulk_nlist = system_all_bulk.query(f_box.wrap(pos_bulk_int), query_args).toNeighborList()
-        AA_bulk_nlist = system_A_bulk.query(f_box.wrap(pos0_bulk_int), query_args).toNeighborList()
-        AB_bulk_nlist = system_A_bulk.query(f_box.wrap(pos1_bulk_int), query_args).toNeighborList()
-        BB_bulk_nlist = system_B_bulk.query(f_box.wrap(pos1_bulk_int), query_args).toNeighborList()
+            system_all_bulk = freud.AABBQuery(f_box, f_box.wrap(pos_bulk))
+            system_A_bulk = freud.AABBQuery(f_box, f_box.wrap(pos0_bulk))
+            system_B_bulk = freud.AABBQuery(f_box, f_box.wrap(pos1_bulk))
 
-        rijs = (pos_bulk[all_bulk_nlist.point_indices] - pos_bulk_int[all_bulk_nlist.query_point_indices])
+            all_bulk_nlist = system_all_bulk.query(f_box.wrap(pos_bulk_int), query_args).toNeighborList()
+            AA_bulk_nlist = system_A_bulk.query(f_box.wrap(pos0_bulk_int), query_args).toNeighborList()
+            AB_bulk_nlist = system_A_bulk.query(f_box.wrap(pos1_bulk_int), query_args).toNeighborList()
+            BB_bulk_nlist = system_B_bulk.query(f_box.wrap(pos1_bulk_int), query_args).toNeighborList()
 
-        difx_out = np.where(rijs[:,0]>h_box)[0]
-        rijs[difx_out,0] = rijs[difx_out,0]-h_box
+            rijs = (pos_bulk[all_bulk_nlist.point_indices] - pos_bulk_int[all_bulk_nlist.query_point_indices])
 
-        difx_out = np.where(rijs[:,0]<-h_box)[0]
-        rijs[difx_out,0] = rijs[difx_out,0]+h_box
+            difx_out = np.where(rijs[:,0]>h_box)[0]
+            rijs[difx_out,0] = rijs[difx_out,0]-h_box
 
-        dify_out = np.where(rijs[:,1]>h_box)[0]
-        rijs[dify_out,1] = rijs[dify_out,1]-h_box
+            difx_out = np.where(rijs[:,0]<-h_box)[0]
+            rijs[difx_out,0] = rijs[difx_out,0]+h_box
 
-        dify_out = np.where(rijs[:,1]<-h_box)[0]
-        rijs[dify_out,1] = rijs[dify_out,1]+h_box
+            dify_out = np.where(rijs[:,1]>h_box)[0]
+            rijs[dify_out,1] = rijs[dify_out,1]-h_box
 
-        bulk_lats = (rijs[:,0]**2 + rijs[:,1]**2)**0.5
+            dify_out = np.where(rijs[:,1]<-h_box)[0]
+            rijs[dify_out,1] = rijs[dify_out,1]+h_box
 
-        bulk_lat_mean = np.mean(bulk_lats)
-        bulk_lat_std = np.std(bulk_lats)
+            bulk_lats = (rijs[:,0]**2 + rijs[:,1]**2)**0.5
 
-        bulk_lat_ind = np.array([], dtype=int)
-        bulk_lat_arr = np.array([])
+            bulk_lat_mean = np.mean(bulk_lats)
+            bulk_lat_std = np.std(bulk_lats)
 
-        for i in all_bulk_nlist.point_indices:
-            if i not in bulk_lat_ind:
-                loc = np.where(all_bulk_nlist.point_indices==i)[0]
-                bulk_lat_arr = np.append(bulk_lat_arr, np.mean((rijs[loc,0]**2 + rijs[loc,1]**2)**0.5))
-                bulk_lat_ind = np.append(bulk_lat_ind, int(i))
+            bulk_lat_ind = np.array([], dtype=int)
+            bulk_lat_arr = np.array([])
 
-        print('int neighbors')
+            for i in all_bulk_nlist.point_indices:
+                if i not in bulk_lat_ind:
+                    loc = np.where(all_bulk_nlist.point_indices==i)[0]
+                    bulk_lat_arr = np.append(bulk_lat_arr, np.mean((rijs[loc,0]**2 + rijs[loc,1]**2)**0.5))
+                    bulk_lat_ind = np.append(bulk_lat_ind, int(i))
 
-        system_all_int = freud.AABBQuery(f_box, f_box.wrap(pos_int))   #Calculate neighbor list
-        system_A_int = freud.AABBQuery(f_box, f_box.wrap(pos0_int))    #Calculate neighbor list
-        system_B_int = freud.AABBQuery(f_box, f_box.wrap(pos1_int))    #Calculate neighbor list
+            print('int neighbors')
 
-        all_int_nlist = system_all_int.query(f_box.wrap(pos), query_args).toNeighborList()
-        AA_int_nlist = system_A_int.query(f_box.wrap(pos0), query_args).toNeighborList()
-        AB_int_nlist = system_A_int.query(f_box.wrap(pos1), query_args).toNeighborList()
-        BB_int_nlist = system_B_int.query(f_box.wrap(pos1), query_args).toNeighborList()
+            system_all_int = freud.AABBQuery(f_box, f_box.wrap(pos_int))   #Calculate neighbor list
+            system_A_int = freud.AABBQuery(f_box, f_box.wrap(pos0_int))    #Calculate neighbor list
+            system_B_int = freud.AABBQuery(f_box, f_box.wrap(pos1_int))    #Calculate neighbor list
 
-        rijs = (pos_int[all_int_nlist.point_indices] - pos[all_int_nlist.query_point_indices])
+            all_int_nlist = system_all_int.query(f_box.wrap(pos), query_args).toNeighborList()
+            AA_int_nlist = system_A_int.query(f_box.wrap(pos0), query_args).toNeighborList()
+            AB_int_nlist = system_A_int.query(f_box.wrap(pos1), query_args).toNeighborList()
+            BB_int_nlist = system_B_int.query(f_box.wrap(pos1), query_args).toNeighborList()
 
-        difx_out = np.where(rijs[:,0]>h_box)[0]
+            rijs = (pos_int[all_int_nlist.point_indices] - pos[all_int_nlist.query_point_indices])
 
-        rijs[difx_out,0] = rijs[difx_out,0]-l_box
+            difx_out = np.where(rijs[:,0]>h_box)[0]
 
-        difx_out = np.where(rijs[:,0]<-h_box)[0]
-        rijs[difx_out,0] = rijs[difx_out,0]+l_box
+            rijs[difx_out,0] = rijs[difx_out,0]-l_box
 
-        dify_out = np.where(rijs[:,1]>h_box)[0]
+            difx_out = np.where(rijs[:,0]<-h_box)[0]
+            rijs[difx_out,0] = rijs[difx_out,0]+l_box
 
-        rijs[dify_out,1] = rijs[dify_out,1]-l_box
-        dify_out = np.where(rijs[:,1]>h_box)[0]
+            dify_out = np.where(rijs[:,1]>h_box)[0]
 
-        dify_out = np.where(rijs[:,1]<-h_box)[0]
-        rijs[dify_out,1] = rijs[dify_out,1]+l_box
+            rijs[dify_out,1] = rijs[dify_out,1]-l_box
+            dify_out = np.where(rijs[:,1]>h_box)[0]
 
-        int_lats = (rijs[:,0]**2 + rijs[:,1]**2)**0.5
+            dify_out = np.where(rijs[:,1]<-h_box)[0]
+            rijs[dify_out,1] = rijs[dify_out,1]+l_box
 
-        int_lat_mean = np.mean(int_lats)
-        int_lat_std = np.std(int_lats)
+            int_lats = (rijs[:,0]**2 + rijs[:,1]**2)**0.5
 
-        int_lat_ind = np.array([], dtype=int)
-        int_lat_arr = np.array([])
+            int_lat_mean = np.mean(int_lats)
+            int_lat_std = np.std(int_lats)
 
-        for i in all_int_nlist.point_indices:
-            if i not in int_lat_ind:
-                loc = np.where(all_int_nlist.point_indices==i)[0]
-                int_lat_arr = np.append(int_lat_arr, np.mean((rijs[loc,0]**2 + rijs[loc,1]**2)**0.5))
-                int_lat_ind = np.append(int_lat_ind, int(i))
+            int_lat_ind = np.array([], dtype=int)
+            int_lat_arr = np.array([])
 
-        dense_lats = np.append(bulk_lats, int_lats)
-        dense_lat_mean = np.mean(dense_lats)
-        dense_lat_std = np.std(dense_lats)
-        pos_bulk_int_x_lat = np.append(pos_bulk[bulk_lat_ind,0], pos_int[int_lat_ind,0])
-        pos_bulk_int_y_lat = np.append(pos_bulk[bulk_lat_ind,1], pos_int[int_lat_ind,1])
-        bulk_int_lat_arr = np.append(bulk_lat_arr, int_lat_arr)
+            for i in all_int_nlist.point_indices:
+                if i not in int_lat_ind:
+                    loc = np.where(all_int_nlist.point_indices==i)[0]
+                    int_lat_arr = np.append(int_lat_arr, np.mean((rijs[loc,0]**2 + rijs[loc,1]**2)**0.5))
+                    int_lat_ind = np.append(int_lat_ind, int(i))
 
-        lat_theory2 = conForRClust(pe_net_int-50, eps)
+            dense_lats = np.append(bulk_lats, int_lats)
+            dense_lat_mean = np.mean(dense_lats)
+            dense_lat_std = np.std(dense_lats)
+            pos_bulk_int_x_lat = np.append(pos_bulk[bulk_lat_ind,0], pos_int[int_lat_ind,0])
+            pos_bulk_int_y_lat = np.append(pos_bulk[bulk_lat_ind,1], pos_int[int_lat_ind,1])
+            bulk_int_lat_arr = np.append(bulk_lat_arr, int_lat_arr)
 
-        #Output means and standard deviations of number density for each phase
-        g = open(outPath2+outTxt_lat, 'a')
-        g.write('{0:.2f}'.format(tst).center(15) + ' ')
-        g.write('{0:.6f}'.format(sizeBin).center(15) + ' ')
-        g.write('{0:.0f}'.format(np.amax(clust_size)).center(15) + ' ')
-        g.write('{0:.6f}'.format(lat_theory2).center(15) + ' ')
-        g.write('{0:.6f}'.format(bulk_lat_mean).center(15) + ' ')
-        g.write('{0:.6f}'.format(bulk_lat_std).center(15) + ' ')
-        g.write('{0:.6f}'.format(int_lat_mean).center(15) + ' ')
-        g.write('{0:.6f}'.format(int_lat_std).center(15) + ' ')
-        g.write('{0:.6f}'.format(dense_lat_mean).center(15) + ' ')
-        g.write('{0:.6f}'.format(dense_lat_std).center(15) + '\n')
-        g.close()
+            lat_theory2 = conForRClust(pe_net_int-50, eps)
 
+            #Output means and standard deviations of number density for each phase
+            g = open(outPath2+outTxt_lat, 'a')
+            g.write('{0:.2f}'.format(tst).center(15) + ' ')
+            g.write('{0:.6f}'.format(sizeBin).center(15) + ' ')
+            g.write('{0:.0f}'.format(np.amax(clust_size)).center(15) + ' ')
+            g.write('{0:.6f}'.format(lat_theory2).center(15) + ' ')
+            g.write('{0:.6f}'.format(bulk_lat_mean).center(15) + ' ')
+            g.write('{0:.6f}'.format(bulk_lat_std).center(15) + ' ')
+            g.write('{0:.6f}'.format(int_lat_mean).center(15) + ' ')
+            g.write('{0:.6f}'.format(int_lat_std).center(15) + ' ')
+            g.write('{0:.6f}'.format(dense_lat_mean).center(15) + ' ')
+            g.write('{0:.6f}'.format(dense_lat_std).center(15) + '\n')
+            g.close()
+        else:
+            pos_bulk_int_x_lat = np.array([])
+            pos_bulk_int_y_lat = np.array([])
+            bulk_int_lat_arr = np.array([])
+            bulk_lat_mean = 0.0
+            bulk_lats = np.array([])
+            int_lats = np.array([])
+            dense_lat_mean = 0.0
         fig = plt.figure(figsize=(7,6))
         ax = fig.add_subplot(111)
         im = plt.scatter(pos_bulk_int_x_lat+h_box, pos_bulk_int_y_lat+h_box, c=bulk_int_lat_arr, s=0.7, vmin=0.97*bulk_lat_mean, vmax=1.03*bulk_lat_mean)
@@ -10255,11 +10264,13 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
         min_n = 0.97*bulk_lat_mean
         max_n = 1.03*bulk_lat_mean
-
-        tick_lev = np.arange(min_n, max_n+(max_n-min_n)/6, (max_n - min_n)/6)
-        #sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
-        #sm.set_array([])
-        clb = plt.colorbar(ticks=tick_lev, orientation="vertical", format=tick.FormatStrFormatter('%.3f'))
+        if bulk_lat_mean != 0.0:
+            tick_lev = np.arange(min_n, max_n+(max_n-min_n)/6, (max_n - min_n)/6)
+            #sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
+            #sm.set_array([])
+            clb = plt.colorbar(ticks=tick_lev, orientation="vertical", format=tick.FormatStrFormatter('%.3f'))
+        else:
+            clb = plt.colorbar(orientation="vertical", format=tick.FormatStrFormatter('%.3f'))
         plt.tick_params(axis='both', which='both',
                         bottom=False, top=False, left=False, right=False,
                         labelbottom=False, labeltop=False, labelleft=False, labelright=False)
@@ -10338,7 +10349,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
         plt.ylabel('Number of particles', fontsize=20)
         plt.xlim([xmin,xmax])
 
-        plt.text(0.77, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(tst) + ' ' + r'$\tau_\mathrm{B}$',
+        plt.text(0.03, 0.94, s=r'$\tau$' + ' = ' + '{:.2f}'.format(tst) + ' ' + r'$\tau_\mathrm{B}$',
             fontsize=18,transform = ax.transAxes,
             bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
 

@@ -10602,3 +10602,4 @@ with hoomd.open(name=inFile, mode='rb') as t:
         plt.tight_layout()
         plt.savefig(outPath + 'num_B_neigh_' + out + pad + ".png", dpi=100)
         plt.close()
+        stop
