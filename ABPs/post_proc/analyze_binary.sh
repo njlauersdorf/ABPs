@@ -112,6 +112,8 @@ elif [ "$method" = "bulk_pressure_phases" ]; then
     python3 $script_path/interpart_press_updated.py $fname $pa2 $pb $xa2 $ep $phi $dtau $bin $step $hoomd_path $txt_path $pic_path
 elif [ "$method" = "pair_correlation" ]; then
     python3 $script_path/radial_density_function_analysis_binary_updates.py $fname $pa2 $pb $xa2 $ep $phi $dtau $bin $step $hoomd_path $txt_path $pic_path
+  elif [ "$method" = "tracer" ]; then
+      python3 $script_path/tracer_analysis_binary_updates.py $fname $pa2 $pb $xa2 $ep $phi $dtau $bin $step $hoomd_path $txt_path $pic_path
 elif [ "$method" = "velocity_new" ]; then
     python3 $script_path/velocity_analysis_binary_updates.py $fname $pa2 $pb $xa2 $ep $phi $dtau $bin $step $hoomd_path $txt_path $pic_path
 
