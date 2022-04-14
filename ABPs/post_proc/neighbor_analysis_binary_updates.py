@@ -10180,264 +10180,279 @@ with hoomd.open(name=inFile, mode='rb') as t:
         lat_theory2 = conForRClust(pe_net_int-50, eps)
 
         query_args = dict(mode='ball', r_min = 0.1, r_max=lat_theory2)
+        if (len(bulk_id_plot)>0) & (len(fast_bulk_id_plot)>0) & (len(slow_bulk_id_plot)>0):
 
-        system_all_bulk = freud.AABBQuery(f_box, f_box.wrap(pos_bulk))
-        system_A_bulk = freud.AABBQuery(f_box, f_box.wrap(pos0_bulk))
-        system_B_bulk = freud.AABBQuery(f_box, f_box.wrap(pos1_bulk))
+            system_all_bulk = freud.AABBQuery(f_box, f_box.wrap(pos_bulk))
+            system_A_bulk = freud.AABBQuery(f_box, f_box.wrap(pos0_bulk))
+            system_B_bulk = freud.AABBQuery(f_box, f_box.wrap(pos1_bulk))
 
-        all_bulk_nlist = system_all_bulk.query(f_box.wrap(pos_bulk_int), query_args).toNeighborList()
-        slow_bulk_nlist = system_all_bulk.query(f_box.wrap(pos0_bulk_int), query_args).toNeighborList()
-        fast_bulk_nlist = system_all_bulk.query(f_box.wrap(pos1_bulk_int), query_args).toNeighborList()
-        #AA_bulk_nlist = system_A_bulk.query(f_box.wrap(pos0_bulk_int), query_args).toNeighborList()
-        #AB_bulk_nlist = system_A_bulk.query(f_box.wrap(pos1_bulk_int), query_args).toNeighborList()
-        #BB_bulk_nlist = system_B_bulk.query(f_box.wrap(pos1_bulk_int), query_args).toNeighborList()
+            all_bulk_nlist = system_all_bulk.query(f_box.wrap(pos_bulk_int), query_args).toNeighborList()
+            slow_bulk_nlist = system_all_bulk.query(f_box.wrap(pos0_bulk_int), query_args).toNeighborList()
+            fast_bulk_nlist = system_all_bulk.query(f_box.wrap(pos1_bulk_int), query_args).toNeighborList()
+            #AA_bulk_nlist = system_A_bulk.query(f_box.wrap(pos0_bulk_int), query_args).toNeighborList()
+            #AB_bulk_nlist = system_A_bulk.query(f_box.wrap(pos1_bulk_int), query_args).toNeighborList()
+            #BB_bulk_nlist = system_B_bulk.query(f_box.wrap(pos1_bulk_int), query_args).toNeighborList()
 
-        bulk_neigh_ind = np.array([], dtype=int)
-        bulk_num_neigh = np.array([])
+            bulk_neigh_ind = np.array([], dtype=int)
+            bulk_num_neigh = np.array([])
 
-        for i in range(0, len(bulk_id_plot)):
-            if i in all_bulk_nlist.point_indices:
-                if i not in bulk_neigh_ind:
-                    loc = np.where(all_bulk_nlist.point_indices==i)[0]
-                    bulk_num_neigh = np.append(bulk_num_neigh, len(loc))
+            for i in range(0, len(bulk_id_plot)):
+                if i in all_bulk_nlist.point_indices:
+                    if i not in bulk_neigh_ind:
+                        loc = np.where(all_bulk_nlist.point_indices==i)[0]
+                        bulk_num_neigh = np.append(bulk_num_neigh, len(loc))
+                        bulk_neigh_ind = np.append(bulk_neigh_ind, int(i))
+                else:
+                    bulk_num_neigh = np.append(bulk_num_neigh, 0)
                     bulk_neigh_ind = np.append(bulk_neigh_ind, int(i))
-            else:
-                bulk_num_neigh = np.append(bulk_num_neigh, 0)
-                bulk_neigh_ind = np.append(bulk_neigh_ind, int(i))
 
-        #for i in all_bulk_nlist.point_indices:
-        #    if i not in bulk_neigh_ind:
-        #        loc = np.where(all_bulk_nlist.point_indices==i)[0]
-        #        bulk_num_neigh = np.append(bulk_num_neigh, len(loc))
-        #        bulk_neigh_ind = np.append(bulk_neigh_ind, int(i))
+            #for i in all_bulk_nlist.point_indices:
+            #    if i not in bulk_neigh_ind:
+            #        loc = np.where(all_bulk_nlist.point_indices==i)[0]
+            #        bulk_num_neigh = np.append(bulk_num_neigh, len(loc))
+            #        bulk_neigh_ind = np.append(bulk_neigh_ind, int(i))
 
-        bulk_slow_neigh_ind = np.array([], dtype=int)
-        bulk_slow_num_neigh = np.array([])
+            bulk_slow_neigh_ind = np.array([], dtype=int)
+            bulk_slow_num_neigh = np.array([])
 
-        for i in range(0, len(bulk_id_plot)):
-            if i in slow_bulk_nlist.point_indices:
-                if i not in bulk_slow_neigh_ind:
-                    loc = np.where(slow_bulk_nlist.point_indices==i)[0]
-                    bulk_slow_num_neigh = np.append(bulk_slow_num_neigh, len(loc))
+            for i in range(0, len(bulk_id_plot)):
+                if i in slow_bulk_nlist.point_indices:
+                    if i not in bulk_slow_neigh_ind:
+                        loc = np.where(slow_bulk_nlist.point_indices==i)[0]
+                        bulk_slow_num_neigh = np.append(bulk_slow_num_neigh, len(loc))
+                        bulk_slow_neigh_ind = np.append(bulk_slow_neigh_ind, int(i))
+                else:
+                    bulk_slow_num_neigh = np.append(bulk_slow_num_neigh, 0)
                     bulk_slow_neigh_ind = np.append(bulk_slow_neigh_ind, int(i))
-            else:
-                bulk_slow_num_neigh = np.append(bulk_slow_num_neigh, 0)
-                bulk_slow_neigh_ind = np.append(bulk_slow_neigh_ind, int(i))
 
-        #for i in slow_bulk_nlist.point_indices:
-        #    if i not in bulk_slow_neigh_ind:
-        #        loc = np.where(slow_bulk_nlist.point_indices==i)[0]
-        #        bulk_slow_num_neigh = np.append(bulk_slow_num_neigh, len(loc))
-        #        bulk_slow_neigh_ind = np.append(bulk_slow_neigh_ind, int(i))
+            #for i in slow_bulk_nlist.point_indices:
+            #    if i not in bulk_slow_neigh_ind:
+            #        loc = np.where(slow_bulk_nlist.point_indices==i)[0]
+            #        bulk_slow_num_neigh = np.append(bulk_slow_num_neigh, len(loc))
+            #        bulk_slow_neigh_ind = np.append(bulk_slow_neigh_ind, int(i))
 
-        bulk_fast_neigh_ind = np.array([], dtype=int)
-        bulk_fast_num_neigh = np.array([])
+            bulk_fast_neigh_ind = np.array([], dtype=int)
+            bulk_fast_num_neigh = np.array([])
 
-        for i in range(0, len(bulk_id_plot)):
-            if i in fast_bulk_nlist.point_indices:
-                if i not in bulk_fast_neigh_ind:
-                    loc = np.where(fast_bulk_nlist.point_indices==i)[0]
-                    bulk_fast_num_neigh = np.append(bulk_fast_num_neigh, len(loc))
+            for i in range(0, len(bulk_id_plot)):
+                if i in fast_bulk_nlist.point_indices:
+                    if i not in bulk_fast_neigh_ind:
+                        loc = np.where(fast_bulk_nlist.point_indices==i)[0]
+                        bulk_fast_num_neigh = np.append(bulk_fast_num_neigh, len(loc))
+                        bulk_fast_neigh_ind = np.append(bulk_fast_neigh_ind, int(i))
+                else:
+                    bulk_fast_num_neigh = np.append(bulk_fast_num_neigh, 0)
                     bulk_fast_neigh_ind = np.append(bulk_fast_neigh_ind, int(i))
-            else:
-                bulk_fast_num_neigh = np.append(bulk_fast_num_neigh, 0)
-                bulk_fast_neigh_ind = np.append(bulk_fast_neigh_ind, int(i))
 
-        #for i in fast_bulk_nlist.point_indices:
-        #    if i not in bulk_fast_neigh_ind:
-        #        loc = np.where(fast_bulk_nlist.point_indices==i)[0]
-        #        bulk_fast_num_neigh = np.append(bulk_fast_num_neigh, len(loc))
-        #        bulk_fast_neigh_ind = np.append(bulk_fast_neigh_ind, int(i))
+            #for i in fast_bulk_nlist.point_indices:
+            #    if i not in bulk_fast_neigh_ind:
+            #        loc = np.where(fast_bulk_nlist.point_indices==i)[0]
+            #        bulk_fast_num_neigh = np.append(bulk_fast_num_neigh, len(loc))
+            #        bulk_fast_neigh_ind = np.append(bulk_fast_neigh_ind, int(i))
 
-        system_all_int = freud.AABBQuery(f_box, f_box.wrap(pos_int))   #Calculate neighbor list
-        system_A_int = freud.AABBQuery(f_box, f_box.wrap(pos0_int))    #Calculate neighbor list
-        system_B_int = freud.AABBQuery(f_box, f_box.wrap(pos1_int))    #Calculate neighbor list
+            system_all_int = freud.AABBQuery(f_box, f_box.wrap(pos_int))   #Calculate neighbor list
+            system_A_int = freud.AABBQuery(f_box, f_box.wrap(pos0_int))    #Calculate neighbor list
+            system_B_int = freud.AABBQuery(f_box, f_box.wrap(pos1_int))    #Calculate neighbor list
 
-        all_int_nlist = system_all_int.query(f_box.wrap(pos), query_args).toNeighborList()
-        slow_int_nlist = system_all_int.query(f_box.wrap(pos0), query_args).toNeighborList()
-        fast_int_nlist = system_all_int.query(f_box.wrap(pos1), query_args).toNeighborList()
-        #AA_int_nlist = system_A_int.query(f_box.wrap(pos0), query_args).toNeighborList()
-        #AB_int_nlist = system_A_int.query(f_box.wrap(pos1), query_args).toNeighborList()
-        #BB_int_nlist = system_B_int.query(f_box.wrap(pos1), query_args).toNeighborList()
+            all_int_nlist = system_all_int.query(f_box.wrap(pos), query_args).toNeighborList()
+            slow_int_nlist = system_all_int.query(f_box.wrap(pos0), query_args).toNeighborList()
+            fast_int_nlist = system_all_int.query(f_box.wrap(pos1), query_args).toNeighborList()
+            #AA_int_nlist = system_A_int.query(f_box.wrap(pos0), query_args).toNeighborList()
+            #AB_int_nlist = system_A_int.query(f_box.wrap(pos1), query_args).toNeighborList()
+            #BB_int_nlist = system_B_int.query(f_box.wrap(pos1), query_args).toNeighborList()
 
-        int_neigh_ind = np.array([], dtype=int)
-        int_num_neigh = np.array([])
-        for i in range(0, len(int_id_plot)):
-            if i in all_int_nlist.point_indices:
-                if i not in int_neigh_ind:
-                    loc = np.where(all_int_nlist.point_indices==i)[0]
-                    int_num_neigh = np.append(int_num_neigh, len(loc))
+            int_neigh_ind = np.array([], dtype=int)
+            int_num_neigh = np.array([])
+            for i in range(0, len(int_id_plot)):
+                if i in all_int_nlist.point_indices:
+                    if i not in int_neigh_ind:
+                        loc = np.where(all_int_nlist.point_indices==i)[0]
+                        int_num_neigh = np.append(int_num_neigh, len(loc))
+                        int_neigh_ind = np.append(int_neigh_ind, int(i))
+                else:
+                    int_num_neigh = np.append(int_num_neigh, 0)
                     int_neigh_ind = np.append(int_neigh_ind, int(i))
-            else:
-                int_num_neigh = np.append(int_num_neigh, 0)
-                int_neigh_ind = np.append(int_neigh_ind, int(i))
 
 
 
 
 
-        #for i in all_int_nlist.point_indices:
-        #    if i not in int_neigh_ind:
-        #        loc = np.where(all_int_nlist.point_indices==i)[0]
-        #        int_num_neigh = np.append(int_num_neigh, len(loc))
-        #        int_neigh_ind = np.append(int_neigh_ind, int(i))
+            #for i in all_int_nlist.point_indices:
+            #    if i not in int_neigh_ind:
+            #        loc = np.where(all_int_nlist.point_indices==i)[0]
+            #        int_num_neigh = np.append(int_num_neigh, len(loc))
+            #        int_neigh_ind = np.append(int_neigh_ind, int(i))
 
-        pos_bulk_int_x_neigh = np.append(pos_bulk[bulk_neigh_ind,0], pos_int[int_neigh_ind,0])
-        pos_bulk_int_y_neigh = np.append(pos_bulk[bulk_neigh_ind,1], pos_int[int_neigh_ind,1])
-        bulk_int_neigh_ind = np.append(bulk_neigh_ind, int_neigh_ind)
-        bulk_int_num_neigh = np.append(bulk_num_neigh, int_num_neigh)
+            pos_bulk_int_x_neigh = np.append(pos_bulk[bulk_neigh_ind,0], pos_int[int_neigh_ind,0])
+            pos_bulk_int_y_neigh = np.append(pos_bulk[bulk_neigh_ind,1], pos_int[int_neigh_ind,1])
+            bulk_int_neigh_ind = np.append(bulk_neigh_ind, int_neigh_ind)
+            bulk_int_num_neigh = np.append(bulk_num_neigh, int_num_neigh)
 
-        int_slow_neigh_ind = np.array([], dtype=int)
-        int_slow_num_neigh = np.array([])
+            int_slow_neigh_ind = np.array([], dtype=int)
+            int_slow_num_neigh = np.array([])
 
-        for i in range(0, len(int_id_plot)):
-            if i in slow_int_nlist.point_indices:
-                if i not in int_slow_neigh_ind:
-                    loc = np.where(slow_int_nlist.point_indices==i)[0]
-                    int_slow_num_neigh = np.append(int_slow_num_neigh, len(loc))
+            for i in range(0, len(int_id_plot)):
+                if i in slow_int_nlist.point_indices:
+                    if i not in int_slow_neigh_ind:
+                        loc = np.where(slow_int_nlist.point_indices==i)[0]
+                        int_slow_num_neigh = np.append(int_slow_num_neigh, len(loc))
+                        int_slow_neigh_ind = np.append(int_slow_neigh_ind, int(i))
+                else:
+                    int_slow_num_neigh = np.append(int_slow_num_neigh, 0)
                     int_slow_neigh_ind = np.append(int_slow_neigh_ind, int(i))
-            else:
-                int_slow_num_neigh = np.append(int_slow_num_neigh, 0)
-                int_slow_neigh_ind = np.append(int_slow_neigh_ind, int(i))
 
-        #for i in slow_int_nlist.point_indices:
-        #    if i not in int_slow_neigh_ind:
-        #        loc = np.where(slow_int_nlist.point_indices==i)[0]
-        #        int_slow_num_neigh = np.append(int_slow_num_neigh, len(loc))
-        #        int_slow_neigh_ind = np.append(int_slow_neigh_ind, int(i))
+            #for i in slow_int_nlist.point_indices:
+            #    if i not in int_slow_neigh_ind:
+            #        loc = np.where(slow_int_nlist.point_indices==i)[0]
+            #        int_slow_num_neigh = np.append(int_slow_num_neigh, len(loc))
+            #        int_slow_neigh_ind = np.append(int_slow_neigh_ind, int(i))
 
-        pos_bulk_int_x_slow_neigh = np.append(pos_bulk[bulk_slow_neigh_ind,0], pos_int[int_slow_neigh_ind,0])
-        pos_bulk_int_y_slow_neigh = np.append(pos_bulk[bulk_slow_neigh_ind,1], pos_int[int_slow_neigh_ind,1])
-        bulk_int_slow_neigh_ind = np.append(bulk_slow_neigh_ind, int_slow_neigh_ind)
-        bulk_int_slow_num_neigh = np.append(bulk_slow_num_neigh, int_slow_num_neigh)
+            pos_bulk_int_x_slow_neigh = np.append(pos_bulk[bulk_slow_neigh_ind,0], pos_int[int_slow_neigh_ind,0])
+            pos_bulk_int_y_slow_neigh = np.append(pos_bulk[bulk_slow_neigh_ind,1], pos_int[int_slow_neigh_ind,1])
+            bulk_int_slow_neigh_ind = np.append(bulk_slow_neigh_ind, int_slow_neigh_ind)
+            bulk_int_slow_num_neigh = np.append(bulk_slow_num_neigh, int_slow_num_neigh)
 
-        int_fast_neigh_ind = np.array([], dtype=int)
-        int_fast_num_neigh = np.array([])
+            int_fast_neigh_ind = np.array([], dtype=int)
+            int_fast_num_neigh = np.array([])
 
-        for i in range(0, len(int_id_plot)):
-            if i in fast_int_nlist.point_indices:
-                if i not in int_fast_neigh_ind:
-                    loc = np.where(fast_int_nlist.point_indices==i)[0]
-                    int_fast_num_neigh = np.append(int_fast_num_neigh, len(loc))
+            for i in range(0, len(int_id_plot)):
+                if i in fast_int_nlist.point_indices:
+                    if i not in int_fast_neigh_ind:
+                        loc = np.where(fast_int_nlist.point_indices==i)[0]
+                        int_fast_num_neigh = np.append(int_fast_num_neigh, len(loc))
+                        int_fast_neigh_ind = np.append(int_fast_neigh_ind, int(i))
+                else:
+                    int_fast_num_neigh = np.append(int_fast_num_neigh, 0)
                     int_fast_neigh_ind = np.append(int_fast_neigh_ind, int(i))
-            else:
-                int_fast_num_neigh = np.append(int_fast_num_neigh, 0)
-                int_fast_neigh_ind = np.append(int_fast_neigh_ind, int(i))
 
-        #for i in fast_int_nlist.point_indices:
-        #    if i not in int_fast_neigh_ind:
-        #        loc = np.where(fast_int_nlist.point_indices==i)[0]
-        #        int_fast_num_neigh = np.append(int_fast_num_neigh, len(loc))
-        #        int_fast_neigh_ind = np.append(int_fast_neigh_ind, int(i))
+            #for i in fast_int_nlist.point_indices:
+            #    if i not in int_fast_neigh_ind:
+            #        loc = np.where(fast_int_nlist.point_indices==i)[0]
+            #        int_fast_num_neigh = np.append(int_fast_num_neigh, len(loc))
+            #        int_fast_neigh_ind = np.append(int_fast_neigh_ind, int(i))
 
-        pos_bulk_int_x_fast_neigh = np.append(pos_bulk[bulk_fast_neigh_ind,0], pos_int[int_fast_neigh_ind,0])
-        pos_bulk_int_y_fast_neigh = np.append(pos_bulk[bulk_fast_neigh_ind,1], pos_int[int_fast_neigh_ind,1])
-        bulk_int_fast_neigh_ind = np.append(bulk_fast_neigh_ind, int_fast_neigh_ind)
-        bulk_int_fast_num_neigh = np.append(bulk_fast_num_neigh, int_fast_num_neigh)
+            pos_bulk_int_x_fast_neigh = np.append(pos_bulk[bulk_fast_neigh_ind,0], pos_int[int_fast_neigh_ind,0])
+            pos_bulk_int_y_fast_neigh = np.append(pos_bulk[bulk_fast_neigh_ind,1], pos_int[int_fast_neigh_ind,1])
+            bulk_int_fast_neigh_ind = np.append(bulk_fast_neigh_ind, int_fast_neigh_ind)
+            bulk_int_fast_num_neigh = np.append(bulk_fast_num_neigh, int_fast_num_neigh)
 
-        bulk_fast0_neigh = len(np.where(bulk_fast_num_neigh==0)[0])
-        bulk_slow0_neigh = len(np.where(bulk_slow_num_neigh==0)[0])
-        bulk_0_neigh = len(np.where(bulk_num_neigh==0)[0])
-        bulk_fast1_neigh = len(np.where(bulk_fast_num_neigh==1)[0])
-        bulk_slow1_neigh = len(np.where(bulk_slow_num_neigh==1)[0])
-        bulk_1_neigh = len(np.where(bulk_num_neigh==1)[0])
-        bulk_fast2_neigh = len(np.where(bulk_fast_num_neigh==2)[0])
-        bulk_slow2_neigh = len(np.where(bulk_slow_num_neigh==2)[0])
-        bulk_2_neigh = len(np.where(bulk_num_neigh==2)[0])
-        bulk_fast3_neigh = len(np.where(bulk_fast_num_neigh==3)[0])
-        bulk_slow3_neigh = len(np.where(bulk_slow_num_neigh==3)[0])
-        bulk_3_neigh = len(np.where(bulk_num_neigh==3)[0])
-        bulk_fast4_neigh = len(np.where(bulk_fast_num_neigh==4)[0])
-        bulk_slow4_neigh = len(np.where(bulk_slow_num_neigh==4)[0])
-        bulk_4_neigh = len(np.where(bulk_num_neigh==4)[0])
-        bulk_fast5_neigh = len(np.where(bulk_fast_num_neigh==5)[0])
-        bulk_slow5_neigh = len(np.where(bulk_slow_num_neigh==5)[0])
-        bulk_5_neigh = len(np.where(bulk_num_neigh==5)[0])
-        bulk_fast6_neigh = len(np.where(bulk_fast_num_neigh==6)[0])
-        bulk_slow6_neigh = len(np.where(bulk_slow_num_neigh==6)[0])
-        bulk_6_neigh = len(np.where(bulk_num_neigh==6)[0])
+            bulk_fast0_neigh = len(np.where(bulk_fast_num_neigh==0)[0])
+            bulk_slow0_neigh = len(np.where(bulk_slow_num_neigh==0)[0])
+            bulk_0_neigh = len(np.where(bulk_num_neigh==0)[0])
+            bulk_fast1_neigh = len(np.where(bulk_fast_num_neigh==1)[0])
+            bulk_slow1_neigh = len(np.where(bulk_slow_num_neigh==1)[0])
+            bulk_1_neigh = len(np.where(bulk_num_neigh==1)[0])
+            bulk_fast2_neigh = len(np.where(bulk_fast_num_neigh==2)[0])
+            bulk_slow2_neigh = len(np.where(bulk_slow_num_neigh==2)[0])
+            bulk_2_neigh = len(np.where(bulk_num_neigh==2)[0])
+            bulk_fast3_neigh = len(np.where(bulk_fast_num_neigh==3)[0])
+            bulk_slow3_neigh = len(np.where(bulk_slow_num_neigh==3)[0])
+            bulk_3_neigh = len(np.where(bulk_num_neigh==3)[0])
+            bulk_fast4_neigh = len(np.where(bulk_fast_num_neigh==4)[0])
+            bulk_slow4_neigh = len(np.where(bulk_slow_num_neigh==4)[0])
+            bulk_4_neigh = len(np.where(bulk_num_neigh==4)[0])
+            bulk_fast5_neigh = len(np.where(bulk_fast_num_neigh==5)[0])
+            bulk_slow5_neigh = len(np.where(bulk_slow_num_neigh==5)[0])
+            bulk_5_neigh = len(np.where(bulk_num_neigh==5)[0])
+            bulk_fast6_neigh = len(np.where(bulk_fast_num_neigh==6)[0])
+            bulk_slow6_neigh = len(np.where(bulk_slow_num_neigh==6)[0])
+            bulk_6_neigh = len(np.where(bulk_num_neigh==6)[0])
 
-        int_fast0_neigh = len(np.where(int_fast_num_neigh==0)[0])
-        int_slow0_neigh = len(np.where(int_slow_num_neigh==0)[0])
-        int_0_neigh = len(np.where(int_num_neigh==0)[0])
-        int_fast1_neigh = len(np.where(int_fast_num_neigh==1)[0])
-        int_slow1_neigh = len(np.where(int_slow_num_neigh==1)[0])
-        int_1_neigh = len(np.where(int_num_neigh==1)[0])
-        int_fast2_neigh = len(np.where(int_fast_num_neigh==2)[0])
-        int_slow2_neigh = len(np.where(int_slow_num_neigh==2)[0])
-        int_2_neigh = len(np.where(int_num_neigh==2)[0])
-        int_fast3_neigh = len(np.where(int_fast_num_neigh==3)[0])
-        int_slow3_neigh = len(np.where(int_slow_num_neigh==3)[0])
-        int_3_neigh = len(np.where(int_num_neigh==3)[0])
-        int_fast4_neigh = len(np.where(int_fast_num_neigh==4)[0])
-        int_slow4_neigh = len(np.where(int_slow_num_neigh==4)[0])
-        int_4_neigh = len(np.where(int_num_neigh==4)[0])
-        int_fast5_neigh = len(np.where(int_fast_num_neigh==5)[0])
-        int_slow5_neigh = len(np.where(int_slow_num_neigh==5)[0])
-        int_5_neigh = len(np.where(int_num_neigh==5)[0])
-        int_fast6_neigh = len(np.where(int_fast_num_neigh==6)[0])
-        int_slow6_neigh = len(np.where(int_slow_num_neigh==6)[0])
-        int_6_neigh = len(np.where(int_num_neigh==6)[0])
+            int_fast0_neigh = len(np.where(int_fast_num_neigh==0)[0])
+            int_slow0_neigh = len(np.where(int_slow_num_neigh==0)[0])
+            int_0_neigh = len(np.where(int_num_neigh==0)[0])
+            int_fast1_neigh = len(np.where(int_fast_num_neigh==1)[0])
+            int_slow1_neigh = len(np.where(int_slow_num_neigh==1)[0])
+            int_1_neigh = len(np.where(int_num_neigh==1)[0])
+            int_fast2_neigh = len(np.where(int_fast_num_neigh==2)[0])
+            int_slow2_neigh = len(np.where(int_slow_num_neigh==2)[0])
+            int_2_neigh = len(np.where(int_num_neigh==2)[0])
+            int_fast3_neigh = len(np.where(int_fast_num_neigh==3)[0])
+            int_slow3_neigh = len(np.where(int_slow_num_neigh==3)[0])
+            int_3_neigh = len(np.where(int_num_neigh==3)[0])
+            int_fast4_neigh = len(np.where(int_fast_num_neigh==4)[0])
+            int_slow4_neigh = len(np.where(int_slow_num_neigh==4)[0])
+            int_4_neigh = len(np.where(int_num_neigh==4)[0])
+            int_fast5_neigh = len(np.where(int_fast_num_neigh==5)[0])
+            int_slow5_neigh = len(np.where(int_slow_num_neigh==5)[0])
+            int_5_neigh = len(np.where(int_num_neigh==5)[0])
+            int_fast6_neigh = len(np.where(int_fast_num_neigh==6)[0])
+            int_slow6_neigh = len(np.where(int_slow_num_neigh==6)[0])
+            int_6_neigh = len(np.where(int_num_neigh==6)[0])
 
-        g = open(outPath2+outTxt_neighbor, 'a')
-        g.write('{0:.2f}'.format(tst).center(15) + ' ')
-        g.write('{0:.6f}'.format(sizeBin).center(15) + ' ')
-        g.write('{0:.0f}'.format(np.amax(clust_size)).center(15) + ' ')
-        g.write('{0:.0f}'.format(bulk_fast0_neigh).center(15) + ' ')
-        g.write('{0:.0f}'.format(bulk_slow0_neigh).center(15) + ' ')
-        g.write('{0:.0f}'.format(bulk_0_neigh).center(15) + ' ')
-        g.write('{0:.0f}'.format(bulk_fast1_neigh).center(15) + ' ')
-        g.write('{0:.0f}'.format(bulk_slow1_neigh).center(15) + ' ')
-        g.write('{0:.0f}'.format(bulk_1_neigh).center(15) + ' ')
-        g.write('{0:.0f}'.format(bulk_fast2_neigh).center(15) + ' ')
-        g.write('{0:.0f}'.format(bulk_slow2_neigh).center(15) + ' ')
-        g.write('{0:.0f}'.format(bulk_2_neigh).center(15) + ' ')
-        g.write('{0:.0f}'.format(bulk_fast3_neigh).center(15) + ' ')
-        g.write('{0:.0f}'.format(bulk_slow3_neigh).center(15) + ' ')
-        g.write('{0:.0f}'.format(bulk_3_neigh).center(15) + ' ')
-        g.write('{0:.0f}'.format(bulk_fast4_neigh).center(15) + ' ')
-        g.write('{0:.0f}'.format(bulk_slow4_neigh).center(15) + ' ')
-        g.write('{0:.0f}'.format(bulk_4_neigh).center(15) + ' ')
-        g.write('{0:.0f}'.format(bulk_fast5_neigh).center(15) + ' ')
-        g.write('{0:.0f}'.format(bulk_slow5_neigh).center(15) + ' ')
-        g.write('{0:.0f}'.format(bulk_5_neigh).center(15) + ' ')
-        g.write('{0:.0f}'.format(bulk_fast6_neigh).center(15) + ' ')
-        g.write('{0:.0f}'.format(bulk_slow6_neigh).center(15) + ' ')
-        g.write('{0:.0f}'.format(bulk_6_neigh).center(15) + ' ')
-        g.write('{0:.0f}'.format(int_fast0_neigh).center(15) + ' ')
-        g.write('{0:.0f}'.format(int_slow0_neigh).center(15) + ' ')
-        g.write('{0:.0f}'.format(int_0_neigh).center(15) + ' ')
-        g.write('{0:.0f}'.format(int_fast1_neigh).center(15) + ' ')
-        g.write('{0:.0f}'.format(int_slow1_neigh).center(15) + ' ')
-        g.write('{0:.0f}'.format(int_1_neigh).center(15) + ' ')
-        g.write('{0:.0f}'.format(int_fast2_neigh).center(15) + ' ')
-        g.write('{0:.0f}'.format(int_slow2_neigh).center(15) + ' ')
-        g.write('{0:.0f}'.format(int_2_neigh).center(15) + ' ')
-        g.write('{0:.0f}'.format(int_fast3_neigh).center(15) + ' ')
-        g.write('{0:.0f}'.format(int_slow3_neigh).center(15) + ' ')
-        g.write('{0:.0f}'.format(int_3_neigh).center(15) + ' ')
-        g.write('{0:.0f}'.format(int_fast4_neigh).center(15) + ' ')
-        g.write('{0:.0f}'.format(int_slow4_neigh).center(15) + ' ')
-        g.write('{0:.0f}'.format(int_4_neigh).center(15) + ' ')
-        g.write('{0:.0f}'.format(int_fast5_neigh).center(15) + ' ')
-        g.write('{0:.0f}'.format(int_slow5_neigh).center(15) + ' ')
-        g.write('{0:.0f}'.format(int_5_neigh).center(15) + ' ')
-        g.write('{0:.0f}'.format(int_fast6_neigh).center(15) + ' ')
-        g.write('{0:.0f}'.format(int_slow6_neigh).center(15) + ' ')
-        g.write('{0:.0f}'.format(int_6_neigh).center(15) + '\n')
-        g.close()
-
+            g = open(outPath2+outTxt_neighbor, 'a')
+            g.write('{0:.2f}'.format(tst).center(15) + ' ')
+            g.write('{0:.6f}'.format(sizeBin).center(15) + ' ')
+            g.write('{0:.0f}'.format(np.amax(clust_size)).center(15) + ' ')
+            g.write('{0:.0f}'.format(bulk_fast0_neigh).center(15) + ' ')
+            g.write('{0:.0f}'.format(bulk_slow0_neigh).center(15) + ' ')
+            g.write('{0:.0f}'.format(bulk_0_neigh).center(15) + ' ')
+            g.write('{0:.0f}'.format(bulk_fast1_neigh).center(15) + ' ')
+            g.write('{0:.0f}'.format(bulk_slow1_neigh).center(15) + ' ')
+            g.write('{0:.0f}'.format(bulk_1_neigh).center(15) + ' ')
+            g.write('{0:.0f}'.format(bulk_fast2_neigh).center(15) + ' ')
+            g.write('{0:.0f}'.format(bulk_slow2_neigh).center(15) + ' ')
+            g.write('{0:.0f}'.format(bulk_2_neigh).center(15) + ' ')
+            g.write('{0:.0f}'.format(bulk_fast3_neigh).center(15) + ' ')
+            g.write('{0:.0f}'.format(bulk_slow3_neigh).center(15) + ' ')
+            g.write('{0:.0f}'.format(bulk_3_neigh).center(15) + ' ')
+            g.write('{0:.0f}'.format(bulk_fast4_neigh).center(15) + ' ')
+            g.write('{0:.0f}'.format(bulk_slow4_neigh).center(15) + ' ')
+            g.write('{0:.0f}'.format(bulk_4_neigh).center(15) + ' ')
+            g.write('{0:.0f}'.format(bulk_fast5_neigh).center(15) + ' ')
+            g.write('{0:.0f}'.format(bulk_slow5_neigh).center(15) + ' ')
+            g.write('{0:.0f}'.format(bulk_5_neigh).center(15) + ' ')
+            g.write('{0:.0f}'.format(bulk_fast6_neigh).center(15) + ' ')
+            g.write('{0:.0f}'.format(bulk_slow6_neigh).center(15) + ' ')
+            g.write('{0:.0f}'.format(bulk_6_neigh).center(15) + ' ')
+            g.write('{0:.0f}'.format(int_fast0_neigh).center(15) + ' ')
+            g.write('{0:.0f}'.format(int_slow0_neigh).center(15) + ' ')
+            g.write('{0:.0f}'.format(int_0_neigh).center(15) + ' ')
+            g.write('{0:.0f}'.format(int_fast1_neigh).center(15) + ' ')
+            g.write('{0:.0f}'.format(int_slow1_neigh).center(15) + ' ')
+            g.write('{0:.0f}'.format(int_1_neigh).center(15) + ' ')
+            g.write('{0:.0f}'.format(int_fast2_neigh).center(15) + ' ')
+            g.write('{0:.0f}'.format(int_slow2_neigh).center(15) + ' ')
+            g.write('{0:.0f}'.format(int_2_neigh).center(15) + ' ')
+            g.write('{0:.0f}'.format(int_fast3_neigh).center(15) + ' ')
+            g.write('{0:.0f}'.format(int_slow3_neigh).center(15) + ' ')
+            g.write('{0:.0f}'.format(int_3_neigh).center(15) + ' ')
+            g.write('{0:.0f}'.format(int_fast4_neigh).center(15) + ' ')
+            g.write('{0:.0f}'.format(int_slow4_neigh).center(15) + ' ')
+            g.write('{0:.0f}'.format(int_4_neigh).center(15) + ' ')
+            g.write('{0:.0f}'.format(int_fast5_neigh).center(15) + ' ')
+            g.write('{0:.0f}'.format(int_slow5_neigh).center(15) + ' ')
+            g.write('{0:.0f}'.format(int_5_neigh).center(15) + ' ')
+            g.write('{0:.0f}'.format(int_fast6_neigh).center(15) + ' ')
+            g.write('{0:.0f}'.format(int_slow6_neigh).center(15) + ' ')
+            g.write('{0:.0f}'.format(int_6_neigh).center(15) + '\n')
+            g.close()
+        else:
+            pos_bulk_int_x_neigh = np.array([])
+            pos_bulk_int_y_neigh = np.array([])
+            bulk_int_num_neigh = np.array([])
+            pos_bulk_int_x_slow_neigh = np.array([])
+            pos_bulk_int_y_slow_neigh = np.array([])
+            bulk_int_slow_num_neigh = np.array([])
+            pos_bulk_int_x_fast_neigh = np.array([])
+            pos_bulk_int_y_fast_neigh = np.array([])
+            bulk_int_fast_num_neigh = np.array([])
 
         fig = plt.figure(figsize=(7,6))
         ax = fig.add_subplot(111)
         im = plt.scatter(pos_bulk_int_x_neigh+h_box, pos_bulk_int_y_neigh+h_box, c=bulk_int_num_neigh, s=0.7)
-        min_n = np.amin(bulk_int_num_neigh)
-        max_n = np.amax(bulk_int_num_neigh)
 
-        tick_lev = np.arange(min_n, max_n+1, 1)
+
         #sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
         #sm.set_array([])
-        clb = plt.colorbar(ticks=tick_lev, orientation="vertical", format=tick.FormatStrFormatter('%.0f'))
+        if len(bulk_int_num_neigh) > 0:
+            min_n = np.amin(bulk_int_num_neigh)
+            max_n = np.amax(bulk_int_num_neigh)
+
+            tick_lev = np.arange(min_n, max_n+1, 1)
+            clb = plt.colorbar(ticks=tick_lev, orientation="vertical", format=tick.FormatStrFormatter('%.0f'))
+        else:
+            clb = plt.colorbar(orientation="vertical", format=tick.FormatStrFormatter('%.0f'))
         plt.tick_params(axis='both', which='both',
                         bottom=False, top=False, left=False, right=False,
                         labelbottom=False, labeltop=False, labelleft=False, labelright=False)
@@ -10488,13 +10503,17 @@ with hoomd.open(name=inFile, mode='rb') as t:
         fig = plt.figure(figsize=(7,6))
         ax = fig.add_subplot(111)
         im = plt.scatter(pos_bulk_int_x_slow_neigh+h_box, pos_bulk_int_y_slow_neigh+h_box, c=bulk_int_slow_num_neigh, s=0.7)
-        min_n = np.amin(bulk_int_slow_num_neigh)
-        max_n = np.amax(bulk_int_slow_num_neigh)
 
-        tick_lev = np.arange(min_n, max_n+1, 1)
         #sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
         #sm.set_array([])
-        clb = plt.colorbar(ticks=tick_lev, orientation="vertical", format=tick.FormatStrFormatter('%.0f'))
+        if len(bulk_int_slow_num_neigh) > 0:
+            min_n = np.amin(bulk_int_slow_num_neigh)
+            max_n = np.amax(bulk_int_slow_num_neigh)
+
+            tick_lev = np.arange(min_n, max_n+1, 1)
+            clb = plt.colorbar(ticks=tick_lev, orientation="vertical", format=tick.FormatStrFormatter('%.0f'))
+        else:
+            clb = plt.colorbar(orientation="vertical", format=tick.FormatStrFormatter('%.0f'))
         plt.tick_params(axis='both', which='both',
                         bottom=False, top=False, left=False, right=False,
                         labelbottom=False, labeltop=False, labelleft=False, labelright=False)
@@ -10547,13 +10566,17 @@ with hoomd.open(name=inFile, mode='rb') as t:
         fig = plt.figure(figsize=(7,6))
         ax = fig.add_subplot(111)
         im = plt.scatter(pos_bulk_int_x_fast_neigh+h_box, pos_bulk_int_y_fast_neigh+h_box, c=bulk_int_fast_num_neigh, s=0.7)
-        min_n = np.amin(bulk_int_fast_num_neigh)
-        max_n = np.amax(bulk_int_fast_num_neigh)
 
-        tick_lev = np.arange(min_n, max_n+1, 1)
         #sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
         #sm.set_array([])
-        clb = plt.colorbar(ticks=tick_lev, orientation="vertical", format=tick.FormatStrFormatter('%.0f'))
+        if len(bulk_int_fast_num_neigh) > 0:
+            min_n = np.amin(bulk_int_fast_num_neigh)
+            max_n = np.amax(bulk_int_fast_num_neigh)
+
+            tick_lev = np.arange(min_n, max_n+1, 1)
+            clb = plt.colorbar(ticks=tick_lev, orientation="vertical", format=tick.FormatStrFormatter('%.0f'))
+        else:
+            clb = plt.colorbar(orientation="vertical", format=tick.FormatStrFormatter('%.0f'))
         plt.tick_params(axis='both', which='both',
                         bottom=False, top=False, left=False, right=False,
                         labelbottom=False, labeltop=False, labelleft=False, labelright=False)
@@ -10602,4 +10625,3 @@ with hoomd.open(name=inFile, mode='rb') as t:
         plt.tight_layout()
         plt.savefig(outPath + 'num_B_neigh_' + out + pad + ".png", dpi=100)
         plt.close()
-        stop
