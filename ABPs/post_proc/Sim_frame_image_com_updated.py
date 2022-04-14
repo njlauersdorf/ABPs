@@ -19,9 +19,9 @@ import sys
 import os
 
 # Run locally
-hoomdPath=str(sys.argv[8])
-outPath2=str(sys.argv[9])
-outPath=str(sys.argv[10])
+hoomdPath=str(sys.argv[10])
+outPath2=str(sys.argv[11])
+outPath=str(sys.argv[12])
 
 # Add hoomd location to Path
 sys.path.insert(0,hoomdPath)
@@ -124,13 +124,17 @@ snap = f[0]
 typ = snap.particles.typeid
 partNum = len(typ)
 
+#Set output file names
+bin_width = float(sys.argv[8])
+time_step = float(sys.argv[9])
+
 # Create outfile name from infile name
 outfile = 'pa'+str(int(peA))+'_pb'+str(int(peB))+'_xa'+str(int(parFrac))+'_eps'+str(eps)+'_phi'+str(int(intPhi))+'_pNum' + str(int(partNum)) 
 out = 'sim_frame_' + outfile + "_frame_"
 
 # Get timesteps to output
 dumps = int(f.__len__())                # get number of timesteps dumped
-start = 0                               # gives first frame to read
+start = 500                               # gives first frame to read
 end = dumps                             # gives last frame to read
 
 def getNBins(length, minSz=(2**(1./6.))):
@@ -297,7 +301,7 @@ with hoomd.open(name=infile, mode='rb') as t:
             ax.add_collection(fastGroup)
             
             #Label time step
-            ax.text(0.95, 0.025, s=r'$\tau$' + ' = ' + '{:.1f}'.format(tst) + ' ' + r'$\tau_\mathrm{r}$',
+            ax.text(0.95, 0.025, s=r'$\tau$' + ' = ' + '{:.2f}'.format(3*tst) + ' ' + r'$\tau_\mathrm{r}$',
                     horizontalalignment='right', verticalalignment='bottom',
                     transform=ax.transAxes,
                     fontsize=18,
@@ -355,7 +359,7 @@ with hoomd.open(name=infile, mode='rb') as t:
                 ax.add_collection(slowGroup)
                 
                 #Label time step
-                ax.text(0.95, 0.025, s=r'$\tau$' + ' = ' + '{:.1f}'.format(tst) + ' ' + r'$\tau_\mathrm{r}$',
+                ax.text(0.95, 0.025, s=r'$\tau$' + ' = ' + '{:.2f}'.format(3*tst) + ' ' + r'$\tau_\mathrm{r}$',
                         horizontalalignment='right', verticalalignment='bottom',
                         transform=ax.transAxes,
                         fontsize=18,
@@ -401,7 +405,7 @@ with hoomd.open(name=infile, mode='rb') as t:
                 ax.add_collection(slowGroup)
                 
                 #Label time step
-                ax.text(0.95, 0.025, s=r'$\tau$' + ' = ' + '{:.1f}'.format(tst) + ' ' + r'$\tau_\mathrm{r}$',
+                ax.text(0.95, 0.025, s=r'$\tau$' + ' = ' + '{:.2f}'.format(3*tst) + ' ' + r'$\tau_\mathrm{r}$',
                         horizontalalignment='right', verticalalignment='bottom',
                         transform=ax.transAxes,
                         fontsize=18,
@@ -452,7 +456,7 @@ with hoomd.open(name=infile, mode='rb') as t:
                 ax.add_collection(fastGroup)
                 
                 #Label time step
-                ax.text(0.95, 0.025, s=r'$\tau$' + ' = ' + '{:.1f}'.format(tst) + ' ' + r'$\tau_\mathrm{r}$',
+                ax.text(0.95, 0.025, s=r'$\tau$' + ' = ' + '{:.2f}'.format(3*tst) + ' ' + r'$\tau_\mathrm{r}$',
                         horizontalalignment='right', verticalalignment='bottom',
                         transform=ax.transAxes,
                         fontsize=18,

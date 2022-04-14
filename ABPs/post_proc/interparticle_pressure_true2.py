@@ -215,6 +215,8 @@ partNum = len(typ)
 # Outfile to write data to
 outfile = 'pa'+str(int(peA))+'_pb'+str(int(peB))+'_xa'+str(int(parFrac))+'_eps'+str(eps)+'_phi'+str(int(intPhi))+'_pNum' + str(int(partNum)) 
 outTxt = 'interpart_press_tom_' + outfile + '.txt'
+outTxt_slow = 'interpart_press_slow_tom_' + outfile + '.txt'
+outTxt_fast = 'interpart_press_fast_tom_' + outfile + '.txt'
 
 g = open(outPath2+outTxt, 'w') # write file headings
 g.write('Timestep'.center(15) + ' ' +\
@@ -234,6 +236,41 @@ g.write('Timestep'.center(15) + ' ' +\
         'NDense'.center(15) + '\n')
 g.close()
 
+g = open(outPath2+outTxt_slow, 'w') # write file headings
+g.write('Timestep'.center(15) + ' ' +\
+        'gasArea'.center(15) + ' ' +\
+        'gasSigXX'.center(15) + ' ' +\
+        'gasSigXY'.center(15) + ' ' +\
+        'gasSigYX'.center(15) + ' ' +\
+        'gasSigYY'.center(15) + ' ' +\
+        'gasTrace'.center(15) + ' ' +\
+        'bulkArea'.center(15) + ' ' +\
+        'bulkSigXX'.center(15) + ' ' +\
+        'bulkSigXY'.center(15) + ' ' +\
+        'bulkSigYX'.center(15) + ' ' +\
+        'bulkSigYY'.center(15) + ' ' +\
+        'bulkTrace'.center(15) + ' ' +\
+        'Length'.center(15) + ' ' +\
+        'NDense'.center(15) + '\n')
+g.close()
+
+g = open(outPath2+outTxt_fast, 'w') # write file headings
+g.write('Timestep'.center(15) + ' ' +\
+        'gasArea'.center(15) + ' ' +\
+        'gasSigXX'.center(15) + ' ' +\
+        'gasSigXY'.center(15) + ' ' +\
+        'gasSigYX'.center(15) + ' ' +\
+        'gasSigYY'.center(15) + ' ' +\
+        'gasTrace'.center(15) + ' ' +\
+        'bulkArea'.center(15) + ' ' +\
+        'bulkSigXX'.center(15) + ' ' +\
+        'bulkSigXY'.center(15) + ' ' +\
+        'bulkSigYX'.center(15) + ' ' +\
+        'bulkSigYY'.center(15) + ' ' +\
+        'bulkTrace'.center(15) + ' ' +\
+        'Length'.center(15) + ' ' +\
+        'NDense'.center(15) + '\n')
+g.close()
             
 box_data = np.zeros((1), dtype=np.ndarray)  # box dimension holder
 r_cut = 2**(1./6.)                          # potential cutoff
@@ -400,10 +437,31 @@ with hoomd.open(name=inFile, mode='rb') as t:
             bulkSigYY = 0
             bulkSigXY=0
             bulkSigYX=0
+            
+            bulkSigXX_slow = 0
+            bulkSigYY_slow = 0
+            bulkSigXY_slow = 0
+            bulkSigYX_slow = 0
+            
+            bulkSigXX_fast = 0
+            bulkSigYY_fast = 0
+            bulkSigXY_fast = 0
+            bulkSigYX_fast = 0
+            
             gasSigXX = 0
             gasSigYY = 0
             gasSigXY=0
             gasSigYX=0
+            
+            gasSigXX_slow = 0
+            gasSigYY_slow = 0
+            gasSigXY_slow = 0
+            gasSigYX_slow = 0
+            
+            gasSigXX_fast = 0
+            gasSigYY_fast = 0
+            gasSigXY_fast = 0
+            gasSigYX_fast = 0
             
             reftype=np.zeros(len(ids))
             for k in range(0, len(ids)):
@@ -433,7 +491,6 @@ with hoomd.open(name=inFile, mode='rb') as t:
                         for indy in looky:
                            # Loop through all particles in that bin
                             for comp in binParts[indx][indy]:
-                                typParts[x_ind][y_ind]=typ[binParts[indx][indy]]
                                 dist = computeDist(refx, refy, pos[comp][0], pos[comp][1])
                                 # If potential is on ...
                                 if 0.1 < dist <= r_cut:
@@ -445,12 +502,33 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                         bulkSigYY += (fy * (pos[comp][1] - refy))
                                         bulkSigXY += (fx * (pos[comp][1] - refy))
                                         bulkSigYX += (fy * (pos[comp][0] - refx))
+                                        if typ[comp] == 0:
+                                            bulkSigXX_slow += (fx * (pos[comp][0] - refx))
+                                            bulkSigYY_slow += (fy * (pos[comp][1] - refy))
+                                            bulkSigXY_slow += (fx * (pos[comp][1] - refy))
+                                            bulkSigYX_slow += (fy * (pos[comp][0] - refx))
+                                        else:
+                                            bulkSigXX_fast += (fx * (pos[comp][0] - refx))
+                                            bulkSigYY_fast += (fy * (pos[comp][1] - refy))
+                                            bulkSigXY_fast += (fx * (pos[comp][1] - refy))
+                                            bulkSigYX_fast += (fy * (pos[comp][0] - refx))
                                     # This goes into the gas pressure
                                     else:
                                         gasSigXX += (fx * (pos[comp][0] - refx))
                                         gasSigYY += (fy * (pos[comp][1] - refy))
                                         gasSigXY += (fx * (pos[comp][1] - refy))
                                         gasSigYX += (fy * (pos[comp][0] - refx))
+                                        if typ[comp] == 0:
+                                            gasSigXX_slow += (fx * (pos[comp][0] - refx))
+                                            gasSigYY_slow += (fy * (pos[comp][1] - refy))
+                                            gasSigXY_slow += (fx * (pos[comp][1] - refy))
+                                            gasSigYX_slow += (fy * (pos[comp][0] - refx))
+                                        else:
+                                            gasSigXX_fast += (fx * (pos[comp][0] - refx))
+                                            gasSigYY_fast += (fy * (pos[comp][1] - refy))
+                                            gasSigXY_fast += (fx * (pos[comp][1] - refy))
+                                            gasSigYX_fast += (fy * (pos[comp][0] - refx))
+                                        
                                     
                             # Compute the distance
             # Now let's get the area of each phase (by summing bin areas)
@@ -480,6 +558,13 @@ with hoomd.open(name=inFile, mode='rb') as t:
             # Divide by two because each pair is counted twice
             bulkTrace = (bulkSigXX + bulkSigYY + bulkSigXY + bulkSigYX)/2.
             gasTrace = (gasSigXX + gasSigYY + gasSigXY + gasSigYX)/2.
+            
+            bulkTrace_slow = (bulkSigXX_slow + bulkSigYY_slow + bulkSigXY_slow + bulkSigYX_slow)/2.
+            gasTrace_slow = (gasSigXX_slow + gasSigYY_slow + gasSigXY_slow + gasSigYX_slow)/2.
+            
+            bulkTrace_fast = (bulkSigXX_fast + bulkSigYY_fast + bulkSigXY_fast + bulkSigYX_fast)/2.
+            gasTrace_fast = (gasSigXX_fast + gasSigYY_fast + gasSigXY_fast + gasSigYX_fast)/2.
+            
             # Area of a bin
             binArea = sizeBin * sizeBin
             # Area of each phase
@@ -506,6 +591,42 @@ with hoomd.open(name=inFile, mode='rb') as t:
             g.write('{0:.3f}'.format(bulkSigYX).center(15) + ' ')
             g.write('{0:.3f}'.format(bulkSigYY).center(15) + ' ')
             g.write('{0:.3f}'.format(bulkTrace).center(15) + ' ')
+            g.write('{0:.1f}'.format(lEdge).center(15) + ' ')
+            g.write('{0:.0f}'.format(ndense).center(15) + '\n')
+            g.close()
+            
+            g = open(outPath2+outTxt_slow, 'a')
+            g.write('{0:.3f}'.format(tst).center(15) + ' ')
+            g.write('{0:.3f}'.format(gasArea).center(15) + ' ')
+            g.write('{0:.3f}'.format(gasSigXX_slow).center(15) + ' ')
+            g.write('{0:.3f}'.format(gasSigXY_slow).center(15) + ' ')
+            g.write('{0:.3f}'.format(gasSigYX_slow).center(15) + ' ')
+            g.write('{0:.3f}'.format(gasSigYY_slow).center(15) + ' ')
+            g.write('{0:.3f}'.format(gasTrace_slow).center(15) + ' ')
+            g.write('{0:.3f}'.format(bulkArea).center(15) + ' ')
+            g.write('{0:.3f}'.format(bulkSigXX_slow).center(15) + ' ')
+            g.write('{0:.3f}'.format(bulkSigXY_slow).center(15) + ' ')
+            g.write('{0:.3f}'.format(bulkSigYX_slow).center(15) + ' ')
+            g.write('{0:.3f}'.format(bulkSigYY_slow).center(15) + ' ')
+            g.write('{0:.3f}'.format(bulkTrace_slow).center(15) + ' ')
+            g.write('{0:.1f}'.format(lEdge).center(15) + ' ')
+            g.write('{0:.0f}'.format(ndense).center(15) + '\n')
+            g.close()
+            
+            g = open(outPath2+outTxt_fast, 'a')
+            g.write('{0:.3f}'.format(tst).center(15) + ' ')
+            g.write('{0:.3f}'.format(gasArea).center(15) + ' ')
+            g.write('{0:.3f}'.format(gasSigXX_fast).center(15) + ' ')
+            g.write('{0:.3f}'.format(gasSigXY_fast).center(15) + ' ')
+            g.write('{0:.3f}'.format(gasSigYX_fast).center(15) + ' ')
+            g.write('{0:.3f}'.format(gasSigYY_fast).center(15) + ' ')
+            g.write('{0:.3f}'.format(gasTrace_fast).center(15) + ' ')
+            g.write('{0:.3f}'.format(bulkArea).center(15) + ' ')
+            g.write('{0:.3f}'.format(bulkSigXX_fast).center(15) + ' ')
+            g.write('{0:.3f}'.format(bulkSigXY_fast).center(15) + ' ')
+            g.write('{0:.3f}'.format(bulkSigYX_fast).center(15) + ' ')
+            g.write('{0:.3f}'.format(bulkSigYY_fast).center(15) + ' ')
+            g.write('{0:.3f}'.format(bulkTrace_fast).center(15) + ' ')
             g.write('{0:.1f}'.format(lEdge).center(15) + ' ')
             g.write('{0:.0f}'.format(ndense).center(15) + '\n')
             g.close()
