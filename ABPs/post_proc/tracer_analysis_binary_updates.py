@@ -10065,8 +10065,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     pos_bulk_int = pos[bulk_int_id_plot]
                     pos_gas_int = pos[gas_int_id_plot]
 
-                #else:
-                if j >= int(dumps/2):
+                    #else:
                     if ind_analyzed==0:
                         slow_tracers = random.choices(slow_bulk_id_plot, k=int(len(slow_bulk_id_plot)/1000))
                         fast_tracers = random.choices(fast_bulk_id_plot, k=int(len(fast_bulk_id_plot)/1000))
