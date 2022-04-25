@@ -557,7 +557,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
     r = np.linspace(0.0,  5.0, 100)             # Define radius for x-axis of plot later
 
-    start = int(400/time_step)#205                                             # first frame to process
+    start = int(0/time_step)#205                                             # first frame to process
     dumps = int(t.__len__())                                # get number of timesteps dumped
     end = int(dumps/time_step)#int(dumps/time_step)-1                                             # final frame to process
     snap = t[0]                                             # Take first snap for box
@@ -635,8 +635,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
             com_tmp_posX_temp = 0
             com_tmp_posY_temp = 0
         if ((np.amax(clust_size)>=0.85*clust_theory) & (np.amax(clust_size)<=1.15*clust_theory) & (steady_state == 'True')) | (steady_state == 'False'):
-            print('true!')
-            print(steady_state)
+
             #shift reference frame to center of mass of cluster
             fsize=10
             pos[:,0]= pos[:,0]-com_tmp_posX_temp
@@ -6075,8 +6074,6 @@ with hoomd.open(name=inFile, mode='rb') as t:
                         okay = np.where(np.abs(np.diff(adjacent_x_arr_new)) + np.abs(np.diff(adjacent_y_arr_new)) > 0)
                         ext_x = np.r_[adjacent_x_arr_new[okay], adjacent_x_arr_new[-1], adjacent_x_arr_new[0]]
                         ext_y = np.r_[adjacent_y_arr_new[okay], adjacent_y_arr_new[-1], adjacent_y_arr_new[0]]
-                        print(ext_x)
-                        print(ext_y)
 
 
                         if len(ext_x)==3:
@@ -9985,150 +9982,346 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 slow_gas_id_plot = np.where((partPhase==2) & (typ==1))[0]        #Bulk phase structure(s)
                 fast_gas_id_plot = np.where((partPhase==2) & (typ==0))[0]        #Bulk phase structure(s)
             gas_id_plot = np.where(partPhase==2)[0]         #All interfaces
-            print('percent_dif')
-            print(((len(fast_bulk_id_plot)/len(bulk_id_plot) - ss_chi_f)/ss_chi_f)*100)
 
             if len(fast_bulk_id_plot)>0:
 
-                bulk_ratio = len(fast_bulk_id_plot)/len(bulk_id_plot)
+                #bulk_ratio = len(fast_bulk_id_plot)/len(bulk_id_plot)
                 if steady_state == 'True':
-                    if ((bulk_ratio <= 1.01 * ss_chi_f) &  (0.99 * ss_chi_f <= bulk_ratio)):
-                        if ind_analyzed == 0:
-                            slow_tracers = random.choices(slow_bulk_id_plot, k=int(len(slow_bulk_id_plot)/1000))
-                            fast_tracers = random.choices(fast_bulk_id_plot, k=int(len(fast_bulk_id_plot)/1000))
-                            pos0_tracer_time_x = pos[slow_tracers,0]
-                            pos0_tracer_time_y = pos[slow_tracers,1]
-                            pos1_tracer_time_x = pos[fast_tracers,0]
-                            pos1_tracer_time_y = pos[fast_tracers,1]
-                            slow_tracers_in_clust = np.ones(len(slow_tracers))
-                            fast_tracers_in_clust = np.ones(len(fast_tracers))
-                            final_xpos_slow_tracers = np.zeros(len(slow_tracers))
-                            final_xpos_fast_tracers = np.zeros(len(fast_tracers))
-                            final_ypos_slow_tracers = np.zeros(len(slow_tracers))
-                            final_ypos_fast_tracers = np.zeros(len(fast_tracers))
-                            final_time_fast_tracers = np.zeros(len(fast_tracers))
-                            final_time_slow_tracers = np.zeros(len(slow_tracers))
+                    #if ((bulk_ratio <= 1.01 * ss_chi_f) &  (0.99 * ss_chi_f <= bulk_ratio)):
+                    if ind_analyzed == 0:
+                        slow_tracers = random.choices(slow_bulk_id_plot, k=int(len(slow_bulk_id_plot)/1000))
+                        fast_tracers = random.choices(fast_bulk_id_plot, k=int(len(fast_bulk_id_plot)/1000))
 
-                        ind_analyzed += 1
-                        print('rdf!')
+                        slow_gas_tracers = random.choices(slow_gas_id_plot, k=int(len(slow_gas_id_plot)/50))
+                        fast_gas_tracers = random.choices(fast_gas_id_plot, k=int(len(fast_gas_id_plot)/50))
+
+                        slow_bulk_tracers = random.choices(slow_bulk_id_plot, k=int(len(slow_bulk_id_plot)/1000))
+                        fast_bulk_tracers = random.choices(fast_bulk_id_plot, k=int(len(fast_bulk_id_plot)/1000))
+
+                        pos0_tracer_time_x = pos[slow_tracers,0]
+                        pos0_tracer_time_y = pos[slow_tracers,1]
+                        pos1_tracer_time_x = pos[fast_tracers,0]
+                        pos1_tracer_time_y = pos[fast_tracers,1]
+
+                        pos0_gas_tracer_time_x = pos[slow_gas_tracers,0]
+                        pos0_gas_tracer_time_y = pos[slow_gas_tracers,1]
+                        pos1_gas_tracer_time_x = pos[fast_gas_tracers,0]
+                        pos1_gas_tracer_time_y = pos[fast_gas_tracers,1]
+
+                        pos0_bulk_tracer_time_x = pos[slow_bulk_tracers,0]
+                        pos0_bulk_tracer_time_y = pos[slow_bulk_tracers,1]
+                        pos1_bulk_tracer_time_x = pos[fast_bulk_tracers,0]
+                        pos1_bulk_tracer_time_y = pos[fast_bulk_tracers,1]
+
+                        slow_tracers_in_clust = np.ones(len(slow_tracers))
+                        fast_tracers_in_clust = np.ones(len(fast_tracers))
+                        final_xpos_slow_tracers = np.zeros(len(slow_tracers))
+                        final_xpos_fast_tracers = np.zeros(len(fast_tracers))
+                        final_ypos_slow_tracers = np.zeros(len(slow_tracers))
+                        final_ypos_fast_tracers = np.zeros(len(fast_tracers))
+                        final_time_fast_tracers = np.zeros(len(fast_tracers))
+                        final_time_slow_tracers = np.zeros(len(slow_tracers))
+
+                        slow_gas_tracers_in_clust = np.ones(len(slow_gas_tracers))
+                        fast_gas_tracers_in_clust = np.ones(len(fast_gas_tracers))
+                        slow_gas_tracers_in_bulk = np.ones(len(slow_gas_tracers))
+                        fast_gas_tracers_in_bulk = np.ones(len(fast_gas_tracers))
+                        final_xpos_slow_gas_tracers = np.zeros(len(slow_gas_tracers))
+                        final_xpos_fast_gas_tracers = np.zeros(len(fast_gas_tracers))
+                        final_ypos_slow_gas_tracers = np.zeros(len(slow_gas_tracers))
+                        final_ypos_fast_gas_tracers = np.zeros(len(fast_gas_tracers))
+                        final_time_fast_gas_tracers = np.zeros(len(fast_gas_tracers))
+                        final_time_slow_gas_tracers = np.zeros(len(slow_gas_tracers))
+
+                        slow_bulk_tracers_in_clust = np.ones(len(slow_bulk_tracers))
+                        fast_bulk_tracers_in_clust = np.ones(len(fast_bulk_tracers))
+                        final_xpos_slow_bulk_tracers = np.zeros(len(slow_bulk_tracers))
+                        final_xpos_fast_bulk_tracers = np.zeros(len(fast_bulk_tracers))
+                        final_ypos_slow_bulk_tracers = np.zeros(len(slow_bulk_tracers))
+                        final_ypos_fast_bulk_tracers = np.zeros(len(fast_bulk_tracers))
+                        final_time_fast_bulk_tracers = np.zeros(len(fast_bulk_tracers))
+                        final_time_slow_bulk_tracers = np.zeros(len(slow_bulk_tracers))
+
+                    ind_analyzed += 1
 
 
-                        pos0=pos[typ0ind]                               # Find positions of type 0 particles
-                        pos0_bulk = pos[slow_bulk_id_plot]
-                        pos0_int = pos[slow_int_id_plot]
-                        pos0_gas = pos[slow_gas_id_plot]
-                        pos0_bulk_int = pos[slow_bulk_int_id_plot]
-                        pos0_gas_int = pos[slow_gas_int_id_plot]
+                    pos0=pos[typ0ind]                               # Find positions of type 0 particles
+                    pos0_bulk = pos[slow_bulk_id_plot]
+                    pos0_int = pos[slow_int_id_plot]
+                    pos0_gas = pos[slow_gas_id_plot]
+                    pos0_bulk_int = pos[slow_bulk_int_id_plot]
+                    pos0_gas_int = pos[slow_gas_int_id_plot]
 
-                        pos1=pos[typ1ind]
-                        pos1_bulk = pos[fast_bulk_id_plot]
-                        pos1_int = pos[fast_int_id_plot]
-                        pos1_gas = pos[fast_gas_id_plot]
-                        pos1_bulk_int = pos[fast_bulk_int_id_plot]
-                        pos1_gas_int = pos[fast_gas_int_id_plot]
+                    pos1=pos[typ1ind]
+                    pos1_bulk = pos[fast_bulk_id_plot]
+                    pos1_int = pos[fast_int_id_plot]
+                    pos1_gas = pos[fast_gas_id_plot]
+                    pos1_bulk_int = pos[fast_bulk_int_id_plot]
+                    pos1_gas_int = pos[fast_gas_int_id_plot]
 
-                        pos_bulk = pos[bulk_id_plot]
-                        pos_int = pos[int_id_plot]
-                        pos_gas = pos[gas_id_plot]
-                        pos_bulk_int = pos[bulk_int_id_plot]
-                        pos_gas_int = pos[gas_int_id_plot]
+                    pos_bulk = pos[bulk_id_plot]
+                    pos_int = pos[int_id_plot]
+                    pos_gas = pos[gas_id_plot]
+                    pos_bulk_int = pos[bulk_int_id_plot]
+                    pos_gas_int = pos[gas_int_id_plot]
 
-                else:
-                    if j >= int(dumps/2):
-                        if ind_analyzed==0:
-                            slow_tracers = random.choices(slow_bulk_id_plot, k=int(len(slow_bulk_id_plot)/1000))
-                            fast_tracers = random.choices(fast_bulk_id_plot, k=int(len(fast_bulk_id_plot)/1000))
-                            pos0_tracer_time_x = pos[slow_tracers,0]
-                            pos0_tracer_time_y = pos[slow_tracers,1]
-                            pos1_tracer_time_x = pos[fast_tracers,0]
-                            pos1_tracer_time_y = pos[fast_tracers,1]
-                            slow_tracers_in_clust = np.ones(len(slow_tracers))
-                            fast_tracers_in_clust = np.ones(len(fast_tracers))
-                            final_xpos_slow_tracers = np.zeros(len(slow_tracers))
-                            final_xpos_fast_tracers = np.zeros(len(fast_tracers))
-                            final_ypos_slow_tracers = np.zeros(len(slow_tracers))
-                            final_ypos_fast_tracers = np.zeros(len(fast_tracers))
-                            final_time_fast_tracers = np.zeros(len(fast_tracers))
-                            final_time_slow_tracers = np.zeros(len(slow_tracers))
-                        '''
-                        else:
-                            for b in range(0, len(slow_tracers)):
-                                if slow_tracers[b] not in bulk_int_id_plot:
-                                    slow_tracers = np.remove(slow_tracers, b)
-                            for b in range(0, len(fast_tracers)):
-                                if fast_tracers[b] not in bulk_int_id_plot:
-                                    fast_tracers = np.remove(fast_tracers, b)
-                        '''
-                        ind_analyzed += 1
-                        pos0=pos[typ0ind]                               # Find positions of type 0 particles
-                        pos0_bulk = pos[slow_bulk_id_plot]
-                        pos0_int = pos[slow_int_id_plot]
-                        pos0_gas = pos[slow_gas_id_plot]
-                        pos0_bulk_int = pos[slow_bulk_int_id_plot]
-                        pos0_gas_int = pos[slow_gas_int_id_plot]
+                #else:
+                if j >= int(dumps/2):
+                    if ind_analyzed==0:
+                        slow_tracers = random.choices(slow_bulk_id_plot, k=int(len(slow_bulk_id_plot)/1000))
+                        fast_tracers = random.choices(fast_bulk_id_plot, k=int(len(fast_bulk_id_plot)/1000))
 
-                        pos1=pos[typ1ind]
-                        pos1_bulk = pos[fast_bulk_id_plot]
-                        pos1_int = pos[fast_int_id_plot]
-                        pos1_gas = pos[fast_gas_id_plot]
-                        pos1_bulk_int = pos[fast_bulk_int_id_plot]
-                        pos1_gas_int = pos[fast_gas_int_id_plot]
 
-                        pos_bulk = pos[bulk_id_plot]
-                        pos_int = pos[int_id_plot]
-                        pos_gas = pos[gas_id_plot]
-                        pos_bulk_int = pos[bulk_int_id_plot]
-                        pos_gas_int = pos[gas_int_id_plot]
-        if ind_analyzed>1:
+                        slow_gas_tracers = random.choices(slow_gas_id_plot, k=int(len(slow_gas_id_plot)/50))
+                        fast_gas_tracers = random.choices(fast_gas_id_plot, k=int(len(fast_gas_id_plot)/50))
+
+
+                        slow_bulk_tracers = random.choices(slow_bulk_id_plot, k=int(len(slow_bulk_id_plot)/1000))
+                        fast_bulk_tracers = random.choices(fast_bulk_id_plot, k=int(len(fast_bulk_id_plot)/1000))
+
+                        pos0_tracer_time_x = pos[slow_tracers,0]
+                        pos0_tracer_time_y = pos[slow_tracers,1]
+                        pos1_tracer_time_x = pos[fast_tracers,0]
+                        pos1_tracer_time_y = pos[fast_tracers,1]
+
+                        pos0_gas_tracer_time_x = pos[slow_gas_tracers,0]
+                        pos0_gas_tracer_time_y = pos[slow_gas_tracers,1]
+                        pos1_gas_tracer_time_x = pos[fast_gas_tracers,0]
+                        pos1_gas_tracer_time_y = pos[fast_gas_tracers,1]
+
+                        pos0_bulk_tracer_time_x = pos[slow_bulk_tracers,0]
+                        pos0_bulk_tracer_time_y = pos[slow_bulk_tracers,1]
+                        pos1_bulk_tracer_time_x = pos[fast_bulk_tracers,0]
+                        pos1_bulk_tracer_time_y = pos[fast_bulk_tracers,1]
+
+                        slow_tracers_in_clust = np.ones(len(slow_tracers))
+                        fast_tracers_in_clust = np.ones(len(fast_tracers))
+                        final_xpos_slow_tracers = np.zeros(len(slow_tracers))
+                        final_xpos_fast_tracers = np.zeros(len(fast_tracers))
+                        final_ypos_slow_tracers = np.zeros(len(slow_tracers))
+                        final_ypos_fast_tracers = np.zeros(len(fast_tracers))
+                        final_time_fast_tracers = np.zeros(len(fast_tracers))
+                        final_time_slow_tracers = np.zeros(len(slow_tracers))
+
+                        slow_gas_tracers_in_clust = np.ones(len(slow_gas_tracers))
+                        fast_gas_tracers_in_clust = np.ones(len(fast_gas_tracers))
+                        slow_gas_tracers_in_bulk = np.ones(len(slow_gas_tracers))
+                        fast_gas_tracers_in_bulk = np.ones(len(fast_gas_tracers))
+                        final_xpos_slow_gas_tracers = np.zeros(len(slow_gas_tracers))
+                        final_xpos_fast_gas_tracers = np.zeros(len(fast_gas_tracers))
+                        final_ypos_slow_gas_tracers = np.zeros(len(slow_gas_tracers))
+                        final_ypos_fast_gas_tracers = np.zeros(len(fast_gas_tracers))
+                        final_time_fast_gas_tracers = np.zeros(len(fast_gas_tracers))
+                        final_time_slow_gas_tracers = np.zeros(len(slow_gas_tracers))
+
+                        slow_bulk_tracers_in_clust = np.ones(len(slow_bulk_tracers))
+                        fast_bulk_tracers_in_clust = np.ones(len(fast_bulk_tracers))
+                        final_xpos_slow_bulk_tracers = np.zeros(len(slow_bulk_tracers))
+                        final_xpos_fast_bulk_tracers = np.zeros(len(fast_bulk_tracers))
+                        final_ypos_slow_bulk_tracers = np.zeros(len(slow_bulk_tracers))
+                        final_ypos_fast_bulk_tracers = np.zeros(len(fast_bulk_tracers))
+                        final_time_fast_bulk_tracers = np.zeros(len(fast_bulk_tracers))
+                        final_time_slow_bulk_tracers = np.zeros(len(slow_bulk_tracers))
+                    '''
+                    else:
+                        for b in range(0, len(slow_tracers)):
+                            if slow_tracers[b] not in bulk_int_id_plot:
+                                slow_tracers = np.remove(slow_tracers, b)
+                        for b in range(0, len(fast_tracers)):
+                            if fast_tracers[b] not in bulk_int_id_plot:
+                                fast_tracers = np.remove(fast_tracers, b)
+                    '''
+                    ind_analyzed += 1
+                    pos0=pos[typ0ind]                               # Find positions of type 0 particles
+                    pos0_bulk = pos[slow_bulk_id_plot]
+                    pos0_int = pos[slow_int_id_plot]
+                    pos0_gas = pos[slow_gas_id_plot]
+                    pos0_bulk_int = pos[slow_bulk_int_id_plot]
+                    pos0_gas_int = pos[slow_gas_int_id_plot]
+
+                    pos1=pos[typ1ind]
+                    pos1_bulk = pos[fast_bulk_id_plot]
+                    pos1_int = pos[fast_int_id_plot]
+                    pos1_gas = pos[fast_gas_id_plot]
+                    pos1_bulk_int = pos[fast_bulk_int_id_plot]
+                    pos1_gas_int = pos[fast_gas_int_id_plot]
+
+                    pos_bulk = pos[bulk_id_plot]
+                    pos_int = pos[int_id_plot]
+                    pos_gas = pos[gas_id_plot]
+                    pos_bulk_int = pos[bulk_int_id_plot]
+                    pos_gas_int = pos[gas_int_id_plot]
+        if ind_analyzed>=1:
 
             pos0_tracer = pos[slow_tracers]
             pos1_tracer = pos[fast_tracers]
 
-            pos0_tracer_time_x = np.vstack((pos0_tracer_time_x, pos0_tracer[:,0]))
-            pos0_tracer_time_y = np.vstack((pos0_tracer_time_y, pos0_tracer[:,1]))
-            pos1_tracer_time_x = np.vstack((pos1_tracer_time_x, pos1_tracer[:,0]))
-            pos1_tracer_time_y = np.vstack((pos1_tracer_time_y, pos1_tracer[:,1]))
+            pos0_gas_tracer = pos[slow_gas_tracers]
+            pos1_gas_tracer = pos[fast_gas_tracers]
+
+            pos0_bulk_tracer = pos[slow_bulk_tracers]
+            pos1_bulk_tracer = pos[fast_bulk_tracers]
+            if ind_analyzed==1:
+                pos0_tracer_time_x = pos0_tracer_time_x.reshape((1,len(pos0_tracer_time_x)))
+                pos0_tracer_time_y = pos0_tracer_time_y.reshape((1,len(pos0_tracer_time_y)))
+                pos1_tracer_time_x = pos1_tracer_time_x.reshape((1,len(pos1_tracer_time_x)))
+                pos1_tracer_time_y = pos1_tracer_time_y.reshape((1,len(pos1_tracer_time_y)))
+
+                pos0_gas_tracer_time_x = pos0_gas_tracer_time_x.reshape((1,len(pos0_gas_tracer_time_x)))
+                pos0_gas_tracer_time_y = pos0_gas_tracer_time_y.reshape((1,len(pos0_gas_tracer_time_y)))
+                pos1_gas_tracer_time_x = pos1_gas_tracer_time_x.reshape((1,len(pos1_gas_tracer_time_x)))
+                pos1_gas_tracer_time_y = pos1_gas_tracer_time_y.reshape((1,len(pos1_gas_tracer_time_y)))
+
+                pos0_bulk_tracer_time_x = pos0_bulk_tracer_time_x.reshape((1,len(pos0_bulk_tracer_time_x)))
+                pos0_bulk_tracer_time_y = pos0_bulk_tracer_time_y.reshape((1,len(pos0_bulk_tracer_time_y)))
+                pos1_bulk_tracer_time_x = pos1_bulk_tracer_time_x.reshape((1,len(pos1_bulk_tracer_time_x)))
+                pos1_bulk_tracer_time_y = pos1_bulk_tracer_time_y.reshape((1,len(pos1_bulk_tracer_time_y)))
+
+            if ind_analyzed>1:
+                pos0_tracer_time_x = np.vstack((pos0_tracer_time_x, pos0_tracer[:,0]))
+                pos0_tracer_time_y = np.vstack((pos0_tracer_time_y, pos0_tracer[:,1]))
+                pos1_tracer_time_x = np.vstack((pos1_tracer_time_x, pos1_tracer[:,0]))
+                pos1_tracer_time_y = np.vstack((pos1_tracer_time_y, pos1_tracer[:,1]))
+
+                pos0_gas_tracer_time_x = np.vstack((pos0_gas_tracer_time_x, pos0_gas_tracer[:,0]))
+                pos0_gas_tracer_time_y = np.vstack((pos0_gas_tracer_time_y, pos0_gas_tracer[:,1]))
+                pos1_gas_tracer_time_x = np.vstack((pos1_gas_tracer_time_x, pos1_gas_tracer[:,0]))
+                pos1_gas_tracer_time_y = np.vstack((pos1_gas_tracer_time_y, pos1_gas_tracer[:,1]))
+
+                pos0_bulk_tracer_time_x = np.vstack((pos0_bulk_tracer_time_x, pos0_bulk_tracer[:,0]))
+                pos0_bulk_tracer_time_y = np.vstack((pos0_bulk_tracer_time_y, pos0_bulk_tracer[:,1]))
+                pos1_bulk_tracer_time_x = np.vstack((pos1_bulk_tracer_time_x, pos1_bulk_tracer[:,0]))
+                pos1_bulk_tracer_time_y = np.vstack((pos1_bulk_tracer_time_y, pos1_bulk_tracer[:,1]))
 
 
 
             pos_ids = np.arange(0, len(pos), step=1)
+            slow_tracers_in_clust_temp = np.ones(len(slow_tracers))
 
             for b in range(0, len(slow_tracers)):
-                if slow_tracers_in_clust[b]==1:
-                    if slow_tracers[b] not in bulk_int_id_plot:
-                        slow_tracers_in_clust[b]=0
-                        final_xpos_slow_tracers[b]=pos0_tracer[b,0]
-                        final_ypos_slow_tracers[b]=pos0_tracer[b,1]
-                        final_time_slow_tracers[b] = np.shape(pos0_tracer_time_x)[0]-1
-                    loc = np.where(pos_ids == slow_tracers[b])[0]
-                    pos_ids = np.delete(pos_ids, loc)
+                if slow_tracers[b] not in bulk_int_id_plot:
+                    slow_tracers_in_clust_temp[b] = 0
+
+                loc = np.where(pos_ids == slow_tracers[b])[0]
+                pos_ids = np.delete(pos_ids, loc)
                 #else:
                 #    if (slow_tracers[b] in bulk_int_id_plot) & (slow_tracers_in_clust[b]==0):
                 #        slow_tracers_in_clust[b]=1
                 #        final_xpos_slow_tracers[b]=pos0_tracer[b,0]
                 #        final_ypos_slow_tracers[b]=pos0_tracer[b,1]
+            if ind_analyzed > 1:
+                slow_tracers_in_clust = np.vstack((slow_tracers_in_clust, slow_tracers_in_clust_temp))
+            else:
+                slow_tracers_in_clust = slow_tracers_in_clust_temp
+                slow_tracers_in_clust = slow_tracers_in_clust.reshape((1,len(slow_tracers_in_clust)))
+            fast_tracers_in_clust_temp = np.ones(len(fast_tracers))
+
             for b in range(0, len(fast_tracers)):
-                if fast_tracers_in_clust[b]==1:
-                    if fast_tracers[b] not in bulk_int_id_plot:
-                        fast_tracers_in_clust[b]=0
-                        final_xpos_fast_tracers[b]=pos1_tracer[b,0]
-                        final_ypos_fast_tracers[b]=pos1_tracer[b,1]
-                        final_time_fast_tracers[b] = np.shape(pos1_tracer_time_x)[0]-1
+                if fast_tracers[b] not in bulk_int_id_plot:
+                    fast_tracers_in_clust_temp[b] = 0
 
-                    loc = np.where(pos_ids == fast_tracers[b])[0]
-                    pos_ids = np.delete(pos_ids, loc)
+                loc = np.where(pos_ids == fast_tracers[b])[0]
+                pos_ids = np.delete(pos_ids, loc)
 
-
+            if ind_analyzed > 1:
+                fast_tracers_in_clust = np.vstack((fast_tracers_in_clust, fast_tracers_in_clust_temp))
+            else:
+                fast_tracers_in_clust = fast_tracers_in_clust_temp
+                fast_tracers_in_clust = fast_tracers_in_clust.reshape((1,len(fast_tracers_in_clust)))
             pos_else = pos[pos_ids]
 
 
+
+            pos_gas_ids = np.arange(0, len(pos), step=1)
+            slow_gas_tracers_in_clust_temp = np.ones(len(slow_gas_tracers))
+            slow_gas_tracers_in_bulk_temp = np.ones(len(slow_gas_tracers))
+
+            for b in range(0, len(slow_gas_tracers)):
+                if slow_gas_tracers[b] not in bulk_int_id_plot:
+                    slow_gas_tracers_in_clust_temp[b] = 0
+                if slow_gas_tracers[b] not in bulk_id_plot:
+                    slow_gas_tracers_in_bulk_temp[b] = 0
+
+                loc = np.where(pos_gas_ids == slow_gas_tracers[b])[0]
+                pos_gas_ids = np.delete(pos_gas_ids, loc)
+                #else:
+                #    if (slow_tracers[b] in bulk_int_id_plot) & (slow_tracers_in_clust[b]==0):
+                #        slow_tracers_in_clust[b]=1
+                #        final_xpos_slow_tracers[b]=pos0_tracer[b,0]
+                #        final_ypos_slow_tracers[b]=pos0_tracer[b,1]
+            if ind_analyzed > 1:
+                slow_gas_tracers_in_clust = np.vstack((slow_gas_tracers_in_clust, slow_gas_tracers_in_clust_temp))
+                slow_gas_tracers_in_bulk = np.vstack((slow_gas_tracers_in_bulk, slow_gas_tracers_in_bulk_temp))
+            else:
+                slow_gas_tracers_in_clust = slow_gas_tracers_in_clust_temp
+                slow_gas_tracers_in_bulk = slow_gas_tracers_in_bulk_temp
+                slow_gas_tracers_in_clust = slow_gas_tracers_in_clust.reshape((1,len(slow_gas_tracers_in_clust)))
+                slow_gas_tracers_in_bulk = slow_gas_tracers_in_bulk.reshape((1,len(slow_gas_tracers_in_bulk)))
+
+            fast_gas_tracers_in_clust_temp = np.ones(len(fast_gas_tracers))
+            fast_gas_tracers_in_bulk_temp = np.ones(len(fast_gas_tracers))
+
+            for b in range(0, len(fast_gas_tracers)):
+                if fast_gas_tracers[b] not in bulk_int_id_plot:
+                    fast_gas_tracers_in_clust_temp[b] = 0
+                if fast_gas_tracers[b] not in bulk_id_plot:
+                    fast_gas_tracers_in_bulk_temp[b] = 0
+
+                loc = np.where(pos_gas_ids == fast_gas_tracers[b])[0]
+                pos_gas_ids = np.delete(pos_gas_ids, loc)
+
+            if ind_analyzed > 1:
+                fast_gas_tracers_in_clust = np.vstack((fast_gas_tracers_in_clust, fast_gas_tracers_in_clust_temp))
+                fast_gas_tracers_in_bulk = np.vstack((fast_gas_tracers_in_bulk, fast_gas_tracers_in_bulk_temp))
+            else:
+                fast_gas_tracers_in_clust = fast_gas_tracers_in_clust_temp
+                fast_gas_tracers_in_bulk = fast_gas_tracers_in_bulk_temp
+                fast_gas_tracers_in_clust = fast_gas_tracers_in_clust.reshape((1,len(fast_gas_tracers_in_clust)))
+                fast_gas_tracers_in_bulk = fast_gas_tracers_in_bulk.reshape((1,len(fast_gas_tracers_in_bulk)))
+
+            pos_gas_else = pos[pos_gas_ids]
+
+            pos_bulk_ids = np.arange(0, len(pos), step=1)
+            slow_bulk_tracers_in_clust_temp = np.ones(len(slow_bulk_tracers))
+
+            for b in range(0, len(slow_bulk_tracers)):
+                if slow_bulk_tracers[b] not in bulk_int_id_plot:
+                    slow_bulk_tracers_in_clust_temp[b] = 0
+
+                loc = np.where(pos_bulk_ids == slow_bulk_tracers[b])[0]
+                pos_bulk_ids = np.delete(pos_bulk_ids, loc)
+                #else:
+                #    if (slow_tracers[b] in bulk_int_id_plot) & (slow_tracers_in_clust[b]==0):
+                #        slow_tracers_in_clust[b]=1
+                #        final_xpos_slow_tracers[b]=pos0_tracer[b,0]
+                #        final_ypos_slow_tracers[b]=pos0_tracer[b,1]
+            if ind_analyzed > 1:
+                slow_bulk_tracers_in_clust = np.vstack((slow_bulk_tracers_in_clust, slow_bulk_tracers_in_clust_temp))
+            else:
+                slow_bulk_tracers_in_clust = slow_bulk_tracers_in_clust_temp
+                slow_bulk_tracers_in_clust = slow_bulk_tracers_in_clust.reshape((1,len(slow_bulk_tracers_in_clust)))
+
+            fast_bulk_tracers_in_clust_temp = np.ones(len(fast_bulk_tracers))
+
+            for b in range(0, len(fast_bulk_tracers)):
+                if fast_bulk_tracers[b] not in bulk_int_id_plot:
+                    fast_bulk_tracers_in_clust_temp[b] = 0
+
+                loc = np.where(pos_bulk_ids == fast_bulk_tracers[b])[0]
+                pos_bulk_ids = np.delete(pos_bulk_ids, loc)
+
+            if ind_analyzed > 1:
+                fast_bulk_tracers_in_clust = np.vstack((fast_bulk_tracers_in_clust, fast_bulk_tracers_in_clust_temp))
+            else:
+                fast_bulk_tracers_in_clust = fast_bulk_tracers_in_clust_temp
+                fast_bulk_tracers_in_clust = fast_bulk_tracers_in_clust.reshape((1,len(fast_bulk_tracers_in_clust)))
+
+            pos_bulk_else = pos[pos_bulk_ids]
 
             # Create frame pad for images
             pad = str(j).zfill(4)
 
             #Plot each particle as a point color-coded by activity and labeled by their activity
-            fig = plt.figure(figsize=(6.5,6))
-            ax = fig.add_subplot(111)
 
             sz = 0.75
             sz2 = 1.5
@@ -10137,17 +10330,713 @@ with hoomd.open(name=inFile, mode='rb') as t:
             fastCol = '#e31a1c'
             slowCol = '#081d58'
             otherCol = '#d9d9d9'
-
-
+            #GAS!
 
             #Assign type 0 particles to plot
-            final_ids_slow = np.where((final_xpos_slow_tracers!=0) & (final_ypos_slow_tracers!=0))[0]
-            final_ids_fast = np.where((final_xpos_fast_tracers!=0) & (final_ypos_fast_tracers!=0))[0]
-            not_final_ids_slow = np.where((final_xpos_slow_tracers==0) & (final_ypos_slow_tracers==0))[0]
-            not_final_ids_fast = np.where((final_xpos_fast_tracers==0) & (final_ypos_fast_tracers==0))[0]
+            final_gas_ids_slow = np.where((final_xpos_slow_gas_tracers!=0) & (final_ypos_slow_gas_tracers!=0))[0]
+            final_gas_ids_fast = np.where((final_xpos_fast_gas_tracers!=0) & (final_ypos_fast_gas_tracers!=0))[0]
+            not_final_gas_ids_slow = np.where((final_xpos_slow_gas_tracers==0) & (final_ypos_slow_gas_tracers==0))[0]
+            not_final_gas_ids_fast = np.where((final_xpos_fast_gas_tracers==0) & (final_ypos_fast_gas_tracers==0))[0]
 
-            plt.scatter(pos_else[:,0], pos_else[:,1], s=sz, c=otherCol)
-            for b in range(0, np.shape(pos0_tracer_time_x)[1]):
+            x_slow_gas_temp1_arr = np.zeros((np.shape(pos0_gas_tracer_time_x)[1],2))
+            x_slow_gas_temp2_arr = np.zeros((np.shape(pos0_gas_tracer_time_x)[1],2))
+            y_slow_gas_temp1_arr = np.zeros((np.shape(pos0_gas_tracer_time_x)[1],2))
+            y_slow_gas_temp2_arr = np.zeros((np.shape(pos0_gas_tracer_time_x)[1],2))
+            final_slow_x_pos_arr = np.zeros(np.shape(pos0_gas_tracer_time_x)[1])
+            final_slow_y_pos_arr = np.zeros(np.shape(pos0_gas_tracer_time_x)[1])
+
+            x_fast_gas_temp1_arr = np.zeros((np.shape(pos1_gas_tracer_time_x)[1],2))
+            x_fast_gas_temp2_arr = np.zeros((np.shape(pos1_gas_tracer_time_x)[1],2))
+            y_fast_gas_temp1_arr = np.zeros((np.shape(pos1_gas_tracer_time_x)[1],2))
+            y_fast_gas_temp2_arr = np.zeros((np.shape(pos1_gas_tracer_time_x)[1],2))
+            final_fast_x_pos_arr = np.zeros(np.shape(pos1_gas_tracer_time_x)[1])
+            final_fast_y_pos_arr = np.zeros(np.shape(pos1_gas_tracer_time_x)[1])
+
+            terminate_gas_slow_program = np.zeros(np.shape(pos0_gas_tracer_time_x)[1])
+            terminate_gas_fast_program = np.zeros(np.shape(pos1_gas_tracer_time_x)[1])
+
+
+
+            fig = plt.figure(figsize=(6.5,6))
+            ax = fig.add_subplot(111)
+            plt.scatter(pos_gas_else[:,0], pos_gas_else[:,1], s=sz, c=otherCol)
+            #loop over number of slow tracers
+            for b in range(0, np.shape(pos0_gas_tracer_time_x)[1]):
+
+                plot_slow_gas_posy_new = np.array([])
+                plot_slow_gas_posx_new = np.array([])
+
+                plot_slow_gas_posx = np.array([])
+                plot_slow_gas_posy = np.array([])
+                for c in range(0, np.shape(pos0_gas_tracer_time_x)[0]):
+
+
+                    if len(plot_slow_gas_posx) == 0:
+                        if slow_gas_tracers_in_bulk[c,b]==1:
+                            if terminate_gas_slow_program[b] == 0:
+
+                                in_clust = np.array([], dtype=int)
+                                for d in range(0, int(c+1)):
+                                    if slow_gas_tracers_in_clust[d,b]==1:
+                                        in_clust = np.append(in_clust, d)
+                                cont_loop = 1
+                                for d in range(1, len(in_clust)):
+                                    if cont_loop == 1:
+                                        ind = int(len(in_clust) - int(d))
+                                        plot_slow_gas_posx = np.insert(plot_slow_gas_posx, 0, pos0_gas_tracer_time_x[in_clust[ind],b], axis=0)
+                                        plot_slow_gas_posy = np.insert(plot_slow_gas_posy, 0, pos0_gas_tracer_time_y[in_clust[ind],b], axis=0)
+
+                                        if int(in_clust[ind]-in_clust[ind-1])<=2:
+
+                                            difr = ( (pos0_gas_tracer_time_y[in_clust[ind],b] - pos0_gas_tracer_time_y[in_clust[ind-1],b])**2 + (pos0_gas_tracer_time_y[in_clust[ind],b] - pos0_gas_tracer_time_y[in_clust[ind-1],b])**2 ) ** 0.5
+                                            if (difr < h_box):
+
+                                                plot_slow_gas_posx = np.insert(plot_slow_gas_posx, 0, pos0_gas_tracer_time_x[in_clust[ind-1],b], axis=0)
+                                                plot_slow_gas_posy = np.insert(plot_slow_gas_posy, 0, pos0_gas_tracer_time_y[in_clust[ind-1],b], axis=0)
+                                            else:
+                                                cont_loop = 0
+
+                                        else:
+
+                                            #if ind>0:
+                                            plot_slow_gas_posx = np.insert(plot_slow_gas_posx, 0, pos0_gas_tracer_time_x[in_clust[ind-1],b], axis=0)
+                                            plot_slow_gas_posy = np.insert(plot_slow_gas_posy, 0, pos0_gas_tracer_time_y[in_clust[ind-1],b], axis=0)
+
+                                            cont_loop = 0
+
+
+                                if c>= (np.shape(pos0_gas_tracer_time_x)[0]-1):
+
+                                    #plt.scatter(plot_fast_posx[0], plot_fast_posy[0], marker='o', s=sz2*4, facecolor = 'None', edgecolor=fastCol, label='PeA: '+str(peA))
+                                    for d in range(1, len(plot_slow_gas_posx)):
+                                        fade = 0.5
+                                        plot_x = np.array([plot_slow_gas_posx[d-1], plot_slow_gas_posx[d]])
+                                        plot_y = np.array([plot_slow_gas_posy[d-1], plot_slow_gas_posy[d]])
+                                        plt.plot(plot_x, plot_y, c=slowCol, alpha=0.5, ls = '--', lw=0.75)
+                                        #plt.plot(plot_slow_gas_posx, plot_slow_gas_posy, c=slowCol, alpha=0.5, ls = '--', lw=0.75)
+                                    plt.scatter(plot_slow_gas_posx[-1], plot_slow_gas_posy[-1], s=sz2*4, c=slowCol, label='PeA: '+str(peA))
+                            else:
+                                if x_slow_gas_temp1_arr[b,0]!=0.0:
+                                    if c >= (np.shape(pos0_gas_tracer_time_x)[0]-1):
+                                        plt.plot(x_slow_gas_temp1_arr[b,:], y_slow_gas_temp1_arr[b,:], alpha=0.5, c=slowCol, ls = '--', lw=0.75)
+                                        plt.plot(x_slow_gas_temp2_arr[b,:], y_slow_gas_temp2_arr[b,:], alpha=0.5, c=slowCol, ls = '--', lw=0.75)
+
+                                        plt.plot(plot_slow_gas_posx, plot_slow_gas_posy, alpha=0.5, c=slowCol, ls = '--', lw=0.75)
+
+                                        plt.scatter(final_slow_x_pos_arr[b], final_slow_y_pos_arr[b], marker='x', s=sz2*5, c=slowCol, label='PeB: '+str(peB))
+                                else:
+                                    if c >= (np.shape(pos0_gas_tracer_time_x)[0]-1):
+                                        plt.plot(plot_slow_gas_posx, plot_slow_gas_posy, c=slowCol, alpha=0.5, ls = '--', lw=0.75)
+                                        plt.scatter(final_slow_x_pos_arr[b], final_slow_y_pos_arr[b], marker='x', s=sz2*5, c=slowCol, label='PeB: '+str(peB))
+
+                    else:
+
+                        if slow_gas_tracers_in_bulk[c,b]==1:
+                            if terminate_gas_slow_program[b]==0:
+                                plot_slow_gas_posx = np.append(plot_slow_gas_posx, pos0_gas_tracer_time_x[c,b])
+                                plot_slow_gas_posy = np.append(plot_slow_gas_posy, pos0_gas_tracer_time_y[c,b])
+
+                                if x_slow_gas_temp1_arr[b,0]!=0.0:
+                                    if c >= (np.shape(pos0_gas_tracer_time_x)[0]-1):
+                                        plt.plot(x_slow_gas_temp1_arr[b,:], y_slow_gas_temp1_arr[b,:], alpha=0.5, c=slowCol, ls = '--', lw=0.75)
+                                        plt.plot(x_slow_gas_temp2_arr[b,:], y_slow_gas_temp2_arr[b,:], alpha=0.5, c=slowCol, ls = '--', lw=0.75)
+
+                                        plt.plot(plot_slow_gas_posx, plot_slow_gas_posy, alpha=0.5, c=slowCol, ls = '--', lw=0.75)
+
+                                        plt.scatter(plot_slow_gas_posx[-1], plot_slow_gas_posy[-1], s=sz2*4, c=slowCol, label='PeA: '+str(peA))
+                                else:
+                                    if c >= (np.shape(pos0_gas_tracer_time_x)[0]-1):
+                                        plt.plot(plot_slow_gas_posx, plot_slow_gas_posy, c=slowCol, alpha=0.5, ls = '--', lw=0.75)
+                                        plt.scatter(plot_slow_gas_posx[-1], plot_slow_gas_posy[-1], s=sz2*4, c=slowCol, label='PeA: '+str(peA))
+
+
+                            else:
+                                if x_slow_gas_temp1_arr[b,0]!=0.0:
+                                    if c >= (np.shape(pos0_gas_tracer_time_x)[0]-1):
+                                        plt.plot(x_slow_gas_temp1_arr[b,:], y_slow_gas_temp1_arr[b,:], alpha=0.5, c=slowCol, ls = '--', lw=0.75)
+                                        plt.plot(x_slow_gas_temp2_arr[b,:], y_slow_gas_temp2_arr[b,:], alpha=0.5, c=slowCol, ls = '--', lw=0.75)
+
+                                        plt.plot(plot_slow_gas_posx, plot_slow_gas_posy, alpha=0.5, c=slowCol, ls = '--', lw=0.75)
+
+                                        plt.scatter(final_slow_x_pos_arr[b], final_slow_y_pos_arr[b], marker='x', s=sz2*5, c=slowCol, label='PeB: '+str(peB))
+                                else:
+                                    if c >= (np.shape(pos0_gas_tracer_time_x)[0]-1):
+                                        plt.plot(plot_slow_gas_posx, plot_slow_gas_posy, c=slowCol, alpha=0.5, ls = '--', lw=0.75)
+                                        plt.scatter(final_slow_x_pos_arr[b], final_slow_y_pos_arr[b], marker='x', s=sz2*5, c=slowCol, label='PeB: '+str(peB))
+
+                        elif slow_gas_tracers_in_clust[c,b]==1:
+
+                            if terminate_gas_slow_program[b]==0:
+                                #in_bulk = np.array([], dtype=int)
+                                #for d in range(0, int(c)):
+                                #    if slow_gas_tracers_in_clust[d,b]==1:
+                                #        in_bulk = np.append(in_bulk, d)
+                                #if len(in_bulk)>0:
+                                plot_slow_gas_posx = np.append(plot_slow_gas_posx, pos0_gas_tracer_time_x[c,b])
+                                plot_slow_gas_posy = np.append(plot_slow_gas_posy, pos0_gas_tracer_time_y[c,b])
+
+                                if c>= (np.shape(pos0_gas_tracer_time_x)[0]-1):
+                                    #plt.scatter(plot_fast_posx[0], plot_fast_posy[0], marker='o', s=sz2*4, facecolor = 'None', edgecolor=fastCol, label='PeA: '+str(peA))
+                                    plt.plot(plot_slow_gas_posx, plot_slow_gas_posy, c=slowCol, alpha=0.5, ls = '--', lw=0.75)
+                                    plt.scatter(plot_slow_gas_posx[-1], plot_slow_gas_posy[-1], s=sz2*4, c=slowCol, label='PeA: '+str(peA))
+                            else:
+                                if x_slow_gas_temp1_arr[b,0]!=0.0:
+                                    if c >= (np.shape(pos0_gas_tracer_time_x)[0]-1):
+                                        plt.plot(x_slow_gas_temp1_arr[b,:], y_slow_gas_temp1_arr[b,:], alpha=0.5, c=slowCol, ls = '--', lw=0.75)
+                                        plt.plot(x_slow_gas_temp2_arr[b,:], y_slow_gas_temp2_arr[b,:], alpha=0.5, c=slowCol, ls = '--', lw=0.75)
+
+                                        plt.plot(plot_slow_gas_posx, plot_slow_gas_posy, alpha=0.5, c=slowCol, ls = '--', lw=0.75)
+
+                                        plt.scatter(final_slow_x_pos_arr[b], final_slow_y_pos_arr[b], marker='x', s=sz2*5, c=slowCol, label='PeB: '+str(peB))
+                                else:
+                                    if c >= (np.shape(pos0_gas_tracer_time_x)[0]-1):
+                                        plt.plot(plot_slow_gas_posx, plot_slow_gas_posy, c=slowCol, alpha=0.5, ls = '--', lw=0.75)
+                                        plt.scatter(final_slow_x_pos_arr[b], final_slow_y_pos_arr[b], marker='x', s=sz2*5, c=slowCol, label='PeB: '+str(peB))
+
+                                #start = int(in_bulk[-1])
+                                #for d in range(start, int(c)):
+
+                                    #plot_fast_gas_posx = np.append(plot_fast_gas_posx, pos1_gas_tracer_time_x[d,b])
+                                    #plot_fast_gas_posy = np.append(plot_fast_gas_posy, pos1_gas_tracer_time_y[d,b])
+
+
+
+
+                        else:
+                            if (slow_gas_tracers_in_clust[c-1,b]==1):
+                                in_bulk = np.array([], dtype=int)
+                                for d in range(0, int(c)):
+                                    if slow_gas_tracers_in_bulk[d,b]==1:
+                                        in_bulk = np.append(in_bulk, d)
+                                cont_loop = 1
+                                if len(in_bulk)>0:
+                                    start = int(in_bulk[-1])
+
+                                    #for d in range(start, int(c)):
+
+                                        #plot_slow_gas_posx = np.append(plot_slow_gas_posx, pos0_gas_tracer_time_x[d,b])
+                                        #plot_slow_gas_posy = np.append(plot_slow_gas_posy, pos0_gas_tracer_time_y[d,b])
+
+
+
+                                    difr = ( (pos0_gas_tracer_time_y[c,b] - plot_slow_gas_posy[-1])**2 + (pos0_gas_tracer_time_x[c,b] - plot_slow_gas_posx[-1])**2 ) ** 0.5
+                                    if (difr > h_box) & (x_slow_gas_temp1_arr[b,0]==0.0):
+                                        if np.abs(pos0_gas_tracer_time_y[c,b] - plot_slow_gas_posy[-1]) > h_box:
+                                            if (pos0_gas_tracer_time_y[c,b]>0) & (plot_slow_gas_posy[-1]<0):
+                                                temp_gas_pos_yprev = plot_slow_gas_posy[-1]
+                                                temp_gas_pos_ycurr = pos0_gas_tracer_time_y[c,b] - l_box
+                                            if (pos0_gas_tracer_time_y[c,b]<0) & (plot_slow_gas_posy[-1]>0):
+                                                temp_gas_pos_yprev = plot_slow_gas_posy[-1]
+                                                temp_gas_pos_ycurr = pos0_gas_tracer_time_y[c,b] + l_box
+                                        else:
+                                            temp_gas_pos_yprev = plot_slow_gas_posy[-1]
+                                            temp_gas_pos_ycurr = pos0_gas_tracer_time_y[c,b]
+
+                                        if np.abs(pos0_gas_tracer_time_x[c,b] - plot_slow_gas_posx[-1]) > h_box:
+                                            if (pos0_gas_tracer_time_x[c,b]>0) & (plot_slow_gas_posx[-1]<0):
+                                                temp_gas_pos_xprev = plot_slow_gas_posx[-1]
+                                                temp_gas_pos_xcurr = pos0_gas_tracer_time_x[c,b] - l_box
+                                            if (pos0_gas_tracer_time_x[c,b]<0) & (plot_slow_gas_posx[-1]>0):
+                                                temp_gas_pos_xprev = plot_slow_gas_posx[-1]
+                                                temp_gas_pos_xcurr = pos0_gas_tracer_time_x[c,b] + l_box
+                                        else:
+                                            temp_gas_pos_xprev = plot_slow_gas_posx[-1]
+                                            temp_gas_pos_xcurr = pos0_gas_tracer_time_x[c,b]
+
+                                        temp_gas_slope = (temp_gas_pos_ycurr - temp_gas_pos_yprev) / (temp_gas_pos_xcurr - temp_gas_pos_xprev)
+                                        temp_gas_yint = temp_gas_pos_yprev - temp_gas_slope * temp_gas_pos_xprev
+
+                                        if np.abs(pos0_gas_tracer_time_y[c,b] - plot_slow_gas_posy[-1]) > h_box:
+                                            if (pos0_gas_tracer_time_y[c,b]>0) & (plot_slow_gas_posy[-1]<0):
+                                                x_gas_int = (-h_box - temp_gas_yint) / temp_gas_slope
+                                            elif (pos0_gas_tracer_time_y[c,b]<0) & (plot_slow_gas_posy[-1]>0):
+                                                x_gas_int = (h_box - temp_gas_yint) / temp_gas_slope
+
+                                            if x_gas_int < temp_gas_pos_xprev:
+                                                x_gas_temp1 = np.linspace(x_gas_int, temp_gas_pos_xprev, num=2)
+                                                x_gas_temp2 = np.linspace(temp_gas_pos_xcurr, x_gas_int, num=2)
+
+                                            else:
+                                                x_gas_temp1 = np.linspace(temp_gas_pos_xprev, x_gas_int, num=2)
+                                                x_gas_temp2 = np.linspace(x_gas_int, temp_gas_pos_xcurr, num=2)
+
+                                            if (pos0_gas_tracer_time_y[c,b]>0) & (plot_slow_gas_posy[-1]<0):
+                                                y_gas_temp1 = x_gas_temp1 * temp_gas_slope + temp_gas_yint
+                                                y_gas_temp2 = x_gas_temp2 * temp_gas_slope + temp_gas_yint + l_box
+                                            elif (pos0_gas_tracer_time_y[c,b]<0) & (plot_slow_gas_posy[-1]>0):
+                                                y_gas_temp1 = x_gas_temp1 * temp_gas_slope + temp_gas_yint
+                                                y_gas_temp2 = x_gas_temp2 * temp_gas_slope + temp_gas_yint - l_box
+
+                                        if np.abs(pos0_gas_tracer_time_x[c,b] - plot_slow_gas_posx[-1]) > h_box:
+                                            if (pos0_gas_tracer_time_x[c,b]>0) & (plot_slow_gas_posx[-1]<0):
+                                                y_gas_int = temp_gas_yint + temp_gas_slope * -h_box
+                                            elif (pos0_gas_tracer_time_x[c,b]<0) & (plot_slow_gas_posx[-1]>0):
+                                                y_gas_int = temp_gas_yint + temp_gas_slope * h_box
+
+                                            if y_gas_int < temp_gas_pos_yprev:
+                                                y_gas_temp1 = np.linspace(y_gas_int, temp_gas_pos_yprev, num=2)
+                                                y_gas_temp2 = np.linspace(temp_gas_pos_ycurr, y_gas_int, num=2)
+
+                                            else:
+                                                y_gas_temp1 = np.linspace(temp_gas_pos_yprev, y_gas_int, num=2)
+                                                y_gas_temp2 = np.linspace(y_gas_int, temp_gas_pos_ycurr, num=2)
+
+                                            if (pos0_gas_tracer_time_x[c,b]>0) & (plot_slow_gas_posx[-1]<0):
+
+                                                x_gas_temp1 = (y_gas_temp1 - temp_gas_yint) / temp_gas_slope
+                                                x_gas_temp2 = (y_gas_temp2 - temp_gas_yint) / temp_gas_slope + l_box
+
+                                            elif (pos0_gas_tracer_time_x[c,b]<0) & (plot_slow_gas_posx[-1]>0):
+
+                                                x_gas_temp1 = (y_gas_temp1 - temp_gas_yint) / temp_gas_slope
+                                                x_gas_temp2 = (y_gas_temp2 - temp_gas_yint) / temp_gas_slope - l_box
+
+
+                                        if terminate_gas_slow_program[b]==0:
+
+
+                                            if (final_slow_x_pos_arr[b]==0):
+                                                terminate_gas_slow_program[b]=1
+                                                x_slow_gas_temp1_arr[b,:] = x_gas_temp1
+                                                x_slow_gas_temp2_arr[b,:] = x_gas_temp2
+
+                                                y_slow_gas_temp1_arr[b,:] = y_gas_temp1
+                                                y_slow_gas_temp2_arr[b,:] = y_gas_temp2
+                                                final_slow_x_pos_arr[b] = pos0_gas_tracer_time_x[c,b]
+                                                final_slow_y_pos_arr[b] = pos0_gas_tracer_time_y[c,b]
+                                            if x_slow_gas_temp1_arr[b,0]!=0.0:
+                                                if c >= (np.shape(pos0_gas_tracer_time_x)[0]-1):
+                                                    plt.plot(x_slow_gas_temp1_arr[b,:], y_slow_gas_temp1_arr[b,:], alpha=0.5, c=slowCol, ls = '--', lw=0.75)
+                                                    plt.plot(x_slow_gas_temp2_arr[b,:], y_slow_gas_temp2_arr[b,:], alpha=0.5, c=slowCol, ls = '--', lw=0.75)
+
+                                                    plt.plot(plot_slow_gas_posx, plot_slow_gas_posy, alpha=0.5, c=slowCol, ls = '--', lw=0.75)
+
+                                                    plt.scatter(final_slow_x_pos_arr[b], final_slow_y_pos_arr[b], marker='x', s=sz2*5, c=slowCol, label='PeB: '+str(peB))
+
+                                                    plt.plot(plot_slow_gas_posx_new, plot_slow_gas_posy_new, alpha=0.5, c=slowCol, ls = '--', lw=0.75)
+
+                                            else:
+
+                                                if c >= (np.shape(pos0_gas_tracer_time_x)[0]-1):
+                                                    #if c == (np.shape(pos0_bulk_tracer_time_x)[0]-1):
+                                                    plt.plot(plot_slow_gas_posx, plot_slow_gas_posy, c=slowCol, alpha=0.5, ls = '--', lw=0.75)
+                                                    if len(plot_fast_gas_posy_new)>0:
+                                                        plt.plot(plot_slow_gas_posx_new, plot_slow_gas_posy_new, alpha=0.5, c=slowCol, ls = '--', lw=0.75)
+                                                        plt.scatter(final_slow_x_pos_arr[b], final_slow_y_pos_arr[b], marker='x', s=sz2*5, c=slowCol, label='PeB: '+str(peB))
+                                                    else:
+                                                        plt.scatter(final_slow_x_pos_arr[b], final_slow_y_pos_arr[b], marker='x', s=sz2*5, c=slowCol, label='PeB: '+str(peB))
+
+
+
+
+                                        else:
+
+                                            if x_slow_gas_temp1_arr[b,0]!=0.0:
+                                                if c >= (np.shape(pos0_gas_tracer_time_x)[0]-1):
+                                                    plt.plot(x_slow_gas_temp1_arr[b,:], y_slow_gas_temp1_arr[b,:], alpha=0.5, c=slowCol, ls = '--', lw=0.75)
+                                                    plt.plot(x_slow_gas_temp2_arr[b,:], y_slow_gas_temp2_arr[b,:], alpha=0.5, c=slowCol, ls = '--', lw=0.75)
+
+                                                    plt.plot(plot_slow_gas_posx, plot_slow_gas_posy, alpha=0.5, c=slowCol, ls = '--', lw=0.75)
+
+                                                    plt.scatter(final_slow_x_pos_arr[b], final_slow_y_pos_arr[b], marker='x', s=sz2*5, c=slowCol, label='PeB: '+str(peB))
+                                            else:
+                                                if c >= (np.shape(pos0_gas_tracer_time_x)[0]-1):
+                                                    plt.plot(plot_slow_gas_posx, plot_slow_gas_posy, c=slowCol, alpha=0.5, ls = '--', lw=0.75)
+                                                    plt.scatter(final_slow_x_pos_arr[b], final_slow_y_pos_arr[b], marker='x', s=sz2*5, c=slowCol, label='PeB: '+str(peB))
+
+
+                                    else:
+                                        if terminate_gas_slow_program[b] == 0:
+
+                                            if (final_slow_x_pos_arr[b]==0):
+                                                final_slow_x_pos_arr[b] = pos0_gas_tracer_time_x[c,b]
+                                                final_slow_y_pos_arr[b] = pos0_gas_tracer_time_y[c,b]
+                                            plot_slow_gas_posx = np.append(plot_slow_gas_posx, pos0_gas_tracer_time_x[c,b])
+                                            plot_slow_gas_posy = np.append(plot_slow_gas_posy, pos0_gas_tracer_time_y[c,b])
+
+
+
+                                            terminate_gas_slow_program[b] = 1
+                                            if c >= (np.shape(pos0_gas_tracer_time_x)[0]-1):
+                                                plt.plot(plot_slow_gas_posx, plot_slow_gas_posy, c=slowCol, alpha=0.5, ls = '--', lw=0.75)
+                                                plt.scatter(plot_slow_gas_posx[-1], plot_slow_gas_posy[-1], marker='x', s=sz2*5, c=slowCol, label='PeA: '+str(peA))
+                                        else:
+
+                                            if x_slow_gas_temp1_arr[b,0]!=0.0:
+                                                if c >= (np.shape(pos0_gas_tracer_time_x)[0]-1):
+                                                    plt.plot(x_slow_gas_temp1_arr[b,:], y_slow_gas_temp1_arr[b,:], alpha=0.5, c=slowCol, ls = '--', lw=0.75)
+                                                    plt.plot(x_slow_gas_temp2_arr[b,:], y_slow_gas_temp2_arr[b,:], alpha=0.5, c=slowCol, ls = '--', lw=0.75)
+
+                                                    plt.plot(plot_slow_gas_posx, plot_slow_gas_posy, alpha=0.5, c=slowCol, ls = '--', lw=0.75)
+
+                                                    plt.scatter(final_slow_x_pos_arr[b], final_slow_y_pos_arr[b], marker='x', s=sz2*5, c=slowCol, label='PeB: '+str(peB))
+                                            else:
+                                                if c >= (np.shape(pos0_gas_tracer_time_x)[0]-1):
+                                                    plt.plot(plot_slow_gas_posx, plot_slow_gas_posy, c=slowCol, alpha=0.5, ls = '--', lw=0.75)
+                                                    plt.scatter(final_slow_x_pos_arr[b], final_slow_y_pos_arr[b], marker='x', s=sz2*5, c=slowCol, label='PeB: '+str(peB))
+
+                            elif (slow_gas_tracers_in_clust[c-1,b]==0):
+                                if terminate_gas_slow_program[b]==1:
+                                    #if (final_fast_x_pos_arr[b]==0):
+                                    #    final_fast_x_pos_arr[b] = pos1_gas_tracer_time_x[c,b]
+                                    #    final_fast_y_pos_arr[b] = pos1_gas_tracer_time_y[c,b]
+                                    #terminate_gas_fast_program[b] = 1
+                                    if x_slow_gas_temp1_arr[b,0]!=0.0:
+                                        if c >= (np.shape(pos0_gas_tracer_time_x)[0]-1):
+                                            plt.plot(x_slow_gas_temp1_arr[b,:], y_slow_gas_temp1_arr[b,:], alpha=0.5, c=slowCol, ls = '--', lw=0.75)
+                                            plt.plot(x_slow_gas_temp2_arr[b,:], y_slow_gas_temp2_arr[b,:], alpha=0.5, c=slowCol, ls = '--', lw=0.75)
+
+                                            plt.plot(plot_slow_gas_posx, plot_slow_gas_posy, alpha=0.5, c=slowCol, ls = '--', lw=0.75)
+
+                                            plt.scatter(final_slow_x_pos_arr[b], final_slow_y_pos_arr[b], marker='x', s=sz2*5, c=slowCol, label='PeB: '+str(peB))
+                                    else:
+                                        if c >= (np.shape(pos0_gas_tracer_time_x)[0]-1):
+                                            plt.plot(plot_slow_gas_posx, plot_slow_gas_posy, c=slowCol, alpha=0.5, ls = '--', lw=0.75)
+                                            plt.scatter(final_slow_x_pos_arr[b], final_slow_y_pos_arr[b], marker='x', s=sz2*5, c=slowCol, label='PeB: '+str(peB))
+
+
+
+
+            for b in range(0, np.shape(pos1_gas_tracer_time_x)[1]):
+                plot_fast_gas_posy_new = np.array([])
+                plot_fast_gas_posx_new = np.array([])
+
+                plot_fast_gas_posx = np.array([])
+                plot_fast_gas_posy = np.array([])
+                for c in range(0, np.shape(pos1_gas_tracer_time_x)[0]):
+
+                    if len(plot_fast_gas_posx) == 0:
+                        if fast_gas_tracers_in_bulk[c,b]==1:
+                            if terminate_gas_fast_program[b] == 0:
+
+                                in_clust = np.array([], dtype=int)
+                                for d in range(0, int(c+1)):
+                                    if fast_gas_tracers_in_clust[d,b]==1:
+                                        in_clust = np.append(in_clust, d)
+                                cont_loop = 1
+                                for d in range(1, len(in_clust)):
+                                    if cont_loop == 1:
+                                        ind = int(len(in_clust) - int(d))
+
+                                        plot_fast_gas_posx = np.insert(plot_fast_gas_posx, 0, pos1_gas_tracer_time_x[in_clust[ind],b], axis=0)
+                                        plot_fast_gas_posy = np.insert(plot_fast_gas_posy, 0, pos1_gas_tracer_time_y[in_clust[ind],b], axis=0)
+
+                                        if int(in_clust[ind]-in_clust[ind-1])<=2:
+                                            difr = ( (pos1_gas_tracer_time_y[in_clust[ind],b] - pos1_gas_tracer_time_y[in_clust[ind-1],b])**2 + (pos1_gas_tracer_time_x[in_clust[ind],b] - pos1_gas_tracer_time_y[in_clust[ind-1],b])**2 ) ** 0.5
+                                            if (difr < h_box):
+
+                                                plot_fast_gas_posx = np.insert(plot_fast_gas_posx, 0, pos1_gas_tracer_time_x[in_clust[ind-1],b], axis=0)
+                                                plot_fast_gas_posy = np.insert(plot_fast_gas_posy, 0, pos1_gas_tracer_time_y[in_clust[ind-1],b], axis=0)
+                                            else:
+                                                cont_loop = 0
+                                        else:
+                                            #if ind>0:
+                                            plot_fast_gas_posx = np.insert(plot_fast_gas_posx, 0, pos1_gas_tracer_time_x[in_clust[ind-1],b], axis=0)
+                                            plot_fast_gas_posy = np.insert(plot_fast_gas_posy, 0, pos1_gas_tracer_time_y[in_clust[ind-1],b], axis=0)
+
+                                            cont_loop = 0
+
+                                if c>= (np.shape(pos1_gas_tracer_time_x)[0]-1):
+                                    #plt.scatter(plot_fast_posx[0], plot_fast_posy[0], marker='o', s=sz2*4, facecolor = 'None', edgecolor=fastCol, label='PeA: '+str(peA))
+                                    plt.plot(plot_fast_gas_posx, plot_fast_gas_posy, c=fastCol, alpha=0.5, ls = '--', lw=0.75)
+                                    plt.scatter(plot_fast_gas_posx[-1], plot_fast_gas_posy[-1], s=sz2*4, c=fastCol, label='PeA: '+str(peA))
+                            else:
+                                if x_fast_gas_temp1_arr[b,0]!=0.0:
+                                    if c >= (np.shape(pos1_gas_tracer_time_x)[0]-1):
+                                        plt.plot(x_fast_gas_temp1_arr[b,:], y_fast_gas_temp1_arr[b,:], alpha=0.5, c=fastCol, ls = '--', lw=0.75)
+                                        plt.plot(x_fast_gas_temp2_arr[b,:], y_fast_gas_temp2_arr[b,:], alpha=0.5, c=fastCol, ls = '--', lw=0.75)
+
+                                        plt.plot(plot_fast_gas_posx, plot_fast_gas_posy, alpha=0.5, c=fastCol, ls = '--', lw=0.75)
+
+                                        plt.scatter(final_fast_x_pos_arr[b], final_fast_y_pos_arr[b], marker='x', s=sz2*5, c=fastCol, label='PeB: '+str(peB))
+                                else:
+                                    if c >= (np.shape(pos1_gas_tracer_time_x)[0]-1):
+                                        plt.plot(plot_fast_gas_posx, plot_fast_gas_posy, c=fastCol, alpha=0.5, ls = '--', lw=0.75)
+                                        plt.scatter(final_fast_x_pos_arr[b], final_fast_y_pos_arr[b], marker='x', s=sz2*5, c=fastCol, label='PeB: '+str(peB))
+                                        #plot_fast_bulk_posx = np.array([])
+                                        #plot_fast_bulk_posy = np.array([])
+                    else:
+                        if fast_gas_tracers_in_bulk[c,b]==1:
+                            if terminate_gas_fast_program[b]==0:
+                                plot_fast_gas_posx = np.append(plot_fast_gas_posx, pos1_gas_tracer_time_x[c,b])
+                                plot_fast_gas_posy = np.append(plot_fast_gas_posy, pos1_gas_tracer_time_y[c,b])
+
+                                if x_fast_gas_temp1_arr[b,0]!=0.0:
+                                    if c >= (np.shape(pos1_gas_tracer_time_x)[0]-1):
+                                        plt.plot(x_fast_gas_temp1_arr[b,:], y_fast_gas_temp1_arr[b,:], alpha=0.5, c=fastCol, ls = '--', lw=0.75)
+                                        plt.plot(x_fast_gas_temp2_arr[b,:], y_fast_gas_temp2_arr[b,:], alpha=0.5, c=fastCol, ls = '--', lw=0.75)
+
+                                        plt.plot(plot_fast_gas_posx, plot_fast_gas_posy, alpha=0.5, c=fastCol, ls = '--', lw=0.75)
+
+                                        plt.scatter(plot_fast_gas_posx[-1], plot_fast_gas_posy[-1], s=sz2*4, c=fastCol, label='PeA: '+str(peA))
+                                else:
+                                    if c >= (np.shape(pos1_gas_tracer_time_x)[0]-1):
+                                        plt.plot(plot_fast_gas_posx, plot_fast_gas_posy, c=fastCol, alpha=0.5, ls = '--', lw=0.75)
+                                        plt.scatter(plot_fast_gas_posx[-1], plot_fast_gas_posy[-1], s=sz2*4, c=fastCol, label='PeA: '+str(peA))
+
+                            else:
+                                if x_fast_gas_temp1_arr[b,0]!=0.0:
+                                    if c >= (np.shape(pos1_gas_tracer_time_x)[0]-1):
+                                        plt.plot(x_fast_gas_temp1_arr[b,:], y_fast_gas_temp1_arr[b,:], alpha=0.5, c=fastCol, ls = '--', lw=0.75)
+                                        plt.plot(x_fast_gas_temp2_arr[b,:], y_fast_gas_temp2_arr[b,:], alpha=0.5, c=fastCol, ls = '--', lw=0.75)
+
+                                        plt.plot(plot_fast_gas_posx, plot_fast_gas_posy, alpha=0.5, c=fastCol, ls = '--', lw=0.75)
+
+                                        plt.scatter(final_fast_x_pos_arr[b], final_fast_y_pos_arr[b], marker='x', s=sz2*5, c=fastCol, label='PeB: '+str(peB))
+                                else:
+                                    if c >= (np.shape(pos1_gas_tracer_time_x)[0]-1):
+                                        plt.plot(plot_fast_gas_posx, plot_fast_gas_posy, c=fastCol, alpha=0.5, ls = '--', lw=0.75)
+                                        plt.scatter(final_fast_x_pos_arr[b], final_fast_y_pos_arr[b], marker='x', s=sz2*5, c=fastCol, label='PeB: '+str(peB))
+                                        #plot_fast_bulk_posx = np.array([])
+                                        #plot_fast_bulk_posy = np.array([])
+
+                        elif fast_gas_tracers_in_clust[c,b]==1:
+                            if terminate_gas_fast_program[b]==0:
+                                #in_bulk = np.array([], dtype=int)
+                                #for d in range(0, int(c)):
+                                #    if fast_gas_tracers_in_clust[d,b]==1:
+                                #        in_bulk = np.append(in_bulk, d)
+                                #if len(in_bulk)>0:
+                                plot_fast_gas_posx = np.append(plot_fast_gas_posx, pos1_gas_tracer_time_x[c,b])
+                                plot_fast_gas_posy = np.append(plot_fast_gas_posy, pos1_gas_tracer_time_y[c,b])
+
+                                if c>= (np.shape(pos1_gas_tracer_time_x)[0]-1):
+                                    #plt.scatter(plot_fast_posx[0], plot_fast_posy[0], marker='o', s=sz2*4, facecolor = 'None', edgecolor=fastCol, label='PeA: '+str(peA))
+                                    plt.plot(plot_fast_gas_posx, plot_fast_gas_posy, c=fastCol, alpha=0.5, ls = '--', lw=0.75)
+                                    plt.scatter(plot_fast_gas_posx[-1], plot_fast_gas_posy[-1], s=sz2*4, c=fastCol, label='PeA: '+str(peA))
+
+
+                            elif terminate_gas_fast_program[b]==1:
+                                if x_fast_gas_temp1_arr[b,0]!=0.0:
+                                    if c >= (np.shape(pos1_gas_tracer_time_x)[0]-1):
+                                        plt.plot(x_fast_gas_temp1_arr[b,:], y_fast_gas_temp1_arr[b,:], alpha=0.5, c=fastCol, ls = '--', lw=0.75)
+                                        plt.plot(x_fast_gas_temp2_arr[b,:], y_fast_gas_temp2_arr[b,:], alpha=0.5, c=fastCol, ls = '--', lw=0.75)
+
+                                        plt.plot(plot_fast_gas_posx, plot_fast_gas_posy, alpha=0.5, c=fastCol, ls = '--', lw=0.75)
+
+                                        plt.scatter(final_fast_x_pos_arr[b], final_fast_y_pos_arr[b], marker='x', s=sz2*5, c=fastCol, label='PeB: '+str(peB))
+                                else:
+                                    if c >= (np.shape(pos1_gas_tracer_time_x)[0]-1):
+                                        plt.plot(plot_fast_gas_posx, plot_fast_gas_posy, c=fastCol, alpha=0.5, ls = '--', lw=0.75)
+                                        plt.scatter(final_fast_x_pos_arr[b], final_fast_y_pos_arr[b], marker='x', s=sz2*5, c=fastCol, label='PeB: '+str(peB))
+                                        #plot_fast_bulk_posx = np.array([])
+                                        #plot_fast_bulk_posy = np.array([])
+                                #start = int(in_bulk[-1])
+                                #for d in range(start, int(c)):
+
+                                    #plot_fast_gas_posx = np.append(plot_fast_gas_posx, pos1_gas_tracer_time_x[d,b])
+                                    #plot_fast_gas_posy = np.append(plot_fast_gas_posy, pos1_gas_tracer_time_y[d,b])
+
+
+
+
+                        else:
+                            if (fast_gas_tracers_in_clust[c-1,b]==1):
+                                in_bulk = np.array([], dtype=int)
+                                for d in range(0, int(c)):
+                                    if fast_gas_tracers_in_bulk[d,b]==1:
+                                        in_bulk = np.append(in_bulk, d)
+                                cont_loop = 1
+                                if len(in_bulk)>0:
+                                    start = int(in_bulk[-1])
+                                    #plot_fast_gas_posx = np.append(plot_fast_gas_posx, pos1_gas_tracer_time_x[c,b])
+                                    #plot_fast_gas_posy = np.append(plot_fast_gas_posy, pos1_gas_tracer_time_y[c,b])
+
+                                    #for d in range(start, int(c)):
+
+                                    #plot_fast_gas_posx = np.append(plot_fast_gas_posx, pos1_gas_tracer_time_x[d,b])
+                                    #plot_fast_gas_posy = np.append(plot_fast_gas_posy, pos1_gas_tracer_time_y[d,b])
+
+
+
+                                    difr = ( (pos1_gas_tracer_time_y[c,b] - plot_fast_gas_posy[-1])**2 + (pos1_gas_tracer_time_x[c,b] - plot_fast_gas_posx[-1])**2 ) ** 0.5
+                                    if (difr > h_box) & (x_fast_gas_temp1_arr[b,0]==0.0):
+                                        if np.abs(pos1_gas_tracer_time_y[c,b] - plot_fast_gas_posy[-1]) > h_box:
+                                            if (pos1_gas_tracer_time_y[c,b]>0) & (plot_fast_gas_posy[-1]<0):
+                                                temp_gas_pos_yprev = plot_fast_gas_posy[-1]
+                                                temp_gas_pos_ycurr = pos1_gas_tracer_time_y[c,b] - l_box
+                                            if (pos1_gas_tracer_time_y[c,b]<0) & (plot_fast_gas_posy[-1]>0):
+                                                temp_gas_pos_yprev = plot_fast_gas_posy[-1]
+                                                temp_gas_pos_ycurr = pos1_gas_tracer_time_y[c,b] + l_box
+                                        else:
+                                            temp_gas_pos_yprev = plot_fast_gas_posy[-1]
+                                            temp_gas_pos_ycurr = pos1_gas_tracer_time_y[c,b]
+
+                                        if np.abs(pos1_gas_tracer_time_x[c,b] - plot_fast_gas_posx[-1]) > h_box:
+                                            if (pos1_gas_tracer_time_x[c,b]>0) & (plot_fast_gas_posx[-1]<0):
+                                                temp_gas_pos_xprev = plot_fast_gas_posx[-1]
+                                                temp_gas_pos_xcurr = pos1_gas_tracer_time_x[c,b] - l_box
+                                            if (pos1_gas_tracer_time_x[c,b]<0) & (plot_fast_gas_posx[-1]>0):
+                                                temp_gas_pos_xprev = plot_fast_gas_posx[-1]
+                                                temp_gas_pos_xcurr = pos1_gas_tracer_time_x[c,b] + l_box
+                                        else:
+                                            temp_gas_pos_xprev = plot_fast_gas_posx[-1]
+                                            temp_gas_pos_xcurr = pos1_gas_tracer_time_x[c,b]
+
+                                        temp_gas_slope = (temp_gas_pos_ycurr - temp_gas_pos_yprev) / (temp_gas_pos_xcurr - temp_gas_pos_xprev)
+                                        temp_gas_yint = temp_gas_pos_yprev - temp_gas_slope * temp_gas_pos_xprev
+
+                                        if np.abs(pos1_gas_tracer_time_y[c,b] - plot_fast_gas_posy[-1]) > h_box:
+                                            if (pos1_gas_tracer_time_y[c,b]>0) & (plot_fast_gas_posy[-1]<0):
+                                                x_gas_int = (-h_box - temp_gas_yint) / temp_gas_slope
+                                            elif (pos1_gas_tracer_time_y[c,b]<0) & (plot_fast_gas_posy[-1]>0):
+                                                x_gas_int = (h_box - temp_gas_yint) / temp_gas_slope
+
+                                            if x_gas_int < temp_gas_pos_xprev:
+                                                x_gas_temp1 = np.linspace(x_gas_int, temp_gas_pos_xprev, num=2)
+                                                x_gas_temp2 = np.linspace(temp_gas_pos_xcurr, x_gas_int, num=2)
+
+                                            else:
+                                                x_gas_temp1 = np.linspace(temp_gas_pos_xprev, x_gas_int, num=2)
+                                                x_gas_temp2 = np.linspace(x_gas_int, temp_gas_pos_xcurr, num=2)
+
+                                            if (pos1_gas_tracer_time_y[c,b]>0) & (plot_fast_gas_posy[-1]<0):
+                                                y_gas_temp1 = x_gas_temp1 * temp_gas_slope + temp_gas_yint
+                                                y_gas_temp2 = x_gas_temp2 * temp_gas_slope + temp_gas_yint + l_box
+                                            elif (pos1_gas_tracer_time_y[c,b]<0) & (plot_fast_gas_posy[-1]>0):
+                                                y_gas_temp1 = x_gas_temp1 * temp_gas_slope + temp_gas_yint
+                                                y_gas_temp2 = x_gas_temp2 * temp_gas_slope + temp_gas_yint - l_box
+
+                                        if np.abs(pos1_gas_tracer_time_x[c,b] - plot_fast_gas_posx[-1]) > h_box:
+                                            if (pos1_gas_tracer_time_x[c,b]>0) & (plot_fast_gas_posx[-1]<0):
+                                                y_gas_int = temp_gas_yint + temp_gas_slope * -h_box
+                                            elif (pos1_gas_tracer_time_x[c,b]<0) & (plot_fast_gas_posx[-1]>0):
+                                                y_gas_int = temp_gas_yint + temp_gas_slope * h_box
+
+                                            if y_gas_int < temp_gas_pos_yprev:
+                                                y_gas_temp1 = np.linspace(y_gas_int, temp_gas_pos_yprev, num=2)
+                                                y_gas_temp2 = np.linspace(temp_gas_pos_ycurr, y_gas_int, num=2)
+
+                                            else:
+                                                y_gas_temp1 = np.linspace(temp_gas_pos_yprev, y_gas_int, num=2)
+                                                y_gas_temp2 = np.linspace(y_gas_int, temp_gas_pos_ycurr, num=2)
+
+                                            if (pos1_gas_tracer_time_x[c,b]>0) & (plot_fast_gas_posx[-1]<0):
+
+                                                x_gas_temp1 = (y_gas_temp1 - temp_gas_yint) / temp_gas_slope
+                                                x_gas_temp2 = (y_gas_temp2 - temp_gas_yint) / temp_gas_slope + l_box
+
+                                            elif (pos1_gas_tracer_time_x[c,b]<0) & (plot_fast_gas_posx[-1]>0):
+
+                                                x_gas_temp1 = (y_gas_temp1 - temp_gas_yint) / temp_gas_slope
+                                                x_gas_temp2 = (y_gas_temp2 - temp_gas_yint) / temp_gas_slope - l_box
+
+
+                                        if terminate_gas_fast_program[b]==0:
+
+
+                                            if (final_fast_x_pos_arr[b]==0):
+                                                terminate_gas_fast_program[b]=1
+                                                x_fast_gas_temp1_arr[b,:] = x_gas_temp1
+                                                x_fast_gas_temp2_arr[b,:] = x_gas_temp2
+
+                                                y_fast_gas_temp1_arr[b,:] = y_gas_temp1
+                                                y_fast_gas_temp2_arr[b,:] = y_gas_temp2
+                                                final_fast_x_pos_arr[b] = pos1_gas_tracer_time_x[c,b]
+                                                final_fast_y_pos_arr[b] = pos1_gas_tracer_time_y[c,b]
+                                            if x_fast_gas_temp1_arr[b,0]!=0.0:
+                                                if c >= (np.shape(pos1_gas_tracer_time_x)[0]-1):
+                                                    plt.plot(x_fast_gas_temp1_arr[b,:], y_fast_gas_temp1_arr[b,:], alpha=0.5, c=fastCol, ls = '--', lw=0.75)
+                                                    plt.plot(x_fast_gas_temp2_arr[b,:], y_fast_gas_temp2_arr[b,:], alpha=0.5, c=fastCol, ls = '--', lw=0.75)
+
+                                                    plt.plot(plot_fast_gas_posx, plot_fast_gas_posy, alpha=0.5, c=fastCol, ls = '--', lw=0.75)
+
+                                                    plt.scatter(final_fast_x_pos_arr[b], final_fast_y_pos_arr[b], marker='x', s=sz2*5, c=fastCol, label='PeB: '+str(peB))
+
+                                                    plt.plot(plot_fast_gas_posx_new, plot_fast_gas_posy_new, alpha=0.5, c=fastCol, ls = '--', lw=0.75)
+
+                                            else:
+
+                                                if c >= (np.shape(pos1_gas_tracer_time_x)[0]-1):
+                                                    #if c == (np.shape(pos0_bulk_tracer_time_x)[0]-1):
+                                                    plt.plot(plot_fast_gas_posx, plot_fast_gas_posy, c=fastCol, alpha=0.5, ls = '--', lw=0.75)
+                                                    if len(plot_fast_gas_posy_new)>0:
+                                                        plt.plot(plot_fast_gas_posx_new, plot_fast_gas_posy_new, alpha=0.5, c=fastCol, ls = '--', lw=0.75)
+                                                        plt.scatter(final_fast_x_pos_arr[b], final_fast_y_pos_arr[b], marker='x', s=sz2*5, c=fastCol, label='PeB: '+str(peB))
+                                                    else:
+                                                        plt.scatter(final_fast_x_pos_arr[b], final_fast_y_pos_arr[b], marker='x', s=sz2*5, c=fastCol, label='PeB: '+str(peB))
+
+
+
+
+                                        else:
+
+                                            if x_fast_gas_temp1_arr[b,0]!=0.0:
+                                                if c >= (np.shape(pos1_gas_tracer_time_x)[0]-1):
+                                                    plt.plot(x_fast_gas_temp1_arr[b,:], y_fast_gas_temp1_arr[b,:], alpha=0.5, c=fastCol, ls = '--', lw=0.75)
+                                                    plt.plot(x_fast_gas_temp2_arr[b,:], y_fast_gas_temp2_arr[b,:], alpha=0.5, c=fastCol, ls = '--', lw=0.75)
+
+                                                    plt.plot(plot_fast_gas_posx, plot_fast_gas_posy, alpha=0.5, c=fastCol, ls = '--', lw=0.75)
+
+                                                    plt.scatter(final_fast_x_pos_arr[b], final_fast_y_pos_arr[b], marker='x', s=sz2*5, c=fastCol, label='PeB: '+str(peB))
+                                            else:
+                                                if c >= (np.shape(pos1_gas_tracer_time_x)[0]-1):
+                                                    plt.plot(plot_fast_gas_posx, plot_fast_gas_posy, c=fastCol, alpha=0.5, ls = '--', lw=0.75)
+                                                    plt.scatter(final_fast_x_pos_arr[b], final_fast_y_pos_arr[b], marker='x', s=sz2*5, c=fastCol, label='PeB: '+str(peB))
+                                                    #plot_fast_bulk_posx = np.array([])
+                                                    #plot_fast_bulk_posy = np.array([])
+
+                                    else:
+                                        if terminate_gas_fast_program[b] == 0:
+
+                                            if (final_fast_x_pos_arr[b]==0):
+                                                final_fast_x_pos_arr[b] = pos1_gas_tracer_time_x[c,b]
+                                                final_fast_y_pos_arr[b] = pos1_gas_tracer_time_y[c,b]
+                                            plot_fast_gas_posx = np.append(plot_fast_gas_posx, pos1_gas_tracer_time_x[c,b])
+                                            plot_fast_gas_posy = np.append(plot_fast_gas_posy, pos1_gas_tracer_time_y[c,b])
+
+
+
+                                            terminate_gas_fast_program[b] = 1
+                                            if c >= (np.shape(pos1_gas_tracer_time_x)[0]-1):
+                                                plt.plot(plot_fast_gas_posx, plot_fast_gas_posy, c=fastCol, alpha=0.5, ls = '--', lw=0.75)
+                                                plt.scatter(plot_fast_gas_posx[-1], plot_fast_gas_posy[-1], marker='x', s=sz2*5, c=fastCol, label='PeA: '+str(peA))
+                                        else:
+
+                                            if x_fast_gas_temp1_arr[b,0]!=0.0:
+                                                if c >= (np.shape(pos1_gas_tracer_time_x)[0]-1):
+                                                    plt.plot(x_fast_gas_temp1_arr[b,:], y_fast_gas_temp1_arr[b,:], alpha=0.5, c=fastCol, ls = '--', lw=0.75)
+                                                    plt.plot(x_fast_gas_temp2_arr[b,:], y_fast_gas_temp2_arr[b,:], alpha=0.5, c=fastCol, ls = '--', lw=0.75)
+
+                                                    plt.plot(plot_fast_gas_posx, plot_fast_gas_posy, alpha=0.5, c=fastCol, ls = '--', lw=0.75)
+
+                                                    plt.scatter(final_fast_x_pos_arr[b], final_fast_y_pos_arr[b], marker='x', s=sz2*5, c=fastCol, label='PeB: '+str(peB))
+                                            else:
+                                                if c >= (np.shape(pos1_gas_tracer_time_x)[0]-1):
+                                                    plt.plot(plot_fast_gas_posx, plot_fast_gas_posy, c=fastCol, alpha=0.5, ls = '--', lw=0.75)
+                                                    plt.scatter(final_fast_x_pos_arr[b], final_fast_y_pos_arr[b], marker='x', s=sz2*5, c=fastCol, label='PeB: '+str(peB))
+                                                    #plot_fast_bulk_posx = np.array([])
+                                                    #plot_fast_bulk_posy = np.array([])
+                            else:
+                                if terminate_gas_fast_program[b]==1:
+                                    #if (final_fast_x_pos_arr[b]==0):
+                                    #    final_fast_x_pos_arr[b] = pos1_gas_tracer_time_x[c,b]
+                                    #    final_fast_y_pos_arr[b] = pos1_gas_tracer_time_y[c,b]
+                                    #terminate_gas_fast_program[b] = 1
+                                    if x_fast_gas_temp1_arr[b,0]!=0.0:
+                                        if c >= (np.shape(pos1_gas_tracer_time_x)[0]-1):
+                                            plt.plot(x_fast_gas_temp1_arr[b,:], y_fast_gas_temp1_arr[b,:], alpha=0.5, c=fastCol, ls = '--', lw=0.75)
+                                            plt.plot(x_fast_gas_temp2_arr[b,:], y_fast_gas_temp2_arr[b,:], alpha=0.5, c=fastCol, ls = '--', lw=0.75)
+
+                                            plt.plot(plot_fast_gas_posx, plot_fast_gas_posy, alpha=0.5, c=fastCol, ls = '--', lw=0.75)
+
+                                            plt.scatter(final_fast_x_pos_arr[b], final_fast_y_pos_arr[b], marker='x', s=sz2*5, c=fastCol, label='PeB: '+str(peB))
+                                    else:
+                                        if c >= (np.shape(pos1_gas_tracer_time_x)[0]-1):
+                                            plt.plot(plot_fast_gas_posx, plot_fast_gas_posy, c=fastCol, alpha=0.5, ls = '--', lw=0.75)
+                                            plt.scatter(final_fast_x_pos_arr[b], final_fast_y_pos_arr[b], marker='x', s=sz2*5, c=fastCol, label='PeB: '+str(peB))
+                                            #plot_fast_bulk_posx = np.array([])
+                                            #plot_fast_bulk_posy = np.array([])
+                        #else:
+
+            ax.text(0.95, 0.025, s=r'$\tau$' + ' = ' + '{:.2f}'.format(tst) + ' ' + r'$\tau_\mathrm{r}$',
+                    horizontalalignment='right', verticalalignment='bottom',
+                    transform=ax.transAxes,
+                    fontsize=18,
+                    bbox=dict(facecolor=(1,1,1,0.5), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+
+
+            '''
                 if final_time_slow_tracers[b]==0:
                     plt.plot(pos0_tracer_time_x[:,b], pos0_tracer_time_y[:,b], c=slowCol, alpha=0.5, ls = '--', lw=0.75)
                 else:
@@ -10162,15 +11051,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
             plt.scatter(final_xpos_fast_tracers, final_ypos_fast_tracers, marker = 'x', s=sz2*5, c=fastCol, label='PeB: '+str(peB))
             plt.scatter(pos1_tracer[not_final_ids_fast,0], pos1_tracer[not_final_ids_fast,1], s=sz2, c=fastCol, label='PeB: '+str(peB))
 
-
-
-
-            #Label time step
-            ax.text(0.95, 0.025, s=r'$\tau$' + ' = ' + '{:.2f}'.format(tst) + ' ' + r'$\tau_\mathrm{r}$',
-                    horizontalalignment='right', verticalalignment='bottom',
-                    transform=ax.transAxes,
-                    fontsize=18,
-                    bbox=dict(facecolor=(1,1,1,0.5), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+            '''
 
             #Set axes parameters
             ax.set_xlim(-h_box, h_box)
@@ -10182,15 +11063,1055 @@ with hoomd.open(name=inFile, mode='rb') as t:
             ax.set_aspect('equal')
 
             #Create legend for binary system
-            leg = ax.legend(loc='upper right', prop={'size': 15}, markerscale=8.0)
+            #leg = ax.legend(loc='upper right', prop={'size': 15}, markerscale=8.0)
 
 
             plt.tight_layout()
-            plt.savefig(outPath + out + "_frame_"+ pad + ".png", dpi=150, transparent=False)
+            plt.savefig(outPath + "gas_tracers_" + out + "_frame_"+ pad + ".png", dpi=150, transparent=False)
             plt.close()
-            if ind_analyzed == 25:
-                stop
+
+
+            #BULK!
+
+            #Assign type 0 particles to plot
+            final_bulk_ids_slow = np.where((final_xpos_slow_bulk_tracers!=0) & (final_ypos_slow_bulk_tracers!=0))[0]
+            final_bulk_ids_fast = np.where((final_xpos_fast_bulk_tracers!=0) & (final_ypos_fast_bulk_tracers!=0))[0]
+            not_final_bulk_ids_slow = np.where((final_xpos_slow_bulk_tracers==0) & (final_ypos_slow_bulk_tracers==0))[0]
+            not_final_bulk_ids_fast = np.where((final_xpos_fast_bulk_tracers==0) & (final_ypos_fast_bulk_tracers==0))[0]
+            terminate_bulk_slow_program = np.zeros(np.shape(pos0_bulk_tracer_time_x)[1])
+            fig = plt.figure(figsize=(6.5,6))
+            ax = fig.add_subplot(111)
+            plt.scatter(pos_bulk_else[:,0], pos_bulk_else[:,1], s=sz, c=otherCol)
+            #loop over number of slow tracers
+            x_slow_bulk_temp1_arr = np.zeros((np.shape(pos0_bulk_tracer_time_x)[1],2))
+            x_slow_bulk_temp2_arr = np.zeros((np.shape(pos0_bulk_tracer_time_x)[1],2))
+            y_slow_bulk_temp1_arr = np.zeros((np.shape(pos0_bulk_tracer_time_x)[1],2))
+            y_slow_bulk_temp2_arr = np.zeros((np.shape(pos0_bulk_tracer_time_x)[1],2))
+            final_slow_x_pos_arr = np.zeros(np.shape(pos0_bulk_tracer_time_x)[1])
+            final_slow_y_pos_arr = np.zeros(np.shape(pos0_bulk_tracer_time_x)[1])
+
+            x_fast_bulk_temp1_arr = np.zeros((np.shape(pos1_bulk_tracer_time_x)[1],2))
+            x_fast_bulk_temp2_arr = np.zeros((np.shape(pos1_bulk_tracer_time_x)[1],2))
+            y_fast_bulk_temp1_arr = np.zeros((np.shape(pos1_bulk_tracer_time_x)[1],2))
+            y_fast_bulk_temp2_arr = np.zeros((np.shape(pos1_bulk_tracer_time_x)[1],2))
+            final_fast_x_pos_arr = np.zeros(np.shape(pos1_bulk_tracer_time_x)[1])
+            final_fast_y_pos_arr = np.zeros(np.shape(pos1_bulk_tracer_time_x)[1])
+
+            for b in range(0, np.shape(pos0_bulk_tracer_time_x)[1]):
+                    plot_slow_bulk_posy_new = np.array([])
+                    plot_slow_bulk_posx_new = np.array([])
+
+                    plot_slow_bulk_posx = np.array([])
+                    plot_slow_bulk_posy = np.array([])
+                    for c in range(0, np.shape(pos0_bulk_tracer_time_x)[0]):
+                        if len(plot_slow_bulk_posx) == 0:
+
+
+                            if slow_bulk_tracers_in_clust[c,b]==1:
+                                if terminate_bulk_slow_program[b] == 0:
+                                    plot_slow_bulk_posx = np.append(plot_slow_bulk_posx, pos0_bulk_tracer_time_x[c,b])
+                                    plot_slow_bulk_posy = np.append(plot_slow_bulk_posy, pos0_bulk_tracer_time_y[c,b])
+                                    if c >= (np.shape(pos0_bulk_tracer_time_x)[0]-1):
+                                        #plt.scatter(plot_fast_posx[0], plot_fast_posy[0], marker='o', s=sz2*4, facecolor = 'None', edgecolor=fastCol, label='PeA: '+str(peA))
+                                        fade_length = len(plot_slow_bulk_posx)
+                                        for d in range(1, len(plot_slow_bulk_posx)):
+                                            fade = (fade_length - (fade_length-(d))) / fade_length
+                                            plot_x = np.array([plot_slow_bulk_posx[d-1], plot_slow_bulk_posx[d]])
+                                            plot_y = np.array([plot_slow_bulk_posy[d-1], plot_slow_bulk_posy[d]])
+                                            plt.plot(plot_x, plot_y, c=slowCol, alpha=fade, ls = '--', lw=0.75)
+                                        #plt.plot(plot_slow_bulk_posx, plot_slow_bulk_posy, c=slowCol, alpha=0.5, ls = '--', lw=0.75)
+                                        plt.scatter(plot_slow_bulk_posx[-1], plot_slow_bulk_posy[-1], s=sz2*4, c=slowCol, label='PeA: '+str(peA))
+                                else:
+                                    if c >= (np.shape(pos0_bulk_tracer_time_x)[0]-1):
+
+
+                                        #plt.scatter(plot_slow_posx[0], plot_slow_posy[0], marker='o', s=sz2*4, facecolor = 'None', edgecolor=slowCol, label='PeA: '+str(peA))
+                                        fade_length = len(plot_slow_bulk_posx)
+                                        for d in range(1, len(plot_slow_bulk_posx)):
+                                            fade = (fade_length - (fade_length-(d))) / fade_length
+                                            plot_x = np.array([plot_slow_bulk_posx[d-1], plot_slow_bulk_posx[d]])
+                                            plot_y = np.array([plot_slow_bulk_posy[d-1], plot_slow_bulk_posy[d]])
+                                            plt.plot(plot_x, plot_y, c=slowCol, alpha=fade, ls = '--', lw=0.75)
+                                        #plt.plot(plot_slow_bulk_posx[:-1], plot_slow_bulk_posy[:-1], alpha=0.5, c=slowCol, ls = '--', lw=0.75)
+                                        plt.scatter(final_slow_x_pos_arr[b], final_slow_y_pos_arr[b], marker='x', s=sz2*5, c=slowCol, label='PeB: '+str(peB))
+                            else:
+                                if (final_slow_x_pos_arr[b]==0):
+                                    final_slow_x_pos_arr[b] = pos0_bulk_tracer_time_x[c,b]
+                                    final_slow_y_pos_arr[b] = pos0_bulk_tracer_time_y[c,b]
+                                if c >= (np.shape(pos0_bulk_tracer_time_x)[0]-1):
+                                    fade_length = len(plot_slow_bulk_posx)
+                                    for d in range(1, len(plot_slow_bulk_posx)):
+                                        fade = (fade_length - (fade_length-(d))) / fade_length
+                                        plot_x = np.array([plot_slow_bulk_posx[d-1], plot_slow_bulk_posx[d]])
+                                        plot_y = np.array([plot_slow_bulk_posy[d-1], plot_slow_bulk_posy[d]])
+                                        plt.plot(plot_x, plot_y, c=slowCol, alpha=fade, ls = '--', lw=0.75)
+                                    #plt.plot(plot_slow_bulk_posx[:-1], plot_slow_bulk_posy[:-1], alpha=0.5, c=slowCol, ls = '--', lw=0.75)
+                                    plt.scatter(final_slow_x_pos_arr[b], final_slow_y_pos_arr[b], marker='x', s=sz2*5, c=slowCol, label='PeB: '+str(peB))
+                        else:
+                            if (slow_bulk_tracers_in_clust[c,b]==1):
+                                difr = ( (pos0_bulk_tracer_time_y[c,b] - plot_slow_bulk_posy[-1])**2 + (pos0_bulk_tracer_time_x[c,b] - plot_slow_bulk_posx[-1])**2 ) ** 0.5
+                                if (difr > h_box) & (x_slow_bulk_temp1_arr[b,0]==0.0):
+                                    if np.abs(pos0_bulk_tracer_time_y[c,b] - plot_slow_bulk_posy[-1]) > h_box:
+                                        if (pos0_bulk_tracer_time_y[c,b]>0) & (plot_slow_bulk_posy[-1]<0):
+                                            temp_bulk_pos_yprev = plot_slow_bulk_posy[-1]
+                                            temp_bulk_pos_ycurr = pos0_bulk_tracer_time_y[c,b] - l_box
+                                        if (pos0_bulk_tracer_time_y[c,b]<0) & (plot_slow_bulk_posy[-1]>0):
+                                            temp_bulk_pos_yprev = plot_slow_bulk_posy[-1]
+                                            temp_bulk_pos_ycurr = pos0_bulk_tracer_time_y[c,b] + l_box
+                                    else:
+                                        temp_bulk_pos_yprev = plot_slow_bulk_posy[-1]
+                                        temp_bulk_pos_ycurr = pos0_bulk_tracer_time_y[c,b]
+
+                                    if np.abs(pos0_bulk_tracer_time_x[c,b] - plot_slow_bulk_posx[-1]) > h_box:
+                                        if (pos0_bulk_tracer_time_x[c,b]>0) & (plot_slow_bulk_posx[-1]<0):
+                                            temp_bulk_pos_xprev = plot_slow_bulk_posx[-1]
+                                            temp_bulk_pos_xcurr = pos0_bulk_tracer_time_x[c,b] - l_box
+                                        if (pos0_bulk_tracer_time_x[c,b]<0) & (plot_slow_bulk_posx[-1]>0):
+                                            temp_bulk_pos_xprev = plot_slow_bulk_posx[-1]
+                                            temp_bulk_pos_xcurr = pos0_bulk_tracer_time_x[c,b] + l_box
+                                    else:
+                                        temp_bulk_pos_xprev = plot_slow_bulk_posx[-1]
+                                        temp_bulk_pos_xcurr = pos0_bulk_tracer_time_x[c,b]
+
+                                    temp_bulk_slope = (temp_bulk_pos_ycurr - temp_bulk_pos_yprev) / (temp_bulk_pos_xcurr - temp_bulk_pos_xprev)
+                                    temp_bulk_yint = temp_bulk_pos_yprev - temp_bulk_slope * temp_bulk_pos_xprev
+
+                                    if np.abs(pos0_bulk_tracer_time_y[c,b] - plot_slow_bulk_posy[-1]) > h_box:
+                                        if (pos0_bulk_tracer_time_y[c,b]>0) & (plot_slow_bulk_posy[-1]<0):
+                                            x_bulk_int = (-h_box - temp_bulk_yint) / temp_bulk_slope
+                                        elif (pos0_bulk_tracer_time_y[c,b]<0) & (plot_slow_bulk_posy[-1]>0):
+                                            x_bulk_int = (h_box - temp_bulk_yint) / temp_bulk_slope
+
+                                        if x_bulk_int < temp_bulk_pos_xprev:
+                                            x_bulk_temp1 = np.linspace(x_bulk_int, temp_bulk_pos_xprev, num=2)
+                                            x_bulk_temp2 = np.linspace(temp_bulk_pos_xcurr, x_bulk_int, num=2)
+
+                                        else:
+                                            x_bulk_temp1 = np.linspace(temp_bulk_pos_xprev, x_bulk_int, num=2)
+                                            x_bulk_temp2 = np.linspace(x_bulk_int, temp_bulk_pos_xcurr, num=2)
+
+                                        if (pos0_bulk_tracer_time_y[c,b]>0) & (plot_slow_bulk_posy[-1]<0):
+                                            y_bulk_temp1 = x_bulk_temp1 * temp_bulk_slope + temp_bulk_yint
+                                            y_bulk_temp2 = x_bulk_temp2 * temp_bulk_slope + temp_bulk_yint + l_box
+                                        elif (pos0_bulk_tracer_time_y[c,b]<0) & (plot_slow_bulk_posy[-1]>0):
+                                            y_bulk_temp1 = x_bulk_temp1 * temp_bulk_slope + temp_bulk_yint
+                                            y_bulk_temp2 = x_bulk_temp2 * temp_bulk_slope + temp_bulk_yint - l_box
+
+                                    if np.abs(pos0_bulk_tracer_time_x[c,b] - plot_slow_bulk_posx[-1]) > h_box:
+                                        if (pos0_bulk_tracer_time_x[c,b]>0) & (plot_slow_bulk_posx[-1]<0):
+                                            y_bulk_int = temp_bulk_yint + temp_bulk_slope * -h_box
+                                        elif (pos0_bulk_tracer_time_x[c,b]<0) & (plot_slow_bulk_posx[-1]>0):
+                                            y_bulk_int = temp_bulk_yint + temp_bulk_slope * h_box
+
+                                        if y_bulk_int < temp_bulk_pos_yprev:
+                                            y_bulk_temp1 = np.linspace(y_bulk_int, temp_bulk_pos_yprev, num=2)
+                                            y_bulk_temp2 = np.linspace(temp_bulk_pos_ycurr, y_bulk_int, num=2)
+
+                                        else:
+                                            y_bulk_temp1 = np.linspace(temp_bulk_pos_yprev, y_bulk_int, num=2)
+                                            y_bulk_temp2 = np.linspace(y_bulk_int, temp_bulk_pos_ycurr, num=2)
+
+                                        if (pos0_bulk_tracer_time_x[c,b]>0) & (plot_slow_bulk_posx[-1]<0):
+
+                                            x_bulk_temp1 = (y_bulk_temp1 - temp_bulk_yint) / temp_bulk_slope
+                                            x_bulk_temp2 = (y_bulk_temp2 - temp_bulk_yint) / temp_bulk_slope + l_box
+
+                                        elif (pos0_bulk_tracer_time_x[c,b]<0) & (plot_slow_bulk_posx[-1]>0):
+
+                                            x_bulk_temp1 = (y_bulk_temp1 - temp_bulk_yint) / temp_bulk_slope
+                                            x_bulk_temp2 = (y_bulk_temp2 - temp_bulk_yint) / temp_bulk_slope - l_box
+
+
+                                    if terminate_bulk_slow_program[b]==0:
+                                        if c >= (np.shape(pos0_bulk_tracer_time_x)[0]-1):
+
+                                            fade_length = len(plot_slow_bulk_posx) + 1
+                                            fade = (fade_length - (fade_length-(len(plot_slow_bulk_posx)+1))) / fade_length
+
+                                            plt.plot(x_bulk_temp1, y_bulk_temp1, alpha=fade, c=slowCol, ls = '--', lw=0.75)
+                                            plt.plot(x_bulk_temp2, y_bulk_temp2, alpha=fade, c=slowCol, ls = '--', lw=0.75)
+
+                                            for d in range(1, len(plot_slow_bulk_posx)):
+                                                fade = (fade_length - (fade_length-(d))) / fade_length
+                                                plot_x = np.array([plot_slow_bulk_posx[d-1], plot_slow_bulk_posx[d]])
+                                                plot_y = np.array([plot_slow_bulk_posy[d-1], plot_slow_bulk_posy[d]])
+                                                plt.plot(plot_x, plot_y, c=slowCol, alpha=fade, ls = '--', lw=0.75)
+
+                                            #plt.plot(plot_slow_bulk_posx, plot_slow_bulk_posy, alpha=0.5, c=slowCol, ls = '--', lw=0.75)
+
+                                            plt.scatter(pos0_bulk_tracer_time_x[c,b], pos0_bulk_tracer_time_y[c,b], s=sz2*4, c=slowCol, label='PeA: '+str(peA))
+                                    else:
+
+                                        if c >= (np.shape(pos0_bulk_tracer_time_x)[0]-1):
+                                            fade_length = len(plot_slow_bulk_posx)
+                                            for d in range(1, len(plot_slow_bulk_posx)):
+                                                fade = (fade_length - (fade_length-(d))) / fade_length
+                                                plot_x = np.array([plot_slow_bulk_posx[d-1], plot_slow_bulk_posx[d]])
+                                                plot_y = np.array([plot_slow_bulk_posy[d-1], plot_slow_bulk_posy[d]])
+                                                plt.plot(plot_x, plot_y, c=slowCol, alpha=fade, ls = '--', lw=0.75)
+                                            #plt.plot(plot_slow_bulk_posx, plot_slow_bulk_posy, alpha=0.5, c=slowCol, ls = '--', lw=0.75)
+
+                                            plt.scatter(final_slow_x_pos_arr[b], final_slow_y_pos_arr[b], marker='x', s=sz2*5, c=slowCol, label='PeB: '+str(peB))
+
+                                else:
+                                    if terminate_bulk_slow_program[b]==0:
+
+                                        if x_slow_bulk_temp1_arr[b,0]!=0.0:
+                                            if c >= (np.shape(pos0_bulk_tracer_time_x)[0]-1):
+
+                                                if len(plot_slow_bulk_posy_new)==0:
+                                                    plot_slow_bulk_posx_new = np.array([x_bulk_temp2, pos0_bulk_tracer_time_x[c,b]])
+                                                    plot_slow_bulk_posy_new = np.array([y_bulk_temp2, pos0_bulk_tracer_time_y[c,b]])
+                                                else:
+                                                    plot_slow_bulk_posx_new = np.append(plot_slow_bulk_posx_new, pos0_bulk_tracer_time_x[c,b])
+                                                    plot_slow_bulk_posy_new = np.append(plot_slow_bulk_posy_new, pos0_bulk_tracer_time_y[c,b])
+
+                                                fade_length = len(plot_slow_bulk_posx) + 1 + len(plot_slow_bulk_posx_new)
+
+                                                fade = (fade_length - (fade_length-(len(plot_slow_bulk_posx)+1))) / fade_length
+                                                plt.plot(x_bulk_temp1, y_bulk_temp1, alpha=fade, c=slowCol, ls = '--', lw=0.75)
+                                                plt.plot(x_bulk_temp2, y_bulk_temp2, alpha=fade, c=slowCol, ls = '--', lw=0.75)
+
+                                                for d in range(1, len(plot_slow_bulk_posx)):
+                                                    fade = (fade_length - (fade_length-(d))) / fade_length
+                                                    plot_x = np.array([plot_slow_bulk_posx[d-1], plot_slow_bulk_posx[d]])
+                                                    plot_y = np.array([plot_slow_bulk_posy[d-1], plot_slow_bulk_posy[d]])
+                                                    plt.plot(plot_x, plot_y, c=slowCol, alpha=fade, ls = '--', lw=0.75)
+                                                #plt.plot(plot_slow_bulk_posx, plot_slow_bulk_posy, alpha=0.5, c=slowCol, ls = '--', lw=0.75)
+
+                                                plt.scatter(pos0_bulk_tracer_time_x[c,b], pos0_bulk_tracer_time_y[c,b], s=sz2*4, c=slowCol, label='PeA: '+str(peA))
+
+
+
+                                                for d in range(1, len(plot_slow_bulk_posx_new)):
+                                                    fade = (fade_length - (fade_length-(len(plot_slow_bulk_posx) + 1 + d))) / fade_length
+                                                    plot_x = np.array([plot_slow_bulk_posx_new[d-1], plot_slow_bulk_posx_new[d]])
+                                                    plot_y = np.array([plot_slow_bulk_posy_new[d-1], plot_slow_bulk_posy_new[d]])
+                                                    plt.plot(plot_x, plot_y, c=slowCol, alpha=fade, ls = '--', lw=0.75)
+                                                #plt.plot(plot_slow_bulk_posx_new, plot_slow_bulk_posy_new, alpha=0.5, c=slowCol, ls = '--', lw=0.75)
+
+
+                                        else:
+                                            #if terminate_bulk_slow_program[b] == 0:
+                                            if len(plot_slow_bulk_posx_new)==0:
+                                                plot_slow_bulk_posx = np.append(plot_slow_bulk_posx, pos0_bulk_tracer_time_x[c,b])
+                                            else:
+                                                plot_slow_bulk_posx_new = np.append(plot_slow_bulk_posx_new, pos0_bulk_tracer_time_x[c,b])
+
+                                            if len(plot_slow_bulk_posy_new)==0:
+                                                plot_slow_bulk_posy = np.append(plot_slow_bulk_posy, pos0_bulk_tracer_time_y[c,b])
+                                            else:
+                                                plot_slow_bulk_posy_new = np.array([y_bulk_temp2, pos0_bulk_tracer_time_y[c,b]])
+
+                                            if c >= (np.shape(pos0_bulk_tracer_time_x)[0]-1):
+
+                                                #if c == (np.shape(pos0_bulk_tracer_time_x)[0]-1):
+                                                fade_length = len(plot_slow_bulk_posx) + len(plot_slow_bulk_posx_new)
+                                                for d in range(1, len(plot_slow_bulk_posx)):
+                                                    fade = (fade_length - (fade_length-(d))) / fade_length
+                                                    plot_x = np.array([plot_slow_bulk_posx[d-1], plot_slow_bulk_posx[d]])
+                                                    plot_y = np.array([plot_slow_bulk_posy[d-1], plot_slow_bulk_posy[d]])
+                                                    plt.plot(plot_x, plot_y, c=slowCol, alpha=fade, ls = '--', lw=0.75)
+                                                #plt.plot(plot_slow_bulk_posx, plot_slow_bulk_posy, c=slowCol, alpha=0.5, ls = '--', lw=0.75)
+                                                if len(plot_slow_bulk_posy_new)>0:
+                                                    for d in range(1, len(plot_slow_bulk_posx_new)):
+                                                        fade = (fade_length - (fade_length-(len(plot_slow_bulk_posx) + 1 + d))) / fade_length
+                                                        plot_x = np.array([plot_slow_bulk_posx_new[d-1], plot_slow_bulk_posx_new[d]])
+                                                        plot_y = np.array([plot_slow_bulk_posy_new[d-1], plot_slow_bulk_posy_new[d]])
+                                                        plt.plot(plot_x, plot_y, c=slowCol, alpha=fade, ls = '--', lw=0.75)
+                                                    #plt.plot(plot_slow_bulk_posx_new, plot_slow_bulk_posy_new, alpha=0.5, c=slowCol, ls = '--', lw=0.75)
+                                                    plt.scatter(pos0_bulk_tracer_time_x[c,b], pos0_bulk_tracer_time_y[c,b], s=sz2*4, c=slowCol, label='PeA: '+str(peA))
+                                                else:
+                                                    plt.scatter(plot_slow_bulk_posx[-1], plot_slow_bulk_posy[-1], s=sz2*4, c=slowCol, label='PeA: '+str(peA))
+                                    else:
+                                        if x_slow_bulk_temp1_arr[b,0]!=0.0:
+                                            if c >= (np.shape(pos0_bulk_tracer_time_x)[0]-1):
+
+                                                fade_length = len(plot_slow_bulk_posx) + 1 + len(plot_slow_bulk_posx_new)
+
+                                                fade = (fade_length - (fade_length-(len(plot_slow_bulk_posx)+1))) / fade_length
+
+                                                plt.plot(x_bulk_temp1, y_bulk_temp1, alpha=fade, c=slowCol, ls = '--', lw=0.75)
+                                                plt.plot(x_bulk_temp2, y_bulk_temp2, alpha=fade, c=slowCol, ls = '--', lw=0.75)
+
+                                                for d in range(1, len(plot_slow_bulk_posx)):
+                                                    fade = (fade_length - (fade_length-(d))) / fade_length
+                                                    plot_x = np.array([plot_slow_bulk_posx[d-1], plot_slow_bulk_posx[d]])
+                                                    plot_y = np.array([plot_slow_bulk_posy[d-1], plot_slow_bulk_posy[d]])
+                                                    plt.plot(plot_x, plot_y, c=slowCol, alpha=fade, ls = '--', lw=0.75)
+                                                #plt.plot(plot_slow_bulk_posx, plot_slow_bulk_posy, alpha=0.5, c=slowCol, ls = '--', lw=0.75)
+                                                if len(plot_slow_bulk_posy_new)>0:
+                                                    for d in range(1, len(plot_slow_bulk_posx_new)):
+                                                        fade = (fade_length - (fade_length-(len(plot_slow_bulk_posx) + 1 + d))) / fade_length
+                                                        plot_x = np.array([plot_slow_bulk_posx_new[d-1], plot_slow_bulk_posx_new[d]])
+                                                        plot_y = np.array([plot_slow_bulk_posy_new[d-1], plot_slow_bulk_posy_new[d]])
+                                                        plt.plot(plot_x, plot_y, c=slowCol, alpha=fade, ls = '--', lw=0.75)
+                                                    #plt.plot(plot_slow_bulk_posx_new, plot_slow_bulk_posy_new, alpha=0.5, c=slowCol, ls = '--', lw=0.75)
+                                                    plt.scatter(final_slow_x_pos_arr[b], final_slow_y_pos_arr[b], marker='x', s=sz2*5, c=slowCol, label='PeB: '+str(peB))
+                                                else:
+                                                    plt.scatter(final_slow_x_pos_arr[b], final_slow_y_pos_arr[b], marker='x', s=sz2*5, c=slowCol, label='PeB: '+str(peB))
+
+                                        else:
+                                            if c >= (np.shape(pos0_bulk_tracer_time_x)[0]-1):
+                                                fade_length = len(plot_slow_bulk_posx) + len(plot_slow_bulk_posx_new)
+                                                for d in range(1, len(plot_slow_bulk_posx)):
+                                                    fade = (fade_length - (fade_length-(d))) / fade_length
+                                                    plot_x = np.array([plot_slow_bulk_posx[d-1], plot_slow_bulk_posx[d]])
+                                                    plot_y = np.array([plot_slow_bulk_posy[d-1], plot_slow_bulk_posy[d]])
+                                                    plt.plot(plot_x, plot_y, c=slowCol, alpha=fade, ls = '--', lw=0.75)
+                                                #plt.plot(plot_slow_bulk_posx, plot_slow_bulk_posy, c=slowCol, alpha=0.5, ls = '--', lw=0.75)
+                                                plt.scatter(final_slow_x_pos_arr[b], final_slow_y_pos_arr[b], marker='x', s=sz2*5, c=slowCol, label='PeB: '+str(peB))
+
+                            else:
+                                if (slow_bulk_tracers_in_clust[c-1,b]==1):
+
+
+                                    difr = ( (pos0_bulk_tracer_time_y[c,b] - plot_slow_bulk_posy[-1])**2 + (pos0_bulk_tracer_time_x[c,b] - plot_slow_bulk_posx[-1])**2 ) ** 0.5
+                                    if (difr > h_box) & (x_slow_bulk_temp1_arr[b,0]==0.0):
+                                        if np.abs(pos0_bulk_tracer_time_y[c,b] - plot_slow_bulk_posy[-1]) > h_box:
+                                            if (pos0_bulk_tracer_time_y[c,b]>0) & (plot_slow_bulk_posy[-1]<0):
+                                                temp_bulk_pos_yprev = plot_slow_bulk_posy[-1]
+                                                temp_bulk_pos_ycurr = pos0_bulk_tracer_time_y[c,b] - l_box
+                                            if (pos0_bulk_tracer_time_y[c,b]<0) & (plot_slow_bulk_posy[-1]>0):
+                                                temp_bulk_pos_yprev = plot_slow_bulk_posy[-1]
+                                                temp_bulk_pos_ycurr = pos0_bulk_tracer_time_y[c,b] + l_box
+                                        else:
+                                            temp_bulk_pos_yprev = plot_slow_bulk_posy[-1]
+                                            temp_bulk_pos_ycurr = pos0_bulk_tracer_time_y[c,b]
+
+                                        if np.abs(pos0_bulk_tracer_time_x[c,b] - plot_slow_bulk_posx[-1]) > h_box:
+                                            if (pos0_bulk_tracer_time_x[c,b]>0) & (plot_slow_bulk_posx[-1]<0):
+                                                temp_bulk_pos_xprev = plot_slow_bulk_posx[-1]
+                                                temp_bulk_pos_xcurr = pos0_bulk_tracer_time_x[c,b] - l_box
+                                            if (pos0_bulk_tracer_time_x[c,b]<0) & (plot_slow_bulk_posx[-1]>0):
+                                                temp_bulk_pos_xprev = plot_slow_bulk_posx[-1]
+                                                temp_bulk_pos_xcurr = pos0_bulk_tracer_time_x[c,b] + l_box
+                                        else:
+                                            temp_bulk_pos_xprev = plot_slow_bulk_posx[-1]
+                                            temp_bulk_pos_xcurr = pos0_bulk_tracer_time_x[c,b]
+
+                                        temp_bulk_slope = (temp_bulk_pos_ycurr - temp_bulk_pos_yprev) / (temp_bulk_pos_xcurr - temp_bulk_pos_xprev)
+                                        temp_bulk_yint = temp_bulk_pos_yprev - temp_bulk_slope * temp_bulk_pos_xprev
+
+                                        if np.abs(pos0_bulk_tracer_time_y[c,b] - plot_slow_bulk_posy[-1]) > h_box:
+                                            if (pos0_bulk_tracer_time_y[c,b]>0) & (plot_slow_bulk_posy[-1]<0):
+                                                x_bulk_int = (-h_box - temp_bulk_yint) / temp_bulk_slope
+                                            elif (pos0_bulk_tracer_time_y[c,b]<0) & (plot_slow_bulk_posy[-1]>0):
+                                                x_bulk_int = (h_box - temp_bulk_yint) / temp_bulk_slope
+
+                                            if x_bulk_int < temp_bulk_pos_xprev:
+                                                x_bulk_temp1 = np.linspace(x_bulk_int, temp_bulk_pos_xprev, num=2)
+                                                x_bulk_temp2 = np.linspace(temp_bulk_pos_xcurr, x_bulk_int, num=2)
+
+                                            else:
+                                                x_bulk_temp1 = np.linspace(temp_bulk_pos_xprev, x_bulk_int, num=2)
+                                                x_bulk_temp2 = np.linspace(x_bulk_int, temp_bulk_pos_xcurr, num=2)
+
+                                            if (pos0_bulk_tracer_time_y[c,b]>0) & (plot_slow_bulk_posy[-1]<0):
+                                                y_bulk_temp1 = x_bulk_temp1 * temp_bulk_slope + temp_bulk_yint
+                                                y_bulk_temp2 = x_bulk_temp2 * temp_bulk_slope + temp_bulk_yint + l_box
+                                            elif (pos0_bulk_tracer_time_y[c,b]<0) & (plot_slow_bulk_posy[-1]>0):
+                                                y_bulk_temp1 = x_bulk_temp1 * temp_bulk_slope + temp_bulk_yint
+                                                y_bulk_temp2 = x_bulk_temp2 * temp_bulk_slope + temp_bulk_yint - l_box
+
+                                        if np.abs(pos0_bulk_tracer_time_x[c,b] - plot_slow_bulk_posx[-1]) > h_box:
+                                            if (pos0_bulk_tracer_time_x[c,b]>0) & (plot_slow_bulk_posx[-1]<0):
+                                                y_bulk_int = temp_bulk_yint + temp_bulk_slope * -h_box
+                                            elif (pos0_bulk_tracer_time_x[c,b]<0) & (plot_slow_bulk_posx[-1]>0):
+                                                y_bulk_int = temp_bulk_yint + temp_bulk_slope * h_box
+
+                                            if y_bulk_int < temp_bulk_pos_yprev:
+                                                y_bulk_temp1 = np.linspace(y_bulk_int, temp_bulk_pos_yprev, num=2)
+                                                y_bulk_temp2 = np.linspace(temp_bulk_pos_ycurr, y_bulk_int, num=2)
+
+                                            else:
+                                                y_bulk_temp1 = np.linspace(temp_bulk_pos_yprev, y_bulk_int, num=2)
+                                                y_bulk_temp2 = np.linspace(y_bulk_int, temp_bulk_pos_ycurr, num=2)
+
+                                            if (pos0_bulk_tracer_time_x[c,b]>0) & (plot_slow_bulk_posx[-1]<0):
+
+                                                x_bulk_temp1 = (y_bulk_temp1 - temp_bulk_yint) / temp_bulk_slope
+                                                x_bulk_temp2 = (y_bulk_temp2 - temp_bulk_yint) / temp_bulk_slope + l_box
+
+                                            elif (pos0_bulk_tracer_time_x[c,b]<0) & (plot_slow_bulk_posx[-1]>0):
+
+                                                x_bulk_temp1 = (y_bulk_temp1 - temp_bulk_yint) / temp_bulk_slope
+                                                x_bulk_temp2 = (y_bulk_temp2 - temp_bulk_yint) / temp_bulk_slope - l_box
+
+
+                                        if terminate_bulk_slow_program[b]==0:
+
+
+                                            if (final_slow_x_pos_arr[b]==0):
+                                                terminate_bulk_slow_program[b]=1
+                                                x_slow_bulk_temp1_arr[b,:] = x_bulk_temp1
+                                                x_slow_bulk_temp2_arr[b,:] = x_bulk_temp2
+
+                                                y_slow_bulk_temp1_arr[b,:] = y_bulk_temp1
+                                                y_slow_bulk_temp2_arr[b,:] = y_bulk_temp2
+                                                final_slow_x_pos_arr[b] = pos0_bulk_tracer_time_x[c,b]
+                                                final_slow_y_pos_arr[b] = pos0_bulk_tracer_time_y[c,b]
+                                            if x_slow_bulk_temp1_arr[b,0]!=0.0:
+                                                if c >= (np.shape(pos0_bulk_tracer_time_x)[0]-1):
+
+                                                    fade_length = len(plot_slow_bulk_posx) + 1 + len(plot_slow_bulk_posx_new)
+
+                                                    fade = (fade_length - (fade_length-(len(plot_slow_bulk_posx)+1))) / fade_length
+
+                                                    plt.plot(x_slow_bulk_temp1_arr[b,:], y_slow_bulk_temp1_arr[b,:], alpha=fade, c=slowCol, ls = '--', lw=0.75)
+                                                    plt.plot(x_slow_bulk_temp2_arr[b,:], y_slow_bulk_temp2_arr[b,:], alpha=fade, c=slowCol, ls = '--', lw=0.75)
+                                                    for d in range(1, len(plot_slow_bulk_posx)):
+                                                        fade = (fade_length - (fade_length-(d))) / fade_length
+                                                        plot_x = np.array([plot_slow_bulk_posx[d-1], plot_slow_bulk_posx[d]])
+                                                        plot_y = np.array([plot_slow_bulk_posy[d-1], plot_slow_bulk_posy[d]])
+                                                        plt.plot(plot_x, plot_y, c=slowCol, alpha=fade, ls = '--', lw=0.75)
+                                                    #plt.plot(plot_slow_bulk_posx, plot_slow_bulk_posy, alpha=0.5, c=slowCol, ls = '--', lw=0.75)
+
+                                                    plt.scatter(final_slow_x_pos_arr[b], final_slow_y_pos_arr[b], marker='x', s=sz2*5, c=slowCol, label='PeB: '+str(peB))
+                                                    for d in range(1, len(plot_slow_bulk_posx_new)):
+                                                        fade = (fade_length - (fade_length-(len(plot_slow_bulk_posx) + 1 + d))) / fade_length
+                                                        plot_x = np.array([plot_slow_bulk_posx_new[d-1], plot_slow_bulk_posx_new[d]])
+                                                        plot_y = np.array([plot_slow_bulk_posy_new[d-1], plot_slow_bulk_posy_new[d]])
+                                                        plt.plot(plot_x, plot_y, c=slowCol, alpha=fade, ls = '--', lw=0.75)
+                                                    #plt.plot(plot_slow_bulk_posx_new, plot_slow_bulk_posy_new, alpha=0.5, c=slowCol, ls = '--', lw=0.75)
+
+                                            else:
+
+                                                if c >= (np.shape(pos0_bulk_tracer_time_x)[0]-1):
+                                                    fade_length = len(plot_slow_bulk_posx) + len(plot_slow_bulk_posx_new)
+
+                                                    #if c == (np.shape(pos0_bulk_tracer_time_x)[0]-1):
+                                                    for d in range(1, len(plot_slow_bulk_posx)):
+                                                        fade = (fade_length - (fade_length-(d))) / fade_length
+                                                        plot_x = np.array([plot_slow_bulk_posx[d-1], plot_slow_bulk_posx[d]])
+                                                        plot_y = np.array([plot_slow_bulk_posy[d-1], plot_slow_bulk_posy[d]])
+                                                        plt.plot(plot_x, plot_y, c=slowCol, alpha=fade, ls = '--', lw=0.75)
+                                                    #plt.plot(plot_slow_bulk_posx, plot_slow_bulk_posy, c=slowCol, alpha=0.5, ls = '--', lw=0.75)
+                                                    if len(plot_slow_bulk_posy_new)>0:
+                                                        for d in range(1, len(plot_slow_bulk_posx_new)):
+                                                            fade = (fade_length - (fade_length-(len(plot_slow_bulk_posx) + 1 + d))) / fade_length
+                                                            plot_x = np.array([plot_slow_bulk_posx_new[d-1], plot_slow_bulk_posx_new[d]])
+                                                            plot_y = np.array([plot_slow_bulk_posy_new[d-1], plot_slow_bulk_posy_new[d]])
+                                                            plt.plot(plot_x, plot_y, c=slowCol, alpha=fade, ls = '--', lw=0.75)
+                                                        #plt.plot(plot_slow_bulk_posx_new, plot_slow_bulk_posy_new, alpha=0.5, c=slowCol, ls = '--', lw=0.75)
+                                                        plt.scatter(final_slow_x_pos_arr[b], final_slow_y_pos_arr[b], marker='x', s=sz2*5, c=slowCol, label='PeB: '+str(peB))
+                                                    else:
+                                                        plt.scatter(final_slow_x_pos_arr[b], final_slow_y_pos_arr[b], marker='x', s=sz2*5, c=slowCol, label='PeB: '+str(peB))
+
+
+
+
+                                        else:
+
+                                            if c>= (np.shape(pos0_bulk_tracer_time_x)[0]-1):
+                                                fade_length = len(plot_slow_bulk_posx) + 1 + len(plot_slow_bulk_posx_new)
+                                                fade = (fade_length - (fade_length-(len(plot_slow_bulk_posx)+1))) / fade_length
+                                                plt.plot(x_slow_bulk_temp1_arr[b,:], y_slow_bulk_temp1_arr[b,:], alpha=fade, c=slowCol, ls = '--', lw=0.75)
+                                                plt.plot(x_slow_bulk_temp2_arr[b,:], y_slow_bulk_temp2_arr[b,:], alpha=fade, c=slowCol, ls = '--', lw=0.75)
+                                                for d in range(1, len(plot_slow_bulk_posx)):
+                                                    fade = (fade_length - (fade_length-(d))) / fade_length
+                                                    plot_x = np.array([plot_slow_bulk_posx[d-1], plot_slow_bulk_posx[d]])
+                                                    plot_y = np.array([plot_slow_bulk_posy[d-1], plot_slow_bulk_posy[d]])
+                                                    plt.plot(plot_x, plot_y, c=slowCol, alpha=fade, ls = '--', lw=0.75)
+                                                #plt.plot(plot_slow_bulk_posx, plot_slow_bulk_posy, alpha=0.5, c=slowCol, ls = '--', lw=0.75)
+
+                                                plt.scatter(final_slow_x_pos_arr[b], final_slow_y_pos_arr[b], marker='x', s=sz2*5, c=slowCol, label='PeB: '+str(peB))
+
+
+                                    else:
+                                        if terminate_bulk_slow_program[b] == 0:
+
+                                            if (final_slow_x_pos_arr[b]==0):
+                                                final_slow_x_pos_arr[b] = pos0_bulk_tracer_time_x[c,b]
+                                                final_slow_y_pos_arr[b] = pos0_bulk_tracer_time_y[c,b]
+                                            plot_slow_bulk_posx = np.append(plot_slow_bulk_posx, pos0_bulk_tracer_time_x[c,b])
+                                            plot_slow_bulk_posy = np.append(plot_slow_bulk_posy, pos0_bulk_tracer_time_y[c,b])
+
+
+
+                                            terminate_bulk_slow_program[b] = 1
+                                            fade_length = len(plot_slow_bulk_posx)
+                                            if c >= (np.shape(pos0_bulk_tracer_time_x)[0]-1):
+                                                for d in range(1, len(plot_slow_bulk_posx)):
+                                                    fade = (fade_length - (fade_length-(d))) / fade_length
+                                                    plot_x = np.array([plot_slow_bulk_posx[d-1], plot_slow_bulk_posx[d]])
+                                                    plot_y = np.array([plot_slow_bulk_posy[d-1], plot_slow_bulk_posy[d]])
+                                                    plt.plot(plot_x, plot_y, c=slowCol, alpha=fade, ls = '--', lw=0.75)
+                                                #plt.plot(plot_slow_bulk_posx, plot_slow_bulk_posy, c=slowCol, alpha=0.5, ls = '--', lw=0.75)
+                                                plt.scatter(plot_slow_bulk_posx[-1], plot_slow_bulk_posy[-1], marker='x', s=sz2*5, c=slowCol, label='PeA: '+str(peA))
+                                        else:
+
+                                            if c >= (np.shape(pos0_bulk_tracer_time_x)[0]-1):
+                                                fade_length = len(plot_slow_bulk_posx)
+                                                for d in range(1, len(plot_slow_bulk_posx)):
+                                                    fade = (fade_length - (fade_length-(d))) / fade_length
+                                                    plot_x = np.array([plot_slow_bulk_posx[d-1], plot_slow_bulk_posx[d]])
+                                                    plot_y = np.array([plot_slow_bulk_posy[d-1], plot_slow_bulk_posy[d]])
+                                                    plt.plot(plot_x, plot_y, c=slowCol, alpha=fade, ls = '--', lw=0.75)
+                                                #plt.plot(plot_slow_bulk_posx, plot_slow_bulk_posy, c=slowCol, alpha=0.5, ls = '--', lw=0.75)
+                                                plt.scatter(final_slow_x_pos_arr[b], final_slow_y_pos_arr[b], marker='x', s=sz2*5, c=slowCol, label='PeB: '+str(peB))
+                                else:
+                                    if (final_slow_x_pos_arr[b]==0):
+                                        final_slow_x_pos_arr[b] = pos0_bulk_tracer_time_x[c,b]
+                                        final_slow_y_pos_arr[b] = pos0_bulk_tracer_time_y[c,b]
+                                    terminate_bulk_slow_program[b] = 1
+                                    if x_slow_bulk_temp1_arr[b,0]!=0.0:
+                                        if c >= (np.shape(pos0_bulk_tracer_time_x)[0]-1):
+                                            fade_length = len(plot_slow_bulk_posx) + 1
+                                            fade = (fade_length - (fade_length-(len(plot_slow_bulk_posx)+1))) / fade_length
+                                            plt.plot(x_slow_bulk_temp1_arr[b,:], y_slow_bulk_temp1_arr[b,:], alpha=fade, c=slowCol, ls = '--', lw=0.75)
+                                            plt.plot(x_slow_bulk_temp2_arr[b,:], y_slow_bulk_temp2_arr[b,:], alpha=fade, c=slowCol, ls = '--', lw=0.75)
+                                            for d in range(1, len(plot_slow_bulk_posx)):
+                                                fade = (fade_length - (fade_length-(d))) / fade_length
+                                                plot_x = np.array([plot_slow_bulk_posx[d-1], plot_slow_bulk_posx[d]])
+                                                plot_y = np.array([plot_slow_bulk_posy[d-1], plot_slow_bulk_posy[d]])
+                                                plt.plot(plot_x, plot_y, c=slowCol, alpha=fade, ls = '--', lw=0.75)
+                                            #plt.plot(plot_slow_bulk_posx, plot_slow_bulk_posy, alpha=0.5, c=slowCol, ls = '--', lw=0.75)
+
+                                            plt.scatter(final_slow_x_pos_arr[b], final_slow_y_pos_arr[b], marker='x', s=sz2*5, c=slowCol, label='PeB: '+str(peB))
+                                    else:
+                                        if c >= (np.shape(pos0_bulk_tracer_time_x)[0]-1):
+                                            fade_length = len(plot_slow_bulk_posx)
+                                            for d in range(1, len(plot_slow_bulk_posx)):
+                                                fade = (fade_length - (fade_length-(d))) / fade_length
+                                                plot_x = np.array([plot_slow_bulk_posx[d-1], plot_slow_bulk_posx[d]])
+                                                plot_y = np.array([plot_slow_bulk_posy[d-1], plot_slow_bulk_posy[d]])
+                                                plt.plot(plot_x, plot_y, c=slowCol, alpha=fade, ls = '--', lw=0.75)
+                                            #plt.plot(plot_slow_bulk_posx, plot_slow_bulk_posy, c=slowCol, alpha=0.5, ls = '--', lw=0.75)
+                                            plt.scatter(final_slow_x_pos_arr[b], final_slow_y_pos_arr[b], marker='x', s=sz2*5, c=slowCol, label='PeB: '+str(peB))
+                                            #plot_fast_bulk_posx = np.array([])
+                                            #plot_fast_bulk_posy = np.array([])
+
+
+
+
+                                        #plot_slow_bulk_posx = np.array([])
+                                        #plot_slow_bulk_posy = np.array([])
+
+            terminate_bulk_fast_program = np.zeros(np.shape(pos1_bulk_tracer_time_x)[1])
+
+            for b in range(0, np.shape(pos1_bulk_tracer_time_x)[1]):
+                    plot_fast_bulk_posy_new = np.array([])
+                    plot_fast_bulk_posx_new = np.array([])
+
+                    plot_fast_bulk_posx = np.array([])
+                    plot_fast_bulk_posy = np.array([])
+                    for c in range(0, np.shape(pos1_bulk_tracer_time_x)[0]):
+                        if len(plot_fast_bulk_posx) == 0:
+
+
+                            if fast_bulk_tracers_in_clust[c,b]==1:
+                                if terminate_bulk_fast_program[b] == 0:
+                                    plot_fast_bulk_posx = np.append(plot_fast_bulk_posx, pos1_bulk_tracer_time_x[c,b])
+                                    plot_fast_bulk_posy = np.append(plot_fast_bulk_posy, pos1_bulk_tracer_time_y[c,b])
+                                    if c >= (np.shape(pos1_bulk_tracer_time_x)[0]-1):
+                                        #plt.scatter(plot_fast_posx[0], plot_fast_posy[0], marker='o', s=sz2*4, facecolor = 'None', edgecolor=fastCol, label='PeA: '+str(peA))
+                                        fade_length = len(plot_fast_bulk_posx)
+                                        for d in range(1, len(plot_fast_bulk_posx)):
+                                            fade = (fade_length - (fade_length-(d))) / fade_length
+                                            plot_x = np.array([plot_fast_bulk_posx[d-1], plot_fast_bulk_posx[d]])
+                                            plot_y = np.array([plot_fast_bulk_posy[d-1], plot_fast_bulk_posy[d]])
+                                            plt.plot(plot_x, plot_y, c=fastCol, alpha=fade, ls = '--', lw=0.75)
+                                        #plt.plot(plot_fast_bulk_posx, plot_fast_bulk_posy, c=fastCol, alpha=0.5, ls = '--', lw=0.75)
+                                        plt.scatter(plot_fast_bulk_posx[-1], plot_fast_bulk_posy[-1], s=sz2*4, c=fastCol, label='PeA: '+str(peA))
+                                else:
+                                    if c >= (np.shape(pos1_bulk_tracer_time_x)[0]-1):
+
+
+                                        #plt.scatter(plot_slow_posx[0], plot_slow_posy[0], marker='o', s=sz2*4, facecolor = 'None', edgecolor=slowCol, label='PeA: '+str(peA))
+                                        fade_length = len(plot_fast_bulk_posx)
+                                        for d in range(1, len(plot_fast_bulk_posx)):
+                                            fade = (fade_length - (fade_length-(d))) / fade_length
+                                            plot_x = np.array([plot_fast_bulk_posx[d-1], plot_fast_bulk_posx[d]])
+                                            plot_y = np.array([plot_fast_bulk_posy[d-1], plot_fast_bulk_posy[d]])
+                                            plt.plot(plot_x, plot_y, c=fastCol, alpha=fade, ls = '--', lw=0.75)
+                                        #plt.plot(plot_fast_bulk_posx[:-1], plot_fast_bulk_posy[:-1], alpha=0.5, c=fastCol, ls = '--', lw=0.75)
+                                        plt.scatter(final_fast_x_pos_arr[b], final_fast_y_pos_arr[b], marker='x', s=sz2*5, c=fastCol, label='PeB: '+str(peB))
+                            else:
+                                if (final_fast_x_pos_arr[b]==0):
+                                    final_fast_x_pos_arr[b] = pos1_bulk_tracer_time_x[c,b]
+                                    final_fast_y_pos_arr[b] = pos1_bulk_tracer_time_y[c,b]
+                                if c >= (np.shape(pos1_bulk_tracer_time_x)[0]-1):
+                                    fade_length = len(plot_fast_bulk_posx)
+                                    for d in range(1, len(plot_fast_bulk_posx)):
+                                        fade = (fade_length - (fade_length-(d))) / fade_length
+                                        plot_x = np.array([plot_fast_bulk_posx[d-1], plot_fast_bulk_posx[d]])
+                                        plot_y = np.array([plot_fast_bulk_posy[d-1], plot_fast_bulk_posy[d]])
+                                        plt.plot(plot_x, plot_y, c=fastCol, alpha=fade, ls = '--', lw=0.75)
+                                    #plt.plot(plot_fast_bulk_posx[:-1], plot_fast_bulk_posy[:-1], alpha=0.5, c=fastCol, ls = '--', lw=0.75)
+                                    plt.scatter(final_fast_x_pos_arr[b], final_fast_y_pos_arr[b], marker='x', s=sz2*5, c=fastCol, label='PeB: '+str(peB))
+                        else:
+                            if (fast_bulk_tracers_in_clust[c,b]==1):
+                                difr = ( (pos1_bulk_tracer_time_y[c,b] - plot_fast_bulk_posy[-1])**2 + (pos1_bulk_tracer_time_x[c,b] - plot_fast_bulk_posx[-1])**2 ) ** 0.5
+                                if (difr > h_box) & (x_fast_bulk_temp1_arr[b,0]==0.0):
+                                    if np.abs(pos1_bulk_tracer_time_y[c,b] - plot_fast_bulk_posy[-1]) > h_box:
+                                        if (pos1_bulk_tracer_time_y[c,b]>0) & (plot_fast_bulk_posy[-1]<0):
+                                            temp_bulk_pos_yprev = plot_fast_bulk_posy[-1]
+                                            temp_bulk_pos_ycurr = pos1_bulk_tracer_time_y[c,b] - l_box
+                                        if (pos1_bulk_tracer_time_y[c,b]<0) & (plot_fast_bulk_posy[-1]>0):
+                                            temp_bulk_pos_yprev = plot_fast_bulk_posy[-1]
+                                            temp_bulk_pos_ycurr = pos1_bulk_tracer_time_y[c,b] + l_box
+                                    else:
+                                        temp_bulk_pos_yprev = plot_fast_bulk_posy[-1]
+                                        temp_bulk_pos_ycurr = pos1_bulk_tracer_time_y[c,b]
+
+                                    if np.abs(pos1_bulk_tracer_time_x[c,b] - plot_fast_bulk_posx[-1]) > h_box:
+                                        if (pos1_bulk_tracer_time_x[c,b]>0) & (plot_fast_bulk_posx[-1]<0):
+                                            temp_bulk_pos_xprev = plot_fast_bulk_posx[-1]
+                                            temp_bulk_pos_xcurr = pos1_bulk_tracer_time_x[c,b] - l_box
+                                        if (pos1_bulk_tracer_time_x[c,b]<0) & (plot_fast_bulk_posx[-1]>0):
+                                            temp_bulk_pos_xprev = plot_fast_bulk_posx[-1]
+                                            temp_bulk_pos_xcurr = pos1_bulk_tracer_time_x[c,b] + l_box
+                                    else:
+                                        temp_bulk_pos_xprev = plot_fast_bulk_posx[-1]
+                                        temp_bulk_pos_xcurr = pos1_bulk_tracer_time_x[c,b]
+
+                                    temp_bulk_slope = (temp_bulk_pos_ycurr - temp_bulk_pos_yprev) / (temp_bulk_pos_xcurr - temp_bulk_pos_xprev)
+                                    temp_bulk_yint = temp_bulk_pos_yprev - temp_bulk_slope * temp_bulk_pos_xprev
+
+                                    if np.abs(pos1_bulk_tracer_time_y[c,b] - plot_fast_bulk_posy[-1]) > h_box:
+                                        if (pos1_bulk_tracer_time_y[c,b]>0) & (plot_fast_bulk_posy[-1]<0):
+                                            x_bulk_int = (-h_box - temp_bulk_yint) / temp_bulk_slope
+                                        elif (pos1_bulk_tracer_time_y[c,b]<0) & (plot_fast_bulk_posy[-1]>0):
+                                            x_bulk_int = (h_box - temp_bulk_yint) / temp_bulk_slope
+
+                                        if x_bulk_int < temp_bulk_pos_xprev:
+                                            x_bulk_temp1 = np.linspace(x_bulk_int, temp_bulk_pos_xprev, num=2)
+                                            x_bulk_temp2 = np.linspace(temp_bulk_pos_xcurr, x_bulk_int, num=2)
+
+                                        else:
+                                            x_bulk_temp1 = np.linspace(temp_bulk_pos_xprev, x_bulk_int, num=2)
+                                            x_bulk_temp2 = np.linspace(x_bulk_int, temp_bulk_pos_xcurr, num=2)
+
+                                        if (pos1_bulk_tracer_time_y[c,b]>0) & (plot_fast_bulk_posy[-1]<0):
+                                            y_bulk_temp1 = x_bulk_temp1 * temp_bulk_slope + temp_bulk_yint
+                                            y_bulk_temp2 = x_bulk_temp2 * temp_bulk_slope + temp_bulk_yint + l_box
+                                        elif (pos1_bulk_tracer_time_y[c,b]<0) & (plot_fast_bulk_posy[-1]>0):
+                                            y_bulk_temp1 = x_bulk_temp1 * temp_bulk_slope + temp_bulk_yint
+                                            y_bulk_temp2 = x_bulk_temp2 * temp_bulk_slope + temp_bulk_yint - l_box
+
+                                    if np.abs(pos1_bulk_tracer_time_x[c,b] - plot_fast_bulk_posx[-1]) > h_box:
+                                        if (pos1_bulk_tracer_time_x[c,b]>0) & (plot_fast_bulk_posx[-1]<0):
+                                            y_bulk_int = temp_bulk_yint + temp_bulk_slope * -h_box
+                                        elif (pos1_bulk_tracer_time_x[c,b]<0) & (plot_fast_bulk_posx[-1]>0):
+                                            y_bulk_int = temp_bulk_yint + temp_bulk_slope * h_box
+
+                                        if y_bulk_int < temp_bulk_pos_yprev:
+                                            y_bulk_temp1 = np.linspace(y_bulk_int, temp_bulk_pos_yprev, num=2)
+                                            y_bulk_temp2 = np.linspace(temp_bulk_pos_ycurr, y_bulk_int, num=2)
+
+                                        else:
+                                            y_bulk_temp1 = np.linspace(temp_bulk_pos_yprev, y_bulk_int, num=2)
+                                            y_bulk_temp2 = np.linspace(y_bulk_int, temp_bulk_pos_ycurr, num=2)
+
+                                        if (pos1_bulk_tracer_time_x[c,b]>0) & (plot_fast_bulk_posx[-1]<0):
+
+                                            x_bulk_temp1 = (y_bulk_temp1 - temp_bulk_yint) / temp_bulk_slope
+                                            x_bulk_temp2 = (y_bulk_temp2 - temp_bulk_yint) / temp_bulk_slope + l_box
+
+                                        elif (pos1_bulk_tracer_time_x[c,b]<0) & (plot_fast_bulk_posx[-1]>0):
+
+                                            x_bulk_temp1 = (y_bulk_temp1 - temp_bulk_yint) / temp_bulk_slope
+                                            x_bulk_temp2 = (y_bulk_temp2 - temp_bulk_yint) / temp_bulk_slope - l_box
+
+
+                                    if terminate_bulk_fast_program[b]==0:
+                                        if c >= (np.shape(pos1_bulk_tracer_time_x)[0]-1):
+                                            fade_length = len(plot_fast_bulk_posx) + 1
+                                            fade = (fade_length - (fade_length-(len(plot_fast_bulk_posx) + 1))) / fade_length
+                                            plt.plot(x_bulk_temp1, y_bulk_temp1, alpha=fade, c=fastCol, ls = '--', lw=0.75)
+                                            plt.plot(x_bulk_temp2, y_bulk_temp2, alpha=fade, c=fastCol, ls = '--', lw=0.75)
+
+                                            for d in range(1, len(plot_fast_bulk_posx)):
+                                                fade = (fade_length - (fade_length-(d))) / fade_length
+                                                plot_x = np.array([plot_fast_bulk_posx[d-1], plot_fast_bulk_posx[d]])
+                                                plot_y = np.array([plot_fast_bulk_posy[d-1], plot_fast_bulk_posy[d]])
+                                                plt.plot(plot_x, plot_y, c=fastCol, alpha=fade, ls = '--', lw=0.75)
+                                            #plt.plot(plot_fast_bulk_posx, plot_fast_bulk_posy, alpha=0.5, c=fastCol, ls = '--', lw=0.75)
+
+                                            plt.scatter(pos1_bulk_tracer_time_x[c,b], pos1_bulk_tracer_time_y[c,b], s=sz2*4, c=fastCol, label='PeA: '+str(peA))
+                                    else:
+
+                                        if c >= (np.shape(pos1_bulk_tracer_time_x)[0]-1):
+                                            fade_length = len(plot_fast_bulk_posx)
+                                            for d in range(1, len(plot_fast_bulk_posx)):
+                                                fade = (fade_length - (fade_length-(d))) / fade_length
+                                                plot_x = np.array([plot_fast_bulk_posx[d-1], plot_fast_bulk_posx[d]])
+                                                plot_y = np.array([plot_fast_bulk_posy[d-1], plot_fast_bulk_posy[d]])
+                                                plt.plot(plot_x, plot_y, c=fastCol, alpha=fade, ls = '--', lw=0.75)
+                                            #plt.plot(plot_fast_bulk_posx, plot_fast_bulk_posy, alpha=0.5, c=fastCol, ls = '--', lw=0.75)
+
+                                            plt.scatter(final_fast_x_pos_arr[b], final_fast_y_pos_arr[b], marker='x', s=sz2*5, c=fastCol, label='PeB: '+str(peB))
+
+                                else:
+                                    if terminate_bulk_fast_program[b]==0:
+
+                                        if x_fast_bulk_temp1_arr[b,0]!=0.0:
+                                            if c >= (np.shape(pos1_bulk_tracer_time_x)[0]-1):
+
+                                                if len(plot_fast_bulk_posy_new)==0:
+                                                    plot_fast_bulk_posx_new = np.array([x_bulk_temp2, pos1_bulk_tracer_time_x[c,b]])
+                                                    plot_fast_bulk_posy_new = np.array([y_bulk_temp2, pos1_bulk_tracer_time_y[c,b]])
+                                                else:
+                                                    plot_fast_bulk_posx_new = np.append(plot_fast_bulk_posx_new, pos1_bulk_tracer_time_x[c,b])
+                                                    plot_fast_bulk_posy_new = np.append(plot_fast_bulk_posy_new, pos1_bulk_tracer_time_y[c,b])
+
+
+                                                fade_length = len(plot_fast_bulk_posx) + 1 + len(plot_fast_bulk_posx_new)
+                                                fade = (fade_length - (fade_length-(len(plot_fast_bulk_posx) + 1))) / fade_length
+                                                plt.plot(x_bulk_temp1, y_bulk_temp1, alpha=fade, c=fastCol, ls = '--', lw=0.75)
+                                                plt.plot(x_bulk_temp2, y_bulk_temp2, alpha=fade, c=fastCol, ls = '--', lw=0.75)
+                                                for d in range(1, len(plot_fast_bulk_posx)):
+                                                    fade = (fade_length - (fade_length-(d))) / fade_length
+                                                    plot_x = np.array([plot_fast_bulk_posx[d-1], plot_fast_bulk_posx[d]])
+                                                    plot_y = np.array([plot_fast_bulk_posy[d-1], plot_fast_bulk_posy[d]])
+                                                    plt.plot(plot_x, plot_y, c=fastCol, alpha=fade, ls = '--', lw=0.75)
+                                                #plt.plot(plot_fast_bulk_posx, plot_fast_bulk_posy, alpha=0.5, c=fastCol, ls = '--', lw=0.75)
+
+                                                plt.scatter(pos1_bulk_tracer_time_x[c,b], pos1_bulk_tracer_time_y[c,b], s=sz2*4, c=fastCol, label='PeA: '+str(peA))
+
+                                                for d in range(1, len(plot_slow_bulk_posx_new)):
+                                                    fade = (fade_length - (fade_length-(len(plot_slow_bulk_posx) + 1 + d))) / fade_length
+                                                    plot_x = np.array([plot_slow_bulk_posx_new[d-1], plot_slow_bulk_posx_new[d]])
+                                                    plot_y = np.array([plot_slow_bulk_posy_new[d-1], plot_slow_bulk_posy_new[d]])
+                                                    plt.plot(plot_x, plot_y, c=fastCol, alpha=fade, ls = '--', lw=0.75)
+                                                #plt.plot(plot_fast_bulk_posx_new, plot_fast_bulk_posy_new, alpha=0.5, c=fastCol, ls = '--', lw=0.75)
+
+
+                                        else:
+                                            #if terminate_bulk_slow_program[b] == 0:
+                                            if len(plot_fast_bulk_posx_new)==0:
+                                                plot_fast_bulk_posx = np.append(plot_fast_bulk_posx, pos1_bulk_tracer_time_x[c,b])
+                                            else:
+                                                plot_fast_bulk_posx_new = np.append(plot_fast_bulk_posx_new, pos1_bulk_tracer_time_x[c,b])
+
+                                            if len(plot_fast_bulk_posy_new)==0:
+                                                plot_fast_bulk_posy = np.append(plot_fast_bulk_posy, pos1_bulk_tracer_time_y[c,b])
+                                            else:
+                                                plot_fast_bulk_posy_new = np.array([y_bulk_temp2, pos1_bulk_tracer_time_y[c,b]])
+
+                                            if c >= (np.shape(pos1_bulk_tracer_time_x)[0]-1):
+
+                                                #if c == (np.shape(pos0_bulk_tracer_time_x)[0]-1):
+                                                fade_length = len(plot_fast_bulk_posx) + len(plot_fast_bulk_posx_new)
+                                                for d in range(1, len(plot_fast_bulk_posx)):
+                                                    fade = (fade_length - (fade_length-(d))) / fade_length
+                                                    plot_x = np.array([plot_fast_bulk_posx[d-1], plot_fast_bulk_posx[d]])
+                                                    plot_y = np.array([plot_fast_bulk_posy[d-1], plot_fast_bulk_posy[d]])
+                                                    plt.plot(plot_x, plot_y, c=fastCol, alpha=fade, ls = '--', lw=0.75)
+                                                #plt.plot(plot_fast_bulk_posx, plot_fast_bulk_posy, c=fastCol, alpha=0.5, ls = '--', lw=0.75)
+                                                if len(plot_fast_bulk_posy_new)>0:
+                                                    for d in range(1, len(plot_slow_bulk_posx_new)):
+                                                        fade = (fade_length - (fade_length-(len(plot_slow_bulk_posx) + 1 + d))) / fade_length
+                                                        plot_x = np.array([plot_slow_bulk_posx_new[d-1], plot_slow_bulk_posx_new[d]])
+                                                        plot_y = np.array([plot_slow_bulk_posy_new[d-1], plot_slow_bulk_posy_new[d]])
+                                                        plt.plot(plot_x, plot_y, c=fastCol, alpha=fade, ls = '--', lw=0.75)
+                                                    #plt.plot(plot_fast_bulk_posx_new, plot_fast_bulk_posy_new, alpha=0.5, c=fastCol, ls = '--', lw=0.75)
+                                                    plt.scatter(pos1_bulk_tracer_time_x[c,b], pos1_bulk_tracer_time_y[c,b], s=sz2*4, c=fastCol, label='PeA: '+str(peA))
+                                                else:
+                                                    plt.scatter(plot_fast_bulk_posx[-1], plot_fast_bulk_posy[-1], s=sz2*4, c=fastCol, label='PeA: '+str(peA))
+                                    else:
+                                        if x_fast_bulk_temp1_arr[b,0]!=0.0:
+                                            if c >= (np.shape(pos1_bulk_tracer_time_x)[0]-1):
+
+                                                fade_length = len(plot_fast_bulk_posx) + 1 + len(plot_fast_bulk_posx_new)
+                                                fade = (fade_length - (fade_length-(len(plot_fast_bulk_posx) + 1))) / fade_length
+
+                                                plt.plot(x_bulk_temp1, y_bulk_temp1, alpha=fade, c=fastCol, ls = '--', lw=0.75)
+                                                plt.plot(x_bulk_temp2, y_bulk_temp2, alpha=fade, c=fastCol, ls = '--', lw=0.75)
+
+                                                for d in range(1, len(plot_fast_bulk_posx)):
+                                                    fade = (fade_length - (fade_length-(d))) / fade_length
+                                                    plot_x = np.array([plot_fast_bulk_posx[d-1], plot_fast_bulk_posx[d]])
+                                                    plot_y = np.array([plot_fast_bulk_posy[d-1], plot_fast_bulk_posy[d]])
+                                                    plt.plot(plot_x, plot_y, c=fastCol, alpha=fade, ls = '--', lw=0.75)
+                                                #plt.plot(plot_fast_bulk_posx, plot_fast_bulk_posy, alpha=0.5, c=fastCol, ls = '--', lw=0.75)
+                                                if len(plot_fast_bulk_posy_new)>0:
+                                                    for d in range(1, len(plot_slow_bulk_posx_new)):
+                                                        fade = (fade_length - (fade_length-(len(plot_slow_bulk_posx) + 1 + d))) / fade_length
+                                                        plot_x = np.array([plot_slow_bulk_posx_new[d-1], plot_slow_bulk_posx_new[d]])
+                                                        plot_y = np.array([plot_slow_bulk_posy_new[d-1], plot_slow_bulk_posy_new[d]])
+                                                        plt.plot(plot_x, plot_y, c=fastCol, alpha=fade, ls = '--', lw=0.75)
+                                                    #plt.plot(plot_fast_bulk_posx_new, plot_fast_bulk_posy_new, alpha=0.5, c=fastCol, ls = '--', lw=0.75)
+                                                    plt.scatter(final_fast_x_pos_arr[b], final_fast_y_pos_arr[b], marker='x', s=sz2*5, c=fastCol, label='PeB: '+str(peB))
+                                                else:
+                                                    plt.scatter(final_fast_x_pos_arr[b], final_fast_y_pos_arr[b], marker='x', s=sz2*5, c=fastCol, label='PeB: '+str(peB))
+
+                                        else:
+                                            if c >= (np.shape(pos1_bulk_tracer_time_x)[0]-1):
+                                                fade_length = len(plot_fast_bulk_posx)
+                                                for d in range(1, len(plot_fast_bulk_posx)):
+                                                    fade = (fade_length - (fade_length-(d))) / fade_length
+                                                    plot_x = np.array([plot_fast_bulk_posx[d-1], plot_fast_bulk_posx[d]])
+                                                    plot_y = np.array([plot_fast_bulk_posy[d-1], plot_fast_bulk_posy[d]])
+                                                    plt.plot(plot_x, plot_y, c=fastCol, alpha=fade, ls = '--', lw=0.75)
+                                                #plt.plot(plot_fast_bulk_posx, plot_fast_bulk_posy, c=fastCol, alpha=0.5, ls = '--', lw=0.75)
+                                                plt.scatter(final_fast_x_pos_arr[b], final_fast_y_pos_arr[b], marker='x', s=sz2*5, c=fastCol, label='PeB: '+str(peB))
+
+                            else:
+                                if (fast_bulk_tracers_in_clust[c-1,b]==1):
+
+
+                                    difr = ( (pos1_bulk_tracer_time_y[c,b] - plot_fast_bulk_posy[-1])**2 + (pos1_bulk_tracer_time_x[c,b] - plot_fast_bulk_posx[-1])**2 ) ** 0.5
+                                    if (difr > h_box) & (x_fast_bulk_temp1_arr[b,0]==0.0):
+                                        if np.abs(pos1_bulk_tracer_time_y[c,b] - plot_fast_bulk_posy[-1]) > h_box:
+                                            if (pos1_bulk_tracer_time_y[c,b]>0) & (plot_fast_bulk_posy[-1]<0):
+                                                temp_bulk_pos_yprev = plot_fast_bulk_posy[-1]
+                                                temp_bulk_pos_ycurr = pos1_bulk_tracer_time_y[c,b] - l_box
+                                            if (pos1_bulk_tracer_time_y[c,b]<0) & (plot_fast_bulk_posy[-1]>0):
+                                                temp_bulk_pos_yprev = plot_fast_bulk_posy[-1]
+                                                temp_bulk_pos_ycurr = pos1_bulk_tracer_time_y[c,b] + l_box
+                                        else:
+                                            temp_bulk_pos_yprev = plot_fast_bulk_posy[-1]
+                                            temp_bulk_pos_ycurr = pos1_bulk_tracer_time_y[c,b]
+
+                                        if np.abs(pos1_bulk_tracer_time_x[c,b] - plot_fast_bulk_posx[-1]) > h_box:
+                                            if (pos1_bulk_tracer_time_x[c,b]>0) & (plot_fast_bulk_posx[-1]<0):
+                                                temp_bulk_pos_xprev = plot_fast_bulk_posx[-1]
+                                                temp_bulk_pos_xcurr = pos1_bulk_tracer_time_x[c,b] - l_box
+                                            if (pos1_bulk_tracer_time_x[c,b]<0) & (plot_fast_bulk_posx[-1]>0):
+                                                temp_bulk_pos_xprev = plot_fast_bulk_posx[-1]
+                                                temp_bulk_pos_xcurr = pos1_bulk_tracer_time_x[c,b] + l_box
+                                        else:
+                                            temp_bulk_pos_xprev = plot_fast_bulk_posx[-1]
+                                            temp_bulk_pos_xcurr = pos1_bulk_tracer_time_x[c,b]
+
+                                        temp_bulk_slope = (temp_bulk_pos_ycurr - temp_bulk_pos_yprev) / (temp_bulk_pos_xcurr - temp_bulk_pos_xprev)
+                                        temp_bulk_yint = temp_bulk_pos_yprev - temp_bulk_slope * temp_bulk_pos_xprev
+
+                                        if np.abs(pos1_bulk_tracer_time_y[c,b] - plot_fast_bulk_posy[-1]) > h_box:
+                                            if (pos1_bulk_tracer_time_y[c,b]>0) & (plot_fast_bulk_posy[-1]<0):
+                                                x_bulk_int = (-h_box - temp_bulk_yint) / temp_bulk_slope
+                                            elif (pos1_bulk_tracer_time_y[c,b]<0) & (plot_fast_bulk_posy[-1]>0):
+                                                x_bulk_int = (h_box - temp_bulk_yint) / temp_bulk_slope
+
+                                            if x_bulk_int < temp_bulk_pos_xprev:
+                                                x_bulk_temp1 = np.linspace(x_bulk_int, temp_bulk_pos_xprev, num=2)
+                                                x_bulk_temp2 = np.linspace(temp_bulk_pos_xcurr, x_bulk_int, num=2)
+
+                                            else:
+                                                x_bulk_temp1 = np.linspace(temp_bulk_pos_xprev, x_bulk_int, num=2)
+                                                x_bulk_temp2 = np.linspace(x_bulk_int, temp_bulk_pos_xcurr, num=2)
+
+                                            if (pos1_bulk_tracer_time_y[c,b]>0) & (plot_fast_bulk_posy[-1]<0):
+                                                y_bulk_temp1 = x_bulk_temp1 * temp_bulk_slope + temp_bulk_yint
+                                                y_bulk_temp2 = x_bulk_temp2 * temp_bulk_slope + temp_bulk_yint + l_box
+                                            elif (pos1_bulk_tracer_time_y[c,b]<0) & (plot_fast_bulk_posy[-1]>0):
+                                                y_bulk_temp1 = x_bulk_temp1 * temp_bulk_slope + temp_bulk_yint
+                                                y_bulk_temp2 = x_bulk_temp2 * temp_bulk_slope + temp_bulk_yint - l_box
+
+                                        if np.abs(pos1_bulk_tracer_time_x[c,b] - plot_fast_bulk_posx[-1]) > h_box:
+                                            if (pos1_bulk_tracer_time_x[c,b]>0) & (plot_fast_bulk_posx[-1]<0):
+                                                y_bulk_int = temp_bulk_yint + temp_bulk_slope * -h_box
+                                            elif (pos1_bulk_tracer_time_x[c,b]<0) & (plot_fast_bulk_posx[-1]>0):
+                                                y_bulk_int = temp_bulk_yint + temp_bulk_slope * h_box
+
+                                            if y_bulk_int < temp_bulk_pos_yprev:
+                                                y_bulk_temp1 = np.linspace(y_bulk_int, temp_bulk_pos_yprev, num=2)
+                                                y_bulk_temp2 = np.linspace(temp_bulk_pos_ycurr, y_bulk_int, num=2)
+
+                                            else:
+                                                y_bulk_temp1 = np.linspace(temp_bulk_pos_yprev, y_bulk_int, num=2)
+                                                y_bulk_temp2 = np.linspace(y_bulk_int, temp_bulk_pos_ycurr, num=2)
+
+                                            if (pos1_bulk_tracer_time_x[c,b]>0) & (plot_fast_bulk_posx[-1]<0):
+
+                                                x_bulk_temp1 = (y_bulk_temp1 - temp_bulk_yint) / temp_bulk_slope
+                                                x_bulk_temp2 = (y_bulk_temp2 - temp_bulk_yint) / temp_bulk_slope + l_box
+
+                                            elif (pos1_bulk_tracer_time_x[c,b]<0) & (plot_fast_bulk_posx[-1]>0):
+
+                                                x_bulk_temp1 = (y_bulk_temp1 - temp_bulk_yint) / temp_bulk_slope
+                                                x_bulk_temp2 = (y_bulk_temp2 - temp_bulk_yint) / temp_bulk_slope - l_box
+
+
+                                        if terminate_bulk_fast_program[b]==0:
+
+
+                                            if (final_fast_x_pos_arr[b]==0):
+                                                terminate_bulk_fast_program[b]=1
+                                                x_fast_bulk_temp1_arr[b,:] = x_bulk_temp1
+                                                x_fast_bulk_temp2_arr[b,:] = x_bulk_temp2
+
+                                                y_fast_bulk_temp1_arr[b,:] = y_bulk_temp1
+                                                y_fast_bulk_temp2_arr[b,:] = y_bulk_temp2
+                                                final_fast_x_pos_arr[b] = pos1_bulk_tracer_time_x[c,b]
+                                                final_fast_y_pos_arr[b] = pos1_bulk_tracer_time_y[c,b]
+                                            if x_fast_bulk_temp1_arr[b,0]!=0.0:
+                                                if c >= (np.shape(pos1_bulk_tracer_time_x)[0]-1):
+                                                    fade_length = len(plot_fast_bulk_posx) + 1 + len(plot_fast_bulk_posx_new)
+                                                    fade = (fade_length - (fade_length-(len(plot_fast_bulk_posx) + 1))) / fade_length
+
+                                                    plt.plot(x_fast_bulk_temp1_arr[b,:], y_fast_bulk_temp1_arr[b,:], alpha=fade, c=fastCol, ls = '--', lw=0.75)
+                                                    plt.plot(x_fast_bulk_temp2_arr[b,:], y_fast_bulk_temp2_arr[b,:], alpha=fade, c=fastCol, ls = '--', lw=0.75)
+                                                    for d in range(1, len(plot_fast_bulk_posx)):
+                                                        fade = (fade_length - (fade_length-(d))) / fade_length
+                                                        plot_x = np.array([plot_fast_bulk_posx[d-1], plot_fast_bulk_posx[d]])
+                                                        plot_y = np.array([plot_fast_bulk_posy[d-1], plot_fast_bulk_posy[d]])
+                                                        plt.plot(plot_x, plot_y, c=fastCol, alpha=fade, ls = '--', lw=0.75)
+                                                    #plt.plot(plot_fast_bulk_posx, plot_fast_bulk_posy, alpha=0.5, c=fastCol, ls = '--', lw=0.75)
+
+                                                    plt.scatter(final_fast_x_pos_arr[b], final_fast_y_pos_arr[b], marker='x', s=sz2*5, c=fastCol, label='PeB: '+str(peB))
+                                                    for d in range(1, len(plot_slow_bulk_posx_new)):
+                                                        fade = (fade_length - (fade_length-(len(plot_slow_bulk_posx) + 1 + d))) / fade_length
+                                                        plot_x = np.array([plot_slow_bulk_posx_new[d-1], plot_slow_bulk_posx_new[d]])
+                                                        plot_y = np.array([plot_slow_bulk_posy_new[d-1], plot_slow_bulk_posy_new[d]])
+                                                        plt.plot(plot_x, plot_y, c=fastCol, alpha=fade, ls = '--', lw=0.75)
+                                                    #plt.plot(plot_fast_bulk_posx_new, plot_fast_bulk_posy_new, alpha=0.5, c=fastCol, ls = '--', lw=0.75)
+
+                                            else:
+
+                                                if c >= (np.shape(pos1_bulk_tracer_time_x)[0]-1):
+                                                    fade_length = len(plot_fast_bulk_posx) + len(plot_fast_bulk_posx_new)
+                                                    #if c == (np.shape(pos0_bulk_tracer_time_x)[0]-1):
+                                                    for d in range(1, len(plot_fast_bulk_posx)):
+                                                        fade = (fade_length - (fade_length-(d))) / fade_length
+                                                        plot_x = np.array([plot_fast_bulk_posx[d-1], plot_fast_bulk_posx[d]])
+                                                        plot_y = np.array([plot_fast_bulk_posy[d-1], plot_fast_bulk_posy[d]])
+                                                        plt.plot(plot_x, plot_y, c=fastCol, alpha=fade, ls = '--', lw=0.75)
+                                                    #plt.plot(plot_fast_bulk_posx, plot_fast_bulk_posy, c=fastCol, alpha=0.5, ls = '--', lw=0.75)
+                                                    if len(plot_fast_bulk_posy_new)>0:
+                                                        for d in range(1, len(plot_slow_bulk_posx_new)):
+                                                            fade = (fade_length - (fade_length-(len(plot_slow_bulk_posx) + 1 + d))) / fade_length
+                                                            plot_x = np.array([plot_slow_bulk_posx_new[d-1], plot_slow_bulk_posx_new[d]])
+                                                            plot_y = np.array([plot_slow_bulk_posy_new[d-1], plot_slow_bulk_posy_new[d]])
+                                                            plt.plot(plot_x, plot_y, c=fastCol, alpha=fade, ls = '--', lw=0.75)
+                                                        #plt.plot(plot_fast_bulk_posx_new, plot_fast_bulk_posy_new, alpha=0.5, c=fastCol, ls = '--', lw=0.75)
+                                                        plt.scatter(final_fast_x_pos_arr[b], final_fast_y_pos_arr[b], marker='x', s=sz2*5, c=fastCol, label='PeB: '+str(peB))
+                                                    else:
+                                                        plt.scatter(final_fast_x_pos_arr[b], final_fast_y_pos_arr[b], marker='x', s=sz2*5, c=fastCol, label='PeB: '+str(peB))
+
+
+
+
+                                        else:
+
+                                            if c>= (np.shape(pos1_bulk_tracer_time_x)[0]-1):
+                                                fade_length = len(plot_fast_bulk_posx) + 1
+                                                fade = (fade_length - (fade_length-(len(plot_fast_bulk_posx) + 1))) / fade_length
+
+                                                plt.plot(x_fast_bulk_temp1_arr[b,:], y_fast_bulk_temp1_arr[b,:], alpha=fade, c=fastCol, ls = '--', lw=0.75)
+                                                plt.plot(x_fast_bulk_temp2_arr[b,:], y_fast_bulk_temp2_arr[b,:], alpha=fade, c=fastCol, ls = '--', lw=0.75)
+                                                for d in range(1, len(plot_fast_bulk_posx)):
+                                                    fade = (fade_length - (fade_length-(d))) / fade_length
+                                                    plot_x = np.array([plot_fast_bulk_posx[d-1], plot_fast_bulk_posx[d]])
+                                                    plot_y = np.array([plot_fast_bulk_posy[d-1], plot_fast_bulk_posy[d]])
+                                                    plt.plot(plot_x, plot_y, c=fastCol, alpha=fade, ls = '--', lw=0.75)
+                                                #plt.plot(plot_fast_bulk_posx, plot_fast_bulk_posy, alpha=0.5, c=fastCol, ls = '--', lw=0.75)
+
+                                                plt.scatter(final_fast_x_pos_arr[b], final_fast_y_pos_arr[b], marker='x', s=sz2*5, c=fastCol, label='PeB: '+str(peB))
+
+
+                                    else:
+                                        if terminate_bulk_fast_program[b] == 0:
+
+                                            if (final_fast_x_pos_arr[b]==0):
+                                                final_fast_x_pos_arr[b] = pos1_bulk_tracer_time_x[c,b]
+                                                final_fast_y_pos_arr[b] = pos1_bulk_tracer_time_y[c,b]
+                                            plot_fast_bulk_posx = np.append(plot_fast_bulk_posx, pos1_bulk_tracer_time_x[c,b])
+                                            plot_fast_bulk_posy = np.append(plot_fast_bulk_posy, pos1_bulk_tracer_time_y[c,b])
+
+
+
+                                            terminate_bulk_fast_program[b] = 1
+                                            if c >= (np.shape(pos1_bulk_tracer_time_x)[0]-1):
+                                                fade_length = len(plot_fast_bulk_posx)
+                                                for d in range(1, len(plot_fast_bulk_posx)):
+                                                    fade = (fade_length - (fade_length-(d))) / fade_length
+                                                    plot_x = np.array([plot_fast_bulk_posx[d-1], plot_fast_bulk_posx[d]])
+                                                    plot_y = np.array([plot_fast_bulk_posy[d-1], plot_fast_bulk_posy[d]])
+                                                    plt.plot(plot_x, plot_y, c=fastCol, alpha=fade, ls = '--', lw=0.75)
+                                                #plt.plot(plot_fast_bulk_posx, plot_fast_bulk_posy, c=fastCol, alpha=0.5, ls = '--', lw=0.75)
+                                                plt.scatter(plot_fast_bulk_posx[-1], plot_fast_bulk_posy[-1], marker='x', s=sz2*5, c=fastCol, label='PeA: '+str(peA))
+                                        else:
+
+                                            if c >= (np.shape(pos1_bulk_tracer_time_x)[0]-1):
+                                                fade_length = len(plot_fast_bulk_posx)
+                                                for d in range(1, len(plot_fast_bulk_posx)):
+                                                    fade = (fade_length - (fade_length-(d))) / fade_length
+                                                    plot_x = np.array([plot_fast_bulk_posx[d-1], plot_fast_bulk_posx[d]])
+                                                    plot_y = np.array([plot_fast_bulk_posy[d-1], plot_fast_bulk_posy[d]])
+                                                    plt.plot(plot_x, plot_y, c=fastCol, alpha=fade, ls = '--', lw=0.75)
+                                                #plt.plot(plot_fast_bulk_posx, plot_fast_bulk_posy, c=fastCol, alpha=0.5, ls = '--', lw=0.75)
+                                                plt.scatter(final_fast_x_pos_arr[b], final_fast_y_pos_arr[b], marker='x', s=sz2*5, c=fastCol, label='PeB: '+str(peB))
+                                else:
+                                    if (final_fast_x_pos_arr[b]==0):
+                                        final_fast_x_pos_arr[b] = pos1_bulk_tracer_time_x[c,b]
+                                        final_fast_y_pos_arr[b] = pos1_bulk_tracer_time_y[c,b]
+                                    terminate_bulk_fast_program[b] = 1
+                                    if x_fast_bulk_temp1_arr[b,0]!=0.0:
+                                        if c >= (np.shape(pos1_bulk_tracer_time_x)[0]-1):
+                                            fade_length = len(plot_fast_bulk_posx) + 1
+                                            fade = (fade_length - (fade_length-(len(plot_fast_bulk_posx) + 1))) / fade_length
+                                            plt.plot(x_fast_bulk_temp1_arr[b,:], y_fast_bulk_temp1_arr[b,:], alpha=fade, c=fastCol, ls = '--', lw=0.75)
+                                            plt.plot(x_fast_bulk_temp2_arr[b,:], y_fast_bulk_temp2_arr[b,:], alpha=fade, c=fastCol, ls = '--', lw=0.75)
+
+                                            for d in range(1, len(plot_fast_bulk_posx)):
+                                                fade = (fade_length - (fade_length-(d))) / fade_length
+                                                plot_x = np.array([plot_fast_bulk_posx[d-1], plot_fast_bulk_posx[d]])
+                                                plot_y = np.array([plot_fast_bulk_posy[d-1], plot_fast_bulk_posy[d]])
+                                                plt.plot(plot_x, plot_y, c=fastCol, alpha=fade, ls = '--', lw=0.75)
+                                            #plt.plot(plot_fast_bulk_posx, plot_fast_bulk_posy, alpha=0.5, c=fastCol, ls = '--', lw=0.75)
+
+                                            plt.scatter(final_fast_x_pos_arr[b], final_fast_y_pos_arr[b], marker='x', s=sz2*5, c=fastCol, label='PeB: '+str(peB))
+                                    else:
+                                        if c >= (np.shape(pos1_bulk_tracer_time_x)[0]-1):
+                                            fade_length = len(plot_fast_bulk_posx)
+                                            for d in range(1, len(plot_fast_bulk_posx)):
+                                                fade = (fade_length - (fade_length-(d))) / fade_length
+                                                plot_x = np.array([plot_fast_bulk_posx[d-1], plot_fast_bulk_posx[d]])
+                                                plot_y = np.array([plot_fast_bulk_posy[d-1], plot_fast_bulk_posy[d]])
+                                                plt.plot(plot_x, plot_y, c=fastCol, alpha=fade, ls = '--', lw=0.75)
+                                            #plt.plot(plot_fast_bulk_posx, plot_fast_bulk_posy, c=fastCol, alpha=0.5, ls = '--', lw=0.75)
+                                            plt.scatter(final_fast_x_pos_arr[b], final_fast_y_pos_arr[b], marker='x', s=sz2*5, c=fastCol, label='PeB: '+str(peB))
+                                            #plot_fast_bulk_posx = np.array([])
+                                            #plot_fast_bulk_posy = np.array([])
+
+
+
+
+            ax.text(0.95, 0.025, s=r'$\tau$' + ' = ' + '{:.2f}'.format(tst) + ' ' + r'$\tau_\mathrm{r}$',
+                    horizontalalignment='right', verticalalignment='bottom',
+                    transform=ax.transAxes,
+                    fontsize=18,
+                    bbox=dict(facecolor=(1,1,1,0.5), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+
+
+            '''
+                if final_time_slow_tracers[b]==0:
+                    plt.plot(pos0_tracer_time_x[:,b], pos0_tracer_time_y[:,b], c=slowCol, alpha=0.5, ls = '--', lw=0.75)
+                else:
+                    plt.plot(pos0_tracer_time_x[0:final_time_slow_tracers[b],b], pos0_tracer_time_y[0:final_time_slow_tracers[b],b], c=slowCol, alpha=0.5, ls = '--', lw=0.75)
+            plt.scatter(final_xpos_slow_tracers, final_ypos_slow_tracers, marker='x', s=sz2*5, c=slowCol, label='PeA: '+str(peA))
+            plt.scatter(pos0_tracer[not_final_ids_slow,0], pos0_tracer[not_final_ids_slow,1], s=sz2, c=slowCol, label='PeA: '+str(peA))
+            for b in range(0, np.shape(pos1_tracer_time_x)[1]):
+                if final_time_fast_tracers[b]==0:
+                    plt.plot(pos1_tracer_time_x[:,b], pos1_tracer_time_y[:,b], c=fastCol, alpha=0.5, ls = '--', lw=0.75)
+                else:
+                    plt.plot(pos1_tracer_time_x[0:final_time_fast_tracers[b],b], pos1_tracer_time_y[0:final_time_fast_tracers[b],b], c=fastCol, alpha=0.5, ls = '--', lw=0.75)
+            plt.scatter(final_xpos_fast_tracers, final_ypos_fast_tracers, marker = 'x', s=sz2*5, c=fastCol, label='PeB: '+str(peB))
+            plt.scatter(pos1_tracer[not_final_ids_fast,0], pos1_tracer[not_final_ids_fast,1], s=sz2, c=fastCol, label='PeB: '+str(peB))
+
+            '''
+
+            #Set axes parameters
+            ax.set_xlim(-h_box, h_box)
+            ax.set_ylim(-h_box, h_box)
+            ax.axes.set_xticks([])
+            ax.axes.set_yticks([])
+            ax.axes.set_xticklabels([])
+            ax.axes.set_yticks([])
+            ax.set_aspect('equal')
+
+            #Create legend for binary system
+            #leg = ax.legend(loc='upper right', prop={'size': 15}, markerscale=8.0)
+
+
+            plt.tight_layout()
+            plt.savefig(outPath + "bulk_tracers_" + out + "_frame_"+ pad + ".png", dpi=150, transparent=False)
+            plt.close()
         else:
+
             pos_ids = np.arange(0, len(pos), step=1)
 
 
@@ -10230,9 +12151,101 @@ with hoomd.open(name=inFile, mode='rb') as t:
             ax.set_aspect('equal')
 
             #Create legend for binary system
-            leg = ax.legend(loc='upper right', prop={'size': 15}, markerscale=8.0)
+            #leg = ax.legend(loc='upper right', prop={'size': 15}, markerscale=8.0)
 
 
             plt.tight_layout()
             plt.savefig(outPath + out + "_frame_"+ pad + ".png", dpi=150, transparent=False)
+            plt.close()
+
+            pos_gas_ids = np.arange(0, len(pos), step=1)
+
+
+            pos_gas_else = pos[pos_gas_ids]
+
+
+
+            # Create frame pad for images
+            pad = str(j).zfill(4)
+
+            #Plot each particle as a point color-coded by activity and labeled by their activity
+            fig = plt.figure(figsize=(6.5,6))
+            ax = fig.add_subplot(111)
+
+            sz = 0.75
+
+            #Set plot colors
+            otherCol = '#d9d9d9'
+
+            #Assign type 0 particles to plot
+            plt.scatter(pos_gas_else[:,0], pos_gas_else[:,1], s=sz, c=otherCol)
+
+            #Label time step
+            ax.text(0.95, 0.025, s=r'$\tau$' + ' = ' + '{:.2f}'.format(tst) + ' ' + r'$\tau_\mathrm{r}$',
+                    horizontalalignment='right', verticalalignment='bottom',
+                    transform=ax.transAxes,
+                    fontsize=18,
+                    bbox=dict(facecolor=(1,1,1,0.5), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+
+            #Set axes parameters
+            ax.set_xlim(-h_box, h_box)
+            ax.set_ylim(-h_box, h_box)
+            ax.axes.set_xticks([])
+            ax.axes.set_yticks([])
+            ax.axes.set_xticklabels([])
+            ax.axes.set_yticks([])
+            ax.set_aspect('equal')
+
+            #Create legend for binary system
+            #leg = ax.legend(loc='upper right', prop={'size': 15}, markerscale=8.0)
+
+
+            plt.tight_layout()
+            plt.savefig(outPath + "gas_tracers_" +  out + "_frame_"+ pad + ".png", dpi=150, transparent=False)
+            plt.close()
+
+            pos_bulk_ids = np.arange(0, len(pos), step=1)
+
+
+            pos_bulk_else = pos[pos_bulk_ids]
+
+
+
+            # Create frame pad for images
+            pad = str(j).zfill(4)
+
+            #Plot each particle as a point color-coded by activity and labeled by their activity
+            fig = plt.figure(figsize=(6.5,6))
+            ax = fig.add_subplot(111)
+
+            sz = 0.75
+
+            #Set plot colors
+            otherCol = '#d9d9d9'
+
+            #Assign type 0 particles to plot
+            plt.scatter(pos_bulk_else[:,0], pos_bulk_else[:,1], s=sz, c=otherCol)
+
+            #Label time step
+            ax.text(0.95, 0.025, s=r'$\tau$' + ' = ' + '{:.2f}'.format(tst) + ' ' + r'$\tau_\mathrm{r}$',
+                    horizontalalignment='right', verticalalignment='bottom',
+                    transform=ax.transAxes,
+                    fontsize=18,
+                    bbox=dict(facecolor=(1,1,1,0.5), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+
+            #Set axes parameters
+            ax.set_xlim(-h_box, h_box)
+            ax.set_ylim(-h_box, h_box)
+            ax.axes.set_xticks([])
+            ax.axes.set_yticks([])
+            ax.axes.set_xticklabels([])
+            ax.axes.set_yticks([])
+            ax.set_aspect('equal')
+
+            #Create legend for binary system
+            #leg = ax.legend(loc='upper right', prop={'size': 15}, markerscale=8.0)
+
+
+            plt.tight_layout()
+            plt.savefig(outPath + "bulk_tracers_" +  out + "_frame_"+ pad + ".png", dpi=150, transparent=False)
             plt.close()

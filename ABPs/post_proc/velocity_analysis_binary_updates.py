@@ -507,7 +507,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
     r = np.linspace(0.0,  5.0, 100)             # Define radius for x-axis of plot later
 
-    start = int(0/time_step)#205                                             # first frame to process
+    start = int(420/time_step)#205                                             # first frame to process
     dumps = int(t.__len__())                                # get number of timesteps dumped
     end = int(dumps/time_step)-1                                             # final frame to process
     snap = t[0]                                             # Take first snap for box
@@ -10212,13 +10212,15 @@ with hoomd.open(name=inFile, mode='rb') as t:
             velocity_x_B_bin = [[0 for b in range(NBins)] for a in range(NBins)]
             velocity_y_B_bin = [[0 for b in range(NBins)] for a in range(NBins)]
             velocity_r_B_bin = [[0 for b in range(NBins)] for a in range(NBins)]
+            velocity_r_bulk_bin = [[0 for b in range(NBins)] for a in range(NBins)]
 
             for ix in range(0, len(occParts)):
                 for iy in range(0, len(occParts)):
-                    if phaseBin[ix][iy] != 2:
+                    if phaseBin[ix][iy] == 0:
                         if len(binParts[ix][iy]) > 0:
                             A_num=0
                             B_num=0
+
                             for h in range(0, len(binParts[ix][iy])):
                                 velocity_x_bin[ix][iy] += velocity_x[binParts[ix][iy][h]]
                                 velocity_y_bin[ix][iy] += velocity_y[binParts[ix][iy][h]]
@@ -10235,27 +10237,36 @@ with hoomd.open(name=inFile, mode='rb') as t:
                             velocity_x_bin[ix][iy] = velocity_x_bin[ix][iy] / len(binParts[ix][iy])
                             velocity_y_bin[ix][iy] = velocity_y_bin[ix][iy] / len(binParts[ix][iy])
                             velocity_r_bin[ix][iy] = (velocity_x_bin[ix][iy] ** 2 + velocity_y_bin[ix][iy] ** 2) ** 0.5
-                            velocity_x_bin[ix][iy] = velocity_x_bin[ix][iy] / velocity_r_bin[ix][iy]
-                            velocity_y_bin[ix][iy] = velocity_y_bin[ix][iy] / velocity_r_bin[ix][iy]
-
+                            velocity_x_bin[ix][iy] = velocity_x_bin[ix][iy]# / velocity_r_bin[ix][iy]
+                            velocity_y_bin[ix][iy] = velocity_y_bin[ix][iy]# / velocity_r_bin[ix][iy]
+                            if phaseBin[ix][iy]==0:
+                                velocity_r_bulk_bin[ix][iy] = (velocity_x_bin[ix][iy] ** 2 + velocity_y_bin[ix][iy] ** 2) ** 0.5
                             if A_num > 0:
                                 velocity_x_A_bin[ix][iy] = velocity_x_A_bin[ix][iy] / A_num
                                 velocity_y_A_bin[ix][iy] = velocity_y_A_bin[ix][iy] / A_num
                                 velocity_r_A_bin[ix][iy] = (velocity_x_A_bin[ix][iy] ** 2 + velocity_y_A_bin[ix][iy] ** 2) ** 0.5
-                                velocity_x_A_bin[ix][iy] = velocity_x_A_bin[ix][iy] / velocity_r_A_bin[ix][iy]
-                                velocity_y_A_bin[ix][iy] = velocity_y_A_bin[ix][iy] / velocity_r_A_bin[ix][iy]
+                                velocity_x_A_bin[ix][iy] = velocity_x_A_bin[ix][iy]# / velocity_r_A_bin[ix][iy]
+                                velocity_y_A_bin[ix][iy] = velocity_y_A_bin[ix][iy]# / velocity_r_A_bin[ix][iy]
 
                             if B_num > 0:
                                 velocity_x_B_bin[ix][iy] = velocity_x_B_bin[ix][iy] / B_num
                                 velocity_y_B_bin[ix][iy] = velocity_y_B_bin[ix][iy] / B_num
                                 velocity_r_B_bin[ix][iy] = (velocity_x_B_bin[ix][iy] ** 2 + velocity_y_B_bin[ix][iy] ** 2) ** 0.5
-                                velocity_x_B_bin[ix][iy] = velocity_x_B_bin[ix][iy] / velocity_r_B_bin[ix][iy]
-                                velocity_y_B_bin[ix][iy] = velocity_y_B_bin[ix][iy] / velocity_r_B_bin[ix][iy]
+                                velocity_x_B_bin[ix][iy] = velocity_x_B_bin[ix][iy]# / velocity_r_B_bin[ix][iy]
+                                velocity_y_B_bin[ix][iy] = velocity_y_B_bin[ix][iy]# / velocity_r_B_bin[ix][iy]
+
+            velocity_x_bin_plot = velocity_x_bin / (np.amax(velocity_r_bin))
+            velocity_y_bin_plot = velocity_y_bin / (np.amax(velocity_r_bin))
+            velocity_x_A_bin_plot = velocity_x_A_bin / (np.amax(velocity_r_bin))
+            velocity_y_A_bin_plot = velocity_y_A_bin / (np.amax(velocity_r_bin))
+            velocity_x_B_bin_plot = velocity_x_B_bin / (np.amax(velocity_r_bin))
+            velocity_y_B_bin_plot = velocity_y_B_bin / (np.amax(velocity_r_bin))
+
 
             velocity_combined = np.zeros((len(v_avg_x), len(v_avg_y),2))
             velocity_A_combined = np.zeros((len(v_avg_x), len(v_avg_y),2))
             velocity_B_combined = np.zeros((len(v_avg_x), len(v_avg_y),2))
-
+            v
             pos_box_combined_align = np.zeros((len(v_avg_x), len(v_avg_y),2))
 
             for ix in range(0, len(align_avg_x)):
@@ -10313,9 +10324,13 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 min_n = np.min(velocity_tot)
                 max_n = np.max(velocity_tot)
 
+
+
+
             fig = plt.figure(figsize=(7,6))
             ax = fig.add_subplot(111)
-            im = plt.scatter(pos[:,0]+h_box, pos[:,1]+h_box, c=velocity_tot, s=0.7, vmin=min_n, vmax=max_n)
+            im = plt.scatter(pos[:,0]+h_box, pos[:,1]+h_box, c=velocity_tot, s=0.7, vmin=min_n, vmax=max_n, cmap='cool')
+
 
 
 
@@ -10339,8 +10354,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
 
             clb.ax.tick_params(labelsize=16)
-            clb.set_label('v', labelpad=-40, y=1.07, rotation=0, fontsize=20)
-            plt.quiver(pos_box_x, pos_box_y, velocity_x_bin, velocity_y_bin, color='black', alpha=0.6)
+            clb.set_label(r'$v$', labelpad=-40, y=1.07, rotation=0, fontsize=20)
+            plt.quiver(pos_box_x, pos_box_y, velocity_x_bin_plot, velocity_y_bin_plot, scale=20.0, color='black', alpha=0.8)
             if bub_large >=1:
                 if interior_bin>0:
                     plt.scatter(xn_pos, yn_pos, c='black', s=3.0)
@@ -10379,7 +10394,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
             fig = plt.figure(figsize=(7,6))
             ax = fig.add_subplot(111)
-            im = plt.scatter(pos[typ0parts,0]+h_box, pos[typ0parts,1]+h_box, c=velocity_A_tot, s=0.7, vmin=min_n, vmax=max_n)
+            im = plt.scatter(pos[typ0parts,0]+h_box, pos[typ0parts,1]+h_box, c=velocity_A_tot, s=0.7, vmin=min_n, vmax=max_n, cmap='cool')
 
 
             tick_lev = np.arange(min_n, max_n+(max_n-min_n)/6, (max_n - min_n)/6)
@@ -10399,8 +10414,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
 
             clb.ax.tick_params(labelsize=16)
-            clb.set_label('v', labelpad=-40, y=1.07, rotation=0, fontsize=20)
-            plt.quiver(pos_box_x, pos_box_y, velocity_x_A_bin, velocity_y_A_bin, color='black', alpha=0.6)
+            clb.set_label(r'$v_\mathrm{A}$', labelpad=-40, y=1.07, rotation=0, fontsize=20)
+            plt.quiver(pos_box_x, pos_box_y, velocity_x_A_bin_plot, velocity_y_A_bin_plot, scale=20.0, color='black', alpha=0.8)
             if bub_large >=1:
                 if interior_bin>0:
                     plt.scatter(xn_pos, yn_pos, c='black', s=3.0)
@@ -10439,7 +10454,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
             fig = plt.figure(figsize=(7,6))
             ax = fig.add_subplot(111)
-            im = plt.scatter(pos[typ1parts,0]+h_box, pos[typ1parts,1]+h_box, c=velocity_B_tot, s=0.7, vmin=min_n, vmax=max_n)
+            im = plt.scatter(pos[typ1parts,0]+h_box, pos[typ1parts,1]+h_box, c=velocity_B_tot, s=0.7, vmin=min_n, vmax=max_n, cmap='cool')
 
             tick_lev = np.arange(min_n, max_n+(max_n-min_n)/6, (max_n - min_n)/6)
             #sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
@@ -10458,8 +10473,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
 
             clb.ax.tick_params(labelsize=16)
-            clb.set_label('v', labelpad=-40, y=1.07, rotation=0, fontsize=20)
-            plt.quiver(pos_box_x, pos_box_y, velocity_x_B_bin, velocity_y_B_bin, color='black', alpha=0.6)
+            clb.set_label(r'$v_\mathrm{B}$', labelpad=-40, y=1.07, rotation=0, fontsize=20)
+            plt.quiver(pos_box_x, pos_box_y, velocity_x_B_bin_plot, velocity_y_B_bin_plot, scale=20.0, color='black', alpha=0.8)
             if bub_large >=1:
                 if interior_bin>0:
                     plt.scatter(xn_pos, yn_pos, c='black', s=3.0)
@@ -10498,8 +10513,16 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
             fig = plt.figure(figsize=(7,6))
             ax = fig.add_subplot(111)
-            min_n = np.min(div_vel)
-            max_n = np.max(div_vel)
+
+            min_n_temp = np.abs(np.min(div_vel))
+            max_n_temp = np.abs(np.max(div_vel))
+
+            if min_n_temp > max_n_temp:
+                max_n = min_n_temp
+                min_n = -min_n_temp
+            else:
+                min_n = -max_n_temp
+                max_n = max_n_temp
 
             levels_text=20
             level_boundaries = np.linspace(min_n, max_n, levels_text + 1)
@@ -10528,8 +10551,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
 
             clb.ax.tick_params(labelsize=16)
-            clb.set_label('v', labelpad=-40, y=1.07, rotation=0, fontsize=20)
-            plt.quiver(pos_box_x, pos_box_y, velocity_x_bin, velocity_y_bin, color='black', alpha=0.6)
+            clb.set_label(r'$\nabla \cdot v$', labelpad=-40, y=1.07, rotation=0, fontsize=20)
+            plt.quiver(pos_box_x, pos_box_y, velocity_x_bin_plot, velocity_y_bin_plot, scale=20.0, color='black', alpha=0.8)
             if bub_large >=1:
                 if interior_bin>0:
                     plt.scatter(xn_pos, yn_pos, c='black', s=3.0)
@@ -10598,8 +10621,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
 
             clb.ax.tick_params(labelsize=16)
-            clb.set_label('v', labelpad=-40, y=1.07, rotation=0, fontsize=20)
-            plt.quiver(pos_box_x, pos_box_y, velocity_x_A_bin, velocity_y_A_bin, color='black', alpha=0.6)
+            clb.set_label(r'$\nabla \cdot v_\mathrm{A}$', labelpad=-40, y=1.07, rotation=0, fontsize=20)
+            plt.quiver(pos_box_x, pos_box_y, velocity_x_A_bin_plot, velocity_y_A_bin_plot, scale=20.0, color='black', alpha=0.8)
             if bub_large >=1:
                 if interior_bin>0:
                     plt.scatter(xn_pos, yn_pos, c='black', s=3.0)
@@ -10668,8 +10691,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
 
             clb.ax.tick_params(labelsize=16)
-            clb.set_label('v', labelpad=-40, y=1.07, rotation=0, fontsize=20)
-            plt.quiver(pos_box_x, pos_box_y, velocity_x_B_bin, velocity_y_B_bin, color='black', alpha=0.6)
+            clb.set_label(r'$\nabla \cdot v_\mathrm{B}$', labelpad=-40, y=1.07, rotation=0, fontsize=20)
+            plt.quiver(pos_box_x, pos_box_y, velocity_x_B_bin_plot, velocity_y_B_bin_plot, scale=20.0, color='black', alpha=0.8)
             if bub_large >=1:
                 if interior_bin>0:
                     plt.scatter(xn_pos, yn_pos, c='black', s=3.0)
@@ -10708,8 +10731,15 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
             fig = plt.figure(figsize=(7,6))
             ax = fig.add_subplot(111)
-            min_n = np.min(curl_vel)
-            max_n = np.max(curl_vel)
+            min_n_temp = np.abs(np.min(curl_vel))
+            max_n_temp = np.abs(np.max(curl_vel))
+
+            if min_n_temp > max_n_temp:
+                max_n = min_n_temp
+                min_n = -min_n_temp
+            else:
+                min_n = -max_n_temp
+                max_n = max_n_temp
 
             levels_text=20
             level_boundaries = np.linspace(min_n, max_n, levels_text + 1)
@@ -10738,8 +10768,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
 
             clb.ax.tick_params(labelsize=16)
-            clb.set_label('v', labelpad=-40, y=1.07, rotation=0, fontsize=20)
-            plt.quiver(pos_box_x, pos_box_y, velocity_x_bin, velocity_y_bin, color='black', alpha=0.6)
+            clb.set_label(r'$\nabla \times v$', labelpad=-40, y=1.07, rotation=0, fontsize=20)
+            plt.quiver(pos_box_x, pos_box_y, velocity_x_bin_plot, velocity_y_bin_plot, scale=20.0, color='black', alpha=0.8)
             if bub_large >=1:
                 if interior_bin>0:
                     plt.scatter(xn_pos, yn_pos, c='black', s=3.0)
@@ -10778,8 +10808,6 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
             fig = plt.figure(figsize=(7,6))
             ax = fig.add_subplot(111)
-            min_n = np.min(curl_velA)
-            max_n = np.max(curl_velA)
 
             levels_text=20
             level_boundaries = np.linspace(min_n, max_n, levels_text + 1)
@@ -10808,8 +10836,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
 
             clb.ax.tick_params(labelsize=16)
-            clb.set_label('v', labelpad=-40, y=1.07, rotation=0, fontsize=20)
-            plt.quiver(pos_box_x, pos_box_y, velocity_x_A_bin, velocity_y_A_bin, color='black', alpha=0.6)
+            clb.set_label(r'$\nabla \times v_\mathrm{A}$', labelpad=-40, y=1.07, rotation=0, fontsize=20)
+            plt.quiver(pos_box_x, pos_box_y, velocity_x_A_bin_plot, velocity_y_A_bin_plot, scale=20.0, color='black', alpha=0.8)
             if bub_large >=1:
                 if interior_bin>0:
                     plt.scatter(xn_pos, yn_pos, c='black', s=3.0)
@@ -10848,8 +10876,6 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
             fig = plt.figure(figsize=(7,6))
             ax = fig.add_subplot(111)
-            min_n = np.min(curl_velB)
-            max_n = np.max(curl_velB)
 
             levels_text=20
             level_boundaries = np.linspace(min_n, max_n, levels_text + 1)
@@ -10878,8 +10904,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
 
             clb.ax.tick_params(labelsize=16)
-            clb.set_label('v', labelpad=-40, y=1.07, rotation=0, fontsize=20)
-            plt.quiver(pos_box_x, pos_box_y, velocity_x_B_bin, velocity_y_B_bin, color='black', alpha=0.6)
+            clb.set_label(r'$\nabla \times v_\mathrm{B}$', labelpad=-40, y=1.07, rotation=0, fontsize=20)
+            plt.quiver(pos_box_x, pos_box_y, velocity_x_B_bin_plot, velocity_y_B_bin_plot, scale=20.0, color='black', alpha=0.8)
             if bub_large >=1:
                 if interior_bin>0:
                     plt.scatter(xn_pos, yn_pos, c='black', s=3.0)

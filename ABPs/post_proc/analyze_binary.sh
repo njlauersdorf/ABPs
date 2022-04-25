@@ -112,8 +112,28 @@ elif [ "$method" = "bulk_pressure_phases" ]; then
     python3 $script_path/interpart_press_updated.py $fname $pa2 $pb $xa2 $ep $phi $dtau $bin $step $hoomd_path $txt_path $pic_path
 elif [ "$method" = "pair_correlation" ]; then
     python3 $script_path/radial_density_function_analysis_binary_updates.py $fname $pa2 $pb $xa2 $ep $phi $dtau $bin $step $hoomd_path $txt_path $pic_path
-  elif [ "$method" = "tracer" ]; then
+elif [ "$method" = "tracer" ]; then
       python3 $script_path/tracer_analysis_binary_updates.py $fname $pa2 $pb $xa2 $ep $phi $dtau $bin $step $hoomd_path $txt_path $pic_path
+
+      pe=${pe%%.*}
+      pa=${pa%%.*}
+      pb=${pb%.*}
+      eps=${ep}
+      phi=${phi%%.*}
+      pNum=${pNum%.*}
+
+      ffmpeg -start_number 1 -framerate 10 -i "$pic_path"bulk_tracers_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_%04d.png\
+       -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
+       "$vid_path"bulk_tracers_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}.mp4
+
+        rm -rf "$pic_path"bulk_tracers_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_*
+
+      ffmpeg -start_number 1 -framerate 10 -i "$pic_path"gas_tracers_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_%04d.png\
+       -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
+       "$vid_path"gas_tracers_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}.mp4
+
+        rm -rf "$pic_path"gas_tracers_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_*
+
 elif [ "$method" = "velocity_new" ]; then
     python3 $script_path/velocity_analysis_binary_updates.py $fname $pa2 $pb $xa2 $ep $phi $dtau $bin $step $hoomd_path $txt_path $pic_path
 
