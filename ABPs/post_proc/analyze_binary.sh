@@ -38,7 +38,7 @@ if [ $hoomd_path == '/Users/nicklauersdorf/hoomd-blue/build' ]; then
 fi
 
 if [ $hoomd_path == "/nas/longleaf/home/njlauers/hoomd-blue/build" ]; then
-    vars="$(python3.5 ${script_path}/get_parameters.py ${fname})"
+    vars="$(python3.8 ${script_path}/get_parameters.py ${fname})"
 fi
 
 pass=()
