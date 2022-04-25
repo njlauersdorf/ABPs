@@ -364,7 +364,6 @@ from gsd import hoomd
 from gsd import pygsd
 
 import freud
-from freud import parallel
 from freud import box
 from freud import density
 from freud import cluster
