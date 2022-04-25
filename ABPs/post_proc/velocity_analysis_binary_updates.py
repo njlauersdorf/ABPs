@@ -10589,6 +10589,16 @@ with hoomd.open(name=inFile, mode='rb') as t:
             plt.savefig(outPath + 'div_map_' + out + pad + ".png", dpi=100)
             plt.close()
 
+            min_n_temp = np.abs(np.min(div_velA))
+            max_n_temp = np.abs(np.max(div_velA))
+
+            if min_n_temp > max_n_temp:
+                max_n = min_n_temp
+                min_n = -min_n_temp
+            else:
+                min_n = -max_n_temp
+                max_n = max_n_temp
+
             fig = plt.figure(figsize=(7,6))
             ax = fig.add_subplot(111)
             min_n = np.min(div_velA)
@@ -10658,6 +10668,16 @@ with hoomd.open(name=inFile, mode='rb') as t:
             plt.tight_layout()
             plt.savefig(outPath + 'div_A_map_' + out + pad + ".png", dpi=100)
             plt.close()
+
+            min_n_temp = np.abs(np.min(div_velB))
+            max_n_temp = np.abs(np.max(div_velB))
+
+            if min_n_temp > max_n_temp:
+                max_n = min_n_temp
+                min_n = -min_n_temp
+            else:
+                min_n = -max_n_temp
+                max_n = max_n_temp
 
             fig = plt.figure(figsize=(7,6))
             ax = fig.add_subplot(111)
@@ -10806,6 +10826,16 @@ with hoomd.open(name=inFile, mode='rb') as t:
             plt.savefig(outPath + 'curl_map_' + out + pad + ".png", dpi=100)
             plt.close()
 
+            min_n_temp = np.abs(np.min(curl_velA))
+            max_n_temp = np.abs(np.max(curl_velA))
+
+            if min_n_temp > max_n_temp:
+                max_n = min_n_temp
+                min_n = -min_n_temp
+            else:
+                min_n = -max_n_temp
+                max_n = max_n_temp
+
             fig = plt.figure(figsize=(7,6))
             ax = fig.add_subplot(111)
 
@@ -10873,6 +10903,16 @@ with hoomd.open(name=inFile, mode='rb') as t:
             plt.tight_layout()
             plt.savefig(outPath + 'curl_A_map_' + out + pad + ".png", dpi=100)
             plt.close()
+
+            min_n_temp = np.abs(np.min(curl_velB))
+            max_n_temp = np.abs(np.max(curl_velB))
+
+            if min_n_temp > max_n_temp:
+                max_n = min_n_temp
+                min_n = -min_n_temp
+            else:
+                min_n = -max_n_temp
+                max_n = max_n_temp
 
             fig = plt.figure(figsize=(7,6))
             ax = fig.add_subplot(111)
