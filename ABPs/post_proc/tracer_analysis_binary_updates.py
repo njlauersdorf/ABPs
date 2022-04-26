@@ -9938,7 +9938,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
             if len(fast_bulk_id_plot)>0:
 
-                if np.amax(clust_size) >= min_size
+                if np.amax(clust_size) >= min_size:
                     if ind_analyzed == 0:
                         slow_tracers = random.choices(slow_bulk_id_plot, k=int(len(slow_bulk_id_plot)/1000))
                         fast_tracers = random.choices(fast_bulk_id_plot, k=int(len(fast_bulk_id_plot)/1000))
