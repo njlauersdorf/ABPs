@@ -364,6 +364,7 @@ from gsd import hoomd
 from gsd import pygsd
 
 import freud
+from freud import parallel
 from freud import box
 from freud import density
 from freud import cluster
@@ -504,53 +505,6 @@ def conForRClust(pe, eps):
     return out
 """
 
-#Bulk phase
-fit_A = 0.03
-fit_B = 1.3603
-fit_C = 0.4684
-
-#Gas phase
-fit_A2 = 0.403
-fit_B2 = 0.633
-fit_C2 = 0.101
-
-#Interface phase
-fit_A3 = 0.011
-fit_B3 = 1.106
-fit_C3 = 0.49
-
-if peA<=peB:
-    if peA>=100:
-        ss_chi_f = fit_A * ((peA/peB) ** (-fit_B)) + fit_C
-        ss_chi_f_gas = fit_A2 * ((peA/peB) ** (fit_B2)) + fit_C2
-        ss_chi_f_int = fit_A3 * ((peA/peB) ** (-fit_B3)) + fit_C3
-        steady_state = 'True'
-    else:
-        steady_state = 'False'
-else:
-    if peB>=100:
-        ss_chi_f = fit_A * ((peB/peA) ** (-fit_B)) + fit_C
-        ss_chi_f_gas = fit_A2 * ((peB/peA) ** (fit_B2)) + fit_C2
-        ss_chi_f_int = fit_A3 * ((peB/peA) ** (-fit_B3)) + fit_C3
-        steady_state = 'True'
-    else:
-        steady_state = 'False'
-
-#Calculate analytical values
-
-if peA<=peB:
-    peNet_gas = ss_chi_f_gas*peB + (1.0-ss_chi_f_gas)*peA
-    peNet_int = ss_chi_f_int*peB + (1.0-ss_chi_f_int)*peA
-else:
-    peNet_gas = ss_chi_f_gas*peA + (1.0-ss_chi_f_gas)*peB
-    peNet_int = ss_chi_f_int*peA + (1.0-ss_chi_f_int)*peB
-
-lat_theory_int = conForRClust(peNet_int-50, eps)
-phi_d = latToPhi(lat_theory_int)
-phi_g = compPhiG(peNet_gas, lat_theory_int)
-clust_theory = partNum * (((phi_g-phi)*phi_d)/(phi*(phi_g-phi_d)))
-
-
 
 with hoomd.open(name=inFile, mode='rb') as t:
 
@@ -611,7 +565,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
         clust_size = clp_all.sizes                                  # find cluster sizes
 
 
-        min_size=int(partNum/8)                                     #Minimum cluster size for measurements to happen
+        min_size=int(partNum/4)                                     #Minimum cluster size for measurements to happen
         lcID = np.where(clust_size == np.amax(clust_size))[0][0]    #Identify largest cluster
         large_clust_ind_all=np.where(clust_size>min_size)           #Identify all clusters larger than minimum size
 
@@ -633,7 +587,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
             com_tmp_posX_temp = 0
             com_tmp_posY_temp = 0
-        if ((np.amax(clust_size)>=0.85*clust_theory) & (np.amax(clust_size)<=1.15*clust_theory) & (steady_state == 'True')) | (steady_state == 'False'):
+        if np.amax(clust_size)>=min_size:
 
             #shift reference frame to center of mass of cluster
             fsize=10
@@ -9984,9 +9938,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
             if len(fast_bulk_id_plot)>0:
 
-                #bulk_ratio = len(fast_bulk_id_plot)/len(bulk_id_plot)
-                if steady_state == 'True':
-                    #if ((bulk_ratio <= 1.01 * ss_chi_f) &  (0.99 * ss_chi_f <= bulk_ratio)):
+                if np.amax(clust_size) >= min_size
                     if ind_analyzed == 0:
                         slow_tracers = random.choices(slow_bulk_id_plot, k=int(len(slow_bulk_id_plot)/1000))
                         fast_tracers = random.choices(fast_bulk_id_plot, k=int(len(fast_bulk_id_plot)/1000))
