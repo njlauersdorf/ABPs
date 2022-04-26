@@ -564,9 +564,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
     r = np.linspace(0.0,  5.0, 100)             # Define radius for x-axis of plot later
 
-    start = int(420/time_step)#205                                             # first frame to process
+    start = int(0/time_step)#205                                             # first frame to process
     dumps = int(t.__len__())                                # get number of timesteps dumped
-    end = int(600/time_step)#int(dumps/time_step)#int(dumps/time_step)-1                                             # final frame to process
+    end = int(dumps/time_step)#int(dumps/time_step)-1                                             # final frame to process
     snap = t[0]                                             # Take first snap for box
     first_tstep = snap.configuration.step                   # First time step
 
