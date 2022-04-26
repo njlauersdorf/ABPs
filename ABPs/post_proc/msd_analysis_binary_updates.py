@@ -453,20 +453,21 @@ time_step = float(sys.argv[9])
 outfile = 'pa'+str(int(peA))+'_pb'+str(int(peB))+'_xa'+str(int(parFrac))+'_eps'+str(eps)+'_phi'+str(int(intPhi))+'_pNum' + str(int(partNum)) + '_bin' + str(int(bin_width)) + '_time' + str(int(time_step))
 out = outfile
 
-outTxt_rdf = 'rdf_' + outfile + '.txt'
+outTxt_msd = 'msd_' + outfile + '.txt'
 
 lat_theory_arr = np.array([])
 
 #.txt file for saving overall phase composition data
-g = open(outPath2+outTxt_rdf, 'w+') # write file headings
-g.write('clust_size'.center(15) + ' ' +\
-                        'lat_theory'.center(15) + ' ' +\
-                        'r'.center(15) + ' ' +\
-                        'any_rdf'.center(15) + ' ' +\
-                        'ss_rdf'.center(15) + ' ' +\
-                        'sf_rdf'.center(15) + ' ' +\
-                        'fs_rdf'.center(15) + ' ' +\
-                        'ff_rdf'.center(15) + '\n')
+g = open(outPath2+outTxt_msd, 'w+') # write file headings
+g.write('tst'.center(15) + ' ' +\
+                        'bin_size'.center(15) + ' ' +\
+                        'clust_size'.center(15) + ' ' +\
+                        'tot_msd'.center(15) + ' ' +\
+                        'tot_msd_std'.center(15) + ' ' +\
+                        'slow_msd'.center(15) + ' ' +\
+                        'slow_msd_std'.center(15) + ' ' +\
+                        'fast_msd'.center(15) + ' ' +\
+                        'fast_msd_std'.center(15) + '\n')
 g.close()
 
 """
@@ -502,70 +503,70 @@ def conForRClust(pe, eps):
     out = r
     return out
 """
-clust_size_arr = np.array([])
-with hoomd.open(name=inFile, mode='rb') as t:
-                                               # first frame to process
-    dumps = int(t.__len__())                                # get number of timesteps dumped
-    start = int((dumps-50)/time_step)#205
-    end = int(dumps/time_step)-1                                             # final frame to process
-    snap = t[0]                                             # Take first snap for box
 
-    # Get box dimensions
-    box_data = snap.configuration.box
-    l_box = box_data[0]                                     #box length
-
-    f_box = box.Box(Lx=l_box, Ly=l_box, is2D=True)
-
-
-    for p in range(start, end):
-        j=int(p*time_step)
-        print('j')
-        print(j)
-
-        snap = t[j]                                 #Take current frame
-
-        #Arrays of particle data
-        pos = snap.particles.position               # position
-        pos[:,-1] = 0.0                             # 2D system
-
-        #Compute cluster parameters using system_all neighbor list
-        system_all = freud.AABBQuery(f_box, f_box.wrap(pos))
-        cl_all=freud.cluster.Cluster()                              #Define cluster
-        cl_all.compute(system_all, neighbors={'r_max': 1.0})        # Calculate clusters given neighbor list, positions,
-                                                                    # and maximal radial interaction distance
-        clp_all = freud.cluster.ClusterProperties()                 #Define cluster properties
-        ids = cl_all.cluster_idx                                    # get id of each cluster
-        clp_all.compute(system_all, ids)                            # Calculate cluster properties given cluster IDs
-        clust_size = clp_all.sizes
-
-        clust_size_arr = np.append(clust_size_arr, np.amax(clust_size))
-
+#Bulk phase
 fit_A = 0.03
 fit_B = 1.3603
 fit_C = 0.4684
 
+#Gas phase
+fit_A2 = 0.403
+fit_B2 = 0.633
+fit_C2 = 0.101
+
+#Interface phase
+fit_A3 = 0.011
+fit_B3 = 1.106
+fit_C3 = 0.49
+
 if peA<=peB:
     if peA>=100:
         ss_chi_f = fit_A * ((peA/peB) ** (-fit_B)) + fit_C
+        ss_chi_f_gas = fit_A2 * ((peA/peB) ** (fit_B2)) + fit_C2
+        ss_chi_f_int = fit_A3 * ((peA/peB) ** (-fit_B3)) + fit_C3
         steady_state = 'True'
     else:
         steady_state = 'False'
 else:
     if peB>=100:
         ss_chi_f = fit_A * ((peB/peA) ** (-fit_B)) + fit_C
+        ss_chi_f_gas = fit_A2 * ((peB/peA) ** (fit_B2)) + fit_C2
+        ss_chi_f_int = fit_A3 * ((peB/peA) ** (-fit_B3)) + fit_C3
         steady_state = 'True'
     else:
         steady_state = 'False'
 
-ss_size = np.mean(clust_size_arr[-101:])
+#Calculate analytical values
 
+if peA<=peB:
+    peNet_gas = ss_chi_f_gas*peB + (1.0-ss_chi_f_gas)*peA
+    peNet_int = ss_chi_f_int*peB + (1.0-ss_chi_f_int)*peA
+else:
+    peNet_gas = ss_chi_f_gas*peA + (1.0-ss_chi_f_gas)*peB
+    peNet_int = ss_chi_f_int*peA + (1.0-ss_chi_f_int)*peB
+
+lat_theory_int = conForRClust(peNet_int-50, eps)
+phi_d = latToPhi(lat_theory_int)
+phi_g = compPhiG(peNet_gas, lat_theory_int)
+clust_theory = partNum * (((phi_g-phi)*phi_d)/(phi*(phi_g-phi_d)))
+
+first_steady_state_frame = 'False'
+
+bulk_msd_arr = np.array([])
+slow_bulk_msd_arr = np.array([])
+fast_bulk_msd_arr = np.array([])
+bulk_msd_std_arr = np.array([])
+slow_bulk_msd_std_arr = np.array([])
+fast_bulk_msd_std_arr = np.array([])
+ss_time_arr = np.array([])
+clust_size_arr = np.array([])
 with hoomd.open(name=inFile, mode='rb') as t:
 
     r = np.linspace(0.0,  5.0, 100)             # Define radius for x-axis of plot later
 
-    start = int(240/time_step)#205                                             # first frame to process
+    start = int(420/time_step)#205                                             # first frame to process
     dumps = int(t.__len__())                                # get number of timesteps dumped
-    end = int(dumps/time_step)#int(dumps/time_step)-1                                             # final frame to process
+    end = int(600/time_step)#int(dumps/time_step)#int(dumps/time_step)-1                                             # final frame to process
     snap = t[0]                                             # Take first snap for box
     first_tstep = snap.configuration.step                   # First time step
 
@@ -586,6 +587,12 @@ with hoomd.open(name=inFile, mode='rb') as t:
         j=int(p*time_step)
         print('j')
         print(j)
+
+        #Arrays of particle data
+        snap_current = t[j]                                 #Take current frame
+
+        pos_current = snap_current.particles.position               # position
+        pos_current[:,-1] = 0.0                             # 2D system
 
         snap = t[j]                                 #Take current frame
 
@@ -640,7 +647,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
             com_tmp_posX_temp = 0
             com_tmp_posY_temp = 0
-        if ((np.amax(clust_size)>=0.99*ss_size) & (np.amax(clust_size)<=1.01*ss_size) & (steady_state == 'True')) | (steady_state == 'False'):
+        if ((np.amax(clust_size)>=0.85*clust_theory) & (np.amax(clust_size)<=1.15*clust_theory) & (steady_state == 'True')) | (steady_state == 'False'):
             print('true!')
             print(steady_state)
             #shift reference frame to center of mass of cluster
@@ -9995,10 +10002,25 @@ with hoomd.open(name=inFile, mode='rb') as t:
             print(((len(fast_bulk_id_plot)/len(bulk_id_plot) - ss_chi_f)/ss_chi_f)*100)
 
             if len(fast_bulk_id_plot)>0:
-                steady_state_once = 'True'
+
                 bulk_ratio = len(fast_bulk_id_plot)/len(bulk_id_plot)
                 if steady_state == 'True':
+
                     if ((bulk_ratio <= 1.01 * ss_chi_f) &  (0.99 * ss_chi_f <= bulk_ratio)):
+                        steady_state_once = 'True'
+                        if first_steady_state_frame == 'False':
+                            print('analyze!')
+                            #Arrays of particle data
+                            snap_first = t[j]                                 #Take current frame
+
+                            pos_first = snap_first.particles.position               # position
+                            pos_first[:,-1] = 0.0
+
+                            first_steady_state_frame = 'True'
+                            bulk_id_plot_first = np.copy(bulk_id_plot)
+                            slow_bulk_id_plot_first = np.copy(slow_bulk_id_plot)
+                            fast_bulk_id_plot_first = np.copy(fast_bulk_id_plot)
+
                         print('rdf!')
 
 
@@ -10057,274 +10079,316 @@ with hoomd.open(name=inFile, mode='rb') as t:
                         r=np.arange(0.0,rstop+wbinsTrue,wbinsTrue)
                         query_args = dict(mode='ball', r_min = 0.1, r_max=rstop)
 
-                        print('bulk neighbors')
-                        system_all_bulk = freud.AABBQuery(f_box, f_box.wrap(pos_bulk))
-                        system_A_bulk = freud.AABBQuery(f_box, f_box.wrap(pos0_bulk))
-                        system_B_bulk = freud.AABBQuery(f_box, f_box.wrap(pos1_bulk))
+                        common_bulk_id = np.intersect1d(bulk_id_plot, bulk_id_plot_first)
+                        common_fast_bulk_id = np.intersect1d(fast_bulk_id_plot, fast_bulk_id_plot_first)
+                        common_slow_bulk_id = np.intersect1d(slow_bulk_id_plot, slow_bulk_id_plot_first)
 
-                        all_bulk_nlist = system_all_bulk.query(f_box.wrap(pos_bulk_int), query_args).toNeighborList()
-                        AA_bulk_nlist = system_A_bulk.query(f_box.wrap(pos0_bulk_int), query_args).toNeighborList()
-                        AB_bulk_nlist = system_A_bulk.query(f_box.wrap(pos1_bulk_int), query_args).toNeighborList()
-                        BA_bulk_nlist = system_B_bulk.query(f_box.wrap(pos0_bulk_int), query_args).toNeighborList()
-                        BB_bulk_nlist = system_B_bulk.query(f_box.wrap(pos1_bulk_int), query_args).toNeighborList()
 
-                        #print('dense neighbors')
+                        bulk_msd_dif_x = pos_current[common_bulk_id,0] - pos_first[common_bulk_id,0]
 
-                        #system_all_dense = freud.AABBQuery(f_box, f_box.wrap(pos_bulk_int))
-                        #system_A_dense = freud.AABBQuery(f_box, f_box.wrap(pos0_bulk_int))
-                        #system_B_dense = freud.AABBQuery(f_box, f_box.wrap(pos1_bulk_int))
+                        bulk_msd_dif_y = pos_current[common_bulk_id,1] - pos_first[common_bulk_id,1]
 
-                        #all_dense_nlist = system_all_dense.query(f_box.wrap(pos), query_args).toNeighborList()
-                        #AA_dense_nlist = system_A_dense.query(f_box.wrap(pos0), query_args).toNeighborList()
-                        #AB_dense_nlist = system_A_dense.query(f_box.wrap(pos1), query_args).toNeighborList()
-                        #BB_dense_nlist = system_B_dense.query(f_box.wrap(pos1), query_args).toNeighborList()
+                        x_lim0 = np.where(bulk_msd_dif_x > h_box)[0]
+                        if len(x_lim0)>0:
+                            bulk_msd_dif_x[x_lim0] = bulk_msd_dif_x[x_lim0] - l_box
 
-                        #print('int neighbors')
+                        x_lim1 = np.where(bulk_msd_dif_x < -h_box)[0]
+                        if len(x_lim1)>0:
+                            bulk_msd_dif_x[x_lim1] = bulk_msd_dif_x[x_lim1] + l_box
 
-                        #system_all_int = freud.AABBQuery(f_box, f_box.wrap(pos_int))   #Calculate neighbor list
-                        #system_A_int = freud.AABBQuery(f_box, f_box.wrap(pos0_int))    #Calculate neighbor list
-                        #system_B_int = freud.AABBQuery(f_box, f_box.wrap(pos1_int))    #Calculate neighbor list
+                        y_lim0 = np.where(bulk_msd_dif_y > h_box)[0]
+                        if len(y_lim0)>0:
+                            bulk_msd_dif_y[y_lim0] = bulk_msd_dif_y[y_lim0] - l_box
 
-                        #all_int_nlist = system_all_int.query(f_box.wrap(pos), query_args).toNeighborList()
-                        #AA_int_nlist = system_A_int.query(f_box.wrap(pos0), query_args).toNeighborList()
-                        #AB_int_nlist = system_A_int.query(f_box.wrap(pos1), query_args).toNeighborList()
-                        #BB_int_nlist = system_B_int.query(f_box.wrap(pos1), query_args).toNeighborList()
+                        y_lim1 = np.where(bulk_msd_dif_y < -h_box)[0]
+                        if len(y_lim1)>0:
+                            bulk_msd_dif_y[y_lim1] = bulk_msd_dif_y[y_lim1] + l_box
 
-                        #print('gas neighbors')
 
-                        #system_all_gas = freud.AABBQuery(f_box, f_box.wrap(pos_gas))
-                        #system_AA_gas = freud.AABBQuery(f_box, f_box.wrap(pos0_gas))
-                        #system_AB_gas = freud.AABBQuery(f_box, f_box.wrap(pos0_gas))
-                        #system_BB_gas = freud.AABBQuery(f_box, f_box.wrap(pos1_gas))
+                        bulk_tot_disp = ( bulk_msd_dif_x ** 2 + bulk_msd_dif_y ** 2 ) ** 0.5
+                        bulk_msd = np.mean(bulk_tot_disp ** 2)
 
-                        #all_gas_nlist = system_all_gas.query(f_box.wrap(pos_gas_int), query_args).toNeighborList()
-                        #AA_gas_nlist = system_AA_gas.query(f_box.wrap(pos0_gas_int), query_args).toNeighborList()
-                        #AB_gas_nlist = system_AB_gas.query(f_box.wrap(pos1_gas_int), query_args).toNeighborList()
-                        #BB_gas_nlist = system_BB_gas.query(f_box.wrap(pos1_gas_int), query_args).toNeighborList()
+                        bulk_msd_arr = np.append(bulk_msd_arr, bulk_msd)
+                        msd_std = 0
+                        msd_std_num = 0
+                        for n in range(0, len(bulk_tot_disp)):
+                            msd_std += ((bulk_tot_disp[n]**2)-bulk_msd)**2
+                            msd_std_num +=1
 
-                        print('initiate rdfs')
+                        bulk_msd_std_arr = np.append(bulk_msd_std_arr, (msd_std / msd_std_num)**0.5)
 
-                        # Get positions of particles in the largest cluster
-                        rdf_all_bulk = freud.density.RDF(bins=nBins, r_max=rstop)
-                        rdf_AA_bulk = freud.density.RDF(bins=nBins, r_max=rstop)
-                        rdf_AB_bulk = freud.density.RDF(bins=nBins, r_max=rstop)
-                        rdf_BA_bulk = freud.density.RDF(bins=nBins, r_max=rstop)
-                        rdf_BB_bulk = freud.density.RDF(bins=nBins, r_max=rstop)
 
-                        #rdf_all_dense = freud.density.RDF(bins=nBins, r_max=rstop)
-                        #rdf_AA_dense = freud.density.RDF(bins=nBins, r_max=rstop)
-                        #rdf_AB_dense = freud.density.RDF(bins=nBins, r_max=rstop)
-                        #rdf_BB_dense = freud.density.RDF(bins=nBins, r_max=rstop)
+                        slow_bulk_msd_dif_x = pos_current[common_slow_bulk_id,0] - pos_first[common_slow_bulk_id,0]
 
-                        #rdf_all_int = freud.density.RDF(bins=nBins, r_max=rstop)
-                        #rdf_AA_int = freud.density.RDF(bins=nBins, r_max=rstop)
-                        #rdf_AB_int = freud.density.RDF(bins=nBins, r_max=rstop)
-                        #rdf_BB_int = freud.density.RDF(bins=nBins, r_max=rstop)
+                        slow_bulk_msd_dif_y = pos_current[common_slow_bulk_id,1] - pos_first[common_slow_bulk_id,1]
 
-                        #rdf_all_gas = freud.density.RDF(bins=nBins, r_max=rstop, r_min=0.1, normalize=True)
-                        #rdf_AA_gas = freud.density.RDF(bins=nBins, r_max=rstop, r_min=0.1, normalize=True)
-                        #rdf_AB_gas = freud.density.RDF(bins=nBins, r_max=rstop, r_min=0.1, normalize=True)
-                        #rdf_BB_gas = freud.density.RDF(bins=nBins, r_max=rstop, r_min=0.1, normalize=True)
+                        x_lim0 = np.where(slow_bulk_msd_dif_x > h_box)[0]
+                        if len(x_lim0)>0:
+                            slow_bulk_msd_dif_x[x_lim0] = slow_bulk_msd_dif_x[x_lim0] - l_box
 
-                        #for i in range(0, len(system_all_bulk)):
-                        rdf_all_bulk.compute(system_all_bulk, neighbors=all_bulk_nlist, reset=False)               #Calculate radial density function
-                        rdf_AA_bulk.compute(system_A_bulk, neighbors=AA_bulk_nlist, reset=False)               #Calculate radial density function
-                        rdf_AB_bulk.compute(system_A_bulk, neighbors=AB_bulk_nlist, reset=False)               #Calculate radial density function
-                        rdf_BA_bulk.compute(system_B_bulk, neighbors=BA_bulk_nlist, reset=False)
-                        rdf_BB_bulk.compute(system_B_bulk, neighbors=BB_bulk_nlist, reset=False)               #Calculate radial density function
+                        x_lim1 = np.where(slow_bulk_msd_dif_x < -h_box)[0]
+                        if len(x_lim1)>0:
+                            slow_bulk_msd_dif_x[x_lim1] = slow_bulk_msd_dif_x[x_lim1] + l_box
 
-                        #print('dense rdf')
-                        #rdf_all_dense.compute(system_all_dense, neighbors=all_dense_nlist, reset=False)               #Calculate radial density function
-                        #rdf_AA_dense.compute(system_A_dense, neighbors=AA_dense_nlist, reset=False)               #Calculate radial density function
-                        #rdf_AB_dense.compute(system_A_dense, neighbors=AB_dense_nlist, reset=False)               #Calculate radial density function
-                        #rdf_BB_dense.compute(system_B_dense, neighbors=BB_dense_nlist, reset=False)               #Calculate radial density function
+                        y_lim0 = np.where(slow_bulk_msd_dif_y > h_box)[0]
+                        if len(y_lim0)>0:
+                            slow_bulk_msd_dif_y[y_lim0] = slow_bulk_msd_dif_y[y_lim0] - l_box
 
-                        #print('int rdf')
-                        #rdf_all_int.compute(system_all_int, neighbors=all_int_nlist, reset=False)               #Calculate radial density function
-                        #rdf_AA_int.compute(system_A_int, neighbors=AA_int_nlist, reset=False)               #Calculate radial density function
-                        #rdf_AB_int.compute(system_A_int, neighbors=AB_int_nlist, reset=False)               #Calculate radial density function
-                        #rdf_BB_int.compute(system_B_int, neighbors=BB_int_nlist, reset=False)               #Calculate radial density function
+                        y_lim1 = np.where(slow_bulk_msd_dif_y < -h_box)[0]
+                        if len(y_lim1)>0:
+                            slow_bulk_msd_dif_y[y_lim1] = slow_bulk_msd_dif_y[y_lim1] + l_box
 
+
+                        slow_bulk_tot_disp = ( slow_bulk_msd_dif_x ** 2 + slow_bulk_msd_dif_y ** 2 ) ** 0.5
+                        slow_bulk_msd = np.mean(slow_bulk_tot_disp ** 2)
+
+                        slow_bulk_msd_arr = np.append(slow_bulk_msd_arr, slow_bulk_msd)
+                        slow_msd_std = 0
+                        slow_msd_std_num = 0
+                        for n in range(0, len(slow_bulk_tot_disp)):
+                            slow_msd_std += ((slow_bulk_tot_disp[n]**2)-slow_bulk_msd)**2
+                            slow_msd_std_num +=1
+
+                        slow_bulk_msd_std_arr = np.append(slow_bulk_msd_std_arr, (slow_msd_std / slow_msd_std_num)**0.5)
+
+
+                        fast_bulk_msd_dif_x = pos_current[common_fast_bulk_id,0] - pos_first[common_fast_bulk_id,0]
+
+                        fast_bulk_msd_dif_y = pos_current[common_fast_bulk_id,1] - pos_first[common_fast_bulk_id,1]
+
+                        x_lim0 = np.where(fast_bulk_msd_dif_x > h_box)[0]
+                        if len(x_lim0)>0:
+                            fast_bulk_msd_dif_x[x_lim0] = fast_bulk_msd_dif_x[x_lim0] - l_box
+
+                        x_lim1 = np.where(fast_bulk_msd_dif_x < -h_box)[0]
+                        if len(x_lim1)>0:
+                            fast_bulk_msd_dif_x[x_lim1] = fast_bulk_msd_dif_x[x_lim1] + l_box
+
+                        y_lim0 = np.where(fast_bulk_msd_dif_y > h_box)[0]
+                        if len(y_lim0)>0:
+                            fast_bulk_msd_dif_y[y_lim0] = fast_bulk_msd_dif_y[y_lim0] - l_box
+
+                        y_lim1 = np.where(fast_bulk_msd_dif_y < -h_box)[0]
+                        if len(y_lim1)>0:
+                            fast_bulk_msd_dif_y[y_lim1] = fast_bulk_msd_dif_y[y_lim1] + l_box
+
+
+                        fast_bulk_tot_disp = ( fast_bulk_msd_dif_x ** 2 + fast_bulk_msd_dif_y ** 2 ) ** 0.5
+                        fast_bulk_msd = np.mean(fast_bulk_tot_disp ** 2)
+
+                        fast_bulk_msd_arr = np.append(fast_bulk_msd_arr, fast_bulk_msd)
+                        fast_msd_std = 0
+                        fast_msd_std_num = 0
+                        for n in range(0, len(fast_bulk_tot_disp)):
+                            fast_msd_std += ((fast_bulk_tot_disp[n]**2)-fast_bulk_msd)**2
+                            fast_msd_std_num +=1
+
+                        fast_bulk_msd_std_arr = np.append(fast_bulk_msd_std_arr, (fast_msd_std / fast_msd_std_num)**0.5)
+
+
+                        ss_time_arr = np.append(ss_time_arr, tst)
+                        clust_size_arr = np.append(clust_size_arr, np.amax(clust_size))
                 else:
-                    print('rdf!2')
-                    pos0=pos[typ0ind]                               # Find positions of type 0 particles
-                    pos0_bulk = pos[slow_bulk_id_plot]
-                    pos0_int = pos[slow_int_id_plot]
-                    pos0_gas = pos[slow_gas_id_plot]
-                    pos0_bulk_int = pos[slow_bulk_int_id_plot]
-                    pos0_gas_int = pos[slow_gas_int_id_plot]
+                    if j >= int(dumps/2):
+                        steady_state_once = 'True'
+                        if first_steady_state_frame == 'False':
+                            #Arrays of particle data
+                            snap_first = t[0]                                 #Take current frame
 
-                    pos1=pos[typ1ind]
-                    pos1_bulk = pos[fast_bulk_id_plot]
-                    pos1_int = pos[fast_int_id_plot]
-                    pos1_gas = pos[fast_gas_id_plot]
-                    pos1_bulk_int = pos[fast_bulk_int_id_plot]
-                    pos1_gas_int = pos[fast_gas_int_id_plot]
+                            pos_first = snap_first.particles.position               # position
+                            pos_first[:,-1] = 0.0
 
-                    pos_bulk = pos[bulk_id_plot]
-                    pos_int = pos[int_id_plot]
-                    pos_gas = pos[gas_id_plot]
-                    pos_bulk_int = pos[bulk_int_id_plot]
-                    pos_gas_int = pos[gas_int_id_plot]
+                            snap_current = t[j]                                 #Take current frame
+                            first_steady_state_frame = 'True'
 
-                    pe_tot_int = 0
-                    pe_num_int = 0
-                    for i in range(0, len(int_id_plot)):
+                        print('rdf!2')
+                        pos0=pos[typ0ind]                               # Find positions of type 0 particles
+                        pos0_bulk = pos[slow_bulk_id_plot]
+                        pos0_int = pos[slow_int_id_plot]
+                        pos0_gas = pos[slow_gas_id_plot]
+                        pos0_bulk_int = pos[slow_bulk_int_id_plot]
+                        pos0_gas_int = pos[slow_gas_int_id_plot]
 
-                        if typ[int_id_plot[i]]==0:
-                            pe_tot_int += peA
-                            pe_num_int += 1
-                        else:
-                            pe_tot_int += peB
-                            pe_num_int += 1
-                    pe_net_int = pe_tot_int / pe_num_int
+                        pos1=pos[typ1ind]
+                        pos1_bulk = pos[fast_bulk_id_plot]
+                        pos1_int = pos[fast_int_id_plot]
+                        pos1_gas = pos[fast_gas_id_plot]
+                        pos1_bulk_int = pos[fast_bulk_int_id_plot]
+                        pos1_gas_int = pos[fast_gas_int_id_plot]
 
-                    lat_theory2 = conForRClust(pe_net_int-50, eps)
-                    lat_theory_arr = np.append(lat_theory_arr, lat_theory2)
+                        pos_bulk = pos[bulk_id_plot]
+                        pos_int = pos[int_id_plot]
+                        pos_gas = pos[gas_id_plot]
+                        pos_bulk_int = pos[bulk_int_id_plot]
+                        pos_gas_int = pos[gas_int_id_plot]
 
-                    #a = system_all.points[cl_all.cluster_keys[large_clust_ind_all[0]]]
-                    AA_in_large = np.array([])
-                    BB_in_large=np.array([])
-                    mark=0
-                    r = np.linspace(0.0,  3.0, 20)             # Define radius for x-axis of plot later
+                        pe_tot_int = 0
+                        pe_num_int = 0
+                        for i in range(0, len(int_id_plot)):
 
-                    # Width, in distance units, of bin
-                    wBins = 0.02
+                            if typ[int_id_plot[i]]==0:
+                                pe_tot_int += peA
+                                pe_num_int += 1
+                            else:
+                                pe_tot_int += peB
+                                pe_num_int += 1
+                        pe_net_int = pe_tot_int / pe_num_int
 
-                    # Distance to compute RDF for
-                    rstop = 10.
+                        lat_theory2 = conForRClust(pe_net_int-50, eps)
+                        lat_theory_arr = np.append(lat_theory_arr, lat_theory2)
 
-                    # Number of bins given this distance
-                    nBins = rstop / wBins
+                        #a = system_all.points[cl_all.cluster_keys[large_clust_ind_all[0]]]
+                        AA_in_large = np.array([])
+                        BB_in_large=np.array([])
+                        mark=0
+                        r = np.linspace(0.0,  3.0, 20)             # Define radius for x-axis of plot later
 
-                    wbinsTrue=(rstop)/(nBins-1)
+                        # Width, in distance units, of bin
+                        wBins = 0.02
 
-                    r=np.arange(0.0,rstop+wbinsTrue,wbinsTrue)
-                    query_args = dict(mode='ball', r_min = 0.1, r_max=rstop)
+                        # Distance to compute RDF for
+                        rstop = 10.
 
-                    print('bulk neighbors')
-                    system_all_bulk = freud.AABBQuery(f_box, f_box.wrap(pos_bulk))
-                    system_A_bulk = freud.AABBQuery(f_box, f_box.wrap(pos0_bulk))
-                    system_B_bulk = freud.AABBQuery(f_box, f_box.wrap(pos1_bulk))
+                        # Number of bins given this distance
+                        nBins = rstop / wBins
 
-                    all_bulk_nlist = system_all_bulk.query(f_box.wrap(pos_bulk_int), query_args).toNeighborList()
-                    AA_bulk_nlist = system_A_bulk.query(f_box.wrap(pos0_bulk_int), query_args).toNeighborList()
-                    AB_bulk_nlist = system_A_bulk.query(f_box.wrap(pos1_bulk_int), query_args).toNeighborList()
-                    BA_bulk_nlist = system_B_bulk.query(f_box.wrap(pos0_bulk_int), query_args).toNeighborList()
-                    BB_bulk_nlist = system_B_bulk.query(f_box.wrap(pos1_bulk_int), query_args).toNeighborList()
+                        wbinsTrue=(rstop)/(nBins-1)
 
-                    #print('dense neighbors')
+                        r=np.arange(0.0,rstop+wbinsTrue,wbinsTrue)
+                        query_args = dict(mode='ball', r_min = 0.1, r_max=rstop)
 
-                    #system_all_dense = freud.AABBQuery(f_box, f_box.wrap(pos_bulk_int))
-                    #system_A_dense = freud.AABBQuery(f_box, f_box.wrap(pos0_bulk_int))
-                    #system_B_dense = freud.AABBQuery(f_box, f_box.wrap(pos1_bulk_int))
+                        #MSD STUFF
+                        common_bulk_id = np.intersect1d(bulk_id_plot, bulk_id_plot_first)
+                        common_fast_bulk_id = np.intersect1d(fast_bulk_id_plot, fast_bulk_id_plot_first)
+                        common_slow_bulk_id = np.intersect1d(slow_bulk_id_plot, slow_bulk_id_plot_first)
 
-                    #all_dense_nlist = system_all_dense.query(f_box.wrap(pos), query_args).toNeighborList()
-                    #AA_dense_nlist = system_A_dense.query(f_box.wrap(pos0), query_args).toNeighborList()
-                    #AB_dense_nlist = system_A_dense.query(f_box.wrap(pos1), query_args).toNeighborList()
-                    #BB_dense_nlist = system_B_dense.query(f_box.wrap(pos1), query_args).toNeighborList()
 
-                    #print('int neighbors')
+                        bulk_msd_dif_x = pos_current[common_bulk_id,0] - pos_first[common_bulk_id,0]
 
-                    #system_all_int = freud.AABBQuery(f_box, f_box.wrap(pos_int))   #Calculate neighbor list
-                    #system_A_int = freud.AABBQuery(f_box, f_box.wrap(pos0_int))    #Calculate neighbor list
-                    #system_B_int = freud.AABBQuery(f_box, f_box.wrap(pos1_int))    #Calculate neighbor list
+                        bulk_msd_dif_y = pos_current[common_bulk_id,1] - pos_first[common_bulk_id,1]
 
-                    #all_int_nlist = system_all_int.query(f_box.wrap(pos), query_args).toNeighborList()
-                    #AA_int_nlist = system_A_int.query(f_box.wrap(pos0), query_args).toNeighborList()
-                    #AB_int_nlist = system_A_int.query(f_box.wrap(pos1), query_args).toNeighborList()
-                    #BB_int_nlist = system_B_int.query(f_box.wrap(pos1), query_args).toNeighborList()
+                        x_lim0 = np.where(bulk_msd_dif_x > h_box)[0]
+                        if len(x_lim0)>0:
+                            bulk_msd_dif_x[x_lim0] = bulk_msd_dif_x[x_lim0] - l_box
 
-                    #print('gas neighbors')
+                        x_lim1 = np.where(bulk_msd_dif_x < -h_box)[0]
+                        if len(x_lim1)>0:
+                            bulk_msd_dif_x[x_lim1] = bulk_msd_dif_x[x_lim1] + l_box
 
-                    #system_all_gas = freud.AABBQuery(f_box, f_box.wrap(pos_gas))
-                    #system_AA_gas = freud.AABBQuery(f_box, f_box.wrap(pos0_gas))
-                    #system_AB_gas = freud.AABBQuery(f_box, f_box.wrap(pos0_gas))
-                    #system_BB_gas = freud.AABBQuery(f_box, f_box.wrap(pos1_gas))
+                        y_lim0 = np.where(bulk_msd_dif_y > h_box)[0]
+                        if len(y_lim0)>0:
+                            bulk_msd_dif_y[y_lim0] = bulk_msd_dif_y[y_lim0] - l_box
 
-                    #all_gas_nlist = system_all_gas.query(f_box.wrap(pos_gas_int), query_args).toNeighborList()
-                    #AA_gas_nlist = system_AA_gas.query(f_box.wrap(pos0_gas_int), query_args).toNeighborList()
-                    #AB_gas_nlist = system_AB_gas.query(f_box.wrap(pos1_gas_int), query_args).toNeighborList()
-                    #BB_gas_nlist = system_BB_gas.query(f_box.wrap(pos1_gas_int), query_args).toNeighborList()
+                        y_lim1 = np.where(bulk_msd_dif_y < -h_box)[0]
+                        if len(y_lim1)>0:
+                            bulk_msd_dif_y[y_lim1] = bulk_msd_dif_y[y_lim1] + l_box
 
-                    print('initiate rdfs')
 
-                    # Get positions of particles in the largest cluster
-                    rdf_all_bulk = freud.density.RDF(bins=nBins, r_max=rstop)
-                    rdf_AA_bulk = freud.density.RDF(bins=nBins, r_max=rstop)
-                    rdf_AB_bulk = freud.density.RDF(bins=nBins, r_max=rstop)
-                    rdf_BA_bulk = freud.density.RDF(bins=nBins, r_max=rstop)
-                    rdf_BB_bulk = freud.density.RDF(bins=nBins, r_max=rstop)
+                        bulk_tot_disp = ( bulk_msd_dif_x ** 2 + bulk_msd_dif_y ** 2 ) ** 0.5
+                        bulk_msd = np.mean(bulk_tot_disp ** 2)
 
-                    #rdf_all_dense = freud.density.RDF(bins=nBins, r_max=rstop)
-                    #rdf_AA_dense = freud.density.RDF(bins=nBins, r_max=rstop)
-                    #rdf_AB_dense = freud.density.RDF(bins=nBins, r_max=rstop)
-                    #rdf_BB_dense = freud.density.RDF(bins=nBins, r_max=rstop)
+                        bulk_msd_arr = np.append(bulk_msd_arr, bulk_msd)
+                        msd_std = 0
+                        msd_std_num = 0
+                        for n in range(0, len(bulk_tot_disp)):
+                            msd_std += ((bulk_tot_disp[n]**2)-bulk_msd)**2
+                            msd_std_num +=1
 
-                    #rdf_all_int = freud.density.RDF(bins=nBins, r_max=rstop)
-                    #rdf_AA_int = freud.density.RDF(bins=nBins, r_max=rstop)
-                    #rdf_AB_int = freud.density.RDF(bins=nBins, r_max=rstop)
-                    #rdf_BB_int = freud.density.RDF(bins=nBins, r_max=rstop)
+                        bulk_msd_std_arr = np.append(bulk_msd_std_arr, (msd_std / msd_std_num)**0.5)
 
-                    #rdf_all_gas = freud.density.RDF(bins=nBins, r_max=rstop, r_min=0.1, normalize=True)
-                    #rdf_AA_gas = freud.density.RDF(bins=nBins, r_max=rstop, r_min=0.1, normalize=True)
-                    #rdf_AB_gas = freud.density.RDF(bins=nBins, r_max=rstop, r_min=0.1, normalize=True)
-                    #rdf_BB_gas = freud.density.RDF(bins=nBins, r_max=rstop, r_min=0.1, normalize=True)
+                        slow_bulk_msd_dif_x = pos_current[common_slow_bulk_id,0] - pos_first[common_slow_bulk_id,0]
 
-                    #for i in range(0, len(system_all_bulk)):
-                    rdf_all_bulk.compute(system_all_bulk, neighbors=all_bulk_nlist, reset=False)               #Calculate radial density function
-                    rdf_AA_bulk.compute(system_A_bulk, neighbors=AA_bulk_nlist, reset=False)               #Calculate radial density function
-                    rdf_AB_bulk.compute(system_A_bulk, neighbors=AB_bulk_nlist, reset=False)               #Calculate radial density function
-                    rdf_BA_bulk.compute(system_B_bulk, neighbors=BA_bulk_nlist, reset=False)
-                    rdf_BB_bulk.compute(system_B_bulk, neighbors=BB_bulk_nlist, reset=False)               #Calculate radial density function
+                        slow_bulk_msd_dif_y = pos_current[common_slow_bulk_id,1] - pos_first[common_slow_bulk_id,1]
 
-                    #print('dense rdf')
-                    #rdf_all_dense.compute(system_all_dense, neighbors=all_dense_nlist, reset=False)               #Calculate radial density function
-                    #rdf_AA_dense.compute(system_A_dense, neighbors=AA_dense_nlist, reset=False)               #Calculate radial density function
-                    #rdf_AB_dense.compute(system_A_dense, neighbors=AB_dense_nlist, reset=False)               #Calculate radial density function
-                    #rdf_BB_dense.compute(system_B_dense, neighbors=BB_dense_nlist, reset=False)               #Calculate radial density function
+                        x_lim0 = np.where(slow_bulk_msd_dif_x > h_box)[0]
+                        if len(x_lim0)>0:
+                            slow_bulk_msd_dif_x[x_lim0] = slow_bulk_msd_dif_x[x_lim0] - l_box
 
-                    #print('int rdf')
-                    #rdf_all_int.compute(system_all_int, neighbors=all_int_nlist, reset=False)               #Calculate radial density function
-                    #rdf_AA_int.compute(system_A_int, neighbors=AA_int_nlist, reset=False)               #Calculate radial density function
-                    #rdf_AB_int.compute(system_A_int, neighbors=AB_int_nlist, reset=False)               #Calculate radial density function
-                    #rdf_BB_int.compute(system_B_int, neighbors=BB_int_nlist, reset=False)               #Calculate radial density function
+                        x_lim1 = np.where(slow_bulk_msd_dif_x < -h_box)[0]
+                        if len(x_lim1)>0:
+                            slow_bulk_msd_dif_x[x_lim1] = slow_bulk_msd_dif_x[x_lim1] + l_box
+
+                        y_lim0 = np.where(slow_bulk_msd_dif_y > h_box)[0]
+                        if len(y_lim0)>0:
+                            slow_bulk_msd_dif_y[y_lim0] = slow_bulk_msd_dif_y[y_lim0] - l_box
+
+                        y_lim1 = np.where(slow_bulk_msd_dif_y < -h_box)[0]
+                        if len(y_lim1)>0:
+                            slow_bulk_msd_dif_y[y_lim1] = slow_bulk_msd_dif_y[y_lim1] + l_box
+
+
+                        slow_bulk_tot_disp = ( slow_bulk_msd_dif_x ** 2 + slow_bulk_msd_dif_y ** 2 ) ** 0.5
+                        slow_bulk_msd = np.mean(slow_bulk_tot_disp ** 2)
+
+                        slow_bulk_msd_arr = np.append(slow_bulk_msd_arr, slow_bulk_msd)
+                        slow_msd_std = 0
+                        slow_msd_std_num = 0
+                        for n in range(0, len(slow_bulk_tot_disp)):
+                            slow_msd_std += ((slow_bulk_tot_disp[n]**2)-slow_bulk_msd)**2
+                            slow_msd_std_num +=1
+
+                        slow_bulk_msd_std_arr = np.append(slow_bulk_msd_std_arr, (slow_msd_std / slow_msd_std_num)**0.5)
+
+                        fast_bulk_msd_dif_x = pos_current[common_fast_bulk_id,0] - pos_first[common_fast_bulk_id,0]
+
+                        fast_bulk_msd_dif_y = pos_current[common_fast_bulk_id,1] - pos_first[common_fast_bulk_id,1]
+
+                        x_lim0 = np.where(fast_bulk_msd_dif_x > h_box)[0]
+                        if len(x_lim0)>0:
+                            fast_bulk_msd_dif_x[x_lim0] = fast_bulk_msd_dif_x[x_lim0] - l_box
+
+                        x_lim1 = np.where(fast_bulk_msd_dif_x < -h_box)[0]
+                        if len(x_lim1)>0:
+                            fast_bulk_msd_dif_x[x_lim1] = fast_bulk_msd_dif_x[x_lim1] + l_box
+
+                        y_lim0 = np.where(fast_bulk_msd_dif_y > h_box)[0]
+                        if len(y_lim0)>0:
+                            fast_bulk_msd_dif_y[y_lim0] = fast_bulk_msd_dif_y[y_lim0] - l_box
+
+                        y_lim1 = np.where(fast_bulk_msd_dif_y < -h_box)[0]
+                        if len(y_lim1)>0:
+                            fast_bulk_msd_dif_y[y_lim1] = fast_bulk_msd_dif_y[y_lim1] + l_box
+
+
+                        fast_bulk_tot_disp = ( fast_bulk_msd_dif_x ** 2 + fast_bulk_msd_dif_y ** 2 ) ** 0.5
+                        fast_bulk_msd = np.mean(fast_bulk_tot_disp ** 2)
+
+                        fast_bulk_msd_arr = np.append(fast_bulk_msd_arr, fast_bulk_msd)
+                        fast_msd_std = 0
+                        fast_msd_std_num = 0
+                        for n in range(0, len(fast_bulk_tot_disp)):
+                            fast_msd_std += ((fast_bulk_tot_disp[n]**2)-fast_bulk_msd)**2
+                            fast_msd_std_num +=1
+
+                        fast_bulk_msd_std_arr = np.append(fast_bulk_msd_std_arr, (fast_msd_std / fast_msd_std_num)**0.5)
+
+                        ss_time_arr = np.append(ss_time_arr, tst)
+                        clust_size_arr = np.append(clust_size_arr, np.amax(clust_size))
 
 
 if steady_state_once == 'True':
+
     #ss_inds = np.where(r>=0.75*rstop)[0]
     fsize=10
 
     fig, ax1 = plt.subplots(figsize=(12,6))
 
-    rdf_AA_bulk_rdf = rdf_AA_bulk.rdf#/np.mean(rdf_AA_bulk.rdf)
-    rdf_BA_bulk_rdf = rdf_BA_bulk.rdf#/np.mean(rdf_BA_bulk.rdf)
-    rdf_AB_bulk_rdf = rdf_AB_bulk.rdf#/np.mean(rdf_AB_bulk.rdf)
-    rdf_BB_bulk_rdf = rdf_BB_bulk.rdf#/np.mean(rdf_BB_bulk.rdf)
-    rdf_all_bulk_rdf = rdf_all_bulk.rdf#/np.mean(rdf_all_bulk.rdf)
+    bulk_msd_max = np.max(bulk_msd_arr)
+    slow_bulk_msd_max = np.max(slow_bulk_msd_arr)
+    fast_bulk_msd_max = np.max(fast_bulk_msd_arr)
 
-    AA_bulk_max = np.max(rdf_AA_bulk_rdf)
-    AB_bulk_max = np.max(rdf_AB_bulk_rdf)
-    BA_bulk_max = np.max(rdf_BA_bulk_rdf)
-    BB_bulk_max = np.max(rdf_BB_bulk_rdf)
-    all_bulk_max = np.max(rdf_all_bulk_rdf)
+    if (bulk_msd_max >= slow_bulk_msd_max) & (bulk_msd_max >= fast_bulk_msd_max):
+        plot_max = 1.05 * np.max(bulk_msd_max)
+    elif (slow_bulk_msd_max >= bulk_msd_max) & (slow_bulk_msd_max >= fast_bulk_msd_max):
+        plot_max = 1.05 * np.max(slow_bulk_msd_max)
+    elif (fast_bulk_msd_max >= slow_bulk_msd_max) & (fast_bulk_msd_max >= bulk_msd_max):
+        plot_max = 1.05 * np.max(fast_bulk_msd_max)
 
-    if (AA_bulk_max >= AB_bulk_max) & (AA_bulk_max >= BB_bulk_max) & (AA_bulk_max >= BA_bulk_max) & (AA_bulk_max >= all_bulk_max):
-        plot_max = 1.05 * np.max(AA_bulk_max)
-    elif (AB_bulk_max >= AA_bulk_max) & (AB_bulk_max >= BB_bulk_max) & (AB_bulk_max >= BA_bulk_max) & (AB_bulk_max >= all_bulk_max):
-        plot_max = 1.05 * np.max(AB_bulk_max)
-    elif (BB_bulk_max >= AA_bulk_max) & (BB_bulk_max >= AB_bulk_max) & (BB_bulk_max >= BA_bulk_max) & (BB_bulk_max >= all_bulk_max):
-        plot_max = 1.05 * np.max(BB_bulk_max)
-    elif (BA_bulk_max >= AA_bulk_max) & (BA_bulk_max >= AB_bulk_max) & (BA_bulk_max >= BB_bulk_max) & (BA_bulk_max >= all_bulk_max):
-        plot_max = 1.05 * np.max(BA_bulk_max)
-    elif (all_bulk_max >= AA_bulk_max) & (all_bulk_max >= AB_bulk_max) & (all_bulk_max >= BB_bulk_max) & (all_bulk_max >= BA_bulk_max):
-        plot_max = 1.05 * np.max(all_bulk_max)
+
     plot_min = 0.0
 
-    r = rdf_all_bulk.bin_centers
-
     step = np.round(np.abs(plot_max - plot_min)/6,2)
-    step_x = np.round(rstop/12,2)
+    step_x = np.round(np.abs(np.max(ss_time_arr)-ss_time_arr[0])/10,2)
     fastCol = '#e31a1c'
     slowCol = '#081d58'
     purple = ("#756bb1")
@@ -10332,43 +10396,38 @@ if steady_state_once == 'True':
     if peA <= peB:
         #plt.plot(r, rdf_all_bulk_rdf, label=r'All',
         #               c='black', lw=1.8*1.2, ls='--')
-        plt.plot(r, rdf_AB_bulk_rdf, label=r'Slow-Fast',
-                       c=pink, lw=1.8*1.2, ls='--')
-        plt.plot(r, rdf_BA_bulk_rdf, label=r'Fast-Slow',
+        plt.plot(ss_time_arr-ss_time_arr[0], bulk_msd_arr, label=r'All',
                        c=purple, lw=1.8*1.2, ls='--')
-        plt.plot(r, rdf_AA_bulk_rdf, label=r'Slow-Slow',
+        plt.plot(ss_time_arr-ss_time_arr[0], slow_bulk_msd_arr, label=r'Slow',
                        c=slowCol, lw=1.8*1.2, ls='--')
-        plt.plot(r, rdf_BB_bulk_rdf, label=r'Fast-Fast',
+        plt.plot(ss_time_arr-ss_time_arr[0], fast_bulk_msd_arr, label=r'Fast',
                        c=fastCol, lw=1.8*1.2, ls='--')
     else:
         #plt.plot(r, rdf_all_bulk_rdf, label=r'All',
         #               c='black', lw=1.8*1.2, ls='--')
-        plt.plot(r, rdf_AB_bulk_rdf, label=r'Slow-Fast',
-                    c=pink, lw=1.8*1.2, ls='--')
-        plt.plot(r, rdf_BA_bulk_rdf, label=r'Fast-Slow',
-                    c=purple, lw=1.8*1.2, ls='--')
-        plt.plot(r, rdf_BB_bulk_rdf, label=r'Slow-Slow',
+        plt.plot(ss_time_arr-ss_time_arr[0], bulk_msd_arr, label=r'All',
+                    c='black', lw=1.8*1.2, ls='--')
+        plt.plot(ss_time_arr-ss_time_arr[0], fast_bulk_msd_arr, label=r'Slow',
                     c=slowCol, lw=1.8*1.2, ls='--')
-        plt.plot(r, rdf_AA_bulk_rdf, label=r'Fast-Fast',
+        plt.plot(ss_time_arr-ss_time_arr[0], slow_bulk_msd_arr, label=r'Fast',
                     c=fastCol, lw=1.8*1.2, ls='--')
 
     ax1.set_ylim(plot_min, plot_max)
 
 
-    ax1.set_xlabel(r'Separation Distance ($r$)', fontsize=fsize*2.8)
+    ax1.set_xlabel(r'Time ($\tau_\mathrm{B}$)', fontsize=fsize*2.8)
 
 
 
-    ax1.set_ylabel(r'$g(r)$', fontsize=fsize*2.8)
+    ax1.set_ylabel(r'MSD', fontsize=fsize*2.8)
 
-    lat_theory = np.mean(lat_theory_arr)
     # Set all the x ticks for radial plots
-    loc = ticker.MultipleLocator(base=lat_theory)
+    loc = ticker.MultipleLocator(base=step_x)
     ax1.xaxis.set_major_locator(loc)
-    loc = ticker.MultipleLocator(base=round(lat_theory/2,3))
+    loc = ticker.MultipleLocator(base=round(step_x/2,3))
     ax1.xaxis.set_minor_locator(loc)
-    ax1.set_xlim(0, rstop)
-    plt.legend(loc='upper right', fontsize=fsize*2.6)
+    ax1.set_xlim(0, np.max(ss_time_arr)-ss_time_arr[0])
+    plt.legend(loc='upper left', fontsize=fsize*2.6)
 
     # Set y ticks
     print(step)
@@ -10382,23 +10441,25 @@ if steady_state_once == 'True':
     #plt.legend(loc='upper right')
 
     plt.tight_layout()
-    plt.savefig(outPath + 'rdf_' + out + ".png", dpi=300)
+    plt.savefig(outPath + 'msd_' + out + ".png", dpi=300)
     plt.close()
 
-    g = open(outPath2+outTxt_rdf, 'a')
-    for i in range(0, len(r)):
-        g.write('{0:.0f}'.format(np.amax(clust_size)).center(15) + ' ')
-        g.write('{0:.6f}'.format(lat_theory2).center(15) + ' ')
-        g.write('{0:.6f}'.format(r[i]).center(15) + ' ')
-        g.write('{0:.6f}'.format(rdf_all_bulk.rdf[i]).center(15) + ' ')
+
+    g = open(outPath2+outTxt_msd, 'a')
+    for i in range(0, len(ss_time_arr)):
+        g.write('{0:.2f}'.format(ss_time_arr[i]).center(15) + ' ')
+        g.write('{0:.6f}'.format(sizeBin).center(15) + ' ')
+        g.write('{0:.0f}'.format(clust_size_arr[i]).center(15) + ' ')
+        g.write('{0:.6f}'.format(bulk_msd_arr[i]).center(15) + ' ')
+        g.write('{0:.6f}'.format(bulk_msd_std_arr[i]).center(15) + ' ')
         if peA<=peB:
-            g.write('{0:.6f}'.format(rdf_AA_bulk.rdf[i]).center(15) + ' ')
-            g.write('{0:.6f}'.format(rdf_AB_bulk.rdf[i]).center(15) + ' ')
-            g.write('{0:.6f}'.format(rdf_BA_bulk.rdf[i]).center(15) + ' ')
-            g.write('{0:.6f}'.format(rdf_BB_bulk.rdf[i]).center(15) + '\n')
+            g.write('{0:.6f}'.format(slow_bulk_msd_arr[i]).center(15) + ' ')
+            g.write('{0:.6f}'.format(slow_bulk_msd_std_arr[i]).center(15) + ' ')
+            g.write('{0:.6f}'.format(fast_bulk_msd_arr[i]).center(15) + ' ')
+            g.write('{0:.6f}'.format(fast_bulk_msd_std_arr[i]).center(15) + '\n')
         else:
-            g.write('{0:.6f}'.format(rdf_BB_bulk.rdf[i]).center(15) + ' ')
-            g.write('{0:.6f}'.format(rdf_BA_bulk.rdf[i]).center(15) + ' ')
-            g.write('{0:.6f}'.format(rdf_AB_bulk.rdf[i]).center(15) + ' ')
-            g.write('{0:.6f}'.format(rdf_AA_bulk.rdf[i]).center(15) + '\n')
+            g.write('{0:.6f}'.format(fast_bulk_msd_arr[i]).center(15) + ' ')
+            g.write('{0:.6f}'.format(fast_bulk_msd_std_arr[i]).center(15) + ' ')
+            g.write('{0:.6f}'.format(slow_bulk_msd_arr[i]).center(15) + ' ')
+            g.write('{0:.6f}'.format(slow_bulk_msd_std_arr[i]).center(15) + '\n')
     g.close()

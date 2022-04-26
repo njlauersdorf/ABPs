@@ -12072,42 +12072,6 @@ with hoomd.open(name=inFile, mode='rb') as t:
             # Create frame pad for images
             pad = str(j).zfill(4)
 
-            #Plot each particle as a point color-coded by activity and labeled by their activity
-            fig = plt.figure(figsize=(6.5,6))
-            ax = fig.add_subplot(111)
-
-            sz = 0.75
-
-            #Set plot colors
-            otherCol = '#d9d9d9'
-
-            #Assign type 0 particles to plot
-            plt.scatter(pos_else[:,0], pos_else[:,1], s=sz, c=otherCol)
-
-            #Label time step
-            ax.text(0.95, 0.025, s=r'$\tau$' + ' = ' + '{:.2f}'.format(tst) + ' ' + r'$\tau_\mathrm{r}$',
-                    horizontalalignment='right', verticalalignment='bottom',
-                    transform=ax.transAxes,
-                    fontsize=18,
-                    bbox=dict(facecolor=(1,1,1,0.5), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
-
-            #Set axes parameters
-            ax.set_xlim(-h_box, h_box)
-            ax.set_ylim(-h_box, h_box)
-            ax.axes.set_xticks([])
-            ax.axes.set_yticks([])
-            ax.axes.set_xticklabels([])
-            ax.axes.set_yticks([])
-            ax.set_aspect('equal')
-
-            #Create legend for binary system
-            #leg = ax.legend(loc='upper right', prop={'size': 15}, markerscale=8.0)
-
-
-            plt.tight_layout()
-            plt.savefig(outPath + out + "_frame_"+ pad + ".png", dpi=150, transparent=False)
-            plt.close()
-
             pos_gas_ids = np.arange(0, len(pos), step=1)
 
 
