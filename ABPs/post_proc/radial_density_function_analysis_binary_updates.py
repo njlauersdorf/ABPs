@@ -591,7 +591,7 @@ else:
             clp_all.compute(system_all, ids)                            # Calculate cluster properties given cluster IDs
             clust_size = clp_all.sizes                                  # find cluster sizes
             clust_arr_temp = np.append(clust_arr_temp, np.amax(clust_size))
-    clust_theory = np.mean(clust_arr_temp[(len(clust_arr_temp)/2):])
+    clust_theory = np.mean(clust_arr_temp[int(len(clust_arr_temp)/2):])
 
 
 with hoomd.open(name=inFile, mode='rb') as t:
