@@ -551,6 +551,8 @@ if steady_state == 'True':
     clust_theory = partNum * (((phi_g-phi)*phi_d)/(phi*(phi_g-phi_d)))
 else:
     with hoomd.open(name=inFile, mode='rb') as t:
+        clust_arr_temp = np.array([])
+
 
         r = np.linspace(0.0,  5.0, 100)             # Define radius for x-axis of plot later
 
