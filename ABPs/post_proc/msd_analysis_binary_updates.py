@@ -556,9 +556,10 @@ else:
 
         r = np.linspace(0.0,  5.0, 100)             # Define radius for x-axis of plot later
 
-        start = int(0/time_step)#205                                             # first frame to process
+                                                    # first frame to process
         dumps = int(t.__len__())                                # get number of timesteps dumped
         end = int(dumps/time_step)#int(dumps/time_step)-1                                             # final frame to process
+        start = int(3*end/4)#205#205 
         snap = t[0]                                             # Take first snap for box
         first_tstep = snap.configuration.step                   # First time step
 
@@ -10235,180 +10236,181 @@ with hoomd.open(name=inFile, mode='rb') as t:
                         ss_time_arr = np.append(ss_time_arr, tst)
                         clust_size_arr = np.append(clust_size_arr, np.amax(clust_size))
                 else:
-                    steady_state_once = 'True'
-                    if first_steady_state_frame == 'False':
-                        #Arrays of particle data
-                        snap_first = t[0]                                 #Take current frame
+                    if if j>int(end*time_step/2):
+                        steady_state_once = 'True'
+                        if first_steady_state_frame == 'False':
+                            #Arrays of particle data
+                            snap_first = t[0]                                 #Take current frame
 
-                        pos_first = snap_first.particles.position               # position
-                        pos_first[:,-1] = 0.0
+                            pos_first = snap_first.particles.position               # position
+                            pos_first[:,-1] = 0.0
 
-                        snap_current = t[j]                                 #Take current frame
-                        first_steady_state_frame = 'True'
+                            snap_current = t[j]                                 #Take current frame
+                            first_steady_state_frame = 'True'
 
-                    print('rdf!2')
-                    pos0=pos[typ0ind]                               # Find positions of type 0 particles
-                    pos0_bulk = pos[slow_bulk_id_plot]
-                    pos0_int = pos[slow_int_id_plot]
-                    pos0_gas = pos[slow_gas_id_plot]
-                    pos0_bulk_int = pos[slow_bulk_int_id_plot]
-                    pos0_gas_int = pos[slow_gas_int_id_plot]
+                        print('rdf!2')
+                        pos0=pos[typ0ind]                               # Find positions of type 0 particles
+                        pos0_bulk = pos[slow_bulk_id_plot]
+                        pos0_int = pos[slow_int_id_plot]
+                        pos0_gas = pos[slow_gas_id_plot]
+                        pos0_bulk_int = pos[slow_bulk_int_id_plot]
+                        pos0_gas_int = pos[slow_gas_int_id_plot]
 
-                    pos1=pos[typ1ind]
-                    pos1_bulk = pos[fast_bulk_id_plot]
-                    pos1_int = pos[fast_int_id_plot]
-                    pos1_gas = pos[fast_gas_id_plot]
-                    pos1_bulk_int = pos[fast_bulk_int_id_plot]
-                    pos1_gas_int = pos[fast_gas_int_id_plot]
+                        pos1=pos[typ1ind]
+                        pos1_bulk = pos[fast_bulk_id_plot]
+                        pos1_int = pos[fast_int_id_plot]
+                        pos1_gas = pos[fast_gas_id_plot]
+                        pos1_bulk_int = pos[fast_bulk_int_id_plot]
+                        pos1_gas_int = pos[fast_gas_int_id_plot]
 
-                    pos_bulk = pos[bulk_id_plot]
-                    pos_int = pos[int_id_plot]
-                    pos_gas = pos[gas_id_plot]
-                    pos_bulk_int = pos[bulk_int_id_plot]
-                    pos_gas_int = pos[gas_int_id_plot]
+                        pos_bulk = pos[bulk_id_plot]
+                        pos_int = pos[int_id_plot]
+                        pos_gas = pos[gas_id_plot]
+                        pos_bulk_int = pos[bulk_int_id_plot]
+                        pos_gas_int = pos[gas_int_id_plot]
 
-                    pe_tot_int = 0
-                    pe_num_int = 0
-                    for i in range(0, len(int_id_plot)):
+                        pe_tot_int = 0
+                        pe_num_int = 0
+                        for i in range(0, len(int_id_plot)):
 
-                        if typ[int_id_plot[i]]==0:
-                            pe_tot_int += peA
-                            pe_num_int += 1
-                        else:
-                            pe_tot_int += peB
-                            pe_num_int += 1
-                    pe_net_int = pe_tot_int / pe_num_int
+                            if typ[int_id_plot[i]]==0:
+                                pe_tot_int += peA
+                                pe_num_int += 1
+                            else:
+                                pe_tot_int += peB
+                                pe_num_int += 1
+                        pe_net_int = pe_tot_int / pe_num_int
 
-                    lat_theory2 = conForRClust(pe_net_int-50, eps)
-                    lat_theory_arr = np.append(lat_theory_arr, lat_theory2)
+                        lat_theory2 = conForRClust(pe_net_int-50, eps)
+                        lat_theory_arr = np.append(lat_theory_arr, lat_theory2)
 
-                    #a = system_all.points[cl_all.cluster_keys[large_clust_ind_all[0]]]
-                    AA_in_large = np.array([])
-                    BB_in_large=np.array([])
-                    mark=0
-                    r = np.linspace(0.0,  3.0, 20)             # Define radius for x-axis of plot later
+                        #a = system_all.points[cl_all.cluster_keys[large_clust_ind_all[0]]]
+                        AA_in_large = np.array([])
+                        BB_in_large=np.array([])
+                        mark=0
+                        r = np.linspace(0.0,  3.0, 20)             # Define radius for x-axis of plot later
 
-                    # Width, in distance units, of bin
-                    wBins = 0.02
+                        # Width, in distance units, of bin
+                        wBins = 0.02
 
-                    # Distance to compute RDF for
-                    rstop = 10.
+                        # Distance to compute RDF for
+                        rstop = 10.
 
-                    # Number of bins given this distance
-                    nBins = rstop / wBins
+                        # Number of bins given this distance
+                        nBins = rstop / wBins
 
-                    wbinsTrue=(rstop)/(nBins-1)
+                        wbinsTrue=(rstop)/(nBins-1)
 
-                    r=np.arange(0.0,rstop+wbinsTrue,wbinsTrue)
-                    query_args = dict(mode='ball', r_min = 0.1, r_max=rstop)
+                        r=np.arange(0.0,rstop+wbinsTrue,wbinsTrue)
+                        query_args = dict(mode='ball', r_min = 0.1, r_max=rstop)
 
-                    #MSD STUFF
-                    common_bulk_id = np.intersect1d(bulk_id_plot, bulk_id_plot_first)
-                    common_fast_bulk_id = np.intersect1d(fast_bulk_id_plot, fast_bulk_id_plot_first)
-                    common_slow_bulk_id = np.intersect1d(slow_bulk_id_plot, slow_bulk_id_plot_first)
-
-
-                    bulk_msd_dif_x = pos_current[common_bulk_id,0] - pos_first[common_bulk_id,0]
-
-                    bulk_msd_dif_y = pos_current[common_bulk_id,1] - pos_first[common_bulk_id,1]
-
-                    x_lim0 = np.where(bulk_msd_dif_x > h_box)[0]
-                    if len(x_lim0)>0:
-                        bulk_msd_dif_x[x_lim0] = bulk_msd_dif_x[x_lim0] - l_box
-
-                    x_lim1 = np.where(bulk_msd_dif_x < -h_box)[0]
-                    if len(x_lim1)>0:
-                        bulk_msd_dif_x[x_lim1] = bulk_msd_dif_x[x_lim1] + l_box
-
-                    y_lim0 = np.where(bulk_msd_dif_y > h_box)[0]
-                    if len(y_lim0)>0:
-                        bulk_msd_dif_y[y_lim0] = bulk_msd_dif_y[y_lim0] - l_box
-
-                    y_lim1 = np.where(bulk_msd_dif_y < -h_box)[0]
-                    if len(y_lim1)>0:
-                        bulk_msd_dif_y[y_lim1] = bulk_msd_dif_y[y_lim1] + l_box
+                        #MSD STUFF
+                        common_bulk_id = np.intersect1d(bulk_id_plot, bulk_id_plot_first)
+                        common_fast_bulk_id = np.intersect1d(fast_bulk_id_plot, fast_bulk_id_plot_first)
+                        common_slow_bulk_id = np.intersect1d(slow_bulk_id_plot, slow_bulk_id_plot_first)
 
 
-                    bulk_tot_disp = ( bulk_msd_dif_x ** 2 + bulk_msd_dif_y ** 2 ) ** 0.5
-                    bulk_msd = np.mean(bulk_tot_disp ** 2)
+                        bulk_msd_dif_x = pos_current[common_bulk_id,0] - pos_first[common_bulk_id,0]
 
-                    bulk_msd_arr = np.append(bulk_msd_arr, bulk_msd)
-                    msd_std = 0
-                    msd_std_num = 0
-                    for n in range(0, len(bulk_tot_disp)):
-                        msd_std += ((bulk_tot_disp[n]**2)-bulk_msd)**2
-                        msd_std_num +=1
+                        bulk_msd_dif_y = pos_current[common_bulk_id,1] - pos_first[common_bulk_id,1]
 
-                    bulk_msd_std_arr = np.append(bulk_msd_std_arr, (msd_std / msd_std_num)**0.5)
+                        x_lim0 = np.where(bulk_msd_dif_x > h_box)[0]
+                        if len(x_lim0)>0:
+                            bulk_msd_dif_x[x_lim0] = bulk_msd_dif_x[x_lim0] - l_box
 
-                    slow_bulk_msd_dif_x = pos_current[common_slow_bulk_id,0] - pos_first[common_slow_bulk_id,0]
+                        x_lim1 = np.where(bulk_msd_dif_x < -h_box)[0]
+                        if len(x_lim1)>0:
+                            bulk_msd_dif_x[x_lim1] = bulk_msd_dif_x[x_lim1] + l_box
 
-                    slow_bulk_msd_dif_y = pos_current[common_slow_bulk_id,1] - pos_first[common_slow_bulk_id,1]
+                        y_lim0 = np.where(bulk_msd_dif_y > h_box)[0]
+                        if len(y_lim0)>0:
+                            bulk_msd_dif_y[y_lim0] = bulk_msd_dif_y[y_lim0] - l_box
 
-                    x_lim0 = np.where(slow_bulk_msd_dif_x > h_box)[0]
-                    if len(x_lim0)>0:
-                        slow_bulk_msd_dif_x[x_lim0] = slow_bulk_msd_dif_x[x_lim0] - l_box
-
-                    x_lim1 = np.where(slow_bulk_msd_dif_x < -h_box)[0]
-                    if len(x_lim1)>0:
-                        slow_bulk_msd_dif_x[x_lim1] = slow_bulk_msd_dif_x[x_lim1] + l_box
-
-                    y_lim0 = np.where(slow_bulk_msd_dif_y > h_box)[0]
-                    if len(y_lim0)>0:
-                        slow_bulk_msd_dif_y[y_lim0] = slow_bulk_msd_dif_y[y_lim0] - l_box
-
-                    y_lim1 = np.where(slow_bulk_msd_dif_y < -h_box)[0]
-                    if len(y_lim1)>0:
-                        slow_bulk_msd_dif_y[y_lim1] = slow_bulk_msd_dif_y[y_lim1] + l_box
+                        y_lim1 = np.where(bulk_msd_dif_y < -h_box)[0]
+                        if len(y_lim1)>0:
+                            bulk_msd_dif_y[y_lim1] = bulk_msd_dif_y[y_lim1] + l_box
 
 
-                    slow_bulk_tot_disp = ( slow_bulk_msd_dif_x ** 2 + slow_bulk_msd_dif_y ** 2 ) ** 0.5
-                    slow_bulk_msd = np.mean(slow_bulk_tot_disp ** 2)
+                        bulk_tot_disp = ( bulk_msd_dif_x ** 2 + bulk_msd_dif_y ** 2 ) ** 0.5
+                        bulk_msd = np.mean(bulk_tot_disp ** 2)
 
-                    slow_bulk_msd_arr = np.append(slow_bulk_msd_arr, slow_bulk_msd)
-                    slow_msd_std = 0
-                    slow_msd_std_num = 0
-                    for n in range(0, len(slow_bulk_tot_disp)):
-                        slow_msd_std += ((slow_bulk_tot_disp[n]**2)-slow_bulk_msd)**2
-                        slow_msd_std_num +=1
+                        bulk_msd_arr = np.append(bulk_msd_arr, bulk_msd)
+                        msd_std = 0
+                        msd_std_num = 0
+                        for n in range(0, len(bulk_tot_disp)):
+                            msd_std += ((bulk_tot_disp[n]**2)-bulk_msd)**2
+                            msd_std_num +=1
 
-                    slow_bulk_msd_std_arr = np.append(slow_bulk_msd_std_arr, (slow_msd_std / slow_msd_std_num)**0.5)
+                        bulk_msd_std_arr = np.append(bulk_msd_std_arr, (msd_std / msd_std_num)**0.5)
 
-                    fast_bulk_msd_dif_x = pos_current[common_fast_bulk_id,0] - pos_first[common_fast_bulk_id,0]
+                        slow_bulk_msd_dif_x = pos_current[common_slow_bulk_id,0] - pos_first[common_slow_bulk_id,0]
 
-                    fast_bulk_msd_dif_y = pos_current[common_fast_bulk_id,1] - pos_first[common_fast_bulk_id,1]
+                        slow_bulk_msd_dif_y = pos_current[common_slow_bulk_id,1] - pos_first[common_slow_bulk_id,1]
 
-                    x_lim0 = np.where(fast_bulk_msd_dif_x > h_box)[0]
-                    if len(x_lim0)>0:
-                        fast_bulk_msd_dif_x[x_lim0] = fast_bulk_msd_dif_x[x_lim0] - l_box
+                        x_lim0 = np.where(slow_bulk_msd_dif_x > h_box)[0]
+                        if len(x_lim0)>0:
+                            slow_bulk_msd_dif_x[x_lim0] = slow_bulk_msd_dif_x[x_lim0] - l_box
 
-                    x_lim1 = np.where(fast_bulk_msd_dif_x < -h_box)[0]
-                    if len(x_lim1)>0:
-                        fast_bulk_msd_dif_x[x_lim1] = fast_bulk_msd_dif_x[x_lim1] + l_box
+                        x_lim1 = np.where(slow_bulk_msd_dif_x < -h_box)[0]
+                        if len(x_lim1)>0:
+                            slow_bulk_msd_dif_x[x_lim1] = slow_bulk_msd_dif_x[x_lim1] + l_box
 
-                    y_lim0 = np.where(fast_bulk_msd_dif_y > h_box)[0]
-                    if len(y_lim0)>0:
-                        fast_bulk_msd_dif_y[y_lim0] = fast_bulk_msd_dif_y[y_lim0] - l_box
+                        y_lim0 = np.where(slow_bulk_msd_dif_y > h_box)[0]
+                        if len(y_lim0)>0:
+                            slow_bulk_msd_dif_y[y_lim0] = slow_bulk_msd_dif_y[y_lim0] - l_box
 
-                    y_lim1 = np.where(fast_bulk_msd_dif_y < -h_box)[0]
-                    if len(y_lim1)>0:
-                        fast_bulk_msd_dif_y[y_lim1] = fast_bulk_msd_dif_y[y_lim1] + l_box
+                        y_lim1 = np.where(slow_bulk_msd_dif_y < -h_box)[0]
+                        if len(y_lim1)>0:
+                            slow_bulk_msd_dif_y[y_lim1] = slow_bulk_msd_dif_y[y_lim1] + l_box
 
 
-                    fast_bulk_tot_disp = ( fast_bulk_msd_dif_x ** 2 + fast_bulk_msd_dif_y ** 2 ) ** 0.5
-                    fast_bulk_msd = np.mean(fast_bulk_tot_disp ** 2)
+                        slow_bulk_tot_disp = ( slow_bulk_msd_dif_x ** 2 + slow_bulk_msd_dif_y ** 2 ) ** 0.5
+                        slow_bulk_msd = np.mean(slow_bulk_tot_disp ** 2)
 
-                    fast_bulk_msd_arr = np.append(fast_bulk_msd_arr, fast_bulk_msd)
-                    fast_msd_std = 0
-                    fast_msd_std_num = 0
-                    for n in range(0, len(fast_bulk_tot_disp)):
-                        fast_msd_std += ((fast_bulk_tot_disp[n]**2)-fast_bulk_msd)**2
-                        fast_msd_std_num +=1
+                        slow_bulk_msd_arr = np.append(slow_bulk_msd_arr, slow_bulk_msd)
+                        slow_msd_std = 0
+                        slow_msd_std_num = 0
+                        for n in range(0, len(slow_bulk_tot_disp)):
+                            slow_msd_std += ((slow_bulk_tot_disp[n]**2)-slow_bulk_msd)**2
+                            slow_msd_std_num +=1
 
-                    fast_bulk_msd_std_arr = np.append(fast_bulk_msd_std_arr, (fast_msd_std / fast_msd_std_num)**0.5)
+                        slow_bulk_msd_std_arr = np.append(slow_bulk_msd_std_arr, (slow_msd_std / slow_msd_std_num)**0.5)
 
-                    ss_time_arr = np.append(ss_time_arr, tst)
-                    clust_size_arr = np.append(clust_size_arr, np.amax(clust_size))
+                        fast_bulk_msd_dif_x = pos_current[common_fast_bulk_id,0] - pos_first[common_fast_bulk_id,0]
+
+                        fast_bulk_msd_dif_y = pos_current[common_fast_bulk_id,1] - pos_first[common_fast_bulk_id,1]
+
+                        x_lim0 = np.where(fast_bulk_msd_dif_x > h_box)[0]
+                        if len(x_lim0)>0:
+                            fast_bulk_msd_dif_x[x_lim0] = fast_bulk_msd_dif_x[x_lim0] - l_box
+
+                        x_lim1 = np.where(fast_bulk_msd_dif_x < -h_box)[0]
+                        if len(x_lim1)>0:
+                            fast_bulk_msd_dif_x[x_lim1] = fast_bulk_msd_dif_x[x_lim1] + l_box
+
+                        y_lim0 = np.where(fast_bulk_msd_dif_y > h_box)[0]
+                        if len(y_lim0)>0:
+                            fast_bulk_msd_dif_y[y_lim0] = fast_bulk_msd_dif_y[y_lim0] - l_box
+
+                        y_lim1 = np.where(fast_bulk_msd_dif_y < -h_box)[0]
+                        if len(y_lim1)>0:
+                            fast_bulk_msd_dif_y[y_lim1] = fast_bulk_msd_dif_y[y_lim1] + l_box
+
+
+                        fast_bulk_tot_disp = ( fast_bulk_msd_dif_x ** 2 + fast_bulk_msd_dif_y ** 2 ) ** 0.5
+                        fast_bulk_msd = np.mean(fast_bulk_tot_disp ** 2)
+
+                        fast_bulk_msd_arr = np.append(fast_bulk_msd_arr, fast_bulk_msd)
+                        fast_msd_std = 0
+                        fast_msd_std_num = 0
+                        for n in range(0, len(fast_bulk_tot_disp)):
+                            fast_msd_std += ((fast_bulk_tot_disp[n]**2)-fast_bulk_msd)**2
+                            fast_msd_std_num +=1
+
+                        fast_bulk_msd_std_arr = np.append(fast_bulk_msd_std_arr, (fast_msd_std / fast_msd_std_num)**0.5)
+
+                        ss_time_arr = np.append(ss_time_arr, tst)
+                        clust_size_arr = np.append(clust_size_arr, np.amax(clust_size))
 
 
 if steady_state_once == 'True':

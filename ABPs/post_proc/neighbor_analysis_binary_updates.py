@@ -541,7 +541,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
     r = np.linspace(0.0,  5.0, 100)             # Define radius for x-axis of plot later
 
-    start = int(0/time_step)#205                                             # first frame to process
+    start = int(720/time_step)#205                                             # first frame to process
     dumps = int(t.__len__())                                # get number of timesteps dumped
     end = int(dumps/time_step)-1                                             # final frame to process
     snap = t[0]                                             # Take first snap for box
@@ -10438,190 +10438,383 @@ with hoomd.open(name=inFile, mode='rb') as t:
             pos_bulk_int_y_fast_neigh = np.array([])
             bulk_int_fast_num_neigh = np.array([])
 
-        fig = plt.figure(figsize=(7,6))
-        ax = fig.add_subplot(111)
-        im = plt.scatter(pos_bulk_int_x_neigh+h_box, pos_bulk_int_y_neigh+h_box, c=bulk_int_num_neigh, s=0.7)
+        if j>0:
+
+            snap_first = t[0]                                 #Take current frame
+
+            #Arrays of particle data
+            pos_first = snap_first.particles.position               # position
+            pos_first[:,-1] = 0.0
+
+            snap_current = t[j]                                 #Take current frame
+
+            #Arrays of particle data
+            pos_current = snap_current.particles.position               # position
+            pos_current[:,-1] = 0.0                             # 2D system
+
+            tst_current = snap_current.configuration.step               # timestep
+            tst_current -= first_tstep                          # normalize by first timestep
+            tst_current *= dtau                                 # convert to Brownian time
+
+            snap_prev = t[j-1]                                 #Take current frame
+
+            #Arrays of particle data
+            pos_prev = snap_prev.particles.position               # position
+            pos_prev[:,-1] = 0.0                             # 2D system
+
+            tst_prev = snap_prev.configuration.step               # timestep
+            tst_prev -= first_tstep                          # normalize by first timestep
+            tst_prev *= dtau                                 # convert to Brownian time
+
+            msd_dif_x = pos_current[:,0] - pos_first[:,0]
+            msd_dif_y = pos_current[:,1] - pos_first[:,1]
 
 
-        #sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
-        #sm.set_array([])
-        if len(bulk_int_num_neigh) > 0:
-            min_n = np.amin(bulk_int_num_neigh)
-            max_n = np.amax(bulk_int_num_neigh)
+            tot_disp = ( msd_dif_x ** 2 + msd_dif_y ** 2 ) ** 0.5
+            msd = np.mean(tot_disp ** 2)
 
-            tick_lev = np.arange(min_n, max_n+1, 1)
-            clb = plt.colorbar(ticks=tick_lev, orientation="vertical", format=tick.FormatStrFormatter('%.0f'))
-        else:
-            clb = plt.colorbar(orientation="vertical", format=tick.FormatStrFormatter('%.0f'))
-        plt.tick_params(axis='both', which='both',
-                        bottom=False, top=False, left=False, right=False,
-                        labelbottom=False, labeltop=False, labelleft=False, labelright=False)
-        plt.text(0.663, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(tst) + ' ' + r'$\tau_\mathrm{r}$',
-                fontsize=18, transform = ax.transAxes,
-                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
-
-        clb.ax.tick_params(labelsize=16)
-        clb.set_label('# Neighbors', labelpad=25, y=0.5, rotation=270, fontsize=20)
-
-        if bub_large >=1:
-            if interior_bin>0:
-                plt.scatter(xn_pos, yn_pos, c='black', s=3.0)
-            if exterior_bin>0:
-                plt.scatter(xn2_pos, yn2_pos, c='black', s=3.0)
-
-        if bub_large >=2:
-            if interior_bin_bub1>0:
-                plt.scatter(xn_bub2_pos, yn_bub2_pos, c='black', s=3.0)
-            if exterior_bin_bub1>0:
-                plt.scatter(xn2_bub2_pos, yn2_bub2_pos, c='black', s=3.0)
-        if bub_large >=3:
-            if interior_bin_bub2>0:
-                plt.scatter(xn_bub3_pos, yn_bub3_pos, c='black', s=3.0)
-            if exterior_bin_bub2>0:
-                plt.scatter(xn2_bub3_pos, yn2_bub3_pos, c='black', s=3.0)
-
-        if bub_large >=4:
-            if interior_bin_bub3>0:
-                plt.scatter(xn_bub4_pos, yn_bub4_pos, c='black', s=3.0)
-            if exterior_bin_bub3>0:
-                plt.scatter(xn2_bub4_pos, yn2_bub4_pos, c='black', s=3.0)
-        if bub_large >=5:
-            if interior_bin_bub4>0:
-                plt.scatter(xn_bub5_pos, yn_bub5_pos, c='black', s=3.0)
-            if exterior_bin_bub4>0:
-                plt.scatter(xn2_bub5_pos, yn2_bub5_pos, c='black', s=3.0)
-
-        plt.xlim(0, l_box)
-        plt.ylim(0, l_box)
-
-        ax.axis('off')
-        plt.tight_layout()
-        plt.savefig(outPath + 'num_neigh_' + out + pad + ".png", dpi=100)
-        plt.close()
+            pos_dif_x = pos_current[:,0] - pos_prev[:,0]
+            pos_dif_y = pos_current[:,1] - pos_prev[:,1]
 
 
-        fig = plt.figure(figsize=(7,6))
-        ax = fig.add_subplot(111)
-        im = plt.scatter(pos_bulk_int_x_slow_neigh+h_box, pos_bulk_int_y_slow_neigh+h_box, c=bulk_int_slow_num_neigh, s=0.7)
+            x_lim0 = np.where(pos_dif_x > h_box)[0]
+            if len(x_lim0)>0:
+                pos_dif_x[x_lim0] = pos_dif_x[x_lim0] - l_box
 
-        #sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
-        #sm.set_array([])
-        if len(bulk_int_slow_num_neigh) > 0:
-            min_n = np.amin(bulk_int_slow_num_neigh)
-            max_n = np.amax(bulk_int_slow_num_neigh)
+            x_lim1 = np.where(pos_dif_x < -h_box)[0]
+            if len(x_lim1)>0:
+                pos_dif_x[x_lim1] = pos_dif_x[x_lim1] + l_box
 
-            tick_lev = np.arange(min_n, max_n+1, 1)
-            clb = plt.colorbar(ticks=tick_lev, orientation="vertical", format=tick.FormatStrFormatter('%.0f'))
-        else:
-            clb = plt.colorbar(orientation="vertical", format=tick.FormatStrFormatter('%.0f'))
-        plt.tick_params(axis='both', which='both',
-                        bottom=False, top=False, left=False, right=False,
-                        labelbottom=False, labeltop=False, labelleft=False, labelright=False)
-        plt.text(0.663, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(tst) + ' ' + r'$\tau_\mathrm{r}$',
-                fontsize=18, transform = ax.transAxes,
-                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+            y_lim0 = np.where(pos_dif_y > h_box)[0]
+            if len(y_lim0)>0:
+                pos_dif_y[y_lim0] = pos_dif_y[y_lim0] - l_box
 
-        clb.ax.tick_params(labelsize=16)
-        if peA<=peB:
-            clb.set_label('# Slow Neighbors', labelpad=25, y=0.5, rotation=270, fontsize=20)
-        else:
-            clb.set_label('# Fast Neighbors', labelpad=25, y=0.5, rotation=270, fontsize=20)
+            y_lim1 = np.where(pos_dif_y < -h_box)[0]
+            if len(y_lim1)>0:
+                pos_dif_y[y_lim1] = pos_dif_y[y_lim1] + l_box
 
-        if bub_large >=1:
-            if interior_bin>0:
-                plt.scatter(xn_pos, yn_pos, c='black', s=3.0)
-            if exterior_bin>0:
-                plt.scatter(xn2_pos, yn2_pos, c='black', s=3.0)
+            time_dif = tst_current - tst_prev
 
-        if bub_large >=2:
-            if interior_bin_bub1>0:
-                plt.scatter(xn_bub2_pos, yn_bub2_pos, c='black', s=3.0)
-            if exterior_bin_bub1>0:
-                plt.scatter(xn2_bub2_pos, yn2_bub2_pos, c='black', s=3.0)
-        if bub_large >=3:
-            if interior_bin_bub2>0:
-                plt.scatter(xn_bub3_pos, yn_bub3_pos, c='black', s=3.0)
-            if exterior_bin_bub2>0:
-                plt.scatter(xn2_bub3_pos, yn2_bub3_pos, c='black', s=3.0)
+            typ0parts = np.where(typ==0)[0]
+            typ1parts = np.where(typ==1)[0]
 
-        if bub_large >=4:
-            if interior_bin_bub3>0:
-                plt.scatter(xn_bub4_pos, yn_bub4_pos, c='black', s=3.0)
-            if exterior_bin_bub3>0:
-                plt.scatter(xn2_bub4_pos, yn2_bub4_pos, c='black', s=3.0)
-        if bub_large >=5:
-            if interior_bin_bub4>0:
-                plt.scatter(xn_bub5_pos, yn_bub5_pos, c='black', s=3.0)
-            if exterior_bin_bub4>0:
-                plt.scatter(xn2_bub5_pos, yn2_bub5_pos, c='black', s=3.0)
+            velocity_x = pos_dif_x / time_dif
+            velocity_y = pos_dif_y / time_dif
 
-        plt.xlim(0, l_box)
-        plt.ylim(0, l_box)
+            velocity_tot = (velocity_x ** 2 + velocity_y ** 2 ) ** 0.5
+            velocity_A_tot = (velocity_x[typ0parts] ** 2 + velocity_y[typ0parts] ** 2 ) ** 0.5
+            velocity_B_tot = (velocity_x[typ1parts] ** 2 + velocity_y[typ1parts] ** 2 ) ** 0.5
+            if len(bulk_id_plot)>0:
+                velocity_mean = np.mean(velocity_tot[bulk_id_plot])
+            else:
+                velocity_mean = np.mean(velocity_tot)
+            velocity_x_bin = [[0 for b in range(NBins)] for a in range(NBins)]
+            velocity_y_bin = [[0 for b in range(NBins)] for a in range(NBins)]
+            velocity_r_bin = [[0 for b in range(NBins)] for a in range(NBins)]
 
-        ax.axis('off')
-        plt.tight_layout()
-        plt.savefig(outPath + 'num_A_neigh_' + out + pad + ".png", dpi=100)
-        plt.close()
+            velocity_x_A_bin = [[0 for b in range(NBins)] for a in range(NBins)]
+            velocity_y_A_bin = [[0 for b in range(NBins)] for a in range(NBins)]
+            velocity_r_A_bin = [[0 for b in range(NBins)] for a in range(NBins)]
 
-        fig = plt.figure(figsize=(7,6))
-        ax = fig.add_subplot(111)
-        im = plt.scatter(pos_bulk_int_x_fast_neigh+h_box, pos_bulk_int_y_fast_neigh+h_box, c=bulk_int_fast_num_neigh, s=0.7)
+            velocity_x_B_bin = [[0 for b in range(NBins)] for a in range(NBins)]
+            velocity_y_B_bin = [[0 for b in range(NBins)] for a in range(NBins)]
+            velocity_r_B_bin = [[0 for b in range(NBins)] for a in range(NBins)]
+            velocity_r_bulk_bin = [[0 for b in range(NBins)] for a in range(NBins)]
 
-        #sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
-        #sm.set_array([])
-        if len(bulk_int_fast_num_neigh) > 0:
-            min_n = np.amin(bulk_int_fast_num_neigh)
-            max_n = np.amax(bulk_int_fast_num_neigh)
+            for ix in range(0, len(occParts)):
+                for iy in range(0, len(occParts)):
+                    if phaseBin[ix][iy] == 0:
+                        if len(binParts[ix][iy]) > 0:
+                            A_num=0
+                            B_num=0
 
-            tick_lev = np.arange(min_n, max_n+1, 1)
-            clb = plt.colorbar(ticks=tick_lev, orientation="vertical", format=tick.FormatStrFormatter('%.0f'))
-        else:
-            clb = plt.colorbar(orientation="vertical", format=tick.FormatStrFormatter('%.0f'))
-        plt.tick_params(axis='both', which='both',
-                        bottom=False, top=False, left=False, right=False,
-                        labelbottom=False, labeltop=False, labelleft=False, labelright=False)
-        plt.text(0.663, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(tst) + ' ' + r'$\tau_\mathrm{r}$',
-                fontsize=18, transform = ax.transAxes,
-                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+                            for h in range(0, len(binParts[ix][iy])):
+                                velocity_x_bin[ix][iy] += velocity_x[binParts[ix][iy][h]]
+                                velocity_y_bin[ix][iy] += velocity_y[binParts[ix][iy][h]]
 
-        clb.ax.tick_params(labelsize=16)
-        if peA<=peB:
-            clb.set_label('# Fast Neighbors', labelpad=25, y=0.5, rotation=270, fontsize=20)
-        else:
-            clb.set_label('# Slow Neighbors', labelpad=25, y=0.5, rotation=270, fontsize=20)
+                                if typ[binParts[ix][iy][h]] == 0:
+                                    velocity_x_A_bin[ix][iy] += velocity_x[binParts[ix][iy][h]]
+                                    velocity_y_A_bin[ix][iy] += velocity_y[binParts[ix][iy][h]]
+                                    A_num += 1
+                                else:
+                                    velocity_x_B_bin[ix][iy] += velocity_x[binParts[ix][iy][h]]
+                                    velocity_y_B_bin[ix][iy] += velocity_y[binParts[ix][iy][h]]
+                                    B_num += 1
 
-        if bub_large >=1:
-            if interior_bin>0:
-                plt.scatter(xn_pos, yn_pos, c='black', s=3.0)
-            if exterior_bin>0:
-                plt.scatter(xn2_pos, yn2_pos, c='black', s=3.0)
+                            velocity_x_bin[ix][iy] = velocity_x_bin[ix][iy] / len(binParts[ix][iy])
+                            velocity_y_bin[ix][iy] = velocity_y_bin[ix][iy] / len(binParts[ix][iy])
+                            velocity_r_bin[ix][iy] = (velocity_x_bin[ix][iy] ** 2 + velocity_y_bin[ix][iy] ** 2) ** 0.5
+                            velocity_x_bin[ix][iy] = velocity_x_bin[ix][iy]# / velocity_r_bin[ix][iy]
+                            velocity_y_bin[ix][iy] = velocity_y_bin[ix][iy]# / velocity_r_bin[ix][iy]
+                            if phaseBin[ix][iy]==0:
+                                velocity_r_bulk_bin[ix][iy] = (velocity_x_bin[ix][iy] ** 2 + velocity_y_bin[ix][iy] ** 2) ** 0.5
+                            if A_num > 0:
+                                velocity_x_A_bin[ix][iy] = velocity_x_A_bin[ix][iy] / A_num
+                                velocity_y_A_bin[ix][iy] = velocity_y_A_bin[ix][iy] / A_num
+                                velocity_r_A_bin[ix][iy] = (velocity_x_A_bin[ix][iy] ** 2 + velocity_y_A_bin[ix][iy] ** 2) ** 0.5
+                                velocity_x_A_bin[ix][iy] = velocity_x_A_bin[ix][iy]# / velocity_r_A_bin[ix][iy]
+                                velocity_y_A_bin[ix][iy] = velocity_y_A_bin[ix][iy]# / velocity_r_A_bin[ix][iy]
 
-        if bub_large >=2:
-            if interior_bin_bub1>0:
-                plt.scatter(xn_bub2_pos, yn_bub2_pos, c='black', s=3.0)
-            if exterior_bin_bub1>0:
-                plt.scatter(xn2_bub2_pos, yn2_bub2_pos, c='black', s=3.0)
-        if bub_large >=3:
-            if interior_bin_bub2>0:
-                plt.scatter(xn_bub3_pos, yn_bub3_pos, c='black', s=3.0)
-            if exterior_bin_bub2>0:
-                plt.scatter(xn2_bub3_pos, yn2_bub3_pos, c='black', s=3.0)
+                            if B_num > 0:
+                                velocity_x_B_bin[ix][iy] = velocity_x_B_bin[ix][iy] / B_num
+                                velocity_y_B_bin[ix][iy] = velocity_y_B_bin[ix][iy] / B_num
+                                velocity_r_B_bin[ix][iy] = (velocity_x_B_bin[ix][iy] ** 2 + velocity_y_B_bin[ix][iy] ** 2) ** 0.5
+                                velocity_x_B_bin[ix][iy] = velocity_x_B_bin[ix][iy]# / velocity_r_B_bin[ix][iy]
+                                velocity_y_B_bin[ix][iy] = velocity_y_B_bin[ix][iy]# / velocity_r_B_bin[ix][iy]
 
-        if bub_large >=4:
-            if interior_bin_bub3>0:
-                plt.scatter(xn_bub4_pos, yn_bub4_pos, c='black', s=3.0)
-            if exterior_bin_bub3>0:
-                plt.scatter(xn2_bub4_pos, yn2_bub4_pos, c='black', s=3.0)
-        if bub_large >=5:
-            if interior_bin_bub4>0:
-                plt.scatter(xn_bub5_pos, yn_bub5_pos, c='black', s=3.0)
-            if exterior_bin_bub4>0:
-                plt.scatter(xn2_bub5_pos, yn2_bub5_pos, c='black', s=3.0)
+            velocity_x_bin_plot = velocity_x_bin / (np.amax(velocity_r_bin))
+            velocity_y_bin_plot = velocity_y_bin / (np.amax(velocity_r_bin))
+            velocity_x_A_bin_plot = velocity_x_A_bin / (np.amax(velocity_r_bin))
+            velocity_y_A_bin_plot = velocity_y_A_bin / (np.amax(velocity_r_bin))
+            velocity_x_B_bin_plot = velocity_x_B_bin / (np.amax(velocity_r_bin))
+            velocity_y_B_bin_plot = velocity_y_B_bin / (np.amax(velocity_r_bin))
 
-        plt.xlim(0, l_box)
-        plt.ylim(0, l_box)
 
-        ax.axis('off')
-        plt.tight_layout()
-        plt.savefig(outPath + 'num_B_neigh_' + out + pad + ".png", dpi=100)
-        plt.close()
+            velocity_combined = np.zeros((len(v_avg_x), len(v_avg_y),2))
+            velocity_A_combined = np.zeros((len(v_avg_x), len(v_avg_y),2))
+            velocity_B_combined = np.zeros((len(v_avg_x), len(v_avg_y),2))
+            v
+            pos_box_combined_align = np.zeros((len(v_avg_x), len(v_avg_y),2))
+
+            for ix in range(0, len(align_avg_x)):
+                for iy in range(0, len(align_avg_y)):
+
+                        velocity_combined[ix][iy][0]=velocity_x_bin[ix][iy]
+                        velocity_combined[ix][iy][1]=velocity_y_bin[ix][iy]
+
+                        velocity_A_combined[ix][iy][0]=velocity_x_A_bin[ix][iy]
+                        velocity_A_combined[ix][iy][1]=velocity_y_A_bin[ix][iy]
+
+                        velocity_B_combined[ix][iy][0]=velocity_x_B_bin[ix][iy]
+                        velocity_B_combined[ix][iy][1]=velocity_y_B_bin[ix][iy]
+
+                        pos_box_combined_align[ix][iy][0]=pos_box_x[ix][iy]
+                        pos_box_combined_align[ix][iy][1]=pos_box_y[ix][iy]
+
+            velx_grad = np.gradient(velocity_combined, axis=0)
+            vely_grad = np.gradient(velocity_combined, axis=1)
+
+            velx_gradA = np.gradient(velocity_A_combined, axis=0)
+            vely_gradA = np.gradient(velocity_A_combined, axis=1)
+
+            velx_gradB = np.gradient(velocity_B_combined, axis=0)
+            vely_gradB = np.gradient(velocity_B_combined, axis=1)
+
+            vel_gradx_x = velx_grad[:,:,0]
+            vel_gradx_y = velx_grad[:,:,1]
+            vel_grady_x = vely_grad[:,:,0]
+            vel_grady_y = vely_grad[:,:,1]
+
+            vel_gradx_xA = velx_gradA[:,:,0]
+            vel_gradx_yA = velx_gradA[:,:,1]
+            vel_grady_xA = vely_gradA[:,:,0]
+            vel_grady_yA = vely_gradA[:,:,1]
+
+            vel_gradx_xB = velx_gradB[:,:,0]
+            vel_gradx_yB = velx_gradB[:,:,1]
+            vel_grady_xB = vely_gradB[:,:,0]
+            vel_grady_yB = vely_gradB[:,:,1]
+
+            div_vel = vel_gradx_x + vel_grady_y
+            curl_vel = -vel_grady_x + vel_gradx_y
+
+            div_velA = vel_gradx_xA + vel_grady_yA
+            curl_velA = -vel_grady_xA + vel_gradx_yA
+
+            div_velB = vel_gradx_xB + vel_grady_yB
+            curl_velB = -vel_grady_xB + vel_gradx_yB
+
+            if len(bulk_id_plot)>0:
+                min_n = 0.0*velocity_mean
+                max_n = 2.5*velocity_mean
+            else:
+                min_n = np.min(velocity_tot)
+                max_n = np.max(velocity_tot)
+
+            fig = plt.figure(figsize=(7,6))
+            ax = fig.add_subplot(111)
+            im = plt.scatter(pos_bulk_int_x_neigh+h_box, pos_bulk_int_y_neigh+h_box, c=bulk_int_num_neigh, s=0.7)
+
+
+            #sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
+            #sm.set_array([])
+            if len(bulk_int_num_neigh) > 0:
+                min_n = np.amin(bulk_int_num_neigh)
+                max_n = np.amax(bulk_int_num_neigh)
+
+                tick_lev = np.arange(min_n, max_n+1, 1)
+                clb = plt.colorbar(ticks=tick_lev, orientation="vertical", format=tick.FormatStrFormatter('%.0f'))
+            else:
+                clb = plt.colorbar(orientation="vertical", format=tick.FormatStrFormatter('%.0f'))
+            plt.tick_params(axis='both', which='both',
+                            bottom=False, top=False, left=False, right=False,
+                            labelbottom=False, labeltop=False, labelleft=False, labelright=False)
+            plt.text(0.663, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(tst) + ' ' + r'$\tau_\mathrm{r}$',
+                    fontsize=18, transform = ax.transAxes,
+                    bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+            plt.quiver(pos_box_x, pos_box_y, velocity_x_bin_plot, velocity_y_bin_plot, scale=20.0, color='black', alpha=0.8)
+            clb.ax.tick_params(labelsize=16)
+            clb.set_label('# Neighbors', labelpad=25, y=0.5, rotation=270, fontsize=20)
+
+            if bub_large >=1:
+                if interior_bin>0:
+                    plt.scatter(xn_pos, yn_pos, c='black', s=3.0)
+                if exterior_bin>0:
+                    plt.scatter(xn2_pos, yn2_pos, c='black', s=3.0)
+
+            if bub_large >=2:
+                if interior_bin_bub1>0:
+                    plt.scatter(xn_bub2_pos, yn_bub2_pos, c='black', s=3.0)
+                if exterior_bin_bub1>0:
+                    plt.scatter(xn2_bub2_pos, yn2_bub2_pos, c='black', s=3.0)
+            if bub_large >=3:
+                if interior_bin_bub2>0:
+                    plt.scatter(xn_bub3_pos, yn_bub3_pos, c='black', s=3.0)
+                if exterior_bin_bub2>0:
+                    plt.scatter(xn2_bub3_pos, yn2_bub3_pos, c='black', s=3.0)
+
+            if bub_large >=4:
+                if interior_bin_bub3>0:
+                    plt.scatter(xn_bub4_pos, yn_bub4_pos, c='black', s=3.0)
+                if exterior_bin_bub3>0:
+                    plt.scatter(xn2_bub4_pos, yn2_bub4_pos, c='black', s=3.0)
+            if bub_large >=5:
+                if interior_bin_bub4>0:
+                    plt.scatter(xn_bub5_pos, yn_bub5_pos, c='black', s=3.0)
+                if exterior_bin_bub4>0:
+                    plt.scatter(xn2_bub5_pos, yn2_bub5_pos, c='black', s=3.0)
+
+            plt.xlim(0, l_box)
+            plt.ylim(0, l_box)
+
+            ax.axis('off')
+            plt.tight_layout()
+            plt.savefig(outPath + 'num_neigh_' + out + pad + ".png", dpi=100)
+            plt.close()
+
+
+            fig = plt.figure(figsize=(7,6))
+            ax = fig.add_subplot(111)
+            im = plt.scatter(pos_bulk_int_x_slow_neigh+h_box, pos_bulk_int_y_slow_neigh+h_box, c=bulk_int_slow_num_neigh, s=0.7)
+
+            #sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
+            #sm.set_array([])
+            if len(bulk_int_slow_num_neigh) > 0:
+                min_n = np.amin(bulk_int_slow_num_neigh)
+                max_n = np.amax(bulk_int_slow_num_neigh)
+
+                tick_lev = np.arange(min_n, max_n+1, 1)
+                clb = plt.colorbar(ticks=tick_lev, orientation="vertical", format=tick.FormatStrFormatter('%.0f'))
+            else:
+                clb = plt.colorbar(orientation="vertical", format=tick.FormatStrFormatter('%.0f'))
+            plt.tick_params(axis='both', which='both',
+                            bottom=False, top=False, left=False, right=False,
+                            labelbottom=False, labeltop=False, labelleft=False, labelright=False)
+            plt.text(0.663, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(tst) + ' ' + r'$\tau_\mathrm{r}$',
+                    fontsize=18, transform = ax.transAxes,
+                    bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+            plt.quiver(pos_box_x, pos_box_y, velocity_x_bin_plot, velocity_y_bin_plot, scale=20.0, color='black', alpha=0.8)
+            clb.ax.tick_params(labelsize=16)
+            if peA<=peB:
+                clb.set_label('# Slow Neighbors', labelpad=25, y=0.5, rotation=270, fontsize=20)
+            else:
+                clb.set_label('# Fast Neighbors', labelpad=25, y=0.5, rotation=270, fontsize=20)
+
+            if bub_large >=1:
+                if interior_bin>0:
+                    plt.scatter(xn_pos, yn_pos, c='black', s=3.0)
+                if exterior_bin>0:
+                    plt.scatter(xn2_pos, yn2_pos, c='black', s=3.0)
+
+            if bub_large >=2:
+                if interior_bin_bub1>0:
+                    plt.scatter(xn_bub2_pos, yn_bub2_pos, c='black', s=3.0)
+                if exterior_bin_bub1>0:
+                    plt.scatter(xn2_bub2_pos, yn2_bub2_pos, c='black', s=3.0)
+            if bub_large >=3:
+                if interior_bin_bub2>0:
+                    plt.scatter(xn_bub3_pos, yn_bub3_pos, c='black', s=3.0)
+                if exterior_bin_bub2>0:
+                    plt.scatter(xn2_bub3_pos, yn2_bub3_pos, c='black', s=3.0)
+
+            if bub_large >=4:
+                if interior_bin_bub3>0:
+                    plt.scatter(xn_bub4_pos, yn_bub4_pos, c='black', s=3.0)
+                if exterior_bin_bub3>0:
+                    plt.scatter(xn2_bub4_pos, yn2_bub4_pos, c='black', s=3.0)
+            if bub_large >=5:
+                if interior_bin_bub4>0:
+                    plt.scatter(xn_bub5_pos, yn_bub5_pos, c='black', s=3.0)
+                if exterior_bin_bub4>0:
+                    plt.scatter(xn2_bub5_pos, yn2_bub5_pos, c='black', s=3.0)
+
+            plt.xlim(0, l_box)
+            plt.ylim(0, l_box)
+
+            ax.axis('off')
+            plt.tight_layout()
+            plt.savefig(outPath + 'num_A_neigh_' + out + pad + ".png", dpi=100)
+            plt.close()
+
+            fig = plt.figure(figsize=(7,6))
+            ax = fig.add_subplot(111)
+            im = plt.scatter(pos_bulk_int_x_fast_neigh+h_box, pos_bulk_int_y_fast_neigh+h_box, c=bulk_int_fast_num_neigh, s=0.7)
+
+            #sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
+            #sm.set_array([])
+            if len(bulk_int_fast_num_neigh) > 0:
+                min_n = np.amin(bulk_int_fast_num_neigh)
+                max_n = np.amax(bulk_int_fast_num_neigh)
+
+                tick_lev = np.arange(min_n, max_n+1, 1)
+                clb = plt.colorbar(ticks=tick_lev, orientation="vertical", format=tick.FormatStrFormatter('%.0f'))
+            else:
+                clb = plt.colorbar(orientation="vertical", format=tick.FormatStrFormatter('%.0f'))
+            plt.tick_params(axis='both', which='both',
+                            bottom=False, top=False, left=False, right=False,
+                            labelbottom=False, labeltop=False, labelleft=False, labelright=False)
+            plt.text(0.663, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(tst) + ' ' + r'$\tau_\mathrm{r}$',
+                    fontsize=18, transform = ax.transAxes,
+                    bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+            plt.quiver(pos_box_x, pos_box_y, velocity_x_bin_plot, velocity_y_bin_plot, scale=20.0, color='black', alpha=0.8)
+            clb.ax.tick_params(labelsize=16)
+            if peA<=peB:
+                clb.set_label('# Fast Neighbors', labelpad=25, y=0.5, rotation=270, fontsize=20)
+            else:
+                clb.set_label('# Slow Neighbors', labelpad=25, y=0.5, rotation=270, fontsize=20)
+
+            if bub_large >=1:
+                if interior_bin>0:
+                    plt.scatter(xn_pos, yn_pos, c='black', s=3.0)
+                if exterior_bin>0:
+                    plt.scatter(xn2_pos, yn2_pos, c='black', s=3.0)
+
+            if bub_large >=2:
+                if interior_bin_bub1>0:
+                    plt.scatter(xn_bub2_pos, yn_bub2_pos, c='black', s=3.0)
+                if exterior_bin_bub1>0:
+                    plt.scatter(xn2_bub2_pos, yn2_bub2_pos, c='black', s=3.0)
+            if bub_large >=3:
+                if interior_bin_bub2>0:
+                    plt.scatter(xn_bub3_pos, yn_bub3_pos, c='black', s=3.0)
+                if exterior_bin_bub2>0:
+                    plt.scatter(xn2_bub3_pos, yn2_bub3_pos, c='black', s=3.0)
+
+            if bub_large >=4:
+                if interior_bin_bub3>0:
+                    plt.scatter(xn_bub4_pos, yn_bub4_pos, c='black', s=3.0)
+                if exterior_bin_bub3>0:
+                    plt.scatter(xn2_bub4_pos, yn2_bub4_pos, c='black', s=3.0)
+            if bub_large >=5:
+                if interior_bin_bub4>0:
+                    plt.scatter(xn_bub5_pos, yn_bub5_pos, c='black', s=3.0)
+                if exterior_bin_bub4>0:
+                    plt.scatter(xn2_bub5_pos, yn2_bub5_pos, c='black', s=3.0)
+
+            plt.xlim(0, l_box)
+            plt.ylim(0, l_box)
+
+            ax.axis('off')
+            plt.tight_layout()
+            plt.savefig(outPath + 'num_B_neigh_' + out + pad + ".png", dpi=100)
+            plt.close()

@@ -10326,7 +10326,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
 
 
-
+            '''
             fig = plt.figure(figsize=(7,6))
             ax = fig.add_subplot(111)
             im = plt.scatter(pos[:,0]+h_box, pos[:,1]+h_box, c=velocity_tot, s=0.7, vmin=min_n, vmax=max_n, cmap='cool')
@@ -10510,7 +10510,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
             plt.tight_layout()
             plt.savefig(outPath + 'velocity_B_map_' + out + pad + ".png", dpi=100)
             plt.close()
-
+            '''
             fig = plt.figure(figsize=(7,6))
             ax = fig.add_subplot(111)
 
