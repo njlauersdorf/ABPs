@@ -10049,7 +10049,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
             gas_id_plot = np.where(partPhase==2)[0]         #All interfaces
 
 
-            if len(fast_bulk_id_plot)>0:
+            if (len(fast_bulk_id_plot)>0) & (len(bulk_id_plot)>0):
 
                 bulk_ratio = len(fast_bulk_id_plot)/len(bulk_id_plot)
                 if steady_state == 'True':

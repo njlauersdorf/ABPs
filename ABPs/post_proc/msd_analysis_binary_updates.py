@@ -10045,10 +10045,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 slow_gas_id_plot = np.where((partPhase==2) & (typ==1))[0]        #Bulk phase structure(s)
                 fast_gas_id_plot = np.where((partPhase==2) & (typ==0))[0]        #Bulk phase structure(s)
             gas_id_plot = np.where(partPhase==2)[0]         #All interfaces
-            print('percent_dif')
-            print(((len(fast_bulk_id_plot)/len(bulk_id_plot) - ss_chi_f)/ss_chi_f)*100)
 
-            if len(fast_bulk_id_plot)>0:
+            if (len(fast_bulk_id_plot)>0) & (len(bulk_id_plot)>0):
 
                 bulk_ratio = len(fast_bulk_id_plot)/len(bulk_id_plot)
                 if steady_state == 'True':
