@@ -559,7 +559,7 @@ else:
                                                     # first frame to process
         dumps = int(t.__len__())                                # get number of timesteps dumped
         end = int(dumps/time_step)#int(dumps/time_step)-1                                             # final frame to process
-        start = int(3*end/4)#205#205 
+        start = int(3*end/4)#205#205
         snap = t[0]                                             # Take first snap for box
         first_tstep = snap.configuration.step                   # First time step
 
@@ -10236,7 +10236,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                         ss_time_arr = np.append(ss_time_arr, tst)
                         clust_size_arr = np.append(clust_size_arr, np.amax(clust_size))
                 else:
-                    if if j>int(end*time_step/2):
+                    if j>int(end*time_step/2):
                         steady_state_once = 'True'
                         if first_steady_state_frame == 'False':
                             #Arrays of particle data

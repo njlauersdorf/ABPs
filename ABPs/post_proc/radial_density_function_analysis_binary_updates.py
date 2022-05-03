@@ -10451,7 +10451,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                         #rdf_all_bulk_rdf_val = rdf_all_bulk_rdf_val# * (indices_A * indices_B - 0) / (np.pi * rstop**2)
                         '''
                 else:
-                    if if j>int(end*time_step/2):
+                    if j>int(end*time_step/2):
                         num_dens_fast_sum = 0
                         num_dens_fast_val = 0
 
