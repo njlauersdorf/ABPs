@@ -14920,6 +14920,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
         g.write('{0:.6f}'.format(gas_std).center(20) + '\n')
         g.close()
 
+
         #Contour plot of the number density of all particles per bin
         fig = plt.figure(figsize=(7,6))
         ax = fig.add_subplot(111)
@@ -15267,6 +15268,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         plt.tight_layout()
         plt.savefig(outPath + 'fast_frac_zoom_' + out + pad + ".png", dpi=100)
         plt.close()
+
 
 
         '''
