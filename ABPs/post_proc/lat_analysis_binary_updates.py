@@ -10257,7 +10257,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
             bulk_lats = np.array([])
             int_lats = np.array([])
             dense_lat_mean = 0.0
-
+        
         if j>0:
 
             snap_first = t[0]                                 #Take current frame
