@@ -452,21 +452,16 @@ time_step = float(sys.argv[9])
 outfile = 'pa'+str(int(peA))+'_pb'+str(int(peB))+'_xa'+str(int(parFrac))+'_eps'+str(eps)+'_phi'+str(int(intPhi))+'_pNum' + str(int(partNum)) + '_bin' + str(int(bin_width)) + '_time' + str(int(time_step))
 out = outfile + "_frame_"
 
-outTxt_lat = 'lat_' + outfile + '.txt'
+outTxt_clust_info = 'cluster_info_' + outfile + '.txt'
 
 
 #.txt file for saving lattice spacing data
-g = open(outPath2+outTxt_lat, 'w+') # write file headings
+g = open(outPath2+outTxt_clust_info, 'w+') # write file headings
 g.write('tauB'.center(15) + ' ' +\
                         'sizeBin'.center(15) + ' ' +\
                         'clust_size'.center(15) + ' ' +\
-                        'lat_theory'.center(15) + ' ' +\
-                        'bulk_mean'.center(15) + ' ' +\
-                        'bulk_std'.center(15) + ' ' +\
-                        'int_mean'.center(15) + ' ' +\
-                        'int_std'.center(15) + ' ' +\
-                        'dense_mean'.center(15) + ' ' +\
-                        'dense_std'.center(15) + '\n')
+                        'clust_v'.center(15) + ' ' +\
+                        'clust_msd'.center(15) + '\n')
 g.close()
 
 """
@@ -507,7 +502,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
     r = np.linspace(0.0,  5.0, 100)             # Define radius for x-axis of plot later
 
-    start = int(720/time_step)#205                                             # first frame to process
+    start = int(0/time_step)#205                                             # first frame to process
     dumps = int(t.__len__())                                # get number of timesteps dumped
     end = int(dumps/time_step)-1                                             # final frame to process
     snap = t[0]                                             # Take first snap for box
@@ -527,6 +522,12 @@ with hoomd.open(name=inFile, mode='rb') as t:
     com_velocity = np.array([])
     com_tmp_posX_arr = np.array([])
     com_tmp_posY_arr = np.array([])
+    ss_time_arr = np.array([])
+    clust_size_arr = np.array([])
+    com_msd = np.array([])
+    ang_arr = np.array([])
+    ang_velocity = np.array([])
+    com_mstheta = np.array([])
     for p in range(start, end):
         j=int(p*time_step)
         print('j')
@@ -560,7 +561,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
         ids = cl_all.cluster_idx                                    # get id of each cluster
         clp_all.compute(system_all, ids)                            # Calculate cluster properties given cluster IDs
         clust_size = clp_all.sizes                                  # find cluster sizes
-
+        clust_size_arr = np.append(clust_size_arr, np.max(clust_size))
 
         min_size=int(partNum/8)                                     #Minimum cluster size for measurements to happen
         lcID = np.where(clust_size == np.amax(clust_size))[0][0]    #Identify largest cluster
@@ -570,6 +571,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
         #If a single cluster is greater than minimum size, determine CoM of largest cluster
         if len(large_clust_ind_all[0])>0:
+            ss_time_arr = np.append(ss_time_arr, tst)
             query_points=clp_all.centers[lcID]
             com_tmp_posX = query_points[0] + h_box
             com_tmp_posY = query_points[1] + h_box
@@ -581,6 +583,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
             com_tmp_posY_arr = np.append(com_tmp_posY_arr, com_tmp_posY)
 
             if len(com_tmp_posX_arr)>=2:
+
                 difx = com_tmp_posX_arr[-1] - com_tmp_posX_arr[-2]
 
                 difx_abs = np.abs(difx)
@@ -590,7 +593,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     else:
                         difx -= l_box
 
-                difx = com_tmp_posY_arr[-1] - com_tmp_posY_arr[-2]
+                dify = com_tmp_posY_arr[-1] - com_tmp_posY_arr[-2]
 
                 #Enforce periodic boundary conditions
                 dify_abs = np.abs(dify)
@@ -601,114 +604,195 @@ with hoomd.open(name=inFile, mode='rb') as t:
                         dify -= l_box
 
                 difr = (difx**2 + dify**2)**0.5
-                com_velocity = np.append(com_velocity, difr/(time_arr[j]-time_arr[j-1]))
+                com_velocity = np.append(com_velocity, difr/(ss_time_arr[-1]-ss_time_arr[-2]))
 
-        else:
-            com_tmp_posX_arr = np.append(com_tmp_posX_arr, 0)
-            com_tmp_posY_arr = np.append(com_tmp_posY_arr, 0)
-            com_velocity = np.append(com_velocity, 0)
+                if (dify > 0) & (difx > 0):
+                    ang = (np.arctan2(np.abs(dify),np.abs(difx)) * 180/np.pi)
+                elif (dify > 0) & (difx < 0):
+                    ang = 90 + (np.arctan2(np.abs(difx),np.abs(dify)) * 180/np.pi)
+                elif (dify < 0) & (difx < 0):
+                    ang = 180 + (np.arctan2(np.abs(dify),np.abs(difx)) * 180/np.pi)
+                elif (dify < 0) & (difx > 0):
+                    ang = 270 + (np.arctan2(np.abs(difx),np.abs(dify)) * 180/np.pi)
+                print('test')
+                print(ang)
+                print(difx)
+                print(dify)
+                ang_arr = np.append(ang_arr, ang)
 
-        #shift reference frame to center of mass of cluster
-        pos[:,0]= pos[:,0]
-        pos[:,1]= pos[:,1]
+                if len(ang_arr)>=2:
+                    dif_theta = (ang_arr[-1] - ang_arr[-2])
+                    if dif_theta > 180:
+                        dif_theta -= 360
+                    elif dif_theta < -180:
+                        dif_theta += 360
+                    ang_velocity = np.append(ang_velocity, dif_theta)#/(ss_time_arr[-1]-ss_time_arr[-2]))
 
 
-        fig = plt.figure(figsize=(7,6))
-        ax = fig.add_subplot(111)
-        im = plt.scatter(pos_bulk_int_x_lat+h_box, pos_bulk_int_y_lat+h_box, c=bulk_int_lat_arr, s=0.7, vmin=0.97*bulk_lat_mean, vmax=1.03*bulk_lat_mean)
+                difx = com_tmp_posX_arr[-1] - com_tmp_posX_arr[0]
+
+                difx_abs = np.abs(difx)
+                if difx_abs>=h_box:
+                    if difx < -h_box:
+                        difx += l_box
+                    else:
+                        difx -= l_box
+
+                dify = com_tmp_posY_arr[-1] - com_tmp_posY_arr[0]
+
+                #Enforce periodic boundary conditions
+                dify_abs = np.abs(dify)
+                if dify_abs>=h_box:
+                    if dify < -h_box:
+                        dify += l_box
+                    else:
+                        dify -= l_box
+
+                difr = (difx**2 + dify**2)**0.5
+                com_msd = np.append(com_msd, difr**2)
+
+                if len(ang_arr)>=2:
+                    dif_theta = ang_arr[-1] - ang_arr[0]
+
+                    if dif_theta > 180:
+                        dif_theta -= 360
+                    elif dif_theta < -180:
+                        dif_theta += 360
+
+                    com_mstheta = np.append(com_mstheta, dif_theta)
 
 
-        min_n = 0.97*bulk_lat_mean
-        max_n = 1.03*bulk_lat_mean
-        if bulk_lat_mean != 0.0:
-            tick_lev = np.arange(min_n, max_n+(max_n-min_n)/6, (max_n - min_n)/6)
-            #sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
-            #sm.set_array([])
-            clb = plt.colorbar(ticks=tick_lev, orientation="vertical", format=tick.FormatStrFormatter('%.3f'))
-        else:
-            clb = plt.colorbar(orientation="vertical", format=tick.FormatStrFormatter('%.3f'))
-        plt.tick_params(axis='both', which='both',
-                        bottom=False, top=False, left=False, right=False,
-                        labelbottom=False, labeltop=False, labelleft=False, labelright=False)
-        plt.text(0.663, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(tst) + ' ' + r'$\tau_\mathrm{B}$',
-                fontsize=18, transform = ax.transAxes,
-                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
-        plt.text(0.75, 0.92, s=r'$\overline{a}$' + ' = ' + '{:.3f}'.format(dense_lat_mean),
-                fontsize=18, transform = ax.transAxes,
-                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
 
-        plt.quiver(pos_box_x, pos_box_y, velocity_x_A_bin_plot, velocity_y_A_bin_plot, scale=20.0, color='black', alpha=0.8)
 
-        clb.ax.tick_params(labelsize=16)
-        clb.set_label('a', labelpad=-40, y=1.07, rotation=0, fontsize=20)
+                g = open(outPath2+outTxt_clust_info, 'a')
+                g.write('{0:.2f}'.format(tst).center(15) + ' ')
+                g.write('{0:.6f}'.format(sizeBin).center(15) + ' ')
+                g.write('{0:.0f}'.format(np.max(clust_size)).center(15) + ' ')
+                g.write('{0:.6f}'.format(com_velocity[-1]).center(15) + ' ')
+                if len(ang_arr)>=2:
+                    g.write('{0:.6f}'.format(ang_velocity[-1]).center(15) + ' ')
+                else:
+                    g.write('{0:.6f}'.format(0).center(15) + ' ')
+                g.write('{0:.6f}'.format(com_msd[-1]).center(15) + '\n')
+                g.close()
 
-        if bub_large >=1:
-            if interior_bin>0:
-                plt.scatter(xn_pos, yn_pos, c='black', s=3.0)
-            if exterior_bin>0:
-                plt.scatter(xn2_pos, yn2_pos, c='black', s=3.0)
-
-        if bub_large >=2:
-            if interior_bin_bub1>0:
-                plt.scatter(xn_bub2_pos, yn_bub2_pos, c='black', s=3.0)
-            if exterior_bin_bub1>0:
-                plt.scatter(xn2_bub2_pos, yn2_bub2_pos, c='black', s=3.0)
-        if bub_large >=3:
-            if interior_bin_bub2>0:
-                plt.scatter(xn_bub3_pos, yn_bub3_pos, c='black', s=3.0)
-            if exterior_bin_bub2>0:
-                plt.scatter(xn2_bub3_pos, yn2_bub3_pos, c='black', s=3.0)
-
-        if bub_large >=4:
-            if interior_bin_bub3>0:
-                plt.scatter(xn_bub4_pos, yn_bub4_pos, c='black', s=3.0)
-            if exterior_bin_bub3>0:
-                plt.scatter(xn2_bub4_pos, yn2_bub4_pos, c='black', s=3.0)
-        if bub_large >=5:
-            if interior_bin_bub4>0:
-                plt.scatter(xn_bub5_pos, yn_bub5_pos, c='black', s=3.0)
-            if exterior_bin_bub4>0:
-                plt.scatter(xn2_bub5_pos, yn2_bub5_pos, c='black', s=3.0)
-
-        plt.xlim(0, l_box)
-        plt.ylim(0, l_box)
-
-        ax.axis('off')
-        plt.tight_layout()
-        plt.savefig(outPath + 'lat_map_' + out + pad + ".png", dpi=100)
-        plt.close()
 
     xmin = 0.5
     xmax = 1.0
 
-    fig = plt.figure(figsize=(8,6))
-    ax = fig.add_subplot(111)
-    #Remove bulk particles that are outside plot's xrange
-    if (len(bulk_lats)>0):
-        bulk_id = np.where((bulk_lats > xmax) | (bulk_lats < xmin))[0]
-        bulk_lats = np.delete(bulk_lats, bulk_id)
+    fig, ax1 = plt.subplots(figsize=(12,6))
+    ax2=ax1.twinx()
 
-        plt.hist(bulk_lats, alpha = 1.0, bins=50, color=green)
+    plot_max = 1.05 * np.max(com_msd)
+    plot_min = 0.0
+    fsize=10
 
-    #If interface particle measured, continue
-    if (len(int_lats)>0):
-        int_id = np.where((int_lats > xmax) | (int_lats < xmin))[0]
-        int_lats = np.delete(int_lats, int_id)
+    step = np.round(np.abs(plot_max - plot_min)/6,2)
+    step_x = np.round(np.abs(np.max(ss_time_arr)-ss_time_arr[0])/10,2)
+    fastCol = '#e31a1c'
+    slowCol = '#081d58'
+    purple = ("#756bb1")
+    pink = ("#dd1c77")
 
-        plt.hist(int_lats, alpha = 0.8, bins=50, color=yellow)
+    ax1.plot(ss_time_arr[0:-1]-ss_time_arr[0], com_msd,
+                   c='green', lw=1.8*1.2, ls='--')
+    ax2.plot(ss_time_arr[0:-2]-ss_time_arr[0], com_mstheta,
+               c='blue', lw=1.8*1.2, ls='--')
+    ax2.set_ylabel(r'$mstheta$',color="blue", fontsize=fsize*2.8)
+    ax2.set_ylim(0, 180)
 
-    green_patch = mpatches.Patch(color=green, label='Bulk')
-    yellow_patch = mpatches.Patch(color=yellow, label='Interface')
-    plt.legend(handles=[green_patch, yellow_patch], fancybox=True, framealpha=0.75, ncol=1, fontsize=12, loc='upper right',labelspacing=0.1, handletextpad=0.1)
+    #ax1.set_ylim(plot_min, plot_max)
 
-    plt.xlabel(r'lattice spacing ($a$)', fontsize=20)
-    plt.ylabel('Number of particles', fontsize=20)
-    plt.xlim([xmin,xmax])
 
-    plt.text(0.03, 0.94, s=r'$\tau$' + ' = ' + '{:.2f}'.format(tst) + ' ' + r'$\tau_\mathrm{B}$',
-        fontsize=18,transform = ax.transAxes,
-        bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+    ax1.set_xlabel(r'Time ($\tau_\mathrm{B}$)', fontsize=fsize*2.8)
+
+    ax1.set_ylabel(r'MSD', fontsize=fsize*2.8)
+
+    # Set all the x ticks for radial plots
+    loc = ticker.MultipleLocator(base=step_x)
+    ax1.xaxis.set_major_locator(loc)
+    loc = ticker.MultipleLocator(base=round(step_x/2,3))
+    ax1.xaxis.set_minor_locator(loc)
+    ax1.set_xlim(0, np.max(ss_time_arr)-ss_time_arr[0])
+    plt.legend(loc='upper left', fontsize=fsize*2.6)
+
+    # Set y ticks
+    print(step)
+    loc = ticker.MultipleLocator(base=step)
+    ax1.yaxis.set_major_locator(loc)
+    loc = ticker.MultipleLocator(base=round(step/2,3))
+    ax1.yaxis.set_minor_locator(loc)
+    # Left middle plot
+    ax1.tick_params(axis='x', labelsize=fsize*2.5)
+    ax1.tick_params(axis='y', labelsize=fsize*2.5)
+    #plt.legend(loc='upper right')
+
+    step2 = np.round(np.abs(360)/6,2)
+    loc = ticker.MultipleLocator(base=step2)
+    ax2.yaxis.set_major_locator(loc)
+    loc = ticker.MultipleLocator(base=round(step2/2,3))
+    ax2.yaxis.set_minor_locator(loc)
+
+    # Left middle plot
+    ax2.tick_params(axis='y', labelsize=fsize*2.5)
 
     plt.tight_layout()
-    plt.savefig(outPath + 'lat_histo_' + out + pad + ".png", dpi=150)
+    plt.savefig(outPath + 'com_msd_' + out + ".png", dpi=300)
+    plt.close()
+
+    fig, ax1 = plt.subplots(figsize=(12,6))
+    ax2=ax1.twinx()
+    plot_max = 3.0 * np.mean(com_velocity)
+    plot_min = 0.0
+
+    step = np.round(np.abs(plot_max - plot_min)/6,2)
+    step_x = np.round(np.abs(np.max(ss_time_arr)-ss_time_arr[0])/10,2)
+    fastCol = '#e31a1c'
+    slowCol = '#081d58'
+    purple = ("#756bb1")
+    pink = ("#dd1c77")
+
+    ax1.plot(ss_time_arr[0:-1]-ss_time_arr[0], com_velocity,
+                   c='green', lw=1.8*1.2, ls='--')
+    ax2.plot(ss_time_arr[0:-2]-ss_time_arr[0], ang_velocity,
+               c='blue', lw=1.8*1.2, ls='--')
+    ax2.set_ylabel(r'$d\theta/dt$',color="blue", fontsize=fsize*2.8)
+    ax1.set_ylim(plot_min, plot_max)
+    ax2.set_ylim(-360, 360)
+
+
+    ax1.set_xlabel(r'Time ($\tau_\mathrm{B}$)', fontsize=fsize*2.8)
+
+    ax1.set_ylabel(r'velocity', color='green', fontsize=fsize*2.8)
+
+    # Set all the x ticks for radial plots
+    loc = ticker.MultipleLocator(base=step_x)
+    ax1.xaxis.set_major_locator(loc)
+    loc = ticker.MultipleLocator(base=round(step_x/2,3))
+    ax1.xaxis.set_minor_locator(loc)
+
+    ax1.set_xlim(0, np.max(ss_time_arr)-ss_time_arr[0])
+    plt.legend(loc='upper left', fontsize=fsize*2.6)
+
+    # Set y ticks
+    print(step)
+    loc = ticker.MultipleLocator(base=step)
+    ax1.yaxis.set_major_locator(loc)
+    loc = ticker.MultipleLocator(base=round(step/2,3))
+    ax1.yaxis.set_minor_locator(loc)
+
+    step2 = np.round(np.abs(360)/6,2)
+    loc = ticker.MultipleLocator(base=step2)
+    ax2.yaxis.set_major_locator(loc)
+    loc = ticker.MultipleLocator(base=round(step2/2,3))
+    ax2.yaxis.set_minor_locator(loc)
+
+    # Left middle plot
+    ax1.tick_params(axis='x', labelsize=fsize*2.5)
+    ax1.tick_params(axis='y', labelsize=fsize*2.5)
+    ax2.tick_params(axis='y', labelsize=fsize*2.5)
+    #plt.legend(loc='upper right')
+
+    plt.tight_layout()
+    plt.savefig(outPath + 'com_velocity_' + out + ".png", dpi=300)
     plt.close()
