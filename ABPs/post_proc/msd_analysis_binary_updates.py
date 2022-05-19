@@ -611,9 +611,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
     r = np.linspace(0.0,  5.0, 100)             # Define radius for x-axis of plot later
 
-    start = int(0/time_step)#205                                             # first frame to process
+    start = int(800/time_step)#205                                             # first frame to process
     dumps = int(t.__len__())                                # get number of timesteps dumped
-    end = int(dumps/time_step)#int(dumps/time_step)-1                                             # final frame to process
+    end = int(900/time_step)#int(dumps/time_step)#int(dumps/time_step)-1                                             # final frame to process
     snap = t[0]                                             # Take first snap for box
     first_tstep = snap.configuration.step                   # First time step
 
@@ -10471,17 +10471,19 @@ if steady_state_once == 'True':
 
 
     ax1.set_ylabel(r'MSD', fontsize=fsize*2.8)
-
+    '''
     # Set all the x ticks for radial plots
     loc = ticker.MultipleLocator(base=step_x)
     ax1.xaxis.set_major_locator(loc)
     loc = ticker.MultipleLocator(base=round(step_x/2,3))
     ax1.xaxis.set_minor_locator(loc)
     ax1.set_xlim(0, np.max(ss_time_arr)-ss_time_arr[0])
+    '''
     plt.legend(loc='upper left', fontsize=fsize*2.6)
 
     # Set y ticks
     print(step)
+    '''
     loc = ticker.MultipleLocator(base=step)
     ax1.yaxis.set_major_locator(loc)
     loc = ticker.MultipleLocator(base=round(step/2,3))
@@ -10489,6 +10491,9 @@ if steady_state_once == 'True':
     # Left middle plot
     ax1.tick_params(axis='x', labelsize=fsize*2.5)
     ax1.tick_params(axis='y', labelsize=fsize*2.5)
+    '''
+    ax1.set_xscale('log')
+    ax1.set_yscale('log')
     #plt.legend(loc='upper right')
 
     plt.tight_layout()

@@ -507,7 +507,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
     r = np.linspace(0.0,  5.0, 100)             # Define radius for x-axis of plot later
 
-    start = int(720/time_step)#205                                             # first frame to process
+    start = int(0/time_step)#205                                             # first frame to process
     dumps = int(t.__len__())                                # get number of timesteps dumped
     end = int(dumps/time_step)-1                                             # final frame to process
     snap = t[0]                                             # Take first snap for box
@@ -10133,6 +10133,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
         if (len(bulk_id_plot)>0) & (len(fast_bulk_id_plot)>0) & (len(slow_bulk_id_plot)>0):
             pe_tot_int = 0
             pe_num_int = 0
+            import time
+            time1 = time.time()
             for i in range(0, len(int_id_plot)):
 
                 if typ[int_id_plot[i]]==0:
@@ -10143,33 +10145,31 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     pe_num_int += 1
             pe_net_int = pe_tot_int / pe_num_int
 
-            query_args = dict(mode='nearest', r_min = 0.1, num_neighbors=6, r_max=r_cut)
+            query_args = dict(mode='nearest', r_min = 0.1, num_neighbors=6)
 
             print('bulk neighbors')
 
 
-            system_all_bulk = freud.AABBQuery(f_box, f_box.wrap(pos_bulk))
-            system_A_bulk = freud.AABBQuery(f_box, f_box.wrap(pos0_bulk))
-            system_B_bulk = freud.AABBQuery(f_box, f_box.wrap(pos1_bulk))
+            system_all_bulk = freud.AABBQuery(f_box, f_box.wrap(pos_bulk_int))
 
-            all_bulk_nlist = system_all_bulk.query(f_box.wrap(pos_bulk_int), query_args).toNeighborList()
-            AA_bulk_nlist = system_A_bulk.query(f_box.wrap(pos0_bulk_int), query_args).toNeighborList()
-            AB_bulk_nlist = system_A_bulk.query(f_box.wrap(pos1_bulk_int), query_args).toNeighborList()
-            BB_bulk_nlist = system_B_bulk.query(f_box.wrap(pos1_bulk_int), query_args).toNeighborList()
+            all_bulk_nlist = system_all_bulk.query(f_box.wrap(pos_bulk), query_args).toNeighborList()
 
-            rijs = (pos_bulk[all_bulk_nlist.point_indices] - pos_bulk_int[all_bulk_nlist.query_point_indices])
+            print(np.max(all_bulk_nlist.distances))
+            print(np.min(all_bulk_nlist.distances))
+
+            rijs = (pos_bulk_int[all_bulk_nlist.point_indices] - pos_bulk[all_bulk_nlist.query_point_indices])
 
             difx_out = np.where(rijs[:,0]>h_box)[0]
-            rijs[difx_out,0] = rijs[difx_out,0]-h_box
+            rijs[difx_out,0] = rijs[difx_out,0]-l_box
 
             difx_out = np.where(rijs[:,0]<-h_box)[0]
-            rijs[difx_out,0] = rijs[difx_out,0]+h_box
+            rijs[difx_out,0] = rijs[difx_out,0]+l_box
 
             dify_out = np.where(rijs[:,1]>h_box)[0]
-            rijs[dify_out,1] = rijs[dify_out,1]-h_box
+            rijs[dify_out,1] = rijs[dify_out,1]-l_box
 
             dify_out = np.where(rijs[:,1]<-h_box)[0]
-            rijs[dify_out,1] = rijs[dify_out,1]+h_box
+            rijs[dify_out,1] = rijs[dify_out,1]+l_box
 
             bulk_lats = (rijs[:,0]**2 + rijs[:,1]**2)**0.5
 
@@ -10187,16 +10187,11 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
             print('int neighbors')
 
-            system_all_int = freud.AABBQuery(f_box, f_box.wrap(pos_int))   #Calculate neighbor list
-            system_A_int = freud.AABBQuery(f_box, f_box.wrap(pos0_int))    #Calculate neighbor list
-            system_B_int = freud.AABBQuery(f_box, f_box.wrap(pos1_int))    #Calculate neighbor list
+            system_all_int = freud.AABBQuery(f_box, f_box.wrap(pos))   #Calculate neighbor list
 
-            all_int_nlist = system_all_int.query(f_box.wrap(pos), query_args).toNeighborList()
-            AA_int_nlist = system_A_int.query(f_box.wrap(pos0), query_args).toNeighborList()
-            AB_int_nlist = system_A_int.query(f_box.wrap(pos1), query_args).toNeighborList()
-            BB_int_nlist = system_B_int.query(f_box.wrap(pos1), query_args).toNeighborList()
+            all_int_nlist = system_all_int.query(f_box.wrap(pos_int), query_args).toNeighborList()
 
-            rijs = (pos_int[all_int_nlist.point_indices] - pos[all_int_nlist.query_point_indices])
+            rijs = (pos[all_int_nlist.point_indices] - pos_int[all_int_nlist.query_point_indices])
 
             difx_out = np.where(rijs[:,0]>h_box)[0]
 
@@ -10228,13 +10223,23 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     int_lat_ind = np.append(int_lat_ind, int(i))
 
             dense_lats = np.append(bulk_lats, int_lats)
+
             dense_lat_mean = np.mean(dense_lats)
             dense_lat_std = np.std(dense_lats)
-            pos_bulk_int_x_lat = np.append(pos_bulk[bulk_lat_ind,0], pos_int[int_lat_ind,0])
-            pos_bulk_int_y_lat = np.append(pos_bulk[bulk_lat_ind,1], pos_int[int_lat_ind,1])
+
+            pos_bulk_int_x_lat = np.append(pos_bulk_int[bulk_lat_ind,0], pos[int_lat_ind,0])
+            pos_bulk_int_y_lat = np.append(pos_bulk_int[bulk_lat_ind,1], pos[int_lat_ind,1])
             bulk_int_lat_arr = np.append(bulk_lat_arr, int_lat_arr)
 
             lat_theory2 = conForRClust(pe_net_int-50, eps)
+            elapsed = time.time() - time1
+
+            print('test')
+            print(elapsed)
+            print(dense_lat_mean)
+            print(bulk_lat_mean)
+            print(int_lat_mean)
+
 
             #Output means and standard deviations of number density for each phase
             g = open(outPath2+outTxt_lat, 'a')
@@ -10249,6 +10254,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
             g.write('{0:.6f}'.format(dense_lat_mean).center(15) + ' ')
             g.write('{0:.6f}'.format(dense_lat_std).center(15) + '\n')
             g.close()
+
         else:
             pos_bulk_int_x_lat = np.array([])
             pos_bulk_int_y_lat = np.array([])
@@ -10257,7 +10263,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
             bulk_lats = np.array([])
             int_lats = np.array([])
             dense_lat_mean = 0.0
-        
+
         if j>0:
 
             snap_first = t[0]                                 #Take current frame
