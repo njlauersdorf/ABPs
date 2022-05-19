@@ -10324,8 +10324,67 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 min_n = np.min(velocity_tot)
                 max_n = np.max(velocity_tot)
 
+            #START VELOCITY CORRELATION CALCULATION
+            ang_arr = np.zeros(len(pos))
+            bulk_ang_arr = np.array([])
+            int_ang_arr = np.array([])
+            gas_ang_arr = np.array([])
+            for h in range(0, len(pos)):
+                ang_temp = np.arctan(velocity_y[h]/velocity_x[h])
+                if velocity_x[h] >= 0:
+                    if ang_temp < 0:
+                        ang_temp = 2*np.pi + ang_temp
+                if velocity_x[h] < 0:
+                    ang_temp = ang_temp * -1
+
+                ang_arr[h] = ang_temp
+                if partPhase[h] == 0:
+                    bulk_ang_arr = np.append(bulk_ang_arr, ang_temp)
+                elif partPhase[h] == 1:
+                    int_ang_arr = np.append(int_ang_arr, ang_temp)
+                else:
+                    gas_ang_arr = np.append(gas_ang_arr, ang_temp)
+
+            # Width, in distance units, of bin
+            wBins = 0.02
+
+            # Distance to compute RDF for
+            rstop = 15.
+
+            # Number of bins given this distance
+            nBins = rstop / wBins
+
+            wbinsTrue=(rstop)/(nBins-1)
+
+            r=np.arange(0.0,rstop+wbinsTrue,wbinsTrue)
+            query_args = dict(mode='ball', r_min = 0.1, r_max=rstop)
+
+            print('bulk neighbors')
+            system_all_bulk = freud.AABBQuery(f_box, f_box.wrap(pos_bulk))
+            system_A_bulk = freud.AABBQuery(f_box, f_box.wrap(pos0_bulk))
+            system_B_bulk = freud.AABBQuery(f_box, f_box.wrap(pos1_bulk))
+
+            all_bulk_nlist = system_all_bulk.query(f_box.wrap(pos_bulk), query_args).toNeighborList()
+            AA_bulk_nlist = system_A_bulk.query(f_box.wrap(pos0_bulk_int), query_args).toNeighborList()
+            AB_bulk_nlist = system_A_bulk.query(f_box.wrap(pos1_bulk_int), query_args).toNeighborList()
+            #BA_bulk_nlist = system_B_bulk.query(f_box.wrap(pos0_bulk_int), query_args).toNeighborList()
+            BB_bulk_nlist = system_B_bulk.query(f_box.wrap(pos1_bulk_int), query_args).toNeighborList()
 
 
+
+            cf = freud.density.CorrelationFunction(bins=50, r_max=rstop)
+            cf.compute(system=system_all_bulk, values=bulk_ang_arr, neighbors = all_bulk_nlist)
+            print(dir(cf))
+            print(cf.bin_centers)
+            print(cf.correlation)
+            print(type(cf.correlation))
+            print(len(cf.correlation))
+
+            plt.plot(cf.bin_centers, cf.correlation)
+            plt.show()
+
+
+            stop
             '''
             fig = plt.figure(figsize=(7,6))
             ax = fig.add_subplot(111)
