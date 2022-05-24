@@ -100,6 +100,10 @@ if parFrac==100.0:
     parFrac=50.0
 
 peNet=peA*(parFrac/100)+peB*(1-(parFrac/100))   #Net activity of system
+if peA >= peB:
+    peRat=peA/peB   #Net activity of system
+else:
+    peRat=peB/peA
 
 eps = float(sys.argv[5])                        #Softness, coefficient of interparticle repulsion (epsilon)
 
@@ -502,19 +506,19 @@ def conForRClust(pe, eps):
 """
 
 #Bulk phase
-fit_A = 0.03
-fit_B = 1.3603
-fit_C = 0.4684
+fit_A = 0.173
+fit_B = 10.374
+fit_C = 0.422
 
 #Gas phase
-fit_A2 = 0.403
-fit_B2 = 0.633
-fit_C2 = 0.101
+fit_A2 = -0.207
+fit_B2 = 8.516
+fit_C2 = 0.608
 
 #Interface phase
-fit_A3 = 0.011
-fit_B3 = 1.106
-fit_C3 = 0.49
+fit_A3 = 0.17
+fit_B3 = 11.082
+fit_C3 = 0.261
 num_steady_state = 0
 rdf_AA_bulk_rdf_val = np.array([])
 rdf_BA_bulk_rdf_val = np.array([])
@@ -523,21 +527,15 @@ rdf_BB_bulk_rdf_val = np.array([])
 rdf_all_bulk_rdf_val = np.array([])
 
 if peA<=peB:
-    if peA>=100:
-        ss_chi_f = fit_A * ((peA/peB) ** (-fit_B)) + fit_C
-        ss_chi_f_gas = fit_A2 * ((peA/peB) ** (fit_B2)) + fit_C2
-        ss_chi_f_int = fit_A3 * ((peA/peB) ** (-fit_B3)) + fit_C3
-        steady_state = 'True'
-    else:
-        steady_state = 'False'
+    ss_chi_f = fit_A /(1 + np.exp(fit_B * ((peA/peB) - fit_C))) + 0.5
+    ss_chi_f_gas = fit_A2 /(1 + np.exp(fit_B2 * ((peA/peB) - fit_C2))) + 0.5
+    ss_chi_f_int = fit_A3 /(1 + np.exp(fit_B3 * ((peA/peB) - fit_C3))) + 0.5
+    steady_state = 'True'
 else:
-    if peB>=100:
-        ss_chi_f = fit_A * ((peB/peA) ** (-fit_B)) + fit_C
-        ss_chi_f_gas = fit_A2 * ((peB/peA) ** (fit_B2)) + fit_C2
-        ss_chi_f_int = fit_A3 * ((peB/peA) ** (-fit_B3)) + fit_C3
-        steady_state = 'True'
-    else:
-        steady_state = 'False'
+    ss_chi_f = fit_A /(1 + np.exp(fit_B * ((peB/peA) - fit_C))) + 0.5
+    ss_chi_f_gas = fit_A2 /(1 + np.exp(fit_B2 * ((peB/peA) - fit_C2))) + 0.5
+    ss_chi_f_int = fit_A3 /(1 + np.exp(fit_B3 * ((peB/peA) - fit_C3))) + 0.5
+    steady_state = 'True'
 
 #Calculate analytical values
 if steady_state == 'True':
@@ -548,9 +546,9 @@ if steady_state == 'True':
         peNet_gas = ss_chi_f_gas*peA + (1.0-ss_chi_f_gas)*peB
         peNet_int = ss_chi_f_int*peA + (1.0-ss_chi_f_int)*peB
 
-    lat_theory_int = conForRClust(peNet_int-50, eps)
+    lat_theory_int = conForRClust(peNet_int-45, eps)
     phi_d = latToPhi(lat_theory_int)
-    phi_g = compPhiG(peNet_gas, lat_theory_int)
+    phi_g = compPhiG((peRat * peNet)+45, lat_theory_int)
     clust_theory = partNum * (((phi_g-phi)*phi_d)/(phi*(phi_g-phi_d)))
     phiCP = np.pi / (2. * np.sqrt(3.))
     clust_rad_theory = ((clust_theory/(4*phiCP))**0.5) * lat_theory_int
@@ -618,8 +616,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
     r = np.linspace(0.0,  5.0, 100)             # Define radius for x-axis of plot later
 
-    start = int(0/time_step)#205                                             # first frame to process
-    dumps = int(t.__len__())                                # get number of timesteps dumped
+                                               # first frame to process
+    dumps = int(t.__len__())
+    start = int((dumps/2)/time_step)#205                             # get number of timesteps dumped
     end = int(dumps/time_step)#int(dumps/time_step)-1                                             # final frame to process
     snap = t[0]                                             # Take first snap for box
     first_tstep = snap.configuration.step                   # First time step
@@ -695,7 +694,13 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
             com_tmp_posX_temp = 0
             com_tmp_posY_temp = 0
-        if ((np.amax(clust_size)>=0.85*clust_theory) & (np.amax(clust_size)<=1.15*clust_theory) & (steady_state == 'True')) | (steady_state == 'False'):
+        print('test')
+        print(np.amax(clust_size))
+        print(0.85*clust_theory)
+        print(clust_theory)
+        print(1.15*clust_theory)
+        test_binary = 1
+        if test_binary==1:#((np.amax(clust_size)>=0.85*clust_theory) & (np.amax(clust_size)<=1.15*clust_theory) & (steady_state == 'True')) | (steady_state == 'False'):
             print('true!')
             print(steady_state)
             #shift reference frame to center of mass of cluster
@@ -6137,8 +6142,6 @@ with hoomd.open(name=inFile, mode='rb') as t:
                         okay = np.where(np.abs(np.diff(adjacent_x_arr_new)) + np.abs(np.diff(adjacent_y_arr_new)) > 0)
                         ext_x = np.r_[adjacent_x_arr_new[okay], adjacent_x_arr_new[-1], adjacent_x_arr_new[0]]
                         ext_y = np.r_[adjacent_y_arr_new[okay], adjacent_y_arr_new[-1], adjacent_y_arr_new[0]]
-                        print(ext_x)
-                        print(ext_y)
 
 
                         if len(ext_x)==3:
@@ -10049,13 +10052,18 @@ with hoomd.open(name=inFile, mode='rb') as t:
             gas_id_plot = np.where(partPhase==2)[0]         #All interfaces
 
 
-            if (len(fast_bulk_id_plot)>0) & (len(bulk_id_plot)>0):
+            if ((len(fast_bulk_id_plot)>0) & (len(bulk_id_plot)>0)) & ((len(fast_int_id_plot)>0) & (len(int_id_plot)>0)):
 
                 bulk_ratio = len(fast_bulk_id_plot)/len(bulk_id_plot)
+                int_ratio = len(fast_int_id_plot)/len(int_id_plot)
                 if steady_state == 'True':
                     print('percent_dif')
-                    print(((len(fast_bulk_id_plot)/len(bulk_id_plot) - ss_chi_f)/ss_chi_f)*100)
-                    if ((bulk_ratio <= 1.01 * ss_chi_f) &  (0.99 * ss_chi_f <= bulk_ratio)):
+                    print(int_ratio)
+                    print(bulk_ratio)
+                    print(ss_chi_f)
+                    print(ss_chi_f_int)
+
+                    if test_binary==1:#(((peA>=70) & ((bulk_ratio <= 1.05 * ss_chi_f) &  (0.95 * ss_chi_f <= bulk_ratio))) | ((peA<70) & ((int_ratio <= 1.02 * ss_chi_f_int) &  (0.98 * ss_chi_f_int <= int_ratio)))):
                         steady_state_once = 'True'
                         print('rdf!')
 
@@ -10913,7 +10921,6 @@ if steady_state_once == 'True':
     plt.legend(loc='upper right', fontsize=fsize*2.6)
 
     # Set y ticks
-    print(step)
     loc = ticker.MultipleLocator(base=step)
     ax1.yaxis.set_major_locator(loc)
     loc = ticker.MultipleLocator(base=round(step/2,3))
