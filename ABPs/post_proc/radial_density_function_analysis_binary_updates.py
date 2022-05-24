@@ -10919,7 +10919,7 @@ if steady_state_once == 'True':
     ax1.xaxis.set_minor_locator(loc)
     ax1.set_xlim(0, rstop)
     plt.legend(loc='upper right', fontsize=fsize*2.6)
-
+    step = 2.0
     # Set y ticks
     loc = ticker.MultipleLocator(base=step)
     ax1.yaxis.set_major_locator(loc)
