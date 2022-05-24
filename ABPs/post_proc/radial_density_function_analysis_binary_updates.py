@@ -10556,14 +10556,14 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                         print('bulk neighbors')
                         #system_all_bulk = freud.AABBQuery(f_box, f_box.wrap(pos_bulk))
-                        system_A_bulk = freud.AABBQuery(f_box, f_box.wrap(pos0_bulk))
-                        system_B_bulk = freud.AABBQuery(f_box, f_box.wrap(pos1_bulk))
+                        system_A_bulk = freud.AABBQuery(f_box, f_box.wrap(pos0_bulk_int))
+                        system_B_bulk = freud.AABBQuery(f_box, f_box.wrap(pos1_bulk_int))
 
                         #all_bulk_nlist = system_all_bulk.query(f_box.wrap(pos_bulk_int), query_args).toNeighborList()
-                        AA_bulk_nlist = system_A_bulk.query(f_box.wrap(pos0_bulk_int), query_args).toNeighborList()
-                        AB_bulk_nlist = system_A_bulk.query(f_box.wrap(pos1_bulk_int), query_args).toNeighborList()
+                        AA_bulk_nlist = system_A_bulk.query(f_box.wrap(pos0_bulk), query_args).toNeighborList()
+                        AB_bulk_nlist = system_A_bulk.query(f_box.wrap(pos1_bulk), query_args).toNeighborList()
                         #BA_bulk_nlist = system_B_bulk.query(f_box.wrap(pos0_bulk_int), query_args).toNeighborList()
-                        BB_bulk_nlist = system_B_bulk.query(f_box.wrap(pos1_bulk_int), query_args).toNeighborList()
+                        BB_bulk_nlist = system_B_bulk.query(f_box.wrap(pos1_bulk), query_args).toNeighborList()
                         num_steady_state +=1
 
                         #use this tomorrow
@@ -10585,7 +10585,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                         difr_all_bulk = (rijs_all_bulk[:,0]**2 + rijs_all_bulk[:,1]**2)**0.5
                         '''
 
-                        rijs_AA_bulk = (pos0_bulk[AA_bulk_nlist.point_indices] - pos0_bulk_int[AA_bulk_nlist.query_point_indices])
+                        rijs_AA_bulk = (pos0_bulk_int[AA_bulk_nlist.point_indices] - pos0_bulk[AA_bulk_nlist.query_point_indices])
 
                         difx_out = np.where(rijs_AA_bulk[:,0]>h_box)[0]
                         rijs_AA_bulk[difx_out,0] = rijs_AA_bulk[difx_out,0]-l_box
@@ -10601,7 +10601,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                         difr_AA_bulk = (rijs_AA_bulk[:,0]**2 + rijs_AA_bulk[:,1]**2)**0.5
 
-                        rijs_AB_bulk = (pos0_bulk[AB_bulk_nlist.point_indices] - pos1_bulk_int[AB_bulk_nlist.query_point_indices])
+                        rijs_AB_bulk = (pos0_bulk_int[AB_bulk_nlist.point_indices] - pos1_bulk[AB_bulk_nlist.query_point_indices])
 
                         difx_out = np.where(rijs_AB_bulk[:,0]>h_box)[0]
                         rijs_AB_bulk[difx_out,0] = rijs_AB_bulk[difx_out,0]-l_box
@@ -10634,7 +10634,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                         difr_BA_bulk = (rijs_BA_bulk[:,0]**2 + rijs_BA_bulk[:,1]**2)**0.5
                         '''
 
-                        rijs_BB_bulk = (pos1_bulk[BB_bulk_nlist.point_indices] - pos1_bulk_int[BB_bulk_nlist.query_point_indices])
+                        rijs_BB_bulk = (pos1_bulk_int[BB_bulk_nlist.point_indices] - pos1_bulk[BB_bulk_nlist.query_point_indices])
 
                         difx_out = np.where(rijs_BB_bulk[:,0]>h_box)[0]
                         rijs_BB_bulk[difx_out,0] = rijs_BB_bulk[difx_out,0]-l_box
