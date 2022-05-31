@@ -601,11 +601,6 @@ else:
             clust_arr_temp = np.append(clust_arr_temp, np.amax(clust_size))
     clust_theory = np.mean(clust_arr_temp[int(len(clust_arr_temp)/2):])
 
-g_r_all_bulk_sum = np.array([])
-g_r_AA_bulk_sum = np.array([])
-g_r_AB_bulk_sum = np.array([])
-g_r_BA_bulk_sum = np.array([])
-g_r_BB_bulk_sum = np.array([])
 time_step_count = 0
 
 num_dens_fast_arr = np.array([])
@@ -10092,15 +10087,14 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                         num_dens_slow_sum += num_dens3B[ix][iy]/(math.pi/4)
                                         num_dens_slow_val += 1
 
-                                    num_dens_sum += num_dens3[ix][iy]#/(math.pi/4)
+                                    num_dens_sum += num_dens3[ix][iy]/(math.pi/4)
                                     num_dens_val += 1
 
                         num_dens_fast_mean = num_dens_fast_sum / num_dens_fast_val
                         num_dens_slow_mean = num_dens_slow_sum / num_dens_slow_val
                         num_dens_mean = num_dens_sum / num_dens_val
 
-
-                        bulk_area_test = (gasBin + intBin) * (sizeBin**2)
+                        bulk_area_test = (bulkBin) * (sizeBin**2)
 
                         num_dens_fast_arr = np.append(num_dens_fast_arr, num_dens_fast_mean)
                         num_dens_slow_arr = np.append(num_dens_slow_arr, num_dens_slow_mean)
@@ -10163,20 +10157,21 @@ with hoomd.open(name=inFile, mode='rb') as t:
                         query_args = dict(mode='ball', r_min = 0.1, r_max=rstop)
 
                         print('bulk neighbors')
-                        #system_all_bulk = freud.AABBQuery(f_box, f_box.wrap(pos_bulk))
-                        system_A_bulk = freud.AABBQuery(f_box, f_box.wrap(pos0_bulk))
-                        system_B_bulk = freud.AABBQuery(f_box, f_box.wrap(pos1_bulk))
+                        #system_all_bulk = freud.AABBQuery(f_box, f_box.wrap(pos_bulk_int))
+                        system_A_bulk = freud.AABBQuery(f_box, f_box.wrap(pos0_bulk_int))
+                        system_B_bulk = freud.AABBQuery(f_box, f_box.wrap(pos1_bulk_int))
 
-                        #all_bulk_nlist = system_all_bulk.query(f_box.wrap(pos_bulk_int), query_args).toNeighborList()
-                        AA_bulk_nlist = system_A_bulk.query(f_box.wrap(pos0_bulk_int), query_args).toNeighborList()
-                        AB_bulk_nlist = system_A_bulk.query(f_box.wrap(pos1_bulk_int), query_args).toNeighborList()
+                        #all_bulk_nlist = system_all_bulk.query(f_box.wrap(pos_bulk), query_args).toNeighborList()
+                        AA_bulk_nlist = system_A_bulk.query(f_box.wrap(pos0_bulk), query_args).toNeighborList()
+                        AB_bulk_nlist = system_A_bulk.query(f_box.wrap(pos1_bulk), query_args).toNeighborList()
                         #BA_bulk_nlist = system_B_bulk.query(f_box.wrap(pos0_bulk_int), query_args).toNeighborList()
-                        BB_bulk_nlist = system_B_bulk.query(f_box.wrap(pos1_bulk_int), query_args).toNeighborList()
+                        BB_bulk_nlist = system_B_bulk.query(f_box.wrap(pos1_bulk), query_args).toNeighborList()
                         num_steady_state +=1
 
                         #use this tomorrow
                         '''
-                        rijs_all_bulk = (pos_bulk[all_bulk_nlist.point_indices] - pos_bulk_int[all_bulk_nlist.query_point_indices])
+
+                        rijs_all_bulk = (pos_bulk_int[all_bulk_nlist.point_indices] - pos_bulk[all_bulk_nlist.query_point_indices])
 
                         difx_out = np.where(rijs_all_bulk[:,0]>h_box)[0]
                         rijs_all_bulk[difx_out,0] = rijs_all_bulk[difx_out,0]-l_box
@@ -10193,7 +10188,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                         difr_all_bulk = (rijs_all_bulk[:,0]**2 + rijs_all_bulk[:,1]**2)**0.5
                         '''
 
-                        rijs_AA_bulk = (pos0_bulk[AA_bulk_nlist.point_indices] - pos0_bulk_int[AA_bulk_nlist.query_point_indices])
+
+                        rijs_AA_bulk = (pos0_bulk_int[AA_bulk_nlist.point_indices] - pos0_bulk[AA_bulk_nlist.query_point_indices])
 
                         difx_out = np.where(rijs_AA_bulk[:,0]>h_box)[0]
                         rijs_AA_bulk[difx_out,0] = rijs_AA_bulk[difx_out,0]-l_box
@@ -10209,7 +10205,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                         difr_AA_bulk = (rijs_AA_bulk[:,0]**2 + rijs_AA_bulk[:,1]**2)**0.5
 
-                        rijs_AB_bulk = (pos0_bulk[AB_bulk_nlist.point_indices] - pos1_bulk_int[AB_bulk_nlist.query_point_indices])
+                        rijs_AB_bulk = (pos0_bulk_int[AB_bulk_nlist.point_indices] - pos1_bulk[AB_bulk_nlist.query_point_indices])
 
                         difx_out = np.where(rijs_AB_bulk[:,0]>h_box)[0]
                         rijs_AB_bulk[difx_out,0] = rijs_AB_bulk[difx_out,0]-l_box
@@ -10242,7 +10238,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                         difr_BA_bulk = (rijs_BA_bulk[:,0]**2 + rijs_BA_bulk[:,1]**2)**0.5
                         '''
 
-                        rijs_BB_bulk = (pos1_bulk[BB_bulk_nlist.point_indices] - pos1_bulk_int[BB_bulk_nlist.query_point_indices])
+                        rijs_BB_bulk = (pos1_bulk_int[BB_bulk_nlist.point_indices] - pos1_bulk[BB_bulk_nlist.query_point_indices])
 
                         difx_out = np.where(rijs_BB_bulk[:,0]>h_box)[0]
                         rijs_BB_bulk[difx_out,0] = rijs_BB_bulk[difx_out,0]-l_box
@@ -10264,27 +10260,51 @@ with hoomd.open(name=inFile, mode='rb') as t:
                         #g_r_BA_bulk = np.array([])
                         g_r_BB_bulk = np.array([])
                         r_arr = np.array([])
-                        for m in range(0, len(r)-1):
+
+                        for m in range(1, len(r)-1):
                             difr = r[m+1] - r[m]
 
                             #inds = np.where((difr_all_bulk>=r[m]) & (difr_all_bulk<r[m+1]))[0]
-                            #g_r_all_bulk = np.append(g_r_all_bulk, len(inds)/(len(all_bulk_nlist.point_indices)*(2*math.pi * r[m+1])/bulk_area_test))
+                            #rho_all = (len(inds) / (2*math.pi * r[m] * difr) )
+                            #rho_tot_all = len(all_bulk_nlist.point_indices)/ (np.pi * 15**2)#bulk_area_test
+                            #rho_tot_all = len(bulk_id_plot) * num_dens_mean
 
+                            #rho_tot_all = len(all_bulk_nlist.point_indices)/ (num_dens_mean * len(bulk_id_plot))#bulk_area_test
+
+
+                            #g_r_all_bulk = np.append(g_r_all_bulk, rho_all / (rho_tot_all) )
+
+
+                            num_dens_AA = num_dens_slow_mean
+                            num_dens_AB = num_dens_fast_mean
+                            num_dens_BB = num_dens_fast_mean
                             inds = np.where((difr_AA_bulk>=r[m]) & (difr_AA_bulk<r[m+1]))[0]
-                            g_r_AA_bulk = np.append(g_r_AA_bulk, len(inds)/(len(AA_bulk_nlist.point_indices)*(2*math.pi * r[m+1])/bulk_area_test))
+                            rho_aa = (len(inds) / (2*math.pi * r[m] * difr) )
+                            rho_tot_aa = len(slow_bulk_id_plot) * num_dens_slow_mean
+                            #rho_tot_aa = len(AA_bulk_nlist.point_indices)/bulk_area_test
+                            g_r_AA_bulk = np.append(g_r_AA_bulk, rho_aa / rho_tot_aa)
+                            #g_r_AA_bulk = np.append(g_r_AA_bulk, len(inds)/(len(slow_bulk_id_plot)*(2*math.pi * r[m] * difr) * num_dens_AA))
 
                             #inds = np.where((difr_BA_bulk>=r[m]) & (difr_BA_bulk<r[m+1]))[0]
                             #g_r_BA_bulk = np.append(g_r_BA_bulk, len(inds)/(len(BA_bulk_nlist.point_indices)*(2*math.pi * r[m+1])/bulk_area_test))
 
                             inds = np.where((difr_AB_bulk>=r[m]) & (difr_AB_bulk<r[m+1]))[0]
-                            g_r_AB_bulk = np.append(g_r_AB_bulk, len(inds)/(len(AB_bulk_nlist.point_indices)*(2*math.pi * r[m+1])/bulk_area_test))
+                            rho_ab = (len(inds) / (2*math.pi * r[m] * difr) )
+                            #rho_tot_ab = len(AB_bulk_nlist.point_indices)/bulk_area_test
+                            rho_tot_ab = len(fast_bulk_id_plot) * (num_dens_slow_mean)
+                            g_r_AB_bulk = np.append(g_r_AB_bulk, rho_ab / rho_tot_ab)
+                            #g_r_AB_bulk = np.append(g_r_AB_bulk, len(inds)/(len(fast_bulk_id_plot)*(2*math.pi * r[m] * difr) * num_dens_AB))
 
                             inds = np.where((difr_BB_bulk>=r[m]) & (difr_BB_bulk<r[m+1]))[0]
-                            g_r_BB_bulk = np.append(g_r_BB_bulk, len(inds)/(len(BB_bulk_nlist.point_indices)*(2*math.pi * r[m+1])/bulk_area_test))
+                            rho_bb = (len(inds) / (2*math.pi * r[m] * difr) )
+                            #rho_tot_bb = len(BB_bulk_nlist.point_indices)/bulk_area_test
+                            rho_tot_bb = len(fast_bulk_id_plot) * num_dens_fast_mean
+                            g_r_BB_bulk = np.append(g_r_BB_bulk, rho_bb / rho_tot_bb)
+                            #g_r_BB_bulk = np.append(g_r_BB_bulk, len(inds)/(len(fast_bulk_id_plot)*(2*math.pi * r[m] * difr) * num_dens_BB))
 
-                            r_arr = np.append(r_arr, r[m+1])
+                            r_arr = np.append(r_arr, r[m])
 
-                        if len(g_r_all_bulk_sum) == 0:
+                        if time_step_count == 0:
                             #g_r_all_bulk_sum = g_r_all_bulk
                             g_r_AA_bulk_sum = g_r_AA_bulk
                             g_r_AB_bulk_sum = g_r_AB_bulk
@@ -10656,27 +10676,50 @@ with hoomd.open(name=inFile, mode='rb') as t:
                         #g_r_BA_bulk = np.array([])
                         g_r_BB_bulk = np.array([])
                         r_arr = np.array([])
-                        for m in range(0, len(r)-1):
+                        for m in range(1, len(r)-1):
                             difr = r[m+1] - r[m]
 
                             #inds = np.where((difr_all_bulk>=r[m]) & (difr_all_bulk<r[m+1]))[0]
-                            #g_r_all_bulk = np.append(g_r_all_bulk, len(inds)/(len(all_bulk_nlist.point_indices)*(2*math.pi * r[m+1])/bulk_area_test))
+                            #rho_all = (len(inds) / (2*math.pi * r[m] * difr) )
+                            #rho_tot_all = len(all_bulk_nlist.point_indices)/ (np.pi * 15**2)#bulk_area_test
+                            #rho_tot_all = len(bulk_id_plot) * num_dens_mean
 
+                            #rho_tot_all = len(all_bulk_nlist.point_indices)/ (num_dens_mean * len(bulk_id_plot))#bulk_area_test
+
+
+                            #g_r_all_bulk = np.append(g_r_all_bulk, rho_all / (rho_tot_all) )
+
+
+                            num_dens_AA = num_dens_slow_mean
+                            num_dens_AB = num_dens_fast_mean
+                            num_dens_BB = num_dens_fast_mean
                             inds = np.where((difr_AA_bulk>=r[m]) & (difr_AA_bulk<r[m+1]))[0]
-                            g_r_AA_bulk = np.append(g_r_AA_bulk, len(inds)/(len(AA_bulk_nlist.point_indices)*(2*math.pi * r[m+1])/bulk_area_test))
+                            rho_aa = (len(inds) / (2*math.pi * r[m] * difr) )
+                            rho_tot_aa = len(slow_bulk_id_plot) * num_dens_slow_mean
+                            #rho_tot_aa = len(AA_bulk_nlist.point_indices)/bulk_area_test
+                            g_r_AA_bulk = np.append(g_r_AA_bulk, rho_aa / rho_tot_aa)
+                            #g_r_AA_bulk = np.append(g_r_AA_bulk, len(inds)/(len(slow_bulk_id_plot)*(2*math.pi * r[m] * difr) * num_dens_AA))
 
                             #inds = np.where((difr_BA_bulk>=r[m]) & (difr_BA_bulk<r[m+1]))[0]
                             #g_r_BA_bulk = np.append(g_r_BA_bulk, len(inds)/(len(BA_bulk_nlist.point_indices)*(2*math.pi * r[m+1])/bulk_area_test))
 
                             inds = np.where((difr_AB_bulk>=r[m]) & (difr_AB_bulk<r[m+1]))[0]
-                            g_r_AB_bulk = np.append(g_r_AB_bulk, len(inds)/(len(AB_bulk_nlist.point_indices)*(2*math.pi * r[m+1])/bulk_area_test))
+                            rho_ab = (len(inds) / (2*math.pi * r[m] * difr) )
+                            #rho_tot_ab = len(AB_bulk_nlist.point_indices)/bulk_area_test
+                            rho_tot_ab = len(fast_bulk_id_plot) * (num_dens_slow_mean)
+                            g_r_AB_bulk = np.append(g_r_AB_bulk, rho_ab / rho_tot_ab)
+                            #g_r_AB_bulk = np.append(g_r_AB_bulk, len(inds)/(len(fast_bulk_id_plot)*(2*math.pi * r[m] * difr) * num_dens_AB))
 
                             inds = np.where((difr_BB_bulk>=r[m]) & (difr_BB_bulk<r[m+1]))[0]
-                            g_r_BB_bulk = np.append(g_r_BB_bulk, len(inds)/(len(BB_bulk_nlist.point_indices)*(2*math.pi * r[m+1])/bulk_area_test))
+                            rho_bb = (len(inds) / (2*math.pi * r[m] * difr) )
+                            #rho_tot_bb = len(BB_bulk_nlist.point_indices)/bulk_area_test
+                            rho_tot_bb = len(fast_bulk_id_plot) * num_dens_fast_mean
+                            g_r_BB_bulk = np.append(g_r_BB_bulk, rho_bb / rho_tot_bb)
+                            #g_r_BB_bulk = np.append(g_r_BB_bulk, len(inds)/(len(fast_bulk_id_plot)*(2*math.pi * r[m] * difr) * num_dens_BB))
 
-                            r_arr = np.append(r_arr, r[m+1])
+                            r_arr = np.append(r_arr, r[m])
 
-                        if len(g_r_all_bulk_sum) == 0:
+                        if time_step_count == 0:
                             #g_r_all_bulk_sum = g_r_all_bulk
                             g_r_AA_bulk_sum = g_r_AA_bulk
                             g_r_AB_bulk_sum = g_r_AB_bulk
@@ -10831,23 +10874,51 @@ if steady_state_once == 'True':
     fsize=10
 
     fig, ax1 = plt.subplots(figsize=(12,6))
-
+    #rdf_all_bulk_rdf = g_r_all_bulk_sum / time_step_count
     rdf_AA_bulk_rdf = g_r_AA_bulk_sum / time_step_count#rdf_AA_bulk.rdf#/np.mean(rdf_AA_bulk.rdf)
     #rdf_BA_bulk_rdf = g_r_BA_bulk_sum / time_step_count#/np.mean(rdf_BA_bulk.rdf)
     rdf_AB_bulk_rdf = g_r_AB_bulk_sum / time_step_count#/np.mean(rdf_AB_bulk.rdf)
     rdf_BB_bulk_rdf = g_r_BB_bulk_sum / time_step_count#/np.mean(rdf_BB_bulk.rdf)
     #rdf_all_bulk_rdf = g_r_all_bulk_sum / time_step_count#/np.mean(rdf_all_bulk.rdf)
 
+    #all_bulk_max = np.max(rdf_all_bulk_rdf)
     AA_bulk_max = np.max(rdf_AA_bulk_rdf)
     AB_bulk_max = np.max(rdf_AB_bulk_rdf)
     #BA_bulk_max = np.max(rdf_BA_bulk_rdf)
     BB_bulk_max = np.max(rdf_BB_bulk_rdf)
     #all_bulk_max = np.max(rdf_all_bulk_rdf)
-    if (AA_bulk_max >= AB_bulk_max) & (AA_bulk_max >= BB_bulk_max):
+    if (AA_bulk_max >= AB_bulk_max):
+        if (AA_bulk_max >= BB_bulk_max):
+            AA_bulk_order = 1
+            if (BB_bulk_max >= AB_bulk_max):
+                BB_bulk_order = 2
+                AB_bulk_order = 3
+            else:
+                AB_bulk_order = 2
+                BB_bulk_order = 3
+        else:
+            BB_bulk_order = 1
+            AA_bulk_order = 2
+            AB_bulk_order = 3
+    else:
+        if (AA_bulk_max >= BB_bulk_max):
+            AB_bulk_order = 1
+            AA_bulk_order = 2
+            BB_bulk_order = 3
+        else:
+            AA_bulk_order = 3
+            if (BB_bulk_max >= AB_bulk_max):
+                BB_bulk_order = 1
+                AB_bulk_order = 2
+            else:
+                AB_bulk_order = 1
+                BB_bulk_order = 2
+
+    if AA_bulk_order == 1:
         plot_max = 1.05 * np.max(AA_bulk_max)
-    elif (AB_bulk_max >= AA_bulk_max) & (AB_bulk_max >= BB_bulk_max):
+    elif AB_bulk_order == 1:
         plot_max = 1.05 * np.max(AB_bulk_max)
-    elif (BB_bulk_max >= AA_bulk_max) & (BB_bulk_max >= AB_bulk_max):
+    elif BB_bulk_order == 1:
         plot_max = 1.05 * np.max(BB_bulk_max)
 
     '''
@@ -10864,7 +10935,7 @@ if steady_state_once == 'True':
     '''
     plot_min = 0.0
 
-    step = np.round(np.abs(plot_max - plot_min)/6,2)
+    step = int(np.abs(plot_max - plot_min)/6)
     step_x = np.round(rstop/12,2)
     fastCol = '#e31a1c'
     slowCol = '#081d58'
@@ -10873,36 +10944,98 @@ if steady_state_once == 'True':
     fast_dens = np.mean(num_dens_fast_arr)
     slow_dens = np.mean(num_dens_slow_arr)
     dens = np.mean(num_dens_arr)
+    x_arr = np.array([0.0,15.0])
+    y_arr = np.array([1.0, 1.0])
 
+    plt.plot(x_arr, y_arr, c='black', lw=1.0, ls='--')
+    first_width = 6.0
+    second_width = 4.0
+    third_width = 2.0
     if peA <= peB:
-        #plt.plot(r_arr, rdf_all_bulk_rdf, label=r'All',
-        #               c=pink, lw=1.0, ls='--', alpha=0.3)
-        plt.plot(r_arr, rdf_AB_bulk_rdf, label=r'Slow-Fast',
-                    c=pink, lw=1.8, ls='-', alpha=0.5)
-        #plt.plot(r_arr, rdf_BA_bulk_rdf, label=r'Fast-Slow',
-        #            c=purple, lw=1.0, ls='--', alpha=0.3)
-        plt.plot(r_arr, rdf_AA_bulk_rdf, label=r'Fast-Fast',
-                    c=fastCol, lw=1.8, ls='-', alpha=0.4)
-        plt.plot(r_arr, rdf_BB_bulk_rdf, label=r'Slow-Slow',
-                    c=slowCol, lw=1.8, ls='-', alpha=0.3)
-
-        #plt.plot(r_arr, g_r_hcp_bulk, label=r'HCP Theory',
-        #            c='black', lw=1.0, ls='--', alpha=0.3)
+        if AA_bulk_order == 1:
+            plt.plot(r_arr, rdf_AA_bulk_rdf, label=r'Slow-Slow',
+                        c=slowCol, lw=first_width, ls='-', alpha=0.8)
+            if AB_bulk_order == 2:
+                plt.plot(r_arr, rdf_AB_bulk_rdf, label=r'Slow-Fast',
+                            c=pink, lw=second_width, ls='-', alpha=0.8)
+                plt.plot(r_arr, rdf_BB_bulk_rdf, label=r'Fast-Fast',
+                            c=fastCol, lw=third_width, ls='-', alpha=0.8)
+            else:
+                plt.plot(r_arr, rdf_BB_bulk_rdf, label=r'Fast-Fast',
+                            c=fastCol, lw=second_width, ls='-', alpha=0.8)
+                plt.plot(r_arr, rdf_AB_bulk_rdf, label=r'Slow-Fast',
+                            c=pink, lw=third_width, ls='-', alpha=0.8)
+        elif AB_bulk_order == 1:
+            plt.plot(r_arr, rdf_AB_bulk_rdf, label=r'Slow-Fast',
+                        c=pink, lw=first_width, ls='-', alpha=0.8)
+            if AA_bulk_order == 2:
+                plt.plot(r_arr, rdf_AA_bulk_rdf, label=r'Slow-Slow',
+                            c=slowCol, lw=second_width, ls='-', alpha=0.8)
+                plt.plot(r_arr, rdf_BB_bulk_rdf, label=r'Fast-Fast',
+                            c=fastCol, lw=third_width, ls='-', alpha=0.8)
+            else:
+                plt.plot(r_arr, rdf_BB_bulk_rdf, label=r'Fast-Fast',
+                            c=fastCol, lw=second_width, ls='-', alpha=0.8)
+                plt.plot(r_arr, rdf_AA_bulk_rdf, label=r'Slow-Slow',
+                            c=slowCol, lw=third_width, ls='-', alpha=0.8)
+        elif BB_bulk_order == 1:
+            plt.plot(r_arr, rdf_BB_bulk_rdf, label=r'Fast-Fast',
+                        c=fastCol, lw=first_width, ls='-', alpha=0.8)
+            if AA_bulk_order == 1:
+                plt.plot(r_arr, rdf_AA_bulk_rdf, label=r'Slow-Slow',
+                            c=slowCol, lw=second_width, ls='-', alpha=0.8)
+                plt.plot(r_arr, rdf_AB_bulk_rdf, label=r'Slow-Fast',
+                            c=pink, lw=third_width, ls='-', alpha=0.8)
+            else:
+                plt.plot(r_arr, rdf_AB_bulk_rdf, label=r'Slow-Fast',
+                            c=pink, lw=second_width, ls='-', alpha=0.8)
+                plt.plot(r_arr, rdf_AA_bulk_rdf, label=r'Slow-Slow',
+                            c=slowCol, lw=third_width, ls='-', alpha=0.8)
 
     else:
-        #plt.plot(r_arr, rdf_all_bulk_rdf, label=r'All',
-        #               c=pink, lw=1.0, ls='--', alpha=0.3)
-        plt.plot(r_arr, rdf_AB_bulk_rdf, label=r'Slow-Fast',
-                    c=pink, lw=1.8, ls='-', alpha=0.5)
-        #plt.plot(r_arr, rdf_BA_bulk_rdf, label=r'Fast-Slow',
-        #            c=purple, lw=1.0, ls='--', alpha=0.3)
-        plt.plot(r_arr, rdf_AA_bulk_rdf, label=r'Fast-Fast',
-                    c=fastCol, lw=1.8, ls='-', alpha=0.4)
-        plt.plot(r_arr, rdf_BB_bulk_rdf, label=r'Slow-Slow',
-                    c=slowCol, lw=1.8, ls='-', alpha=0.3)
+        if AA_bulk_order == 1:
+            plt.plot(r_arr, rdf_AA_bulk_rdf, label=r'Fast-Fast',
+                        c=fastCol, lw=first_width, ls='-', alpha=0.8)
+            if AB_bulk_order == 2:
+                plt.plot(r_arr, rdf_AB_bulk_rdf, label=r'Slow-Fast',
+                            c=pink, lw=second_width, ls='-', alpha=0.8)
+                plt.plot(r_arr, rdf_BB_bulk_rdf, label=r'Slow-Slow',
+                            c=slowCol, lw=third_width, ls='-', alpha=0.8)
+            else:
+                plt.plot(r_arr, rdf_BB_bulk_rdf, label=r'Slow-Slow',
+                            c=slowCol, lw=second_width, ls='-', alpha=0.8)
+                plt.plot(r_arr, rdf_AB_bulk_rdf, label=r'Slow-Fast',
+                            c=pink, lw=third_width, ls='-', alpha=0.8)
+        elif AB_bulk_order == 1:
+            plt.plot(r_arr, rdf_AB_bulk_rdf, label=r'Slow-Fast',
+                        c=pink, lw=first_width, ls='-', alpha=0.8)
+            if AA_bulk_order == 2:
+                plt.plot(r_arr, rdf_AA_bulk_rdf, label=r'Fast-Fast',
+                            c=fastCol, lw=second_width, ls='-', alpha=0.8)
+                plt.plot(r_arr, rdf_BB_bulk_rdf, label=r'Slow-Slow',
+                            c=slowCol, lw=third_width, ls='-', alpha=0.8)
+            else:
+                plt.plot(r_arr, rdf_BB_bulk_rdf, label=r'Slow-Slow',
+                            c=slowCol, lw=second_width, ls='-', alpha=0.8)
+                plt.plot(r_arr, rdf_AA_bulk_rdf, label=r'Fast-Fast',
+                            c=fastCol, lw=third_width, ls='-', alpha=0.8)
+        elif BB_bulk_order == 1:
+            plt.plot(r_arr, rdf_BB_bulk_rdf, label=r'Slow-Slow',
+                        c=slowCol, lw=first_width, ls='-', alpha=0.8)
+            if AA_bulk_order == 1:
+                plt.plot(r_arr, rdf_AA_bulk_rdf, label=r'Fast-Fast',
+                            c=fastCol, lw=second_width, ls='-', alpha=0.8)
+                plt.plot(r_arr, rdf_AB_bulk_rdf, label=r'Slow-Fast',
+                            c=pink, lw=third_width, ls='-', alpha=0.8)
+            else:
+                plt.plot(r_arr, rdf_AB_bulk_rdf, label=r'Slow-Fast',
+                            c=pink, lw=second_width, ls='-', alpha=0.8)
+                plt.plot(r_arr, rdf_AA_bulk_rdf, label=r'Fast-Fast',
+                            c=fastCol, lw=third_width, ls='-', alpha=0.8)
+
 
     ax1.set_ylim(plot_min, plot_max)
-    #ax1.set_ylim(0, 10)
+    #ax1.set_ylim(0, 2)
 
 
     ax1.set_xlabel(r'Separation Distance ($r$)', fontsize=fsize*2.8)
@@ -10919,11 +11052,11 @@ if steady_state_once == 'True':
     ax1.xaxis.set_minor_locator(loc)
     ax1.set_xlim(0, rstop)
     plt.legend(loc='upper right', fontsize=fsize*2.6)
-    step = 2.0
+    #step = 2.0
     # Set y ticks
     loc = ticker.MultipleLocator(base=step)
     ax1.yaxis.set_major_locator(loc)
-    loc = ticker.MultipleLocator(base=round(step/2,3))
+    loc = ticker.MultipleLocator(base=int(step/2))
     ax1.yaxis.set_minor_locator(loc)
     # Left middle plot
     ax1.tick_params(axis='x', labelsize=fsize*2.5)
