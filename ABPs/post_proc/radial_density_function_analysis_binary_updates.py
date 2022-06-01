@@ -10936,7 +10936,7 @@ if steady_state_once == 'True':
     plot_min = 0.0
 
     step = int(np.abs(plot_max - plot_min)/6)
-    step_x = np.round(rstop/12,2)
+    step_x = 1.5
     fastCol = '#e31a1c'
     slowCol = '#081d58'
     purple = ("#756bb1")
@@ -10954,84 +10954,84 @@ if steady_state_once == 'True':
     if peA <= peB:
         if AA_bulk_order == 1:
             plt.plot(r_arr, rdf_AA_bulk_rdf, label=r'Slow-Slow',
-                        c=slowCol, lw=first_width, ls='-', alpha=0.8)
+                        c=slowCol, lw=first_width, ls='-', alpha=1)
             if AB_bulk_order == 2:
                 plt.plot(r_arr, rdf_AB_bulk_rdf, label=r'Slow-Fast',
-                            c=pink, lw=second_width, ls='-', alpha=0.8)
+                            c=purple, lw=second_width, ls='-', alpha=1)
                 plt.plot(r_arr, rdf_BB_bulk_rdf, label=r'Fast-Fast',
-                            c=fastCol, lw=third_width, ls='-', alpha=0.8)
+                            c=fastCol, lw=third_width, ls='-', alpha=1)
             else:
                 plt.plot(r_arr, rdf_BB_bulk_rdf, label=r'Fast-Fast',
-                            c=fastCol, lw=second_width, ls='-', alpha=0.8)
+                            c=fastCol, lw=second_width, ls='-', alpha=1)
                 plt.plot(r_arr, rdf_AB_bulk_rdf, label=r'Slow-Fast',
-                            c=pink, lw=third_width, ls='-', alpha=0.8)
+                            c=purple, lw=third_width, ls='-', alpha=1)
         elif AB_bulk_order == 1:
             plt.plot(r_arr, rdf_AB_bulk_rdf, label=r'Slow-Fast',
-                        c=pink, lw=first_width, ls='-', alpha=0.8)
+                        c=purple, lw=first_width, ls='-', alpha=1)
             if AA_bulk_order == 2:
                 plt.plot(r_arr, rdf_AA_bulk_rdf, label=r'Slow-Slow',
-                            c=slowCol, lw=second_width, ls='-', alpha=0.8)
+                            c=slowCol, lw=second_width, ls='-', alpha=1)
                 plt.plot(r_arr, rdf_BB_bulk_rdf, label=r'Fast-Fast',
-                            c=fastCol, lw=third_width, ls='-', alpha=0.8)
+                            c=fastCol, lw=third_width, ls='-', alpha=1)
             else:
                 plt.plot(r_arr, rdf_BB_bulk_rdf, label=r'Fast-Fast',
-                            c=fastCol, lw=second_width, ls='-', alpha=0.8)
+                            c=fastCol, lw=second_width, ls='-', alpha=1)
                 plt.plot(r_arr, rdf_AA_bulk_rdf, label=r'Slow-Slow',
-                            c=slowCol, lw=third_width, ls='-', alpha=0.8)
+                            c=slowCol, lw=third_width, ls='-', alpha=1)
         elif BB_bulk_order == 1:
             plt.plot(r_arr, rdf_BB_bulk_rdf, label=r'Fast-Fast',
-                        c=fastCol, lw=first_width, ls='-', alpha=0.8)
+                        c=fastCol, lw=first_width, ls='-', alpha=1)
             if AA_bulk_order == 1:
                 plt.plot(r_arr, rdf_AA_bulk_rdf, label=r'Slow-Slow',
-                            c=slowCol, lw=second_width, ls='-', alpha=0.8)
+                            c=slowCol, lw=second_width, ls='-', alpha=1)
                 plt.plot(r_arr, rdf_AB_bulk_rdf, label=r'Slow-Fast',
-                            c=pink, lw=third_width, ls='-', alpha=0.8)
+                            c=purple, lw=third_width, ls='-', alpha=1)
             else:
                 plt.plot(r_arr, rdf_AB_bulk_rdf, label=r'Slow-Fast',
-                            c=pink, lw=second_width, ls='-', alpha=0.8)
+                            c=purple, lw=second_width, ls='-', alpha=1)
                 plt.plot(r_arr, rdf_AA_bulk_rdf, label=r'Slow-Slow',
-                            c=slowCol, lw=third_width, ls='-', alpha=0.8)
+                            c=slowCol, lw=third_width, ls='-', alpha=1.0)
 
     else:
         if AA_bulk_order == 1:
             plt.plot(r_arr, rdf_AA_bulk_rdf, label=r'Fast-Fast',
-                        c=fastCol, lw=first_width, ls='-', alpha=0.8)
+                        c=fastCol, lw=first_width, ls='-', alpha=1)
             if AB_bulk_order == 2:
                 plt.plot(r_arr, rdf_AB_bulk_rdf, label=r'Slow-Fast',
-                            c=pink, lw=second_width, ls='-', alpha=0.8)
+                            c=purple, lw=second_width, ls='-', alpha=1)
                 plt.plot(r_arr, rdf_BB_bulk_rdf, label=r'Slow-Slow',
-                            c=slowCol, lw=third_width, ls='-', alpha=0.8)
+                            c=slowCol, lw=third_width, ls='-', alpha=1)
             else:
                 plt.plot(r_arr, rdf_BB_bulk_rdf, label=r'Slow-Slow',
-                            c=slowCol, lw=second_width, ls='-', alpha=0.8)
+                            c=slowCol, lw=second_width, ls='-', alpha=1)
                 plt.plot(r_arr, rdf_AB_bulk_rdf, label=r'Slow-Fast',
-                            c=pink, lw=third_width, ls='-', alpha=0.8)
+                            c=purple, lw=third_width, ls='-', alpha=1)
         elif AB_bulk_order == 1:
             plt.plot(r_arr, rdf_AB_bulk_rdf, label=r'Slow-Fast',
-                        c=pink, lw=first_width, ls='-', alpha=0.8)
+                        c=purple, lw=first_width, ls='-', alpha=1)
             if AA_bulk_order == 2:
                 plt.plot(r_arr, rdf_AA_bulk_rdf, label=r'Fast-Fast',
-                            c=fastCol, lw=second_width, ls='-', alpha=0.8)
+                            c=fastCol, lw=second_width, ls='-', alpha=1)
                 plt.plot(r_arr, rdf_BB_bulk_rdf, label=r'Slow-Slow',
-                            c=slowCol, lw=third_width, ls='-', alpha=0.8)
+                            c=slowCol, lw=third_width, ls='-', alpha=1)
             else:
                 plt.plot(r_arr, rdf_BB_bulk_rdf, label=r'Slow-Slow',
-                            c=slowCol, lw=second_width, ls='-', alpha=0.8)
+                            c=slowCol, lw=second_width, ls='-', alpha=1)
                 plt.plot(r_arr, rdf_AA_bulk_rdf, label=r'Fast-Fast',
-                            c=fastCol, lw=third_width, ls='-', alpha=0.8)
+                            c=fastCol, lw=third_width, ls='-', alpha=1)
         elif BB_bulk_order == 1:
             plt.plot(r_arr, rdf_BB_bulk_rdf, label=r'Slow-Slow',
-                        c=slowCol, lw=first_width, ls='-', alpha=0.8)
+                        c=slowCol, lw=first_width, ls='-', alpha=1)
             if AA_bulk_order == 1:
                 plt.plot(r_arr, rdf_AA_bulk_rdf, label=r'Fast-Fast',
-                            c=fastCol, lw=second_width, ls='-', alpha=0.8)
+                            c=fastCol, lw=second_width, ls='-', alpha=1)
                 plt.plot(r_arr, rdf_AB_bulk_rdf, label=r'Slow-Fast',
-                            c=pink, lw=third_width, ls='-', alpha=0.8)
+                            c=purple, lw=third_width, ls='-', alpha=1)
             else:
                 plt.plot(r_arr, rdf_AB_bulk_rdf, label=r'Slow-Fast',
-                            c=pink, lw=second_width, ls='-', alpha=0.8)
+                            c=purple, lw=second_width, ls='-', alpha=1)
                 plt.plot(r_arr, rdf_AA_bulk_rdf, label=r'Fast-Fast',
-                            c=fastCol, lw=third_width, ls='-', alpha=0.8)
+                            c=fastCol, lw=third_width, ls='-', alpha=1)
 
 
     ax1.set_ylim(plot_min, plot_max)
@@ -11046,9 +11046,9 @@ if steady_state_once == 'True':
 
     lat_theory = np.mean(lat_theory_arr)
     # Set all the x ticks for radial plots
-    loc = ticker.MultipleLocator(base=2*lat_theory)
+    loc = ticker.MultipleLocator(base=1.5)
     ax1.xaxis.set_major_locator(loc)
-    loc = ticker.MultipleLocator(base=lat_theory)
+    loc = ticker.MultipleLocator(base=0.75)
     ax1.xaxis.set_minor_locator(loc)
     ax1.set_xlim(0, rstop)
     plt.legend(loc='upper right', fontsize=fsize*2.6)
