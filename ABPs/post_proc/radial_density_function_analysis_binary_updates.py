@@ -11056,7 +11056,7 @@ if steady_state_once == 'True':
     # Set y ticks
     loc = ticker.MultipleLocator(base=step)
     ax1.yaxis.set_major_locator(loc)
-    loc = ticker.MultipleLocator(base=int(step/2))
+    loc = ticker.MultipleLocator(base=step/2)
     ax1.yaxis.set_minor_locator(loc)
     # Left middle plot
     ax1.tick_params(axis='x', labelsize=fsize*2.5)
