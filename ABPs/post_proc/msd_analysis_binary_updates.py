@@ -118,6 +118,7 @@ try:
 except:
     dtau = 0.000001
 
+test_binary = 1
 # Set some constants
 r_cut=2**(1/6)                  #Cut off interaction radius (Per LJ Potential)
 kT = 1.0                        # temperature
@@ -10053,7 +10054,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 bulk_ratio = len(fast_bulk_id_plot)/len(bulk_id_plot)
                 if steady_state == 'True':
 
-                    if ((bulk_ratio <= 1.01 * ss_chi_f) &  (0.99 * ss_chi_f <= bulk_ratio)):
+                    if test_binary==1:#if ((bulk_ratio <= 1.01 * ss_chi_f) &  (0.99 * ss_chi_f <= bulk_ratio)):
                         steady_state_once = 'True'
                         if first_steady_state_frame == 'False':
                             print('analyze!')

@@ -606,6 +606,9 @@ num_dens_fast_arr = np.array([])
 num_dens_slow_arr = np.array([])
 num_dens_arr = np.array([])
 
+partPhase_time = np.array([])
+partPhase_time_arr = np.array([])
+
 with hoomd.open(name=inFile, mode='rb') as t:
 
     r = np.linspace(0.0,  5.0, 100)             # Define radius for x-axis of plot later
@@ -10059,689 +10062,50 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     print(ss_chi_f_int)
 
                     if test_binary==1:#(((peA>=70) & ((bulk_ratio <= 1.05 * ss_chi_f) &  (0.95 * ss_chi_f <= bulk_ratio))) | ((peA<70) & ((int_ratio <= 1.02 * ss_chi_f_int) &  (0.98 * ss_chi_f_int <= int_ratio)))):
-                        steady_state_once = 'True'
-                        print('rdf!')
-
-                        num_dens_fast_sum = 0
-                        num_dens_fast_val = 0
-
-                        num_dens_slow_sum = 0
-                        num_dens_slow_val = 0
-
-                        num_dens_sum = 0
-                        num_dens_val = 0
-                        distances = np.array([])
-                        for ix in range(0, len(occParts)):
-                            for iy in range(0, len(occParts)):
-                                if phaseBin[ix][iy]==0:
-                                    if peA <= peB:
-                                        num_dens_fast_sum += num_dens3B[ix][iy]/(math.pi/4)
-                                        num_dens_fast_val += 1
-
-                                        num_dens_slow_sum += num_dens3A[ix][iy]/(math.pi/4)
-                                        num_dens_slow_val += 1
-                                    else:
-                                        num_dens_fast_sum += num_dens3A[ix][iy]/(math.pi/4)
-                                        num_dens_fast_val += 1
-
-                                        num_dens_slow_sum += num_dens3B[ix][iy]/(math.pi/4)
-                                        num_dens_slow_val += 1
-
-                                    num_dens_sum += num_dens3[ix][iy]/(math.pi/4)
-                                    num_dens_val += 1
-
-                        num_dens_fast_mean = num_dens_fast_sum / num_dens_fast_val
-                        num_dens_slow_mean = num_dens_slow_sum / num_dens_slow_val
-                        num_dens_mean = num_dens_sum / num_dens_val
-
-                        bulk_area_test = (bulkBin) * (sizeBin**2)
-
-                        num_dens_fast_arr = np.append(num_dens_fast_arr, num_dens_fast_mean)
-                        num_dens_slow_arr = np.append(num_dens_slow_arr, num_dens_slow_mean)
-                        num_dens_arr = np.append(num_dens_arr, num_dens_mean)
-
-
-                        pos0=pos[typ0ind]                               # Find positions of type 0 particles
-                        pos0_bulk = pos[slow_bulk_id_plot]
-                        pos0_int = pos[slow_int_id_plot]
-                        pos0_gas = pos[slow_gas_id_plot]
-                        pos0_bulk_int = pos[slow_bulk_int_id_plot]
-                        pos0_gas_int = pos[slow_gas_int_id_plot]
-
-                        pos1=pos[typ1ind]
-                        pos1_bulk = pos[fast_bulk_id_plot]
-                        pos1_int = pos[fast_int_id_plot]
-                        pos1_gas = pos[fast_gas_id_plot]
-                        pos1_bulk_int = pos[fast_bulk_int_id_plot]
-                        pos1_gas_int = pos[fast_gas_int_id_plot]
-
-                        pos_bulk = pos[bulk_id_plot]
-                        pos_int = pos[int_id_plot]
-                        pos_gas = pos[gas_id_plot]
-                        pos_bulk_int = pos[bulk_int_id_plot]
-                        pos_gas_int = pos[gas_int_id_plot]
-
-                        pe_tot_int = 0
-                        pe_num_int = 0
-                        for i in range(0, len(int_id_plot)):
-
-                            if typ[int_id_plot[i]]==0:
-                                pe_tot_int += peA
-                                pe_num_int += 1
-                            else:
-                                pe_tot_int += peB
-                                pe_num_int += 1
-                        pe_net_int = pe_tot_int / pe_num_int
-
-                        lat_theory2 = conForRClust(pe_net_int-50, eps)
-                        lat_theory_arr = np.append(lat_theory_arr, lat_theory2)
-
-                        #a = system_all.points[cl_all.cluster_keys[large_clust_ind_all[0]]]
-                        AA_in_large = np.array([])
-                        BB_in_large=np.array([])
-                        mark=0
-                        r = np.linspace(0.0,  3.0, 20)             # Define radius for x-axis of plot later
-
-                        # Width, in distance units, of bin
-                        wBins = 0.02
-
-                        # Distance to compute RDF for
-                        rstop = 15.
-
-                        # Number of bins given this distance
-                        nBins = rstop / wBins
-
-                        wbinsTrue=(rstop)/(nBins-1)
-
-                        r=np.arange(0.0,rstop+wbinsTrue,wbinsTrue)
-                        query_args = dict(mode='ball', r_min = 0.1, r_max=rstop)
-
-                        print('bulk neighbors')
-                        system_all_bulk = freud.AABBQuery(f_box, f_box.wrap(pos_bulk_int))
-                        system_A_bulk = freud.AABBQuery(f_box, f_box.wrap(pos0_bulk_int))
-                        system_B_bulk = freud.AABBQuery(f_box, f_box.wrap(pos1_bulk_int))
-
-                        all_bulk_nlist = system_all_bulk.query(f_box.wrap(pos_bulk), query_args).toNeighborList()
-                        AA_bulk_nlist = system_A_bulk.query(f_box.wrap(pos0_bulk), query_args).toNeighborList()
-                        AB_bulk_nlist = system_A_bulk.query(f_box.wrap(pos1_bulk), query_args).toNeighborList()
-                        #BA_bulk_nlist = system_B_bulk.query(f_box.wrap(pos0_bulk_int), query_args).toNeighborList()
-                        BB_bulk_nlist = system_B_bulk.query(f_box.wrap(pos1_bulk), query_args).toNeighborList()
-                        num_steady_state +=1
-
-                        #use this tomorrow
-
-
-                        rijs_all_bulk = (pos_bulk_int[all_bulk_nlist.point_indices] - pos_bulk[all_bulk_nlist.query_point_indices])
-
-                        difx_out = np.where(rijs_all_bulk[:,0]>h_box)[0]
-                        rijs_all_bulk[difx_out,0] = rijs_all_bulk[difx_out,0]-l_box
-
-                        difx_out = np.where(rijs_all_bulk[:,0]<-h_box)[0]
-                        rijs_all_bulk[difx_out,0] = rijs_all_bulk[difx_out,0]+l_box
-
-                        dify_out = np.where(rijs_all_bulk[:,1]>h_box)[0]
-                        rijs_all_bulk[dify_out,1] = rijs_all_bulk[dify_out,1]-l_box
-
-                        dify_out = np.where(rijs_all_bulk[:,1]<-h_box)[0]
-                        rijs_all_bulk[dify_out,1] = rijs_all_bulk[dify_out,1]+l_box
-
-                        difr_all_bulk = (rijs_all_bulk[:,0]**2 + rijs_all_bulk[:,1]**2)**0.5
-
-
-
-                        rijs_AA_bulk = (pos0_bulk_int[AA_bulk_nlist.point_indices] - pos0_bulk[AA_bulk_nlist.query_point_indices])
-
-                        difx_out = np.where(rijs_AA_bulk[:,0]>h_box)[0]
-                        rijs_AA_bulk[difx_out,0] = rijs_AA_bulk[difx_out,0]-l_box
-
-                        difx_out = np.where(rijs_AA_bulk[:,0]<-h_box)[0]
-                        rijs_AA_bulk[difx_out,0] = rijs_AA_bulk[difx_out,0]+l_box
-
-                        dify_out = np.where(rijs_AA_bulk[:,1]>h_box)[0]
-                        rijs_AA_bulk[dify_out,1] = rijs_AA_bulk[dify_out,1]-l_box
-
-                        dify_out = np.where(rijs_AA_bulk[:,1]<-h_box)[0]
-                        rijs_AA_bulk[dify_out,1] = rijs_AA_bulk[dify_out,1]+l_box
-
-                        difr_AA_bulk = (rijs_AA_bulk[:,0]**2 + rijs_AA_bulk[:,1]**2)**0.5
-
-                        rijs_AB_bulk = (pos0_bulk_int[AB_bulk_nlist.point_indices] - pos1_bulk[AB_bulk_nlist.query_point_indices])
-
-                        difx_out = np.where(rijs_AB_bulk[:,0]>h_box)[0]
-                        rijs_AB_bulk[difx_out,0] = rijs_AB_bulk[difx_out,0]-l_box
-
-                        difx_out = np.where(rijs_AB_bulk[:,0]<-h_box)[0]
-                        rijs_AB_bulk[difx_out,0] = rijs_AB_bulk[difx_out,0]+l_box
-
-                        dify_out = np.where(rijs_AB_bulk[:,1]>h_box)[0]
-                        rijs_AB_bulk[dify_out,1] = rijs_AB_bulk[dify_out,1]-l_box
-
-                        dify_out = np.where(rijs_AB_bulk[:,1]<-h_box)[0]
-                        rijs_AB_bulk[dify_out,1] = rijs_AB_bulk[dify_out,1]+l_box
-
-                        difr_AB_bulk = (rijs_AB_bulk[:,0]**2 + rijs_AB_bulk[:,1]**2)**0.5
-                        '''
-                        rijs_BA_bulk = (pos1_bulk[BA_bulk_nlist.point_indices] - pos0_bulk_int[BA_bulk_nlist.query_point_indices])
-
-                        difx_out = np.where(rijs_BA_bulk[:,0]>h_box)[0]
-                        rijs_BA_bulk[difx_out,0] = rijs_BA_bulk[difx_out,0]-l_box
-
-                        difx_out = np.where(rijs_BA_bulk[:,0]<-h_box)[0]
-                        rijs_BA_bulk[difx_out,0] = rijs_BA_bulk[difx_out,0]+l_box
-
-                        dify_out = np.where(rijs_BA_bulk[:,1]>h_box)[0]
-                        rijs_BA_bulk[dify_out,1] = rijs_BA_bulk[dify_out,1]-l_box
-
-                        dify_out = np.where(rijs_BA_bulk[:,1]<-h_box)[0]
-                        rijs_BA_bulk[dify_out,1] = rijs_BA_bulk[dify_out,1]+l_box
-
-                        difr_BA_bulk = (rijs_BA_bulk[:,0]**2 + rijs_BA_bulk[:,1]**2)**0.5
-                        '''
-
-                        rijs_BB_bulk = (pos1_bulk_int[BB_bulk_nlist.point_indices] - pos1_bulk[BB_bulk_nlist.query_point_indices])
-
-                        difx_out = np.where(rijs_BB_bulk[:,0]>h_box)[0]
-                        rijs_BB_bulk[difx_out,0] = rijs_BB_bulk[difx_out,0]-l_box
-
-                        difx_out = np.where(rijs_BB_bulk[:,0]<-h_box)[0]
-                        rijs_BB_bulk[difx_out,0] = rijs_BB_bulk[difx_out,0]+l_box
-
-                        dify_out = np.where(rijs_BB_bulk[:,1]>h_box)[0]
-                        rijs_BB_bulk[dify_out,1] = rijs_BB_bulk[dify_out,1]-l_box
-
-                        dify_out = np.where(rijs_BB_bulk[:,1]<-h_box)[0]
-                        rijs_BB_bulk[dify_out,1] = rijs_BB_bulk[dify_out,1]+l_box
-
-                        difr_BB_bulk = (rijs_BB_bulk[:,0]**2 + rijs_BB_bulk[:,1]**2)**0.5
-                        #plt.hist(difr_all_bulk/((len(all_bulk_nlist.point_indices)/bulk_area_test)*np.pi*rstop**2), bins=r)
-                        g_r_all_bulk = np.array([])
-                        g_r_AA_bulk = np.array([])
-                        g_r_AB_bulk = np.array([])
-                        #g_r_BA_bulk = np.array([])
-                        g_r_BB_bulk = np.array([])
-                        r_arr = np.array([])
-
-                        for m in range(1, len(r)-1):
-                            difr = r[m+1] - r[m]
-
-                            #inds = np.where((difr_all_bulk>=r[m]) & (difr_all_bulk<r[m+1]))[0]
-                            #rho_all = (len(inds) / (2*math.pi * r[m] * difr) )
-                            #rho_tot_all = len(all_bulk_nlist.point_indices)/ (np.pi * 15**2)#bulk_area_test
-                            #rho_tot_all = len(bulk_id_plot) * num_dens_mean
-
-                            #rho_tot_all = len(all_bulk_nlist.point_indices)/ (num_dens_mean * len(bulk_id_plot))#bulk_area_test
-
-
-                            #g_r_all_bulk = np.append(g_r_all_bulk, rho_all / (rho_tot_all) )
-
-                            inds = np.where((difr_all_bulk>=r[m]) & (difr_all_bulk<r[m+1]))[0]
-                            rho_all = (len(inds) / (2*math.pi * r[m] * difr) )
-                            rho_tot_all = len(bulk_id_plot) * num_dens_mean
-                            #rho_tot_aa = len(AA_bulk_nlist.point_indices)/bulk_area_test
-                            g_r_all_bulk = np.append(g_r_all_bulk, rho_all / rho_tot_all)
-
-                            num_dens_AA = num_dens_slow_mean
-                            num_dens_AB = num_dens_fast_mean
-                            num_dens_BB = num_dens_fast_mean
-                            inds = np.where((difr_AA_bulk>=r[m]) & (difr_AA_bulk<r[m+1]))[0]
-                            rho_aa = (len(inds) / (2*math.pi * r[m] * difr) )
-                            rho_tot_aa = len(slow_bulk_id_plot) * num_dens_slow_mean
-                            #rho_tot_aa = len(AA_bulk_nlist.point_indices)/bulk_area_test
-                            g_r_AA_bulk = np.append(g_r_AA_bulk, rho_aa / rho_tot_aa)
-                            #g_r_AA_bulk = np.append(g_r_AA_bulk, len(inds)/(len(slow_bulk_id_plot)*(2*math.pi * r[m] * difr) * num_dens_AA))
-
-                            #inds = np.where((difr_BA_bulk>=r[m]) & (difr_BA_bulk<r[m+1]))[0]
-                            #g_r_BA_bulk = np.append(g_r_BA_bulk, len(inds)/(len(BA_bulk_nlist.point_indices)*(2*math.pi * r[m+1])/bulk_area_test))
-
-                            inds = np.where((difr_AB_bulk>=r[m]) & (difr_AB_bulk<r[m+1]))[0]
-                            rho_ab = (len(inds) / (2*math.pi * r[m] * difr) )
-                            #rho_tot_ab = len(AB_bulk_nlist.point_indices)/bulk_area_test
-                            rho_tot_ab = len(fast_bulk_id_plot) * (num_dens_slow_mean)
-                            g_r_AB_bulk = np.append(g_r_AB_bulk, rho_ab / rho_tot_ab)
-                            #g_r_AB_bulk = np.append(g_r_AB_bulk, len(inds)/(len(fast_bulk_id_plot)*(2*math.pi * r[m] * difr) * num_dens_AB))
-
-                            inds = np.where((difr_BB_bulk>=r[m]) & (difr_BB_bulk<r[m+1]))[0]
-                            rho_bb = (len(inds) / (2*math.pi * r[m] * difr) )
-                            #rho_tot_bb = len(BB_bulk_nlist.point_indices)/bulk_area_test
-                            rho_tot_bb = len(fast_bulk_id_plot) * num_dens_fast_mean
-                            g_r_BB_bulk = np.append(g_r_BB_bulk, rho_bb / rho_tot_bb)
-                            #g_r_BB_bulk = np.append(g_r_BB_bulk, len(inds)/(len(fast_bulk_id_plot)*(2*math.pi * r[m] * difr) * num_dens_BB))
-
-                            r_arr = np.append(r_arr, r[m])
-
-                        if time_step_count == 0:
-                            g_r_all_bulk_sum = g_r_all_bulk
-                            g_r_AA_bulk_sum = g_r_AA_bulk
-                            g_r_AB_bulk_sum = g_r_AB_bulk
-                            #g_r_BA_bulk_sum = g_r_BA_bulk
-                            g_r_BB_bulk_sum = g_r_BB_bulk
-                            time_step_count += 1
+                        print('test2')
+                        print(np.shape(partPhase))
+                        if steady_state_once == 'False':
+                            partPhase_time = partPhase
+                            partPhase_time_arr = np.append(partPhase_time_arr, tst)
+                            steady_state_once = 'True'
                         else:
-                            g_r_all_bulk_sum += g_r_all_bulk
-                            g_r_AA_bulk_sum += g_r_AA_bulk
-                            g_r_AB_bulk_sum += g_r_AB_bulk
-                            #g_r_BA_bulk_sum += g_r_BA_bulk
-                            g_r_BB_bulk_sum += g_r_BB_bulk
-                            time_step_count += 1
-                        #pre_filter = len(all_bulk_nlist)
+                            partPhase_time_arr = np.append(partPhase_time_arr, tst)
+                            partPhase_time = np.vstack((partPhase_time, partPhase))
+                        print(np.shape(partPhase_time))
 
-                        #all_bulk_nlist.filter(indices_A != indices_B)
-                        #post_filter = len(all_bulk_nlist)
-
-                        #norm_all = len(pos_bulk) * len(pos_bulk_int) / bulk_area
-                        #norm_AA = len(pos0_bulk) * len(pos0_bulk_int) / bulk_area
-                        #norm_AB = len(pos0_bulk) * len(pos1_bulk_int) / bulk_area
-                        #norm_BA = len(pos1_bulk) * len(pos0_bulk_int) / bulk_area
-                        #norm_BB = len(pos1_bulk) * len(pos1_bulk_int) / bulk_area
-
-                        #print('dense neighbors')
-
-                        #system_all_dense = freud.AABBQuery(f_box, f_box.wrap(pos_bulk_int))
-                        #system_A_dense = freud.AABBQuery(f_box, f_box.wrap(pos0_bulk_int))
-                        #system_B_dense = freud.AABBQuery(f_box, f_box.wrap(pos1_bulk_int))
-
-                        #all_dense_nlist = system_all_dense.query(f_box.wrap(pos), query_args).toNeighborList()
-                        #AA_dense_nlist = system_A_dense.query(f_box.wrap(pos0), query_args).toNeighborList()
-                        #AB_dense_nlist = system_A_dense.query(f_box.wrap(pos1), query_args).toNeighborList()
-                        #BB_dense_nlist = system_B_dense.query(f_box.wrap(pos1), query_args).toNeighborList()
-
-                        #print('int neighbors')
-
-                        #system_all_int = freud.AABBQuery(f_box, f_box.wrap(pos_int))   #Calculate neighbor list
-                        #system_A_int = freud.AABBQuery(f_box, f_box.wrap(pos0_int))    #Calculate neighbor list
-                        #system_B_int = freud.AABBQuery(f_box, f_box.wrap(pos1_int))    #Calculate neighbor list
-
-                        #all_int_nlist = system_all_int.query(f_box.wrap(pos), query_args).toNeighborList()
-                        #AA_int_nlist = system_A_int.query(f_box.wrap(pos0), query_args).toNeighborList()
-                        #AB_int_nlist = system_A_int.query(f_box.wrap(pos1), query_args).toNeighborList()
-                        #BB_int_nlist = system_B_int.query(f_box.wrap(pos1), query_args).toNeighborList()
-
-                        #print('gas neighbors')
-
-                        #system_all_gas = freud.AABBQuery(f_box, f_box.wrap(pos_gas))
-                        #system_AA_gas = freud.AABBQuery(f_box, f_box.wrap(pos0_gas))
-                        #system_AB_gas = freud.AABBQuery(f_box, f_box.wrap(pos0_gas))
-                        #system_BB_gas = freud.AABBQuery(f_box, f_box.wrap(pos1_gas))
-
-                        #all_gas_nlist = system_all_gas.query(f_box.wrap(pos_gas_int), query_args).toNeighborList()
-                        #AA_gas_nlist = system_AA_gas.query(f_box.wrap(pos0_gas_int), query_args).toNeighborList()
-                        #AB_gas_nlist = system_AB_gas.query(f_box.wrap(pos1_gas_int), query_args).toNeighborList()
-                        #BB_gas_nlist = system_BB_gas.query(f_box.wrap(pos1_gas_int), query_args).toNeighborList()
-
-                        print('initiate rdfs')
-
-                        # Get positions of particles in the largest cluster
-                        #rdf_all_bulk = freud.density.RDF(bins=nBins, r_max=rstop, normalize=False)
-                        #rdf_AA_bulk = freud.density.RDF(bins=nBins, r_max=rstop, normalize=False)
-                        #rdf_AB_bulk = freud.density.RDF(bins=nBins, r_max=rstop, normalize=False)
-                        ##rdf_BA_bulk = freud.density.RDF(bins=nBins, r_max=rstop, normalize=False)
-                        #rdf_BB_bulk = freud.density.RDF(bins=nBins, r_max=rstop, normalize=False)
-
-                        #rdf_all_dense = freud.density.RDF(bins=nBins, r_max=rstop)
-                        #rdf_AA_dense = freud.density.RDF(bins=nBins, r_max=rstop)
-                        #rdf_AB_dense = freud.density.RDF(bins=nBins, r_max=rstop)
-                        #rdf_BB_dense = freud.density.RDF(bins=nBins, r_max=rstop)
-
-                        #rdf_all_int = freud.density.RDF(bins=nBins, r_max=rstop)
-                        #rdf_AA_int = freud.density.RDF(bins=nBins, r_max=rstop)
-                        #rdf_AB_int = freud.density.RDF(bins=nBins, r_max=rstop)
-                        #rdf_BB_int = freud.density.RDF(bins=nBins, r_max=rstop)
-
-                        #rdf_all_gas = freud.density.RDF(bins=nBins, r_max=rstop, r_min=0.1, normalize=True)
-                        #rdf_AA_gas = freud.density.RDF(bins=nBins, r_max=rstop, r_min=0.1, normalize=True)
-                        #rdf_AB_gas = freud.density.RDF(bins=nBins, r_max=rstop, r_min=0.1, normalize=True)
-                        #rdf_BB_gas = freud.density.RDF(bins=nBins, r_max=rstop, r_min=0.1, normalize=True)
-
-                        #for i in range(0, len(system_all_bulk)):
-                        #rdf_all_bulk.compute(system_all_bulk, neighbors=all_bulk_nlist, reset=True)               #Calculate radial density function
-                        #rdf_AA_bulk.compute(system_A_bulk, neighbors=AA_bulk_nlist, reset=True)               #Calculate radial density function
-                        #rdf_AB_bulk.compute(system_A_bulk, neighbors=AB_bulk_nlist, reset=True)               #Calculate radial density function
-                        #rdf_BA_bulk.compute(system_B_bulk, neighbors=BA_bulk_nlist, reset=True)
-                        #rdf_BB_bulk.compute(system_B_bulk, neighbors=BB_bulk_nlist, reset=True)               #Calculate radial density function
-
-
-                        #print('dense rdf')
-                        #rdf_all_dense.compute(system_all_dense, neighbors=all_dense_nlist, reset=False)               #Calculate radial density function
-                        #rdf_AA_dense.compute(system_A_dense, neighbors=AA_dense_nlist, reset=False)               #Calculate radial density function
-                        #rdf_AB_dense.compute(system_A_dense, neighbors=AB_dense_nlist, reset=False)               #Calculate radial density function
-                        #rdf_BB_dense.compute(system_B_dense, neighbors=BB_dense_nlist, reset=False)               #Calculate radial density function
-
-                        #print('int rdf')
-                        #rdf_all_int.compute(system_all_int, neighbors=all_int_nlist, reset=False)               #Calculate radial density function
-                        #rdf_AA_int.compute(system_A_int, neighbors=AA_int_nlist, reset=False)               #Calculate radial density function
-                        #rdf_AB_int.compute(system_A_int, neighbors=AB_int_nlist, reset=False)               #Calculate radial density function
-                        #rdf_BB_int.compute(system_B_int, neighbors=BB_int_nlist, reset=False)               #Calculate radial density function
-                        #if len(rdf_all_bulk_rdf_val) == 0:
-                        #    rdf_all_bulk_rdf_val = rdf_all_bulk.rdf
-                        #else:
-                        #    rdf_all_bulk_rdf_val += rdf_all_bulk.rdf
-                        #rdf_AA_bulk_rdf_val += rdf_AA_bulk.rdf#/np.mean(rdf_AA_bulk.rdf)
-                        #rdf_BA_bulk_rdf_val += rdf_BA_bulk.rdf#/np.mean(rdf_BA_bulk.rdf)
-                        #rdf_AB_bulk_rdf_val += rdf_AB_bulk.rdf#/np.mean(rdf_AB_bulk.rdf)
-                        #rdf_BB_bulk_rdf_val += rdf_BB_bulk.rdf#/np.mean(rdf_BB_bulk.rdf)
-                        #rdf_all_bulk_rdf_val += rdf_all_bulk.rdf#/np.mean(rdf_all_bulk.rdf)
-                        '''
-                        query_args2 = dict(mode='ball', r_min = 0.1, r_max=r_cut)
-
-                        system_A_bulk2 = freud.AABBQuery(f_box, f_box.wrap(pos0_bulk))
-                        system_B_bulk2 = freud.AABBQuery(f_box, f_box.wrap(pos1_bulk))
-
-                        AA_bulk_nlist2 = system_A_bulk2.query(f_box.wrap(pos0_bulk_int), query_args2).toNeighborList()
-                        AB_bulk_nlist2 = system_A_bulk2.query(f_box.wrap(pos1_bulk_int), query_args2).toNeighborList()
-                        #BA_bulk_nlist = system_B_bulk.query(f_box.wrap(pos0_bulk_int), query_args).toNeighborList()
-                        BB_bulk_nlist2 = system_B_bulk2.query(f_box.wrap(pos1_bulk_int), query_args2).toNeighborList()
-                        num_steady_state +=1
-
-                        rijs_AA_bulk = (pos0_bulk[AA_bulk_nlist.point_indices] - pos0_bulk_int[AA_bulk_nlist.query_point_indices])
-
-                        difx_out = np.where(rijs_AA_bulk[:,0]>h_box)[0]
-                        rijs_AA_bulk[difx_out,0] = rijs_AA_bulk[difx_out,0]-l_box
-
-                        difx_out = np.where(rijs_AA_bulk[:,0]<-h_box)[0]
-                        rijs_AA_bulk[difx_out,0] = rijs_AA_bulk[difx_out,0]+l_box
-
-                        dify_out = np.where(rijs_AA_bulk[:,1]>h_box)[0]
-                        rijs_AA_bulk[dify_out,1] = rijs_AA_bulk[dify_out,1]-l_box
-
-                        dify_out = np.where(rijs_AA_bulk[:,1]<-h_box)[0]
-                        rijs_AA_bulk[dify_out,1] = rijs_AA_bulk[dify_out,1]+l_box
-
-                        difr_AA_bulk = (rijs_AA_bulk[:,0]**2 + rijs_AA_bulk[:,1]**2)**0.5
-
-                        rijs_AB_bulk = (pos0_bulk[AB_bulk_nlist.point_indices] - pos1_bulk_int[AB_bulk_nlist.query_point_indices])
-
-                        difx_out = np.where(rijs_AB_bulk[:,0]>h_box)[0]
-                        rijs_AB_bulk[difx_out,0] = rijs_AB_bulk[difx_out,0]-l_box
-
-                        difx_out = np.where(rijs_AB_bulk[:,0]<-h_box)[0]
-                        rijs_AB_bulk[difx_out,0] = rijs_AB_bulk[difx_out,0]+l_box
-
-                        dify_out = np.where(rijs_AB_bulk[:,1]>h_box)[0]
-                        rijs_AB_bulk[dify_out,1] = rijs_AB_bulk[dify_out,1]-l_box
-
-                        dify_out = np.where(rijs_AB_bulk[:,1]<-h_box)[0]
-                        rijs_AB_bulk[dify_out,1] = rijs_AB_bulk[dify_out,1]+l_box
-
-                        difr_AB_bulk = (rijs_AB_bulk[:,0]**2 + rijs_AB_bulk[:,1]**2)**0.5
-
-                        rijs_BB_bulk = (pos1_bulk[BB_bulk_nlist.point_indices] - pos1_bulk_int[BB_bulk_nlist.query_point_indices])
-
-                        difx_out = np.where(rijs_BB_bulk[:,0]>h_box)[0]
-                        rijs_BB_bulk[difx_out,0] = rijs_BB_bulk[difx_out,0]-l_box
-
-                        difx_out = np.where(rijs_BB_bulk[:,0]<-h_box)[0]
-                        rijs_BB_bulk[difx_out,0] = rijs_BB_bulk[difx_out,0]+l_box
-
-                        dify_out = np.where(rijs_BB_bulk[:,1]>h_box)[0]
-                        rijs_BB_bulk[dify_out,1] = rijs_BB_bulk[dify_out,1]-l_box
-
-                        dify_out = np.where(rijs_BB_bulk[:,1]<-h_box)[0]
-                        rijs_BB_bulk[dify_out,1] = rijs_BB_bulk[dify_out,1]+l_box
-
-                        difr_BB_bulk = (rijs_BB_bulk[:,0]**2 + rijs_BB_bulk[:,1]**2)**0.5
-
-
-                        #rdf_all_bulk_rdf_val = rdf_all_bulk_rdf_val# * (indices_A * indices_B - 0) / (np.pi * rstop**2)
-                        '''
                 else:
                     if j>int(end*time_step/2):
-                        num_dens_fast_sum = 0
-                        num_dens_fast_val = 0
-
-                        num_dens_slow_sum = 0
-                        num_dens_slow_val = 0
-
-                        num_dens_sum = 0
-                        num_dens_val = 0
-
-                        for ix in range(0, len(occParts)):
-                            for iy in range(0, len(occParts)):
-                                if phaseBin[ix][iy]==0:
-                                    if peA <= peB:
-                                        num_dens_fast_sum += num_dens3B[ix][iy]/(math.pi/4)
-                                        num_dens_fast_val += 1
-
-                                        num_dens_slow_sum += num_dens3A[ix][iy]/(math.pi/4)
-                                        num_dens_slow_val += 1
-                                    else:
-                                        num_dens_fast_sum += num_dens3A[ix][iy]/(math.pi/4)
-                                        num_dens_fast_val += 1
-
-                                        num_dens_slow_sum += num_dens3B[ix][iy]/(math.pi/4)
-                                        num_dens_slow_val += 1
-                                    num_dens_sum += num_dens3[ix][iy]/(math.pi/4)
-                                    num_dens_val += 1
-
-                        num_dens_fast_mean = num_dens_fast_sum / num_dens_fast_val
-                        num_dens_slow_mean = num_dens_slow_sum / num_dens_slow_val
-                        num_dens_mean = num_dens_sum / num_dens_val
-
-                        bulk_area_test = (gasBin + intBin) * (sizeBin**2)
-
-                        num_dens_fast_arr = np.append(num_dens_fast_arr, num_dens_fast_mean)
-                        num_dens_slow_arr = np.append(num_dens_slow_arr, num_dens_slow_mean)
-                        num_dens_arr = np.append(num_dens_arr, num_dens_mean)
-
-                        steady_state_once = 'True'
-                        print('rdf!2')
-                        pos0=pos[typ0ind]                               # Find positions of type 0 particles
-                        pos0_bulk = pos[slow_bulk_id_plot]
-                        pos0_int = pos[slow_int_id_plot]
-                        pos0_gas = pos[slow_gas_id_plot]
-                        pos0_bulk_int = pos[slow_bulk_int_id_plot]
-                        pos0_gas_int = pos[slow_gas_int_id_plot]
-
-                        pos1=pos[typ1ind]
-                        pos1_bulk = pos[fast_bulk_id_plot]
-                        pos1_int = pos[fast_int_id_plot]
-                        pos1_gas = pos[fast_gas_id_plot]
-                        pos1_bulk_int = pos[fast_bulk_int_id_plot]
-                        pos1_gas_int = pos[fast_gas_int_id_plot]
-
-                        pos_bulk = pos[bulk_id_plot]
-                        pos_int = pos[int_id_plot]
-                        pos_gas = pos[gas_id_plot]
-                        pos_bulk_int = pos[bulk_int_id_plot]
-                        pos_gas_int = pos[gas_int_id_plot]
-
-                        pe_tot_int = 0
-                        pe_num_int = 0
-                        for i in range(0, len(int_id_plot)):
-
-                            if typ[int_id_plot[i]]==0:
-                                pe_tot_int += peA
-                                pe_num_int += 1
-                            else:
-                                pe_tot_int += peB
-                                pe_num_int += 1
-                        pe_net_int = pe_tot_int / pe_num_int
-
-                        lat_theory2 = conForRClust(pe_net_int-50, eps)
-                        lat_theory_arr = np.append(lat_theory_arr, lat_theory2)
-
-                        #a = system_all.points[cl_all.cluster_keys[large_clust_ind_all[0]]]
-                        AA_in_large = np.array([])
-                        BB_in_large=np.array([])
-                        mark=0
-                        r = np.linspace(0.0,  3.0, 20)             # Define radius for x-axis of plot later
-
-                        # Width, in distance units, of bin
-                        wBins = 0.02
-
-                        # Distance to compute RDF for
-                        rstop = 15.
-
-                        # Number of bins given this distance
-                        nBins = rstop / wBins
-
-                        wbinsTrue=(rstop)/(nBins-1)
-
-                        r=np.arange(0.0,rstop+wbinsTrue,wbinsTrue)
-                        query_args = dict(mode='ball', r_min = 0.1, r_max=rstop)
-
-                        print('bulk neighbors')
-                        system_all_bulk = freud.AABBQuery(f_box, f_box.wrap(pos_bulk_int))
-                        system_A_bulk = freud.AABBQuery(f_box, f_box.wrap(pos0_bulk_int))
-                        system_B_bulk = freud.AABBQuery(f_box, f_box.wrap(pos1_bulk_int))
-
-                        all_bulk_nlist = system_all_bulk.query(f_box.wrap(pos_bulk), query_args).toNeighborList()
-                        AA_bulk_nlist = system_A_bulk.query(f_box.wrap(pos0_bulk), query_args).toNeighborList()
-                        AB_bulk_nlist = system_A_bulk.query(f_box.wrap(pos1_bulk), query_args).toNeighborList()
-                        #BA_bulk_nlist = system_B_bulk.query(f_box.wrap(pos0_bulk_int), query_args).toNeighborList()
-                        BB_bulk_nlist = system_B_bulk.query(f_box.wrap(pos1_bulk), query_args).toNeighborList()
-                        num_steady_state +=1
-
-                        #use this tomorrow
-
-                        rijs_all_bulk = (pos_bulk_int[all_bulk_nlist.point_indices] - pos_bulk[all_bulk_nlist.query_point_indices])
-
-                        difx_out = np.where(rijs_all_bulk[:,0]>h_box)[0]
-                        rijs_all_bulk[difx_out,0] = rijs_all_bulk[difx_out,0]-l_box
-
-                        difx_out = np.where(rijs_all_bulk[:,0]<-h_box)[0]
-                        rijs_all_bulk[difx_out,0] = rijs_all_bulk[difx_out,0]+l_box
-
-                        dify_out = np.where(rijs_all_bulk[:,1]>h_box)[0]
-                        rijs_all_bulk[dify_out,1] = rijs_all_bulk[dify_out,1]-l_box
-
-                        dify_out = np.where(rijs_all_bulk[:,1]<-h_box)[0]
-                        rijs_all_bulk[dify_out,1] = rijs_all_bulk[dify_out,1]+l_box
-
-                        difr_all_bulk = (rijs_all_bulk[:,0]**2 + rijs_all_bulk[:,1]**2)**0.5
-
-
-                        rijs_AA_bulk = (pos0_bulk_int[AA_bulk_nlist.point_indices] - pos0_bulk[AA_bulk_nlist.query_point_indices])
-
-                        difx_out = np.where(rijs_AA_bulk[:,0]>h_box)[0]
-                        rijs_AA_bulk[difx_out,0] = rijs_AA_bulk[difx_out,0]-l_box
-
-                        difx_out = np.where(rijs_AA_bulk[:,0]<-h_box)[0]
-                        rijs_AA_bulk[difx_out,0] = rijs_AA_bulk[difx_out,0]+l_box
-
-                        dify_out = np.where(rijs_AA_bulk[:,1]>h_box)[0]
-                        rijs_AA_bulk[dify_out,1] = rijs_AA_bulk[dify_out,1]-l_box
-
-                        dify_out = np.where(rijs_AA_bulk[:,1]<-h_box)[0]
-                        rijs_AA_bulk[dify_out,1] = rijs_AA_bulk[dify_out,1]+l_box
-
-                        difr_AA_bulk = (rijs_AA_bulk[:,0]**2 + rijs_AA_bulk[:,1]**2)**0.5
-
-                        rijs_AB_bulk = (pos0_bulk_int[AB_bulk_nlist.point_indices] - pos1_bulk[AB_bulk_nlist.query_point_indices])
-
-                        difx_out = np.where(rijs_AB_bulk[:,0]>h_box)[0]
-                        rijs_AB_bulk[difx_out,0] = rijs_AB_bulk[difx_out,0]-l_box
-
-                        difx_out = np.where(rijs_AB_bulk[:,0]<-h_box)[0]
-                        rijs_AB_bulk[difx_out,0] = rijs_AB_bulk[difx_out,0]+l_box
-
-                        dify_out = np.where(rijs_AB_bulk[:,1]>h_box)[0]
-                        rijs_AB_bulk[dify_out,1] = rijs_AB_bulk[dify_out,1]-l_box
-
-                        dify_out = np.where(rijs_AB_bulk[:,1]<-h_box)[0]
-                        rijs_AB_bulk[dify_out,1] = rijs_AB_bulk[dify_out,1]+l_box
-
-                        difr_AB_bulk = (rijs_AB_bulk[:,0]**2 + rijs_AB_bulk[:,1]**2)**0.5
-                        '''
-                        rijs_BA_bulk = (pos1_bulk[BA_bulk_nlist.point_indices] - pos0_bulk_int[BA_bulk_nlist.query_point_indices])
-
-                        difx_out = np.where(rijs_BA_bulk[:,0]>h_box)[0]
-                        rijs_BA_bulk[difx_out,0] = rijs_BA_bulk[difx_out,0]-l_box
-
-                        difx_out = np.where(rijs_BA_bulk[:,0]<-h_box)[0]
-                        rijs_BA_bulk[difx_out,0] = rijs_BA_bulk[difx_out,0]+l_box
-
-                        dify_out = np.where(rijs_BA_bulk[:,1]>h_box)[0]
-                        rijs_BA_bulk[dify_out,1] = rijs_BA_bulk[dify_out,1]-l_box
-
-                        dify_out = np.where(rijs_BA_bulk[:,1]<-h_box)[0]
-                        rijs_BA_bulk[dify_out,1] = rijs_BA_bulk[dify_out,1]+l_box
-
-                        difr_BA_bulk = (rijs_BA_bulk[:,0]**2 + rijs_BA_bulk[:,1]**2)**0.5
-                        '''
-
-                        rijs_BB_bulk = (pos1_bulk_int[BB_bulk_nlist.point_indices] - pos1_bulk[BB_bulk_nlist.query_point_indices])
-
-                        difx_out = np.where(rijs_BB_bulk[:,0]>h_box)[0]
-                        rijs_BB_bulk[difx_out,0] = rijs_BB_bulk[difx_out,0]-l_box
-
-                        difx_out = np.where(rijs_BB_bulk[:,0]<-h_box)[0]
-                        rijs_BB_bulk[difx_out,0] = rijs_BB_bulk[difx_out,0]+l_box
-
-                        dify_out = np.where(rijs_BB_bulk[:,1]>h_box)[0]
-                        rijs_BB_bulk[dify_out,1] = rijs_BB_bulk[dify_out,1]-l_box
-
-                        dify_out = np.where(rijs_BB_bulk[:,1]<-h_box)[0]
-                        rijs_BB_bulk[dify_out,1] = rijs_BB_bulk[dify_out,1]+l_box
-
-                        difr_BB_bulk = (rijs_BB_bulk[:,0]**2 + rijs_BB_bulk[:,1]**2)**0.5
-                        #plt.hist(difr_all_bulk/((len(all_bulk_nlist.point_indices)/bulk_area_test)*np.pi*rstop**2), bins=r)
-                        g_r_all_bulk = np.array([])
-                        g_r_AA_bulk = np.array([])
-                        g_r_AB_bulk = np.array([])
-                        #g_r_BA_bulk = np.array([])
-                        g_r_BB_bulk = np.array([])
-                        r_arr = np.array([])
-                        for m in range(1, len(r)-1):
-                            difr = r[m+1] - r[m]
-
-                            #inds = np.where((difr_all_bulk>=r[m]) & (difr_all_bulk<r[m+1]))[0]
-                            #rho_all = (len(inds) / (2*math.pi * r[m] * difr) )
-                            #rho_tot_all = len(all_bulk_nlist.point_indices)/ (np.pi * 15**2)#bulk_area_test
-                            #rho_tot_all = len(bulk_id_plot) * num_dens_mean
-
-                            #rho_tot_all = len(all_bulk_nlist.point_indices)/ (num_dens_mean * len(bulk_id_plot))#bulk_area_test
-
-                            inds = np.where((difr_all_bulk>=r[m]) & (difr_all_bulk<r[m+1]))[0]
-                            rho_all = (len(inds) / (2*math.pi * r[m] * difr) )
-                            rho_tot_all = len(bulk_id_plot) * num_dens_mean
-                            g_r_all_bulk = np.append(g_r_all_bulk, rho_all / (rho_tot_all) )
-
-
-                            num_dens_AA = num_dens_slow_mean
-                            num_dens_AB = num_dens_fast_mean
-                            num_dens_BB = num_dens_fast_mean
-                            inds = np.where((difr_AA_bulk>=r[m]) & (difr_AA_bulk<r[m+1]))[0]
-                            rho_aa = (len(inds) / (2*math.pi * r[m] * difr) )
-                            rho_tot_aa = len(slow_bulk_id_plot) * num_dens_slow_mean
-                            #rho_tot_aa = len(AA_bulk_nlist.point_indices)/bulk_area_test
-                            g_r_AA_bulk = np.append(g_r_AA_bulk, rho_aa / rho_tot_aa)
-                            #g_r_AA_bulk = np.append(g_r_AA_bulk, len(inds)/(len(slow_bulk_id_plot)*(2*math.pi * r[m] * difr) * num_dens_AA))
-
-                            #inds = np.where((difr_BA_bulk>=r[m]) & (difr_BA_bulk<r[m+1]))[0]
-                            #g_r_BA_bulk = np.append(g_r_BA_bulk, len(inds)/(len(BA_bulk_nlist.point_indices)*(2*math.pi * r[m+1])/bulk_area_test))
-
-                            inds = np.where((difr_AB_bulk>=r[m]) & (difr_AB_bulk<r[m+1]))[0]
-                            rho_ab = (len(inds) / (2*math.pi * r[m] * difr) )
-                            #rho_tot_ab = len(AB_bulk_nlist.point_indices)/bulk_area_test
-                            rho_tot_ab = len(fast_bulk_id_plot) * (num_dens_slow_mean)
-                            g_r_AB_bulk = np.append(g_r_AB_bulk, rho_ab / rho_tot_ab)
-                            #g_r_AB_bulk = np.append(g_r_AB_bulk, len(inds)/(len(fast_bulk_id_plot)*(2*math.pi * r[m] * difr) * num_dens_AB))
-
-                            inds = np.where((difr_BB_bulk>=r[m]) & (difr_BB_bulk<r[m+1]))[0]
-                            rho_bb = (len(inds) / (2*math.pi * r[m] * difr) )
-                            #rho_tot_bb = len(BB_bulk_nlist.point_indices)/bulk_area_test
-                            rho_tot_bb = len(fast_bulk_id_plot) * num_dens_fast_mean
-                            g_r_BB_bulk = np.append(g_r_BB_bulk, rho_bb / rho_tot_bb)
-                            #g_r_BB_bulk = np.append(g_r_BB_bulk, len(inds)/(len(fast_bulk_id_plot)*(2*math.pi * r[m] * difr) * num_dens_BB))
-
-                            r_arr = np.append(r_arr, r[m])
-
-                        if time_step_count == 0:
-                            g_r_all_bulk_sum = g_r_all_bulk
-                            g_r_AA_bulk_sum = g_r_AA_bulk
-                            g_r_AB_bulk_sum = g_r_AB_bulk
-                            #g_r_BA_bulk_sum = g_r_BA_bulk
-                            g_r_BB_bulk_sum = g_r_BB_bulk
-                            time_step_count += 1
-                        else:
-                            g_r_all_bulk_sum += g_r_all_bulk
-                            g_r_AA_bulk_sum += g_r_AA_bulk
-                            g_r_AB_bulk_sum += g_r_AB_bulk
-                            #g_r_BA_bulk_sum += g_r_BA_bulk
-                            g_r_BB_bulk_sum += g_r_BB_bulk
-                            time_step_count += 1
+                        print('test2')
+                        print(np.shape(partPhase))
+                        partPhase_time = np.append(partPhase_time, partPhase)
+                        print(np.shape(partPhase_time))
 
 if steady_state_once == 'True':
+
+    #for i in range(0, len(partPhase_time_arr)):
+    for j in range(0, np.shape(partPhase_time)[1]):
+
+        bulk_id = np.where(partPhase_time[:,j]==0)[0]
+        gas_id = np.where(partPhase_time[:,j]==2)[0]
+        int_id = np.where(partPhase_time[:,j]==1)[0]
+
+        if len(int_id)>0:
+            for k in range(0, len(int_id)):
+                if partPhase_time[:,int_id[k]]
+
+
+
+
+        if (len(bulk_id)>0) & (len(gas_id)>0):
+            gas_min_time = np.min(partPhase_time_arr[gas_id])
+            bulk_min_time = np.min(partPhase_time_arr[bulk_id])
+            if bulk_min_time < gas_min_time:
+                for k in range(1, len(bulk_id)):
+                    if bulk_id[k] - bulk_id[k-1] != 1:
+                        if partPhase_time[k,bulk_id[k]]==1:
+
+
+
 
 
     '''
@@ -11074,74 +10438,20 @@ if steady_state_once == 'True':
     plt.savefig(outPath + 'rdf_' + out + ".png", dpi=300)
     plt.close()
 
-    #ss_inds = np.where(r>=0.75*rstop)[0]
-    fsize=10
-
-    fig, ax1 = plt.subplots(figsize=(12,6))
-    rdf_all_bulk_rdf = g_r_all_bulk_sum / time_step_count
-
-    all_bulk_max = np.max(rdf_all_bulk_rdf)
-
-
-    plot_max = 1.05 * np.max(all_bulk_max)
-
-    plot_min = 0.0
-
-
-    x_arr = np.array([0.0,15.0])
-    y_arr = np.array([1.0, 1.0])
-
-    plt.plot(x_arr, y_arr, c='black', lw=1.0, ls='--')
-
-    plt.plot(r_arr, rdf_all_bulk_rdf,
-                c='black', lw=first_width, ls='-', alpha=1)
-
-
-    ax1.set_ylim(plot_min, plot_max)
-    #ax1.set_ylim(0, 2)
-
-
-    ax1.set_xlabel(r'Separation Distance ($r$)', fontsize=fsize*2.8)
-
-
-
-    ax1.set_ylabel(r'$g(r)$', fontsize=fsize*2.8)
-
-    lat_theory = np.mean(lat_theory_arr)
-    # Set all the x ticks for radial plots
-    loc = ticker.MultipleLocator(base=1.5)
-    ax1.xaxis.set_major_locator(loc)
-    loc = ticker.MultipleLocator(base=0.75)
-    ax1.xaxis.set_minor_locator(loc)
-    ax1.set_xlim(0, rstop)
-    plt.legend(loc='upper right', fontsize=fsize*2.6)
-    #step = 2.0
-    # Set y ticks
-    loc = ticker.MultipleLocator(base=step)
-    ax1.yaxis.set_major_locator(loc)
-    loc = ticker.MultipleLocator(base=step/2)
-    ax1.yaxis.set_minor_locator(loc)
-    # Left middle plot
-    ax1.tick_params(axis='x', labelsize=fsize*2.5)
-    ax1.tick_params(axis='y', labelsize=fsize*2.5)
-    #plt.legend(loc='upper right')
-
-    plt.tight_layout()
-    plt.savefig(outPath + 'rdf_all_' + out + ".png", dpi=300)
-    plt.close()
-
     g = open(outPath2+outTxt_rdf, 'a')
     for i in range(0, len(r_arr)):
         g.write('{0:.0f}'.format(np.amax(clust_size)).center(15) + ' ')
         g.write('{0:.6f}'.format(lat_theory2).center(15) + ' ')
         g.write('{0:.6f}'.format(r[i]).center(15) + ' ')
-        g.write('{0:.6f}'.format(rdf_all_bulk_rdf[i]).center(15) + ' ')
+        #g.write('{0:.6f}'.format(rdf_all_bulk_rdf[i]).center(15) + ' ')
         if peA<=peB:
             g.write('{0:.6f}'.format(rdf_AA_bulk_rdf[i]).center(15) + ' ')
             g.write('{0:.6f}'.format(rdf_AB_bulk_rdf[i]).center(15) + ' ')
+            #g.write('{0:.6f}'.format(rdf_BA_bulk_rdf[i]).center(15) + ' ')
             g.write('{0:.6f}'.format(rdf_BB_bulk_rdf[i]).center(15) + '\n')
         else:
             g.write('{0:.6f}'.format(rdf_BB_bulk_rdf[i]).center(15) + ' ')
+            #g.write('{0:.6f}'.format(rdf_BA_bulk_rdf[i]).center(15) + ' ')
             g.write('{0:.6f}'.format(rdf_AB_bulk_rdf[i]).center(15) + ' ')
             g.write('{0:.6f}'.format(rdf_AA_bulk_rdf[i]).center(15) + '\n')
     g.close()
