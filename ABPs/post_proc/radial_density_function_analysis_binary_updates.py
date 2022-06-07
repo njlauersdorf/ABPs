@@ -465,6 +465,7 @@ g = open(outPath2+outTxt_rdf, 'w+') # write file headings
 g.write('clust_size'.center(15) + ' ' +\
                         'lat_theory'.center(15) + ' ' +\
                         'r'.center(15) + ' ' +\
+                        'all_rdf'.center(15) + ' ' +\
                         'ss_rdf'.center(15) + ' ' +\
                         'sf_rdf'.center(15) + ' ' +\
                         'ff_rdf'.center(15) + '\n')
