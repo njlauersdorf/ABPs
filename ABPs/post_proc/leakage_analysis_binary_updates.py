@@ -456,18 +456,32 @@ time_step = float(sys.argv[9])
 outfile = 'pa'+str(int(peA))+'_pb'+str(int(peB))+'_xa'+str(int(parFrac))+'_eps'+str(eps)+'_phi'+str(int(intPhi))+'_pNum' + str(int(partNum)) + '_bin' + str(int(bin_width)) + '_time' + str(int(time_step))
 out = outfile
 
-outTxt_rdf = 'rdf_' + outfile + '.txt'
+outTxt_leak = 'leakage_' + outfile + '.txt'
 
 lat_theory_arr = np.array([])
 
 #.txt file for saving overall phase composition data
-g = open(outPath2+outTxt_rdf, 'w+') # write file headings
-g.write('clust_size'.center(15) + ' ' +\
-                        'lat_theory'.center(15) + ' ' +\
-                        'r'.center(15) + ' ' +\
-                        'ss_rdf'.center(15) + ' ' +\
-                        'sf_rdf'.center(15) + ' ' +\
-                        'ff_rdf'.center(15) + '\n')
+g = open(outPath2+outTxt_leak, 'w+') # write file headings
+g.write('tst'.center(15) + ' ' +\
+                        'clust_size'.center(15) + ' ' +\
+                        'Ngas_to_bulk'.center(15) + ' ' +\
+                        'Nsgas_to_bulk'.center(15) + ' ' +\
+                        'Nfgas_to_bulk'.center(15) + ' ' +\
+                        'Nbulk_to_gas'.center(15) + ' ' +\
+                        'Nsbulk_to_gas'.center(15) + ' ' +\
+                        'Nfbulk_to_gas'.center(15) + ' ' +\
+                        'Ngas_to_int'.center(15) + ' ' +\
+                        'Nsgas_to_int'.center(15) + ' ' +\
+                        'Nfgas_to_int'.center(15) + ' ' +\
+                        'Nint_to_gas'.center(15) + ' ' +\
+                        'Nsint_to_gas'.center(15) + ' ' +\
+                        'Nfint_to_gas'.center(15) + ' ' +\
+                        'Nbulk_to_int'.center(15) + ' ' +\
+                        'Nsbulk_to_int'.center(15) + ' ' +\
+                        'Nfbulk_to_int'.center(15) + ' ' +\
+                        'Nint_to_bulk'.center(15) + ' ' +\
+                        'Nsint_to_bulk'.center(15) + ' ' +\
+                        'Nfint_to_bulk'.center(15) + '\n')
 g.close()
 
 """
@@ -608,14 +622,14 @@ num_dens_arr = np.array([])
 
 partPhase_time = np.array([])
 partPhase_time_arr = np.array([])
-
+clust_size_arr = np.array([])
 with hoomd.open(name=inFile, mode='rb') as t:
 
     r = np.linspace(0.0,  5.0, 100)             # Define radius for x-axis of plot later
 
                                                # first frame to process
     dumps = int(t.__len__())
-    start = int((dumps/2)/time_step)#205                             # get number of timesteps dumped
+    start = int(0/time_step)#205                             # get number of timesteps dumped
     end = int(dumps/time_step)#int(dumps/time_step)-1                                             # final frame to process
     snap = t[0]                                             # Take first snap for box
     first_tstep = snap.configuration.step                   # First time step
@@ -667,6 +681,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
         ids = cl_all.cluster_idx                                    # get id of each cluster
         clp_all.compute(system_all, ids)                            # Calculate cluster properties given cluster IDs
         clust_size = clp_all.sizes                                  # find cluster sizes
+        clust_size_arr = np.append(clust_size_arr, clust_size)
 
 
         min_size=int(partNum/8)                                     #Minimum cluster size for measurements to happen
@@ -10050,408 +10065,172 @@ with hoomd.open(name=inFile, mode='rb') as t:
             gas_id_plot = np.where(partPhase==2)[0]         #All interfaces
 
 
-            if ((len(fast_bulk_id_plot)>0) & (len(bulk_id_plot)>0)) & ((len(fast_int_id_plot)>0) & (len(int_id_plot)>0)):
-
-                bulk_ratio = len(fast_bulk_id_plot)/len(bulk_id_plot)
-                int_ratio = len(fast_int_id_plot)/len(int_id_plot)
-                if steady_state == 'True':
-                    print('percent_dif')
-                    print(int_ratio)
-                    print(bulk_ratio)
-                    print(ss_chi_f)
-                    print(ss_chi_f_int)
-
-                    if test_binary==1:#(((peA>=70) & ((bulk_ratio <= 1.05 * ss_chi_f) &  (0.95 * ss_chi_f <= bulk_ratio))) | ((peA<70) & ((int_ratio <= 1.02 * ss_chi_f_int) &  (0.98 * ss_chi_f_int <= int_ratio)))):
-                        print('test2')
-                        print(np.shape(partPhase))
-                        if steady_state_once == 'False':
-                            partPhase_time = partPhase
-                            partPhase_time_arr = np.append(partPhase_time_arr, tst)
-                            steady_state_once = 'True'
-                        else:
-                            partPhase_time_arr = np.append(partPhase_time_arr, tst)
-                            partPhase_time = np.vstack((partPhase_time, partPhase))
-                        print(np.shape(partPhase_time))
-
-                else:
-                    if j>int(end*time_step/2):
-                        print('test2')
-                        print(np.shape(partPhase))
-                        partPhase_time = np.append(partPhase_time, partPhase)
-                        print(np.shape(partPhase_time))
+            if steady_state_once == 'False':
+                partPhase_time = partPhase
+                partPhase_time_arr = np.append(partPhase_time_arr, tst)
+                steady_state_once = 'True'
+            else:
+                partPhase_time_arr = np.append(partPhase_time_arr, tst)
+                partPhase_time = np.vstack((partPhase_time, partPhase))
 
 if steady_state_once == 'True':
 
     #for i in range(0, len(partPhase_time_arr)):
-    for j in range(0, np.shape(partPhase_time)[1]):
+    start_part_phase = partPhase_time[:,0]
+    start_bulk_id = np.where(partPhase_time[0,:]==0)[0]
+    start_gas_id = np.where(partPhase_time[0,:]==2)[0]
+    start_int_id = np.where(partPhase_time[0,:]==1)[0]
 
-        bulk_id = np.where(partPhase_time[:,j]==0)[0]
-        gas_id = np.where(partPhase_time[:,j]==2)[0]
-        int_id = np.where(partPhase_time[:,j]==1)[0]
+    start_bulk_id_with_int = np.where(partPhase_time[0,:]==0)[0]
+    start_gas_id_with_int = np.where(partPhase_time[0,:]==2)[0]
+    start_int_id_with_int = np.where(partPhase_time[0,:]==1)[0]
 
-        if len(int_id)>0:
-            for k in range(0, len(int_id)):
-                if partPhase_time[:,int_id[k]]
+    num_bulk_to_gas = np.array([])
+    num_slow_bulk_to_gas = np.array([])
+    num_fast_bulk_to_gas = np.array([])
 
+    num_gas_to_bulk = np.array([])
+    num_slow_gas_to_bulk = np.array([])
+    num_fast_gas_to_bulk = np.array([])
 
+    num_gas_to_int = np.array([])
+    num_slow_gas_to_int = np.array([])
+    num_fast_gas_to_int = np.array([])
 
+    num_int_to_gas = np.array([])
+    num_slow_int_to_gas = np.array([])
+    num_fast_int_to_gas = np.array([])
 
-        if (len(bulk_id)>0) & (len(gas_id)>0):
-            gas_min_time = np.min(partPhase_time_arr[gas_id])
-            bulk_min_time = np.min(partPhase_time_arr[bulk_id])
-            if bulk_min_time < gas_min_time:
-                for k in range(1, len(bulk_id)):
-                    if bulk_id[k] - bulk_id[k-1] != 1:
-                        if partPhase_time[k,bulk_id[k]]==1:
+    num_bulk_to_int = np.array([])
+    num_slow_bulk_to_int = np.array([])
+    num_fast_bulk_to_int = np.array([])
 
+    num_int_to_bulk = np.array([])
+    num_slow_int_to_bulk = np.array([])
+    num_fast_int_to_bulk = np.array([])
 
+    for j in range(1, np.shape(partPhase_time)[0]):
+        print('j')
+        print(j)
 
+        bulk_id = np.where(partPhase_time[j,:]==0)[0]
+        gas_id = np.where(partPhase_time[j,:]==2)[0]
+        int_id = np.where(partPhase_time[j,:]==1)[0]
 
+        still_in_bulk = np.intersect1d(start_bulk_id, bulk_id, return_indices=True)
+        not_in_bulk = np.delete(bulk_id, still_in_bulk[2])
 
-    '''
-    pos_bulk_hcp = np.array([])
-    pos_bulk_int_hcp = []
+        still_in_gas = np.intersect1d(start_gas_id, gas_id, return_indices=True)
+        not_in_gas = np.delete(gas_id, still_in_gas[2])
 
-    def computeDistance(x, y):
-        return np.sqrt((x**2) + (y**2))
+        still_in_int = np.intersect1d(start_int_id, int_id, return_indices=True)
+        not_in_int = np.delete(int_id, still_in_int[2])
 
-    rMin = 0             # starting distance for particle placement
-    rMax = clust_rad_theory         # maximum distance for particle placement
-    ver = np.sqrt(0.75) * lat_theory   # vertical shift between lattice rows
-    hor = lat_theory / 2.0             # horizontal shift between lattice rows
+        #now_in_int = np.intersect1d(start_int_id, not_in_bulk)
+        bulk_now_in_gas = np.intersect1d(start_gas_id, not_in_bulk, return_indices=True)
+        gas_now_in_bulk = np.intersect1d(start_bulk_id, not_in_gas, return_indices=True)
 
-    x = 0.
-    y = 0.
-    shift = 0.
-    rAlign=20.
-    z = 0.0
-    while y <= rMax:
-        r = computeDistance(x, y)
-        # Check if x-position is too large
-        if r > (rMax + (lat_theory/2.)):
-            y += ver
-            shift += 1
-            if shift % 2:
-                x = hor
-            else:
-                x = 0.
-            continue
-        # Whether or not particle is oriented
-        if r > (rMax - rAlign):
-            # If the loop makes it this far, append
-            if len(pos_bulk_int_hcp)==0:
-                pos_bulk_int_hcp = np.array([x, y, z])
-            else:
-                pos_bulk_int_hcp = np.vstack((pos_bulk_int_hcp, np.array([x, y, z])))
+        bulk_now_in_int = np.intersect1d(start_int_id_with_int, not_in_bulk, return_indices=True)
+        int_now_in_bulk = np.intersect1d(start_bulk_id_with_int, not_in_int, return_indices=True)
 
-            if x != 0. and y != 0.:
-                # Mirror positions, alignment and type
-                pos_bulk_int_hcp = np.vstack((pos_bulk_int_hcp, np.array([-x, y, z])))
-                pos_bulk_int_hcp = np.vstack((pos_bulk_int_hcp, np.array([-x, -y, z])))
-                pos_bulk_int_hcp = np.vstack((pos_bulk_int_hcp, np.array([x, -y, z])))
-            # y must be zero
-            elif x != 0.:
-                pos_bulk_int_hcp = np.vstack((pos_bulk_int_hcp, np.array([-x, y, z])))
-            # x must be zero
-            elif y!= 0.:
-                pos_bulk_int_hcp = np.vstack((pos_bulk_int_hcp, np.array([x, -y, z])))
+        gas_now_in_int = np.intersect1d(start_int_id_with_int, not_in_gas, return_indices=True)
+        int_now_in_gas = np.intersect1d(start_gas_id_with_int, not_in_int, return_indices=True)
 
-            # Increment counter
-            x += lat_theory
+        gas_nolonger_in_bulk = np.intersect1d(start_bulk_id, bulk_now_in_gas[0], return_indices=True)
+        bulk_nolonger_in_gas = np.intersect1d(start_gas_id, gas_now_in_bulk[0], return_indices=True)
 
+        int_nolonger_in_bulk = np.intersect1d(start_bulk_id_with_int, bulk_now_in_int[0], return_indices=True)
+        bulk_nolonger_in_int = np.intersect1d(start_int_id_with_int, int_now_in_bulk[0], return_indices=True)
+
+        int_nolonger_in_gas = np.intersect1d(start_gas_id_with_int, gas_now_in_int[0], return_indices=True)
+        gas_nolonger_in_int = np.intersect1d(start_int_id_with_int, int_now_in_gas[0], return_indices=True)
+
+        if len(bulk_now_in_gas)>0:
+            num_bulk_to_gas = np.append(num_bulk_to_gas, len(bulk_now_in_gas[0]))
+            num_slow_bulk_to_gas = np.append(num_slow_bulk_to_gas, len(np.where(typ[bulk_now_in_gas[0]]==0)[0]))
+            num_fast_bulk_to_gas = np.append(num_fast_bulk_to_gas, len(np.where(typ[bulk_now_in_gas[0]]==1)[0]))
+            start_bulk_id = np.delete(start_bulk_id, gas_nolonger_in_bulk[1])
+            start_gas_id = np.append(start_gas_id, bulk_now_in_gas[1])
         else:
-            if len(pos_bulk_int_hcp)==0:
-                pos_bulk_int_hcp = np.array([x, y, z])
-            else:
-                pos_bulk_int_hcp = np.vstack((pos_bulk_int_hcp, np.array([x, y, z])))
+            num_bulk_to_gas = np.append(num_bulk_to_gas, 0)
+            num_slow_bulk_to_gas = np.append(num_slow_bulk_to_gas, 0)
+            num_fast_bulk_to_gas = np.append(num_fast_bulk_to_gas, 0)
 
-            if len(pos_bulk_hcp) == 0:
-                pos_bulk_hcp = np.array([x, y, z])
-            else:
-                pos_bulk_hcp = np.vstack((pos_bulk_hcp, np.array([x, y, z])))
-
-            if x != 0. and y != 0.:
-                # Mirror positions, alignment and type
-                pos_bulk_hcp = np.vstack((pos_bulk_hcp, np.array([-x, y, z])))
-                pos_bulk_hcp = np.vstack((pos_bulk_hcp, np.array([-x, -y, z])))
-                pos_bulk_hcp = np.vstack((pos_bulk_hcp, np.array([x, -y, z])))
-
-                pos_bulk_int_hcp = np.vstack((pos_bulk_int_hcp, np.array([-x, y, z])))
-                pos_bulk_int_hcp = np.vstack((pos_bulk_int_hcp, np.array([-x, -y, z])))
-                pos_bulk_int_hcp = np.vstack((pos_bulk_int_hcp, np.array([x, -y, z])))
-            # y must be zero
-            elif x != 0.:
-                pos_bulk_hcp = np.vstack((pos_bulk_hcp, np.array([-x, y, z])))
-
-                pos_bulk_int_hcp = np.vstack((pos_bulk_int_hcp, np.array([-x, y, z])))
-            # x must be zero
-            elif y!= 0.:
-                pos_bulk_hcp = np.vstack((pos_bulk_hcp, np.array([x, -y, z])))
-
-                pos_bulk_int_hcp = np.vstack((pos_bulk_int_hcp, np.array([x, -y, z])))
-
-            # Increment counter
-            x += lat_theory
-    print(np.shape(pos_bulk_hcp))
-    print(np.shape(pos))
-    # Width, in distance units, of bin
-    wBins = 0.02
-
-    # Distance to compute RDF for
-    rstop = 20.
-
-    # Number of bins given this distance
-    nBins = rstop / wBins
-
-    wbinsTrue=(rstop)/(nBins-1)
-
-    r=np.arange(0.0,rstop+wbinsTrue,wbinsTrue)
-    query_args = dict(mode='ball', r_min = 0.1, r_max=rstop)
-
-    system_hcp_bulk = freud.AABBQuery(f_box, f_box.wrap(pos_bulk_hcp))
-    hcp_bulk_nlist = system_hcp_bulk.query(f_box.wrap(pos_bulk_int_hcp), query_args).toNeighborList()
-
-    #use this tomorrow
-    rijs_hcp_bulk = (pos_bulk_hcp[hcp_bulk_nlist.point_indices] - pos_bulk_int_hcp[hcp_bulk_nlist.query_point_indices])
-
-    difx_out = np.where(rijs_hcp_bulk[:,0]>h_box)[0]
-    rijs_hcp_bulk[difx_out,0] = rijs_hcp_bulk[difx_out,0]-l_box
-
-    difx_out = np.where(rijs_hcp_bulk[:,0]<-h_box)[0]
-    rijs_hcp_bulk[difx_out,0] = rijs_hcp_bulk[difx_out,0]+l_box
-
-    dify_out = np.where(rijs_hcp_bulk[:,1]>h_box)[0]
-    rijs_hcp_bulk[dify_out,1] = rijs_hcp_bulk[dify_out,1]-l_box
-
-    dify_out = np.where(rijs_hcp_bulk[:,1]<-h_box)[0]
-    rijs_hcp_bulk[dify_out,1] = rijs_hcp_bulk[dify_out,1]+l_box
-
-    difr_hcp_bulk = (rijs_hcp_bulk[:,0]**2 + rijs_hcp_bulk[:,1]**2)**0.5
-
-    g_r_hcp_bulk = np.array([])
-    r_arr = np.array([])
-    for m in range(0, len(r)-1):
-        difr = r[m+1] - r[m]
-
-        inds = np.where((difr_hcp_bulk>=r[m]) & (difr_hcp_bulk<r[m+1]))[0]
-        g_r_hcp_bulk = np.append(g_r_hcp_bulk, len(inds)/(len(hcp_bulk_nlist.point_indices)*(2*math.pi * r[m+1])/(np.pi*clust_rad_theory**2)))
-
-        r_arr = np.append(r_arr, r[m+1])
-
-    '''
-
-
-    #ss_inds = np.where(r>=0.75*rstop)[0]
-    fsize=10
-
-    fig, ax1 = plt.subplots(figsize=(12,6))
-    #rdf_all_bulk_rdf = g_r_all_bulk_sum / time_step_count
-    rdf_AA_bulk_rdf = g_r_AA_bulk_sum / time_step_count#rdf_AA_bulk.rdf#/np.mean(rdf_AA_bulk.rdf)
-    #rdf_BA_bulk_rdf = g_r_BA_bulk_sum / time_step_count#/np.mean(rdf_BA_bulk.rdf)
-    rdf_AB_bulk_rdf = g_r_AB_bulk_sum / time_step_count#/np.mean(rdf_AB_bulk.rdf)
-    rdf_BB_bulk_rdf = g_r_BB_bulk_sum / time_step_count#/np.mean(rdf_BB_bulk.rdf)
-    #rdf_all_bulk_rdf = g_r_all_bulk_sum / time_step_count#/np.mean(rdf_all_bulk.rdf)
-
-    #all_bulk_max = np.max(rdf_all_bulk_rdf)
-    AA_bulk_max = np.max(rdf_AA_bulk_rdf)
-    AB_bulk_max = np.max(rdf_AB_bulk_rdf)
-    #BA_bulk_max = np.max(rdf_BA_bulk_rdf)
-    BB_bulk_max = np.max(rdf_BB_bulk_rdf)
-    #all_bulk_max = np.max(rdf_all_bulk_rdf)
-    if (AA_bulk_max >= AB_bulk_max):
-        if (AA_bulk_max >= BB_bulk_max):
-            AA_bulk_order = 1
-            if (BB_bulk_max >= AB_bulk_max):
-                BB_bulk_order = 2
-                AB_bulk_order = 3
-            else:
-                AB_bulk_order = 2
-                BB_bulk_order = 3
+        if len(gas_now_in_bulk)>0:
+            num_gas_to_bulk = np.append(num_gas_to_bulk, len(gas_now_in_bulk[0]))
+            num_slow_gas_to_bulk = np.append(num_slow_gas_to_bulk, len(np.where(typ[gas_now_in_bulk[0]]==0)[0]))
+            num_fast_gas_to_bulk = np.append(num_fast_gas_to_bulk, len(np.where(typ[gas_now_in_bulk[0]]==1)[0]))
+            start_gas_id = np.delete(start_gas_id, bulk_nolonger_in_gas[1])
+            start_bulk_id = np.append(start_bulk_id, gas_now_in_bulk[1])
         else:
-            BB_bulk_order = 1
-            AA_bulk_order = 2
-            AB_bulk_order = 3
-    else:
-        if (AA_bulk_max >= BB_bulk_max):
-            AB_bulk_order = 1
-            AA_bulk_order = 2
-            BB_bulk_order = 3
+            num_gas_to_bulk = np.append(num_gas_to_bulk, 0)
+            num_slow_gas_to_bulk = np.append(num_slow_gas_to_bulk, 0)
+            num_fast_gas_to_bulk = np.append(num_fast_gas_to_bulk, 0)
+
+        if len(bulk_now_in_int)>0:
+            num_bulk_to_int = np.append(num_bulk_to_int, len(bulk_now_in_int[0]))
+            num_slow_bulk_to_int = np.append(num_slow_bulk_to_int, len(np.where(typ[bulk_now_in_int[0]]==0)[0]))
+            num_fast_bulk_to_int = np.append(num_fast_bulk_to_int, len(np.where(typ[bulk_now_in_int[0]]==1)[0]))
+            start_bulk_id_with_int = np.delete(start_bulk_id_with_int, int_nolonger_in_bulk[1])
+            start_int_id_with_int = np.append(start_int_id_with_int, bulk_now_in_int[1])
         else:
-            AA_bulk_order = 3
-            if (BB_bulk_max >= AB_bulk_max):
-                BB_bulk_order = 1
-                AB_bulk_order = 2
-            else:
-                AB_bulk_order = 1
-                BB_bulk_order = 2
+            num_bulk_to_int = np.append(num_bulk_to_int, 0)
+            num_slow_bulk_to_int = np.append(num_slow_bulk_to_int, 0)
+            num_fast_bulk_to_int = np.append(num_fast_bulk_to_int, 0)
 
-    if AA_bulk_order == 1:
-        plot_max = 1.05 * np.max(AA_bulk_max)
-    elif AB_bulk_order == 1:
-        plot_max = 1.05 * np.max(AB_bulk_max)
-    elif BB_bulk_order == 1:
-        plot_max = 1.05 * np.max(BB_bulk_max)
-
-    '''
-    if (AA_bulk_max >= AB_bulk_max) & (AA_bulk_max >= BB_bulk_max) & (AA_bulk_max >= BA_bulk_max) & (AA_bulk_max >= all_bulk_max):
-        plot_max = 1.05 * np.max(AA_bulk_max)
-    elif (AB_bulk_max >= AA_bulk_max) & (AB_bulk_max >= BB_bulk_max) & (AB_bulk_max >= BA_bulk_max) & (AB_bulk_max >= all_bulk_max):
-        plot_max = 1.05 * np.max(AB_bulk_max)
-    elif (BB_bulk_max >= AA_bulk_max) & (BB_bulk_max >= AB_bulk_max) & (BB_bulk_max >= BA_bulk_max) & (BB_bulk_max >= all_bulk_max):
-        plot_max = 1.05 * np.max(BB_bulk_max)
-    elif (BA_bulk_max >= AA_bulk_max) & (BA_bulk_max >= AB_bulk_max) & (BA_bulk_max >= BB_bulk_max) & (BA_bulk_max >= all_bulk_max):
-        plot_max = 1.05 * np.max(BA_bulk_max)
-    elif (all_bulk_max >= AA_bulk_max) & (all_bulk_max >= AB_bulk_max) & (all_bulk_max >= BB_bulk_max) & (all_bulk_max >= BA_bulk_max):
-        plot_max = 1.05 * np.max(all_bulk_max)
-    '''
-    plot_min = 0.0
-
-    step = int(np.abs(plot_max - plot_min)/6)
-    step_x = 1.5
-    fastCol = '#e31a1c'
-    slowCol = '#081d58'
-    purple = ("#756bb1")
-    pink = ("#2ca25f")
-    fast_dens = np.mean(num_dens_fast_arr)
-    slow_dens = np.mean(num_dens_slow_arr)
-    dens = np.mean(num_dens_arr)
-    x_arr = np.array([0.0,15.0])
-    y_arr = np.array([1.0, 1.0])
-
-    plt.plot(x_arr, y_arr, c='black', lw=1.0, ls='--')
-    first_width = 9.0
-    second_width = 6.0
-    third_width = 3.0
-    if peA <= peB:
-        if AA_bulk_order == 1:
-            plt.plot(r_arr, rdf_AA_bulk_rdf, label=r'Slow-Slow',
-                        c=slowCol, lw=first_width, ls='-', alpha=1)
-            if AB_bulk_order == 2:
-                plt.plot(r_arr, rdf_AB_bulk_rdf, label=r'Slow-Fast',
-                            c=purple, lw=second_width, ls='-', alpha=1)
-                plt.plot(r_arr, rdf_BB_bulk_rdf, label=r'Fast-Fast',
-                            c=fastCol, lw=third_width, ls='-', alpha=1)
-            else:
-                plt.plot(r_arr, rdf_BB_bulk_rdf, label=r'Fast-Fast',
-                            c=fastCol, lw=second_width, ls='-', alpha=1)
-                plt.plot(r_arr, rdf_AB_bulk_rdf, label=r'Slow-Fast',
-                            c=purple, lw=third_width, ls='-', alpha=1)
-        elif AB_bulk_order == 1:
-            plt.plot(r_arr, rdf_AB_bulk_rdf, label=r'Slow-Fast',
-                        c=purple, lw=first_width, ls='-', alpha=1)
-            if AA_bulk_order == 2:
-                plt.plot(r_arr, rdf_AA_bulk_rdf, label=r'Slow-Slow',
-                            c=slowCol, lw=second_width, ls='-', alpha=1)
-                plt.plot(r_arr, rdf_BB_bulk_rdf, label=r'Fast-Fast',
-                            c=fastCol, lw=third_width, ls='-', alpha=1)
-            else:
-                plt.plot(r_arr, rdf_BB_bulk_rdf, label=r'Fast-Fast',
-                            c=fastCol, lw=second_width, ls='-', alpha=1)
-                plt.plot(r_arr, rdf_AA_bulk_rdf, label=r'Slow-Slow',
-                            c=slowCol, lw=third_width, ls='-', alpha=1)
-        elif BB_bulk_order == 1:
-            plt.plot(r_arr, rdf_BB_bulk_rdf, label=r'Fast-Fast',
-                        c=fastCol, lw=first_width, ls='-', alpha=1)
-            if AA_bulk_order == 1:
-                plt.plot(r_arr, rdf_AA_bulk_rdf, label=r'Slow-Slow',
-                            c=slowCol, lw=second_width, ls='-', alpha=1)
-                plt.plot(r_arr, rdf_AB_bulk_rdf, label=r'Slow-Fast',
-                            c=purple, lw=third_width, ls='-', alpha=1)
-            else:
-                plt.plot(r_arr, rdf_AB_bulk_rdf, label=r'Slow-Fast',
-                            c=purple, lw=second_width, ls='-', alpha=1)
-                plt.plot(r_arr, rdf_AA_bulk_rdf, label=r'Slow-Slow',
-                            c=slowCol, lw=third_width, ls='-', alpha=1.0)
-
-    else:
-        if AA_bulk_order == 1:
-            plt.plot(r_arr, rdf_AA_bulk_rdf, label=r'Fast-Fast',
-                        c=fastCol, lw=first_width, ls='-', alpha=1)
-            if AB_bulk_order == 2:
-                plt.plot(r_arr, rdf_AB_bulk_rdf, label=r'Slow-Fast',
-                            c=purple, lw=second_width, ls='-', alpha=1)
-                plt.plot(r_arr, rdf_BB_bulk_rdf, label=r'Slow-Slow',
-                            c=slowCol, lw=third_width, ls='-', alpha=1)
-            else:
-                plt.plot(r_arr, rdf_BB_bulk_rdf, label=r'Slow-Slow',
-                            c=slowCol, lw=second_width, ls='-', alpha=1)
-                plt.plot(r_arr, rdf_AB_bulk_rdf, label=r'Slow-Fast',
-                            c=purple, lw=third_width, ls='-', alpha=1)
-        elif AB_bulk_order == 1:
-            plt.plot(r_arr, rdf_AB_bulk_rdf, label=r'Slow-Fast',
-                        c=purple, lw=first_width, ls='-', alpha=1)
-            if AA_bulk_order == 2:
-                plt.plot(r_arr, rdf_AA_bulk_rdf, label=r'Fast-Fast',
-                            c=fastCol, lw=second_width, ls='-', alpha=1)
-                plt.plot(r_arr, rdf_BB_bulk_rdf, label=r'Slow-Slow',
-                            c=slowCol, lw=third_width, ls='-', alpha=1)
-            else:
-                plt.plot(r_arr, rdf_BB_bulk_rdf, label=r'Slow-Slow',
-                            c=slowCol, lw=second_width, ls='-', alpha=1)
-                plt.plot(r_arr, rdf_AA_bulk_rdf, label=r'Fast-Fast',
-                            c=fastCol, lw=third_width, ls='-', alpha=1)
-        elif BB_bulk_order == 1:
-            plt.plot(r_arr, rdf_BB_bulk_rdf, label=r'Slow-Slow',
-                        c=slowCol, lw=first_width, ls='-', alpha=1)
-            if AA_bulk_order == 1:
-                plt.plot(r_arr, rdf_AA_bulk_rdf, label=r'Fast-Fast',
-                            c=fastCol, lw=second_width, ls='-', alpha=1)
-                plt.plot(r_arr, rdf_AB_bulk_rdf, label=r'Slow-Fast',
-                            c=purple, lw=third_width, ls='-', alpha=1)
-            else:
-                plt.plot(r_arr, rdf_AB_bulk_rdf, label=r'Slow-Fast',
-                            c=purple, lw=second_width, ls='-', alpha=1)
-                plt.plot(r_arr, rdf_AA_bulk_rdf, label=r'Fast-Fast',
-                            c=fastCol, lw=third_width, ls='-', alpha=1)
-
-
-    ax1.set_ylim(plot_min, plot_max)
-    #ax1.set_ylim(0, 2)
-
-
-    ax1.set_xlabel(r'Separation Distance ($r$)', fontsize=fsize*2.8)
-
-
-
-    ax1.set_ylabel(r'$g(r)$', fontsize=fsize*2.8)
-
-    lat_theory = np.mean(lat_theory_arr)
-    # Set all the x ticks for radial plots
-    loc = ticker.MultipleLocator(base=1.5)
-    ax1.xaxis.set_major_locator(loc)
-    loc = ticker.MultipleLocator(base=0.75)
-    ax1.xaxis.set_minor_locator(loc)
-    ax1.set_xlim(0, rstop)
-    plt.legend(loc='upper right', fontsize=fsize*2.6)
-    #step = 2.0
-    # Set y ticks
-    loc = ticker.MultipleLocator(base=step)
-    ax1.yaxis.set_major_locator(loc)
-    loc = ticker.MultipleLocator(base=step/2)
-    ax1.yaxis.set_minor_locator(loc)
-    # Left middle plot
-    ax1.tick_params(axis='x', labelsize=fsize*2.5)
-    ax1.tick_params(axis='y', labelsize=fsize*2.5)
-    #plt.legend(loc='upper right')
-
-    plt.tight_layout()
-    plt.savefig(outPath + 'rdf_' + out + ".png", dpi=300)
-    plt.close()
-
-    g = open(outPath2+outTxt_rdf, 'a')
-    for i in range(0, len(r_arr)):
-        g.write('{0:.0f}'.format(np.amax(clust_size)).center(15) + ' ')
-        g.write('{0:.6f}'.format(lat_theory2).center(15) + ' ')
-        g.write('{0:.6f}'.format(r[i]).center(15) + ' ')
-        #g.write('{0:.6f}'.format(rdf_all_bulk_rdf[i]).center(15) + ' ')
-        if peA<=peB:
-            g.write('{0:.6f}'.format(rdf_AA_bulk_rdf[i]).center(15) + ' ')
-            g.write('{0:.6f}'.format(rdf_AB_bulk_rdf[i]).center(15) + ' ')
-            #g.write('{0:.6f}'.format(rdf_BA_bulk_rdf[i]).center(15) + ' ')
-            g.write('{0:.6f}'.format(rdf_BB_bulk_rdf[i]).center(15) + '\n')
+        if len(int_now_in_bulk)>0:
+            num_int_to_bulk = np.append(num_int_to_bulk, len(int_now_in_bulk[0]))
+            num_slow_int_to_bulk = np.append(num_slow_int_to_bulk, len(np.where(typ[int_now_in_bulk[0]]==0)[0]))
+            num_fast_int_to_bulk = np.append(num_fast_int_to_bulk, len(np.where(typ[int_now_in_bulk[0]]==1)[0]))
+            start_int_id_with_int = np.delete(start_int_id_with_int, bulk_nolonger_in_int[1])
+            start_bulk_id_with_int = np.append(start_bulk_id_with_int, int_now_in_bulk[1])
         else:
-            g.write('{0:.6f}'.format(rdf_BB_bulk_rdf[i]).center(15) + ' ')
-            #g.write('{0:.6f}'.format(rdf_BA_bulk_rdf[i]).center(15) + ' ')
-            g.write('{0:.6f}'.format(rdf_AB_bulk_rdf[i]).center(15) + ' ')
-            g.write('{0:.6f}'.format(rdf_AA_bulk_rdf[i]).center(15) + '\n')
+            num_int_to_bulk = np.append(num_int_to_bulk, 0)
+            num_slow_int_to_bulk = np.append(num_slow_int_to_bulk, 0)
+            num_fast_int_to_bulk = np.append(num_fast_int_to_bulk, 0)
+
+        if len(gas_now_in_int)>0:
+            num_gas_to_int = np.append(num_gas_to_int, len(gas_now_in_int[0]))
+            num_slow_gas_to_int = np.append(num_slow_gas_to_int, len(np.where(typ[gas_now_in_int[0]]==0)[0]))
+            num_fast_gas_to_int = np.append(num_fast_gas_to_int, len(np.where(typ[gas_now_in_int[0]]==1)[0]))
+            start_gas_id_with_int = np.delete(start_gas_id_with_int, int_nolonger_in_gas[1])
+            start_int_id_with_int = np.append(start_int_id_with_int, gas_now_in_int[1])
+        else:
+            num_gas_to_int = np.append(num_gas_to_int, 0)
+            num_slow_gas_to_int = np.append(num_slow_gas_to_int, 0)
+            num_fast_gas_to_int = np.append(num_fast_gas_to_int, 0)
+
+        if len(int_now_in_gas)>0:
+            num_int_to_gas = np.append(num_int_to_gas, len(int_now_in_gas[0]))
+            num_slow_int_to_gas = np.append(num_slow_int_to_gas, len(np.where(typ[int_now_in_gas[0]]==0)[0]))
+            num_fast_int_to_gas = np.append(num_fast_int_to_gas, len(np.where(typ[int_now_in_gas[0]]==1)[0]))
+            start_int_id_with_int = np.delete(start_int_id_with_int, gas_nolonger_in_int[1])
+            start_gas_id_with_int = np.append(start_gas_id_with_int, int_now_in_gas[1])
+        else:
+            num_int_to_gas = np.append(num_int_to_gas, 0)
+            num_slow_int_to_gas = np.append(num_slow_int_to_gas, 0)
+            num_fast_int_to_gas = np.append(num_fast_int_to_gas, 0)
+
+    g = open(outPath2+outTxt_leak, 'a')
+    for i in range(0, int(len(partPhase_time_arr)-1)):
+        g.write('{0:.2f}'.format(partPhase_time_arr[i]).center(15) + ' ')
+        g.write('{0:.0f}'.format(clust_size_arr[i]).center(15) + ' ')
+        g.write('{0:.0f}'.format(num_gas_to_bulk[i]).center(15) + ' ')
+        g.write('{0:.0f}'.format(num_slow_gas_to_bulk[i]).center(15) + ' ')
+        g.write('{0:.0f}'.format(num_fast_gas_to_bulk[i]).center(15) + ' ')
+        g.write('{0:.0f}'.format(num_bulk_to_gas[i]).center(15) + ' ')
+        g.write('{0:.0f}'.format(num_slow_bulk_to_gas[i]).center(15) + ' ')
+        g.write('{0:.0f}'.format(num_fast_bulk_to_gas[i]).center(15) + ' ')
+        g.write('{0:.0f}'.format(num_gas_to_int[i]).center(15) + ' ')
+        g.write('{0:.0f}'.format(num_slow_gas_to_int[i]).center(15) + ' ')
+        g.write('{0:.0f}'.format(num_fast_gas_to_int[i]).center(15) + ' ')
+        g.write('{0:.0f}'.format(num_int_to_gas[i]).center(15) + ' ')
+        g.write('{0:.0f}'.format(num_slow_int_to_gas[i]).center(15) + ' ')
+        g.write('{0:.0f}'.format(num_fast_int_to_gas[i]).center(15) + ' ')
+        g.write('{0:.0f}'.format(num_bulk_to_int[i]).center(15) + ' ')
+        g.write('{0:.0f}'.format(num_slow_bulk_to_int[i]).center(15) + ' ')
+        g.write('{0:.0f}'.format(num_fast_bulk_to_int[i]).center(15) + ' ')
+        g.write('{0:.0f}'.format(num_int_to_bulk[i]).center(15) + ' ')
+        g.write('{0:.0f}'.format(num_slow_int_to_bulk[i]).center(15) + ' ')
+        g.write('{0:.0f}'.format(num_fast_int_to_bulk[i]).center(15) + '\n')
     g.close()
