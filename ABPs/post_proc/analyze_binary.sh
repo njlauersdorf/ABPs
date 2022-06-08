@@ -104,6 +104,7 @@ else
     pa2=${pa%%.*}
 fi
 
+which python3
 if [ "$method" = "interface_pressure_com" ]; then
     python3 $script_path/align_pressure_CoM.py $fname $pa2 $pb $xa2 $ep $phi $dtau $bin $step $hoomd_path $txt_path $pic_path
 elif [ "$method" = "interface_pressure_surface" ]; then
