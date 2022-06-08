@@ -10146,7 +10146,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                         wBins = 0.02
 
                         # Distance to compute RDF for
-                        rstop = 15.
+                        rstop = 10.
 
                         # Number of bins given this distance
                         nBins = rstop / wBins
@@ -10569,7 +10569,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                         wBins = 0.02
 
                         # Distance to compute RDF for
-                        rstop = 15.
+                        rstop = 10.
 
                         # Number of bins given this distance
                         nBins = rstop / wBins
