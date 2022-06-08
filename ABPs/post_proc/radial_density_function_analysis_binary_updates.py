@@ -64,7 +64,7 @@ import matplotlib.patches as patches
 import matplotlib.ticker as tick
 import matplotlib.ticker as ticker
 
-from symfit import parameters, variables, sin, cos, Fit
+#from symfit import parameters, variables, sin, cos, Fit
 
 from scipy.optimize import curve_fit
 
@@ -135,7 +135,7 @@ def fourier(x, *a):
     for deg in range(1, int(len(a)/2)):
         ret += ((a[(deg*2)] * np.cos((deg) * ((x-a[0])*np.pi/180))) + (a[2*deg+1] * np.sin((deg) * ((x-a[0])*np.pi/180))))
     return ret
-
+'''
 def fourier_series(x, f, n=0):
     """
     Returns a symbolic fourier series of order `n`.
@@ -151,7 +151,7 @@ def fourier_series(x, f, n=0):
     series = a0 + sum(ai * cos(i * (x-f)) + bi * sin(i * (x-f))
                      for i, (ai, bi) in enumerate(zip(cos_a, sin_b), start=1))
     return series
-
+'''
 def avgCollisionForce(peNet):
     '''
     Purpose: Average compressive force experienced by a reference particle in the
