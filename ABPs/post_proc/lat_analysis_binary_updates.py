@@ -507,9 +507,10 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
     r = np.linspace(0.0,  5.0, 100)             # Define radius for x-axis of plot later
 
-    start = int(0/time_step)#205                                             # first frame to process
+    start = int(500/time_step)#205                                             # first frame to process
     dumps = int(t.__len__())                                # get number of timesteps dumped
     end = int(dumps/time_step)-1                                             # final frame to process
+    end = start + 2
     snap = t[0]                                             # Take first snap for box
     first_tstep = snap.configuration.step                   # First time step
 
@@ -10450,6 +10451,224 @@ with hoomd.open(name=inFile, mode='rb') as t:
             div_velB = vel_gradx_xB + vel_grady_yB
             curl_velB = -vel_grady_xB + vel_gradx_yB
 
+            px_bulk_slow = np.sin(ang[slow_bulk_id_plot])# * peA
+            py_bulk_slow = -np.cos(ang[slow_bulk_id_plot])# * peA
+
+            px_bulk_fast = np.sin(ang[fast_bulk_id_plot])# * peB
+            py_bulk_fast = -np.cos(ang[fast_bulk_id_plot])# * peB
+
+            px_int_slow = np.sin(ang[slow_int_id_plot])# * peA
+            py_int_slow = -np.cos(ang[slow_int_id_plot])# * peA
+
+            px_int_fast = np.sin(ang[fast_int_id_plot])# * peB
+            py_int_fast = -np.cos(ang[fast_int_id_plot])# * peB
+
+            px_gas_slow = np.sin(ang[slow_gas_id_plot])# * peA
+            py_gas_slow = -np.cos(ang[slow_gas_id_plot])# * peA
+
+            px_gas_fast = np.sin(ang[fast_gas_id_plot])# * peB
+            py_gas_fast = -np.cos(ang[fast_gas_id_plot])# * peB
+
+
+            push_velocity_x_bulk_slow = velocity_x[slow_bulk_id_plot] - px_bulk_slow
+            push_velocity_y_bulk_slow = velocity_y[slow_bulk_id_plot] - py_bulk_slow
+
+            push_velocity_x_bulk_fast = velocity_x[fast_bulk_id_plot] - px_bulk_fast
+            push_velocity_y_bulk_fast = velocity_y[fast_bulk_id_plot] - py_bulk_fast
+
+            push_velocity_x_int_slow = velocity_x[slow_int_id_plot] - px_int_slow
+            push_velocity_y_int_slow = velocity_y[slow_int_id_plot] - py_int_slow
+
+            push_velocity_x_int_fast = velocity_x[fast_int_id_plot] - px_int_fast
+            push_velocity_y_int_fast = velocity_y[fast_int_id_plot] - py_int_fast
+
+            push_velocity_x_gas_slow = velocity_x[slow_gas_id_plot] - px_gas_slow
+            push_velocity_y_gas_slow = velocity_y[slow_gas_id_plot] - py_gas_slow
+
+            push_velocity_x_gas_fast = velocity_x[fast_gas_id_plot] - px_gas_fast
+            push_velocity_y_gas_fast = velocity_y[fast_gas_id_plot] - py_gas_fast
+
+            velocity_x_gas_slow = velocity_x[slow_gas_id_plot]
+            velocity_y_gas_slow = velocity_y[slow_gas_id_plot]
+
+            velocity_x_gas_fast = velocity_x[fast_gas_id_plot]
+            velocity_y_gas_fast = velocity_y[fast_gas_id_plot]
+
+            push_velocity_bulk_slow = (push_velocity_x_bulk_slow**2 + push_velocity_y_bulk_slow**2)**0.5# / peA
+            push_velocity_bulk_fast = (push_velocity_x_bulk_fast**2 + push_velocity_y_bulk_fast**2)**0.5# / peB
+
+            push_velocity_int_slow = (push_velocity_x_int_slow**2 + push_velocity_y_int_slow**2)**0.5# / peA
+            push_velocity_int_fast = (push_velocity_x_int_fast**2 + push_velocity_y_int_fast**2)**0.5# / peB
+
+            push_velocity_gas_slow = (push_velocity_x_gas_slow**2 + push_velocity_y_gas_slow**2)**0.5# / peA
+            push_velocity_gas_fast = (push_velocity_x_gas_fast**2 + push_velocity_y_gas_fast**2)**0.5# / peB
+
+
+            #r_dot_p = (-difx * px) + (-dify * py)
+            velocity_gas_slow = (velocity_x_gas_slow**2 + velocity_y_gas_slow**2) ** 0.5
+            velocity_gas_fast = (velocity_x_gas_fast**2 + velocity_y_gas_fast**2) ** 0.5
+
+            dot_velocity_bulk_slow = (velocity_x[slow_bulk_id_plot] * px_bulk_slow + velocity_y[slow_bulk_id_plot] * py_bulk_slow)/velocity_tot[slow_bulk_id_plot]
+
+            dot_velocity_bulk_fast = (velocity_x[fast_bulk_id_plot] * px_bulk_fast + velocity_y[fast_bulk_id_plot] * py_bulk_fast)/velocity_tot[fast_bulk_id_plot]
+
+            dot_velocity_int_slow = (velocity_x[slow_int_id_plot] * px_int_slow + velocity_y[slow_int_id_plot] * py_int_slow)/velocity_tot[slow_int_id_plot]
+
+            dot_velocity_int_fast = (velocity_x[fast_int_id_plot] * px_int_fast + velocity_y[fast_int_id_plot] * py_int_fast)/velocity_tot[fast_int_id_plot]
+
+            dot_velocity_gas_slow = (velocity_x[slow_gas_id_plot] * px_gas_slow + velocity_y[slow_gas_id_plot] * py_gas_slow)/velocity_tot[slow_gas_id_plot]
+
+            dot_velocity_gas_fast = (velocity_x[fast_gas_id_plot] * px_gas_fast + velocity_y[fast_gas_id_plot] * py_gas_fast)/velocity_tot[fast_gas_id_plot]
+
+            #Output means and standard deviations of number density for each phase
+            g = open(outPath2+outTxt_lat, 'a')
+            g.write('{0:.2f}'.format(tst).center(15) + ' ')
+            g.write('{0:.6f}'.format(sizeBin).center(15) + ' ')
+            g.write('{0:.0f}'.format(np.amax(clust_size)).center(15) + ' ')
+            g.write('{0:.6f}'.format(lat_theory2).center(15) + ' ')
+            g.write('{0:.6f}'.format(bulk_lat_mean).center(15) + ' ')
+            g.write('{0:.6f}'.format(bulk_lat_std).center(15) + ' ')
+            g.write('{0:.6f}'.format(int_lat_mean).center(15) + ' ')
+            g.write('{0:.6f}'.format(int_lat_std).center(15) + ' ')
+            g.write('{0:.6f}'.format(dense_lat_mean).center(15) + ' ')
+            g.write('{0:.6f}'.format(dense_lat_std).center(15) + '\n')
+            g.close()
+
+            fig = plt.figure(figsize=(8,6))
+            ax = fig.add_subplot(111)
+
+            x_min = 0.0
+            x_max = 30.0
+            x_arr = np.linspace(x_min, x_max, num=75)
+
+            fast_bulk_hist = np.histogram(push_velocity_bulk_fast, bins=x_arr, density=True)[0]
+            slow_bulk_hist = np.histogram(push_velocity_bulk_slow, bins=x_arr, density=True)[0]
+
+            fast_int_hist = np.histogram(push_velocity_int_fast, bins=x_arr, density=True)[0]
+            slow_int_hist = np.histogram(push_velocity_int_slow, bins=x_arr, density=True)[0]
+
+            fast_int_hist = np.histogram(push_velocity_gas_fast, bins=x_arr, density=True)[0]
+            slow_int_hist = np.histogram(push_velocity_gas_slow, bins=x_arr, density=True)[0]
+
+            #Remove bulk particles that are outside plot's xrange
+
+            if (len(push_velocity_bulk_fast)>0):
+                plt.hist(push_velocity_bulk_fast, bins = x_arr, alpha = 0.5, color=fastCol, density=True)
+
+            if (len(push_velocity_bulk_slow)>0):
+
+                plt.hist(push_velocity_bulk_slow, bins = x_arr, alpha = 0.5, color=slowCol, density=True)
+
+            green_patch = mpatches.Patch(color=slowCol, label=r'$\mathrm{Pe}_\mathrm{S}=$' + str(peA))
+            yellow_patch = mpatches.Patch(color=fastCol, label=r'$\mathrm{Pe}_\mathrm{F}=$' + str(peB))
+            plt.legend(handles=[green_patch, yellow_patch], fancybox=True, framealpha=0.75, ncol=1, fontsize=12, loc='upper right',labelspacing=0.1, handletextpad=0.1)
+
+            plt.xlabel(r'Velocity', fontsize=20)
+            plt.ylabel('Probability density of bulk particles', fontsize=20)
+            #plt.xlim([xmin,xmax])
+
+            plt.text(0.73, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(tst) + ' ' + r'$\tau_\mathrm{B}$',
+                fontsize=18,transform = ax.transAxes,
+                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+            fsize=12
+            plt.tick_params(axis='x', labelsize=fsize)
+            plt.tick_params(axis='y', labelsize=fsize)
+            plt.tight_layout()
+            plt.savefig(outPath + 'bulk_velocity_histo_' + out + pad + ".png", dpi=150)
+            plt.close()
+
+            fig = plt.figure(figsize=(8,6))
+            ax = fig.add_subplot(111)
+
+            x_min = -500.0
+            x_max = 500.0
+            x_arr = np.linspace(x_min, x_max, num=75)
+
+            fast_bulk_hist = np.histogram(push_velocity_bulk_fast, bins=x_arr, density=True)[0]
+            slow_bulk_hist = np.histogram(push_velocity_bulk_slow, bins=x_arr, density=True)[0]
+
+            fast_int_hist = np.histogram(push_velocity_int_fast, bins=x_arr, density=True)[0]
+            slow_int_hist = np.histogram(push_velocity_int_slow, bins=x_arr, density=True)[0]
+
+            fast_int_hist = np.histogram(push_velocity_gas_fast, bins=x_arr, density=True)[0]
+            slow_int_hist = np.histogram(push_velocity_gas_slow, bins=x_arr, density=True)[0]
+
+            #Remove bulk particles that are outside plot's xrange
+
+            if (len(push_velocity_gas_fast)>0):
+                plt.hist(velocity_gas_fast, bins = x_arr, alpha = 0.5, color=fastCol, density=True)
+
+            if (len(push_velocity_gas_slow)>0):
+
+                plt.hist(velocity_gas_slow, bins = x_arr, alpha = 0.5, color=slowCol, density=True)
+
+            green_patch = mpatches.Patch(color=slowCol, label=r'$\mathrm{Pe}_\mathrm{S}=$' + str(peA))
+            yellow_patch = mpatches.Patch(color=fastCol, label=r'$\mathrm{Pe}_\mathrm{F}=$' + str(peB))
+            plt.legend(handles=[green_patch, yellow_patch], fancybox=True, framealpha=0.75, ncol=1, fontsize=12, loc='upper right',labelspacing=0.1, handletextpad=0.1)
+
+            plt.xlabel(r'Velocity', fontsize=20)
+            plt.ylabel('Probability density of bulk particles', fontsize=20)
+            #plt.xlim([xmin,xmax])
+
+            plt.text(0.73, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(tst) + ' ' + r'$\tau_\mathrm{B}$',
+                fontsize=18,transform = ax.transAxes,
+                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+            fsize=12
+            plt.tick_params(axis='x', labelsize=fsize)
+            plt.tick_params(axis='y', labelsize=fsize)
+            plt.tight_layout()
+            plt.savefig(outPath + 'gas_velocity_histo_' + out + pad + ".png", dpi=150)
+            plt.close()
+
+            x_min = 0.0
+            x_max = 1.0
+            x_arr = np.linspace(x_min, x_max, num=50)
+
+            dot_fast_bulk_hist = np.histogram(dot_velocity_bulk_fast, bins=x_arr, density=True)[0]
+            dot_slow_bulk_hist = np.histogram(dot_velocity_bulk_slow, bins=x_arr, density=True)[0]
+
+            dot_fast_int_hist = np.histogram(dot_velocity_int_fast, bins=x_arr, density=True)[0]
+            dot_slow_int_hist = np.histogram(dot_velocity_int_slow, bins=x_arr, density=True)[0]
+
+            dot_fast_int_hist = np.histogram(dot_velocity_gas_fast, bins=x_arr, density=True)[0]
+            dot_slow_int_hist = np.histogram(dot_velocity_gas_slow, bins=x_arr, density=True)[0]
+
+            fig = plt.figure(figsize=(8,6))
+            ax = fig.add_subplot(111)
+            #Remove bulk particles that are outside plot's xrange
+            #if (len(push_velocity_bulk_slow)>0):
+
+            #    plt.hist(push_velocity_bulk_slow, alpha = 1.0, bins=100, color=slowCol)
+
+            #if (len(push_velocity_bulk_fast)>0):
+            #    plt.hist(push_velocity_bulk_fast, alpha = 1.0, bins=100, color=fastCol)
+
+            if (len(push_velocity_bulk_slow)>0):
+
+                plt.hist(dot_velocity_bulk_slow, alpha = 0.5, bins=x_arr, color=slowCol, density=True)
+            if (len(push_velocity_bulk_fast)>0):
+                plt.hist(dot_velocity_bulk_fast, alpha = 0.5, bins=x_arr, color=fastCol, density=True)
+
+
+
+            green_patch = mpatches.Patch(color=slowCol, label=r'$\mathrm{Pe}_\mathrm{S}=$' + str(peA))
+            yellow_patch = mpatches.Patch(color=fastCol, label=r'$\mathrm{Pe}_\mathrm{F}=$' + str(peB))
+            plt.legend(handles=[green_patch, yellow_patch], fancybox=True, framealpha=0.75, ncol=1, fontsize=12, loc='upper right',labelspacing=0.1, handletextpad=0.1)
+
+            plt.xlabel(r'$\hat{v}\cdot\hat{p}$', fontsize=20)
+            plt.ylabel('Probability density of bulk particles', fontsize=20)
+            #plt.xlim([xmin,xmax])
+
+            plt.text(0.03, 0.94, s=r'$\tau$' + ' = ' + '{:.2f}'.format(tst) + ' ' + r'$\tau_\mathrm{B}$',
+                fontsize=18,transform = ax.transAxes,
+                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+            plt.tick_params(axis='x', labelsize=fsize)
+            plt.tick_params(axis='y', labelsize=fsize)
+            plt.tight_layout()
+            plt.savefig(outPath + 'bulk_velocity_dot_histo_' + out + pad + ".png", dpi=150)
+            plt.close()
+            stop
+
             if len(bulk_id_plot)>0:
                 min_n = 0.0*velocity_mean
                 max_n = 2.5*velocity_mean
@@ -10480,7 +10699,6 @@ with hoomd.open(name=inFile, mode='rb') as t:
             plt.text(0.75, 0.92, s=r'$\overline{a}$' + ' = ' + '{:.3f}'.format(dense_lat_mean),
                     fontsize=18, transform = ax.transAxes,
                     bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
-
             plt.quiver(pos_box_x, pos_box_y, velocity_x_A_bin_plot, velocity_y_A_bin_plot, scale=20.0, color='black', alpha=0.8)
 
             clb.ax.tick_params(labelsize=16)

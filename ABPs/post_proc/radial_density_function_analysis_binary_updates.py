@@ -11053,9 +11053,9 @@ if steady_state_once == 'True':
 
     lat_theory = np.mean(lat_theory_arr)
     # Set all the x ticks for radial plots
-    loc = ticker.MultipleLocator(base=1.5)
+    loc = ticker.MultipleLocator(base=1.0)
     ax1.xaxis.set_major_locator(loc)
-    loc = ticker.MultipleLocator(base=0.75)
+    loc = ticker.MultipleLocator(base=0.5)
     ax1.xaxis.set_minor_locator(loc)
     ax1.set_xlim(0, rstop)
     plt.legend(loc='upper right', fontsize=fsize*2.6)

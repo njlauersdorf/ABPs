@@ -99,7 +99,7 @@ if parFrac==100.0:
     parFrac=50.0
 
 peNet=peA*(parFrac/100)+peB*(1-(parFrac/100))   #Net activity of system
-if peA >= peB:
+if peA <= peB:
     peRat=peA/peB   #Net activity of system
 else:
     peRat=peB/peA
