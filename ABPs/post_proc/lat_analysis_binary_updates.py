@@ -10300,23 +10300,32 @@ with hoomd.open(name=inFile, mode='rb') as t:
             tot_disp = ( msd_dif_x ** 2 + msd_dif_y ** 2 ) ** 0.5
             msd = np.mean(tot_disp ** 2)
 
+            dift = tst_current - tst_prev
+
+            pref_disp = int(math.ceil(peB * dift))
+
+            if pref_disp > h_box:
+                bounds = pref_disp
+            else:
+                bounds = h_box
+
             pos_dif_x = pos_current[:,0] - pos_prev[:,0]
             pos_dif_y = pos_current[:,1] - pos_prev[:,1]
 
 
-            x_lim0 = np.where(pos_dif_x > h_box)[0]
+            x_lim0 = np.where(pos_dif_x > bounds)[0]
             if len(x_lim0)>0:
                 pos_dif_x[x_lim0] = pos_dif_x[x_lim0] - l_box
 
-            x_lim1 = np.where(pos_dif_x < -h_box)[0]
+            x_lim1 = np.where(pos_dif_x < -bounds)[0]
             if len(x_lim1)>0:
                 pos_dif_x[x_lim1] = pos_dif_x[x_lim1] + l_box
 
-            y_lim0 = np.where(pos_dif_y > h_box)[0]
+            y_lim0 = np.where(pos_dif_y > bounds)[0]
             if len(y_lim0)>0:
                 pos_dif_y[y_lim0] = pos_dif_y[y_lim0] - l_box
 
-            y_lim1 = np.where(pos_dif_y < -h_box)[0]
+            y_lim1 = np.where(pos_dif_y < -bounds)[0]
             if len(y_lim1)>0:
                 pos_dif_y[y_lim1] = pos_dif_y[y_lim1] + l_box
 
@@ -10400,7 +10409,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
             velocity_combined = np.zeros((len(v_avg_x), len(v_avg_y),2))
             velocity_A_combined = np.zeros((len(v_avg_x), len(v_avg_y),2))
             velocity_B_combined = np.zeros((len(v_avg_x), len(v_avg_y),2))
-            v
+
             pos_box_combined_align = np.zeros((len(v_avg_x), len(v_avg_y),2))
 
             for ix in range(0, len(align_avg_x)):
@@ -10494,6 +10503,12 @@ with hoomd.open(name=inFile, mode='rb') as t:
             velocity_x_gas_fast = velocity_x[fast_gas_id_plot]
             velocity_y_gas_fast = velocity_y[fast_gas_id_plot]
 
+            velocity_x_bulk_slow = velocity_x[slow_bulk_id_plot]
+            velocity_y_bulk_slow = velocity_y[slow_bulk_id_plot]
+
+            velocity_x_bulk_fast = velocity_x[fast_bulk_id_plot]
+            velocity_y_bulk_fast = velocity_y[fast_bulk_id_plot]
+
             push_velocity_bulk_slow = (push_velocity_x_bulk_slow**2 + push_velocity_y_bulk_slow**2)**0.5# / peA
             push_velocity_bulk_fast = (push_velocity_x_bulk_fast**2 + push_velocity_y_bulk_fast**2)**0.5# / peB
 
@@ -10507,6 +10522,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
             #r_dot_p = (-difx * px) + (-dify * py)
             velocity_gas_slow = (velocity_x_gas_slow**2 + velocity_y_gas_slow**2) ** 0.5
             velocity_gas_fast = (velocity_x_gas_fast**2 + velocity_y_gas_fast**2) ** 0.5
+
+            velocity_bulk_slow = (velocity_x_bulk_slow**2 + velocity_y_bulk_slow**2) ** 0.5
+            velocity_bulk_fast = (velocity_x_bulk_fast**2 + velocity_y_bulk_fast**2) ** 0.5
 
             dot_velocity_bulk_slow = (velocity_x[slow_bulk_id_plot] * px_bulk_slow + velocity_y[slow_bulk_id_plot] * py_bulk_slow)/velocity_tot[slow_bulk_id_plot]
 
@@ -10538,8 +10556,14 @@ with hoomd.open(name=inFile, mode='rb') as t:
             ax = fig.add_subplot(111)
 
             x_min = 0.0
-            x_max = 30.0
-            x_arr = np.linspace(x_min, x_max, num=75)
+            x_max = 50.0
+
+            loc = ticker.MultipleLocator(base=(x_max/10))
+            ax.xaxis.set_major_locator(loc)
+            loc = ticker.MultipleLocator(base=(x_max/20))
+            ax.xaxis.set_minor_locator(loc)
+
+            x_arr = np.linspace(x_min, x_max, num=100)
 
             fast_bulk_hist = np.histogram(push_velocity_bulk_fast, bins=x_arr, density=True)[0]
             slow_bulk_hist = np.histogram(push_velocity_bulk_slow, bins=x_arr, density=True)[0]
@@ -10561,7 +10585,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
             green_patch = mpatches.Patch(color=slowCol, label=r'$\mathrm{Pe}_\mathrm{S}=$' + str(peA))
             yellow_patch = mpatches.Patch(color=fastCol, label=r'$\mathrm{Pe}_\mathrm{F}=$' + str(peB))
-            plt.legend(handles=[green_patch, yellow_patch], fancybox=True, framealpha=0.75, ncol=1, fontsize=12, loc='upper right',labelspacing=0.1, handletextpad=0.1)
+            plt.legend(handles=[green_patch, yellow_patch], fancybox=True, framealpha=0.75, ncol=1, fontsize=18, loc='upper right',labelspacing=0.1, handletextpad=0.1)
 
             plt.xlabel(r'Velocity', fontsize=20)
             plt.ylabel('Probability density of bulk particles', fontsize=20)
@@ -10570,7 +10594,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
             plt.text(0.73, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(tst) + ' ' + r'$\tau_\mathrm{B}$',
                 fontsize=18,transform = ax.transAxes,
                 bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
-            fsize=12
+            fsize=14
             plt.tick_params(axis='x', labelsize=fsize)
             plt.tick_params(axis='y', labelsize=fsize)
             plt.tight_layout()
@@ -10580,9 +10604,10 @@ with hoomd.open(name=inFile, mode='rb') as t:
             fig = plt.figure(figsize=(8,6))
             ax = fig.add_subplot(111)
 
-            x_min = -500.0
-            x_max = 500.0
-            x_arr = np.linspace(x_min, x_max, num=75)
+            x_min = 0.0
+            x_max = peB
+
+            x_arr = np.linspace(x_min, x_max, num=100)
 
             fast_bulk_hist = np.histogram(push_velocity_bulk_fast, bins=x_arr, density=True)[0]
             slow_bulk_hist = np.histogram(push_velocity_bulk_slow, bins=x_arr, density=True)[0]
@@ -10604,7 +10629,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
             green_patch = mpatches.Patch(color=slowCol, label=r'$\mathrm{Pe}_\mathrm{S}=$' + str(peA))
             yellow_patch = mpatches.Patch(color=fastCol, label=r'$\mathrm{Pe}_\mathrm{F}=$' + str(peB))
-            plt.legend(handles=[green_patch, yellow_patch], fancybox=True, framealpha=0.75, ncol=1, fontsize=12, loc='upper right',labelspacing=0.1, handletextpad=0.1)
+            plt.legend(handles=[green_patch, yellow_patch], fancybox=True, framealpha=0.75, ncol=1, fontsize=18, loc='upper right',labelspacing=0.1, handletextpad=0.1)
 
             plt.xlabel(r'Velocity', fontsize=20)
             plt.ylabel('Probability density of bulk particles', fontsize=20)
@@ -10613,16 +10638,124 @@ with hoomd.open(name=inFile, mode='rb') as t:
             plt.text(0.73, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(tst) + ' ' + r'$\tau_\mathrm{B}$',
                 fontsize=18,transform = ax.transAxes,
                 bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
-            fsize=12
+            fsize=14
             plt.tick_params(axis='x', labelsize=fsize)
             plt.tick_params(axis='y', labelsize=fsize)
+
+            loc = ticker.MultipleLocator(base=(peB/10))
+            ax.xaxis.set_major_locator(loc)
+            loc = ticker.MultipleLocator(base=(peB/20))
+            ax.xaxis.set_minor_locator(loc)
+
             plt.tight_layout()
             plt.savefig(outPath + 'gas_velocity_histo_' + out + pad + ".png", dpi=150)
             plt.close()
 
+            fig = plt.figure(figsize=(8,6))
+            ax = fig.add_subplot(111)
+
+            x_min = -1#peB
+            x_max = 1#peB
+
+            x_arr = np.linspace(x_min, x_max, num=100)
+
+            fast_bulk_hist = np.histogram(push_velocity_bulk_fast, bins=x_arr, density=True)[0]
+            slow_bulk_hist = np.histogram(push_velocity_bulk_slow, bins=x_arr, density=True)[0]
+
+            fast_int_hist = np.histogram(push_velocity_int_fast, bins=x_arr, density=True)[0]
+            slow_int_hist = np.histogram(push_velocity_int_slow, bins=x_arr, density=True)[0]
+
+            fast_int_hist = np.histogram(push_velocity_gas_fast, bins=x_arr, density=True)[0]
+            slow_int_hist = np.histogram(push_velocity_gas_slow, bins=x_arr, density=True)[0]
+
+            #Remove bulk particles that are outside plot's xrange
+
+            if (len(push_velocity_gas_fast)>0):
+                plt.hist((velocity_bulk_fast-peB)/peB, bins = x_arr, alpha = 0.5, color=fastCol, density=True)
+
+            if (len(push_velocity_gas_slow)>0):
+                if peA > 0:
+                    plt.hist((velocity_bulk_slow-peA)/peA, bins = x_arr, alpha = 0.5, color=slowCol, density=True)
+                else:
+                    plt.hist((velocity_bulk_slow-peA)/peB, bins = x_arr, alpha = 0.5, color=slowCol, density=True)
+            green_patch = mpatches.Patch(color=slowCol, label=r'$\mathrm{Pe}_\mathrm{S}=$' + str(peA))
+            yellow_patch = mpatches.Patch(color=fastCol, label=r'$\mathrm{Pe}_\mathrm{F}=$' + str(peB))
+            plt.legend(handles=[green_patch, yellow_patch], fancybox=True, framealpha=0.75, ncol=1, fontsize=18, loc='upper right',labelspacing=0.1, handletextpad=0.1)
+
+            plt.xlabel(r'Velocity Supression [$(v-v_\mathrm{p})/v_\mathrm{p}$]', fontsize=20)
+            plt.ylabel('Probability density of bulk particles', fontsize=20)
+            #plt.xlim([xmin,xmax])
+
+            plt.text(0.73, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(tst) + ' ' + r'$\tau_\mathrm{B}$',
+                fontsize=18,transform = ax.transAxes,
+                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+            fsize=14
+            plt.tick_params(axis='x', labelsize=fsize)
+            plt.tick_params(axis='y', labelsize=fsize)
+
+            loc = ticker.MultipleLocator(base=(1/5))
+            ax.xaxis.set_major_locator(loc)
+            loc = ticker.MultipleLocator(base=(1/10))
+            ax.xaxis.set_minor_locator(loc)
+
+            plt.tight_layout()
+            plt.savefig(outPath + 'bulk_velocity_enhance_histo_' + out + pad + ".png", dpi=150)
+            plt.close()
+
+            fig = plt.figure(figsize=(8,6))
+            ax = fig.add_subplot(111)
+
+            x_min = -1#peB
+            x_max = 1#peB
+
+            x_arr = np.linspace(x_min, x_max, num=100)
+
+            fast_bulk_hist = np.histogram(push_velocity_bulk_fast, bins=x_arr, density=True)[0]
+            slow_bulk_hist = np.histogram(push_velocity_bulk_slow, bins=x_arr, density=True)[0]
+
+            fast_int_hist = np.histogram(push_velocity_int_fast, bins=x_arr, density=True)[0]
+            slow_int_hist = np.histogram(push_velocity_int_slow, bins=x_arr, density=True)[0]
+
+            fast_int_hist = np.histogram(push_velocity_gas_fast, bins=x_arr, density=True)[0]
+            slow_int_hist = np.histogram(push_velocity_gas_slow, bins=x_arr, density=True)[0]
+
+            #Remove bulk particles that are outside plot's xrange
+
+            if (len(push_velocity_gas_fast)>0):
+                plt.hist((velocity_gas_fast-peB)/peB, bins = x_arr, alpha = 0.5, color=fastCol, density=True)
+
+            if (len(push_velocity_gas_slow)>0):
+                if peA > 0:
+                    plt.hist((velocity_gas_slow-peA)/peA, bins = x_arr, alpha = 0.5, color=slowCol, density=True)
+                else:
+                    plt.hist((velocity_gas_slow-peA)/peB, bins = x_arr, alpha = 0.5, color=slowCol, density=True)
+            green_patch = mpatches.Patch(color=slowCol, label=r'$\mathrm{Pe}_\mathrm{S}=$' + str(peA))
+            yellow_patch = mpatches.Patch(color=fastCol, label=r'$\mathrm{Pe}_\mathrm{F}=$' + str(peB))
+            plt.legend(handles=[green_patch, yellow_patch], fancybox=True, framealpha=0.75, ncol=1, fontsize=18, loc='upper right',labelspacing=0.1, handletextpad=0.1)
+
+            plt.xlabel(r'Velocity Supression [$(v-v_\mathrm{p})/v_\mathrm{p}$]', fontsize=20)
+            plt.ylabel('Probability density of bulk particles', fontsize=20)
+            #plt.xlim([xmin,xmax])
+
+            plt.text(0.73, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(tst) + ' ' + r'$\tau_\mathrm{B}$',
+                fontsize=18,transform = ax.transAxes,
+                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+            fsize=14
+            plt.tick_params(axis='x', labelsize=fsize)
+            plt.tick_params(axis='y', labelsize=fsize)
+
+            loc = ticker.MultipleLocator(base=(1/5))
+            ax.xaxis.set_major_locator(loc)
+            loc = ticker.MultipleLocator(base=(1/10))
+            ax.xaxis.set_minor_locator(loc)
+
+            plt.tight_layout()
+            plt.savefig(outPath + 'gas_velocity_enhance_histo_' + out + pad + ".png", dpi=150)
+            plt.close()
+
             x_min = 0.0
             x_max = 1.0
-            x_arr = np.linspace(x_min, x_max, num=50)
+            x_arr = np.linspace(x_min, x_max, num=100)
 
             dot_fast_bulk_hist = np.histogram(dot_velocity_bulk_fast, bins=x_arr, density=True)[0]
             dot_slow_bulk_hist = np.histogram(dot_velocity_bulk_slow, bins=x_arr, density=True)[0]
@@ -10653,13 +10786,18 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
             green_patch = mpatches.Patch(color=slowCol, label=r'$\mathrm{Pe}_\mathrm{S}=$' + str(peA))
             yellow_patch = mpatches.Patch(color=fastCol, label=r'$\mathrm{Pe}_\mathrm{F}=$' + str(peB))
-            plt.legend(handles=[green_patch, yellow_patch], fancybox=True, framealpha=0.75, ncol=1, fontsize=12, loc='upper right',labelspacing=0.1, handletextpad=0.1)
+            plt.legend(handles=[green_patch, yellow_patch], fancybox=True, framealpha=0.75, ncol=1, fontsize=18, loc='upper left',labelspacing=0.1, handletextpad=0.1)
 
             plt.xlabel(r'$\hat{v}\cdot\hat{p}$', fontsize=20)
             plt.ylabel('Probability density of bulk particles', fontsize=20)
             #plt.xlim([xmin,xmax])
 
-            plt.text(0.03, 0.94, s=r'$\tau$' + ' = ' + '{:.2f}'.format(tst) + ' ' + r'$\tau_\mathrm{B}$',
+            loc = ticker.MultipleLocator(base=(x_max/10))
+            ax.xaxis.set_major_locator(loc)
+            loc = ticker.MultipleLocator(base=(x_max/20))
+            ax.xaxis.set_minor_locator(loc)
+
+            plt.text(0.03, 0.78, s=r'$\tau$' + ' = ' + '{:.2f}'.format(tst) + ' ' + r'$\tau_\mathrm{B}$',
                 fontsize=18,transform = ax.transAxes,
                 bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
             plt.tick_params(axis='x', labelsize=fsize)
