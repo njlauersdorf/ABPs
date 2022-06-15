@@ -464,6 +464,12 @@ lat_theory_arr = np.array([])
 g = open(outPath2+outTxt_leak, 'w+') # write file headings
 g.write('tst'.center(15) + ' ' +\
                         'clust_size'.center(15) + ' ' +\
+                        'Nnot_to_clust'.center(15) + ' ' +\
+                        'Nsnot_to_clust'.center(15) + ' ' +\
+                        'Nfnot_to_clust'.center(15) + ' ' +\
+                        'Nclust_to_gas'.center(15) + ' ' +\
+                        'Nsclust_to_gas'.center(15) + ' ' +\
+                        'Nfclust_to_gas'.center(15) + ' ' +\
                         'Ngas_to_bulk'.center(15) + ' ' +\
                         'Nsgas_to_bulk'.center(15) + ' ' +\
                         'Nfgas_to_bulk'.center(15) + ' ' +\
@@ -609,6 +615,7 @@ else:
                                                                         # and maximal radial interaction distance
             clp_all = freud.cluster.ClusterProperties()                 #Define cluster properties
             ids = cl_all.cluster_idx                                    # get id of each cluster
+
             clp_all.compute(system_all, ids)                            # Calculate cluster properties given cluster IDs
             clust_size = clp_all.sizes                                  # find cluster sizes
             clust_arr_temp = np.append(clust_arr_temp, np.amax(clust_size))
@@ -679,15 +686,19 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                                     # and maximal radial interaction distance
         clp_all = freud.cluster.ClusterProperties()                 #Define cluster properties
         ids = cl_all.cluster_idx                                    # get id of each cluster
+
         clp_all.compute(system_all, ids)                            # Calculate cluster properties given cluster IDs
         clust_size = clp_all.sizes                                  # find cluster sizes
-        clust_size_arr = np.append(clust_size_arr, clust_size)
+        clust_size_arr = np.append(clust_size_arr, np.amax(clust_size))
+
 
 
         min_size=int(partNum/8)                                     #Minimum cluster size for measurements to happen
         lcID = np.where(clust_size == np.amax(clust_size))[0][0]    #Identify largest cluster
-        large_clust_ind_all=np.where(clust_size>min_size)           #Identify all clusters larger than minimum size
 
+
+
+        large_clust_ind_all=np.where(clust_size>min_size)           #Identify all clusters larger than minimum size
 
 
         #If a single cluster is greater than minimum size, determine CoM of largest cluster
@@ -10066,10 +10077,17 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
 
             if steady_state_once == 'False':
+                in_clust_arr = np.zeros(partNum)
+                clust_id_time = np.where(ids==lcID)[0]
+                in_clust_arr[clust_id_time]=1
                 partPhase_time = partPhase
                 partPhase_time_arr = np.append(partPhase_time_arr, tst)
                 steady_state_once = 'True'
             else:
+                clust_id_time = np.where(ids==lcID)[0]
+                in_clust_temp = np.zeros(partNum)
+                in_clust_temp[clust_id_time]=1
+                in_clust_arr = np.vstack((in_clust_arr, in_clust_temp))
                 partPhase_time_arr = np.append(partPhase_time_arr, tst)
                 partPhase_time = np.vstack((partPhase_time, partPhase))
 
@@ -10081,9 +10099,20 @@ if steady_state_once == 'True':
     start_gas_id = np.where(partPhase_time[0,:]==2)[0]
     start_int_id = np.where(partPhase_time[0,:]==1)[0]
 
+    start_clust_id = np.where(in_clust_arr[0,:]==1)[0]
+    start_not_clust_id = np.where(in_clust_arr[0,:]==0)[0]
+
     start_bulk_id_with_int = np.where(partPhase_time[0,:]==0)[0]
     start_gas_id_with_int = np.where(partPhase_time[0,:]==2)[0]
     start_int_id_with_int = np.where(partPhase_time[0,:]==1)[0]
+
+    num_clust_to_not_clust = np.array([])
+    num_slow_clust_to_not_clust = np.array([])
+    num_fast_clust_to_not_clust = np.array([])
+
+    num_not_clust_to_clust = np.array([])
+    num_slow_not_clust_to_clust = np.array([])
+    num_fast_not_clust_to_clust = np.array([])
 
     num_bulk_to_gas = np.array([])
     num_slow_bulk_to_gas = np.array([])
@@ -10117,6 +10146,15 @@ if steady_state_once == 'True':
         gas_id = np.where(partPhase_time[j,:]==2)[0]
         int_id = np.where(partPhase_time[j,:]==1)[0]
 
+        clust_id = np.where(in_clust_arr[j,:]==1)[0]
+        not_clust_id = np.where(in_clust_arr[j,:]==0)[0]
+
+        still_in_clust = np.intersect1d(start_clust_id, clust_id, return_indices=True)
+        not_in_clust = np.delete(clust_id, still_in_clust[2])
+
+        still_in_not_clust = np.intersect1d(start_not_clust_id, not_clust_id, return_indices=True)
+        not_in_not_clust = np.delete(not_clust_id, still_in_not_clust[2])
+
         still_in_bulk = np.intersect1d(start_bulk_id, bulk_id, return_indices=True)
         not_in_bulk = np.delete(bulk_id, still_in_bulk[2])
 
@@ -10127,6 +10165,9 @@ if steady_state_once == 'True':
         not_in_int = np.delete(int_id, still_in_int[2])
 
         #now_in_int = np.intersect1d(start_int_id, not_in_bulk)
+        clust_now_in_not_clust = np.intersect1d(start_not_clust_id, not_in_clust, return_indices=True)
+        not_clust_now_in_clust = np.intersect1d(start_clust_id, not_in_not_clust, return_indices=True)
+
         bulk_now_in_gas = np.intersect1d(start_gas_id, not_in_bulk, return_indices=True)
         gas_now_in_bulk = np.intersect1d(start_bulk_id, not_in_gas, return_indices=True)
 
@@ -10136,6 +10177,9 @@ if steady_state_once == 'True':
         gas_now_in_int = np.intersect1d(start_int_id_with_int, not_in_gas, return_indices=True)
         int_now_in_gas = np.intersect1d(start_gas_id_with_int, not_in_int, return_indices=True)
 
+        not_clust_nolonger_in_clust = np.intersect1d(start_clust_id, clust_now_in_not_clust[0], return_indices=True)
+        clust_nolonger_in_not_clust = np.intersect1d(start_not_clust_id, not_clust_now_in_clust[0], return_indices=True)
+
         gas_nolonger_in_bulk = np.intersect1d(start_bulk_id, bulk_now_in_gas[0], return_indices=True)
         bulk_nolonger_in_gas = np.intersect1d(start_gas_id, gas_now_in_bulk[0], return_indices=True)
 
@@ -10144,6 +10188,28 @@ if steady_state_once == 'True':
 
         int_nolonger_in_gas = np.intersect1d(start_gas_id_with_int, gas_now_in_int[0], return_indices=True)
         gas_nolonger_in_int = np.intersect1d(start_int_id_with_int, int_now_in_gas[0], return_indices=True)
+
+        if len(clust_now_in_not_clust)>0:
+            num_clust_to_not_clust = np.append(num_clust_to_not_clust, len(clust_now_in_not_clust[0]))
+            num_slow_clust_to_not_clust = np.append(num_slow_clust_to_not_clust, len(np.where(typ[clust_now_in_not_clust[0]]==0)[0]))
+            num_fast_clust_to_not_clust = np.append(num_fast_clust_to_not_clust, len(np.where(typ[clust_now_in_not_clust[0]]==1)[0]))
+            start_clust_id = np.delete(start_clust_id, not_clust_nolonger_in_clust[1])
+            start_not_clust_id = np.append(start_not_clust_id, clust_now_in_not_clust[1])
+        else:
+            num_clust_to_not_clust = np.append(num_clust_to_not_clust, 0)
+            num_slow_clust_to_not_clust = np.append(num_slow_clust_to_not_clust, 0)
+            num_fast_clust_to_not_clust = np.append(num_fast_clust_to_not_clust, 0)
+
+        if len(not_clust_now_in_clust)>0:
+            num_not_clust_to_clust = np.append(num_not_clust_to_clust, len(not_clust_now_in_clust[0]))
+            num_slow_not_clust_to_clust = np.append(num_slow_not_clust_to_clust, len(np.where(typ[not_clust_now_in_clust[0]]==0)[0]))
+            num_fast_not_clust_to_clust = np.append(num_fast_not_clust_to_clust, len(np.where(typ[not_clust_now_in_clust[0]]==1)[0]))
+            start_not_clust_id = np.delete(start_not_clust_id, clust_nolonger_in_not_clust[1])
+            start_clust_id = np.append(start_clust_id, not_clust_now_in_clust[1])
+        else:
+            num_not_clust_to_clust = np.append(num_not_clust_to_clust, 0)
+            num_slow_not_clust_to_clust = np.append(num_slow_not_clust_to_clust, 0)
+            num_fast_not_clust_to_clust = np.append(num_fast_not_clust_to_clust, 0)
 
         if len(bulk_now_in_gas)>0:
             num_bulk_to_gas = np.append(num_bulk_to_gas, len(bulk_now_in_gas[0]))
@@ -10215,6 +10281,12 @@ if steady_state_once == 'True':
     for i in range(0, int(len(partPhase_time_arr)-1)):
         g.write('{0:.2f}'.format(partPhase_time_arr[i]).center(15) + ' ')
         g.write('{0:.0f}'.format(clust_size_arr[i]).center(15) + ' ')
+        g.write('{0:.0f}'.format(num_not_clust_to_clust[i]).center(15) + ' ')
+        g.write('{0:.0f}'.format(num_slow_not_clust_to_clust[i]).center(15) + ' ')
+        g.write('{0:.0f}'.format(num_fast_not_clust_to_clust[i]).center(15) + ' ')
+        g.write('{0:.0f}'.format(num_clust_to_not_clust[i]).center(15) + ' ')
+        g.write('{0:.0f}'.format(num_slow_clust_to_not_clust[i]).center(15) + ' ')
+        g.write('{0:.0f}'.format(num_fast_clust_to_not_clust[i]).center(15) + ' ')
         g.write('{0:.0f}'.format(num_gas_to_bulk[i]).center(15) + ' ')
         g.write('{0:.0f}'.format(num_slow_gas_to_bulk[i]).center(15) + ' ')
         g.write('{0:.0f}'.format(num_fast_gas_to_bulk[i]).center(15) + ' ')
