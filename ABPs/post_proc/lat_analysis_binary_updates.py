@@ -65,7 +65,7 @@ import matplotlib.patches as patches
 import matplotlib.ticker as tick
 import matplotlib.ticker as ticker
 
-from symfit import parameters, variables, sin, cos, Fit
+#from symfit import parameters, variables, sin, cos, Fit
 
 from scipy.optimize import curve_fit
 
@@ -507,10 +507,10 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
     r = np.linspace(0.0,  5.0, 100)             # Define radius for x-axis of plot later
 
-    start = int(500/time_step)#205                                             # first frame to process
+    start = int(400/time_step)#205                                             # first frame to process
     dumps = int(t.__len__())                                # get number of timesteps dumped
     end = int(dumps/time_step)-1                                             # final frame to process
-    end = start + 2
+    end = start + 10
     snap = t[0]                                             # Take first snap for box
     first_tstep = snap.configuration.step                   # First time step
 
@@ -10231,8 +10231,10 @@ with hoomd.open(name=inFile, mode='rb') as t:
             pos_bulk_int_x_lat = np.append(pos_bulk_int[bulk_lat_ind,0], pos[int_lat_ind,0])
             pos_bulk_int_y_lat = np.append(pos_bulk_int[bulk_lat_ind,1], pos[int_lat_ind,1])
             bulk_int_lat_arr = np.append(bulk_lat_arr, int_lat_arr)
-
-            lat_theory2 = conForRClust(pe_net_int-50, eps)
+            if pe_net_int >= 50:
+                lat_theory2 = conForRClust(pe_net_int-50, eps)
+            else:
+                lat_theory2 = 0.0
             elapsed = time.time() - time1
 
             print('test')
@@ -10338,6 +10340,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
             velocity_y = pos_dif_y / time_dif
 
             velocity_tot = (velocity_x ** 2 + velocity_y ** 2 ) ** 0.5
+
             velocity_A_tot = (velocity_x[typ0parts] ** 2 + velocity_y[typ0parts] ** 2 ) ** 0.5
             velocity_B_tot = (velocity_x[typ1parts] ** 2 + velocity_y[typ1parts] ** 2 ) ** 0.5
             if len(bulk_id_plot)>0:
@@ -10397,13 +10400,13 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                 velocity_r_B_bin[ix][iy] = (velocity_x_B_bin[ix][iy] ** 2 + velocity_y_B_bin[ix][iy] ** 2) ** 0.5
                                 velocity_x_B_bin[ix][iy] = velocity_x_B_bin[ix][iy]# / velocity_r_B_bin[ix][iy]
                                 velocity_y_B_bin[ix][iy] = velocity_y_B_bin[ix][iy]# / velocity_r_B_bin[ix][iy]
-
-            velocity_x_bin_plot = velocity_x_bin / (np.amax(velocity_r_bin))
-            velocity_y_bin_plot = velocity_y_bin / (np.amax(velocity_r_bin))
-            velocity_x_A_bin_plot = velocity_x_A_bin / (np.amax(velocity_r_bin))
-            velocity_y_A_bin_plot = velocity_y_A_bin / (np.amax(velocity_r_bin))
-            velocity_x_B_bin_plot = velocity_x_B_bin / (np.amax(velocity_r_bin))
-            velocity_y_B_bin_plot = velocity_y_B_bin / (np.amax(velocity_r_bin))
+            if (np.amax(velocity_r_bin)) > 0:
+                velocity_x_bin_plot = velocity_x_bin / (np.amax(velocity_r_bin))
+                velocity_y_bin_plot = velocity_y_bin / (np.amax(velocity_r_bin))
+                velocity_x_A_bin_plot = velocity_x_A_bin / (np.amax(velocity_r_bin))
+                velocity_y_A_bin_plot = velocity_y_A_bin / (np.amax(velocity_r_bin))
+                velocity_x_B_bin_plot = velocity_x_B_bin / (np.amax(velocity_r_bin))
+                velocity_y_B_bin_plot = velocity_y_B_bin / (np.amax(velocity_r_bin))
 
 
             velocity_combined = np.zeros((len(v_avg_x), len(v_avg_y),2))
@@ -10460,6 +10463,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
             div_velB = vel_gradx_xB + vel_grady_yB
             curl_velB = -vel_grady_xB + vel_gradx_yB
 
+            px_all = np.sin(ang)# * peA
+            py_all = -np.cos(ang)# * peA
+
             px_bulk_slow = np.sin(ang[slow_bulk_id_plot])# * peA
             py_bulk_slow = -np.cos(ang[slow_bulk_id_plot])# * peA
 
@@ -10509,6 +10515,12 @@ with hoomd.open(name=inFile, mode='rb') as t:
             velocity_x_bulk_fast = velocity_x[fast_bulk_id_plot]
             velocity_y_bulk_fast = velocity_y[fast_bulk_id_plot]
 
+            velocity_x_int_slow = velocity_x[slow_int_id_plot]
+            velocity_y_int_slow = velocity_y[slow_int_id_plot]
+
+            velocity_x_int_fast = velocity_x[fast_int_id_plot]
+            velocity_y_int_fast = velocity_y[fast_int_id_plot]
+
             push_velocity_bulk_slow = (push_velocity_x_bulk_slow**2 + push_velocity_y_bulk_slow**2)**0.5# / peA
             push_velocity_bulk_fast = (push_velocity_x_bulk_fast**2 + push_velocity_y_bulk_fast**2)**0.5# / peB
 
@@ -10526,6 +10538,16 @@ with hoomd.open(name=inFile, mode='rb') as t:
             velocity_bulk_slow = (velocity_x_bulk_slow**2 + velocity_y_bulk_slow**2) ** 0.5
             velocity_bulk_fast = (velocity_x_bulk_fast**2 + velocity_y_bulk_fast**2) ** 0.5
 
+            velocity_int_slow = (velocity_x_int_slow**2 + velocity_y_int_slow**2) ** 0.5
+            velocity_int_fast = (velocity_x_int_fast**2 + velocity_y_int_fast**2) ** 0.5
+
+            dot_velocity = (velocity_x * px_all + velocity_y * py_all) / velocity_tot
+            slow_id = np.where(typ==0)[0]
+            fast_id = np.where(typ==1)[0]
+
+            dot_velocity_slow = (velocity_x[slow_id] * px_all[slow_id] + velocity_y[slow_id] * py_all[slow_id]) / velocity_tot[slow_id]
+            dot_velocity_fast = (velocity_x[fast_id] * px_all[fast_id] + velocity_y[fast_id] * py_all[fast_id]) / velocity_tot[fast_id]
+
             dot_velocity_bulk_slow = (velocity_x[slow_bulk_id_plot] * px_bulk_slow + velocity_y[slow_bulk_id_plot] * py_bulk_slow)/velocity_tot[slow_bulk_id_plot]
 
             dot_velocity_bulk_fast = (velocity_x[fast_bulk_id_plot] * px_bulk_fast + velocity_y[fast_bulk_id_plot] * py_bulk_fast)/velocity_tot[fast_bulk_id_plot]
@@ -10538,50 +10560,46 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
             dot_velocity_gas_fast = (velocity_x[fast_gas_id_plot] * px_gas_fast + velocity_y[fast_gas_id_plot] * py_gas_fast)/velocity_tot[fast_gas_id_plot]
 
-            #Output means and standard deviations of number density for each phase
-            g = open(outPath2+outTxt_lat, 'a')
-            g.write('{0:.2f}'.format(tst).center(15) + ' ')
-            g.write('{0:.6f}'.format(sizeBin).center(15) + ' ')
-            g.write('{0:.0f}'.format(np.amax(clust_size)).center(15) + ' ')
-            g.write('{0:.6f}'.format(lat_theory2).center(15) + ' ')
-            g.write('{0:.6f}'.format(bulk_lat_mean).center(15) + ' ')
-            g.write('{0:.6f}'.format(bulk_lat_std).center(15) + ' ')
-            g.write('{0:.6f}'.format(int_lat_mean).center(15) + ' ')
-            g.write('{0:.6f}'.format(int_lat_std).center(15) + ' ')
-            g.write('{0:.6f}'.format(dense_lat_mean).center(15) + ' ')
-            g.write('{0:.6f}'.format(dense_lat_std).center(15) + '\n')
-            g.close()
+
+            x_min = 0.0
+            x_max_bulk = 30
+            x_max_gas = peB
+
+            x_arr_bulk = np.linspace(x_min, x_max_bulk, num=100)
+            x_arr_gas = np.linspace(x_min, x_max_gas, num=100)
+
+            fast_bulk_hist = np.histogram(velocity_bulk_fast, bins=x_arr_bulk, density=True)[0]
+            slow_bulk_hist = np.histogram(velocity_bulk_slow, bins=x_arr_bulk, density=True)[0]
+
+            fast_int_hist = np.histogram(velocity_int_fast, bins=x_arr_gas, density=True)[0]
+            slow_int_hist = np.histogram(velocity_int_slow, bins=x_arr_gas, density=True)[0]
+
+            fast_gas_hist = np.histogram(velocity_gas_fast, bins=x_arr_gas, density=True)[0]
+            slow_gas_hist = np.histogram(velocity_gas_slow, bins=x_arr_gas, density=True)[0]
 
             fig = plt.figure(figsize=(8,6))
             ax = fig.add_subplot(111)
 
-            x_min = 0.0
-            x_max = 50.0
-
-            loc = ticker.MultipleLocator(base=(x_max/10))
+            loc = ticker.MultipleLocator(base=(x_max_bulk/10))
             ax.xaxis.set_major_locator(loc)
-            loc = ticker.MultipleLocator(base=(x_max/20))
+            loc = ticker.MultipleLocator(base=(x_max_bulk/20))
             ax.xaxis.set_minor_locator(loc)
-
-            x_arr = np.linspace(x_min, x_max, num=100)
-
-            fast_bulk_hist = np.histogram(push_velocity_bulk_fast, bins=x_arr, density=True)[0]
-            slow_bulk_hist = np.histogram(push_velocity_bulk_slow, bins=x_arr, density=True)[0]
-
-            fast_int_hist = np.histogram(push_velocity_int_fast, bins=x_arr, density=True)[0]
-            slow_int_hist = np.histogram(push_velocity_int_slow, bins=x_arr, density=True)[0]
-
-            fast_int_hist = np.histogram(push_velocity_gas_fast, bins=x_arr, density=True)[0]
-            slow_int_hist = np.histogram(push_velocity_gas_slow, bins=x_arr, density=True)[0]
 
             #Remove bulk particles that are outside plot's xrange
 
-            if (len(push_velocity_bulk_fast)>0):
-                plt.hist(push_velocity_bulk_fast, bins = x_arr, alpha = 0.5, color=fastCol, density=True)
+            #if (len(push_velocity_bulk_fast)>0):
+            #    plt.hist(push_velocity_bulk_fast, bins = x_arr, alpha = 0.5, color=fastCol, density=True)
 
-            if (len(push_velocity_bulk_slow)>0):
+            #if (len(push_velocity_bulk_slow)>0):
 
-                plt.hist(push_velocity_bulk_slow, bins = x_arr, alpha = 0.5, color=slowCol, density=True)
+            #    plt.hist(push_velocity_bulk_slow, bins = x_arr, alpha = 0.5, color=slowCol, density=True)
+
+            if (len(velocity_bulk_fast)>0):
+                plt.hist(velocity_bulk_fast, bins = x_arr_bulk, alpha = 0.5, color=fastCol, density=True)
+
+            if (len(velocity_bulk_slow)>0):
+
+                plt.hist(velocity_bulk_slow, bins = x_arr_bulk, alpha = 0.5, color=slowCol, density=True)
 
             green_patch = mpatches.Patch(color=slowCol, label=r'$\mathrm{Pe}_\mathrm{S}=$' + str(peA))
             yellow_patch = mpatches.Patch(color=fastCol, label=r'$\mathrm{Pe}_\mathrm{F}=$' + str(peB))
@@ -10604,28 +10622,14 @@ with hoomd.open(name=inFile, mode='rb') as t:
             fig = plt.figure(figsize=(8,6))
             ax = fig.add_subplot(111)
 
-            x_min = 0.0
-            x_max = peB
-
-            x_arr = np.linspace(x_min, x_max, num=100)
-
-            fast_bulk_hist = np.histogram(push_velocity_bulk_fast, bins=x_arr, density=True)[0]
-            slow_bulk_hist = np.histogram(push_velocity_bulk_slow, bins=x_arr, density=True)[0]
-
-            fast_int_hist = np.histogram(push_velocity_int_fast, bins=x_arr, density=True)[0]
-            slow_int_hist = np.histogram(push_velocity_int_slow, bins=x_arr, density=True)[0]
-
-            fast_int_hist = np.histogram(push_velocity_gas_fast, bins=x_arr, density=True)[0]
-            slow_int_hist = np.histogram(push_velocity_gas_slow, bins=x_arr, density=True)[0]
-
             #Remove bulk particles that are outside plot's xrange
 
             if (len(push_velocity_gas_fast)>0):
-                plt.hist(velocity_gas_fast, bins = x_arr, alpha = 0.5, color=fastCol, density=True)
+                plt.hist(velocity_gas_fast, bins = x_arr_gas, alpha = 0.5, color=fastCol, density=True)
 
             if (len(push_velocity_gas_slow)>0):
 
-                plt.hist(velocity_gas_slow, bins = x_arr, alpha = 0.5, color=slowCol, density=True)
+                plt.hist(velocity_gas_slow, bins = x_arr_gas, alpha = 0.5, color=slowCol, density=True)
 
             green_patch = mpatches.Patch(color=slowCol, label=r'$\mathrm{Pe}_\mathrm{S}=$' + str(peA))
             yellow_patch = mpatches.Patch(color=fastCol, label=r'$\mathrm{Pe}_\mathrm{F}=$' + str(peB))
@@ -10658,16 +10662,6 @@ with hoomd.open(name=inFile, mode='rb') as t:
             x_max = 1#peB
 
             x_arr = np.linspace(x_min, x_max, num=100)
-
-            fast_bulk_hist = np.histogram(push_velocity_bulk_fast, bins=x_arr, density=True)[0]
-            slow_bulk_hist = np.histogram(push_velocity_bulk_slow, bins=x_arr, density=True)[0]
-
-            fast_int_hist = np.histogram(push_velocity_int_fast, bins=x_arr, density=True)[0]
-            slow_int_hist = np.histogram(push_velocity_int_slow, bins=x_arr, density=True)[0]
-
-            fast_int_hist = np.histogram(push_velocity_gas_fast, bins=x_arr, density=True)[0]
-            slow_int_hist = np.histogram(push_velocity_gas_slow, bins=x_arr, density=True)[0]
-
             #Remove bulk particles that are outside plot's xrange
 
             if (len(push_velocity_gas_fast)>0):
@@ -10710,15 +10704,6 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
             x_arr = np.linspace(x_min, x_max, num=100)
 
-            fast_bulk_hist = np.histogram(push_velocity_bulk_fast, bins=x_arr, density=True)[0]
-            slow_bulk_hist = np.histogram(push_velocity_bulk_slow, bins=x_arr, density=True)[0]
-
-            fast_int_hist = np.histogram(push_velocity_int_fast, bins=x_arr, density=True)[0]
-            slow_int_hist = np.histogram(push_velocity_int_slow, bins=x_arr, density=True)[0]
-
-            fast_int_hist = np.histogram(push_velocity_gas_fast, bins=x_arr, density=True)[0]
-            slow_int_hist = np.histogram(push_velocity_gas_slow, bins=x_arr, density=True)[0]
-
             #Remove bulk particles that are outside plot's xrange
 
             if (len(push_velocity_gas_fast)>0):
@@ -10753,7 +10738,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
             plt.savefig(outPath + 'gas_velocity_enhance_histo_' + out + pad + ".png", dpi=150)
             plt.close()
 
-            x_min = 0.0
+            x_min = -1.0
             x_max = 1.0
             x_arr = np.linspace(x_min, x_max, num=100)
 
@@ -10792,9 +10777,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
             plt.ylabel('Probability density of bulk particles', fontsize=20)
             #plt.xlim([xmin,xmax])
 
-            loc = ticker.MultipleLocator(base=(x_max/10))
+            loc = ticker.MultipleLocator(base=(x_max/5))
             ax.xaxis.set_major_locator(loc)
-            loc = ticker.MultipleLocator(base=(x_max/20))
+            loc = ticker.MultipleLocator(base=(x_max/10))
             ax.xaxis.set_minor_locator(loc)
 
             plt.text(0.03, 0.78, s=r'$\tau$' + ' = ' + '{:.2f}'.format(tst) + ' ' + r'$\tau_\mathrm{B}$',
@@ -10805,7 +10790,193 @@ with hoomd.open(name=inFile, mode='rb') as t:
             plt.tight_layout()
             plt.savefig(outPath + 'bulk_velocity_dot_histo_' + out + pad + ".png", dpi=150)
             plt.close()
+
+            min_n = -1.0
+            max_n = 1.0
+
+
+            fig = plt.figure(figsize=(7,6))
+            ax = fig.add_subplot(111)
+
+
+            im = plt.scatter(pos[:,0]+h_box, pos[:,1]+h_box, c=dot_velocity, s=0.7, vmin=min_n, vmax=max_n)
+
+
+            tick_lev = np.arange(min_n, max_n + (max_n - min_n)/6, (max_n - min_n)/6)
+            #sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
+            #sm.set_array([])
+            clb = plt.colorbar(ticks=tick_lev, orientation="vertical", format=tick.FormatStrFormatter('%.3f'))
+
+            plt.tick_params(axis='both', which='both',
+                            bottom=False, top=False, left=False, right=False,
+                            labelbottom=False, labeltop=False, labelleft=False, labelright=False)
+            plt.text(0.663, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(tst) + ' ' + r'$\tau_\mathrm{B}$',
+                    fontsize=18, transform = ax.transAxes,
+                    bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+            if (np.amax(velocity_r_bin)) > 0:
+                plt.quiver(pos_box_x, pos_box_y, velocity_x_A_bin_plot, velocity_y_A_bin_plot, scale=20.0, color='black', alpha=0.8)
+
+            clb.ax.tick_params(labelsize=16)
+            clb.set_label(r'$v \cdot \hat{p}$', labelpad=-40, y=1.07, rotation=0, fontsize=20)
+
+            if bub_large >=1:
+                if interior_bin>0:
+                    plt.scatter(xn_pos, yn_pos, c='black', s=3.0)
+                if exterior_bin>0:
+                    plt.scatter(xn2_pos, yn2_pos, c='black', s=3.0)
+
+            if bub_large >=2:
+                if interior_bin_bub1>0:
+                    plt.scatter(xn_bub2_pos, yn_bub2_pos, c='black', s=3.0)
+                if exterior_bin_bub1>0:
+                    plt.scatter(xn2_bub2_pos, yn2_bub2_pos, c='black', s=3.0)
+            if bub_large >=3:
+                if interior_bin_bub2>0:
+                    plt.scatter(xn_bub3_pos, yn_bub3_pos, c='black', s=3.0)
+                if exterior_bin_bub2>0:
+                    plt.scatter(xn2_bub3_pos, yn2_bub3_pos, c='black', s=3.0)
+
+            if bub_large >=4:
+                if interior_bin_bub3>0:
+                    plt.scatter(xn_bub4_pos, yn_bub4_pos, c='black', s=3.0)
+                if exterior_bin_bub3>0:
+                    plt.scatter(xn2_bub4_pos, yn2_bub4_pos, c='black', s=3.0)
+            if bub_large >=5:
+                if interior_bin_bub4>0:
+                    plt.scatter(xn_bub5_pos, yn_bub5_pos, c='black', s=3.0)
+                if exterior_bin_bub4>0:
+                    plt.scatter(xn2_bub5_pos, yn2_bub5_pos, c='black', s=3.0)
+
+            plt.xlim(0, l_box)
+            plt.ylim(0, l_box)
+
+            ax.axis('off')
+            plt.tight_layout()
+            plt.savefig(outPath + 'dot_velocity_map_' + out + pad + ".png", dpi=100)
+            plt.close()
+
+            fig = plt.figure(figsize=(7,6))
+            ax = fig.add_subplot(111)
+
+
+            im = plt.scatter(pos[fast_id,0]+h_box, pos[fast_id,1]+h_box, c=dot_velocity_fast, s=0.7, vmin=min_n, vmax=max_n)
+
+
+            tick_lev = np.arange(min_n, max_n + (max_n - min_n)/6, (max_n - min_n)/6)
+            #sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
+            #sm.set_array([])
+            clb = plt.colorbar(ticks=tick_lev, orientation="vertical", format=tick.FormatStrFormatter('%.3f'))
+
+            plt.tick_params(axis='both', which='both',
+                            bottom=False, top=False, left=False, right=False,
+                            labelbottom=False, labeltop=False, labelleft=False, labelright=False)
+            plt.text(0.663, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(tst) + ' ' + r'$\tau_\mathrm{B}$',
+                    fontsize=18, transform = ax.transAxes,
+                    bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+            if (np.amax(velocity_r_bin)) > 0:
+                plt.quiver(pos_box_x, pos_box_y, velocity_x_A_bin_plot, velocity_y_A_bin_plot, scale=20.0, color='black', alpha=0.8)
+
+            clb.ax.tick_params(labelsize=16)
+            clb.set_label(r'$v_\mathrm{F} \cdot \hat{p}$', labelpad=-40, y=1.07, rotation=0, fontsize=20)
+
+            if bub_large >=1:
+                if interior_bin>0:
+                    plt.scatter(xn_pos, yn_pos, c='black', s=3.0)
+                if exterior_bin>0:
+                    plt.scatter(xn2_pos, yn2_pos, c='black', s=3.0)
+
+            if bub_large >=2:
+                if interior_bin_bub1>0:
+                    plt.scatter(xn_bub2_pos, yn_bub2_pos, c='black', s=3.0)
+                if exterior_bin_bub1>0:
+                    plt.scatter(xn2_bub2_pos, yn2_bub2_pos, c='black', s=3.0)
+            if bub_large >=3:
+                if interior_bin_bub2>0:
+                    plt.scatter(xn_bub3_pos, yn_bub3_pos, c='black', s=3.0)
+                if exterior_bin_bub2>0:
+                    plt.scatter(xn2_bub3_pos, yn2_bub3_pos, c='black', s=3.0)
+
+            if bub_large >=4:
+                if interior_bin_bub3>0:
+                    plt.scatter(xn_bub4_pos, yn_bub4_pos, c='black', s=3.0)
+                if exterior_bin_bub3>0:
+                    plt.scatter(xn2_bub4_pos, yn2_bub4_pos, c='black', s=3.0)
+            if bub_large >=5:
+                if interior_bin_bub4>0:
+                    plt.scatter(xn_bub5_pos, yn_bub5_pos, c='black', s=3.0)
+                if exterior_bin_bub4>0:
+                    plt.scatter(xn2_bub5_pos, yn2_bub5_pos, c='black', s=3.0)
+
+            plt.xlim(0, l_box)
+            plt.ylim(0, l_box)
+
+            ax.axis('off')
+            plt.tight_layout()
+            plt.savefig(outPath + 'dot_velocity_fast_map_' + out + pad + ".png", dpi=100)
+            plt.close()
+
+            fig = plt.figure(figsize=(7,6))
+            ax = fig.add_subplot(111)
+
+
+            im = plt.scatter(pos[slow_id,0]+h_box, pos[slow_id,1]+h_box, c=dot_velocity_slow, s=0.7, vmin=min_n, vmax=max_n)
+
+
+            tick_lev = np.arange(min_n, max_n + (max_n - min_n)/6, (max_n - min_n)/6)
+            #sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
+            #sm.set_array([])
+            clb = plt.colorbar(ticks=tick_lev, orientation="vertical", format=tick.FormatStrFormatter('%.3f'))
+
+            plt.tick_params(axis='both', which='both',
+                            bottom=False, top=False, left=False, right=False,
+                            labelbottom=False, labeltop=False, labelleft=False, labelright=False)
+            plt.text(0.663, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(tst) + ' ' + r'$\tau_\mathrm{B}$',
+                    fontsize=18, transform = ax.transAxes,
+                    bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+            if (np.amax(velocity_r_bin)) > 0:
+                plt.quiver(pos_box_x, pos_box_y, velocity_x_A_bin_plot, velocity_y_A_bin_plot, scale=20.0, color='black', alpha=0.8)
+
+            clb.ax.tick_params(labelsize=16)
+            clb.set_label(r'$v_\mathrm{S} \cdot \hat{p}$', labelpad=-40, y=1.07, rotation=0, fontsize=20)
+
+            if bub_large >=1:
+                if interior_bin>0:
+                    plt.scatter(xn_pos, yn_pos, c='black', s=3.0)
+                if exterior_bin>0:
+                    plt.scatter(xn2_pos, yn2_pos, c='black', s=3.0)
+
+            if bub_large >=2:
+                if interior_bin_bub1>0:
+                    plt.scatter(xn_bub2_pos, yn_bub2_pos, c='black', s=3.0)
+                if exterior_bin_bub1>0:
+                    plt.scatter(xn2_bub2_pos, yn2_bub2_pos, c='black', s=3.0)
+            if bub_large >=3:
+                if interior_bin_bub2>0:
+                    plt.scatter(xn_bub3_pos, yn_bub3_pos, c='black', s=3.0)
+                if exterior_bin_bub2>0:
+                    plt.scatter(xn2_bub3_pos, yn2_bub3_pos, c='black', s=3.0)
+
+            if bub_large >=4:
+                if interior_bin_bub3>0:
+                    plt.scatter(xn_bub4_pos, yn_bub4_pos, c='black', s=3.0)
+                if exterior_bin_bub3>0:
+                    plt.scatter(xn2_bub4_pos, yn2_bub4_pos, c='black', s=3.0)
+            if bub_large >=5:
+                if interior_bin_bub4>0:
+                    plt.scatter(xn_bub5_pos, yn_bub5_pos, c='black', s=3.0)
+                if exterior_bin_bub4>0:
+                    plt.scatter(xn2_bub5_pos, yn2_bub5_pos, c='black', s=3.0)
+
+            plt.xlim(0, l_box)
+            plt.ylim(0, l_box)
+
+            ax.axis('off')
+            plt.tight_layout()
+            plt.savefig(outPath + 'dot_velocity_slow_map_' + out + pad + ".png", dpi=100)
+            plt.close()
+
             stop
+
 
             if len(bulk_id_plot)>0:
                 min_n = 0.0*velocity_mean
@@ -10837,7 +11008,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
             plt.text(0.75, 0.92, s=r'$\overline{a}$' + ' = ' + '{:.3f}'.format(dense_lat_mean),
                     fontsize=18, transform = ax.transAxes,
                     bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
-            plt.quiver(pos_box_x, pos_box_y, velocity_x_A_bin_plot, velocity_y_A_bin_plot, scale=20.0, color='black', alpha=0.8)
+            if (np.amax(velocity_r_bin)) > 0:
+                plt.quiver(pos_box_x, pos_box_y, velocity_x_A_bin_plot, velocity_y_A_bin_plot, scale=20.0, color='black', alpha=0.8)
 
             clb.ax.tick_params(labelsize=16)
             clb.set_label('a', labelpad=-40, y=1.07, rotation=0, fontsize=20)

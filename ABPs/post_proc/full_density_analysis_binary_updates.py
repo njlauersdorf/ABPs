@@ -65,7 +65,7 @@ import matplotlib.patches as patches
 import matplotlib.ticker as tick
 
 
-from symfit import parameters, variables, sin, cos, Fit
+#from symfit import parameters, variables, sin, cos, Fit
 
 from scipy.optimize import curve_fit
 

@@ -10147,7 +10147,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     num_ids += 1
                 mean_x_arr = np.append(mean_x_arr, x_pos_sum / num_ids)
                 mean_y_arr = np.append(mean_y_arr, y_pos_sum / num_ids)
-
+            '''
             for i in range(0, np.shape(slow_all_bulk_ind_arr)[0]):
                 for m in range(0, np.shape(slow_all_bulk_ind_arr)[1]):
                     difx1 = pos_bulk_int[slow_all_bulk_ind_arr[i,m],0] - mean_x_arr
@@ -10189,7 +10189,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                     dify2 -= l_box
 
                             dif
-
+            '''
 
 
 
