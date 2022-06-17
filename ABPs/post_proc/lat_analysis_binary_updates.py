@@ -503,12 +503,22 @@ def conForRClust(pe, eps):
     return out
 """
 
+velocity_bulk_fast_time = np.array([])
+velocity_bulk_slow_time = np.array([])
+velocity_gas_fast_time = np.array([])
+velocity_gas_slow_time = np.array([])
+dot_velocity_bulk_fast_time = np.array([])
+dot_velocity_bulk_slow_time = np.array([])
+dot_velocity_gas_fast_time = np.array([])
+dot_velocity_gas_slow_time = np.array([])
+time_arr = np.array([])
+
 with hoomd.open(name=inFile, mode='rb') as t:
 
     r = np.linspace(0.0,  5.0, 100)             # Define radius for x-axis of plot later
 
     start = int(400/time_step)#205                                             # first frame to process
-    dumps = int(t.__len__())                                # get number of timesteps dumped
+    dumps = start + 50 #int(t.__len__())                                # get number of timesteps dumped
     end = int(dumps/time_step)-1                                             # final frame to process
     end = start + 10
     snap = t[0]                                             # Take first snap for box
@@ -10466,6 +10476,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
             px_all = np.sin(ang)# * peA
             py_all = -np.cos(ang)# * peA
 
+
             px_bulk_slow = np.sin(ang[slow_bulk_id_plot])# * peA
             py_bulk_slow = -np.cos(ang[slow_bulk_id_plot])# * peA
 
@@ -10585,6 +10596,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
             loc = ticker.MultipleLocator(base=(x_max_bulk/20))
             ax.xaxis.set_minor_locator(loc)
 
+
             #Remove bulk particles that are outside plot's xrange
 
             #if (len(push_velocity_bulk_fast)>0):
@@ -10624,6 +10636,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
             #Remove bulk particles that are outside plot's xrange
 
+
             if (len(push_velocity_gas_fast)>0):
                 plt.hist(velocity_gas_fast, bins = x_arr_gas, alpha = 0.5, color=fastCol, density=True)
 
@@ -10636,7 +10649,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
             plt.legend(handles=[green_patch, yellow_patch], fancybox=True, framealpha=0.75, ncol=1, fontsize=18, loc='upper right',labelspacing=0.1, handletextpad=0.1)
 
             plt.xlabel(r'Velocity', fontsize=20)
-            plt.ylabel('Probability density of bulk particles', fontsize=20)
+            plt.ylabel('Probability density of gas particles', fontsize=20)
             #plt.xlim([xmin,xmax])
 
             plt.text(0.73, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(tst) + ' ' + r'$\tau_\mathrm{B}$',
@@ -10663,6 +10676,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
             x_arr = np.linspace(x_min, x_max, num=100)
             #Remove bulk particles that are outside plot's xrange
+
 
             if (len(push_velocity_gas_fast)>0):
                 plt.hist((velocity_bulk_fast-peB)/peB, bins = x_arr, alpha = 0.5, color=fastCol, density=True)
@@ -10719,7 +10733,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
             plt.legend(handles=[green_patch, yellow_patch], fancybox=True, framealpha=0.75, ncol=1, fontsize=18, loc='upper right',labelspacing=0.1, handletextpad=0.1)
 
             plt.xlabel(r'Velocity Supression [$(v-v_\mathrm{p})/v_\mathrm{p}$]', fontsize=20)
-            plt.ylabel('Probability density of bulk particles', fontsize=20)
+            plt.ylabel('Probability density of gas particles', fontsize=20)
             #plt.xlim([xmin,xmax])
 
             plt.text(0.73, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(tst) + ' ' + r'$\tau_\mathrm{B}$',
@@ -10766,7 +10780,6 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 plt.hist(dot_velocity_bulk_slow, alpha = 0.5, bins=x_arr, color=slowCol, density=True)
             if (len(push_velocity_bulk_fast)>0):
                 plt.hist(dot_velocity_bulk_fast, alpha = 0.5, bins=x_arr, color=fastCol, density=True)
-
 
 
             green_patch = mpatches.Patch(color=slowCol, label=r'$\mathrm{Pe}_\mathrm{S}=$' + str(peA))
@@ -10854,129 +10867,6 @@ with hoomd.open(name=inFile, mode='rb') as t:
             plt.tight_layout()
             plt.savefig(outPath + 'dot_velocity_map_' + out + pad + ".png", dpi=100)
             plt.close()
-
-            fig = plt.figure(figsize=(7,6))
-            ax = fig.add_subplot(111)
-
-
-            im = plt.scatter(pos[fast_id,0]+h_box, pos[fast_id,1]+h_box, c=dot_velocity_fast, s=0.7, vmin=min_n, vmax=max_n)
-
-
-            tick_lev = np.arange(min_n, max_n + (max_n - min_n)/6, (max_n - min_n)/6)
-            #sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
-            #sm.set_array([])
-            clb = plt.colorbar(ticks=tick_lev, orientation="vertical", format=tick.FormatStrFormatter('%.3f'))
-
-            plt.tick_params(axis='both', which='both',
-                            bottom=False, top=False, left=False, right=False,
-                            labelbottom=False, labeltop=False, labelleft=False, labelright=False)
-            plt.text(0.663, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(tst) + ' ' + r'$\tau_\mathrm{B}$',
-                    fontsize=18, transform = ax.transAxes,
-                    bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
-            if (np.amax(velocity_r_bin)) > 0:
-                plt.quiver(pos_box_x, pos_box_y, velocity_x_A_bin_plot, velocity_y_A_bin_plot, scale=20.0, color='black', alpha=0.8)
-
-            clb.ax.tick_params(labelsize=16)
-            clb.set_label(r'$v_\mathrm{F} \cdot \hat{p}$', labelpad=-40, y=1.07, rotation=0, fontsize=20)
-
-            if bub_large >=1:
-                if interior_bin>0:
-                    plt.scatter(xn_pos, yn_pos, c='black', s=3.0)
-                if exterior_bin>0:
-                    plt.scatter(xn2_pos, yn2_pos, c='black', s=3.0)
-
-            if bub_large >=2:
-                if interior_bin_bub1>0:
-                    plt.scatter(xn_bub2_pos, yn_bub2_pos, c='black', s=3.0)
-                if exterior_bin_bub1>0:
-                    plt.scatter(xn2_bub2_pos, yn2_bub2_pos, c='black', s=3.0)
-            if bub_large >=3:
-                if interior_bin_bub2>0:
-                    plt.scatter(xn_bub3_pos, yn_bub3_pos, c='black', s=3.0)
-                if exterior_bin_bub2>0:
-                    plt.scatter(xn2_bub3_pos, yn2_bub3_pos, c='black', s=3.0)
-
-            if bub_large >=4:
-                if interior_bin_bub3>0:
-                    plt.scatter(xn_bub4_pos, yn_bub4_pos, c='black', s=3.0)
-                if exterior_bin_bub3>0:
-                    plt.scatter(xn2_bub4_pos, yn2_bub4_pos, c='black', s=3.0)
-            if bub_large >=5:
-                if interior_bin_bub4>0:
-                    plt.scatter(xn_bub5_pos, yn_bub5_pos, c='black', s=3.0)
-                if exterior_bin_bub4>0:
-                    plt.scatter(xn2_bub5_pos, yn2_bub5_pos, c='black', s=3.0)
-
-            plt.xlim(0, l_box)
-            plt.ylim(0, l_box)
-
-            ax.axis('off')
-            plt.tight_layout()
-            plt.savefig(outPath + 'dot_velocity_fast_map_' + out + pad + ".png", dpi=100)
-            plt.close()
-
-            fig = plt.figure(figsize=(7,6))
-            ax = fig.add_subplot(111)
-
-
-            im = plt.scatter(pos[slow_id,0]+h_box, pos[slow_id,1]+h_box, c=dot_velocity_slow, s=0.7, vmin=min_n, vmax=max_n)
-
-
-            tick_lev = np.arange(min_n, max_n + (max_n - min_n)/6, (max_n - min_n)/6)
-            #sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
-            #sm.set_array([])
-            clb = plt.colorbar(ticks=tick_lev, orientation="vertical", format=tick.FormatStrFormatter('%.3f'))
-
-            plt.tick_params(axis='both', which='both',
-                            bottom=False, top=False, left=False, right=False,
-                            labelbottom=False, labeltop=False, labelleft=False, labelright=False)
-            plt.text(0.663, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(tst) + ' ' + r'$\tau_\mathrm{B}$',
-                    fontsize=18, transform = ax.transAxes,
-                    bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
-            if (np.amax(velocity_r_bin)) > 0:
-                plt.quiver(pos_box_x, pos_box_y, velocity_x_A_bin_plot, velocity_y_A_bin_plot, scale=20.0, color='black', alpha=0.8)
-
-            clb.ax.tick_params(labelsize=16)
-            clb.set_label(r'$v_\mathrm{S} \cdot \hat{p}$', labelpad=-40, y=1.07, rotation=0, fontsize=20)
-
-            if bub_large >=1:
-                if interior_bin>0:
-                    plt.scatter(xn_pos, yn_pos, c='black', s=3.0)
-                if exterior_bin>0:
-                    plt.scatter(xn2_pos, yn2_pos, c='black', s=3.0)
-
-            if bub_large >=2:
-                if interior_bin_bub1>0:
-                    plt.scatter(xn_bub2_pos, yn_bub2_pos, c='black', s=3.0)
-                if exterior_bin_bub1>0:
-                    plt.scatter(xn2_bub2_pos, yn2_bub2_pos, c='black', s=3.0)
-            if bub_large >=3:
-                if interior_bin_bub2>0:
-                    plt.scatter(xn_bub3_pos, yn_bub3_pos, c='black', s=3.0)
-                if exterior_bin_bub2>0:
-                    plt.scatter(xn2_bub3_pos, yn2_bub3_pos, c='black', s=3.0)
-
-            if bub_large >=4:
-                if interior_bin_bub3>0:
-                    plt.scatter(xn_bub4_pos, yn_bub4_pos, c='black', s=3.0)
-                if exterior_bin_bub3>0:
-                    plt.scatter(xn2_bub4_pos, yn2_bub4_pos, c='black', s=3.0)
-            if bub_large >=5:
-                if interior_bin_bub4>0:
-                    plt.scatter(xn_bub5_pos, yn_bub5_pos, c='black', s=3.0)
-                if exterior_bin_bub4>0:
-                    plt.scatter(xn2_bub5_pos, yn2_bub5_pos, c='black', s=3.0)
-
-            plt.xlim(0, l_box)
-            plt.ylim(0, l_box)
-
-            ax.axis('off')
-            plt.tight_layout()
-            plt.savefig(outPath + 'dot_velocity_slow_map_' + out + pad + ".png", dpi=100)
-            plt.close()
-
-            stop
-
 
             if len(bulk_id_plot)>0:
                 min_n = 0.0*velocity_mean
@@ -11084,3 +10974,205 @@ with hoomd.open(name=inFile, mode='rb') as t:
         plt.tight_layout()
         plt.savefig(outPath + 'lat_histo_' + out + pad + ".png", dpi=150)
         plt.close()
+
+        velocity_bulk_fast_time = np.append(velocity_bulk_fast_time, velocity_bulk_fast)
+        velocity_bulk_slow_time = np.append(velocity_bulk_slow_time, velocity_bulk_slow)
+        velocity_gas_fast_time = np.append(velocity_gas_fast_time, velocity_gas_fast)
+        velocity_gas_slow_time = np.append(velocity_gas_slow_time, velocity_gas_slow)
+        dot_velocity_bulk_fast_time = np.append(dot_velocity_bulk_fast_time, dot_velocity_bulk_fast)
+        dot_velocity_bulk_slow_time = np.append(dot_velocity_bulk_slow_time, dot_velocity_bulk_slow)
+        dot_velocity_gas_fast_time = np.append(dot_velocity_gas_fast_time, dot_velocity_gas_fast)
+        dot_velocity_gas_slow_time = np.append(dot_velocity_gas_slow_time, dot_velocity_gas_slow)
+        time_arr = np.append(time_arr, tst)
+
+fig = plt.figure(figsize=(8,6))
+ax = fig.add_subplot(111)
+
+loc = ticker.MultipleLocator(base=(x_max_bulk/10))
+ax.xaxis.set_major_locator(loc)
+loc = ticker.MultipleLocator(base=(x_max_bulk/20))
+ax.xaxis.set_minor_locator(loc)
+
+
+#Remove bulk particles that are outside plot's xrange
+
+#if (len(push_velocity_bulk_fast)>0):
+#    plt.hist(push_velocity_bulk_fast, bins = x_arr, alpha = 0.5, color=fastCol, density=True)
+
+#if (len(push_velocity_bulk_slow)>0):
+
+#    plt.hist(push_velocity_bulk_slow, bins = x_arr, alpha = 0.5, color=slowCol, density=True)
+
+if (len(velocity_bulk_fast)>0):
+    plt.hist(velocity_bulk_fast_time, bins = x_arr_bulk, alpha = 0.5, color=fastCol, density=True)
+
+if (len(velocity_bulk_slow)>0):
+
+    plt.hist(velocity_bulk_slow_time, bins = x_arr_bulk, alpha = 0.5, color=slowCol, density=True)
+
+green_patch = mpatches.Patch(color=slowCol, label=r'$\mathrm{Pe}_\mathrm{S}=$' + str(peA))
+yellow_patch = mpatches.Patch(color=fastCol, label=r'$\mathrm{Pe}_\mathrm{F}=$' + str(peB))
+plt.legend(handles=[green_patch, yellow_patch], fancybox=True, framealpha=0.75, ncol=1, fontsize=18, loc='upper right',labelspacing=0.1, handletextpad=0.1)
+
+plt.xlabel(r'Velocity', fontsize=20)
+plt.ylabel('Probability density of bulk particles', fontsize=20)
+#plt.xlim([xmin,xmax])
+
+fsize=14
+plt.tick_params(axis='x', labelsize=fsize)
+plt.tick_params(axis='y', labelsize=fsize)
+plt.tight_layout()
+plt.savefig(outPath + 'steadystate_bulk_velocity_histo_' + out + pad + ".png", dpi=150)
+plt.close()
+
+fig = plt.figure(figsize=(8,6))
+ax = fig.add_subplot(111)
+
+#Remove bulk particles that are outside plot's xrange
+
+
+if (len(push_velocity_gas_fast)>0):
+    plt.hist(velocity_gas_fast_time, bins = x_arr_gas, alpha = 0.5, color=fastCol, density=True)
+
+if (len(push_velocity_gas_slow)>0):
+
+    plt.hist(velocity_gas_slow_time, bins = x_arr_gas, alpha = 0.5, color=slowCol, density=True)
+
+green_patch = mpatches.Patch(color=slowCol, label=r'$\mathrm{Pe}_\mathrm{S}=$' + str(peA))
+yellow_patch = mpatches.Patch(color=fastCol, label=r'$\mathrm{Pe}_\mathrm{F}=$' + str(peB))
+plt.legend(handles=[green_patch, yellow_patch], fancybox=True, framealpha=0.75, ncol=1, fontsize=18, loc='upper right',labelspacing=0.1, handletextpad=0.1)
+
+plt.xlabel(r'Velocity', fontsize=20)
+plt.ylabel('Probability density of gas particles', fontsize=20)
+#plt.xlim([xmin,xmax])
+
+fsize=14
+plt.tick_params(axis='x', labelsize=fsize)
+plt.tick_params(axis='y', labelsize=fsize)
+
+loc = ticker.MultipleLocator(base=(peB/10))
+ax.xaxis.set_major_locator(loc)
+loc = ticker.MultipleLocator(base=(peB/20))
+ax.xaxis.set_minor_locator(loc)
+
+plt.tight_layout()
+plt.savefig(outPath + 'steadystate_gas_velocity_histo_' + out + pad + ".png", dpi=150)
+plt.close()
+
+fig = plt.figure(figsize=(8,6))
+ax = fig.add_subplot(111)
+
+x_min = -1#peB
+x_max = 1#peB
+
+x_arr = np.linspace(x_min, x_max, num=100)
+#Remove bulk particles that are outside plot's xrange
+
+
+if (len(push_velocity_gas_fast)>0):
+    plt.hist((velocity_bulk_fast-peB)/peB, bins = x_arr, alpha = 0.5, color=fastCol, density=True)
+
+if (len(push_velocity_gas_slow)>0):
+    if peA > 0:
+        plt.hist((velocity_bulk_slow_time-peA)/peA, bins = x_arr, alpha = 0.5, color=slowCol, density=True)
+    else:
+        plt.hist((velocity_bulk_slow_time-peA)/peB, bins = x_arr, alpha = 0.5, color=slowCol, density=True)
+green_patch = mpatches.Patch(color=slowCol, label=r'$\mathrm{Pe}_\mathrm{S}=$' + str(peA))
+yellow_patch = mpatches.Patch(color=fastCol, label=r'$\mathrm{Pe}_\mathrm{F}=$' + str(peB))
+plt.legend(handles=[green_patch, yellow_patch], fancybox=True, framealpha=0.75, ncol=1, fontsize=18, loc='upper right',labelspacing=0.1, handletextpad=0.1)
+
+plt.xlabel(r'Velocity Supression [$(v-v_\mathrm{p})/v_\mathrm{p}$]', fontsize=20)
+plt.ylabel('Probability density of bulk particles', fontsize=20)
+#plt.xlim([xmin,xmax])
+
+fsize=14
+plt.tick_params(axis='x', labelsize=fsize)
+plt.tick_params(axis='y', labelsize=fsize)
+
+loc = ticker.MultipleLocator(base=(1/5))
+ax.xaxis.set_major_locator(loc)
+loc = ticker.MultipleLocator(base=(1/10))
+ax.xaxis.set_minor_locator(loc)
+
+plt.tight_layout()
+plt.savefig(outPath + 'steadystate_bulk_velocity_enhance_histo_' + out + pad + ".png", dpi=150)
+plt.close()
+
+fig = plt.figure(figsize=(8,6))
+ax = fig.add_subplot(111)
+
+x_min = -1#peB
+x_max = 1#peB
+
+x_arr = np.linspace(x_min, x_max, num=100)
+
+#Remove bulk particles that are outside plot's xrange
+
+if (len(push_velocity_gas_fast)>0):
+    plt.hist((velocity_gas_fast_time-peB)/peB, bins = x_arr, alpha = 0.5, color=fastCol, density=True)
+
+if (len(push_velocity_gas_slow)>0):
+    if peA > 0:
+        plt.hist((velocity_gas_slow_time-peA)/peA, bins = x_arr, alpha = 0.5, color=slowCol, density=True)
+    else:
+        plt.hist((velocity_gas_slow_time-peA)/peB, bins = x_arr, alpha = 0.5, color=slowCol, density=True)
+green_patch = mpatches.Patch(color=slowCol, label=r'$\mathrm{Pe}_\mathrm{S}=$' + str(peA))
+yellow_patch = mpatches.Patch(color=fastCol, label=r'$\mathrm{Pe}_\mathrm{F}=$' + str(peB))
+plt.legend(handles=[green_patch, yellow_patch], fancybox=True, framealpha=0.75, ncol=1, fontsize=18, loc='upper right',labelspacing=0.1, handletextpad=0.1)
+
+plt.xlabel(r'Velocity Supression [$(v-v_\mathrm{p})/v_\mathrm{p}$]', fontsize=20)
+plt.ylabel('Probability density of gas particles', fontsize=20)
+#plt.xlim([xmin,xmax])
+
+fsize=14
+plt.tick_params(axis='x', labelsize=fsize)
+plt.tick_params(axis='y', labelsize=fsize)
+
+loc = ticker.MultipleLocator(base=(1/5))
+ax.xaxis.set_major_locator(loc)
+loc = ticker.MultipleLocator(base=(1/10))
+ax.xaxis.set_minor_locator(loc)
+
+plt.tight_layout()
+plt.savefig(outPath + 'steadystate_gas_velocity_enhance_histo_' + out + pad + ".png", dpi=150)
+plt.close()
+
+x_min = -1.0
+x_max = 1.0
+x_arr = np.linspace(x_min, x_max, num=100)
+
+fig = plt.figure(figsize=(8,6))
+ax = fig.add_subplot(111)
+#Remove bulk particles that are outside plot's xrange
+#if (len(push_velocity_bulk_slow)>0):
+
+#    plt.hist(push_velocity_bulk_slow, alpha = 1.0, bins=100, color=slowCol)
+
+#if (len(push_velocity_bulk_fast)>0):
+#    plt.hist(push_velocity_bulk_fast, alpha = 1.0, bins=100, color=fastCol)
+
+if (len(push_velocity_bulk_slow)>0):
+
+    plt.hist(dot_velocity_bulk_slow_time, alpha = 0.5, bins=x_arr, color=slowCol, density=True)
+if (len(push_velocity_bulk_fast)>0):
+    plt.hist(dot_velocity_bulk_fast_time, alpha = 0.5, bins=x_arr, color=fastCol, density=True)
+
+
+green_patch = mpatches.Patch(color=slowCol, label=r'$\mathrm{Pe}_\mathrm{S}=$' + str(peA))
+yellow_patch = mpatches.Patch(color=fastCol, label=r'$\mathrm{Pe}_\mathrm{F}=$' + str(peB))
+plt.legend(handles=[green_patch, yellow_patch], fancybox=True, framealpha=0.75, ncol=1, fontsize=18, loc='upper left',labelspacing=0.1, handletextpad=0.1)
+
+plt.xlabel(r'$\hat{v}\cdot\hat{p}$', fontsize=20)
+plt.ylabel('Probability density of bulk particles', fontsize=20)
+#plt.xlim([xmin,xmax])
+
+loc = ticker.MultipleLocator(base=(x_max/5))
+ax.xaxis.set_major_locator(loc)
+loc = ticker.MultipleLocator(base=(x_max/10))
+ax.xaxis.set_minor_locator(loc)
+
+plt.tick_params(axis='x', labelsize=fsize)
+plt.tick_params(axis='y', labelsize=fsize)
+plt.tight_layout()
+plt.savefig(outPath + 'steadystate_bulk_velocity_dot_histo_' + out + pad + ".png", dpi=150)
+plt.close()
