@@ -10586,7 +10586,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
             fast_gas_hist = np.histogram(velocity_gas_fast, bins=x_arr_gas, density=True)[0]
             slow_gas_hist = np.histogram(velocity_gas_slow, bins=x_arr_gas, density=True)[0]
-
+            '''
             fig = plt.figure(figsize=(8,6))
             ax = fig.add_subplot(111)
 
@@ -10802,6 +10802,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
             plt.tight_layout()
             plt.savefig(outPath + 'bulk_velocity_dot_histo_' + out + pad + ".png", dpi=150)
             plt.close()
+            '''
 
             min_n = -1.0
             max_n = 1.0
@@ -10939,6 +10940,16 @@ with hoomd.open(name=inFile, mode='rb') as t:
             plt.savefig(outPath + 'lat_map_' + out + pad + ".png", dpi=100)
             plt.close()
 
+            velocity_bulk_fast_time = np.append(velocity_bulk_fast_time, velocity_bulk_fast)
+            velocity_bulk_slow_time = np.append(velocity_bulk_slow_time, velocity_bulk_slow)
+            velocity_gas_fast_time = np.append(velocity_gas_fast_time, velocity_gas_fast)
+            velocity_gas_slow_time = np.append(velocity_gas_slow_time, velocity_gas_slow)
+            dot_velocity_bulk_fast_time = np.append(dot_velocity_bulk_fast_time, dot_velocity_bulk_fast)
+            dot_velocity_bulk_slow_time = np.append(dot_velocity_bulk_slow_time, dot_velocity_bulk_slow)
+            dot_velocity_gas_fast_time = np.append(dot_velocity_gas_fast_time, dot_velocity_gas_fast)
+            dot_velocity_gas_slow_time = np.append(dot_velocity_gas_slow_time, dot_velocity_gas_slow)
+            time_arr = np.append(time_arr, tst)
+
         xmin = 0.5
         xmax = 1.0
 
@@ -10974,15 +10985,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
         plt.savefig(outPath + 'lat_histo_' + out + pad + ".png", dpi=150)
         plt.close()
 
-        velocity_bulk_fast_time = np.append(velocity_bulk_fast_time, velocity_bulk_fast)
-        velocity_bulk_slow_time = np.append(velocity_bulk_slow_time, velocity_bulk_slow)
-        velocity_gas_fast_time = np.append(velocity_gas_fast_time, velocity_gas_fast)
-        velocity_gas_slow_time = np.append(velocity_gas_slow_time, velocity_gas_slow)
-        dot_velocity_bulk_fast_time = np.append(dot_velocity_bulk_fast_time, dot_velocity_bulk_fast)
-        dot_velocity_bulk_slow_time = np.append(dot_velocity_bulk_slow_time, dot_velocity_bulk_slow)
-        dot_velocity_gas_fast_time = np.append(dot_velocity_gas_fast_time, dot_velocity_gas_fast)
-        dot_velocity_gas_slow_time = np.append(dot_velocity_gas_slow_time, dot_velocity_gas_slow)
-        time_arr = np.append(time_arr, tst)
+
 
 fig = plt.figure(figsize=(8,6))
 ax = fig.add_subplot(111)
