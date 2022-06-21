@@ -227,6 +227,12 @@ elif [ "$method" = "lattice_spacing" ]; then
 
       rm -rf "$pic_path"lat_map_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_*
 
+    ffmpeg -start_number 0 -framerate 7 -i "$pic_path"dot_velocity_map_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_%04d.png\
+     -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
+     "$vid_path"dot_velocity_map_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}.mp4
+
+      rm -rf "$pic_path"dot_velocity_map_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_*
+
     ffmpeg -start_number 0 -framerate 7 -i "$pic_path"lat_histo_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}_frame_%04d.png\
      -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
      "$vid_path"lat_histo_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}.mp4
