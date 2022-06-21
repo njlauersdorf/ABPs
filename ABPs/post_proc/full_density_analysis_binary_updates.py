@@ -538,9 +538,9 @@ g.close()
 with hoomd.open(name=inFile, mode='rb') as t:
 
     dumps = int(t.__len__())
-    start = int(0/time_step)#205                                             # first frame to process
+    start = int(400/time_step)#205                                             # first frame to process
                                 # get number of timesteps dumped
-    end = int(dumps/time_step)-1                                             # final frame to process
+    end = start + 2#int(dumps/time_step)-1                                             # final frame to process
     snap = t[0]                                             # Take first snap for box
     first_tstep = snap.configuration.step                   # First time step
 
@@ -660,7 +660,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
         align_tot_y = [[0 for b in range(NBins)] for a in range(NBins)]
 
         num_dens3 = [[0 for b in range(NBins)] for a in range(NBins)]
-
+        empt_arr = [[0 for b in range(NBins)] for a in range(NBins)]
         binParts = [[[] for b in range(NBins)] for a in range(NBins)]
         typParts=  [[[] for b in range(NBins)] for a in range(NBins)]
             #posParts=  [[[] for b in range(NBins)] for a in range(NBins)]
@@ -755,6 +755,10 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                         #Calculate number density per bin
                         num_dens3[ix][iy] = (len(binParts[ix][iy])/(sizeBin**2))*(math.pi/4)
+                        if len(binParts[ix][iy])==0:
+                            empt_arr[ix][iy]=1.0
+                        else:
+                            empt_arr[ix][iy]=0.0
 
                         #Calculate average orientation per bin
                         p_plot_x[ix][iy] = p_all_x[ix][iy]/len(binParts[ix][iy])
@@ -845,6 +849,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
         align_tot_yB = [[0 for b in range(NBins)] for a in range(NBins)]
 
         num_dens3 = [[0 for b in range(NBins)] for a in range(NBins)]
+        empt_arr = [[0 for b in range(NBins)] for a in range(NBins)]
         num_densDif = [[0 for b in range(NBins)] for a in range(NBins)]
         fast_frac_arr = [[0 for b in range(NBins)] for a in range(NBins)]
         num_dens3A = [[0 for b in range(NBins)] for a in range(NBins)]
@@ -1009,7 +1014,13 @@ with hoomd.open(name=inFile, mode='rb') as t:
                         num_dens3A[ix][iy] = (typ0_temp/(sizeBin**2))*(math.pi/4)                   #Number density of type A particles
                         num_dens3B[ix][iy] = (typ1_temp/(sizeBin**2))*(math.pi/4)                   #Number density of type B particles
                         fast_frac_arr[ix][iy] = num_dens3B[ix][iy]/num_dens3[ix][iy]
+                        if len(binParts[ix][iy])==0:
+                            print('boob')
 
+                            empt_arr[ix][iy]=1.0
+                        else:
+                            #print('bobble')
+                            empt_arr[ix][iy]=0.0
                         if peB >= peA:
                             num_densDif[ix][iy]=num_dens3B[ix][iy]-num_dens3A[ix][iy]                   #Difference in number density
                         else:
@@ -15138,7 +15149,52 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         min_n = 0.0#np.min(fast_frac_arr)
         max_n = 1.0#np.max(fast_frac_arr)
 
+        empt_arr = np.ones(np.shape(empt_arr))
+        import random
+        for ix in range(0, len(empt_arr)):
+            for iy in range(0, len(empt_arr)):
+                test = random.randint(1,20)
+                if test ==1:
+                    empt_arr[ix][iy] = 1
+                else:
+                    empt_arr[ix][iy] = 0
+        from matplotlib.colors import LinearSegmentedColormap
+        def grayscale_cmap(cmap):
+            """Return a grayscale version of the given colormap"""
+            cmap = plt.cm.get_cmap(cmap)
+            colors = cmap(np.arange(cmap.N))
 
+            # convert RGBA to perceived grayscale luminance
+            # cf. http://alienryderflex.com/hsp.html
+            RGB_weight = [0.299, 0.587, 0.114]
+            luminance = np.sqrt(np.dot(colors[:, :3] ** 2, RGB_weight))
+            colors[:, :3] = luminance[:, np.newaxis]
+
+            return LinearSegmentedColormap.from_list(cmap.name + "_gray", colors, cmap.N)
+        def view_colormap(cmap):
+            """Plot a colormap with its grayscale equivalent"""
+            cmap = plt.cm.get_cmap(cmap)
+            colors = cmap(np.arange(cmap.N))
+
+            cmap2 = plt.cm.get_cmap('Greys')
+            colors2 = cmap2(np.arange(cmap2.N))
+            print(cmap2(np.arange(cmap2.N))[:,:-1])
+            colors2[:,:-1] = [1., 1., 1.]
+
+            cmap3 = plt.cm.get_cmap('BuPu')
+            my_cmap = cmap3(np.arange(cmap3.N))
+            alphas = np.ones(cmap.N) * 0.3
+
+            for i in range(cmap.N):
+
+                my_cmap[i,:-1] = colors2[i,:-1] * alphas[i] + colors[i,:-1] * (1.0 - alphas[i])
+
+
+            #cmap = grayscale_cmap(cmap)
+            #grayscale = cmap(np.arange(cmap.N))
+
+            return my_cmap
+        filtered_cmap = view_colormap('inferno')
         #Contour plot of the difference in number density of type B to type A per bin
         fig = plt.figure(figsize=(7,6))
         ax = fig.add_subplot(111)
@@ -15147,7 +15203,13 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         level_boundaries = np.linspace(min_n, max_n, levels_text + 1)
 
         im = plt.contourf(pos_box_x, pos_box_y, fast_frac_arr, level_boundaries, vmin=min_n, vmax=max_n, cmap='seismic', extend='both')
+        #im = plt.contourf(pos_box_x, pos_box_y, fast_frac_arr, level_boundaries, vmin=min_n, vmax=max_n, cmap=my_cmap, extend='both')
+
         norm= matplotlib.colors.Normalize(vmin=min_n, vmax=max_n)
+
+        #im = plt.contourf(pos_box_x, pos_box_y, fast_frac_arr, level_boundaries, vmin=min_n, vmax=max_n, cmap='inferno', extend='both')
+        plt.contourf(pos_box_x, pos_box_y, empt_arr, alpha=0.3, cmap='Greys', vmin=0.0, vmax=1.0, extend='both')
+
 
         if bub_large >=1:
             if interior_bin>0:
@@ -15178,10 +15240,12 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                 plt.scatter(xn2_bub5_pos, yn2_bub5_pos, c='black', s=3.0)
 
         sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
+        #sm = plt.cm.ScalarMappable(norm=norm, cmap = filtered_cmap)
+
         sm.set_array([])
         tick_lev = np.arange(min_n, max_n+max_n/10, (max_n-min_n)/10)
         clb = fig.colorbar(sm, ticks=tick_lev, boundaries=level_boundaries,
-values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStrFormatter('%.2f'))
+        values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStrFormatter('%.2f'))
         clb.ax.tick_params(labelsize=16)
 
         clb.set_label(r'$\chi_\mathrm{F}$', labelpad=-40, y=1.07, rotation=0, fontsize=20)
@@ -15204,70 +15268,6 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
         min_n = 0.3#np.min(fast_frac_arr)
         max_n = 0.7#np.max(fast_frac_arr)
-
-
-        #Contour plot of the difference in number density of type B to type A per bin
-        fig = plt.figure(figsize=(7,6))
-        ax = fig.add_subplot(111)
-        div_min = -3
-        levels_text=40
-        level_boundaries = np.linspace(min_n, max_n, levels_text + 1)
-
-        im = plt.contourf(pos_box_x, pos_box_y, fast_frac_arr, level_boundaries, vmin=min_n, vmax=max_n, cmap='seismic', extend='both')
-        norm= matplotlib.colors.Normalize(vmin=min_n, vmax=max_n)
-
-        if bub_large >=1:
-            if interior_bin>0:
-                plt.scatter(xn_pos, yn_pos, c='black', s=3.0)
-            if exterior_bin>0:
-                plt.scatter(xn2_pos, yn2_pos, c='black', s=3.0)
-
-        if bub_large >=2:
-            if interior_bin_bub1>0:
-                plt.scatter(xn_bub2_pos, yn_bub2_pos, c='black', s=3.0)
-            if exterior_bin_bub1>0:
-                plt.scatter(xn2_bub2_pos, yn2_bub2_pos, c='black', s=3.0)
-        if bub_large >=3:
-            if interior_bin_bub2>0:
-                plt.scatter(xn_bub3_pos, yn_bub3_pos, c='black', s=3.0)
-            if exterior_bin_bub2>0:
-                plt.scatter(xn2_bub3_pos, yn2_bub3_pos, c='black', s=3.0)
-
-        if bub_large >=4:
-            if interior_bin_bub3>0:
-                plt.scatter(xn_bub4_pos, yn_bub4_pos, c='black', s=3.0)
-            if exterior_bin_bub3>0:
-                plt.scatter(xn2_bub4_pos, yn2_bub4_pos, c='black', s=3.0)
-        if bub_large >=5:
-            if interior_bin_bub4>0:
-                plt.scatter(xn_bub5_pos, yn_bub5_pos, c='black', s=3.0)
-            if exterior_bin_bub4>0:
-                plt.scatter(xn2_bub5_pos, yn2_bub5_pos, c='black', s=3.0)
-
-        sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
-        sm.set_array([])
-        tick_lev = np.arange(min_n, max_n+max_n/10, (max_n-min_n)/10)
-        clb = fig.colorbar(sm, ticks=tick_lev, boundaries=level_boundaries,
-values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStrFormatter('%.2f'))
-        clb.ax.tick_params(labelsize=16)
-
-        clb.set_label(r'$\chi_\mathrm{F}$', labelpad=-40, y=1.07, rotation=0, fontsize=20)
-
-        plt.xlim(0, l_box)
-        plt.ylim(0, l_box)
-
-        plt.tick_params(axis='both', which='both',
-                        bottom=False, top=False, left=False, right=False,
-                        labelbottom=False, labeltop=False, labelleft=False, labelright=False)
-
-        plt.text(0.663, 0.04, s=r'$\tau$' + ' = ' + '{:.1f}'.format(tst) + ' ' + r'$\tau_\mathrm{B}$',
-                fontsize=18, transform = ax.transAxes,
-                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
-
-        ax.axis('off')
-        plt.tight_layout()
-        plt.savefig(outPath + 'fast_frac_zoom_' + out + pad + ".png", dpi=100)
-        plt.close()
 
 
 

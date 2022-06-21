@@ -456,7 +456,7 @@ outfile = 'pa'+str(int(peA))+'_pb'+str(int(peB))+'_xa'+str(int(parFrac))+'_eps'+
 out = outfile
 
 outTxt_rdf = 'rdf_' + outfile + '.txt'
-
+outTxt_angdf = 'rdf_' + outfile + '.txt'
 lat_theory_arr = np.array([])
 
 #.txt file for saving overall phase composition data
@@ -468,6 +468,17 @@ g.write('clust_size'.center(15) + ' ' +\
                         'ss_rdf'.center(15) + ' ' +\
                         'sf_rdf'.center(15) + ' ' +\
                         'ff_rdf'.center(15) + '\n')
+g.close()
+
+g = open(outPath2+outTxt_angdf, 'w+') # write file headings
+g.write('clust_size'.center(15) + ' ' +\
+                        'theta'.center(15) + ' ' +\
+                        'all_all_angdf'.center(15) + ' ' +\
+                        'all_s_angdf'.center(15) + ' ' +\
+                        'all_f_angdf'.center(15) + ' ' +\
+                        'ss_angdf'.center(15) + ' ' +\
+                        'sf_angdf'.center(15) + ' ' +\
+                        'ff_angdf'.center(15) + '\n')
 g.close()
 
 """
@@ -10308,6 +10319,322 @@ with hoomd.open(name=inFile, mode='rb') as t:
                             #g_r_BB_bulk = np.append(g_r_BB_bulk, len(inds)/(len(fast_bulk_id_plot)*(2*math.pi * r[m] * difr) * num_dens_BB))
 
                             r_arr = np.append(r_arr, r[m])
+                        #Angular distribution function
+                        r = np.linspace(0.0,  3.0, 20)             # Define radius for x-axis of plot later
+
+                        # Width, in distance units, of bin
+                        wBins = 0.02
+
+                        # Distance to compute RDF for
+
+                        # Number of bins given this distance
+                        nBins = r_cut / wBins
+
+                        wbinsTrue=(r_cut)/(nBins-1)
+
+
+                        r=np.arange(0.0,r_cut+wbinsTrue,wbinsTrue)
+                        query_args = dict(mode='ball', r_min = 0.1, r_max=r_cut)
+
+                        system_all_bulk = freud.AABBQuery(f_box, f_box.wrap(pos_bulk_int))
+                        system_A_bulk = freud.AABBQuery(f_box, f_box.wrap(pos0_bulk_int))
+                        system_B_bulk = freud.AABBQuery(f_box, f_box.wrap(pos1_bulk_int))
+
+                        all_bulk_nlist = system_all_bulk.query(f_box.wrap(pos_bulk), query_args).toNeighborList()
+                        A_bulk_nlist = system_A_bulk.query(f_box.wrap(pos_bulk), query_args).toNeighborList()
+                        B_bulk_nlist = system_B_bulk.query(f_box.wrap(pos_bulk), query_args).toNeighborList()
+
+                        AA_bulk_nlist = system_A_bulk.query(f_box.wrap(pos0_bulk), query_args).toNeighborList()
+                        AB_bulk_nlist = system_A_bulk.query(f_box.wrap(pos1_bulk), query_args).toNeighborList()
+                        BB_bulk_nlist = system_B_bulk.query(f_box.wrap(pos1_bulk), query_args).toNeighborList()
+
+                        rijs_all_bulk = (pos_bulk_int[all_bulk_nlist.point_indices] - pos_bulk[all_bulk_nlist.query_point_indices])
+
+                        difx_out = np.where(rijs_all_bulk[:,0]>h_box)[0]
+                        rijs_all_bulk[difx_out,0] = rijs_all_bulk[difx_out,0]-l_box
+
+                        difx_out = np.where(rijs_all_bulk[:,0]<-h_box)[0]
+                        rijs_all_bulk[difx_out,0] = rijs_all_bulk[difx_out,0]+l_box
+
+                        dify_out = np.where(rijs_all_bulk[:,1]>h_box)[0]
+                        rijs_all_bulk[dify_out,1] = rijs_all_bulk[dify_out,1]-l_box
+
+                        dify_out = np.where(rijs_all_bulk[:,1]<-h_box)[0]
+                        rijs_all_bulk[dify_out,1] = rijs_all_bulk[dify_out,1]+l_box
+
+                        rijs_A_bulk = (pos_bulk_int[A_bulk_nlist.point_indices] - pos_bulk[A_bulk_nlist.query_point_indices])
+
+                        difx_out = np.where(rijs_A_bulk[:,0]>h_box)[0]
+                        rijs_A_bulk[difx_out,0] = rijs_A_bulk[difx_out,0]-l_box
+
+                        difx_out = np.where(rijs_A_bulk[:,0]<-h_box)[0]
+                        rijs_A_bulk[difx_out,0] = rijs_A_bulk[difx_out,0]+l_box
+
+                        dify_out = np.where(rijs_A_bulk[:,1]>h_box)[0]
+                        rijs_A_bulk[dify_out,1] = rijs_A_bulk[dify_out,1]-l_box
+
+                        dify_out = np.where(rijs_A_bulk[:,1]<-h_box)[0]
+                        rijs_A_bulk[dify_out,1] = rijs_A_bulk[dify_out,1]+l_box
+
+                        rijs_B_bulk = (pos_bulk_int[B_bulk_nlist.point_indices] - pos_bulk[B_bulk_nlist.query_point_indices])
+
+                        difx_out = np.where(rijs_B_bulk[:,0]>h_box)[0]
+                        rijs_B_bulk[difx_out,0] = rijs_B_bulk[difx_out,0]-l_box
+
+                        difx_out = np.where(rijs_B_bulk[:,0]<-h_box)[0]
+                        rijs_B_bulk[difx_out,0] = rijs_B_bulk[difx_out,0]+l_box
+
+                        dify_out = np.where(rijs_B_bulk[:,1]>h_box)[0]
+                        rijs_B_bulk[dify_out,1] = rijs_B_bulk[dify_out,1]-l_box
+
+                        dify_out = np.where(rijs_B_bulk[:,1]<-h_box)[0]
+                        rijs_B_bulk[dify_out,1] = rijs_B_bulk[dify_out,1]+l_box
+
+                        rijs_AA_bulk = (pos0_bulk_int[AA_bulk_nlist.point_indices] - pos0_bulk[AA_bulk_nlist.query_point_indices])
+
+                        difx_out = np.where(rijs_AA_bulk[:,0]>h_box)[0]
+                        rijs_AA_bulk[difx_out,0] = rijs_AA_bulk[difx_out,0]-l_box
+
+                        difx_out = np.where(rijs_AA_bulk[:,0]<-h_box)[0]
+                        rijs_AA_bulk[difx_out,0] = rijs_AA_bulk[difx_out,0]+l_box
+
+                        dify_out = np.where(rijs_AA_bulk[:,1]>h_box)[0]
+                        rijs_AA_bulk[dify_out,1] = rijs_AA_bulk[dify_out,1]-l_box
+
+                        dify_out = np.where(rijs_AA_bulk[:,1]<-h_box)[0]
+                        rijs_AA_bulk[dify_out,1] = rijs_AA_bulk[dify_out,1]+l_box
+
+                        rijs_AB_bulk = (pos0_bulk_int[AB_bulk_nlist.point_indices] - pos1_bulk[AB_bulk_nlist.query_point_indices])
+
+                        difx_out = np.where(rijs_AB_bulk[:,0]>h_box)[0]
+                        rijs_AB_bulk[difx_out,0] = rijs_AB_bulk[difx_out,0]-l_box
+
+                        difx_out = np.where(rijs_AB_bulk[:,0]<-h_box)[0]
+                        rijs_AB_bulk[difx_out,0] = rijs_AB_bulk[difx_out,0]+l_box
+
+                        dify_out = np.where(rijs_AB_bulk[:,1]>h_box)[0]
+                        rijs_AB_bulk[dify_out,1] = rijs_AB_bulk[dify_out,1]-l_box
+
+                        dify_out = np.where(rijs_AB_bulk[:,1]<-h_box)[0]
+                        rijs_AB_bulk[dify_out,1] = rijs_AB_bulk[dify_out,1]+l_box
+
+                        rijs_BB_bulk = (pos1_bulk_int[BB_bulk_nlist.point_indices] - pos1_bulk[BB_bulk_nlist.query_point_indices])
+
+                        difx_out = np.where(rijs_BB_bulk[:,0]>h_box)[0]
+                        rijs_BB_bulk[difx_out,0] = rijs_BB_bulk[difx_out,0]-l_box
+
+                        difx_out = np.where(rijs_BB_bulk[:,0]<-h_box)[0]
+                        rijs_BB_bulk[difx_out,0] = rijs_BB_bulk[difx_out,0]+l_box
+
+                        dify_out = np.where(rijs_BB_bulk[:,1]>h_box)[0]
+                        rijs_BB_bulk[dify_out,1] = rijs_BB_bulk[dify_out,1]-l_box
+
+                        dify_out = np.where(rijs_BB_bulk[:,1]<-h_box)[0]
+                        rijs_BB_bulk[dify_out,1] = rijs_BB_bulk[dify_out,1]+l_box
+
+                        quad1 = np.where((rijs_all_bulk[:,0] > 0) & (rijs_all_bulk[:,1]>0))[0]
+                        quad2 = np.where((rijs_all_bulk[:,0] < 0) & (rijs_all_bulk[:,1]>0))[0]
+                        quad3 = np.where((rijs_all_bulk[:,0] < 0) & (rijs_all_bulk[:,1]<0))[0]
+                        quad4 = np.where((rijs_all_bulk[:,0] > 0) & (rijs_all_bulk[:,1]<0))[0]
+
+                        pos_xint = np.where((rijs_all_bulk[:,0] > 0) & (rijs_all_bulk[:,1]==0))[0]
+                        pos_yint = np.where((rijs_all_bulk[:,0] == 0) & (rijs_all_bulk[:,1]>0))[0]
+                        neg_xint = np.where((rijs_all_bulk[:,0] < 0) & (rijs_all_bulk[:,1]==0))[0]
+                        neg_yint = np.where((rijs_all_bulk[:,0] == 0) & (rijs_all_bulk[:,1]<0))[0]
+
+                        nonzero = np.where(rijs_all_bulk[:,0]==0)[0]
+                        ang_loc = np.zeros(len(all_bulk_nlist.point_indices))
+                        ang_loc[quad1] = np.arctan(rijs_all_bulk[quad1,1]/rijs_all_bulk[quad1,0])
+                        ang_loc[quad2] = (np.pi/2) + np.arctan(-rijs_all_bulk[quad2,0]/rijs_all_bulk[quad2,1])
+                        ang_loc[quad3] = (np.pi) + np.arctan(rijs_all_bulk[quad3,1]/rijs_all_bulk[quad3,0])
+                        ang_loc[quad4] = (3*np.pi/2) + np.arctan(-rijs_all_bulk[quad4,0]/rijs_all_bulk[quad4,1])
+                        if len(pos_xint) > 0:
+                            ang_loc[pos_xint] = 0
+                        if len(neg_xint) > 0:
+                            ang_loc[neg_xint] = np.pi
+
+                        if len(pos_yint) > 0:
+                            ang_loc[pos_yint] = np.pi/2
+                        if len(neg_yint) > 0:
+                            ang_loc[neg_yint] = 3*np.pi/2
+
+
+                        quad1 = np.where((rijs_A_bulk[:,0] > 0) & (rijs_A_bulk[:,1]>0))[0]
+                        quad2 = np.where((rijs_A_bulk[:,0] < 0) & (rijs_A_bulk[:,1]>0))[0]
+                        quad3 = np.where((rijs_A_bulk[:,0] < 0) & (rijs_A_bulk[:,1]<0))[0]
+                        quad4 = np.where((rijs_A_bulk[:,0] > 0) & (rijs_A_bulk[:,1]<0))[0]
+
+                        pos_xint = np.where((rijs_A_bulk[:,0] > 0) & (rijs_A_bulk[:,1]==0))[0]
+                        pos_yint = np.where((rijs_A_bulk[:,0] == 0) & (rijs_A_bulk[:,1]>0))[0]
+                        neg_xint = np.where((rijs_A_bulk[:,0] < 0) & (rijs_A_bulk[:,1]==0))[0]
+                        neg_yint = np.where((rijs_A_bulk[:,0] == 0) & (rijs_A_bulk[:,1]<0))[0]
+
+                        nonzero = np.where(rijs_A_bulk[:,0]==0)[0]
+                        ang_loc_A = np.zeros(len(A_bulk_nlist.point_indices))
+                        ang_loc_A[quad1] = np.arctan(rijs_A_bulk[quad1,1]/rijs_A_bulk[quad1,0])
+                        ang_loc_A[quad2] = (np.pi/2) + np.arctan(-rijs_A_bulk[quad2,0]/rijs_A_bulk[quad2,1])
+                        ang_loc_A[quad3] = (np.pi) + np.arctan(rijs_A_bulk[quad3,1]/rijs_A_bulk[quad3,0])
+                        ang_loc_A[quad4] = (3*np.pi/2) + np.arctan(-rijs_A_bulk[quad4,0]/rijs_A_bulk[quad4,1])
+                        if len(pos_xint) > 0:
+                            ang_loc_A[pos_xint] = 0
+                        if len(neg_xint) > 0:
+                            ang_loc_A[neg_xint] = np.pi
+
+                        if len(pos_yint) > 0:
+                            ang_loc_A[pos_yint] = np.pi/2
+                        if len(neg_yint) > 0:
+                            ang_loc_A[neg_yint] = 3*np.pi/2
+
+                        quad1 = np.where((rijs_B_bulk[:,0] > 0) & (rijs_B_bulk[:,1]>0))[0]
+                        quad2 = np.where((rijs_B_bulk[:,0] < 0) & (rijs_B_bulk[:,1]>0))[0]
+                        quad3 = np.where((rijs_B_bulk[:,0] < 0) & (rijs_B_bulk[:,1]<0))[0]
+                        quad4 = np.where((rijs_B_bulk[:,0] > 0) & (rijs_B_bulk[:,1]<0))[0]
+
+                        pos_xint = np.where((rijs_B_bulk[:,0] > 0) & (rijs_B_bulk[:,1]==0))[0]
+                        pos_yint = np.where((rijs_B_bulk[:,0] == 0) & (rijs_B_bulk[:,1]>0))[0]
+                        neg_xint = np.where((rijs_B_bulk[:,0] < 0) & (rijs_B_bulk[:,1]==0))[0]
+                        neg_yint = np.where((rijs_B_bulk[:,0] == 0) & (rijs_B_bulk[:,1]<0))[0]
+
+                        nonzero = np.where(rijs_B_bulk[:,0]==0)[0]
+                        ang_loc_B = np.zeros(len(B_bulk_nlist.point_indices))
+
+                        ang_loc_B[quad1] = np.arctan(rijs_B_bulk[quad1,1]/rijs_B_bulk[quad1,0])
+
+                        ang_loc_B[quad2] = (np.pi/2) + np.arctan(-rijs_B_bulk[quad2,0]/rijs_B_bulk[quad2,1])
+
+                        ang_loc_B[quad3] = (np.pi) + np.arctan(rijs_B_bulk[quad3,1]/rijs_B_bulk[quad3,0])
+
+                        ang_loc_B[quad4] = (3*np.pi/2) + np.arctan(-rijs_B_bulk[quad4,0]/rijs_B_bulk[quad4,1])
+
+                        if len(pos_xint) > 0:
+                            ang_loc_B[pos_xint] = 0
+                        if len(neg_xint) > 0:
+                            ang_loc_B[neg_xint] = np.pi
+
+                        if len(pos_yint) > 0:
+                            ang_loc_B[pos_yint] = np.pi/2
+                        if len(neg_yint) > 0:
+                            ang_loc_B[neg_yint] = 3*np.pi/2
+
+
+                        quad1 = np.where((rijs_AA_bulk[:,0] > 0) & (rijs_AA_bulk[:,1]>0))[0]
+                        quad2 = np.where((rijs_AA_bulk[:,0] < 0) & (rijs_AA_bulk[:,1]>0))[0]
+                        quad3 = np.where((rijs_AA_bulk[:,0] < 0) & (rijs_AA_bulk[:,1]<0))[0]
+                        quad4 = np.where((rijs_AA_bulk[:,0] > 0) & (rijs_AA_bulk[:,1]<0))[0]
+
+                        pos_xint = np.where((rijs_AA_bulk[:,0] > 0) & (rijs_AA_bulk[:,1]==0))[0]
+                        pos_yint = np.where((rijs_AA_bulk[:,0] == 0) & (rijs_AA_bulk[:,1]>0))[0]
+                        neg_xint = np.where((rijs_AA_bulk[:,0] < 0) & (rijs_AA_bulk[:,1]==0))[0]
+                        neg_yint = np.where((rijs_AA_bulk[:,0] == 0) & (rijs_AA_bulk[:,1]<0))[0]
+
+                        nonzero = np.where(rijs_AA_bulk[:,0]==0)[0]
+                        ang_loc_AA = np.zeros(len(AA_bulk_nlist.point_indices))
+
+                        ang_loc_AA[quad1] = np.arctan(rijs_AA_bulk[quad1,1]/rijs_AA_bulk[quad1,0])
+
+                        ang_loc_AA[quad2] = (np.pi/2) + np.arctan(-rijs_AA_bulk[quad2,0]/rijs_AA_bulk[quad2,1])
+
+                        ang_loc_AA[quad3] = (np.pi) + np.arctan(rijs_AA_bulk[quad3,1]/rijs_AA_bulk[quad3,0])
+
+                        ang_loc_AA[quad4] = (3*np.pi/2) + np.arctan(-rijs_AA_bulk[quad4,0]/rijs_AA_bulk[quad4,1])
+
+                        if len(pos_xint) > 0:
+                            ang_loc_AA[pos_xint] = 0
+                        if len(neg_xint) > 0:
+                            ang_loc_AA[neg_xint] = np.pi
+
+                        if len(pos_yint) > 0:
+                            ang_loc_AA[pos_yint] = np.pi/2
+                        if len(neg_yint) > 0:
+                            ang_loc_AA[neg_yint] = 3*np.pi/2
+
+                        quad1 = np.where((rijs_AB_bulk[:,0] > 0) & (rijs_AB_bulk[:,1]>0))[0]
+                        quad2 = np.where((rijs_AB_bulk[:,0] < 0) & (rijs_AB_bulk[:,1]>0))[0]
+                        quad3 = np.where((rijs_AB_bulk[:,0] < 0) & (rijs_AB_bulk[:,1]<0))[0]
+                        quad4 = np.where((rijs_AB_bulk[:,0] > 0) & (rijs_AB_bulk[:,1]<0))[0]
+
+                        pos_xint = np.where((rijs_AB_bulk[:,0] > 0) & (rijs_AB_bulk[:,1]==0))[0]
+                        pos_yint = np.where((rijs_AB_bulk[:,0] == 0) & (rijs_AB_bulk[:,1]>0))[0]
+                        neg_xint = np.where((rijs_AB_bulk[:,0] < 0) & (rijs_AB_bulk[:,1]==0))[0]
+                        neg_yint = np.where((rijs_AB_bulk[:,0] == 0) & (rijs_AB_bulk[:,1]<0))[0]
+
+                        nonzero = np.where(rijs_AB_bulk[:,0]==0)[0]
+                        ang_loc_AB = np.zeros(len(AB_bulk_nlist.point_indices))
+
+                        ang_loc_AB[quad1] = np.arctan(rijs_AB_bulk[quad1,1]/rijs_AB_bulk[quad1,0])
+
+                        ang_loc_AB[quad2] = (np.pi/2) + np.arctan(-rijs_AB_bulk[quad2,0]/rijs_AB_bulk[quad2,1])
+
+                        ang_loc_AB[quad3] = (np.pi) + np.arctan(rijs_AB_bulk[quad3,1]/rijs_AB_bulk[quad3,0])
+
+                        ang_loc_AB[quad4] = (3*np.pi/2) + np.arctan(-rijs_AB_bulk[quad4,0]/rijs_AB_bulk[quad4,1])
+
+                        if len(pos_xint) > 0:
+                            ang_loc_AB[pos_xint] = 0
+                        if len(neg_xint) > 0:
+                            ang_loc_AB[neg_xint] = np.pi
+
+                        if len(pos_yint) > 0:
+                            ang_loc_AB[pos_yint] = np.pi/2
+                        if len(neg_yint) > 0:
+                            ang_loc_AB[neg_yint] = 3*np.pi/2
+
+                        quad1 = np.where((rijs_BB_bulk[:,0] > 0) & (rijs_BB_bulk[:,1]>0))[0]
+                        quad2 = np.where((rijs_BB_bulk[:,0] < 0) & (rijs_BB_bulk[:,1]>0))[0]
+                        quad3 = np.where((rijs_BB_bulk[:,0] < 0) & (rijs_BB_bulk[:,1]<0))[0]
+                        quad4 = np.where((rijs_BB_bulk[:,0] > 0) & (rijs_BB_bulk[:,1]<0))[0]
+
+                        pos_xint = np.where((rijs_BB_bulk[:,0] > 0) & (rijs_BB_bulk[:,1]==0))[0]
+                        pos_yint = np.where((rijs_BB_bulk[:,0] == 0) & (rijs_BB_bulk[:,1]>0))[0]
+                        neg_xint = np.where((rijs_BB_bulk[:,0] < 0) & (rijs_BB_bulk[:,1]==0))[0]
+                        neg_yint = np.where((rijs_BB_bulk[:,0] == 0) & (rijs_BB_bulk[:,1]<0))[0]
+
+                        nonzero = np.where(rijs_BB_bulk[:,0]==0)[0]
+                        ang_loc_BB = np.zeros(len(BB_bulk_nlist.point_indices))
+
+                        ang_loc_BB[quad1] = np.arctan(rijs_BB_bulk[quad1,1]/rijs_BB_bulk[quad1,0])
+
+                        ang_loc_BB[quad2] = (np.pi/2) + np.arctan(-rijs_BB_bulk[quad2,0]/rijs_BB_bulk[quad2,1])
+
+                        ang_loc_BB[quad3] = (np.pi) + np.arctan(rijs_BB_bulk[quad3,1]/rijs_BB_bulk[quad3,0])
+
+                        ang_loc_BB[quad4] = (3*np.pi/2) + np.arctan(-rijs_BB_bulk[quad4,0]/rijs_BB_bulk[quad4,1])
+
+                        if len(pos_xint) > 0:
+                            ang_loc_BB[pos_xint] = 0
+                        if len(neg_xint) > 0:
+                            ang_loc_BB[neg_xint] = np.pi
+
+                        if len(pos_yint) > 0:
+                            ang_loc_BB[pos_yint] = np.pi/2
+                        if len(neg_yint) > 0:
+                            ang_loc_BB[neg_yint] = 3*np.pi/2
+
+                        theta=np.arange(0.0,360,1)
+                        ang_loc_A = (ang_loc_A/np.pi)*180
+                        ang_loc = (ang_loc/np.pi)*180
+                        ang_loc_B = (ang_loc_B/np.pi)*180
+                        ang_loc_AA = (ang_loc_AA/np.pi)*180
+                        ang_loc_AB = (ang_loc_AB/np.pi)*180
+                        ang_loc_BB = (ang_loc_BB/np.pi)*180
+                        '''
+                        for i in range(0, len(bulk_id_plot)):
+                            if len(np.where(all_bulk_nlist.point_indices==bulk_id_plot[i])[0])>0:
+
+                                ang_loc[np.where(all_bulk_nlist.point_indices==bulk_id_plot[i])[0]] = ang_loc[np.where(all_bulk_nlist.point_indices==bulk_id_plot[i])[0]] - np.min(ang_loc[np.where(all_bulk_nlist.point_indices==bulk_id_plot[i])[0]])
+                        '''
+                        fastCol = '#e31a1c'
+                        slowCol = '#081d58'
+
+                        ang_loc_prob = np.histogram(ang_loc, bins = theta)
+                        ang_loc_A_prob = np.histogram(ang_loc_A, bins = theta)
+                        ang_loc_B_prob = np.histogram(ang_loc_B, bins = theta)
+
+                        ang_loc_AA_prob = np.histogram(ang_loc_AA, bins = theta)
+                        ang_loc_AB_prob = np.histogram(ang_loc_AB, bins = theta)
+                        ang_loc_BB_prob = np.histogram(ang_loc_BB, bins = theta)
+
+                        ang_loc_theory = ang_loc_prob[0] - ang_loc_A_prob[0]
 
                         if time_step_count == 0:
                             g_r_all_bulk_sum = g_r_all_bulk
@@ -10315,6 +10642,15 @@ with hoomd.open(name=inFile, mode='rb') as t:
                             g_r_AB_bulk_sum = g_r_AB_bulk
                             #g_r_BA_bulk_sum = g_r_BA_bulk
                             g_r_BB_bulk_sum = g_r_BB_bulk
+
+                            ang_loc_AA_prob_norm_temp = ang_loc_AA_prob[0]/np.sum(ang_loc_AA_prob[0])
+                            ang_loc_AB_prob_norm_temp = ang_loc_AB_prob[0]/np.sum(ang_loc_AB_prob[0])
+                            ang_loc_BB_prob_norm_temp = ang_loc_BB_prob[0]/np.sum(ang_loc_BB_prob[0])
+
+                            ang_loc_prob_norm_temp = ang_loc_prob[0]/np.sum(ang_loc_prob[0])
+                            ang_loc_A_prob_norm_temp = ang_loc_A_prob[0]/np.sum(ang_loc_A_prob[0])
+                            ang_loc_B_prob_norm_temp = ang_loc_prob[0]/np.sum(ang_loc_prob[0])
+
                             time_step_count += 1
                         else:
                             g_r_all_bulk_sum += g_r_all_bulk
@@ -10323,6 +10659,15 @@ with hoomd.open(name=inFile, mode='rb') as t:
                             #g_r_BA_bulk_sum += g_r_BA_bulk
                             g_r_BB_bulk_sum += g_r_BB_bulk
                             time_step_count += 1
+
+                            ang_loc_AA_prob_norm_temp += ang_loc_AA_prob[0]/np.sum(ang_loc_AA_prob[0])
+                            ang_loc_AB_prob_norm_temp += ang_loc_AB_prob[0]/np.sum(ang_loc_AB_prob[0])
+                            ang_loc_BB_prob_norm_temp += ang_loc_BB_prob[0]/np.sum(ang_loc_BB_prob[0])
+
+                            ang_loc_prob_norm_temp += ang_loc_prob[0]/np.sum(ang_loc_prob[0])
+                            ang_loc_A_prob_norm_temp += ang_loc_A_prob[0]/np.sum(ang_loc_A_prob[0])
+                            ang_loc_B_prob_norm_temp += ang_loc_prob[0]/np.sum(ang_loc_prob[0])
+
                         #pre_filter = len(all_bulk_nlist)
 
                         #all_bulk_nlist.filter(indices_A != indices_B)
@@ -10563,6 +10908,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
                         AA_in_large = np.array([])
                         BB_in_large=np.array([])
                         mark=0
+
+
+
                         r = np.linspace(0.0,  3.0, 20)             # Define radius for x-axis of plot later
 
                         # Width, in distance units, of bin
@@ -10674,6 +11022,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
                         rijs_BB_bulk[dify_out,1] = rijs_BB_bulk[dify_out,1]+l_box
 
                         difr_BB_bulk = (rijs_BB_bulk[:,0]**2 + rijs_BB_bulk[:,1]**2)**0.5
+
+
+
                         #plt.hist(difr_all_bulk/((len(all_bulk_nlist.point_indices)/bulk_area_test)*np.pi*rstop**2), bins=r)
                         g_r_all_bulk = np.array([])
                         g_r_AA_bulk = np.array([])
@@ -10725,6 +11076,104 @@ with hoomd.open(name=inFile, mode='rb') as t:
                             #g_r_BB_bulk = np.append(g_r_BB_bulk, len(inds)/(len(fast_bulk_id_plot)*(2*math.pi * r[m] * difr) * num_dens_BB))
 
                             r_arr = np.append(r_arr, r[m])
+
+                        #Angular distribution function
+                        r = np.linspace(0.0,  3.0, 20)             # Define radius for x-axis of plot later
+
+                        # Width, in distance units, of bin
+                        wBins = 0.02
+
+                        # Distance to compute RDF for
+
+                        # Number of bins given this distance
+                        nBins = r_cut / wBins
+
+                        wbinsTrue=(rstop)/(nBins-1)
+
+                        r=np.arange(0.0,rstop+wbinsTrue,wbinsTrue)
+                        query_args = dict(mode='ball', r_min = 0.1, r_max=r_cut)
+
+                        system_all_bulk = freud.AABBQuery(f_box, f_box.wrap(pos_bulk_int))
+                        system_A_bulk = freud.AABBQuery(f_box, f_box.wrap(pos0_bulk_int))
+                        system_B_bulk = freud.AABBQuery(f_box, f_box.wrap(pos1_bulk_int))
+
+                        all_bulk_nlist = system_all_bulk.query(f_box.wrap(pos_bulk), query_args).toNeighborList()
+                        A_bulk_nlist = system_A_bulk.query(f_box.wrap(pos_bulk), query_args).toNeighborList()
+                        B_bulk_nlist = system_B_bulk.query(f_box.wrap(pos_bulk), query_args).toNeighborList()
+
+                        rijs_all_bulk = (pos_bulk_int[all_bulk_nlist.point_indices] - pos_bulk[all_bulk_nlist.query_point_indices])
+
+                        difx_out = np.where(rijs_all_bulk[:,0]>h_box)[0]
+                        rijs_all_bulk[difx_out,0] = rijs_all_bulk[difx_out,0]-l_box
+
+                        difx_out = np.where(rijs_all_bulk[:,0]<-h_box)[0]
+                        rijs_all_bulk[difx_out,0] = rijs_all_bulk[difx_out,0]+l_box
+
+                        dify_out = np.where(rijs_all_bulk[:,1]>h_box)[0]
+                        rijs_all_bulk[dify_out,1] = rijs_all_bulk[dify_out,1]-l_box
+
+                        dify_out = np.where(rijs_all_bulk[:,1]<-h_box)[0]
+                        rijs_all_bulk[dify_out,1] = rijs_all_bulk[dify_out,1]+l_box
+
+                        rijs_A_bulk = (pos_bulk_int[A_bulk_nlist.point_indices] - pos_bulk[A_bulk_nlist.query_point_indices])
+
+                        difx_out = np.where(rijs_A_bulk[:,0]>h_box)[0]
+                        rijs_A_bulk[difx_out,0] = rijs_A_bulk[difx_out,0]-l_box
+
+                        difx_out = np.where(rijs_A_bulk[:,0]<-h_box)[0]
+                        rijs_A_bulk[difx_out,0] = rijs_A_bulk[difx_out,0]+l_box
+
+                        dify_out = np.where(rijs_A_bulk[:,1]>h_box)[0]
+                        rijs_A_bulk[dify_out,1] = rijs_A_bulk[dify_out,1]-l_box
+
+                        dify_out = np.where(rijs_A_bulk[:,1]<-h_box)[0]
+                        rijs_A_bulk[dify_out,1] = rijs_A_bulk[dify_out,1]+l_box
+
+                        rijs_B_bulk = (pos_bulk_int[B_bulk_nlist.point_indices] - pos_bulk[B_bulk_nlist.query_point_indices])
+
+                        difx_out = np.where(rijs_B_bulk[:,0]>h_box)[0]
+                        rijs_B_bulk[difx_out,0] = rijs_B_bulk[difx_out,0]-l_box
+
+                        difx_out = np.where(rijs_B_bulk[:,0]<-h_box)[0]
+                        rijs_B_bulk[difx_out,0] = rijs_B_bulk[difx_out,0]+l_box
+
+                        dify_out = np.where(rijs_B_bulk[:,1]>h_box)[0]
+                        rijs_B_bulk[dify_out,1] = rijs_B_bulk[dify_out,1]-l_box
+
+                        dify_out = np.where(rijs_B_bulk[:,1]<-h_box)[0]
+                        rijs_B_bulk[dify_out,1] = rijs_B_bulk[dify_out,1]+l_box
+
+                        quad1 = np.where((difx_out > 0) & (dify_out>0))[0]
+                        quad2 = np.where((difx_out < 0) & (dify_out>0))[0]
+                        quad3 = np.where((difx_out < 0) & (dify_out<0))[0]
+                        quad4 = np.where((difx_out > 0) & (dify_out<0))[0]
+
+                        pos_xint = np.where((difx_out > 0) & (dify_out==0))[0]
+                        pos_yint = np.where((difx_out == 0) & (dify_out>0))[0]
+                        neg_xint = np.where((difx_out < 0) & (dify_out==0))[0]
+                        neg_yint = np.where((difx_out == 0) & (dify_out<0))[0]
+
+                        nonzero = np.where(difx_out==0)[0]
+                        ang_loc = np.zeros(len(all_bulk_nlist.point_indices))
+                        ang_loc[nonzero] = np.arctan(dify_out[nonzero]/difx_out[nonzero])
+                        print(np.min(ang_loc[nonzero]))
+                        print(np.max(ang_loc[nonzero]))
+                        stop
+                        ang_loc
+                        ang_loc[neg_xint] = 0
+                        ang_loc[pos_xint] = 0
+
+                        ang_loc[quad1] = np.arctan(dify_out[quad1], difx_out[quad1])
+                        ang_loc[quad2] = np.arctan(difx_out[quad2], dify_out[quad2])
+                        ang_loc[quad1] = np.arctan(dify_out[quad1], difx_out[quad1])
+                        ang_loc[quad2] = np.arctan(difx_out[quad2], dify_out[quad2])
+
+
+
+                        np.arctan2()
+
+
+
 
                         if time_step_count == 0:
                             g_r_all_bulk_sum = g_r_all_bulk
@@ -10888,6 +11337,367 @@ if steady_state_once == 'True':
     rdf_BB_bulk_rdf = g_r_BB_bulk_sum / time_step_count#/np.mean(rdf_BB_bulk.rdf)
     #rdf_all_bulk_rdf = g_r_all_bulk_sum / time_step_count#/np.mean(rdf_all_bulk.rdf)
 
+    ang_loc_prob_AA_norm_avg = ang_loc_AA_prob_norm_temp / time_step_count
+    ang_loc_prob_AB_norm_avg = ang_loc_AB_prob_norm_temp / time_step_count
+    ang_loc_prob_BB_norm_avg = ang_loc_BB_prob_norm_temp / time_step_count
+
+    ang_loc_prob_norm_avg = ang_loc_prob_norm_temp / time_step_count
+    ang_loc_prob_A_norm_avg = ang_loc_A_prob_norm_temp / time_step_count
+    ang_loc_prob_B_norm_avg = ang_loc_B_prob_norm_temp / time_step_count
+
+    AA_bulk_max = np.max(ang_loc_prob_AA_norm_avg)
+    AB_bulk_max = np.max(ang_loc_prob_AB_norm_avg)
+    #BA_bulk_max = np.max(rdf_BA_bulk_rdf)
+    BB_bulk_max = np.max(ang_loc_prob_BB_norm_avg)
+
+    if (AA_bulk_max >= AB_bulk_max):
+        if (AA_bulk_max >= BB_bulk_max):
+            AA_bulk_order = 1
+            if (BB_bulk_max >= AB_bulk_max):
+                BB_bulk_order = 2
+                AB_bulk_order = 3
+            else:
+                AB_bulk_order = 2
+                BB_bulk_order = 3
+        else:
+            BB_bulk_order = 1
+            AA_bulk_order = 2
+            AB_bulk_order = 3
+    else:
+        if (AA_bulk_max >= BB_bulk_max):
+            AB_bulk_order = 1
+            AA_bulk_order = 2
+            BB_bulk_order = 3
+        else:
+            AA_bulk_order = 3
+            if (BB_bulk_max >= AB_bulk_max):
+                BB_bulk_order = 1
+                AB_bulk_order = 2
+            else:
+                AB_bulk_order = 1
+                BB_bulk_order = 2
+
+    if AA_bulk_order == 1:
+        plot_max = 1.8 * np.max(AA_bulk_max)
+    elif AB_bulk_order == 1:
+        plot_max = 1.8 * np.max(AB_bulk_max)
+    elif BB_bulk_order == 1:
+        plot_max = 1.8 * np.max(BB_bulk_max)
+
+
+    plot_min = 0.0
+
+    step = int(np.abs(plot_max - plot_min)/6)
+    step_x = 1.5
+    fastCol = '#e31a1c'
+    slowCol = '#081d58'
+    purple = ("#756bb1")
+    pink = ("#2ca25f")
+    fast_dens = np.mean(num_dens_fast_arr)
+    slow_dens = np.mean(num_dens_slow_arr)
+    dens = np.mean(num_dens_arr)
+    x_arr = np.array([0.0,15.0])
+    y_arr = np.array([1.0, 1.0])
+
+    plt.plot(x_arr, y_arr, c='black', lw=1.0, ls='--')
+    first_width = 9.0
+    second_width = 6.0
+    third_width = 3.0
+    if peA <= peB:
+        if AA_bulk_order == 1:
+            plt.plot(theta[1:], ang_loc_prob_AA_norm_avg, label=r'Slow-Slow',
+                        c=slowCol, lw=first_width, ls='-', alpha=1)
+            if AB_bulk_order == 2:
+                plt.plot(theta[1:], ang_loc_prob_AB_norm_avg, label=r'Slow-Fast',
+                            c=purple, lw=second_width, ls='-', alpha=1)
+                plt.plot(theta[1:], ang_loc_prob_BB_norm_avg, label=r'Fast-Fast',
+                            c=fastCol, lw=third_width, ls='-', alpha=1)
+            else:
+                plt.plot(theta[1:], ang_loc_prob_BB_norm_avg, label=r'Fast-Fast',
+                            c=fastCol, lw=second_width, ls='-', alpha=1)
+                plt.plot(theta[1:], ang_loc_prob_AB_norm_avg, label=r'Slow-Fast',
+                            c=purple, lw=third_width, ls='-', alpha=1)
+        elif AB_bulk_order == 1:
+            plt.plot(theta[1:], ang_loc_prob_AB_norm_avg, label=r'Slow-Fast',
+                        c=purple, lw=first_width, ls='-', alpha=1)
+            if AA_bulk_order == 2:
+                plt.plot(theta[1:], ang_loc_prob_AA_norm_avg, label=r'Slow-Slow',
+                            c=slowCol, lw=second_width, ls='-', alpha=1)
+                plt.plot(theta[1:], ang_loc_prob_BB_norm_avg, label=r'Fast-Fast',
+                            c=fastCol, lw=third_width, ls='-', alpha=1)
+            else:
+                plt.plot(theta[1:], ang_loc_prob_BB_norm_avg, label=r'Fast-Fast',
+                            c=fastCol, lw=second_width, ls='-', alpha=1)
+                plt.plot(theta[1:], ang_loc_prob_AA_norm_avg, label=r'Slow-Slow',
+                            c=slowCol, lw=third_width, ls='-', alpha=1)
+        elif BB_bulk_order == 1:
+            plt.plot(theta[1:], ang_loc_prob_BB_norm_avg, label=r'Fast-Fast',
+                        c=fastCol, lw=first_width, ls='-', alpha=1)
+            if AA_bulk_order == 1:
+                plt.plot(theta[1:], ang_loc_prob_AA_norm_avg, label=r'Slow-Slow',
+                            c=slowCol, lw=second_width, ls='-', alpha=1)
+                plt.plot(theta[1:], ang_loc_prob_AB_norm_avg, label=r'Slow-Fast',
+                            c=purple, lw=third_width, ls='-', alpha=1)
+            else:
+                plt.plot(theta[1:], ang_loc_prob_AB_norm_avg, label=r'Slow-Fast',
+                            c=purple, lw=second_width, ls='-', alpha=1)
+                plt.plot(theta[1:], ang_loc_prob_AA_norm_avg, label=r'Slow-Slow',
+                            c=slowCol, lw=third_width, ls='-', alpha=1.0)
+
+    else:
+        if AA_bulk_order == 1:
+            plt.plot(theta[1:], ang_loc_prob_AA_norm_avg, label=r'Fast-Fast',
+                        c=fastCol, lw=first_width, ls='-', alpha=1)
+            if AB_bulk_order == 2:
+                plt.plot(theta[1:], ang_loc_prob_AB_norm_avg, label=r'Slow-Fast',
+                            c=purple, lw=second_width, ls='-', alpha=1)
+                plt.plot(theta[1:], ang_loc_prob_BB_norm_avg, label=r'Slow-Slow',
+                            c=slowCol, lw=third_width, ls='-', alpha=1)
+            else:
+                plt.plot(theta[1:], ang_loc_prob_BB_norm_avg, label=r'Slow-Slow',
+                            c=slowCol, lw=second_width, ls='-', alpha=1)
+                plt.plot(theta[1:], ang_loc_prob_AB_norm_avg, label=r'Slow-Fast',
+                            c=purple, lw=third_width, ls='-', alpha=1)
+        elif AB_bulk_order == 1:
+            plt.plot(theta[1:], ang_loc_prob_AB_norm_avg, label=r'Slow-Fast',
+                        c=purple, lw=first_width, ls='-', alpha=1)
+            if AA_bulk_order == 2:
+                plt.plot(theta[1:], ang_loc_prob_AA_norm_avg, label=r'Fast-Fast',
+                            c=fastCol, lw=second_width, ls='-', alpha=1)
+                plt.plot(theta[1:], ang_loc_prob_BB_norm_avg, label=r'Slow-Slow',
+                            c=slowCol, lw=third_width, ls='-', alpha=1)
+            else:
+                plt.plot(theta[1:], ang_loc_prob_BB_norm_avg, label=r'Slow-Slow',
+                            c=slowCol, lw=second_width, ls='-', alpha=1)
+                plt.plot(theta[1:], ang_loc_prob_AA_norm_avg, label=r'Fast-Fast',
+                            c=fastCol, lw=third_width, ls='-', alpha=1)
+        elif BB_bulk_order == 1:
+            plt.plot(theta[1:], ang_loc_prob_BB_norm_avg, label=r'Slow-Slow',
+                        c=slowCol, lw=first_width, ls='-', alpha=1)
+            if AA_bulk_order == 1:
+                plt.plot(theta[1:], ang_loc_prob_AA_norm_avg, label=r'Fast-Fast',
+                            c=fastCol, lw=second_width, ls='-', alpha=1)
+                plt.plot(theta[1:], ang_loc_prob_AB_norm_avg, label=r'Slow-Fast',
+                            c=purple, lw=third_width, ls='-', alpha=1)
+            else:
+                plt.plot(theta[1:], ang_loc_prob_AB_norm_avg, label=r'Slow-Fast',
+                            c=purple, lw=second_width, ls='-', alpha=1)
+                plt.plot(theta[1:], ang_loc_prob_AA_norm_avg, label=r'Fast-Fast',
+                            c=fastCol, lw=third_width, ls='-', alpha=1)
+
+
+    ax1.set_ylim(plot_min, plot_max)
+    ax1.set_xlim(0, 360)
+
+
+    ax1.set_xlabel(r'Angle CCW from +x-axis ($\theta$)', fontsize=fsize*2.8)
+
+
+
+    ax1.set_ylabel(r'$g(\theta)$', fontsize=fsize*2.8)
+
+    lat_theory = np.mean(lat_theory_arr)
+    # Set all the x ticks for radial plots
+    loc = ticker.MultipleLocator(base=60)
+    ax1.xaxis.set_major_locator(loc)
+    loc = ticker.MultipleLocator(base=30)
+    ax1.xaxis.set_minor_locator(loc)
+    #ax1.set_xlim(0, rstop)
+    plt.legend(loc='upper right', fontsize=fsize*2.6)
+    #step = 2.0
+    # Set y ticks
+    # Left middle plot
+    ax1.tick_params(axis='x', labelsize=fsize*2.5)
+    ax1.tick_params(axis='y', labelsize=fsize*2.5)
+    #plt.legend(loc='upper right')
+
+    plt.tight_layout()
+    plt.savefig(outPath + 'angdf_' + out + ".png", dpi=300)
+    plt.close()
+
+
+
+
+
+
+    ##########
+
+    bulk_max = np.max(ang_loc_prob_norm_avg)
+    A_bulk_max = np.max(ang_loc_prob_A_norm_avg)
+    #BA_bulk_max = np.max(rdf_BA_bulk_rdf)
+    B_bulk_max = np.max(ang_loc_prob_B_norm_avg)
+
+    if (bulk_max >= A_bulk_max):
+        if (bulk_max >= B_bulk_max):
+            bulk_order = 1
+            if (B_bulk_max >= A_bulk_max):
+                B_bulk_order = 2
+                A_bulk_order = 3
+            else:
+                A_bulk_order = 2
+                B_bulk_order = 3
+        else:
+            B_bulk_order = 1
+            bulk_order = 2
+            A_bulk_order = 3
+    else:
+        if (bulk_max >= B_bulk_max):
+            A_bulk_order = 1
+            bulk_order = 2
+            B_bulk_order = 3
+        else:
+            bulk_order = 3
+            if (B_bulk_max >= A_bulk_max):
+                B_bulk_order = 1
+                A_bulk_order = 2
+            else:
+                A_bulk_order = 1
+                B_bulk_order = 2
+
+    if bulk_order == 1:
+        plot_max = 1.8 * np.max(bulk_max)
+    elif A_bulk_order == 1:
+        plot_max = 1.8 * np.max(A_bulk_max)
+    elif B_bulk_order == 1:
+        plot_max = 1.8 * np.max(B_bulk_max)
+
+
+    plot_min = 0.0
+
+    step = int(np.abs(plot_max - plot_min)/6)
+    step_x = 1.5
+    fastCol = '#e31a1c'
+    slowCol = '#081d58'
+    purple = ("#756bb1")
+    pink = ("#2ca25f")
+    fast_dens = np.mean(num_dens_fast_arr)
+    slow_dens = np.mean(num_dens_slow_arr)
+    dens = np.mean(num_dens_arr)
+    x_arr = np.array([0.0,15.0])
+    y_arr = np.array([1.0, 1.0])
+
+    first_width = 9.0
+    second_width = 6.0
+    third_width = 3.0
+    fig, ax1 = plt.subplots(figsize=(12,6))
+    if peA <= peB:
+        if AA_bulk_order == 1:
+            plt.plot(theta[1:], ang_loc_prob_norm_avg, label=r'All-All',
+                        c=slowCol, lw=first_width, ls='-', alpha=1)
+            if AB_bulk_order == 2:
+                plt.plot(theta[1:], ang_loc_prob_A_norm_avg, label=r'All-Slow',
+                            c=purple, lw=second_width, ls='-', alpha=1)
+                plt.plot(theta[1:], ang_loc_prob_B_norm_avg, label=r'All-Fast',
+                            c=fastCol, lw=third_width, ls='-', alpha=1)
+            else:
+                plt.plot(theta[1:], ang_loc_prob_B_norm_avg, label=r'All-Fast',
+                            c=fastCol, lw=second_width, ls='-', alpha=1)
+                plt.plot(theta[1:], ang_loc_prob_A_norm_avg, label=r'All-Slow',
+                            c=purple, lw=third_width, ls='-', alpha=1)
+        elif AB_bulk_order == 1:
+            plt.plot(theta[1:], ang_loc_prob_A_norm_avg, label=r'All-Slow',
+                        c=purple, lw=first_width, ls='-', alpha=1)
+            if AA_bulk_order == 2:
+                plt.plot(theta[1:], ang_loc_prob_norm_avg, label=r'All-All',
+                            c=slowCol, lw=second_width, ls='-', alpha=1)
+                plt.plot(theta[1:], ang_loc_prob_B_norm_avg, label=r'All-Fast',
+                            c=fastCol, lw=third_width, ls='-', alpha=1)
+            else:
+                plt.plot(theta[1:], ang_loc_prob_B_norm_avg, label=r'All-Fast',
+                            c=fastCol, lw=second_width, ls='-', alpha=1)
+                plt.plot(theta[1:], ang_loc_prob_norm_avg, label=r'All-All',
+                            c=slowCol, lw=third_width, ls='-', alpha=1)
+        elif BB_bulk_order == 1:
+            plt.plot(theta[1:], ang_loc_prob_B_norm_avg, label=r'All-Fast',
+                        c=fastCol, lw=first_width, ls='-', alpha=1)
+            if AA_bulk_order == 1:
+                plt.plot(theta[1:], ang_loc_prob_norm_avg, label=r'All-All',
+                            c=slowCol, lw=second_width, ls='-', alpha=1)
+                plt.plot(theta[1:], ang_loc_prob_A_norm_avg, label=r'All-Slow',
+                            c=purple, lw=third_width, ls='-', alpha=1)
+            else:
+                plt.plot(theta[1:], ang_loc_prob_A_norm_avg, label=r'All-Slow',
+                            c=purple, lw=second_width, ls='-', alpha=1)
+                plt.plot(theta[1:], ang_loc_prob_norm_avg, label=r'All-All',
+                            c=slowCol, lw=third_width, ls='-', alpha=1.0)
+
+    else:
+        if AA_bulk_order == 1:
+            plt.plot(theta[1:], ang_loc_prob_norm_avg, label=r'All-All',
+                        c=fastCol, lw=first_width, ls='-', alpha=1)
+            if AB_bulk_order == 2:
+                plt.plot(theta[1:], ang_loc_prob_A_norm_avg, label=r'All-Fast',
+                            c=purple, lw=second_width, ls='-', alpha=1)
+                plt.plot(theta[1:], ang_loc_prob_B_norm_avg, label=r'All-Slow',
+                            c=slowCol, lw=third_width, ls='-', alpha=1)
+            else:
+                plt.plot(theta[1:], ang_loc_prob_B_norm_avg, label=r'All-Slow',
+                            c=slowCol, lw=second_width, ls='-', alpha=1)
+                plt.plot(theta[1:], ang_loc_prob_A_norm_avg, label=r'All-Fast',
+                            c=purple, lw=third_width, ls='-', alpha=1)
+        elif AB_bulk_order == 1:
+            plt.plot(theta[1:], ang_loc_prob_A_norm_avg, label=r'All-Fast',
+                        c=purple, lw=first_width, ls='-', alpha=1)
+            if AA_bulk_order == 2:
+                plt.plot(theta[1:], ang_loc_prob_norm_avg, label=r'All-All',
+                            c=fastCol, lw=second_width, ls='-', alpha=1)
+                plt.plot(theta[1:], ang_loc_prob_B_norm_avg, label=r'All-Slow',
+                            c=slowCol, lw=third_width, ls='-', alpha=1)
+            else:
+                plt.plot(theta[1:], ang_loc_prob_B_norm_avg, label=r'All-Slow',
+                            c=slowCol, lw=second_width, ls='-', alpha=1)
+                plt.plot(theta[1:], ang_loc_prob_norm_avg, label=r'All-All',
+                            c=fastCol, lw=third_width, ls='-', alpha=1)
+        elif BB_bulk_order == 1:
+            plt.plot(theta[1:], ang_loc_prob_B_norm_avg, label=r'All-Slow',
+                        c=slowCol, lw=first_width, ls='-', alpha=1)
+            if AA_bulk_order == 1:
+                plt.plot(theta[1:], ang_loc_prob_norm_avg, label=r'All-All',
+                            c=fastCol, lw=second_width, ls='-', alpha=1)
+                plt.plot(theta[1:], ang_loc_prob_A_norm_avg, label=r'All-Fast',
+                            c=purple, lw=third_width, ls='-', alpha=1)
+            else:
+                plt.plot(theta[1:], ang_loc_prob_A_norm_avg, label=r'All-Fast',
+                            c=purple, lw=second_width, ls='-', alpha=1)
+                plt.plot(theta[1:], ang_loc_prob_norm_avg, label=r'All-All',
+                            c=fastCol, lw=third_width, ls='-', alpha=1)
+
+
+    ax1.set_ylim(plot_min, plot_max)
+    ax1.set_xlim(0, 360)
+
+
+    ax1.set_xlabel(r'Angle CCW from +x-axis ($\theta$)', fontsize=fsize*2.8)
+
+
+
+    ax1.set_ylabel(r'$g(\theta)$', fontsize=fsize*2.8)
+
+    lat_theory = np.mean(lat_theory_arr)
+    # Set all the x ticks for radial plots
+    loc = ticker.MultipleLocator(base=60)
+    ax1.xaxis.set_major_locator(loc)
+    loc = ticker.MultipleLocator(base=30)
+    ax1.xaxis.set_minor_locator(loc)
+    #ax1.set_xlim(0, rstop)
+    plt.legend(loc='upper right', fontsize=fsize*2.6)
+    #step = 2.0
+    # Set y ticks
+    # Left middle plot
+    ax1.tick_params(axis='x', labelsize=fsize*2.5)
+    ax1.tick_params(axis='y', labelsize=fsize*2.5)
+    #plt.legend(loc='upper right')
+
+    plt.tight_layout()
+    plt.savefig(outPath + 'angdf_all_' + out + ".png", dpi=300)
+    plt.close()
+
+
+
+
+
+
+
     #all_bulk_max = np.max(rdf_all_bulk_rdf)
     AA_bulk_max = np.max(rdf_AA_bulk_rdf)
     AB_bulk_max = np.max(rdf_AB_bulk_rdf)
@@ -10951,9 +11761,9 @@ if steady_state_once == 'True':
     fast_dens = np.mean(num_dens_fast_arr)
     slow_dens = np.mean(num_dens_slow_arr)
     dens = np.mean(num_dens_arr)
-    x_arr = np.array([0.0,15.0])
+    x_arr = np.array([0.0,10.0])
     y_arr = np.array([1.0, 1.0])
-
+    fig, ax1 = plt.subplots(figsize=(12,6))
     plt.plot(x_arr, y_arr, c='black', lw=1.0, ls='--')
     first_width = 9.0
     second_width = 6.0
@@ -11042,7 +11852,7 @@ if steady_state_once == 'True':
 
 
     ax1.set_ylim(plot_min, plot_max)
-    #ax1.set_ylim(0, 2)
+    #ax1.set_xlim(0, rstop)
 
 
     ax1.set_xlabel(r'Separation Distance ($r$)', fontsize=fsize*2.8)
@@ -11051,7 +11861,6 @@ if steady_state_once == 'True':
 
     ax1.set_ylabel(r'$g(r)$', fontsize=fsize*2.8)
 
-    lat_theory = np.mean(lat_theory_arr)
     # Set all the x ticks for radial plots
     loc = ticker.MultipleLocator(base=1.0)
     ax1.xaxis.set_major_locator(loc)
@@ -11094,7 +11903,7 @@ if steady_state_once == 'True':
     plt.plot(x_arr, y_arr, c='black', lw=1.0, ls='--')
 
     plt.plot(r_arr, rdf_all_bulk_rdf,
-                c='black', lw=first_width, ls='-', alpha=1)
+                c='black', lw=first_width, ls='-', alpha=1, label='All-All')
 
 
     ax1.set_ylim(plot_min, plot_max)
@@ -11131,10 +11940,11 @@ if steady_state_once == 'True':
     plt.close()
 
     g = open(outPath2+outTxt_rdf, 'a')
+
     for i in range(0, len(r_arr)):
         g.write('{0:.0f}'.format(np.amax(clust_size)).center(15) + ' ')
         g.write('{0:.6f}'.format(lat_theory2).center(15) + ' ')
-        g.write('{0:.6f}'.format(r[i]).center(15) + ' ')
+        g.write('{0:.6f}'.format(r_arr[i]).center(15) + ' ')
         g.write('{0:.6f}'.format(rdf_all_bulk_rdf[i]).center(15) + ' ')
         if peA<=peB:
             g.write('{0:.6f}'.format(rdf_AA_bulk_rdf[i]).center(15) + ' ')
@@ -11144,4 +11954,25 @@ if steady_state_once == 'True':
             g.write('{0:.6f}'.format(rdf_BB_bulk_rdf[i]).center(15) + ' ')
             g.write('{0:.6f}'.format(rdf_AB_bulk_rdf[i]).center(15) + ' ')
             g.write('{0:.6f}'.format(rdf_AA_bulk_rdf[i]).center(15) + '\n')
+    g.close()
+
+
+    g = open(outPath2+outTxt_angdf, 'a')
+
+    for i in range(0, len(theta)-1):
+        g.write('{0:.0f}'.format(np.amax(clust_size)).center(15) + ' ')
+        g.write('{0:.6f}'.format(theta[i+1]).center(15) + ' ')
+        g.write('{0:.6f}'.format(ang_loc_prob_norm_avg[i]).center(15) + ' ')
+        if peA<=peB:
+            g.write('{0:.6f}'.format(ang_loc_prob_A_norm_avg[i]).center(15) + ' ')
+            g.write('{0:.6f}'.format(ang_loc_prob_B_norm_avg[i]).center(15) + ' ')
+            g.write('{0:.6f}'.format(ang_loc_prob_AA_norm_avg[i]).center(15) + ' ')
+            g.write('{0:.6f}'.format(ang_loc_prob_AB_norm_avg[i]).center(15) + ' ')
+            g.write('{0:.6f}'.format(ang_loc_prob_BB_norm_avg[i]).center(15) + '\n')
+        else:
+            g.write('{0:.6f}'.format(ang_loc_prob_B_norm_avg[i]).center(15) + ' ')
+            g.write('{0:.6f}'.format(ang_loc_prob_A_norm_avg[i]).center(15) + ' ')
+            g.write('{0:.6f}'.format(ang_loc_prob_BB_norm_avg[i]).center(15) + ' ')
+            g.write('{0:.6f}'.format(ang_loc_prob_AB_norm_avg[i]).center(15) + ' ')
+            g.write('{0:.6f}'.format(ang_loc_prob_AA_norm_avg[i]).center(15) + '\n')
     g.close()

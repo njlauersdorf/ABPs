@@ -11065,7 +11065,7 @@ fig = plt.figure(figsize=(8,6))
 ax = fig.add_subplot(111)
 
 x_min = -1#peB
-x_max = 1#peB
+x_max = -0.7#peB
 
 x_arr = np.linspace(x_min, x_max, num=100)
 #Remove bulk particles that are outside plot's xrange
@@ -11091,10 +11091,12 @@ fsize=14
 plt.tick_params(axis='x', labelsize=fsize)
 plt.tick_params(axis='y', labelsize=fsize)
 
-loc = ticker.MultipleLocator(base=(1/5))
-ax.xaxis.set_major_locator(loc)
 loc = ticker.MultipleLocator(base=(1/10))
+ax.xaxis.set_major_locator(loc)
+loc = ticker.MultipleLocator(base=(1/20))
 ax.xaxis.set_minor_locator(loc)
+
+plt.xlim([-1.0, -0.7])
 
 plt.tight_layout()
 plt.savefig(outPath + 'steadystate_bulk_velocity_enhance_histo_' + out + pad + ".png", dpi=150)
