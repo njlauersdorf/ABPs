@@ -521,6 +521,9 @@ g = open(outPath2+outTxt_num_dens, 'w+') # write file headings
 g.write('tauB'.center(20) + ' ' +\
                         'sizeBin'.center(20) + ' ' +\
                         'clust_size'.center(20) + ' ' +\
+                        'dense_area'.center(20) + ' ' +\
+                        'dense_ndens'.center(20) + ' ' +\
+                        'dense_ndens_std'.center(20) + ' ' +\
                         'bulk_area'.center(20) + ' ' +\
                         'bulk_ndens'.center(20) + ' ' +\
                         'bulk_ndens_std'.center(20) + ' ' +\
@@ -540,7 +543,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
     dumps = int(t.__len__())
     start = int(400/time_step)#205                                             # first frame to process
                                 # get number of timesteps dumped
-    end = start + 2#int(dumps/time_step)-1                                             # final frame to process
+    end = start + 10#int(dumps/time_step)-1                                             # final frame to process
     snap = t[0]                                             # Take first snap for box
     first_tstep = snap.configuration.step                   # First time step
 
@@ -14826,6 +14829,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
         bub_num_dens_num = 0
         gas_num_dens_sum = 0
         gas_num_dens_num = 0
+        dense_num_dens_sum = 0
+        dense_num_dens_num = 0
 
         #Calculate components for mean of number density per phase
         for ix in range(0, len(phaseBin)):
@@ -14842,6 +14847,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 elif phaseBin[ix][iy]==2:
                     gas_num_dens_sum += len(binParts[ix][iy])/sizeBin**2
                     gas_num_dens_num +=1
+                elif phaseBin[ix][iy]!=2:
+                    dense_num_dens_sum += len(binParts[ix][iy])/sizeBin**2
+                    dense_num_dens_num +=1
 
         #Calculate mean number density per phase
         if bulk_num_dens_num > 0:
@@ -14860,12 +14868,17 @@ with hoomd.open(name=inFile, mode='rb') as t:
             gas_avg = (gas_num_dens_sum/gas_num_dens_num)
         else:
             gas_avg = 0
+        if dense_num_dens_num > 0:
+            dense_avg = (dense_num_dens_sum/dense_num_dens_num)
+        else:
+            dense_avg = 0
 
         #Calculate area of each phase
         bulk_area = bulk_num_dens_num * sizeBin**2
         int_area = int_num_dens_num * sizeBin**2
         bub_area = bub_num_dens_num * sizeBin**2
         gas_area = gas_num_dens_num * sizeBin**2
+        dense_area = dense_num_dens_num * sizeBin**2
 
         #Initiate empty values for standard deviation calculation
         bulk_num_dens_std_sum = 0
@@ -14876,6 +14889,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
         bub_num_dens_std_num = 0
         gas_num_dens_std_sum = 0
         gas_num_dens_std_num = 0
+        dense_num_dens_std_sum = 0
+        dense_num_dens_std_num = 0
 
         #Calculate components for standard deviations of number density per phase
         for ix in range(0, len(phaseBin)):
@@ -14892,6 +14907,10 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 elif phaseBin[ix][iy]==2:
                     gas_num_dens_std_sum += ((len(binParts[ix][iy])/sizeBin**2) - (gas_avg))**2
                     gas_num_dens_std_num +=1
+
+                if phaseBin[ix][iy]!=2:
+                    dense_num_dens_std_sum += ((len(binParts[ix][iy])/sizeBin**2) - (dense_avg))**2
+                    dense_num_dens_std_num +=1
 
 
         #Calculate standard deviation of number density for each phase
@@ -14911,12 +14930,19 @@ with hoomd.open(name=inFile, mode='rb') as t:
             gas_std = (gas_num_dens_std_sum/gas_num_dens_std_num)**0.5
         else:
             gas_std = 0
+        if dense_num_dens_std_num > 0:
+            dense_std = (dense_num_dens_std_sum/dense_num_dens_std_num)**0.5
+        else:
+            dense_std = 0
 
         #Output means and standard deviations of number density for each phase
         g = open(outPath2+outTxt_num_dens, 'a')
         g.write('{0:.2f}'.format(tst).center(20) + ' ')
         g.write('{0:.6f}'.format(sizeBin).center(20) + ' ')
         g.write('{0:.0f}'.format(np.amax(clust_size)).center(20) + ' ')
+        g.write('{0:.6f}'.format(dense_area).center(20) + ' ')
+        g.write('{0:.6f}'.format(dense_avg).center(20) + ' ')
+        g.write('{0:.6f}'.format(dense_std).center(20) + ' ')
         g.write('{0:.6f}'.format(bulk_area).center(20) + ' ')
         g.write('{0:.6f}'.format(bulk_avg).center(20) + ' ')
         g.write('{0:.6f}'.format(bulk_std).center(20) + ' ')
@@ -14933,6 +14959,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
 
         #Contour plot of the number density of all particles per bin
+        '''
         fig = plt.figure(figsize=(7,6))
         ax = fig.add_subplot(111)
         div_min = -3
@@ -14994,6 +15021,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         plt.tight_layout()
         plt.savefig(outPath + 'num_dens_' + out + pad + ".png", dpi=100)
         plt.close()
+        '''
 
 
         div_max = 3
@@ -15195,6 +15223,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
             return my_cmap
         filtered_cmap = view_colormap('inferno')
+        '''
         #Contour plot of the difference in number density of type B to type A per bin
         fig = plt.figure(figsize=(7,6))
         ax = fig.add_subplot(111)
@@ -15265,9 +15294,73 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         plt.tight_layout()
         plt.savefig(outPath + 'fast_frac_' + out + pad + ".png", dpi=100)
         plt.close()
+        '''
 
         min_n = 0.3#np.min(fast_frac_arr)
         max_n = 0.7#np.max(fast_frac_arr)
+
+        fig = plt.figure(figsize=(8.5,8))
+        ax = fig.add_subplot(111)
+
+        myEps = [1., 0.1, 0.01, 0.001, 0.0001]
+        plt.scatter(pos[bulk_id_plot,0]+h_box, pos[bulk_id_plot,1]+h_box, s=0.75, marker='.', c=green)
+        plt.scatter(pos[gas_id,0]+h_box, pos[gas_id,1]+h_box, s=0.75, marker='.', c=red)
+        plt.scatter(pos[edge_id_plot,0]+h_box, pos[edge_id_plot,1]+h_box, s=0.75, marker='.', c=yellow)
+
+        if len(bub_id_plot)>0:
+            plt.scatter(pos[bub_id_plot,0]+h_box, pos[bub_id_plot,1]+h_box, s=0.75, marker='.', c=purple)
+        '''
+        if len(bub1_parts)>0:
+            plt.scatter(pos[bub1_parts,0]+h_box, pos[bub1_parts,1]+h_box, s=0.75, marker='.', c=purple)
+        if len(bub2_parts)>0:
+            plt.scatter(pos[bub2_parts,0]+h_box, pos[bub2_parts,1]+h_box, s=0.75, marker='.', c=purple)
+        if len(bub3_parts)>0:
+            plt.scatter(pos[bub3_parts,0]+h_box, pos[bub3_parts,1]+h_box, s=0.75, marker='.', c=purple)
+        if len(bub4_parts)>0:
+            plt.scatter(pos[bub4_parts,0]+h_box, pos[bub4_parts,1]+h_box, s=0.75, marker='.', c=purple)
+        if len(bub5_parts)>0:
+            plt.scatter(pos[bub5_parts,0]+h_box, pos[bub5_parts,1]+h_box, s=0.75, marker='.', c=purple)
+        '''
+
+        plt.quiver(pos_box_x_plot, pos_box_y_plot, p_plot_x, p_plot_y)
+        plt.xticks(pos_box_start)
+        plt.yticks(pos_box_start)
+        plt.tick_params(
+                                axis='x',          # changes apply to the x-axis
+                                which='both',      # both major and minor ticks are affected
+                                bottom=False,      # ticks along the bottom edge are off
+                                top=False,         # ticks along the top edge are off
+                                labelbottom=False,
+                                labelleft=False)
+        plt.tick_params(
+                                axis='y',          # changes apply to the x-axis
+                                which='both',      # both major and minor ticks are affected
+                                right=False,      # ticks along the bottom edge are off
+                                left=False,         # ticks along the top edge are off
+                                labelbottom=False,
+                                labelleft=False)
+
+        plt.ylim((0, l_box))
+        plt.xlim((0, l_box))
+        plt.tick_params(axis='both', which='both',
+                        bottom=False, top=False, left=False, right=False,
+                        labelbottom=False, labeltop=False, labelleft=False, labelright=False)
+
+        plt.text(0.77, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(tst) + ' ' + r'$\tau_\mathrm{B}$',
+                fontsize=18,transform = ax.transAxes,
+                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+
+        eps_leg=[]
+        mkSz = [0.1, 0.1, 0.15, 0.1, 0.1]
+        msz=40
+        red_patch = mpatches.Patch(color=red, label='Dilute')
+        green_patch = mpatches.Patch(color=green, label='Bulk')
+        yellow_patch = mpatches.Patch(color=yellow, label='Interface')
+        purple_patch = mpatches.Patch(color=purple, label='Bubble')
+        plt.legend(handles=[green_patch, yellow_patch, red_patch, purple_patch], fancybox=True, framealpha=0.75, ncol=1, fontsize=16, loc='upper left',labelspacing=0.1, handletextpad=0.1)
+        plt.tight_layout()
+        plt.savefig(outPath + 'interface_acc_' + out + pad + ".png", dpi=100)
+        plt.close()
 
 
 
