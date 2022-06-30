@@ -10346,6 +10346,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                         AA_bulk_nlist = system_A_bulk.query(f_box.wrap(pos0_bulk), query_args).toNeighborList()
                         AB_bulk_nlist = system_A_bulk.query(f_box.wrap(pos1_bulk), query_args).toNeighborList()
+                        BA_bulk_nlist = system_B_bulk.query(f_box.wrap(pos0_bulk), query_args).toNeighborList()
                         BB_bulk_nlist = system_B_bulk.query(f_box.wrap(pos1_bulk), query_args).toNeighborList()
 
                         rijs_all_bulk = (pos_bulk_int[all_bulk_nlist.point_indices] - pos_bulk[all_bulk_nlist.query_point_indices])
@@ -10362,7 +10363,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                         dify_out = np.where(rijs_all_bulk[:,1]<-h_box)[0]
                         rijs_all_bulk[dify_out,1] = rijs_all_bulk[dify_out,1]+l_box
 
-                        rijs_A_bulk = (pos_bulk_int[A_bulk_nlist.point_indices] - pos_bulk[A_bulk_nlist.query_point_indices])
+                        rijs_A_bulk = (pos0_bulk_int[A_bulk_nlist.point_indices] - pos_bulk[A_bulk_nlist.query_point_indices])
 
                         difx_out = np.where(rijs_A_bulk[:,0]>h_box)[0]
                         rijs_A_bulk[difx_out,0] = rijs_A_bulk[difx_out,0]-l_box
@@ -10376,7 +10377,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                         dify_out = np.where(rijs_A_bulk[:,1]<-h_box)[0]
                         rijs_A_bulk[dify_out,1] = rijs_A_bulk[dify_out,1]+l_box
 
-                        rijs_B_bulk = (pos_bulk_int[B_bulk_nlist.point_indices] - pos_bulk[B_bulk_nlist.query_point_indices])
+                        rijs_B_bulk = (pos1_bulk_int[B_bulk_nlist.point_indices] - pos_bulk[B_bulk_nlist.query_point_indices])
 
                         difx_out = np.where(rijs_B_bulk[:,0]>h_box)[0]
                         rijs_B_bulk[difx_out,0] = rijs_B_bulk[difx_out,0]-l_box
@@ -10417,6 +10418,20 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                         dify_out = np.where(rijs_AB_bulk[:,1]<-h_box)[0]
                         rijs_AB_bulk[dify_out,1] = rijs_AB_bulk[dify_out,1]+l_box
+
+                        rijs_BA_bulk = (pos1_bulk_int[BA_bulk_nlist.point_indices] - pos0_bulk[BA_bulk_nlist.query_point_indices])
+
+                        difx_out = np.where(rijs_BA_bulk[:,0]>h_box)[0]
+                        rijs_BA_bulk[difx_out,0] = rijs_BA_bulk[difx_out,0]-l_box
+
+                        difx_out = np.where(rijs_BA_bulk[:,0]<-h_box)[0]
+                        rijs_BA_bulk[difx_out,0] = rijs_BA_bulk[difx_out,0]+l_box
+
+                        dify_out = np.where(rijs_BA_bulk[:,1]>h_box)[0]
+                        rijs_BA_bulk[dify_out,1] = rijs_BA_bulk[dify_out,1]-l_box
+
+                        dify_out = np.where(rijs_BA_bulk[:,1]<-h_box)[0]
+                        rijs_BA_bulk[dify_out,1] = rijs_BA_bulk[dify_out,1]+l_box
 
                         rijs_BB_bulk = (pos1_bulk_int[BB_bulk_nlist.point_indices] - pos1_bulk[BB_bulk_nlist.query_point_indices])
 
@@ -10579,6 +10594,37 @@ with hoomd.open(name=inFile, mode='rb') as t:
                         if len(neg_yint) > 0:
                             ang_loc_AB[neg_yint] = 3*np.pi/2
 
+                        quad1 = np.where((rijs_BA_bulk[:,0] > 0) & (rijs_BA_bulk[:,1]>0))[0]
+                        quad2 = np.where((rijs_BA_bulk[:,0] < 0) & (rijs_BA_bulk[:,1]>0))[0]
+                        quad3 = np.where((rijs_BA_bulk[:,0] < 0) & (rijs_BA_bulk[:,1]<0))[0]
+                        quad4 = np.where((rijs_BA_bulk[:,0] > 0) & (rijs_BA_bulk[:,1]<0))[0]
+
+                        pos_xint = np.where((rijs_BA_bulk[:,0] > 0) & (rijs_BA_bulk[:,1]==0))[0]
+                        pos_yint = np.where((rijs_BA_bulk[:,0] == 0) & (rijs_BA_bulk[:,1]>0))[0]
+                        neg_xint = np.where((rijs_BA_bulk[:,0] < 0) & (rijs_BA_bulk[:,1]==0))[0]
+                        neg_yint = np.where((rijs_BA_bulk[:,0] == 0) & (rijs_BA_bulk[:,1]<0))[0]
+
+                        nonzero = np.where(rijs_BA_bulk[:,0]==0)[0]
+                        ang_loc_BA = np.zeros(len(BA_bulk_nlist.point_indices))
+
+                        ang_loc_BA[quad1] = np.arctan(rijs_BA_bulk[quad1,1]/rijs_BA_bulk[quad1,0])
+
+                        ang_loc_BA[quad2] = (np.pi/2) + np.arctan(-rijs_BA_bulk[quad2,0]/rijs_BA_bulk[quad2,1])
+
+                        ang_loc_BA[quad3] = (np.pi) + np.arctan(rijs_BA_bulk[quad3,1]/rijs_BA_bulk[quad3,0])
+
+                        ang_loc_BA[quad4] = (3*np.pi/2) + np.arctan(-rijs_BA_bulk[quad4,0]/rijs_BA_bulk[quad4,1])
+
+                        if len(pos_xint) > 0:
+                            ang_loc_BA[pos_xint] = 0
+                        if len(neg_xint) > 0:
+                            ang_loc_BA[neg_xint] = np.pi
+
+                        if len(pos_yint) > 0:
+                            ang_loc_BA[pos_yint] = np.pi/2
+                        if len(neg_yint) > 0:
+                            ang_loc_BA[neg_yint] = 3*np.pi/2
+
                         quad1 = np.where((rijs_BB_bulk[:,0] > 0) & (rijs_BB_bulk[:,1]>0))[0]
                         quad2 = np.where((rijs_BB_bulk[:,0] < 0) & (rijs_BB_bulk[:,1]>0))[0]
                         quad3 = np.where((rijs_BB_bulk[:,0] < 0) & (rijs_BB_bulk[:,1]<0))[0]
@@ -10617,6 +10663,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                         ang_loc_AA = (ang_loc_AA/np.pi)*180
                         ang_loc_AB = (ang_loc_AB/np.pi)*180
                         ang_loc_BB = (ang_loc_BB/np.pi)*180
+                        ang_loc_BA = (ang_loc_BA/np.pi)*180
                         '''
                         for i in range(0, len(bulk_id_plot)):
                             if len(np.where(all_bulk_nlist.point_indices==bulk_id_plot[i])[0])>0:
@@ -10626,12 +10673,129 @@ with hoomd.open(name=inFile, mode='rb') as t:
                         fastCol = '#e31a1c'
                         slowCol = '#081d58'
 
+                        g_theta_all_bulk = np.array([])
+                        g_theta_AA_bulk = np.array([])
+                        g_theta_A_bulk = np.array([])
+                        #g_r_BA_bulk = np.array([])
+                        g_theta_B_bulk = np.array([])
+                        g_theta_AB_bulk = np.array([])
+                        g_theta_BA_bulk = np.array([])
+                        #g_r_BA_bulk = np.array([])
+                        g_theta_BB_bulk = np.array([])
+
+                        for m in range(0, len(theta)-1):
+                            diftheta = theta[m+1] - theta[m]
+
+                            #inds = np.where((difr_all_bulk>=r[m]) & (difr_all_bulk<r[m+1]))[0]
+                            #rho_all = (len(inds) / (2*math.pi * r[m] * difr) )
+                            #rho_tot_all = len(all_bulk_nlist.point_indices)/ (np.pi * 15**2)#bulk_area_test
+                            #rho_tot_all = len(bulk_id_plot) * num_dens_mean
+
+                            #rho_tot_all = len(all_bulk_nlist.point_indices)/ (num_dens_mean * len(bulk_id_plot))#bulk_area_test
+
+
+                            #g_r_all_bulk = np.append(g_r_all_bulk, rho_all / (rho_tot_all) )
+
+                            inds = np.where((ang_loc>=theta[m]) & (ang_loc<theta[m+1]))[0]
+                            rho_all = len(inds)
+                            rho_tot_all = len(bulk_id_plot)
+                            #rho_tot_aa = len(AA_bulk_nlist.point_indices)/bulk_area_test
+                            g_theta_all_bulk = np.append(g_theta_all_bulk, len(inds) / rho_tot_all)
+
+
+
+                            num_dens_AA = len(slow_bulk_id_plot)
+                            num_dens_AB = len(fast_bulk_id_plot)
+                            num_dens_BB = len(fast_bulk_id_plot)
+
+                            inds = np.where((ang_loc_A>=theta[m]) & (ang_loc_A<theta[m+1]))[0]
+                            rho_a = (len(inds))
+
+                            rho_tot_a = len(slow_bulk_id_plot)
+                            #rho_tot_aa = len(AA_bulk_nlist.point_indices)/bulk_area_test
+                            g_theta_A_bulk = np.append(g_theta_A_bulk, rho_a / rho_tot_a)
+
+                            inds = np.where((ang_loc_B>=theta[m]) & (ang_loc_B<theta[m+1]))[0]
+                            rho_b = (len(inds))
+                            rho_tot_b = len(fast_bulk_id_plot)
+                            #rho_tot_aa = len(AA_bulk_nlist.point_indices)/bulk_area_test
+                            g_theta_B_bulk = np.append(g_theta_B_bulk, rho_b / rho_tot_b)
+                            print('zero')
+                            print(rho_all-(rho_a + rho_b))
+
+                            inds = np.where((ang_loc_AA>=theta[m]) & (ang_loc_AA<theta[m+1]))[0]
+                            rho_aa = (len(inds))
+                            rho_tot_aa = len(slow_bulk_id_plot)
+                            #rho_tot_aa = len(AA_bulk_nlist.point_indices)/bulk_area_test
+                            g_theta_AA_bulk = np.append(g_theta_AA_bulk, rho_aa / rho_tot_aa)
+                            #g_r_AA_bulk = np.append(g_r_AA_bulk, len(inds)/(len(slow_bulk_id_plot)*(2*math.pi * r[m] * difr) * num_dens_AA))
+
+                            #inds = np.where((difr_BA_bulk>=r[m]) & (difr_BA_bulk<r[m+1]))[0]
+                            #g_r_BA_bulk = np.append(g_r_BA_bulk, len(inds)/(len(BA_bulk_nlist.point_indices)*(2*math.pi * r[m+1])/bulk_area_test))
+
+                            inds = np.where((ang_loc_AB>=theta[m]) & (ang_loc_AB<theta[m+1]))[0]
+                            rho_ab = (len(inds))
+                            #rho_tot_ab = len(AB_bulk_nlist.point_indices)/bulk_area_test
+                            rho_tot_ab = len(fast_bulk_id_plot)
+                            g_theta_AB_bulk = np.append(g_theta_AB_bulk, rho_ab / rho_tot_ab)
+                            #g_r_AB_bulk = np.append(g_r_AB_bulk, len(inds)/(len(fast_bulk_id_plot)*(2*math.pi * r[m] * difr) * num_dens_AB))
+
+                            inds = np.where((ang_loc_BA>=theta[m]) & (ang_loc_BA<theta[m+1]))[0]
+                            rho_ba = (len(inds))
+                            #rho_tot_ab = len(AB_bulk_nlist.point_indices)/bulk_area_test
+                            rho_tot_ba = len(slow_bulk_id_plot)
+                            g_theta_BA_bulk = np.append(g_theta_BA_bulk, rho_ba / rho_tot_ba)
+                            #g_r_AB_bulk = np.append(g_r_AB_bulk, len(inds)/(len(fast_bulk_id_plot)*(2*math.pi * r[m] * difr) * num_dens_AB))
+
+
+                            inds = np.where((ang_loc_BB>=theta[m]) & (ang_loc_BB<theta[m+1]))[0]
+                            rho_bb = (len(inds))
+                            #rho_tot_bb = len(BB_bulk_nlist.point_indices)/bulk_area_test
+                            rho_tot_bb = len(fast_bulk_id_plot)
+                            g_theta_BB_bulk = np.append(g_theta_BB_bulk, rho_bb / rho_tot_bb)
+                            #g_r_BB_bulk = np.append(g_r_BB_bulk, len(inds)/(len(fast_bulk_id_plot)*(2*math.pi * r[m] * difr) * num_dens_BB))
+
+                        if time_step_count == 0:
+                            g_r_all_bulk_sum = g_r_all_bulk
+                            g_r_AA_bulk_sum = g_r_AA_bulk
+                            g_r_AB_bulk_sum = g_r_AB_bulk
+                            #g_r_BA_bulk_sum = g_r_BA_bulk
+                            g_r_BB_bulk_sum = g_r_BB_bulk
+
+                            ang_loc_AA_prob_norm_temp = g_theta_AA_bulk#ang_loc_AA_prob[0]/np.sum(ang_loc_A_prob[0])
+                            ang_loc_BA_prob_norm_temp = g_theta_BA_bulk#ang_loc_BA_prob[0]/np.sum(ang_loc_B_prob[0])
+                            ang_loc_AB_prob_norm_temp = g_theta_AB_bulk#ang_loc_AB_prob[0]/np.sum(ang_loc_A_prob[0])
+                            ang_loc_BB_prob_norm_temp = g_theta_BB_bulk#ang_loc_BB_prob[0]/np.sum(ang_loc_B_prob[0])
+
+                            ang_loc_prob_norm_temp = g_theta_all_bulk#ang_loc_prob[0]/np.sum(ang_loc_prob[0])
+                            ang_loc_A_prob_norm_temp = g_theta_A_bulk#ang_loc_A_prob[0]/np.sum(ang_loc_prob[0])
+                            ang_loc_B_prob_norm_temp = g_theta_B_bulk#ang_loc_theory/np.sum(ang_loc_prob[0])
+
+                            time_step_count += 1
+                        else:
+                            g_r_all_bulk_sum += g_r_all_bulk
+                            g_r_AA_bulk_sum += g_r_AA_bulk
+                            g_r_AB_bulk_sum += g_r_AB_bulk
+                            #g_r_BA_bulk_sum += g_r_BA_bulk
+                            g_r_BB_bulk_sum += g_r_BB_bulk
+                            time_step_count += 1
+
+                            ang_loc_AA_prob_norm_temp += g_theta_AA_bulk#ang_loc_AA_prob[0]/np.sum(ang_loc_A_prob[0])
+                            ang_loc_BA_prob_norm_temp += g_theta_BA_bulk#ang_loc_BA_prob[0]/np.sum(ang_loc_A_prob[0])
+                            ang_loc_AB_prob_norm_temp += g_theta_AB_bulk#ang_loc_AB_prob[0]/np.sum(ang_loc_B_prob[0])
+                            ang_loc_BB_prob_norm_temp += g_theta_BB_bulk#ang_loc_BB_prob[0]/np.sum(ang_loc_B_prob[0])
+
+                            ang_loc_prob_norm_temp += g_theta_all_bulk#ang_loc_prob[0]/np.sum(ang_loc_prob[0])
+                            ang_loc_A_prob_norm_temp += g_theta_A_bulk#ang_loc_A_prob[0]/np.sum(ang_loc_prob[0])
+                            ang_loc_B_prob_norm_temp += g_theta_B_bulk#ang_loc_theory/np.sum(ang_loc_prob[0])
+                        '''
                         ang_loc_prob = np.histogram(ang_loc, bins = theta)
                         ang_loc_A_prob = np.histogram(ang_loc_A, bins = theta)
                         ang_loc_B_prob = np.histogram(ang_loc_B, bins = theta)
 
                         ang_loc_AA_prob = np.histogram(ang_loc_AA, bins = theta)
                         ang_loc_AB_prob = np.histogram(ang_loc_AB, bins = theta)
+                        ang_loc_BA_prob = np.histogram(ang_loc_BA, bins = theta)
                         ang_loc_BB_prob = np.histogram(ang_loc_BB, bins = theta)
 
                         ang_loc_theory = ang_loc_prob[0] - ang_loc_A_prob[0]
@@ -10643,13 +10807,14 @@ with hoomd.open(name=inFile, mode='rb') as t:
                             #g_r_BA_bulk_sum = g_r_BA_bulk
                             g_r_BB_bulk_sum = g_r_BB_bulk
 
-                            ang_loc_AA_prob_norm_temp = ang_loc_AA_prob[0]/np.sum(ang_loc_AA_prob[0])
-                            ang_loc_AB_prob_norm_temp = ang_loc_AB_prob[0]/np.sum(ang_loc_AB_prob[0])
-                            ang_loc_BB_prob_norm_temp = ang_loc_BB_prob[0]/np.sum(ang_loc_BB_prob[0])
+                            ang_loc_AA_prob_norm_temp = ang_loc_AA_prob[0]/np.sum(ang_loc_A_prob[0])
+                            ang_loc_BA_prob_norm_temp = ang_loc_BA_prob[0]/np.sum(ang_loc_B_prob[0])
+                            ang_loc_AB_prob_norm_temp = ang_loc_AB_prob[0]/np.sum(ang_loc_A_prob[0])
+                            ang_loc_BB_prob_norm_temp = ang_loc_BB_prob[0]/np.sum(ang_loc_B_prob[0])
 
                             ang_loc_prob_norm_temp = ang_loc_prob[0]/np.sum(ang_loc_prob[0])
-                            ang_loc_A_prob_norm_temp = ang_loc_A_prob[0]/np.sum(ang_loc_A_prob[0])
-                            ang_loc_B_prob_norm_temp = ang_loc_prob[0]/np.sum(ang_loc_prob[0])
+                            ang_loc_A_prob_norm_temp = ang_loc_A_prob[0]/np.sum(ang_loc_prob[0])
+                            ang_loc_B_prob_norm_temp = ang_loc_theory/np.sum(ang_loc_prob[0])
 
                             time_step_count += 1
                         else:
@@ -10660,14 +10825,15 @@ with hoomd.open(name=inFile, mode='rb') as t:
                             g_r_BB_bulk_sum += g_r_BB_bulk
                             time_step_count += 1
 
-                            ang_loc_AA_prob_norm_temp += ang_loc_AA_prob[0]/np.sum(ang_loc_AA_prob[0])
-                            ang_loc_AB_prob_norm_temp += ang_loc_AB_prob[0]/np.sum(ang_loc_AB_prob[0])
-                            ang_loc_BB_prob_norm_temp += ang_loc_BB_prob[0]/np.sum(ang_loc_BB_prob[0])
+                            ang_loc_AA_prob_norm_temp += ang_loc_AA_prob[0]/np.sum(ang_loc_A_prob[0])
+                            ang_loc_BA_prob_norm_temp += ang_loc_BA_prob[0]/np.sum(ang_loc_A_prob[0])
+                            ang_loc_AB_prob_norm_temp += ang_loc_AB_prob[0]/np.sum(ang_loc_B_prob[0])
+                            ang_loc_BB_prob_norm_temp += ang_loc_BB_prob[0]/np.sum(ang_loc_B_prob[0])
 
                             ang_loc_prob_norm_temp += ang_loc_prob[0]/np.sum(ang_loc_prob[0])
-                            ang_loc_A_prob_norm_temp += ang_loc_A_prob[0]/np.sum(ang_loc_A_prob[0])
-                            ang_loc_B_prob_norm_temp += ang_loc_prob[0]/np.sum(ang_loc_prob[0])
-
+                            ang_loc_A_prob_norm_temp += ang_loc_A_prob[0]/np.sum(ang_loc_prob[0])
+                            ang_loc_B_prob_norm_temp += ang_loc_theory/np.sum(ang_loc_prob[0])
+                        '''
                         #pre_filter = len(all_bulk_nlist)
 
                         #all_bulk_nlist.filter(indices_A != indices_B)
@@ -11339,6 +11505,7 @@ if steady_state_once == 'True':
 
     ang_loc_prob_AA_norm_avg = ang_loc_AA_prob_norm_temp / time_step_count
     ang_loc_prob_AB_norm_avg = ang_loc_AB_prob_norm_temp / time_step_count
+    ang_loc_prob_BA_norm_avg = ang_loc_BA_prob_norm_temp / time_step_count
     ang_loc_prob_BB_norm_avg = ang_loc_BB_prob_norm_temp / time_step_count
 
     ang_loc_prob_norm_avg = ang_loc_prob_norm_temp / time_step_count
@@ -11485,7 +11652,8 @@ if steady_state_once == 'True':
                 plt.plot(theta[1:], ang_loc_prob_AA_norm_avg, label=r'Fast-Fast',
                             c=fastCol, lw=third_width, ls='-', alpha=1)
 
-
+    plt.plot(theta[1:], ang_loc_prob_BA_norm_avg, label=r'Fast-Slow',
+                c='pink', lw=second_width, ls='-', alpha=1)
     ax1.set_ylim(plot_min, plot_max)
     ax1.set_xlim(0, 360)
 

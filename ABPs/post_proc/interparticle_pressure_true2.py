@@ -60,8 +60,8 @@ else:
 if parFrac==100.0:
     parFrac_orig=0.5
     parFrac=50.0
-    
-    
+
+
 eps = float(sys.argv[5])
 
 try:
@@ -89,7 +89,7 @@ def legend_without_duplicate_labels(ax):
     handles, labels = ax.get_legend_handles_labels()
     unique = [(h, l) for i, (h, l) in enumerate(zip(handles, labels)) if l not in labels[:i]]
     ax.legend(*zip(*unique))
-    
+
 def computeVel(activity):
     "Given particle activity, output intrinsic swim speed"
     # This gives:
@@ -120,7 +120,7 @@ def computeTauLJ(epsilon):
 
 
 tauLJ=computeTauLJ(eps)
-dt = dtau * tauLJ    
+dt = dtau * tauLJ
 
 # Get filenames for various file types
 '''
@@ -148,7 +148,7 @@ from scipy import stats
 def computeDist(x1, y1, x2, y2):
     '''Compute distance between two points'''
     return np.sqrt( ((x2-x1)**2) + ((y2 - y1)**2) )
-    
+
 def computeFLJ(r, x1, y1, x2, y2, eps):
     sig = 1.
     f = (24. * eps / r) * ( (2*((sig/r)**12)) - ((sig/r)**6) )
@@ -168,7 +168,7 @@ def roundUp(n, decimals=0):
     '''Round up size of bins to account for floating point inaccuracy'''
     multiplier = 10 ** decimals
     return math.ceil(n * multiplier) / multiplier
-    
+
 def getNBins(length, minSz=(2**(1./6.))):
     "Given box size, return number of bins"
     initGuess = int(length) + 1
@@ -199,21 +199,21 @@ if inFile[0:7] == "cluster":
     add = 'cluster_'
 else:
     add = ''
-''' 
+'''
 #Open input simulation file
 f = hoomd.open(name=inFile, mode='rb')
 
 box_data = np.zeros((1), dtype=np.ndarray)  # box dimension holder
 r_cut = 2**(1./6.)                          # potential cutoff
 tauPerDT = computeTauPerTstep(epsilon=eps)  # brownian time per timestep
-                
+
 #Get particle number from initial frame
 snap = f[0]
 typ = snap.particles.typeid
 partNum = len(typ)
 
 # Outfile to write data to
-outfile = 'pa'+str(int(peA))+'_pb'+str(int(peB))+'_xa'+str(int(parFrac))+'_eps'+str(eps)+'_phi'+str(int(intPhi))+'_pNum' + str(int(partNum)) 
+outfile = 'pa'+str(int(peA))+'_pb'+str(int(peB))+'_xa'+str(int(parFrac))+'_eps'+str(eps)+'_phi'+str(int(intPhi))+'_pNum' + str(int(partNum))
 outTxt = 'interpart_press_tom_' + outfile + '.txt'
 outTxt_slow = 'interpart_press_slow_tom_' + outfile + '.txt'
 outTxt_fast = 'interpart_press_fast_tom_' + outfile + '.txt'
@@ -271,13 +271,13 @@ g.write('Timestep'.center(15) + ' ' +\
         'Length'.center(15) + ' ' +\
         'NDense'.center(15) + '\n')
 g.close()
-            
+
 box_data = np.zeros((1), dtype=np.ndarray)  # box dimension holder
 r_cut = 2**(1./6.)                          # potential cutoff
 tauPerDT = computeTauPerTstep(epsilon=eps)  # brownian time per timestep
 
 with hoomd.open(name=inFile, mode='rb') as t:
-    
+
     start = 0                   # first frame to process
     dumps = int(t.__len__())    # get number of timesteps dumped
     end = dumps                 # final frame to process
@@ -314,7 +314,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
         typ0ind=np.where(snap.particles.typeid==0)      # Calculate which particles are type 0
         typ1ind=np.where(snap.particles.typeid==1)      # Calculate which particles are type 1
-        
+
         xy = np.delete(pos, 2, 1)
         tst = snap.configuration.step               # timestep
         tst -= first_tstep                          # normalize by first timestep
@@ -322,7 +322,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
         time_arr[j]=tst
         # Compute clusters for this timestep
         system_all = freud.AABBQuery(f_box, f_box.wrap(pos))
-        
+
         cl_all=freud.cluster.Cluster()                      #Define cluster
         cl_all.compute(system_all, neighbors={'r_max': 1.0})    # Calculate clusters given neighbor list, positions,
                                                         # and maximal radial interaction distance
@@ -334,12 +334,12 @@ with hoomd.open(name=inFile, mode='rb') as t:
         clust_size = clp_all.sizes              # find cluster sizes
         min_size=int(partNum/20)
         large_clust_ind_all=np.where(clust_size>min_size)
-        
-        
-        
+        print(min_size)
+        print(np.max(clust_size))
+
 
         if len(large_clust_ind_all[0])>0:
-            
+
             # Get the positions of all particles in LC
             binParts = [[[] for b in range(NBins)] for a in range(NBins)]
             typParts=  [[[] for b in range(NBins)] for a in range(NBins)]
@@ -356,7 +356,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 y_ind = int(tmp_posY / sizeBin)
                 # Append all particles to appropriate bin
                 binParts[x_ind][y_ind].append(k)
-            
+
                 # Get sufficient cluster mesh as well
                 if clust_size[ids[k]] >= min_size:
                     liqPos.append(pos[k])
@@ -364,21 +364,21 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 # Get a gas particle list as well
                 elif clust_size[ids[k]] <= 100:
                     gasPos.append(pos[k])
-            
+
             # If sufficient neighbor bins are empty, we have an edge
             thresh = 1.5
             # Loop through x index of mesh
             for ix in range(0, len(occParts)):
-        
+
                 # If at right edge, wrap to left
                 if (ix + 1) != NBins:
                     lookx = [ix-1, ix, ix+1]
                 else:
                     lookx = [ix-1, ix, 0]
-                
+
                 # Loop through y index of mesh
                 for iy in range(0, len(occParts[ix])):
-            
+
                     # Reset neighbor counter
                     count = 0
                     # If the bin is not occupied, skip it
@@ -389,12 +389,12 @@ with hoomd.open(name=inFile, mode='rb') as t:
                         looky = [iy-1, iy, iy+1]
                     else:
                         looky = [iy-1, iy, 0]
-                
+
                     # Loop through surrounding x-index
                     for indx in lookx:
                         # Loop through surrounding y-index
                         for indy in looky:
-                    
+
                             # If neighbor bin is NOT occupied
                             if occParts[indx][indy] == 0:
                                 # If neighbor bin shares a vertex
@@ -403,11 +403,11 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                 # If neighbor bin shares a side
                                 else:
                                     count += 1
-                                
+
                     # If sufficient neighbors are empty, we found an edge
                     if count >= thresh:
                         edgeBin[indx][indy] = 1
-        
+
             blurBin = [[0 for b in range(NBins)] for a in range(NBins)]
             Nedges = 0
             # Blur the edge bins a bit
@@ -437,32 +437,32 @@ with hoomd.open(name=inFile, mode='rb') as t:
             bulkSigYY = 0
             bulkSigXY=0
             bulkSigYX=0
-            
+
             bulkSigXX_slow = 0
             bulkSigYY_slow = 0
             bulkSigXY_slow = 0
             bulkSigYX_slow = 0
-            
+
             bulkSigXX_fast = 0
             bulkSigYY_fast = 0
             bulkSigXY_fast = 0
             bulkSigYX_fast = 0
-            
+
             gasSigXX = 0
             gasSigYY = 0
             gasSigXY=0
             gasSigYX=0
-            
+
             gasSigXX_slow = 0
             gasSigYY_slow = 0
             gasSigXY_slow = 0
             gasSigYX_slow = 0
-            
+
             gasSigXX_fast = 0
             gasSigYY_fast = 0
             gasSigXY_fast = 0
             gasSigYX_fast = 0
-            
+
             reftype=np.zeros(len(ids))
             for k in range(0, len(ids)):
                 # Convert position to be > 0 to place in list mesh
@@ -528,8 +528,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                             gasSigYY_fast += (fy * (pos[comp][1] - refy))
                                             gasSigXY_fast += (fx * (pos[comp][1] - refy))
                                             gasSigYX_fast += (fy * (pos[comp][0] - refx))
-                                        
-                                    
+
+
                             # Compute the distance
             # Now let's get the area of each phase (by summing bin areas)
             gasBins = 0
@@ -558,13 +558,13 @@ with hoomd.open(name=inFile, mode='rb') as t:
             # Divide by two because each pair is counted twice
             bulkTrace = (bulkSigXX + bulkSigYY + bulkSigXY + bulkSigYX)/2.
             gasTrace = (gasSigXX + gasSigYY + gasSigXY + gasSigYX)/2.
-            
+
             bulkTrace_slow = (bulkSigXX_slow + bulkSigYY_slow + bulkSigXY_slow + bulkSigYX_slow)/2.
             gasTrace_slow = (gasSigXX_slow + gasSigYY_slow + gasSigXY_slow + gasSigYX_slow)/2.
-            
+
             bulkTrace_fast = (bulkSigXX_fast + bulkSigYY_fast + bulkSigXY_fast + bulkSigYX_fast)/2.
             gasTrace_fast = (gasSigXX_fast + gasSigYY_fast + gasSigXY_fast + gasSigYX_fast)/2.
-            
+
             # Area of a bin
             binArea = sizeBin * sizeBin
             # Area of each phase
@@ -574,9 +574,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
             dense_area_arr[j] = bulkArea
             gas_area_arr[j] = gasArea
             edge_area_arr[j] = edgeArea
-            
+
             ndense = max(clust_size)
-            
+
             g = open(outPath2+outTxt, 'a')
             g.write('{0:.3f}'.format(tst).center(15) + ' ')
             g.write('{0:.3f}'.format(gasArea).center(15) + ' ')
@@ -594,7 +594,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
             g.write('{0:.1f}'.format(lEdge).center(15) + ' ')
             g.write('{0:.0f}'.format(ndense).center(15) + '\n')
             g.close()
-            
+
             g = open(outPath2+outTxt_slow, 'a')
             g.write('{0:.3f}'.format(tst).center(15) + ' ')
             g.write('{0:.3f}'.format(gasArea).center(15) + ' ')
@@ -612,7 +612,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
             g.write('{0:.1f}'.format(lEdge).center(15) + ' ')
             g.write('{0:.0f}'.format(ndense).center(15) + '\n')
             g.close()
-            
+
             g = open(outPath2+outTxt_fast, 'a')
             g.write('{0:.3f}'.format(tst).center(15) + ' ')
             g.write('{0:.3f}'.format(gasArea).center(15) + ' ')
