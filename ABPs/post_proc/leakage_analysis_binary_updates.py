@@ -464,9 +464,9 @@ lat_theory_arr = np.array([])
 g = open(outPath2+outTxt_leak, 'w+') # write file headings
 g.write('tst'.center(15) + ' ' +\
                         'clust_size'.center(15) + ' ' +\
-                        'Nnot_to_clust'.center(15) + ' ' +\
-                        'Nsnot_to_clust'.center(15) + ' ' +\
-                        'Nfnot_to_clust'.center(15) + ' ' +\
+                        'Ngas_to_clust'.center(15) + ' ' +\
+                        'Nsgas_to_clust'.center(15) + ' ' +\
+                        'Nfgas_to_clust'.center(15) + ' ' +\
                         'Nclust_to_gas'.center(15) + ' ' +\
                         'Nsclust_to_gas'.center(15) + ' ' +\
                         'Nfclust_to_gas'.center(15) + ' ' +\
