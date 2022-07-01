@@ -487,7 +487,13 @@ g.write('tst'.center(15) + ' ' +\
                         'Nfbulk_to_int'.center(15) + ' ' +\
                         'Nint_to_bulk'.center(15) + ' ' +\
                         'Nsint_to_bulk'.center(15) + ' ' +\
-                        'Nfint_to_bulk'.center(15) + '\n')
+                        'Nfint_to_bulk'.center(15) + ' ' +\
+                        'Nbulk_to_gas2'.center(15) + ' ' +\
+                        'Nsbulk_to_gas2'.center(15) + ' ' +\
+                        'Nfbulk_to_gas2'.center(15) + ' ' +\
+                        'Ngas2_to_bulk'.center(15) + ' ' +\
+                        'Nsgas2_to_bulk'.center(15) + ' ' +\
+                        'Nfgas2_to_bulk'.center(15) + '\n')
 g.close()
 
 """
@@ -637,7 +643,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                # first frame to process
     dumps = int(t.__len__())
     start = int(0/time_step)#205                             # get number of timesteps dumped
-    end = int(dumps/time_step)#int(dumps/time_step)-1                                             # final frame to process
+    end = (dumps/time_step)#int(dumps/time_step)-1                                             # final frame to process
     snap = t[0]                                             # Take first snap for box
     first_tstep = snap.configuration.step                   # First time step
 
@@ -10100,19 +10106,19 @@ if steady_state_once == 'True':
     start_int_id = np.where(partPhase_time[0,:]==1)[0]
 
     start_clust_id = np.where(in_clust_arr[0,:]==1)[0]
-    start_not_clust_id = np.where(in_clust_arr[0,:]==0)[0]
+    start_gas2_id = np.where(in_clust_arr[0,:]==0)[0]
 
     start_bulk_id_with_int = np.where(partPhase_time[0,:]==0)[0]
     start_gas_id_with_int = np.where(partPhase_time[0,:]==2)[0]
     start_int_id_with_int = np.where(partPhase_time[0,:]==1)[0]
 
-    num_clust_to_not_clust = np.array([])
-    num_slow_clust_to_not_clust = np.array([])
-    num_fast_clust_to_not_clust = np.array([])
+    num_clust_to_gas2 = np.array([])
+    num_slow_clust_to_gas2 = np.array([])
+    num_fast_clust_to_gas2 = np.array([])
 
-    num_not_clust_to_clust = np.array([])
-    num_slow_not_clust_to_clust = np.array([])
-    num_fast_not_clust_to_clust = np.array([])
+    num_gas2_to_clust = np.array([])
+    num_slow_gas2_to_clust = np.array([])
+    num_fast_gas2_to_clust = np.array([])
 
     num_bulk_to_gas = np.array([])
     num_slow_bulk_to_gas = np.array([])
@@ -10138,6 +10144,14 @@ if steady_state_once == 'True':
     num_slow_int_to_bulk = np.array([])
     num_fast_int_to_bulk = np.array([])
 
+    num_bulk_to_gas2 = np.array([])
+    num_slow_bulk_to_gas2 = np.array([])
+    num_fast_bulk_to_gas2 = np.array([])
+
+    num_gas2_to_bulk = np.array([])
+    num_slow_gas2_to_bulk = np.array([])
+    num_fast_gas2_to_bulk = np.array([])
+
     for j in range(1, np.shape(partPhase_time)[0]):
         print('j')
         print(j)
@@ -10147,13 +10161,13 @@ if steady_state_once == 'True':
         int_id = np.where(partPhase_time[j,:]==1)[0]
 
         clust_id = np.where(in_clust_arr[j,:]==1)[0]
-        not_clust_id = np.where(in_clust_arr[j,:]==0)[0]
+        gas2_id = np.where(in_clust_arr[j,:]==0)[0]
 
         still_in_clust = np.intersect1d(start_clust_id, clust_id, return_indices=True)
         not_in_clust = np.delete(clust_id, still_in_clust[2])
 
-        still_in_not_clust = np.intersect1d(start_not_clust_id, not_clust_id, return_indices=True)
-        not_in_not_clust = np.delete(not_clust_id, still_in_not_clust[2])
+        still_in_gas2 = np.intersect1d(start_gas2_id, gas2_id, return_indices=True)
+        not_in_gas2 = np.delete(gas2_id, still_in_gas2[2])
 
         still_in_bulk = np.intersect1d(start_bulk_id, bulk_id, return_indices=True)
         not_in_bulk = np.delete(bulk_id, still_in_bulk[2])
@@ -10165,8 +10179,9 @@ if steady_state_once == 'True':
         not_in_int = np.delete(int_id, still_in_int[2])
 
         #now_in_int = np.intersect1d(start_int_id, not_in_bulk)
-        clust_now_in_not_clust = np.intersect1d(start_not_clust_id, not_in_clust, return_indices=True)
-        not_clust_now_in_clust = np.intersect1d(start_clust_id, not_in_not_clust, return_indices=True)
+        clust_now_in_gas2 = np.intersect1d(start_gas2_id, not_in_clust, return_indices=True)
+
+        gas2_now_in_clust = np.intersect1d(start_clust_id, not_in_gas2, return_indices=True)
 
         bulk_now_in_gas = np.intersect1d(start_gas_id, not_in_bulk, return_indices=True)
         gas_now_in_bulk = np.intersect1d(start_bulk_id, not_in_gas, return_indices=True)
@@ -10177,8 +10192,11 @@ if steady_state_once == 'True':
         gas_now_in_int = np.intersect1d(start_int_id_with_int, not_in_gas, return_indices=True)
         int_now_in_gas = np.intersect1d(start_gas_id_with_int, not_in_int, return_indices=True)
 
-        not_clust_nolonger_in_clust = np.intersect1d(start_clust_id, clust_now_in_not_clust[0], return_indices=True)
-        clust_nolonger_in_not_clust = np.intersect1d(start_not_clust_id, not_clust_now_in_clust[0], return_indices=True)
+        gas2_now_in_bulk = np.intersect1d(start_bulk_id_with_int, not_in_gas, return_indices=True)
+        bulk_now_in_gas2 = np.intersect1d(start_gas_id_with_int, not_in_bulk, return_indices=True)
+
+        gas2_nolonger_in_clust = np.intersect1d(start_clust_id, clust_now_in_gas2[0], return_indices=True)
+        clust_nolonger_in_gas2 = np.intersect1d(start_gas2_id, gas2_now_in_clust[0], return_indices=True)
 
         gas_nolonger_in_bulk = np.intersect1d(start_bulk_id, bulk_now_in_gas[0], return_indices=True)
         bulk_nolonger_in_gas = np.intersect1d(start_gas_id, gas_now_in_bulk[0], return_indices=True)
@@ -10189,34 +10207,37 @@ if steady_state_once == 'True':
         int_nolonger_in_gas = np.intersect1d(start_gas_id_with_int, gas_now_in_int[0], return_indices=True)
         gas_nolonger_in_int = np.intersect1d(start_int_id_with_int, int_now_in_gas[0], return_indices=True)
 
-        if len(clust_now_in_not_clust)>0:
-            num_clust_to_not_clust = np.append(num_clust_to_not_clust, len(clust_now_in_not_clust[0]))
-            num_slow_clust_to_not_clust = np.append(num_slow_clust_to_not_clust, len(np.where(typ[clust_now_in_not_clust[0]]==0)[0]))
-            num_fast_clust_to_not_clust = np.append(num_fast_clust_to_not_clust, len(np.where(typ[clust_now_in_not_clust[0]]==1)[0]))
-            start_clust_id = np.delete(start_clust_id, not_clust_nolonger_in_clust[1])
-            start_not_clust_id = np.append(start_not_clust_id, clust_now_in_not_clust[1])
-        else:
-            num_clust_to_not_clust = np.append(num_clust_to_not_clust, 0)
-            num_slow_clust_to_not_clust = np.append(num_slow_clust_to_not_clust, 0)
-            num_fast_clust_to_not_clust = np.append(num_fast_clust_to_not_clust, 0)
+        bulk_nolonger_in_gas2 = np.intersect1d(start_gas_id_with_int, gas2_now_in_bulk[0], return_indices=True)
+        gas2_nolonger_in_bulk = np.intersect1d(start_bulk_id_with_int, bulk_now_in_gas2[0], return_indices=True)
 
-        if len(not_clust_now_in_clust)>0:
-            num_not_clust_to_clust = np.append(num_not_clust_to_clust, len(not_clust_now_in_clust[0]))
-            num_slow_not_clust_to_clust = np.append(num_slow_not_clust_to_clust, len(np.where(typ[not_clust_now_in_clust[0]]==0)[0]))
-            num_fast_not_clust_to_clust = np.append(num_fast_not_clust_to_clust, len(np.where(typ[not_clust_now_in_clust[0]]==1)[0]))
-            start_not_clust_id = np.delete(start_not_clust_id, clust_nolonger_in_not_clust[1])
-            start_clust_id = np.append(start_clust_id, not_clust_now_in_clust[1])
+        if len(clust_now_in_gas2)>0:
+            num_clust_to_gas2 = np.append(num_clust_to_gas2, len(clust_now_in_gas2[0]))
+            num_slow_clust_to_gas2 = np.append(num_slow_clust_to_gas2, len(np.where(typ[clust_now_in_gas2[0]]==0)[0]))
+            num_fast_clust_to_gas2 = np.append(num_fast_clust_to_gas2, len(np.where(typ[clust_now_in_gas2[0]]==1)[0]))
+            start_clust_id = np.delete(start_clust_id, gas2_nolonger_in_clust[1])
+            start_gas2_id = np.append(start_gas2_id, clust_now_in_gas2[0])
         else:
-            num_not_clust_to_clust = np.append(num_not_clust_to_clust, 0)
-            num_slow_not_clust_to_clust = np.append(num_slow_not_clust_to_clust, 0)
-            num_fast_not_clust_to_clust = np.append(num_fast_not_clust_to_clust, 0)
+            num_clust_to_gas2 = np.append(num_clust_to_gas2, 0)
+            num_slow_clust_to_gas2 = np.append(num_slow_clust_to_gas2, 0)
+            num_fast_clust_to_gas2 = np.append(num_fast_clust_to_gas2, 0)
+
+        if len(gas2_now_in_clust)>0:
+            num_gas2_to_clust = np.append(num_gas2_to_clust, len(gas2_now_in_clust[0]))
+            num_slow_gas2_to_clust = np.append(num_slow_gas2_to_clust, len(np.where(typ[gas2_now_in_clust[0]]==0)[0]))
+            num_fast_gas2_to_clust = np.append(num_fast_gas2_to_clust, len(np.where(typ[gas2_now_in_clust[0]]==1)[0]))
+            start_gas2_id = np.delete(start_gas2_id, clust_nolonger_in_gas2[1])
+            start_clust_id = np.append(start_clust_id, gas2_now_in_clust[0])
+        else:
+            num_gas2_to_clust = np.append(num_gas2_to_clust, 0)
+            num_slow_gas2_to_clust = np.append(num_slow_gas2_to_clust, 0)
+            num_fast_gas2_to_clust = np.append(num_fast_gas2_to_clust, 0)
 
         if len(bulk_now_in_gas)>0:
             num_bulk_to_gas = np.append(num_bulk_to_gas, len(bulk_now_in_gas[0]))
             num_slow_bulk_to_gas = np.append(num_slow_bulk_to_gas, len(np.where(typ[bulk_now_in_gas[0]]==0)[0]))
             num_fast_bulk_to_gas = np.append(num_fast_bulk_to_gas, len(np.where(typ[bulk_now_in_gas[0]]==1)[0]))
             start_bulk_id = np.delete(start_bulk_id, gas_nolonger_in_bulk[1])
-            start_gas_id = np.append(start_gas_id, bulk_now_in_gas[1])
+            start_gas_id = np.append(start_gas_id, bulk_now_in_gas[0])
         else:
             num_bulk_to_gas = np.append(num_bulk_to_gas, 0)
             num_slow_bulk_to_gas = np.append(num_slow_bulk_to_gas, 0)
@@ -10227,7 +10248,7 @@ if steady_state_once == 'True':
             num_slow_gas_to_bulk = np.append(num_slow_gas_to_bulk, len(np.where(typ[gas_now_in_bulk[0]]==0)[0]))
             num_fast_gas_to_bulk = np.append(num_fast_gas_to_bulk, len(np.where(typ[gas_now_in_bulk[0]]==1)[0]))
             start_gas_id = np.delete(start_gas_id, bulk_nolonger_in_gas[1])
-            start_bulk_id = np.append(start_bulk_id, gas_now_in_bulk[1])
+            start_bulk_id = np.append(start_bulk_id, gas_now_in_bulk[0])
         else:
             num_gas_to_bulk = np.append(num_gas_to_bulk, 0)
             num_slow_gas_to_bulk = np.append(num_slow_gas_to_bulk, 0)
@@ -10238,7 +10259,7 @@ if steady_state_once == 'True':
             num_slow_bulk_to_int = np.append(num_slow_bulk_to_int, len(np.where(typ[bulk_now_in_int[0]]==0)[0]))
             num_fast_bulk_to_int = np.append(num_fast_bulk_to_int, len(np.where(typ[bulk_now_in_int[0]]==1)[0]))
             start_bulk_id_with_int = np.delete(start_bulk_id_with_int, int_nolonger_in_bulk[1])
-            start_int_id_with_int = np.append(start_int_id_with_int, bulk_now_in_int[1])
+            start_int_id_with_int = np.append(start_int_id_with_int, bulk_now_in_int[0])
         else:
             num_bulk_to_int = np.append(num_bulk_to_int, 0)
             num_slow_bulk_to_int = np.append(num_slow_bulk_to_int, 0)
@@ -10249,7 +10270,7 @@ if steady_state_once == 'True':
             num_slow_int_to_bulk = np.append(num_slow_int_to_bulk, len(np.where(typ[int_now_in_bulk[0]]==0)[0]))
             num_fast_int_to_bulk = np.append(num_fast_int_to_bulk, len(np.where(typ[int_now_in_bulk[0]]==1)[0]))
             start_int_id_with_int = np.delete(start_int_id_with_int, bulk_nolonger_in_int[1])
-            start_bulk_id_with_int = np.append(start_bulk_id_with_int, int_now_in_bulk[1])
+            start_bulk_id_with_int = np.append(start_bulk_id_with_int, int_now_in_bulk[0])
         else:
             num_int_to_bulk = np.append(num_int_to_bulk, 0)
             num_slow_int_to_bulk = np.append(num_slow_int_to_bulk, 0)
@@ -10260,7 +10281,7 @@ if steady_state_once == 'True':
             num_slow_gas_to_int = np.append(num_slow_gas_to_int, len(np.where(typ[gas_now_in_int[0]]==0)[0]))
             num_fast_gas_to_int = np.append(num_fast_gas_to_int, len(np.where(typ[gas_now_in_int[0]]==1)[0]))
             start_gas_id_with_int = np.delete(start_gas_id_with_int, int_nolonger_in_gas[1])
-            start_int_id_with_int = np.append(start_int_id_with_int, gas_now_in_int[1])
+            start_int_id_with_int = np.append(start_int_id_with_int, gas_now_in_int[0])
         else:
             num_gas_to_int = np.append(num_gas_to_int, 0)
             num_slow_gas_to_int = np.append(num_slow_gas_to_int, 0)
@@ -10271,22 +10292,44 @@ if steady_state_once == 'True':
             num_slow_int_to_gas = np.append(num_slow_int_to_gas, len(np.where(typ[int_now_in_gas[0]]==0)[0]))
             num_fast_int_to_gas = np.append(num_fast_int_to_gas, len(np.where(typ[int_now_in_gas[0]]==1)[0]))
             start_int_id_with_int = np.delete(start_int_id_with_int, gas_nolonger_in_int[1])
-            start_gas_id_with_int = np.append(start_gas_id_with_int, int_now_in_gas[1])
+            start_gas_id_with_int = np.append(start_gas_id_with_int, int_now_in_gas[0])
         else:
             num_int_to_gas = np.append(num_int_to_gas, 0)
             num_slow_int_to_gas = np.append(num_slow_int_to_gas, 0)
             num_fast_int_to_gas = np.append(num_fast_int_to_gas, 0)
 
+        if len(gas2_now_in_bulk)>0:
+            num_gas2_to_bulk = np.append(num_gas2_to_bulk, len(gas2_now_in_bulk[0]))
+            num_slow_gas2_to_bulk = np.append(num_slow_gas2_to_bulk, len(np.where(typ[gas2_now_in_bulk[0]]==0)[0]))
+            num_fast_gas2_to_bulk = np.append(num_fast_gas2_to_bulk, len(np.where(typ[gas2_now_in_bulk[0]]==1)[0]))
+            start_gas_id_with_int = np.delete(start_gas_id_with_int, bulk_nolonger_in_gas2[1])
+            start_bulk_id_with_int = np.append(start_bulk_id_with_int, gas2_now_in_bulk[0])
+        else:
+            num_gas2_to_bulk = np.append(num_gas2_to_bulk, 0)
+            num_slow_gas2_to_bulk = np.append(num_slow_gas2_to_bulk, 0)
+            num_fast_gas2_to_bulk = np.append(num_fast_gas2_to_bulk, 0)
+
+        if len(bulk_now_in_gas2)>0:
+            num_bulk_to_gas2 = np.append(num_bulk_to_gas2, len(bulk_now_in_gas2[0]))
+            num_slow_bulk_to_gas2 = np.append(num_slow_bulk_to_gas2, len(np.where(typ[bulk_now_in_gas2[0]]==0)[0]))
+            num_fast_bulk_to_gas2 = np.append(num_fast_bulk_to_gas2, len(np.where(typ[bulk_now_in_gas2[0]]==1)[0]))
+            start_bulk_id_with_int = np.delete(start_bulk_id_with_int, gas2_nolonger_in_bulk[1])
+            start_gas_id_with_int = np.append(start_gas_id_with_int, bulk_now_in_gas2[0])
+        else:
+            num_bulk_to_gas2 = np.append(num_bulk_to_gas2, 0)
+            num_slow_bulk_to_gas2 = np.append(num_slow_bulk_to_gas2, 0)
+            num_fast_bulk_to_gas2 = np.append(num_fast_bulk_to_gas2, 0)
+
     g = open(outPath2+outTxt_leak, 'a')
     for i in range(0, int(len(partPhase_time_arr)-1)):
         g.write('{0:.2f}'.format(partPhase_time_arr[i]).center(15) + ' ')
         g.write('{0:.0f}'.format(clust_size_arr[i]).center(15) + ' ')
-        g.write('{0:.0f}'.format(num_not_clust_to_clust[i]).center(15) + ' ')
-        g.write('{0:.0f}'.format(num_slow_not_clust_to_clust[i]).center(15) + ' ')
-        g.write('{0:.0f}'.format(num_fast_not_clust_to_clust[i]).center(15) + ' ')
-        g.write('{0:.0f}'.format(num_clust_to_not_clust[i]).center(15) + ' ')
-        g.write('{0:.0f}'.format(num_slow_clust_to_not_clust[i]).center(15) + ' ')
-        g.write('{0:.0f}'.format(num_fast_clust_to_not_clust[i]).center(15) + ' ')
+        g.write('{0:.0f}'.format(num_gas2_to_clust[i]).center(15) + ' ')
+        g.write('{0:.0f}'.format(num_slow_gas2_to_clust[i]).center(15) + ' ')
+        g.write('{0:.0f}'.format(num_fast_gas2_to_clust[i]).center(15) + ' ')
+        g.write('{0:.0f}'.format(num_clust_to_gas2[i]).center(15) + ' ')
+        g.write('{0:.0f}'.format(num_slow_clust_to_gas2[i]).center(15) + ' ')
+        g.write('{0:.0f}'.format(num_fast_clust_to_gas2[i]).center(15) + ' ')
         g.write('{0:.0f}'.format(num_gas_to_bulk[i]).center(15) + ' ')
         g.write('{0:.0f}'.format(num_slow_gas_to_bulk[i]).center(15) + ' ')
         g.write('{0:.0f}'.format(num_fast_gas_to_bulk[i]).center(15) + ' ')
@@ -10304,5 +10347,11 @@ if steady_state_once == 'True':
         g.write('{0:.0f}'.format(num_fast_bulk_to_int[i]).center(15) + ' ')
         g.write('{0:.0f}'.format(num_int_to_bulk[i]).center(15) + ' ')
         g.write('{0:.0f}'.format(num_slow_int_to_bulk[i]).center(15) + ' ')
-        g.write('{0:.0f}'.format(num_fast_int_to_bulk[i]).center(15) + '\n')
+        g.write('{0:.0f}'.format(num_fast_int_to_bulk[i]).center(15) + ' ')
+        g.write('{0:.0f}'.format(num_bulk_to_gas2[i]).center(15) + ' ')
+        g.write('{0:.0f}'.format(num_slow_bulk_to_gas2[i]).center(15) + ' ')
+        g.write('{0:.0f}'.format(num_fast_bulk_to_gas2[i]).center(15) + ' ')
+        g.write('{0:.0f}'.format(num_gas2_to_bulk[i]).center(15) + ' ')
+        g.write('{0:.0f}'.format(num_slow_gas2_to_bulk[i]).center(15) + ' ')
+        g.write('{0:.0f}'.format(num_fast_gas2_to_bulk[i]).center(15) + '\n')
     g.close()

@@ -75,7 +75,7 @@ peB = float(sys.argv[3])                                #Activity (Pe) for speci
 #Set plot colors
 fastCol = '#e31a1c'
 slowCol = '#081d58'
-    
+
 parFrac_orig = float(sys.argv[4])                       #Fraction of system consists of species A (chi_A)
 
 #Convert particle fraction to a percent
@@ -83,7 +83,7 @@ if parFrac_orig<1.0:
     parFrac=parFrac_orig*100.
 else:
     parFrac=parFrac_orig
- 
+
 if (parFrac == 100.):
     mono=1
     mono_activity=peA
@@ -98,7 +98,7 @@ elif peA==peB:
     mono_type = 2
 else:
     mono=0
-    
+
 eps = float(sys.argv[5])                                #Softness, coefficient of interparticle repulsion (epsilon)
 
 #Set system area fraction (phi)
@@ -109,16 +109,16 @@ try:
 except:
     phi = 0.6
     intPhi = 60
-    
+
 #Get simulation time step
 try:
     dtau = float(sys.argv[7])
 except:
     dtau = 0.000001
-    
+
 #Open input simulation file
 f = hoomd.open(name=infile, mode='rb')
-                
+
 #Get particle number from initial frame
 snap = f[0]
 typ = snap.particles.typeid
@@ -129,24 +129,24 @@ bin_width = float(sys.argv[8])
 time_step = float(sys.argv[9])
 
 # Create outfile name from infile name
-outfile = 'pa'+str(int(peA))+'_pb'+str(int(peB))+'_xa'+str(int(parFrac))+'_eps'+str(eps)+'_phi'+str(int(intPhi))+'_pNum' + str(int(partNum)) 
+outfile = 'pa'+str(int(peA))+'_pb'+str(int(peB))+'_xa'+str(int(parFrac))+'_eps'+str(eps)+'_phi'+str(int(intPhi))+'_pNum' + str(int(partNum))
 out = 'sim_frame_' + outfile + "_frame_"
 
 # Get timesteps to output
 dumps = int(f.__len__())                # get number of timesteps dumped
-start = 500                               # gives first frame to read
+start = 0                               # gives first frame to read
 end = dumps                             # gives last frame to read
 
 def getNBins(length, minSz=(2**(1./6.))):
     '''
     Purpose: Given box size, return number of bins
-    
-    Inputs: 
+
+    Inputs:
         length: length of box
         minSz: set minimum bin length to LJ cut-off distance
     Output: number of bins along box length rounded up
     '''
-    
+
     initGuess = int(length) + 1
     nBins = initGuess
     # This loop only exits on function return
@@ -159,13 +159,13 @@ def getNBins(length, minSz=(2**(1./6.))):
 def roundUp(n, decimals=0):
     '''
     Purpose: Round up number of bins to account for floating point inaccuracy
-    
-    Inputs: 
+
+    Inputs:
         n: number of bins along length of box
         decimals: exponent of multiplier for rounding (default=0)
     Output: number of bins along box length rounded up
     '''
-    
+
     multiplier = 10 ** decimals
     return math.ceil(n * multiplier) / multiplier
 
@@ -184,21 +184,21 @@ with hoomd.open(name=infile, mode='rb') as t:
     l_box = box_data[0]
     h_box = l_box / 2.
     a_box = l_box * l_box
-    
+
     #2D binning of system
     nBins = (getNBins(l_box, r_cut))
     sizeBin = roundUp((l_box / nBins), 6)
-    f_box = box.Box(Lx=l_box, Ly=l_box, is2D=True)    
-    
+    f_box = box.Box(Lx=l_box, Ly=l_box, is2D=True)
+
     #Find particle identifier information
     partNum = len(snap.particles.typeid)                #Get particle number from initial frame
     typ0ind=np.where(snap.particles.typeid==0)[0]       # Calculate which particles are type 0
     typ1ind=np.where(snap.particles.typeid==1)[0]       # Calculate which particles are type 1
-    
+
     '''
     #If you want to colorize monodisperse systems to visualize motion, uncomment
     if (len(typ0ind)>0) and (len(typ1ind)>0):
-        pass      
+        pass
     else:
             typ0ind = random.sample(range(int(partNum)), int(partNum/2))
             typ1ind = np.array([], dtype=int)
@@ -208,25 +208,25 @@ with hoomd.open(name=infile, mode='rb') as t:
                 else:
                     typ1ind = np.append(typ1ind, int(i))
     '''
-                    
+
     # Loop through snapshots
     for j in range(start, end):
-        
-        
+
+
         # Get the current snapshot
         snap = t[j]
-        
+
         # Easier accessors
         pos = snap.particles.position               # position
         pos[:,-1] = 0.0
         xy = np.delete(pos, 2, 1)
 
         typ = snap.particles.typeid                 # type
-        
+
         tst = snap.configuration.step               # timestep
         tst -= first_tstep                          # normalize by first timestep
         tst *= dtau                                 # convert to Brownian time
-        
+
         #Identify clusters
         system_all = freud.AABBQuery(f_box, f_box.wrap(pos))        #Make neighbor list of particles
         cl_all=freud.cluster.Cluster()                              #Define cluster
@@ -235,28 +235,28 @@ with hoomd.open(name=infile, mode='rb') as t:
         clp_all = freud.cluster.ClusterProperties()                 #Define cluster properties
         ids = cl_all.cluster_idx                                    # get id of each cluster
         clp_all.compute(system_all, ids)                            # Calculate cluster properties given cluster IDs
-        
+
         clust_size = clp_all.sizes                                  # find cluster sizes
         min_size=int(partNum/5)                                     #Define minimum size of largest cluster to perform measurement
         lcID = np.where(clust_size == np.amax(clust_size))[0][0]    #Find ID of largest cluster
         large_clust_ind_all=np.where(clust_size>min_size)           #Find IDs of clusters with size larger than minimum limit
-        
+
         query_points=clp_all.centers[lcID]                          #Find CoM of largest cluster
         #com_tmp_posX = query_points[0]# + h_box                     #X position of largest cluster's CoM
         #com_tmp_posY = query_points[1]# + h_box                     #Y position of largest cluster's CoM
         com_tmp_posX = np.mean(pos[:,0])
         com_tmp_posY = np.mean(pos[:,1])
         #Shift origin (0,0) to cluster's CoM
-        pos[:,0]= pos[:,0]-com_tmp_posX                             
+        pos[:,0]= pos[:,0]-com_tmp_posX
         pos[:,1]= pos[:,1]-com_tmp_posY
-        
+
         #Enforce periodic boundary conditions
         for i in range(0, partNum):
             if pos[i,0]>h_box:
                 pos[i,0]=pos[i,0]-l_box
             elif pos[i,0]<-h_box:
                 pos[i,0]=pos[i,0]+l_box
-                
+
             if pos[i,1]>h_box:
                 pos[i,1]=pos[i,1]-l_box
             elif pos[i,1]<-h_box:
@@ -267,29 +267,29 @@ with hoomd.open(name=infile, mode='rb') as t:
             #Local each particle's positions
             pos0=pos[typ0ind]                               # Find positions of type 0 particles
             pos1=pos[typ1ind]
-            
+
             # Create frame pad for images
             pad = str(j).zfill(4)
-            
+
             #Plot each particle as a point color-coded by activity and labeled by their activity
-            fig = plt.figure(figsize=(6.5,6)) 
-            ax = fig.add_subplot(111)  
-            
-            
-                
-                
+            fig = plt.figure(figsize=(6.5,6))
+            ax = fig.add_subplot(111)
+
+
+
+
             sz = 0.75
             #Assign type 0 particles to plot
-            
+
             ells0 = [Ellipse(xy=pos0[i,:],
                     width=sz, height=sz, label='PeA: '+str(peA))
             for i in range(0,len(typ0ind))]
-            
+
             #Assign type 1 particles to plot
             ells1 = [Ellipse(xy=pos1[i,:],
                     width=sz, height=sz, label='PeB: '+str(peB))
             for i in range(0,len(typ1ind))]
-            
+
             # Plot position colored by neighbor number
             if peA <= peB:
                 slowGroup = mc.PatchCollection(ells0, facecolors=slowCol)
@@ -299,14 +299,14 @@ with hoomd.open(name=infile, mode='rb') as t:
                 fastGroup = mc.PatchCollection(ells0,facecolors=fastCol)
             ax.add_collection(slowGroup)
             ax.add_collection(fastGroup)
-            
+
             #Label time step
             ax.text(0.95, 0.025, s=r'$\tau$' + ' = ' + '{:.2f}'.format(3*tst) + ' ' + r'$\tau_\mathrm{r}$',
                     horizontalalignment='right', verticalalignment='bottom',
                     transform=ax.transAxes,
                     fontsize=18,
                     bbox=dict(facecolor=(1,1,1,0.5), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
-            
+
             #Set axes parameters
             ax.set_xlim(-h_box, h_box)
             ax.set_ylim(-h_box, h_box)
@@ -315,7 +315,7 @@ with hoomd.open(name=infile, mode='rb') as t:
             ax.axes.set_xticklabels([])
             ax.axes.set_yticks([])
             ax.set_aspect('equal')
-            
+
             #Create legend for binary system
             if parFrac<100.0:
                 leg = ax.legend(handles=[ells0[0], ells1[1]], labels=[r'$\mathrm{Pe}_\mathrm{A} = $'+str(int(peA)), r'$\mathrm{Pe}_\mathrm{B} = $'+str(int(peB))], loc='upper right', prop={'size': 15}, markerscale=8.0)
@@ -332,39 +332,39 @@ with hoomd.open(name=infile, mode='rb') as t:
             plt.tight_layout()
             plt.savefig(outPath+out + pad + ".png", dpi=150, transparent=False)
             plt.close()
-            
+
         elif mono == 1:
             if mono_type == 0:
                 #Local each particle's positions
                 pos0=pos[typ0ind]                               # Find positions of type 0 particles
-                
+
                 # Create frame pad for images
                 pad = str(j).zfill(4)
-                
+
                 #Plot each particle as a point color-coded by activity and labeled by their activity
-                fig = plt.figure(figsize=(6.5,6)) 
-                ax = fig.add_subplot(111)  
-                
-                
-                    
-                    
+                fig = plt.figure(figsize=(6.5,6))
+                ax = fig.add_subplot(111)
+
+
+
+
                 sz = 0.75
                 #Assign type 0 particles to plot
                 ells0 = [Ellipse(xy=pos0[i,:],
                         width=sz, height=sz, label='Pe: '+str(peA))
                 for i in range(0,len(typ0ind))]
-                
+
                 # Plot position colored by neighbor number
                 slowGroup = mc.PatchCollection(ells0, facecolors=slowCol)
                 ax.add_collection(slowGroup)
-                
+
                 #Label time step
                 ax.text(0.95, 0.025, s=r'$\tau$' + ' = ' + '{:.2f}'.format(3*tst) + ' ' + r'$\tau_\mathrm{r}$',
                         horizontalalignment='right', verticalalignment='bottom',
                         transform=ax.transAxes,
                         fontsize=18,
                         bbox=dict(facecolor=(1,1,1,0.5), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
-                
+
                 #Set axes parameters
                 ax.set_xlim(-h_box, h_box)
                 ax.set_ylim(-h_box, h_box)
@@ -373,7 +373,7 @@ with hoomd.open(name=infile, mode='rb') as t:
                 ax.axes.set_xticklabels([])
                 ax.axes.set_yticks([])
                 ax.set_aspect('equal')
-                
+
 
                 leg = ax.legend(handles=[ells0[0]], labels=[r'$\mathrm{Pe} = $'+str(int(peA))], loc='upper right', prop={'size': 15}, markerscale=8.0)
                 leg.legendHandles[0].set_color(slowCol)
@@ -383,34 +383,34 @@ with hoomd.open(name=infile, mode='rb') as t:
             elif mono_type == 1:
                 #Local each particle's positions
                 pos0=pos[typ1ind]                               # Find positions of type 0 particles
-                
+
                 # Create frame pad for images
                 pad = str(j).zfill(4)
-                
+
                 #Plot each particle as a point color-coded by activity and labeled by their activity
-                fig = plt.figure(figsize=(6.5,6)) 
-                ax = fig.add_subplot(111)  
-                
-                
-                    
-                    
+                fig = plt.figure(figsize=(6.5,6))
+                ax = fig.add_subplot(111)
+
+
+
+
                 sz = 0.75
                 #Assign type 0 particles to plot
                 ells0 = [Ellipse(xy=pos0[i,:],
                         width=sz, height=sz, label='Pe: '+str(peB))
                 for i in range(0,len(typ0ind))]
-                
+
                 # Plot position colored by neighbor number
                 slowGroup = mc.PatchCollection(ells0, facecolors=slowCol)
                 ax.add_collection(slowGroup)
-                
+
                 #Label time step
                 ax.text(0.95, 0.025, s=r'$\tau$' + ' = ' + '{:.2f}'.format(3*tst) + ' ' + r'$\tau_\mathrm{r}$',
                         horizontalalignment='right', verticalalignment='bottom',
                         transform=ax.transAxes,
                         fontsize=18,
                         bbox=dict(facecolor=(1,1,1,0.5), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
-                
+
                 #Set axes parameters
                 ax.set_xlim(-h_box, h_box)
                 ax.set_ylim(-h_box, h_box)
@@ -419,7 +419,7 @@ with hoomd.open(name=infile, mode='rb') as t:
                 ax.axes.set_xticklabels([])
                 ax.axes.set_yticks([])
                 ax.set_aspect('equal')
-                
+
 
                 leg = ax.legend(handles=[ells0[0]], labels=[r'$\mathrm{Pe} = $'+str(int(peB))], loc='upper right', prop={'size': 15}, markerscale=8.0)
                 leg.legendHandles[0].set_color(slowCol)
@@ -429,17 +429,17 @@ with hoomd.open(name=infile, mode='rb') as t:
             elif mono_type == 2:
                 #Local each particle's positions
                 pos0=pos[typ0ind]                               # Find positions of type 0 particles
-                pos1=pos[typ1ind]  
+                pos1=pos[typ1ind]
                 # Create frame pad for images
                 pad = str(j).zfill(4)
-                
+
                 #Plot each particle as a point color-coded by activity and labeled by their activity
-                fig = plt.figure(figsize=(6.5,6)) 
-                ax = fig.add_subplot(111)  
-                
-                
-                    
-                    
+                fig = plt.figure(figsize=(6.5,6))
+                ax = fig.add_subplot(111)
+
+
+
+
                 sz = 0.75
                 #Assign type 0 particles to plot
                 ells0 = [Ellipse(xy=pos0[i,:],
@@ -448,20 +448,20 @@ with hoomd.open(name=infile, mode='rb') as t:
                 ells1 = [Ellipse(xy=pos1[i,:],
                         width=sz, height=sz, label='Pe: '+str(peB))
                 for i in range(0,len(typ1ind))]
-                
+
                 # Plot position colored by neighbor number
                 slowGroup = mc.PatchCollection(ells0, facecolors=slowCol)
                 ax.add_collection(slowGroup)
                 fastGroup = mc.PatchCollection(ells1, facecolors=slowCol)
                 ax.add_collection(fastGroup)
-                
+
                 #Label time step
                 ax.text(0.95, 0.025, s=r'$\tau$' + ' = ' + '{:.2f}'.format(3*tst) + ' ' + r'$\tau_\mathrm{r}$',
                         horizontalalignment='right', verticalalignment='bottom',
                         transform=ax.transAxes,
                         fontsize=18,
                         bbox=dict(facecolor=(1,1,1,0.5), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
-                
+
                 #Set axes parameters
                 ax.set_xlim(-h_box, h_box)
                 ax.set_ylim(-h_box, h_box)
@@ -470,7 +470,7 @@ with hoomd.open(name=infile, mode='rb') as t:
                 ax.axes.set_xticklabels([])
                 ax.axes.set_yticks([])
                 ax.set_aspect('equal')
-                
+
 
                 leg = ax.legend(handles=[ells0[0]], labels=[r'$\mathrm{Pe} = $'+str(int(peB))], loc='upper right', prop={'size': 15}, markerscale=8.0)
                 leg.legendHandles[0].set_color(slowCol)

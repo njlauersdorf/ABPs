@@ -2807,9 +2807,13 @@ with hoomd.open(name=inFile, mode='rb') as t:
         #If bubbles exist, calculate the structure ID for the interface
         if len(bub_ids)>0:
             interface_id = bub_size_id_arr[np.min(np.where(if_bub_id_arr==1)[0])]
+        else:
+            interface_id = 0
         #If bulk/gas exist, calculate the structure ID for the gas/bulk
         if len(bulk_ids)>0:
             bulk_id = bub_size_id_arr[np.min(np.where(if_bub_id_arr==0)[0])]
+        else:
+            bulk_id = 0
 
         # Individually label each interface until all edge bins identified using flood fill algorithm
         if len(bub_ids)>0:
@@ -10153,7 +10157,10 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 else:
                     pe_tot_int += peB
                     pe_num_int += 1
-            pe_net_int = pe_tot_int / pe_num_int
+            if pe_num_int>0:
+                pe_net_int = pe_tot_int / pe_num_int
+            else:
+                pe_net_int = 0
 
             query_args = dict(mode='nearest', r_min = 0.1, num_neighbors=6)
 
@@ -10987,7 +10994,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
         plt.close()
         '''
 
-
+x_max_bulk = 600
+x_arr_bulk = np.linspace(0, x_max_bulk, num=100)
 
 fig = plt.figure(figsize=(8,6))
 ax = fig.add_subplot(111)
@@ -11006,6 +11014,7 @@ ax.xaxis.set_minor_locator(loc)
 #if (len(push_velocity_bulk_slow)>0):
 
 #    plt.hist(push_velocity_bulk_slow, bins = x_arr, alpha = 0.5, color=slowCol, density=True)
+
 
 if (len(velocity_bulk_fast)>0):
     plt.hist(velocity_bulk_fast_time, bins = x_arr_bulk, alpha = 0.5, color=fastCol, density=True)
