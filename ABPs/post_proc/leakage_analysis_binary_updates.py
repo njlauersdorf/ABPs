@@ -464,6 +464,8 @@ lat_theory_arr = np.array([])
 g = open(outPath2+outTxt_leak, 'w+') # write file headings
 g.write('tst'.center(15) + ' ' +\
                         'clust_size'.center(15) + ' ' +\
+                        'Ngas_to_clust_p'.center(15) + ' ' +\
+                        'Nclust_to_gas_p'.center(15) + ' ' +\
                         'Ngas_to_clust'.center(15) + ' ' +\
                         'Nsgas_to_clust'.center(15) + ' ' +\
                         'Nfgas_to_clust'.center(15) + ' ' +\
@@ -643,7 +645,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                                # first frame to process
     dumps = int(t.__len__())
     start = int(0/time_step)#205                             # get number of timesteps dumped
-    end = int(dumps/time_step)#int(dumps/time_step)-1                                             # final frame to process
+    end = start + 20# int(dumps/time_step)#int(dumps/time_step)-1                                             # final frame to process
     snap = t[0]                                             # Take first snap for box
     first_tstep = snap.configuration.step                   # First time step
 
@@ -10322,8 +10324,10 @@ if steady_state_once == 'True':
 
     g = open(outPath2+outTxt_leak, 'a')
     for i in range(0, int(len(partPhase_time_arr)-1)):
-        g.write('{0:.2f}'.format(partPhase_time_arr[i]).center(15) + ' ')
+        g.write('{0:.2f}'.format(partPhase_time_arr[i+1]).center(15) + ' ')
         g.write('{0:.0f}'.format(clust_size_arr[i]).center(15) + ' ')
+        g.write('{0:.0f}'.format(num_gas_to_bulk[i] + num_gas_to_int[i]).center(15) + ' ')
+        g.write('{0:.0f}'.format(num_bulk_to_gas[i] + num_int_to_gas[i]).center(15) + ' ')
         g.write('{0:.0f}'.format(num_gas2_to_clust[i]).center(15) + ' ')
         g.write('{0:.0f}'.format(num_slow_gas2_to_clust[i]).center(15) + ' ')
         g.write('{0:.0f}'.format(num_fast_gas2_to_clust[i]).center(15) + ' ')
