@@ -38,6 +38,7 @@ import matplotlib.patches as patches
 
 import numpy as np
 import matplotlib
+
 if hoomdPath == '/nas/longleaf/home/njlauers/hoomd-blue/build':
     matplotlib.use('Agg')
 else:

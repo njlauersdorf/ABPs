@@ -33,7 +33,7 @@ outPath2=str(sys.argv[11])
 outPath=str(sys.argv[12])
 
 # Add hoomd location to Path
-sys.path.insert(0,hoomdPath)
+#sys.path.insert(0,hoomdPath)
 
 from gsd import hoomd
 import freud

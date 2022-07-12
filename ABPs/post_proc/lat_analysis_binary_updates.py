@@ -528,6 +528,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
     l_box = box_data[0]                                     #box length
     h_box = l_box / 2.0                                     #half box length
 
+    print(l_box)
+
     #2D binning of system
     NBins = getNBins(l_box, r_cut)
     sizeBin = roundUp((l_box / NBins), 6)
@@ -557,6 +559,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
         tst = snap.configuration.step               # timestep
         tst -= first_tstep                          # normalize by first timestep
         tst *= dtau                                 # convert to Brownian time
+        print(tst)
+        if p==1:
+            stop
         time_arr[j]=tst
 
         #Compute cluster parameters using system_all neighbor list
@@ -10144,6 +10149,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
         pos_gas = pos[gas_id_plot]
         pos_bulk_int = pos[bulk_int_id_plot]
         pos_gas_int = pos[gas_int_id_plot]
+
         if (len(bulk_id_plot)>0) & (len(fast_bulk_id_plot)>0) & (len(slow_bulk_id_plot)>0):
             pe_tot_int = 0
             pe_num_int = 0
