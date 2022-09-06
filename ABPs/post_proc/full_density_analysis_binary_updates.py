@@ -541,7 +541,7 @@ g.close()
 with hoomd.open(name=inFile, mode='rb') as t:
 
     dumps = int(t.__len__())
-    start = int(0/time_step)#205                                             # first frame to process
+    start = int(400/time_step)#205                                             # first frame to process
                                 # get number of timesteps dumped
     end = int(dumps/time_step)-1                                             # final frame to process
     snap = t[0]                                             # Take first snap for box
@@ -603,8 +603,10 @@ with hoomd.open(name=inFile, mode='rb') as t:
         #If a single cluster is greater than minimum size, determine CoM of largest cluster
         if len(large_clust_ind_all[0])>0:
             query_points=clp_all.centers[lcID]
+
             com_tmp_posX = query_points[0] + h_box
             com_tmp_posY = query_points[1] + h_box
+
 
             com_tmp_posX_temp = query_points[0]
             com_tmp_posY_temp = query_points[1]
@@ -615,6 +617,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
             com_tmp_posX_temp = 0
             com_tmp_posY_temp = 0
+
 
         #shift reference frame to center of mass of cluster
         pos[:,0]= pos[:,0]-com_tmp_posX_temp
@@ -776,6 +779,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
         #Re-create bins for true measurement (txt file output)
         NBins = getNBins(l_box, bin_width)
+
         sizeBin = roundUp(((l_box) / NBins), 6)
 
         #Initialize arrays to save to
@@ -1052,7 +1056,6 @@ with hoomd.open(name=inFile, mode='rb') as t:
                         else:
                             p_avg_xB[ix][iy] = 0.0
                             p_avg_yB[ix][iy] = 0.0
-
 
         # Search 2 bins around each bin to average alignment (reduce noise)
         for ix in range(0, NBins):
@@ -1444,9 +1447,6 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     for h in range(0, len(binParts[ix][iy])):
                         partPhase[binParts[ix][iy][h]]=phaseBin[ix][iy]
                         partTyp[binParts[ix][iy][h]]=typ[binParts[ix][iy][h]]
-
-
-
 
 
 

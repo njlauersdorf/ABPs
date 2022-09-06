@@ -5,8 +5,8 @@
 #SBATCH --mem=10g
 # Command to increase memory allocated --mem=100g
 
-source ~/.bashrc
-conda activate rekt
+#source ~/.bashrc
+#conda activate rekt
 
 #This is the path to hoomd
 hoomd_path=$1
@@ -108,6 +108,8 @@ fi
 which python3
 if [ "$method" = "interface_pressure_com" ]; then
     python3 $script_path/align_pressure_CoM.py $fname $pa2 $pb $xa2 $ep $phi $dtau $bin $step $hoomd_path $txt_path $pic_path
+elif [ "$method" = "dens_test" ]; then
+    python3 $script_path/full_density_analysis_binary_updates_temp.py $fname $pa2 $pb $xa2 $ep $phi $dtau $bin $step $hoomd_path $txt_path $pic_path
 elif [ "$method" = "interface_pressure_surface" ]; then
     python3 $script_path/align_pressure_updated.py $fname $pa2 $pb $xa2 $ep $phi $dtau $bin $step $hoomd_path $txt_path $pic_path
 elif [ "$method" = "bulk_pressure_total" ]; then
