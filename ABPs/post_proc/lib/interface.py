@@ -495,13 +495,13 @@ class interface:
                             int_surface_y = np.append(int_surface_y, surface1_y_id[v])
                 elif (surface1_num > 0) & (surface2_num == 0):
                     for v in range(0, len(surface1_x_id)):
-                        ext_surface_x = np.append(ext_x, surface1_x_id[v])
-                        ext_surface_y = np.append(ext_y, surface1_y_id[v])
+                        ext_surface_x = np.append(ext_surface_x, surface1_x_id[v])
+                        ext_surface_y = np.append(ext_surface_y, surface1_y_id[v])
 
                 elif (surface1_num == 0) & (surface2_num > 0):
                     for v in range(0, len(surface2_x_id)):
-                        ext_surface_x = np.append(ext_x, surface2_x_id[v])
-                        ext_surface_y = np.append(ext_y, surface2_y_id[v])
+                        ext_surface_x = np.append(ext_surface_x, surface2_x_id[v])
+                        ext_surface_y = np.append(ext_surface_y, surface2_y_id[v])
 
                 int_surface_num = len(int_surface_x)
                 ext_surface_num = len(ext_surface_x)
@@ -1025,12 +1025,12 @@ class interface:
                 xn_pos_non_per = np.zeros(1)
                 yn_pos_non_per = np.zeros(1)
 
-                xn_pos[0] = int_x[0]
-                yn_pos[0] = int_y[0]
-                xn_pos[0] = int_x[0] * self.sizeBin
-                yn_pos[0] = int_y[0] * self.sizeBin
-                xn_pos_non_per[0] = int_x[0] * self.sizeBin
-                yn_pos_non_per[0] = int_y[0] * self.sizeBin
+                xn_pos[0] = int_surface_x[0]
+                yn_pos[0] = int_surface_y[0]
+                xn_pos[0] = int_surface_x[0] * self.sizeBin
+                yn_pos[0] = int_surface_y[0] * self.sizeBin
+                xn_pos_non_per[0] = int_surface_x[0] * self.sizeBin
+                yn_pos_non_per[0] = int_surface_y[0] * self.sizeBin
                 if xn[0] < 0:
                     xn[0]+=self.NBins
                 if xn[0]>=self.NBins:
@@ -1052,8 +1052,8 @@ class interface:
                     yn_pos[0]-=self.l_box
 
         else:
-            xn=np.array([int_x[0]])
-            yn=np.array([int_y[0]])
+            xn=np.array([int_surface_x[0]])
+            yn=np.array([int_surface_y[0]])
             xn_pos = np.copy(xn)
             yn_pos = np.copy(yn)
             xn_pos_non_per = np.copy(xn)
