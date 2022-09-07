@@ -2189,6 +2189,7 @@ class interface:
         method1_align_dict = {'bin': {'all': {'x': new_align_avg_trad_x, 'y': new_align_avg_trad_y, 'mag': new_align_avg_trad, 'num': new_align_num}, 'A': {'x': new_align_avg_trad_x0, 'y': new_align_avg_trad_y0, 'mag': new_align_avg_trad0, 'num': new_align_num0}, 'B': {'x': new_align_avg_trad_x1, 'y': new_align_avg_trad_y1, 'mag': new_align_avg_trad1, 'num': new_align_num1}}, 'part': part_align}
         method2_align_dict = {'bin': {'all': {'x': new_align_avg_x, 'y': new_align_avg_y, 'mag': new_align_avg, 'num': new_align_num}, 'A': {'x': new_align_avg_x0, 'y': new_align_avg_y0, 'mag': new_align_avg0, 'num': new_align_num0}, 'B': {'x': new_align_avg_x1, 'y': new_align_avg_y1, 'mag': new_align_avg1, 'num': new_align_num1}}, 'part': {'align': part_align, 'difr': part_difr}}
         return  method1_align_dict, method2_align_dict
+    """
     def fourier_analysis(self, radius_dict, n_len = 21):
 
         def fourier(x, *a):
@@ -2202,13 +2203,13 @@ class interface:
         import matplotlib.pyplot as plt
 
         def fourier_series(x, f, n=0):
-            """
+            '''
             Returns a symbolic fourier series of order `n`.
 
             :param n: Order of the fourier series.
             :param x: Independent variable
             :param f: Frequency of the fourier series
-            """
+            '''
             # Make the parameter objects for all the terms
             a0, *cos_a = parameters(','.join(['a{}'.format(i) for i in range(0, n + 1)]))
             sin_b = parameters(','.join(['b{}'.format(i) for i in range(1, n + 1)]))
@@ -2241,3 +2242,4 @@ class interface:
 
         fourier_dict = {'modes': n_arr, 'coeffs': coeffs}
         return fourier_dict
+    """
