@@ -1425,6 +1425,7 @@ class interface:
         new_align_avg_dif = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
 
         part_align = np.zeros(self.partNum)
+        part_difr = np.zeros(self.partNum)
 
         int_id = int_dict['bin']
 
@@ -1638,7 +1639,7 @@ class interface:
                                     new_align_trad_x[ix][iy] += x_dot_p_trad
                                     new_align_trad_y[ix][iy] += y_dot_p_trad
                                     part_align[self.binParts[ix][iy][h]] = r_dot_p
-
+                                    part_difr[self.binParts[ix][iy][h]] = difr_short
                                     if self.typ[self.binParts[ix][iy][h]]==0:
                                         new_align0[ix][iy] += r_dot_p
                                         new_align_x0[ix][iy] += x_dot_p
@@ -1692,7 +1693,7 @@ class interface:
 
 
         method1_align_dict = {'bin': {'all': {'x': new_align_avg_trad_x, 'y': new_align_avg_trad_y, 'mag': new_align_avg_trad, 'num': new_align_num}, 'A': {'x': new_align_avg_trad_x0, 'y': new_align_avg_trad_y0, 'mag': new_align_avg_trad0, 'num': new_align_num0}, 'B': {'x': new_align_avg_trad_x1, 'y': new_align_avg_trad_y1, 'mag': new_align_avg_trad1, 'num': new_align_num1}}, 'part': part_align}
-        method2_align_dict = {'bin': {'all': {'x': new_align_avg_x, 'y': new_align_avg_y, 'mag': new_align_avg, 'num': new_align_num}, 'A': {'x': new_align_avg_x0, 'y': new_align_avg_y0, 'mag': new_align_avg0, 'num': new_align_num0}, 'B': {'x': new_align_avg_x1, 'y': new_align_avg_y1, 'mag': new_align_avg1, 'num': new_align_num1}}, 'part': part_align}
+        method2_align_dict = {'bin': {'all': {'x': new_align_avg_x, 'y': new_align_avg_y, 'mag': new_align_avg, 'num': new_align_num}, 'A': {'x': new_align_avg_x0, 'y': new_align_avg_y0, 'mag': new_align_avg0, 'num': new_align_num0}, 'B': {'x': new_align_avg_x1, 'y': new_align_avg_y1, 'mag': new_align_avg1, 'num': new_align_num1}}, 'part': {'align': part_align, 'difr': part_difr}}
         return  method1_align_dict, method2_align_dict
     def bulk_alignment(self, method1_align_dict, method2_align_dict, surface_measurements, surface_curve, sep_surface_dict, bulk_dict, bulk_comp_dict, int_comp_dict):
         #Calculate alignment of bulk particles
@@ -1754,7 +1755,8 @@ class interface:
         new_align_num0 = method1_align_dict['bin']['A']['num']
         new_align_num1 = method1_align_dict['bin']['B']['num']
 
-        part_align = method1_align_dict['part']
+        part_align = method2_align_dict['part']['align']
+        part_difr = method2_align_dict['part']['difr']
 
         for m in range(0, len(bulk_large_ids)):
 
@@ -1886,7 +1888,7 @@ class interface:
 
                                     #Save alignment of each particle
                                     part_align[self.binParts[ix][iy][h]] = r_dot_p
-
+                                    part_difr[self.binParts[ix][iy][h]] = difr_short
                                     #Calculate alignment of all particles per bin
                                     new_align[ix][iy] += r_dot_p
                                     new_align_x[ix][iy] += x_dot_p
@@ -1952,7 +1954,7 @@ class interface:
                             new_align_avg_trad_y1[ix][iy] = new_align_trad_y1[ix][iy] / new_align_num1[ix][iy]
 
         method1_align_dict = {'bin': {'all': {'x': new_align_avg_trad_x, 'y': new_align_avg_trad_y, 'mag': new_align_avg_trad, 'num': new_align_num}, 'A': {'x': new_align_avg_trad_x0, 'y': new_align_avg_trad_y0, 'mag': new_align_avg_trad0, 'num': new_align_num0}, 'B': {'x': new_align_avg_trad_x1, 'y': new_align_avg_trad_y1, 'mag': new_align_avg_trad1, 'num': new_align_num1}}, 'part': part_align}
-        method2_align_dict = {'bin': {'all': {'x': new_align_avg_x, 'y': new_align_avg_y, 'mag': new_align_avg, 'num': new_align_num}, 'A': {'x': new_align_avg_x0, 'y': new_align_avg_y0, 'mag': new_align_avg0, 'num': new_align_num0}, 'B': {'x': new_align_avg_x1, 'y': new_align_avg_y1, 'mag': new_align_avg1, 'num': new_align_num1}}, 'part': part_align}
+        method2_align_dict = {'bin': {'all': {'x': new_align_avg_x, 'y': new_align_avg_y, 'mag': new_align_avg, 'num': new_align_num}, 'A': {'x': new_align_avg_x0, 'y': new_align_avg_y0, 'mag': new_align_avg0, 'num': new_align_num0}, 'B': {'x': new_align_avg_x1, 'y': new_align_avg_y1, 'mag': new_align_avg1, 'num': new_align_num1}}, 'part': {'align': part_align, 'difr': part_difr}}
         return  method1_align_dict, method2_align_dict
     def gas_alignment(self, method1_align_dict, method2_align_dict, surface_measurements, surface_curve, sep_surface_dict, int_comp_dict):
 
@@ -2006,7 +2008,8 @@ class interface:
         new_align_num0 = method1_align_dict['bin']['A']['num']
         new_align_num1 = method1_align_dict['bin']['B']['num']
 
-        part_align = method1_align_dict['part']
+        part_align = method2_align_dict['part']['align']
+        part_difr = method2_align_dict['part']['difr']
 
         #Calculate alignment of gas bins
         #Loop over bins in system
@@ -2120,6 +2123,7 @@ class interface:
                             #Calculate total alignment and number of particles per bin for all particles
 
                             part_align[self.binParts[ix][iy][h]] = r_dot_p
+                            part_difr[self.binParts[ix][iy][h]] = difr_short
                             new_align[ix][iy] += r_dot_p
                             new_align_x[ix][iy] += x_dot_p
                             new_align_y[ix][iy] += y_dot_p
@@ -2183,7 +2187,7 @@ class interface:
                             new_align_avg_trad_y1[ix][iy] = new_align_trad_y1[ix][iy] / new_align_num1[ix][iy]
 
         method1_align_dict = {'bin': {'all': {'x': new_align_avg_trad_x, 'y': new_align_avg_trad_y, 'mag': new_align_avg_trad, 'num': new_align_num}, 'A': {'x': new_align_avg_trad_x0, 'y': new_align_avg_trad_y0, 'mag': new_align_avg_trad0, 'num': new_align_num0}, 'B': {'x': new_align_avg_trad_x1, 'y': new_align_avg_trad_y1, 'mag': new_align_avg_trad1, 'num': new_align_num1}}, 'part': part_align}
-        method2_align_dict = {'bin': {'all': {'x': new_align_avg_x, 'y': new_align_avg_y, 'mag': new_align_avg, 'num': new_align_num}, 'A': {'x': new_align_avg_x0, 'y': new_align_avg_y0, 'mag': new_align_avg0, 'num': new_align_num0}, 'B': {'x': new_align_avg_x1, 'y': new_align_avg_y1, 'mag': new_align_avg1, 'num': new_align_num1}}, 'part': part_align}
+        method2_align_dict = {'bin': {'all': {'x': new_align_avg_x, 'y': new_align_avg_y, 'mag': new_align_avg, 'num': new_align_num}, 'A': {'x': new_align_avg_x0, 'y': new_align_avg_y0, 'mag': new_align_avg0, 'num': new_align_num0}, 'B': {'x': new_align_avg_x1, 'y': new_align_avg_y1, 'mag': new_align_avg1, 'num': new_align_num1}}, 'part': {'align': part_align, 'difr': part_difr}}
         return  method1_align_dict, method2_align_dict
     def fourier_analysis(self, radius_dict, n_len = 21):
 

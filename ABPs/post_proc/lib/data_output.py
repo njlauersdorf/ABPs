@@ -184,3 +184,123 @@ class data_output:
                                 f.write('{0:.6f}'.format(data[i]).center(20) + ' ')
             else:
                 raise ValueError('System has already been run. Delete previous save file if you wish to proceed.')
+    def write_to_txt(self, input_dict, outPath):
+
+        #Output values for radial measurements from CoM
+        headers = ['tauB', 'sizeBin', 'clust_size']
+        data = [self.tst, self.sizeBin, self.clust_size]
+
+        is_file = os.path.isfile(outPath)
+        for key, value in input_dict.items():
+            if isinstance(value, dict):
+                for key2, value2 in value.items():
+
+                    if isinstance(value2, dict):
+                        for key3, value3 in value2.items():
+                            key_new = key + '_' + key2 + '_' + key3
+                            headers.append(key_new)
+                            data.append(value3)
+
+                    else:
+                        key_new = key + '_' + key2
+                        headers.append(key_new)
+                        data.append(value2)
+            else:
+                headers.append(key)
+                data.append(value)
+
+        if is_file == 0:
+            header_string = ''
+            with open(outPath, 'w+') as f:
+                for i in range(0, len(headers)):
+                    if i == len(headers)-1:
+                        header_string += headers[i].center(20) + '\n'
+                    else:
+                        header_string += headers[i].center(20) + ' '
+                f.write(header_string)
+
+            arr_ind = 0
+            arr_len = 1
+
+            for i in range(0, len(data)):
+                if type(data[i])==list:
+                    arr_len_temp = len(data[i])
+                    if arr_len_temp > arr_len:
+                        arr_len = arr_len_temp
+
+            with open(outPath, 'a') as f:
+                while arr_ind < arr_len:
+                    #print(arr_ind)
+                    for i in range(0, len(data)):
+                        if i == len(data)-1:
+                            if type(data[i])==list:
+                                f.write('{0:.6f}'.format(data[i][arr_ind]).center(20) + '\n')
+                                arr_ind += 1
+                            elif type(data[i])==int:
+                                f.write('{0:.0f}'.format(data[i]).center(20) + '\n')
+                                arr_ind += 1
+                            elif type(data[i])==float:
+                                f.write('{0:.6f}'.format(data[i]).center(20) + '\n')
+                                arr_ind += 1
+                            else:
+                                f.write('{0:.6f}'.format(data[i]).center(20) + '\n')
+                                arr_ind += 1
+
+                        else:
+                            if type(data[i])==list:
+                                f.write('{0:.6f}'.format(data[i][arr_ind]).center(20) + ' ')
+                            elif type(data[i])==int:
+                                f.write('{0:.0f}'.format(data[i]).center(20) + ' ')
+                            elif type(data[i]==float):
+                                f.write('{0:.6f}'.format(data[i]).center(20) + ' ')
+                            else:
+                                f.write('{0:.6f}'.format(data[i]).center(20) + ' ')
+
+
+        else:
+            with open(outPath, 'r',) as f:
+                #csvReader = csv.reader(f)
+                final_line = f.readlines()[-1].strip()
+
+            tst_ind = final_line.find(' ')
+            prev_tst = float(final_line[:tst_ind])
+            if round(self.tst - prev_tst, 1)==round(self.dt_step, 1):
+
+                arr_ind = 0
+                arr_len = 1
+
+                for i in range(0, len(data)):
+                    if type(data[i])==list:
+                        arr_len_temp = len(data[i])
+                        if arr_len_temp > arr_len:
+                            arr_len = arr_len_temp
+
+                with open(outPath, 'a') as f:
+                    while arr_ind < arr_len:
+                        for i in range(0, len(data)):
+                            if i == len(data)-1:
+
+                                if type(data[i])==list:
+                                    f.write('{0:.6f}'.format(data[i][arr_ind]).center(20) + '\n')
+                                    arr_ind += 1
+                                elif type(data[i])==int:
+                                    f.write('{0:.0f}'.format(data[i]).center(20) + '\n')
+                                    arr_ind += 1
+                                elif type(data[i])==float:
+                                    f.write('{0:.6f}'.format(data[i]).center(20) + '\n')
+                                    arr_ind += 1
+                                else:
+                                    f.write('{0:.6f}'.format(data[i]).center(20) + '\n')
+                                    arr_ind += 1
+
+                            else:
+                                if type(data[i])==list:
+                                    f.write('{0:.6f}'.format(data[i][arr_ind]).center(20) + ' ')
+                                elif type(data[i])==int:
+                                    f.write('{0:.0f}'.format(data[i]).center(20) + ' ')
+                                elif type(data[i]==float):
+                                    f.write('{0:.6f}'.format(data[i]).center(20) + ' ')
+                                else:
+                                    f.write('{0:.6f}'.format(data[i]).center(20) + ' ')
+            else:
+                raise ValueError('System has already been run. Delete previous save file if you wish to proceed.')

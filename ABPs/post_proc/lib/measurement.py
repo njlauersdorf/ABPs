@@ -101,7 +101,7 @@ class measurement:
 
         self.phase_ident_functs = phase_identification.phase_identification(self.area_frac_dict, self.align_dict, self.part_dict, self.press_dict, self.l_box, self.partNum, self.NBins, self.peA, self.peB, self.parFrac, self.eps, self.typ)
 
-        self.particle_prop_functs = particles.particle_props(self.l_box, self.partNum, self.NBins, self.peA, self.peB, self.typ)
+        self.particle_prop_functs = particles.particle_props(self.l_box, self.partNum, self.NBins, self.peA, self.peB, self.typ, self.pos, self.ang)
 
         self.theory_functs = theory.theory()
 
@@ -246,6 +246,24 @@ class measurement:
         dense_A_lat_std = np.std(dense_A_lats)
         dense_B_lat_std = np.std(dense_B_lats)
 
+        pos_bulk_x_lat = pos_dense[bulk_lat_ind,0]
+        pos_bulk_y_lat = pos_dense[bulk_lat_ind,1]
+
+        pos_bulk_x_A_lat = pos_dense[bulk_A_lat_ind,0]
+        pos_bulk_y_A_lat = pos_dense[bulk_A_lat_ind,1]
+
+        pos_bulk_x_B_lat = pos_dense[bulk_B_lat_ind,0]
+        pos_bulk_y_B_lat = pos_dense[bulk_B_lat_ind,1]
+
+        pos_int_x_lat = self.pos[int_lat_ind,0]
+        pos_int_y_lat = self.pos[int_lat_ind,1]
+
+        pos_int_x_A_lat = self.pos[int_A_lat_ind,0]
+        pos_int_y_A_lat = self.pos[int_A_lat_ind,1]
+
+        pos_int_x_B_lat = self.pos[int_B_lat_ind,0]
+        pos_int_y_B_lat = self.pos[int_B_lat_ind,1]
+
         pos_dense_x_lat = np.append(pos_dense[bulk_lat_ind,0], self.pos[int_lat_ind,0])
         pos_dense_y_lat = np.append(pos_dense[bulk_lat_ind,1], self.pos[int_lat_ind,1])
 
@@ -258,7 +276,7 @@ class measurement:
         dense_lat_arr = np.append(bulk_lat_arr, int_lat_arr)
 
         lat_stat_dict = {'bulk': {'all': {'mean': bulk_lat_mean, 'std': bulk_lat_std}, 'A': {'mean': bulk_A_lat_mean, 'std': bulk_A_lat_std}, 'B': {'mean': bulk_B_lat_mean, 'std': bulk_B_lat_std}}, 'int': {'all': {'mean': int_lat_mean, 'std': int_lat_std}, 'A': {'mean': int_A_lat_mean, 'std': int_A_lat_std}, 'B': {'mean': int_B_lat_mean, 'std': int_B_lat_std}}, 'dense': {'all': {'mean': dense_lat_mean, 'std': dense_lat_std }, 'A': {'mean': dense_A_lat_mean, 'std': dense_A_lat_std }, 'B': {'mean': dense_B_lat_mean, 'std': dense_B_lat_std } } }
-        lat_plot_dict = {'all': {'vals': dense_lat_arr, 'x': pos_dense_x_lat, 'y': pos_dense_y_lat}, 'A': {'vals': dense_A_lat_arr, 'x': pos_dense_x_A_lat, 'y': pos_dense_y_A_lat}, 'B': {'vals': dense_B_lat_arr, 'x': pos_dense_x_B_lat, 'y': pos_dense_x_B_lat }  }
+        lat_plot_dict = {'dense': {'all': {'vals': dense_lat_arr, 'x': pos_dense_x_lat, 'y': pos_dense_y_lat}, 'A': {'vals': dense_A_lat_arr, 'x': pos_dense_x_A_lat, 'y': pos_dense_y_A_lat}, 'B': {'vals': dense_B_lat_arr, 'x': pos_dense_x_B_lat, 'y': pos_dense_x_B_lat }  }, 'bulk': {'all': {'vals': bulk_lat_arr, 'x': pos_bulk_x_lat, 'y': pos_bulk_y_lat}, 'A': {'vals': bulk_A_lat_arr, 'x': pos_bulk_x_A_lat, 'y': pos_bulk_y_A_lat}, 'B': {'vals': bulk_B_lat_arr, 'x': pos_bulk_x_B_lat, 'y': pos_bulk_x_B_lat }  }, 'int': {'all': {'vals': int_lat_arr, 'x': pos_int_x_lat, 'y': pos_int_y_lat}, 'A': {'vals': int_A_lat_arr, 'x': pos_int_x_A_lat, 'y': pos_int_y_A_lat}, 'B': {'vals': int_B_lat_arr, 'x': pos_int_x_B_lat, 'y': pos_int_x_B_lat }  } }
         return lat_stat_dict, lat_plot_dict
 
 
@@ -377,14 +395,14 @@ class measurement:
         difr_BB_bulk = self.utility_functs.sep_dist_arr(pos_B_dense[BB_bulk_nlist.point_indices], pos_B_bulk[BB_bulk_nlist.query_point_indices])
 
 
-        g_r_allall_bulk = np.array([])
-        g_r_allA_bulk = np.array([])
-        g_r_allB_bulk = np.array([])
-        g_r_AA_bulk = np.array([])
-        g_r_AB_bulk = np.array([])
-        g_r_BB_bulk = np.array([])
+        g_r_allall_bulk = []
+        g_r_allA_bulk = []
+        g_r_allB_bulk = []
+        g_r_AA_bulk = []
+        g_r_AB_bulk = []
+        g_r_BB_bulk = []
 
-        r_arr = np.array([])
+        r_arr = []
 
         difr_allA_bulk = np.append(difr_AA_bulk, difr_AB_bulk)
         difr_allB_bulk = np.append(difr_BB_bulk, difr_AB_bulk)
@@ -398,34 +416,34 @@ class measurement:
             inds = np.where((difr_allall_bulk>=r[m]) & (difr_allall_bulk<r[m+1]))[0]
             rho_all = (len(inds) / (2*math.pi * r[m] * difr) )
             rho_tot_all = len(phase_part_dict['bulk']['all']) * num_dens_mean_dict['all']
-            g_r_allall_bulk = np.append(g_r_allall_bulk, rho_all / rho_tot_all)
+            g_r_allall_bulk.append(rho_all / rho_tot_all)
 
             inds = np.where((difr_allA_bulk>=r[m]) & (difr_allA_bulk<r[m+1]))[0]
             rho_a = (len(inds) / (2*math.pi * r[m] * difr) )
             rho_tot_a = len(pos_A_bulk) * num_dens_mean_dict['all']
-            g_r_allA_bulk = np.append(g_r_allA_bulk, rho_a / rho_tot_a)
+            g_r_allA_bulk.append(rho_a / rho_tot_a)
 
             inds = np.where((difr_allB_bulk>=r[m]) & (difr_allB_bulk<r[m+1]))[0]
             rho_b = (len(inds) / (2*math.pi * r[m] * difr) )
             rho_tot_b = len(pos_B_bulk) * num_dens_mean_dict['all']
-            g_r_allB_bulk = np.append(g_r_allB_bulk, rho_b / rho_tot_b)
+            g_r_allB_bulk.append(rho_b / rho_tot_b)
 
             inds = np.where((difr_AA_bulk>=r[m]) & (difr_AA_bulk<r[m+1]))[0]
             rho_aa = (len(inds) / (2*math.pi * r[m] * difr) )
             rho_tot_aa = len(pos_A_bulk) * num_dens_mean_dict['A']
-            g_r_AA_bulk = np.append(g_r_AA_bulk, rho_aa / rho_tot_aa)
+            g_r_AA_bulk.append(rho_aa / rho_tot_aa)
 
             inds = np.where((difr_AB_bulk>=r[m]) & (difr_AB_bulk<r[m+1]))[0]
             rho_ab = (len(inds) / (2*math.pi * r[m] * difr) )
             rho_tot_ab = len(pos_B_bulk) * (num_dens_mean_dict['A'])
-            g_r_AB_bulk = np.append(g_r_AB_bulk, rho_ab / rho_tot_ab)
+            g_r_AB_bulk.append(rho_ab / rho_tot_ab)
 
             inds = np.where((difr_BB_bulk>=r[m]) & (difr_BB_bulk<r[m+1]))[0]
             rho_bb = (len(inds) / (2*math.pi * r[m] * difr) )
             rho_tot_bb = len(pos_B_bulk) * num_dens_mean_dict['B']
-            g_r_BB_bulk = np.append(g_r_BB_bulk, rho_bb / rho_tot_bb)
+            g_r_BB_bulk.append(rho_bb / rho_tot_bb)
 
-            r_arr = np.append(r_arr, r[m])
+            r_arr.append(r[m])
 
         rad_df_dict = {'r': r_arr, 'all-all': g_r_allall_bulk, 'all-A': g_r_allA_bulk, 'all-B': g_r_allB_bulk, 'A-A': g_r_AA_bulk, 'A-B': g_r_AB_bulk, 'B-B': g_r_BB_bulk}
         return rad_df_dict
@@ -571,7 +589,7 @@ class measurement:
         g_theta_AB_bulk=g_theta_AB_bulk/(-np.trapz(theta_arr, g_theta_AB_bulk))
         g_theta_BB_bulk=g_theta_BB_bulk/(-np.trapz(theta_arr, g_theta_BB_bulk))
 
-        ang_df_dict = {'theta': theta_arr, 'all-all': g_theta_allall_bulk, 'A-all': g_theta_Aall_bulk, 'B-all': g_theta_Ball_bulk, 'A-A': g_theta_AA_bulk, 'A-B': g_theta_AB_bulk, 'B-B': g_theta_BB_bulk}
+        ang_df_dict = {'theta': np.ndarray.tolist(theta_arr), 'all-all': np.ndarray.tolist(g_theta_allall_bulk), 'A-all': np.ndarray.tolist(g_theta_Aall_bulk), 'B-all': np.ndarray.tolist(g_theta_Ball_bulk), 'A-A': np.ndarray.tolist(g_theta_AA_bulk), 'A-B': np.ndarray.tolist(g_theta_AB_bulk), 'B-B': np.ndarray.tolist(g_theta_BB_bulk)}
         return ang_df_dict
 
     def nearest_neighbors(self):
@@ -581,7 +599,6 @@ class measurement:
         phase_count_dict = self.phase_ident_functs.phase_count(self.phase_dict)
 
         phase_part_dict = self.particle_prop_functs.particle_phase_ids(self.phasePart)
-
         distances = np.array([])
         bulk_area_test = phase_count_dict['bulk'] * (self.sizeBin**2)
 

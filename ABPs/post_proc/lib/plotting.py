@@ -76,13 +76,9 @@ class plotting:
 
     def plot_phases(self, pos, phase_ids_dict, sep_surface_dict, int_comp_dict):
 
-        yellow = ("#fdfd96")
+        yellow = ("#7570b3")
         green = ("#77dd77")
         red = ("#ff6961")
-
-        yellow = ("#0570b0")
-        green = ("#023858")
-        red = ("#74a9cf")
 
         bulk_part_ids = phase_ids_dict['ids']['bulk']['all']
         gas_part_ids = phase_ids_dict['ids']['gas']['all']
@@ -146,6 +142,9 @@ class plotting:
         eps_leg=[]
         mkSz = [0.1, 0.1, 0.15, 0.1, 0.1]
         msz=40
+
+        plt.xlim(0, self.l_box)
+        plt.ylim(0, self.l_box)
         red_patch = mpatches.Patch(color=red, label='Dilute')
         green_patch = mpatches.Patch(color=green, label='Bulk')
         yellow_patch = mpatches.Patch(color=yellow, label='Interface')
@@ -402,7 +401,8 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
     def plot_dif_frac(self, num_dens_dict, sep_surface_dict, int_comp_dict):
 
         fast_frac = num_dens_dict['bin']['fast frac']
-        slow_frac = np.ones(np.shape(num_dens_dict['fast frac'])) - num_dens_dict['fast frac']
+        slow_frac = np.ones(np.shape(fast_frac)) - fast_frac
+
         frac_dif = fast_frac - slow_frac
         fig = plt.figure(figsize=(7,6))
         ax = fig.add_subplot(111)
@@ -660,16 +660,17 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
     def lat_histogram(self, lat_plot_dict):
 
-        dense_lat_mean = np.mean(lat_plot_dict['dense']['vals'])
+        dense_lat_mean = np.mean(lat_plot_dict['bulk']['all']['vals'])
+
         xmin = 0.85*dense_lat_mean
         xmax = 1.1*dense_lat_mean
 
         #Define colors for plots
-        yellow = ("#fdfd96")
+        yellow = ("#7570b3")
         green = ("#77dd77")
 
-        bulk_lats = lat_plot_dict['bulk']['vals']
-        int_lats = lat_plot_dict['int']['vals']
+        bulk_lats = lat_plot_dict['bulk']['all']['vals']
+        int_lats = lat_plot_dict['int']['all']['vals']
 
         fig = plt.figure(figsize=(8,6))
         ax = fig.add_subplot(111)
@@ -706,17 +707,20 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         plt.show()
         #plt.savefig(outPath + 'lat_histo_' + out + pad + ".png", dpi=150)
         #plt.close()
-    def lat_map(self, lat_plot_dict):
+    def lat_map(self, lat_plot_dict, sep_surface_dict, int_comp_dict, velocity_dict=None):
 
-        dense_lats = lat_plot_dict['bin']['dense']
+        bulk_lat_mean = np.mean(lat_plot_dict['bulk']['all']['vals'])
+
+        dense_lats = lat_plot_dict['dense']['all']
+        min_n = 0.97*bulk_lat_mean
+        max_n = 1.03*bulk_lat_mean
 
         fig = plt.figure(figsize=(7,6))
         ax = fig.add_subplot(111)
-        im = plt.scatter(pos_bulk_int_x_lat+h_box, pos_bulk_int_y_lat+h_box, c=dense_lats, s=0.7, vmin=0.97*bulk_lat_mean, vmax=1.03*bulk_lat_mean)
+        im = plt.scatter(lat_plot_dict['dense']['all']['x']+self.h_box, lat_plot_dict['dense']['all']['y']+self.h_box, c=lat_plot_dict['dense']['all']['vals'], s=0.7, vmin=min_n, vmax=max_n)
 
 
-        min_n = 0.97*bulk_lat_mean
-        max_n = 1.03*bulk_lat_mean
+
         if bulk_lat_mean != 0.0:
             tick_lev = np.arange(min_n, max_n+(max_n-min_n)/6, (max_n - min_n)/6)
             #sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
@@ -730,53 +734,43 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         plt.text(0.663, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
                 fontsize=18, transform = ax.transAxes,
                 bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
-        plt.text(0.75, 0.92, s=r'$\overline{a}$' + ' = ' + '{:.3f}'.format(dense_lat_mean),
+        plt.text(0.75, 0.92, s=r'$\overline{a}$' + ' = ' + '{:.3f}'.format(bulk_lat_mean),
                 fontsize=18, transform = ax.transAxes,
                 bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
-        if (np.amax(velocity_r_bin)) > 0:
-            plt.quiver(pos_box_x, pos_box_y, velocity_x_A_bin_plot, velocity_y_A_bin_plot, scale=20.0, color='black', alpha=0.8)
+
+        if velocity_dict!=None:
+            plt.quiver(self.pos_x, self.pos_y, velocity_dict['bin']['all']['x'], velocity_dict['bin']['all']['y'], scale=20.0, color='black', alpha=0.8)
 
         clb.ax.tick_params(labelsize=16)
         clb.set_label('a', labelpad=-40, y=1.07, rotation=0, fontsize=20)
 
-        if bub_large >=1:
-            if interior_bin>0:
-                plt.scatter(xn_pos, yn_pos, c='black', s=3.0)
-            if exterior_bin>0:
-                plt.scatter(xn2_pos, yn2_pos, c='black', s=3.0)
+        for m in range(0, len(sep_surface_dict)):
+            key = 'surface id ' + str(int(int_comp_dict['ids']['int id'][m]))
+            pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
+            pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
 
-        if bub_large >=2:
-            if interior_bin_bub1>0:
-                plt.scatter(xn_bub2_pos, yn_bub2_pos, c='black', s=3.0)
-            if exterior_bin_bub1>0:
-                plt.scatter(xn2_bub2_pos, yn2_bub2_pos, c='black', s=3.0)
-        if bub_large >=3:
-            if interior_bin_bub2>0:
-                plt.scatter(xn_bub3_pos, yn_bub3_pos, c='black', s=3.0)
-            if exterior_bin_bub2>0:
-                plt.scatter(xn2_bub3_pos, yn2_bub3_pos, c='black', s=3.0)
+            pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
+            pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
 
-        if bub_large >=4:
-            if interior_bin_bub3>0:
-                plt.scatter(xn_bub4_pos, yn_bub4_pos, c='black', s=3.0)
-            if exterior_bin_bub3>0:
-                plt.scatter(xn2_bub4_pos, yn2_bub4_pos, c='black', s=3.0)
-        if bub_large >=5:
-            if interior_bin_bub4>0:
-                plt.scatter(xn_bub5_pos, yn_bub5_pos, c='black', s=3.0)
-            if exterior_bin_bub4>0:
-                plt.scatter(xn2_bub5_pos, yn2_bub5_pos, c='black', s=3.0)
+            plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
+            plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
 
-        plt.xlim(0, l_box)
-        plt.ylim(0, l_box)
+        plt.xlim(0, self.l_box)
+        plt.ylim(0, self.l_box)
 
         ax.axis('off')
         plt.tight_layout()
-        plt.savefig(outPath + 'lat_map_' + out + pad + ".png", dpi=100)
-        plt.close()
+        plt.show()
+        #plt.savefig(outPath + 'lat_map_' + out + pad + ".png", dpi=100)
+        #plt.close()
     def plot_general_rdf(self, radial_df_dict):
 
         fsize=10
+
+        rdf_allall = np.array(radial_df_dict['all-all'])
+        rdf_aa = np.array(radial_df_dict['A-A'])
+        rdf_ab = np.array(radial_df_dict['A-B'])
+        rdf_bb = np.array(radial_df_dict['B-B'])
 
         fig, ax1 = plt.subplots(figsize=(12,6))
 
@@ -803,13 +797,12 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
         ax1.set_xlabel(r'Separation Distance ($r$)', fontsize=fsize*2.8)
 
-
-
         ax1.set_ylabel(r'$g(r)$', fontsize=fsize*2.8)
 
         #lat_theory = np.mean(lat_theory_arr)
         # Set all the x ticks for radial plots
-        x_tick_val = radial_df_dict['r'][np.where(radial_df_dict['all-all']==np.max(radial_df_dict['all-all']))[0]]
+
+        x_tick_val = radial_df_dict['r'][np.where(rdf_allall==np.max(rdf_allall))[0][0]]
         loc = ticker.MultipleLocator(base=(x_tick_val*2))
         ax1.xaxis.set_major_locator(loc)
         loc = ticker.MultipleLocator(base=(x_tick_val))
@@ -836,11 +829,16 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
         fsize=10
 
+        rdf_allall = np.array(radial_df_dict['all-all'])
+        rdf_aa = np.array(radial_df_dict['A-A'])
+        rdf_ab = np.array(radial_df_dict['A-B'])
+        rdf_bb = np.array(radial_df_dict['B-B'])
+
         #all_bulk_max = np.max(rdf_all_bulk_rdf)
-        AA_bulk_max = np.max(radial_df_dict['A-A'])
-        AB_bulk_max = np.max(radial_df_dict['A-B'])
+        AA_bulk_max = np.max(rdf_aa)
+        AB_bulk_max = np.max(rdf_ab)
         #BA_bulk_max = np.max(rdf_BA_bulk_rdf)
-        BB_bulk_max = np.max(radial_df_dict['B-B'])
+        BB_bulk_max = np.max(rdf_bb)
         #all_bulk_max = np.max(rdf_all_bulk_rdf)
         if (AA_bulk_max >= AB_bulk_max):
             if (AA_bulk_max >= BB_bulk_max):
@@ -897,43 +895,43 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         second_width = 8.0
         third_width = 2.5
         if AA_bulk_order == 1:
-            plt.plot(radial_df_dict['r'], radial_df_dict['A-A'], label=r'A-A',
+            plt.plot(radial_df_dict['r'], rdf_aa, label=r'A-A',
                         c=green, lw=first_width, ls='-', alpha=1)
             if AB_bulk_order == 2:
-                plt.plot(radial_df_dict['r'], radial_df_dict['A-B'], label=r'A-B',
+                plt.plot(radial_df_dict['r'], rdf_ab, label=r'A-B',
                             c=orange, lw=second_width, ls='-', alpha=1)
-                plt.plot(radial_df_dict['r'], radial_df_dict['B-B'], label=r'B-B',
+                plt.plot(radial_df_dict['r'], rdf_bb, label=r'B-B',
                             c=purple, lw=third_width, ls='-', alpha=1)
             else:
-                plt.plot(radial_df_dict['r'], radial_df_dict['B-B'], label=r'B-B',
+                plt.plot(radial_df_dict['r'], rdf_bb, label=r'B-B',
                             c=orange, lw=second_width, ls='-', alpha=1)
-                plt.plot(radial_df_dict['r'], radial_df_dict['A-B'], label=r'A-B',
+                plt.plot(radial_df_dict['r'], rdf_ab, label=r'A-B',
                             c=purple, lw=third_width, ls='-', alpha=1)
         elif AB_bulk_order == 1:
-            plt.plot(radial_df_dict['r'], radial_df_dict['A-B'], label=r'A-B',
+            plt.plot(radial_df_dict['r'], rdf_ab, label=r'A-B',
                         c=green, lw=first_width, ls='-', alpha=1)
             if AA_bulk_order == 2:
-                plt.plot(radial_df_dict['r'], radial_df_dict['A-A'], label=r'A-A',
+                plt.plot(radial_df_dict['r'], rdf_aa, label=r'A-A',
                             c=orange, lw=second_width, ls='-', alpha=1)
-                plt.plot(radial_df_dict['r'], radial_df_dict['B-B'], label=r'B-B',
+                plt.plot(radial_df_dict['r'], rdf_bb, label=r'B-B',
                             c=purple, lw=third_width, ls='-', alpha=1)
             else:
-                plt.plot(radial_df_dict['r'], radial_df_dict['B-B'], label=r'B-B',
+                plt.plot(radial_df_dict['r'], rdf_bb, label=r'B-B',
                             c=orange, lw=second_width, ls='-', alpha=1)
-                plt.plot(radial_df_dict['r'], radial_df_dict['A-A'], label=r'A-A',
+                plt.plot(radial_df_dict['r'], rdf_aa, label=r'A-A',
                             c=purple, lw=third_width, ls='-', alpha=1)
         elif BB_bulk_order == 1:
-            plt.plot(radial_df_dict['r'], radial_df_dict['B-B'], label=r'B-B',
+            plt.plot(radial_df_dict['r'], rdf_bb, label=r'B-B',
                         c=green, lw=first_width, ls='-', alpha=1)
             if AA_bulk_order == 1:
-                plt.plot(radial_df_dict['r'], radial_df_dict['A-A'], label=r'A-A',
+                plt.plot(radial_df_dict['r'], rdf_aa, label=r'A-A',
                             c=orange, lw=second_width, ls='-', alpha=1)
-                plt.plot(radial_df_dict['r'], radial_df_dict['A-B'], label=r'A-B',
+                plt.plot(radial_df_dict['r'], rdf_ab, label=r'A-B',
                             c=purple, lw=third_width, ls='-', alpha=1)
             else:
-                plt.plot(radial_df_dict['r'], radial_df_dict['A-B'], label=r'A-B',
+                plt.plot(radial_df_dict['r'], rdf_ab, label=r'A-B',
                             c=orange, lw=second_width, ls='-', alpha=1)
-                plt.plot(radial_df_dict['r'], radial_df_dict['A-A'], label=r'A-A',
+                plt.plot(radial_df_dict['r'], rdf_aa, label=r'A-A',
                             c=purple, lw=third_width, ls='-', alpha=1.0)
 
         plt.plot(x_arr, y_arr, c='black', lw=1.5, ls='--')
@@ -949,7 +947,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         ax1.set_ylabel(r'$g(r)$', fontsize=fsize*2.8)
 
         # Set all the x ticks for radial plots
-        x_tick_val = radial_df_dict['r'][np.where(radial_df_dict['all-all']==np.max(radial_df_dict['all-all']))[0]]
+        x_tick_val = radial_df_dict['r'][np.where(rdf_allall==np.max(rdf_allall))[0][0]]
         loc = ticker.MultipleLocator(base=(x_tick_val*2))
         ax1.xaxis.set_major_locator(loc)
         loc = ticker.MultipleLocator(base=(x_tick_val))
@@ -974,6 +972,202 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         plt.show()
         #plt.savefig(outPath + 'rdf_' + out + ".png", dpi=300)
         #plt.close()
+
+    def plot_general_adf(self, angular_df_dict):
+
+        fsize=10
+
+        adf_allall = np.array(angular_df_dict['all-all'])
+        adf_aa = np.array(angular_df_dict['A-A'])
+        adf_ab = np.array(angular_df_dict['A-B'])
+        adf_bb = np.array(angular_df_dict['B-B'])
+
+        fig, ax1 = plt.subplots(figsize=(12,6))
+
+        plot_max = 1.2 * np.max(angular_df_dict['all-all'])
+
+        plot_min = -0.02
+
+        rstop=2*np.pi
+        step = np.abs(plot_max - plot_min)/6
+
+        plt.plot(angular_df_dict['theta'], angular_df_dict['all-all'],
+                    c='black', lw=9.0, ls='-', alpha=1, label='All-All')
+
+
+        ax1.set_ylim(plot_min, plot_max)
+        #ax1.set_ylim(0, 2)
+
+
+        ax1.set_xlabel(r'Interparticle separation angle from $+\hat{\mathbf{x}}$ ($\theta$)', fontsize=fsize*2.8)
+
+        ax1.set_ylabel(r'$g(\theta)$', fontsize=fsize*2.8)
+
+        #lat_theory = np.mean(lat_theory_arr)
+        # Set all the x ticks for radial plots
+
+        loc = ticker.MultipleLocator(base=(np.pi/3))
+        ax1.xaxis.set_major_locator(loc)
+        loc = ticker.MultipleLocator(base=(np.pi/6))
+        ax1.xaxis.set_minor_locator(loc)
+        ax1.set_xlim(0, rstop)
+        plt.legend(loc='upper right', fontsize=fsize*2.6)
+        #step = 2.0
+        # Set y ticks
+
+        loc = ticker.MultipleLocator(base=step)
+        ax1.yaxis.set_major_locator(loc)
+        loc = ticker.MultipleLocator(base=step/2)
+        ax1.yaxis.set_minor_locator(loc)
+        # Left middle plot
+        ax1.tick_params(axis='x', labelsize=fsize*2.5)
+        ax1.tick_params(axis='y', labelsize=fsize*2.5)
+        #plt.legend(loc='upper right')
+
+        plt.tight_layout()
+        plt.show()
+        #plt.savefig(outPath + 'rdf_all_' + out + ".png", dpi=300)
+        #plt.close()
+
+    def plot_all_adfs(self, angular_df_dict):
+
+        fsize=10
+
+        adf_allall = np.array(angular_df_dict['all-all'])
+        adf_aa = np.array(angular_df_dict['A-A'])
+        adf_ab = np.array(angular_df_dict['A-B'])
+        adf_bb = np.array(angular_df_dict['B-B'])
+
+        #all_bulk_max = np.max(rdf_all_bulk_rdf)
+        AA_bulk_max = np.max(adf_aa)
+        AB_bulk_max = np.max(adf_ab)
+        #BA_bulk_max = np.max(rdf_BA_bulk_rdf)
+        BB_bulk_max = np.max(adf_bb)
+        #all_bulk_max = np.max(rdf_all_bulk_rdf)
+        if (AA_bulk_max >= AB_bulk_max):
+            if (AA_bulk_max >= BB_bulk_max):
+                AA_bulk_order = 1
+                if (BB_bulk_max >= AB_bulk_max):
+                    BB_bulk_order = 2
+                    AB_bulk_order = 3
+                else:
+                    AB_bulk_order = 2
+                    BB_bulk_order = 3
+            else:
+                BB_bulk_order = 1
+                AA_bulk_order = 2
+                AB_bulk_order = 3
+        else:
+            if (AA_bulk_max >= BB_bulk_max):
+                AB_bulk_order = 1
+                AA_bulk_order = 2
+                BB_bulk_order = 3
+            else:
+                AA_bulk_order = 3
+                if (BB_bulk_max >= AB_bulk_max):
+                    BB_bulk_order = 1
+                    AB_bulk_order = 2
+                else:
+                    AB_bulk_order = 1
+                    BB_bulk_order = 2
+
+        if AA_bulk_order == 1:
+            plot_max = 1.2 * AA_bulk_max
+        elif AB_bulk_order == 1:
+            plot_max = 1.2 * AB_bulk_max
+        elif BB_bulk_order == 1:
+            plot_max = 1.2 * BB_bulk_max
+
+        plot_min = -0.02
+
+        rstop=2*np.pi
+
+        step = np.abs(plot_max - plot_min)/6
+        step_x = 1.5
+        fastCol = '#e31a1c'
+        slowCol = '#081d58'
+        purple = ("#00441b")
+        orange = ("#ff7f00")
+        green = ("#377EB8")
+
+        fig, ax1 = plt.subplots(figsize=(12,6))
+
+        first_width = 6.0
+        second_width = 4.0
+        third_width = 2.0
+        if AA_bulk_order == 1:
+            plt.plot(angular_df_dict['theta'], adf_aa, label=r'A-A',
+                        c=green, lw=first_width, ls='-', alpha=1)
+            if AB_bulk_order == 2:
+                plt.plot(angular_df_dict['theta'], adf_ab, label=r'A-B',
+                            c=orange, lw=second_width, ls='-', alpha=1)
+                plt.plot(angular_df_dict['theta'], adf_bb, label=r'B-B',
+                            c=purple, lw=third_width, ls='-', alpha=1)
+            else:
+                plt.plot(angular_df_dict['theta'], adf_bb, label=r'B-B',
+                            c=orange, lw=second_width, ls='-', alpha=1)
+                plt.plot(angular_df_dict['theta'], adf_ab, label=r'A-B',
+                            c=purple, lw=third_width, ls='-', alpha=1)
+        elif AB_bulk_order == 1:
+            plt.plot(angular_df_dict['theta'], adf_ab, label=r'A-B',
+                        c=green, lw=first_width, ls='-', alpha=1)
+            if AA_bulk_order == 2:
+                plt.plot(angular_df_dict['theta'], adf_aa, label=r'A-A',
+                            c=orange, lw=second_width, ls='-', alpha=1)
+                plt.plot(angular_df_dict['theta'], adf_bb, label=r'B-B',
+                            c=purple, lw=third_width, ls='-', alpha=1)
+            else:
+                plt.plot(angular_df_dict['theta'], adf_bb, label=r'B-B',
+                            c=orange, lw=second_width, ls='-', alpha=1)
+                plt.plot(angular_df_dict['theta'], adf_aa, label=r'A-A',
+                            c=purple, lw=third_width, ls='-', alpha=1)
+        elif BB_bulk_order == 1:
+            plt.plot(angular_df_dict['theta'], adf_bb, label=r'B-B',
+                        c=green, lw=first_width, ls='-', alpha=1)
+            if AA_bulk_order == 1:
+                plt.plot(angular_df_dict['theta'], adf_aa, label=r'A-A',
+                            c=orange, lw=second_width, ls='-', alpha=1)
+                plt.plot(angular_df_dict['theta'], adf_ab, label=r'A-B',
+                            c=purple, lw=third_width, ls='-', alpha=1)
+            else:
+                plt.plot(angular_df_dict['theta'], adf_ab, label=r'A-B',
+                            c=orange, lw=second_width, ls='-', alpha=1)
+                plt.plot(angular_df_dict['theta'], adf_aa, label=r'A-A',
+                            c=purple, lw=third_width, ls='-', alpha=1.0)
+
+        ax1.set_ylim(plot_min, plot_max)
+        #ax1.set_xlim(0, rstop)
+
+        ax1.set_xlabel(r'Interparticle separation angle from $+\hat{\mathbf{x}}$ ($\theta$)', fontsize=fsize*2.8)
+
+        ax1.set_ylabel(r'$g(\theta)$', fontsize=fsize*2.8)
+
+        # Set all the x ticks for radial plots
+        loc = ticker.MultipleLocator(base=(np.pi/3))
+        ax1.xaxis.set_major_locator(loc)
+        loc = ticker.MultipleLocator(base=(np.pi/6))
+        ax1.xaxis.set_minor_locator(loc)
+        ax1.set_xlim(0, rstop)
+        #plt.legend(loc='upper right', fontsize=fsize*2.6)
+        #step = 2.0
+        # Set y ticks
+        loc = ticker.MultipleLocator(base=step)
+        ax1.yaxis.set_major_locator(loc)
+        loc = ticker.MultipleLocator(base=step/2)
+        ax1.yaxis.set_minor_locator(loc)
+        # Left middle plot
+        ax1.tick_params(axis='x', labelsize=fsize*2.5)
+        ax1.tick_params(axis='y', labelsize=fsize*2.5)
+        #plt.legend(loc='upper right')
+
+        leg = [Line2D([0], [0], lw=8.0, c=green, label='A-A', linestyle='solid'), Line2D([0], [0], lw=8.0, c=orange, label='A-B', linestyle='solid'), Line2D([0], [0], lw=8.0, c=purple, label='B-B', linestyle='solid')]
+
+        legend = ax1.legend(handles=leg, loc='upper right', columnspacing=1., handletextpad=0.3, bbox_transform=ax1.transAxes, bbox_to_anchor=[0.98, 1.03], fontsize=fsize*2.8, frameon=False, ncol=3)
+        plt.tight_layout()
+        plt.show()
+        #plt.savefig(outPath + 'rdf_' + out + ".png", dpi=300)
+        #plt.close()
+
     def plot_all_neighbors_of_all_parts(self, neigh_plot_dict, sep_surface_dict, int_comp_dict):
         fig = plt.figure(figsize=(7,6))
         ax = fig.add_subplot(111)

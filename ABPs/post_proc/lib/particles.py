@@ -23,7 +23,7 @@ import theory, utility
 
 class particle_props:
 
-    def __init__(self, l_box, partNum, NBins, peA, peB, typ):
+    def __init__(self, l_box, partNum, NBins, peA, peB, typ, pos, ang):
         theory_functs = theory.theory()
         self.l_box = l_box
         self.h_box = self.l_box / 2
@@ -42,6 +42,9 @@ class particle_props:
         self.typ = typ
 
         self.utility_functs = utility.utility(self.l_box)
+
+        self.pos = pos
+        self.ang = ang
 
     def particle_phase_ids(self, phasePart):
         A_bulk_id = np.where((phasePart==0) & (self.typ==0))[0]        #Bulk phase structure(s)
@@ -153,3 +156,68 @@ class particle_props:
             part_difr[h] = difr
 
         return part_difr
+    def radial_normal_fa(self):
+
+        align_norm = np.array([])
+        fa_norm = np.array([])
+        r_dist_norm = np.array([])
+        for h in range(0, len(self.pos)):
+
+            #x-distance from CoM
+            difx = self.pos[h,0] - 0
+
+            #y-distance from CoM
+            dify = self.pos[h,1] - 0
+
+            #Very large initial distance to calculate closest interior edge bin to this exterior edge bin
+            difr= ( (difx )**2 + (dify)**2)**0.5
+
+            x_norm_unitv = (difx) / difr
+            y_norm_unitv = (dify) / difr
+
+            #Calculate x and y orientation of active force
+            px = np.sin(self.ang[h])
+            py = -np.cos(self.ang[h])
+
+            #Calculate alignment towards CoM
+            r_dot_p = (-x_norm_unitv * px) + (-y_norm_unitv * py)
+
+            #Add alignment with CoM for average calculation of all particles
+            align_norm=np.append(align_norm, r_dot_p)
+
+            #If particle is of type A, add alignment with nearest surface's normal for average calculation
+            if self.typ[h] == 0:
+                fa_norm=np.append(fa_norm, r_dot_p*self.peA)
+            else:
+                fa_norm=np.append(fa_norm, r_dot_p*self.peB)
+            r_dist_norm = np.append(r_dist_norm, difr)
+
+        radial_fa_dict = {'r': r_dist_norm, 'fa': fa_norm, 'align': align_norm}
+        return radial_fa_dict
+
+        def radial_surface_normal_fa(self, method2_align_dict):
+
+            part_align = method2_align_dict['part']['align']
+
+            fa_norm = np.array([])
+            r_dist_norm = np.array([])
+            for h in range(0, len(self.pos)):
+
+                #x-distance from CoM
+                difx = self.pos[h,0] - 0
+
+                #y-distance from CoM
+                dify = self.pos[h,1] - 0
+
+                #Very large initial distance to calculate closest interior edge bin to this exterior edge bin
+                difr= ( (difx )**2 + (dify)**2)**0.5
+
+                #If particle is of type A, add alignment with nearest surface's normal for average calculation
+                if self.typ[h] == 0:
+                    fa_norm=np.append(fa_norm, r_dot_p*self.peA)
+                else:
+                    fa_norm=np.append(fa_norm, r_dot_p*self.peB)
+
+                r_dist_norm = np.append(r_dist_norm, difr)
+            radial_fa_dict = {'r': r_dist_norm, 'fa': fa_norm, 'align': part_align}
+            return radial_fa_dict
