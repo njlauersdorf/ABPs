@@ -600,8 +600,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
             purple = ("#cab2d6")        #Bubble or small gas-dense interfaces
 
             #label previous positions for velocity calculation
-            prev_pos = pos.copy()
-            prev_ang = ang.copy()
+
             '''
             #Output general calculations/information for each phase
             g = open(outPath2+outTxt_phase_info, 'a')
@@ -819,6 +818,6 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                 data_output_functs = data_output.data_output(l_box, sizeBin, tst, clust_large, dt_step)
                 data_output_functs.write_to_txt(act_press_dict, dataPath + 'surface_interface_pressure_' + outfile + '.txt')
-            end_time = time.time()
-            print('end!')
-            print(end_time - start_time)
+
+        prev_pos = pos.copy()
+        prev_ang = ang.copy()
