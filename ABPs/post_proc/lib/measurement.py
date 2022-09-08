@@ -607,10 +607,15 @@ class measurement:
         bulk_area_test = phase_count_dict['bulk'] * (self.sizeBin**2)
 
         peNet_int = self.average_activity(part_ids = phase_part_dict['int']['all'])
-
-        num_dens_mean = len(phase_part_dict['bulk']['all'])/bulk_area_test
-        num_dens_A_mean = len(phase_part_dict['bulk']['A'])/bulk_area_test
-        num_dens_B_mean = len(phase_part_dict['bulk']['B'])/bulk_area_test
+        
+        if bulk_area_test > 0:
+            num_dens_mean = len(phase_part_dict['bulk']['all'])/bulk_area_test
+            num_dens_A_mean = len(phase_part_dict['bulk']['A'])/bulk_area_test
+            num_dens_B_mean = len(phase_part_dict['bulk']['B'])/bulk_area_test
+        else:
+            num_dens_mean = 0
+            num_dens_A_mean = 0
+            num_dens_B_mean = 0
 
         typ0ind = np.where(self.typ==0)[0]
         pos_A=self.pos[typ0ind]                               # Find positions of type 0 particles
