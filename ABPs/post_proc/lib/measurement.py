@@ -318,10 +318,14 @@ class measurement:
                     num_dens_A_sum += num_dens_A[ix][iy]/(math.pi/4)
 
                     num_dens_B_sum += num_dens_B[ix][iy]/(math.pi/4)
-
-        num_dens_mean = num_dens_sum / num_dens_val
-        num_dens_A_mean = num_dens_A_sum / num_dens_val
-        num_dens_B_mean = num_dens_B_sum / num_dens_val
+        if num_dens_val > 0:
+            num_dens_mean = num_dens_sum / num_dens_val
+            num_dens_A_mean = num_dens_A_sum / num_dens_val
+            num_dens_B_mean = num_dens_B_sum / num_dens_val
+        else:
+            num_dens_mean = 0
+            num_dens_A_mean = 0
+            num_dens_B_mean = 0
 
         return {'all': num_dens_mean, 'A': num_dens_A_mean, 'B': num_dens_B_mean}
 
