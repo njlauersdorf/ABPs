@@ -229,7 +229,7 @@ import time
 with hoomd.open(name=inFile, mode='rb') as t:
 
     dumps = int(t.__len__())
-    start = int( 0/time_step)#205                                             # first frame to process
+    start = int( 3/time_step)#205                                             # first frame to process
                                 # get number of timesteps dumped
     end = int(dumps/time_step)-1                                             # final frame to process
     snap = t[0]                                             # Take first snap for box
@@ -635,6 +635,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 print(key)
                 if sep_surface_dict[key]['interior']['num']>0:
                     sort_interior_ids = interface_functs.sort_surface_points(sep_surface_dict[key]['interior'])
+                    print(sort_interior_ids)
+
                     all_surface_curves[key]['interior'] = interface_functs.surface_curve_interp(sort_interior_ids)
 
                     com_pov_interior_pos = interface_functs.surface_com_pov(all_surface_curves[key]['interior']['pos'])
@@ -645,6 +647,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                 if sep_surface_dict[key]['exterior']['num']>0:
                     sort_exterior_ids = interface_functs.sort_surface_points(sep_surface_dict[key]['exterior'])
+
                     all_surface_curves[key]['exterior'] = interface_functs.surface_curve_interp(sort_exterior_ids)
 
                     com_pov_exterior_pos = interface_functs.surface_com_pov(all_surface_curves[key]['exterior']['pos'])

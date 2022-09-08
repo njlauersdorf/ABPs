@@ -98,14 +98,20 @@ class plotting:
 
         for m in range(0, len(sep_surface_dict)):
             key = 'surface id ' + str(int(int_comp_dict['ids']['int id'][m]))
-            pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
-            pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
+            try:
+                pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
+                pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
+                plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
+            except:
+                pass
 
-            pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
-            pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
+            try:
+                pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
+                pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
+                plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
+            except:
+                pass
 
-            plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
-            plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
 
 
 
@@ -169,14 +175,19 @@ class plotting:
 
         for m in range(0, len(sep_surface_dict)):
             key = 'surface id ' + str(int(int_comp_dict['ids']['int id'][m]))
-            pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
-            pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
+            try:
+                pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
+                pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
+                plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
+            except:
+                pass
 
-            pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
-            pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
-
-            plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
-            plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
+            try:
+                pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
+                pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
+                plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
+            except:
+                pass
 
 
         sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
@@ -219,14 +230,19 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
         for m in range(0, len(sep_surface_dict)):
             key = 'surface id ' + str(int(int_comp_dict['ids']['int id'][m]))
-            pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
-            pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
+            try:
+                pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
+                pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
+                plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
+            except:
+                pass
 
-            pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
-            pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
-
-            plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
-            plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
+            try:
+                pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
+                pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
+                plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
+            except:
+                pass
 
         sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
         sm.set_array([])
@@ -268,14 +284,19 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
         for m in range(0, len(sep_surface_dict)):
             key = 'surface id ' + str(int(int_comp_dict['ids']['int id'][m]))
-            pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
-            pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
+            try:
+                pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
+                pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
+                plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
+            except:
+                pass
 
-            pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
-            pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
-
-            plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
-            plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
+            try:
+                pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
+                pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
+                plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
+            except:
+                pass
 
         sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
         sm.set_array([])
@@ -317,14 +338,19 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
         for m in range(0, len(sep_surface_dict)):
             key = 'surface id ' + str(int(int_comp_dict['ids']['int id'][m]))
-            pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
-            pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
+            try:
+                pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
+                pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
+                plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
+            except:
+                pass
 
-            pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
-            pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
-
-            plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
-            plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
+            try:
+                pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
+                pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
+                plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
+            except:
+                pass
 
         sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
         sm.set_array([])
@@ -365,14 +391,19 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
         for m in range(0, len(sep_surface_dict)):
             key = 'surface id ' + str(int(int_comp_dict['ids']['int id'][m]))
-            pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
-            pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
+            try:
+                pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
+                pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
+                plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
+            except:
+                pass
 
-            pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
-            pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
-
-            plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
-            plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
+            try:
+                pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
+                pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
+                plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
+            except:
+                pass
 
         sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
         sm.set_array([])
@@ -416,14 +447,19 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
         for m in range(0, len(sep_surface_dict)):
             key = 'surface id ' + str(int(int_comp_dict['ids']['int id'][m]))
-            pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
-            pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
+            try:
+                pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
+                pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
+                plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
+            except:
+                pass
 
-            pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
-            pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
-
-            plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
-            plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
+            try:
+                pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
+                pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
+                plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
+            except:
+                pass
 
         sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
         sm.set_array([])
@@ -465,14 +501,19 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
         for m in range(0, len(sep_surface_dict)):
             key = 'surface id ' + str(int(int_comp_dict['ids']['int id'][m]))
-            pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
-            pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
+            try:
+                pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
+                pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
+                plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
+            except:
+                pass
 
-            pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
-            pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
-
-            plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
-            plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
+            try:
+                pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
+                pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
+                plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
+            except:
+                pass
 
         plt.quiver(self.pos_x, self.pos_y, self.orient_x, self.orient_y)
 
@@ -517,14 +558,19 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
         for m in range(0, len(sep_surface_dict)):
             key = 'surface id ' + str(int(int_comp_dict['ids']['int id'][m]))
-            pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
-            pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
+            try:
+                pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
+                pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
+                plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
+            except:
+                pass
 
-            pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
-            pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
-
-            plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
-            plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
+            try:
+                pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
+                pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
+                plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
+            except:
+                pass
 
         plt.quiver(self.pos_x, self.pos_y, self.orient_x, self.orient_y)
 
@@ -569,14 +615,19 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
         for m in range(0, len(sep_surface_dict)):
             key = 'surface id ' + str(int(int_comp_dict['ids']['int id'][m]))
-            pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
-            pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
+            try:
+                pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
+                pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
+                plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
+            except:
+                pass
 
-            pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
-            pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
-
-            plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
-            plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
+            try:
+                pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
+                pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
+                plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
+            except:
+                pass
 
         plt.quiver(self.pos_x, self.pos_y, self.orient_x, self.orient_y)
 
@@ -621,14 +672,19 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
         for m in range(0, len(sep_surface_dict)):
             key = 'surface id ' + str(int(int_comp_dict['ids']['int id'][m]))
-            pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
-            pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
+            try:
+                pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
+                pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
+                plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
+            except:
+                pass
 
-            pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
-            pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
-
-            plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
-            plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
+            try:
+                pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
+                pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
+                plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
+            except:
+                pass
 
         plt.quiver(self.pos_x, self.pos_y, self.orient_x, self.orient_y)
 
@@ -746,14 +802,19 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
         for m in range(0, len(sep_surface_dict)):
             key = 'surface id ' + str(int(int_comp_dict['ids']['int id'][m]))
-            pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
-            pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
+            try:
+                pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
+                pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
+                plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
+            except:
+                pass
 
-            pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
-            pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
-
-            plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
-            plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
+            try:
+                pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
+                pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
+                plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
+            except:
+                pass
 
         plt.xlim(0, self.l_box)
         plt.ylim(0, self.l_box)
@@ -1194,14 +1255,19 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
         for m in range(0, len(sep_surface_dict)):
             key = 'surface id ' + str(int(int_comp_dict['ids']['int id'][m]))
-            pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
-            pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
+            try:
+                pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
+                pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
+                plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
+            except:
+                pass
 
-            pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
-            pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
-
-            plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
-            plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
+            try:
+                pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
+                pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
+                plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
+            except:
+                pass
 
         plt.xlim(0, self.l_box)
         plt.ylim(0, self.l_box)
@@ -1238,14 +1304,19 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
         for m in range(0, len(sep_surface_dict)):
             key = 'surface id ' + str(int(int_comp_dict['ids']['int id'][m]))
-            pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
-            pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
+            try:
+                pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
+                pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
+                plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
+            except:
+                pass
 
-            pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
-            pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
-
-            plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
-            plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
+            try:
+                pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
+                pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
+                plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
+            except:
+                pass
 
         plt.xlim(0, self.l_box)
         plt.ylim(0, self.l_box)
@@ -1282,14 +1353,19 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
         for m in range(0, len(sep_surface_dict)):
             key = 'surface id ' + str(int(int_comp_dict['ids']['int id'][m]))
-            pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
-            pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
+            try:
+                pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
+                pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
+                plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
+            except:
+                pass
 
-            pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
-            pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
-
-            plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
-            plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
+            try:
+                pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
+                pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
+                plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
+            except:
+                pass
 
         plt.xlim(0, self.l_box)
         plt.ylim(0, self.l_box)
@@ -1326,14 +1402,19 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
         for m in range(0, len(sep_surface_dict)):
             key = 'surface id ' + str(int(int_comp_dict['ids']['int id'][m]))
-            pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
-            pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
+            try:
+                pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
+                pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
+                plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
+            except:
+                pass
 
-            pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
-            pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
-
-            plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
-            plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
+            try:
+                pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
+                pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
+                plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
+            except:
+                pass
 
         plt.xlim(0, self.l_box)
         plt.ylim(0, self.l_box)
@@ -1370,14 +1451,19 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
         for m in range(0, len(sep_surface_dict)):
             key = 'surface id ' + str(int(int_comp_dict['ids']['int id'][m]))
-            pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
-            pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
+            try:
+                pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
+                pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
+                plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
+            except:
+                pass
 
-            pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
-            pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
-
-            plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
-            plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
+            try:
+                pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
+                pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
+                plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
+            except:
+                pass
 
         plt.xlim(0, self.l_box)
         plt.ylim(0, self.l_box)
