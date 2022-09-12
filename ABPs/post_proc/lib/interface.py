@@ -1873,11 +1873,13 @@ class interface:
                                     dify_ext = self.utility_functs.sep_dist(ypos_ref, exterior_int_com_y)
 
                                     difr_ext= ( (difx_ext )**2 + (dify_ext)**2)**0.5
-                                    
+
                                     if difr_ext < difr_short:
                                         difr_short= ( (difx_ext )**2 + (dify_ext)**2)**0.5
                                         x_norm_unitv = difx_ext / difr_short
                                         y_norm_unitv = dify_ext / difr_short
+                                        interior_bin_short = 0
+                                        exterior_bin_short = 0
 
                                 if (interior_exist == 1):
                                     difx_int = self.utility_functs.sep_dist(xpos_ref, interior_int_com_x)
@@ -1889,6 +1891,8 @@ class interface:
                                         difr_short= ( (difx_int )**2 + (dify_int)**2)**0.5
                                         x_norm_unitv = difx_int / difr_short
                                         y_norm_unitv = dify_int / difr_short
+                                        interior_bin_short = 0
+                                        exterior_bin_short = 0
 
 
 
@@ -1947,6 +1951,10 @@ class interface:
                                     elif exterior_bin_short == 1:
                                         x_dot_p = (x_norm_unitv * px)
                                         y_dot_p = (y_norm_unitv * py)
+                                    else:
+                                        x_dot_p = (-x_norm_unitv * px)
+                                        y_dot_p = (-y_norm_unitv * py)
+
 
                                     r_dot_p = x_dot_p + y_dot_p
 
