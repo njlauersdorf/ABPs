@@ -229,7 +229,7 @@ import time
 with hoomd.open(name=inFile, mode='rb') as t:
 
     dumps = int(t.__len__())
-    start = int(0/time_step)#205                                             # first frame to process
+    start = int(200/time_step)#205                                             # first frame to process
                                 # get number of timesteps dumped
     end = int(dumps/time_step)-1                                             # final frame to process
     snap = t[0]                                             # Take first snap for box
@@ -314,7 +314,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
             sizeBin = utility_functs.roundUp(((l_box) / NBins), 6)
 
-            binning_functs = binning.binning(l_box, partNum, NBins, peA, peB, typ)
+            binning_functs = binning.binning(l_box, partNum, NBins, peA, peB, typ, eps)
 
             pos_dict = binning_functs.create_bins()
 
@@ -339,7 +339,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
             #Time frame for plots
             pad = str(j).zfill(4)
 
-            press_dict = binning_functs.bin_press(align_dict, area_frac_dict)
+            press_dict = binning_functs.bin_active_press(align_dict, area_frac_dict)
 
             #radial_density_function_analysis_binary_updates
             align_grad_dict = binning_functs.curl_and_div(align_dict)
@@ -664,6 +664,13 @@ with hoomd.open(name=inFile, mode='rb') as t:
             method1_align_dict, method2_align_dict = interface_functs.bulk_alignment(method1_align_dict, method2_align_dict, all_surface_measurements, all_surface_curves, sep_surface_dict, bulk_dict, bulk_comp_dict, int_comp_dict)
             method1_align_dict, method2_align_dict = interface_functs.gas_alignment(method1_align_dict, method2_align_dict, all_surface_measurements, all_surface_curves, sep_surface_dict, int_comp_dict)
 
+            if measurement_method == 'activity':
+
+                plotting_functs = plotting.plotting(orient_dict, pos_dict, l_box, NBins, sizeBin, peA, peB, parFrac, eps, typ, tst)
+
+                if plot == 'y':
+                    plotting_functs.plot_part_activity(pos, all_surface_curves, int_comp_dict)
+
             if measurement_method == 'phases':
 
                 plotting_functs = plotting.plotting(orient_dict, pos_dict, l_box, NBins, sizeBin, peA, peB, parFrac, eps, typ, tst)
@@ -789,6 +796,15 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                 data_output_functs.write_to_txt(shear_dict, dataPath + 'shear_stress_' + outfile + '.txt')
 
+                if plot == 'y':
+                    vp_bin_arr = stress_and_pressure_functs.virial_pressure_binned(stress_plot_dict)
+                    vp_part_arr = stress_and_pressure_functs.virial_pressure_part(stress_plot_dict)
+
+                    plotting_functs = plotting.plotting(orient_dict, pos_dict, l_box, NBins, sizeBin, peA, peB, parFrac, eps, typ, tst)
+
+                    plotting_functs.plot_interpart_press_binned(vp_bin_arr, all_surface_curves, int_comp_dict)
+                    plotting_functs.interpart_press_map(pos, vp_part_arr, all_surface_curves, int_comp_dict)
+
             elif measurement_method == 'com_interface_pressure':
                 stress_and_pressure_functs = stress_and_pressure.stress_and_pressure(l_box, NBins, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
 
@@ -821,6 +837,66 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                 data_output_functs = data_output.data_output(l_box, sizeBin, tst, clust_large, dt_step)
                 data_output_functs.write_to_txt(act_press_dict, dataPath + 'surface_interface_pressure_' + outfile + '.txt')
+            elif measurement_method == 'hexatic_order':
+
+                lattice_structure_functs = measurement.measurement(l_box, NBins, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
+
+                hexatic_order_dict= lattice_structure_functs.hexatic_order()
+
+                #data_output_functs = data_output.data_output(l_box, sizeBin, tst, clust_large, dt_step)
+                #data_output_functs.write_to_txt(hexatic_order_dict, dataPath + 'hexatic_order_' + outfile + '.txt')
+
+                if plot == 'y':
+                    plotting_functs = plotting.plotting(orient_dict, pos_dict, l_box, NBins, sizeBin, peA, peB, parFrac, eps, typ, tst)
+
+                    plotting_functs.plot_hexatic_order(pos, hexatic_order_dict['order'], all_surface_curves, int_comp_dict)
+
+                    plotting_functs.plot_domain_angle(pos, hexatic_order_dict['theta'], all_surface_curves, int_comp_dict)
+
+            elif measurement_method == 'translational_order':
+
+                lattice_structure_functs = measurement.measurement(l_box, NBins, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
+
+                trans_order_param= lattice_structure_functs.translational_order()
+
+                #data_output_functs = data_output.data_output(l_box, sizeBin, tst, clust_large, dt_step)
+                #data_output_functs.write_to_txt(hexatic_order_dict, dataPath + 'hexatic_order_' + outfile + '.txt')
+
+                if plot == 'y':
+                    plotting_functs = plotting.plotting(orient_dict, pos_dict, l_box, NBins, sizeBin, peA, peB, parFrac, eps, typ, tst)
+
+                    plotting_functs.plot_trans_order(pos, trans_order_param, all_surface_curves, int_comp_dict)
+
+            elif measurement_method == 'steinhardt_order':
+
+                lattice_structure_functs = measurement.measurement(l_box, NBins, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
+
+                stein_order_param= lattice_structure_functs.steinhardt_order()
+
+                #data_output_functs = data_output.data_output(l_box, sizeBin, tst, clust_large, dt_step)
+                #data_output_functs.write_to_txt(hexatic_order_dict, dataPath + 'hexatic_order_' + outfile + '.txt')
+
+                if plot == 'y':
+                    plotting_functs = plotting.plotting(orient_dict, pos_dict, l_box, NBins, sizeBin, peA, peB, parFrac, eps, typ, tst)
+
+                    plotting_functs.plot_stein_order(pos, stein_order_param, all_surface_curves, int_comp_dict)
+
+            elif measurement_method == 'nematic_order':
+
+                lattice_structure_functs = measurement.measurement(l_box, NBins, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
+
+                nematic_order_param= lattice_structure_functs.nematic_order()
+
+                #data_output_functs = data_output.data_output(l_box, sizeBin, tst, clust_large, dt_step)
+                #data_output_functs.write_to_txt(hexatic_order_dict, dataPath + 'hexatic_order_' + outfile + '.txt')
+
+                if plot == 'y':
+                    plotting_functs = plotting.plotting(orient_dict, pos_dict, l_box, NBins, sizeBin, peA, peB, parFrac, eps, typ, tst)
+
+                    plotting_functs.plot_stein_order(pos, nematic_order_param, all_surface_curves, int_comp_dict)
+
+
+            stop
 
         prev_pos = pos.copy()
         prev_ang = ang.copy()

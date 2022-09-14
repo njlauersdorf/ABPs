@@ -607,7 +607,7 @@ class measurement:
         bulk_area_test = phase_count_dict['bulk'] * (self.sizeBin**2)
 
         peNet_int = self.average_activity(part_ids = phase_part_dict['int']['all'])
-        
+
         if bulk_area_test > 0:
             num_dens_mean = len(phase_part_dict['bulk']['all'])/bulk_area_test
             num_dens_A_mean = len(phase_part_dict['bulk']['A'])/bulk_area_test
@@ -804,3 +804,95 @@ class measurement:
         neigh_plot_dict = {'all-all': {'neigh': allall_dense_num_neigh, 'x': allall_dense_pos_x, 'y': allall_dense_pos_y}, 'all-A': {'neigh': allA_dense_num_neigh, 'x': allA_dense_pos_x, 'y': allA_dense_pos_y}, 'all-B': {'neigh': allB_dense_num_neigh, 'x': allB_dense_pos_x, 'y': allB_dense_pos_y}, 'A-all': {'neigh': Aall_dense_num_neigh, 'x': allall_dense_pos_x, 'y': allall_dense_pos_y}, 'B-all': {'neigh': Ball_dense_num_neigh, 'x': allall_dense_pos_x, 'y': allall_dense_pos_y}}
 
         return neigh_stat_dict, neigh_plot_dict
+
+    def hexatic_order(self):
+
+        query_args = dict(mode='nearest', r_min = 0.1, num_neighbors=6)
+
+        system_all = freud.AABBQuery(self.f_box, self.f_box.wrap(self.pos))
+
+        allall_bulk_nlist = system_all.query(self.f_box.wrap(self.pos), query_args).toNeighborList()
+
+        hex_order = freud.order.Hexatic(k=6)
+
+        # Compute hexatic order for 6 nearest neighbors
+        hex_order.compute(system=(self.f_box, self.pos), neighbors=allall_bulk_nlist)
+        #hex_order.compute(system=(f_box, pos_A), neighbors=allA_bulk_nlist)
+
+        psi_k = hex_order.particle_order
+
+        #Average hexatic order parameter
+        avg_psi_k = np.mean(psi_k)
+
+        # Create an array of angles relative to the average
+        order_param = np.abs(psi_k)
+
+        #Calculate relative bond orientation of crystal domains
+        relative_angles = np.angle(psi_k)
+
+        #Since hexagonal domains, translate angle to 0 to pi/3 radians
+        for g in range(0, len(relative_angles)):
+            if relative_angles[g]<(-2*np.pi/3):
+                relative_angles[g]+=(np.pi)
+            elif (-2*np.pi/3)<=relative_angles[g]<(-np.pi/3):
+                relative_angles[g]+=(2*np.pi/3)
+            elif (-np.pi/3)<=relative_angles[g]<0:
+                relative_angles[g]+=(np.pi/3)
+            elif np.pi/3<relative_angles[g]<=(2*np.pi/3):
+                relative_angles[g]-=(np.pi/3)
+            elif (2*np.pi/3) < relative_angles[g]:
+                relative_angles[g]-=(2*np.pi/3)
+
+        hexatic_order_dict = {'order': order_param, 'theta': relative_angles}
+        return hexatic_order_dict
+
+    def translational_order(self):
+
+        query_args = dict(mode='nearest', r_min = 0.1, num_neighbors=6)
+
+        system_all = freud.AABBQuery(self.f_box, self.f_box.wrap(self.pos))
+
+        allall_bulk_nlist = system_all.query(self.f_box.wrap(self.pos), query_args).toNeighborList()
+
+        #Compute translational order parameter
+        trans_order = freud.order.Translational(k=6)
+
+        trans_order.compute(system=(self.f_box, self.pos), neighbors=allall_bulk_nlist)
+
+        trans_param = np.abs(trans_order.particle_order)
+
+        return trans_param
+
+    def steinhardt_order(self):
+
+        query_args = dict(mode='nearest', r_min = 0.1, num_neighbors=6)
+
+        system_all = freud.AABBQuery(self.f_box, self.f_box.wrap(self.pos))
+
+        allall_bulk_nlist = system_all.query(self.f_box.wrap(self.pos), query_args).toNeighborList()
+
+        #Compute Steinhardt order parameter
+        ql = freud.order.Steinhardt(l=6)
+
+        ql.compute(system=(self.f_box, self.pos), neighbors=allall_bulk_nlist)
+
+        stein_param = np.abs(ql.particle_order)
+
+        return stein_param
+
+    def nematic_order(self):
+
+        query_args = dict(mode='nearest', r_min = 0.1, num_neighbors=6)
+
+        system_all = freud.AABBQuery(self.f_box, self.f_box.wrap(self.pos))
+
+        allall_bulk_nlist = system_all.query(self.f_box.wrap(self.pos), query_args).toNeighborList()
+
+        #Compute Steinhardt order parameter
+        nop = freud.order.Nematic([1, 0, 0])
+        
+        nop.compute(ori)
+
+        nematic_param = np.abs(nop.order)
+
+        return nematic_param

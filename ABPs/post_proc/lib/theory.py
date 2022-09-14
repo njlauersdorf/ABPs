@@ -31,6 +31,9 @@ import matplotlib.ticker as tick
 
 from scipy.optimize import curve_fit
 
+sys.path.append(os.path.join(os.path.dirname(__file__), 'lib'))
+import utility
+
 class theory:
     def __init__(self):
         # Set some constants
@@ -41,6 +44,7 @@ class theory:
         self.D_t = self.kT / self.threeEtaPiSigma      # translational diffusion constant
         self.D_r = (3.0 * self.D_t) / (self.sigma**2)  # rotational diffusion constant
         self.tauBrown = (self.sigma**2) / self.D_t     # brownian time scale (invariant)
+
 
     def avgCollisionForce(self, peNet):
         '''
@@ -196,10 +200,14 @@ class theory:
             r += j
 
         return r
-    def computeFLJ(self, r, x1, y1, x2, y2, eps):
+    def computeFLJ(self, r, x1, y1, x2, y2, eps, l_box):
         f = (24. * eps / r) * ( (2*((self.sigma/r)**12)) - ((self.sigma/r)**6) )
-        fx = f * (x2 - x1) / r
-        fy = f * (y2 - y1) / r
+        utility_functs = utility.utility(l_box)
+        difx = utility_functs.sep_dist(x2, x1)
+        dify = utility_functs.sep_dist(y2, y1)
+
+        fx = f * difx / r
+        fy = f * dify / r
         return fx, fy
 
 

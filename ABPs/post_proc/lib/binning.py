@@ -23,8 +23,8 @@ import theory, utility
 
 class binning:
 
-    def __init__(self, l_box, partNum, NBins, peA, peB, typ):
-        theory_functs = theory.theory()
+    def __init__(self, l_box, partNum, NBins, peA, peB, typ, eps):
+        self.theory_functs = theory.theory()
         self.l_box = l_box
         self.h_box = self.l_box / 2
         utility_functs = utility.utility(self.l_box)
@@ -38,10 +38,12 @@ class binning:
         self.peA = peA
         self.peB = peB
         self.r_cut=2**(1/6)                  #Cut off interaction radius (Per LJ Potential)
-
+        self.eps = eps
         self.typ = typ
 
         self.utility_functs = utility.utility(self.l_box)
+
+
     def create_bins(self):
         pos_box_x_mid = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
         pos_box_y_mid = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
@@ -418,7 +420,7 @@ class binning:
          'A':{'x':p_avg_xA,  'y':p_avg_yA,  'mag':p_avg_magA},  'B':{'x':p_avg_xB,  'y':p_avg_yB,  'mag':p_avg_magB}}}
         return orient_dict
 
-    def bin_press(self, align_dict, area_frac_dict):
+    def bin_active_press(self, align_dict, area_frac_dict):
         align_mag = align_dict['bin']['all']['mag']
         align_A_mag = align_dict['bin']['A']['mag']
         align_B_mag = align_dict['bin']['B']['mag']
@@ -437,6 +439,65 @@ class binning:
                 press_dif[ix][iy] = area_frac_B[ix][iy] * align_B_mag[ix][iy] - area_frac_A[ix][iy] * align_A_mag[ix][iy]
         press_dict = {'bin':{'all':press,
          'A':press_A,  'B':press_B,  'dif':press_dif}}
+        return press_dict
+    def bin_interpart_press(self, pos, part_dict):
+
+        binParts = part_dict['id']
+        pressure_vp = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
+
+        press_num = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
+
+        for ix in range(0, self.NBins):
+            for iy in range(0, self.NBins):
+                if len(binParts[ix][iy]) != 0:
+                    if ix==0:
+                        ix_new_range = [self.NBins-1, 0, 1]
+                    elif ix==self.NBins-1:
+                        ix_new_range = [self.NBins-2, self.NBins-1, 0]
+                    else:
+                        ix_new_range = [ix-1, ix, ix+1]
+
+                    if iy==0:
+                        iy_new_range = [self.NBins-1, 0, 1]
+                    elif iy==self.NBins-1:
+                        iy_new_range = [self.NBins-2, self.NBins-1, 0]
+                    else:
+                        iy_new_range = [iy-1, iy, iy+1]
+                    for h in range(0, len(binParts[ix][iy])):
+                        #lat_temp = 10000
+                        for ix2 in ix_new_range:
+                            for iy2 in iy_new_range:
+                                if len(binParts[ix2][iy2])!=0:
+                                    for h2 in range(0,len(binParts[ix2][iy2])):
+                                        if binParts[ix2][iy2][h2] != binParts[ix][iy][h]:
+
+                                            difx = self.utility_functs.sep_dist(pos[binParts[ix][iy]][h][0], pos[binParts[ix2][iy2]][h2][0])
+
+                                            dify = self.utility_functs.sep_dist(pos[binParts[ix][iy]][h][1], pos[binParts[ix2][iy2]][h2][1])
+
+                                            difr=(difx**2+dify**2)**0.5
+                                            #if difr2 < lat_temp:
+                                            #    lat_temp = difr2
+                                            #else:
+                                            #    pass
+                                            if 0.1<=difr<=self.r_cut:
+                                                fx, fy = self.theory_functs.computeFLJ(difr, pos[binParts[ix][iy]][h][0], pos[binParts[ix][iy]][h][1], pos[binParts[ix2][iy2]][h2][0], pos[binParts[ix2][iy2]][h2][1], self.eps)
+                                                                        # Compute the x force times x distance
+                                                sigx = fx * (difx)
+                                                                        # Likewise for y
+                                                sigy = fy * (dify)
+
+                                                press_num[ix][iy] += 1
+                                                pressure_vp[ix][iy] += ((sigx + sigy) / 2.)
+
+
+        pressure_vp_avg = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
+
+        for ix in range(0, self.NBins):
+            for iy in range(0, self.NBins):
+                pressure_vp_avg[ix][iy]=pressure_vp[ix][iy]/(2*self.sizeBin**2)
+
+        press_dict = {'tot': pressure_vp, 'num': press_num, 'avg': pressure_vp_avg}
         return press_dict
 
     def curl_and_div(self, input_dict):

@@ -94,7 +94,7 @@ class stress_and_pressure:
 
         self.press_dict = press_dict
 
-        self.binning = binning.binning(self.l_box, self.partNum, self.NBins, self.peA, self.peB, self.ang)
+        self.binning = binning.binning(self.l_box, self.partNum, self.NBins, self.peA, self.peB, self.ang, self.eps)
 
         self.plotting_utility = plotting_utility.plotting_utility(self.l_box, self.partNum, self.typ)
 
@@ -187,11 +187,14 @@ class stress_and_pressure:
                 for indx in lookx:
                     # Loop through surrounding y-index
                     for indy in looky:
+
                         if len(binParts[ix][iy])>0:
                             # Loop through all reference particles in ix,iy bin
                             for h in binParts[ix][iy]:
                                 # Loop through all neighboring particles in indx,indy bin
-                                for j in binParts[ix][iy]:
+                                for j in binParts[indx][indy]:
+                                    difx_test = self.pos[h][0] - self.pos[j][0]
+                                    dify_test = self.pos[h][1] - self.pos[j][1]
 
                                     difx = self.utility_functs.sep_dist(self.pos[h][0], self.pos[j][0])
 
@@ -199,15 +202,17 @@ class stress_and_pressure:
 
                                     difr = ( (difx)**2 + (dify)**2)**0.5
 
+
                                     # If potential is on ...
                                     if 0.1 < difr <= self.r_cut:
                                         # Compute the x and y components of force
-                                        fx, fy = theory_functs.computeFLJ(difr, self.pos[h][0], self.pos[h][1], self.pos[j][0], self.pos[j][1], self.eps)
+                                        fx, fy = theory_functs.computeFLJ(difr, self.pos[j][0], self.pos[j][1], self.pos[h][0], self.pos[h][1], self.eps, self.l_box)
 
-                                        SigXX = (fx * difr)
+                                        SigXX = (fx * difx)
                                         SigYY = (fy * dify)
                                         SigXY = (fx * dify)
                                         SigYX = (fy * difx)
+
 
                                         SigXX_part[h] += SigXX
                                         SigYY_part[h] += SigYY
@@ -273,7 +278,7 @@ class stress_and_pressure:
                                                 gasSigXY_B += SigXY
                                                 gasSigYX_B += SigYX
 
-        stress_plot_dict = {'bin': {'XX': SigXX_bin, 'XY': SigXY_bin, 'YX': SigYX_bin, 'YY': SigYY_bin}, 'part': {'XX': SigXX_part, 'XY': SigXY_part, 'YX': SigYX_bin, 'YY': SigYY_bin}}
+        stress_plot_dict = {'bin': {'XX': SigXX_bin, 'XY': SigXY_bin, 'YX': SigYX_bin, 'YY': SigYY_bin}, 'part': {'XX': SigXX_part, 'XY': SigXY_part, 'YX': SigYX_part, 'YY': SigYY_part}}
         stress_stat_dict = {'bulk': {'all': {'XX': bulkSigXX_all, 'XY': bulkSigXY_all, 'YX': bulkSigYX_all, 'YY': bulkSigYY_all}, 'A': {'XX': bulkSigXX_A, 'XY': bulkSigXY_A, 'YX': bulkSigYX_A, 'YY': bulkSigYY_A}, 'B': {'XX': bulkSigXX_B, 'XY': bulkSigXY_B, 'YX': bulkSigYX_B, 'YY': bulkSigYY_B}}, 'int': {'all': {'XX': intSigXX_all, 'XY': intSigXY_all, 'YX': intSigYX_all, 'YY': intSigYY_all}, 'A': {'XX': intSigXX_A, 'XY': intSigXY_A, 'YX': intSigYX_A, 'YY': intSigYY_A}, 'B': {'XX': intSigXX_B, 'XY': intSigXY_B, 'YX': intSigYX_B, 'YY': intSigYY_B}}, 'gas': {'all': {'XX': gasSigXX_all, 'XY': gasSigXY_all, 'YX': gasSigYX_all, 'YY': gasSigYY_all}, 'A': {'XX': gasSigXX_A, 'XY': gasSigXY_A, 'YX': gasSigYX_A, 'YY': gasSigYY_A}, 'B': {'XX': gasSigXX_B, 'XY': gasSigXY_B, 'YX': gasSigYX_B, 'YY': gasSigYY_B}}}
         return stress_plot_dict, stress_stat_dict
 
@@ -300,6 +305,29 @@ class stress_and_pressure:
         shear_dict = {'bulk': {'all': bulk_shear_stress, 'A': bulkA_shear_stress, 'B': bulkB_shear_stress}, 'int': {'all': int_shear_stress, 'A': intA_shear_stress, 'B': intB_shear_stress}, 'gas': {'all': gas_shear_stress, 'A': gasA_shear_stress, 'B': gasB_shear_stress}}
 
         return shear_dict
+
+    def virial_pressure_binned(self, stress_plot_dict):
+
+        press_arr = np.zeros((self.NBins, self.NBins))
+
+        for ix in range(0, self.NBins):
+
+            for iy in range(0, self.NBins):
+
+                press_arr[ix][iy] = (stress_plot_dict['bin']['XX'][ix][iy] + stress_plot_dict['bin']['YY'][ix][iy])/(2 * self.sizeBin**2)
+
+        return press_arr
+
+    def virial_pressure_part(self, stress_plot_dict):
+
+        press_arr = np.zeros(self.partNum)
+
+        for h in range(0, self.partNum):
+
+            press_arr[h] = (stress_plot_dict['part']['XX'][h] + stress_plot_dict['part']['YY'][h])/(2)
+
+        return press_arr
+
     def virial_pressure(self, stress_stat_dict):
 
         bulkTrace = (stress_stat_dict['bulk']['all']['XX'] + stress_stat_dict['bulk']['all']['YY'])/2.
@@ -316,9 +344,9 @@ class stress_and_pressure:
 
         count_dict = self.phase_ident.phase_count(self.phase_dict)
 
-        bulk_area = count_dict['bulk'] * self.sizeBin
-        int_area = count_dict['int'] * self.sizeBin
-        gas_area = count_dict['gas'] * self.sizeBin
+        bulk_area = count_dict['bulk'] * self.sizeBin**2
+        int_area = count_dict['int'] * self.sizeBin**2
+        gas_area = count_dict['gas'] * self.sizeBin**2
 
         bulk_press = bulkTrace / bulk_area
         bulkA_press = bulkTrace_A / bulk_area

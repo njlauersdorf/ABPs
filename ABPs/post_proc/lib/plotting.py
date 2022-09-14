@@ -1473,3 +1473,634 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         plt.show()
         #plt.savefig(outPath + 'num_neigh_' + out + pad + ".png", dpi=100)
         #plt.close()
+    def plot_hexatic_order(self, pos, hexatic_order_param, sep_surface_dict, int_comp_dict):
+
+        #Plot particles colorized by hexatic order parameter
+        fig = plt.figure(figsize=(7,6))
+        ax = fig.add_subplot(111)
+        div_min = -3
+        min_n = 0.9
+        max_n = 1.0
+        levels_text=40
+        level_boundaries = np.linspace(min_n, max_n, levels_text + 1)
+        tick_locs   = [0.0,np.pi/6,np.pi/3]
+        tick_labels = ['0',r'$\pi/6$',r'$\pi/3$']
+
+        im = plt.scatter(pos[:,0]+self.h_box, pos[:,1]+self.h_box, c=hexatic_order_param, s=0.7, vmin=min_n, vmax=max_n, cmap='viridis')
+        norm= matplotlib.colors.Normalize(vmin=min_n, vmax=max_n)
+
+        sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
+        sm.set_array([])
+        tick_lev = np.arange(min_n, max_n+max_n/10, (max_n-min_n)/10)
+        clb = fig.colorbar(sm, ticks=tick_lev, boundaries=level_boundaries,
+values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStrFormatter('%.2f'))
+
+        clb.ax.tick_params(labelsize=16)
+        clb.set_label(r'$\Psi$', labelpad=-55, y=1.04, rotation=0, fontsize=18)
+
+        for m in range(0, len(sep_surface_dict)):
+            key = 'surface id ' + str(int(int_comp_dict['ids']['int id'][m]))
+            try:
+                pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
+                pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
+                plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
+            except:
+                pass
+
+            try:
+                pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
+                pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
+                plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
+            except:
+                pass
+
+        plt.xlim(0, self.l_box)
+        plt.ylim(0, self.l_box)
+
+        plt.tick_params(axis='both', which='both',
+                        bottom=False, top=False, left=False, right=False,
+                        labelbottom=False, labeltop=False, labelleft=False, labelright=False)
+
+        plt.text(0.663, 0.04, s=r'$\tau$' + ' = ' + '{:.1f}'.format(3*self.tst) + ' ' + r'$\tau_\mathrm{r}$',
+                fontsize=18, transform = ax.transAxes,
+                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+
+        ax.axis('off')
+        plt.tight_layout()
+        #pad = str(j).zfill(4)
+        #plt.savefig(outPath + 'hexatic_order_' + out + pad + ".png", dpi=100)
+        #plt.close()
+        plt.show()
+    def plot_domain_angle(self, pos, relative_angles, sep_surface_dict, int_comp_dict):
+
+        tick_locs   = [0.0,np.pi/6,np.pi/3]
+        tick_labels = ['0',r'$\pi/6$',r'$\pi/3$']
+
+        #Plot particles colorized by bond orientation angle
+        fig = plt.figure(figsize=(7,6))
+        ax = fig.add_subplot(111)
+        div_min = -3
+        min_n = np.min(relative_angles)
+        max_n = np.max(relative_angles)
+        levels_text=40
+        level_boundaries = np.linspace(min_n, max_n, levels_text + 1)
+        im = plt.scatter(pos[:,0]+self.h_box, pos[:,1]+self.h_box, c=relative_angles, s=0.7, vmin=0.0, vmax=np.pi/3, cmap='viridis')
+        norm= matplotlib.colors.Normalize(vmin=0.0, vmax=np.pi/3)
+        sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
+        sm.set_array([])
+        tick_lev = np.arange(min_n, max_n+max_n/10, (max_n-min_n)/10)
+        clb = fig.colorbar(sm)
+        clb.ax.tick_params(labelsize=16)
+        clb.set_label(r'$\theta$', labelpad=-38, y=1.05, rotation=0, fontsize=18)
+        clb.locator     = matplotlib.ticker.FixedLocator(tick_locs)
+        clb.formatter   = matplotlib.ticker.FixedFormatter(tick_labels)
+        clb.update_ticks()
+
+        for m in range(0, len(sep_surface_dict)):
+            key = 'surface id ' + str(int(int_comp_dict['ids']['int id'][m]))
+            try:
+                pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
+                pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
+                plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
+            except:
+                pass
+
+            try:
+                pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
+                pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
+                plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
+            except:
+                pass
+
+        plt.xlim(0, self.l_box)
+        plt.ylim(0, self.l_box)
+
+        plt.tick_params(axis='both', which='both',
+                        bottom=False, top=False, left=False, right=False,
+                        labelbottom=False, labeltop=False, labelleft=False, labelright=False)
+
+        plt.text(0.663, 0.04, s=r'$\tau$' + ' = ' + '{:.1f}'.format(3*self.tst) + ' ' + r'$\tau_\mathrm{r}$',
+                fontsize=18, transform = ax.transAxes,
+                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+
+        ax.axis('off')
+        plt.tight_layout()
+        plt.show()
+        #pad = str(j).zfill(4)
+        #plt.savefig(outPath + 'relative_angle_' + out + pad + ".png", dpi=100)
+        #plt.close()
+
+    def plot_trans_order(self, pos, trans_param, sep_surface_dict, int_comp_dict):
+
+        #Plot particles colorized by translational order parameter
+        fig = plt.figure(figsize=(7,6))
+        ax = fig.add_subplot(111)
+        div_min = -3
+        min_n = np.min(trans_param)
+        max_n = 1.0
+        levels_text=40
+        level_boundaries = np.linspace(min_n, max_n, levels_text + 1)
+        tick_locs   = [0.0,np.pi/6,np.pi/3]
+        tick_labels = ['0',r'$\pi/6$',r'$\pi/3$']
+
+
+
+        im = plt.scatter(pos[:,0]+self.h_box, pos[:,1]+self.h_box, c=trans_param, s=0.7, vmin=min_n, vmax=max_n, cmap='viridis')
+        norm= matplotlib.colors.Normalize(vmin=min_n, vmax=max_n)
+
+        sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
+        sm.set_array([])
+        tick_lev = np.arange(min_n, max_n+max_n/10, (max_n-min_n)/10)
+        clb = fig.colorbar(sm, ticks=tick_lev, boundaries=level_boundaries,
+values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStrFormatter('%.2f'))
+
+        clb.ax.tick_params(labelsize=16)
+        clb.set_label(r'$\Psi$', labelpad=-55, y=1.04, rotation=0, fontsize=18)
+
+        for m in range(0, len(sep_surface_dict)):
+            key = 'surface id ' + str(int(int_comp_dict['ids']['int id'][m]))
+            try:
+                pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
+                pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
+                plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
+            except:
+                pass
+
+            try:
+                pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
+                pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
+                plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
+            except:
+                pass
+
+        plt.xlim(0, self.l_box)
+        plt.ylim(0, self.l_box)
+
+        plt.tick_params(axis='both', which='both',
+                        bottom=False, top=False, left=False, right=False,
+                        labelbottom=False, labeltop=False, labelleft=False, labelright=False)
+
+        plt.text(0.663, 0.04, s=r'$\tau$' + ' = ' + '{:.1f}'.format(3*self.tst) + ' ' + r'$\tau_\mathrm{r}$',
+                fontsize=18, transform = ax.transAxes,
+                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+
+        ax.axis('off')
+        plt.tight_layout()
+        plt.show()
+        #pad = str(j).zfill(4)
+        #plt.savefig(outPath + 'translational_order_' + out + pad + ".png", dpi=100)
+        #plt.close()
+
+    def plot_stein_order(self, pos, stein_param, sep_surface_dict, int_comp_dict):
+
+        #Plot particles colorized by translational order parameter
+        fig = plt.figure(figsize=(7,6))
+        ax = fig.add_subplot(111)
+        div_min = -3
+        min_n = np.mean(stein_param)
+        max_n = np.max(stein_param)
+        levels_text=40
+        level_boundaries = np.linspace(min_n, max_n, levels_text + 1)
+        tick_locs   = [0.0,np.pi/6,np.pi/3]
+        tick_labels = ['0',r'$\pi/6$',r'$\pi/3$']
+
+
+
+        im = plt.scatter(pos[:,0]+self.h_box, pos[:,1]+self.h_box, c=stein_param, s=0.7, vmin=min_n, vmax=max_n, cmap='viridis')
+        norm= matplotlib.colors.Normalize(vmin=min_n, vmax=max_n)
+
+        sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
+        sm.set_array([])
+        tick_lev = np.arange(min_n, max_n+max_n/10, (max_n-min_n)/10)
+        clb = fig.colorbar(sm, ticks=tick_lev, boundaries=level_boundaries,
+values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStrFormatter('%.2f'))
+
+        clb.ax.tick_params(labelsize=16)
+        clb.set_label(r'$\Psi$', labelpad=-55, y=1.04, rotation=0, fontsize=18)
+
+        for m in range(0, len(sep_surface_dict)):
+            key = 'surface id ' + str(int(int_comp_dict['ids']['int id'][m]))
+            try:
+                pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
+                pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
+                plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
+            except:
+                pass
+
+            try:
+                pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
+                pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
+                plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
+            except:
+                pass
+
+        plt.xlim(0, self.l_box)
+        plt.ylim(0, self.l_box)
+
+        plt.tick_params(axis='both', which='both',
+                        bottom=False, top=False, left=False, right=False,
+                        labelbottom=False, labeltop=False, labelleft=False, labelright=False)
+
+        plt.text(0.663, 0.04, s=r'$\tau$' + ' = ' + '{:.1f}'.format(3*self.tst) + ' ' + r'$\tau_\mathrm{r}$',
+                fontsize=18, transform = ax.transAxes,
+                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+
+        ax.axis('off')
+        plt.tight_layout()
+        plt.show()
+        #pad = str(j).zfill(4)
+        #plt.savefig(outPath + 'translational_order_' + out + pad + ".png", dpi=100)
+        #plt.close()
+
+    def plot_nematic_order(self, pos, nematic_param, sep_surface_dict, int_comp_dict):
+
+        #Plot particles colorized by translational order parameter
+        fig = plt.figure(figsize=(7,6))
+        ax = fig.add_subplot(111)
+        div_min = -3
+        min_n = np.mean(nematic_param)
+        max_n = np.max(nematic_param)
+        levels_text=40
+        level_boundaries = np.linspace(min_n, max_n, levels_text + 1)
+        tick_locs   = [0.0,np.pi/6,np.pi/3]
+        tick_labels = ['0',r'$\pi/6$',r'$\pi/3$']
+
+
+
+        im = plt.scatter(pos[:,0]+self.h_box, pos[:,1]+self.h_box, c=nematic_param, s=0.7, vmin=min_n, vmax=max_n, cmap='viridis')
+        norm= matplotlib.colors.Normalize(vmin=min_n, vmax=max_n)
+
+        sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
+        sm.set_array([])
+        tick_lev = np.arange(min_n, max_n+max_n/10, (max_n-min_n)/10)
+        clb = fig.colorbar(sm, ticks=tick_lev, boundaries=level_boundaries,
+values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStrFormatter('%.2f'))
+
+        clb.ax.tick_params(labelsize=16)
+        clb.set_label(r'$\Psi$', labelpad=-55, y=1.04, rotation=0, fontsize=18)
+
+        for m in range(0, len(sep_surface_dict)):
+            key = 'surface id ' + str(int(int_comp_dict['ids']['int id'][m]))
+            try:
+                pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
+                pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
+                plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
+            except:
+                pass
+
+            try:
+                pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
+                pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
+                plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
+            except:
+                pass
+
+        plt.xlim(0, self.l_box)
+        plt.ylim(0, self.l_box)
+
+        plt.tick_params(axis='both', which='both',
+                        bottom=False, top=False, left=False, right=False,
+                        labelbottom=False, labeltop=False, labelleft=False, labelright=False)
+
+        plt.text(0.663, 0.04, s=r'$\tau$' + ' = ' + '{:.1f}'.format(3*self.tst) + ' ' + r'$\tau_\mathrm{r}$',
+                fontsize=18, transform = ax.transAxes,
+                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+
+        ax.axis('off')
+        plt.tight_layout()
+        plt.show()
+        #pad = str(j).zfill(4)
+        #plt.savefig(outPath + 'translational_order_' + out + pad + ".png", dpi=100)
+        #plt.close()
+
+
+
+    def plot_interpart_press_binned2(self, interpart_press_binned, sep_surface_dict, int_comp_dict):
+
+        vmax_p = np.max(interpart_press_binned)
+        vmin_p = np.min(interpart_press_binned)
+
+
+        fig = plt.figure(figsize=(7,6))
+        ax = fig.add_subplot(111)
+        #ax2 = fig.add_subplot()
+
+
+        im = plt.contourf(self.pos_x, self.pos_y, interpart_press_binned, vmin = vmin_p, vmax=vmax_p)
+
+        norm= matplotlib.colors.Normalize(vmin=vmin_p, vmax=vmax_p)
+
+        sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
+        sm.set_array([])
+        tick_lev = np.arange(vmin_p, vmax_p+vmax_p/10, (vmax_p-vmin_p)/10)
+        clb = fig.colorbar(sm, ticks=tick_lev)
+        clb.ax.tick_params(labelsize=16)
+
+        clb.ax.set_title(r'$\Pi^\mathrm{P}$', fontsize=20)
+        #fig.colorbar(im, ax=ax2)
+
+        for m in range(0, len(sep_surface_dict)):
+            key = 'surface id ' + str(int(int_comp_dict['ids']['int id'][m]))
+            try:
+                pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
+                pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
+                plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
+            except:
+                pass
+
+            try:
+                pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
+                pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
+                plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
+            except:
+                pass
+
+        plt.xlim(0, self.l_box)
+        plt.ylim(0, self.l_box)
+
+        plt.text(0.663, 0.04, s=r'$\tau$' + ' = ' + '{:.1f}'.format(3*self.tst) + ' ' + r'$\tau_\mathrm{r}$',
+            fontsize=18, transform = ax.transAxes,
+            bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+
+        #ax2.axis('off')
+        plt.axis('off')
+        #plt.title(r'$\mathrm{Pe}$' + ' = ' + str(int(peA)) + ', ' + r'$\phi$' + ' = ' + str(phi) + ', ' + r'$\epsilon$' + ' = ' + r'$10^{{{}}}$'.format(int(np.log10(eps))), fontsize=17)
+        plt.tight_layout()
+        plt.show()
+        #plt.savefig(outPath + 'interpart_press_' + out + pad + ".png", dpi=200)
+        #plt.close()
+
+    def plot_interpart_press_binned(self, interpart_press_binned, sep_surface_dict, int_comp_dict):
+
+        fig = plt.figure(figsize=(7,6))
+        ax = fig.add_subplot(111)
+        div_min = -3
+        min_n = np.min(interpart_press_binned)
+        max_n = np.max(interpart_press_binned)
+        levels_text=40
+        level_boundaries = np.linspace(min_n, max_n, levels_text + 1)
+        im = plt.contourf(self.pos_x, self.pos_y, interpart_press_binned, level_boundaries, vmin=min_n, vmax=max_n, cmap='seismic', extend='both')
+        norm= matplotlib.colors.Normalize(vmin=min_n, vmax=max_n)
+
+        for m in range(0, len(sep_surface_dict)):
+            key = 'surface id ' + str(int(int_comp_dict['ids']['int id'][m]))
+            try:
+                pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
+                pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
+                plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
+            except:
+                pass
+
+            try:
+                pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
+                pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
+                plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
+            except:
+                pass
+
+        plt.quiver(self.pos_x, self.pos_y, self.orient_x, self.orient_y)
+
+
+        sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
+        sm.set_array([])
+        tick_lev = np.arange(min_n, max_n+max_n/10, (max_n-min_n)/10)
+        clb = fig.colorbar(sm, ticks=tick_lev, boundaries=level_boundaries,
+values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStrFormatter('%.2f'))
+        clb.ax.tick_params(labelsize=16)
+        clb.set_label(r'$\Pi^\mathrm{P}$', labelpad=-40, y=1.07, rotation=0, fontsize=20)
+
+        plt.xlim(0, self.l_box)
+        plt.ylim(0, self.l_box)
+
+        plt.tick_params(axis='both', which='both',
+                        bottom=False, top=False, left=False, right=False,
+                        labelbottom=False, labeltop=False, labelleft=False, labelright=False)
+
+        plt.text(0.663, 0.04, s=r'$\tau$' + ' = ' + '{:.1f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+                fontsize=18, transform = ax.transAxes,
+                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+
+        ax.axis('off')
+        plt.tight_layout()
+        plt.show()
+        #plt.savefig(outPath + 'num_dens_' + out + pad + ".png", dpi=100)
+        #plt.close()
+
+    def interpart_press_map(self, pos, interpart_press_part, sep_surface_dict, int_comp_dict):
+
+        bulk_lat_mean = np.mean(interpart_press_part)
+
+        min_n = np.min(interpart_press_part)
+        max_n = np.max(interpart_press_part)
+
+        fig = plt.figure(figsize=(7,6))
+        ax = fig.add_subplot(111)
+        im = plt.scatter(pos[:,0]+self.h_box, pos[:,1]+self.h_box, c=interpart_press_part, s=0.7, vmin=min_n, vmax=max_n)
+
+
+
+        if bulk_lat_mean != 0.0:
+            tick_lev = np.arange(min_n, max_n+(max_n-min_n)/6, (max_n - min_n)/6)
+            #sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
+            #sm.set_array([])
+            clb = plt.colorbar(ticks=tick_lev, orientation="vertical", format=tick.FormatStrFormatter('%.3f'))
+        else:
+            clb = plt.colorbar(orientation="vertical", format=tick.FormatStrFormatter('%.3f'))
+        plt.tick_params(axis='both', which='both',
+                        bottom=False, top=False, left=False, right=False,
+                        labelbottom=False, labeltop=False, labelleft=False, labelright=False)
+        plt.text(0.663, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+                fontsize=18, transform = ax.transAxes,
+                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+
+        clb.ax.tick_params(labelsize=16)
+        clb.set_label(r'$\hat{\Pi}_\mathrm{d}^\mathrm{P}$', labelpad=-90, y=1.08, rotation=0, fontsize=20)
+
+        for m in range(0, len(sep_surface_dict)):
+            key = 'surface id ' + str(int(int_comp_dict['ids']['int id'][m]))
+            try:
+                pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
+                pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
+                plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
+            except:
+                pass
+
+            try:
+                pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
+                pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
+                plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
+            except:
+                pass
+
+        plt.xlim(0, self.l_box)
+        plt.ylim(0, self.l_box)
+
+        ax.axis('off')
+        plt.tight_layout()
+        plt.show()
+        #plt.savefig(outPath + 'lat_map_' + out + pad + ".png", dpi=100)
+        #plt.close()
+    def plot_part_activity(self, pos, sep_surface_dict, int_comp_dict):
+
+        #Set plot colors
+        fastCol = '#e31a1c'
+        slowCol = '#081d58'
+
+        typ0ind = np.where(self.typ == 0)[0]
+        typ1ind = np.where(self.typ == 1)[0]
+
+        if (self.parFrac == 100.):
+            mono=1
+            mono_activity=self.peA
+            mono_type = 0
+        elif (self.parFrac == 0.):
+            mono = 1
+            mono_activity=self.peB
+            mono_type = 1
+        elif self.peA==self.peB:
+            mono=1
+            mono_activity=self.peA
+            mono_type = 2
+        else:
+            mono=0
+
+        #Plot each particle as a point color-coded by activity and labeled by their activity
+        fig = plt.figure(figsize=(6.5,6))
+        ax = fig.add_subplot(111)
+
+        sz = 0.75
+
+        if mono==0:
+            #Local each particle's positions
+            pos0=pos[typ0ind]                               # Find positions of type 0 particles
+            pos1=pos[typ1ind]
+
+            #Assign type 0 particles to plot
+
+            ells0 = [Ellipse(xy=pos0[i,:]+self.h_box,
+                    width=sz, height=sz, label='PeA: '+str(self.peA))
+            for i in range(0,len(typ0ind))]
+
+            #Assign type 1 particles to plot
+            ells1 = [Ellipse(xy=pos1[i,:]+self.h_box,
+                    width=sz, height=sz, label='PeB: '+str(self.peB))
+            for i in range(0,len(typ1ind))]
+
+            # Plot position colored by neighbor number
+            if self.peA <= self.peB:
+                slowGroup = mc.PatchCollection(ells0, facecolors=slowCol)
+                fastGroup = mc.PatchCollection(ells1,facecolors=fastCol)
+            else:
+                slowGroup = mc.PatchCollection(ells1, facecolors=slowCol)
+                fastGroup = mc.PatchCollection(ells0,facecolors=fastCol)
+            ax.add_collection(slowGroup)
+            ax.add_collection(fastGroup)
+
+            #Create legend for binary system
+            if self.parFrac<100.0:
+                leg = ax.legend(handles=[ells0[0], ells1[1]], labels=[r'$\mathrm{Pe}_\mathrm{A} = $'+str(int(self.peA)), r'$\mathrm{Pe}_\mathrm{B} = $'+str(int(self.peB))], loc='upper right', prop={'size': 15}, markerscale=8.0)
+                if self.peA <= self.peB:
+                    leg.legendHandles[0].set_color(slowCol)
+                    leg.legendHandles[1].set_color(fastCol)
+                else:
+                    leg.legendHandles[0].set_color(fastCol)
+                    leg.legendHandles[1].set_color(slowCol)
+            #Create legend for monodisperse system
+            else:
+                leg = ax.legend(handles=[ells0[0]], labels=[r'$\mathrm{Pe} = $'+str(int(self.peA)), r'$\mathrm{Pe} = $'+str(int(self.peA))], loc='upper right', prop={'size': 15}, markerscale=8.0)
+                leg.legendHandles[0].set_color(slowCol)
+
+        elif mono == 1:
+            if mono_type == 0:
+                #Local each particle's positions
+                pos0=pos[typ0ind]                               # Find positions of type 0 particles
+
+                #Assign type 0 particles to plot
+                ells0 = [Ellipse(xy=pos0[i,:]+self.h_box,
+                        width=sz, height=sz, label='Pe: '+str(self.peA))
+                for i in range(0,len(typ0ind))]
+
+                # Plot position colored by neighbor number
+                slowGroup = mc.PatchCollection(ells0, facecolors=slowCol)
+                ax.add_collection(slowGroup)
+
+                leg = ax.legend(handles=[ells0[0]], labels=[r'$\mathrm{Pe} = $'+str(int(self.peA))], loc='upper right', prop={'size': 15}, markerscale=8.0)
+                leg.legendHandles[0].set_color(slowCol)
+
+            elif mono_type == 1:
+                #Local each particle's positions
+                pos1=pos[typ1ind]                               # Find positions of type 0 particles
+
+                #Assign type 0 particles to plot
+                ells1 = [Ellipse(xy=pos1[i,:]+self.h_box,
+                        width=sz, height=sz, label='Pe: '+str(self.peB))
+                for i in range(0,len(typ1ind))]
+
+                # Plot position colored by neighbor number
+                slowGroup = mc.PatchCollection(ells1, facecolors=slowCol)
+                ax.add_collection(slowGroup)
+
+                leg = ax.legend(handles=[ells1[0]], labels=[r'$\mathrm{Pe} = $'+str(int(self.peB))], loc='upper right', prop={'size': 15}, markerscale=8.0)
+                leg.legendHandles[0].set_color(slowCol)
+
+            elif mono_type == 2:
+                #Local each particle's positions
+                pos0=pos[typ0ind]                               # Find positions of type 0 particles
+                pos1=pos[typ1ind]
+
+                #Assign type 0 particles to plot
+                ells0 = [Ellipse(xy=pos0[i,:]+self.h_box,
+                        width=sz, height=sz, label='Pe: '+str(self.peA))
+                for i in range(0,len(typ0ind))]
+                ells1 = [Ellipse(xy=pos1[i,:]+self.h_box,
+                        width=sz, height=sz, label='Pe: '+str(self.peB))
+                for i in range(0,len(typ1ind))]
+
+                # Plot position colored by neighbor number
+                slowGroup = mc.PatchCollection(ells0, facecolors=slowCol)
+                ax.add_collection(slowGroup)
+                fastGroup = mc.PatchCollection(ells1, facecolors=slowCol)
+                ax.add_collection(fastGroup)
+
+                leg = ax.legend(handles=[ells0[0]], labels=[r'$\mathrm{Pe} = $'+str(int(self.peB))], loc='upper right', prop={'size': 15}, markerscale=8.0)
+                leg.legendHandles[0].set_color(slowCol)
+
+        for m in range(0, len(sep_surface_dict)):
+            key = 'surface id ' + str(int(int_comp_dict['ids']['int id'][m]))
+            try:
+                pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
+                pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
+                plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
+            except:
+                pass
+
+            try:
+                pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
+                pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
+                plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
+            except:
+                pass
+
+        #Label time step
+        ax.text(0.95, 0.025, s=r'$\tau$' + ' = ' + '{:.2f}'.format(3*self.tst) + ' ' + r'$\tau_\mathrm{r}$',
+                horizontalalignment='right', verticalalignment='bottom',
+                transform=ax.transAxes,
+                fontsize=18,
+                bbox=dict(facecolor=(1,1,1,0.5), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+
+        #Set axes parameters
+        ax.set_xlim(0, self.l_box)
+        ax.set_ylim(0, self.l_box)
+        ax.axes.set_xticks([])
+        ax.axes.set_yticks([])
+        ax.axes.set_xticklabels([])
+        ax.axes.set_yticks([])
+        ax.set_aspect('equal')
+
+        # Create frame pad for images
+        #pad = str(j).zfill(4)
+
+        plt.tight_layout()
+        #plt.savefig(outPath+out + pad + ".png", dpi=150, transparent=False)
+        #plt.close()
+        plt.show()
