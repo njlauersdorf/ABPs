@@ -229,7 +229,7 @@ import time
 with hoomd.open(name=inFile, mode='rb') as t:
 
     dumps = int(t.__len__())
-    start = int(200/time_step)#205                                             # first frame to process
+    start = int(0/time_step)#205                                             # first frame to process
                                 # get number of timesteps dumped
     end = int(dumps/time_step)-1                                             # final frame to process
     snap = t[0]                                             # Take first snap for box
@@ -632,10 +632,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 key = 'surface id ' + str(int(int_comp_dict['ids']['int id'][m]))
                 all_surface_curves[key] = {}
                 all_surface_measurements[key] = {}
-                print(key)
                 if sep_surface_dict[key]['interior']['num']>0:
                     sort_interior_ids = interface_functs.sort_surface_points(sep_surface_dict[key]['interior'])
-                    print(sort_interior_ids)
 
                     all_surface_curves[key]['interior'] = interface_functs.surface_curve_interp(sort_interior_ids)
 
@@ -663,19 +661,33 @@ with hoomd.open(name=inFile, mode='rb') as t:
             method1_align_dict, method2_align_dict = interface_functs.surface_alignment(all_surface_measurements, all_surface_curves, sep_surface_dict, int_dict, int_comp_dict)
             method1_align_dict, method2_align_dict = interface_functs.bulk_alignment(method1_align_dict, method2_align_dict, all_surface_measurements, all_surface_curves, sep_surface_dict, bulk_dict, bulk_comp_dict, int_comp_dict)
             method1_align_dict, method2_align_dict = interface_functs.gas_alignment(method1_align_dict, method2_align_dict, all_surface_measurements, all_surface_curves, sep_surface_dict, int_comp_dict)
+            if measurement_method == 'velocity':
+                if j>(start*time_step):
+                    particle_prop_functs = particles.particle_props(l_box, partNum, NBins, peA, peB, typ, pos, ang)
 
-            if measurement_method == 'activity':
+                    part_ang_vel_dict = particle_prop_functs.angular_velocity(ang_vel_dict['part'], phase_dict['part'])
+                    part_vel_dict = particle_prop_functs.velocity(vel_dict['part']['mag'], phase_dict['part'])
 
-                plotting_functs = plotting.plotting(orient_dict, pos_dict, l_box, NBins, sizeBin, peA, peB, parFrac, eps, typ, tst)
+                    data_output_functs = data_output.data_output(l_box, sizeBin, tst, clust_large, dt_step)
+                    data_output_functs.write_to_txt(part_ang_vel_dict, dataPath + 'angular_velocity_' + outfile + '.txt')
+                    data_output_functs.write_to_txt(part_vel_dict, dataPath + 'velocity_' + outfile + '.txt')
+
+                    if plot == 'y':
+                        plotting_functs = plotting.plotting(orient_dict, pos_dict, l_box, NBins, sizeBin, peA, peB, parFrac, eps, typ, tst)
+                        plotting_functs.ang_vel_histogram(ang_vel_dict['part'], phase_dict['part'])
+                        plotting_functs.ang_vel_bulk_sf_histogram(ang_vel_dict['part'], phase_dict['part'])
+                        plotting_functs.ang_vel_int_sf_histogram(ang_vel_dict['part'], phase_dict['part'])
+                        plotting_functs.ang_vel_int_sf_histogram(ang_vel_dict['part'], phase_dict['part'])
+            elif measurement_method == 'activity':
 
                 if plot == 'y':
+                    plotting_functs = plotting.plotting(orient_dict, pos_dict, l_box, NBins, sizeBin, peA, peB, parFrac, eps, typ, tst)
                     plotting_functs.plot_part_activity(pos, all_surface_curves, int_comp_dict)
 
-            if measurement_method == 'phases':
-
-                plotting_functs = plotting.plotting(orient_dict, pos_dict, l_box, NBins, sizeBin, peA, peB, parFrac, eps, typ, tst)
+            elif measurement_method == 'phases':
 
                 if plot == 'y':
+                    plotting_functs = plotting.plotting(orient_dict, pos_dict, l_box, NBins, sizeBin, peA, peB, parFrac, eps, typ, tst)
                     plotting_functs.plot_phases(pos, part_count_dict, all_surface_curves, int_comp_dict)
 
             elif measurement_method == 'number_density':
@@ -895,8 +907,6 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                     plotting_functs.plot_stein_order(pos, nematic_order_param, all_surface_curves, int_comp_dict)
 
-
-            stop
-
+        #if j == start:
         prev_pos = pos.copy()
         prev_ang = ang.copy()

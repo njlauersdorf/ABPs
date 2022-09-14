@@ -2104,3 +2104,187 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         #plt.savefig(outPath+out + pad + ".png", dpi=150, transparent=False)
         #plt.close()
         plt.show()
+    def ang_vel_histogram(self, ang_vel, phasePart):
+
+        xmin = np.min(ang_vel)
+        xmax = np.max(ang_vel)
+
+        #Define colors for plots
+        yellow = ("#7570b3")
+        green = ("#77dd77")
+        red = ("#ff6961")
+
+        bulk_ang_vel = ang_vel[np.where(phasePart==0)[0]]
+        int_ang_vel = ang_vel[np.where(phasePart==1)[0]]
+        gas_ang_vel = ang_vel[np.where(phasePart==2)[0]]
+
+        fig = plt.figure(figsize=(8,6))
+        ax = fig.add_subplot(111)
+
+        #Remove bulk particles that are outside plot's xrange
+        if (len(bulk_ang_vel)>0):
+            bulk_id = np.where((bulk_ang_vel > xmax) | (bulk_ang_vel < xmin))[0]
+            bulk_ang_vel = np.delete(bulk_ang_vel, bulk_id)
+
+            plt.hist(bulk_ang_vel, alpha = 1.0, bins=60, color=green)
+
+        #If interface particle measured, continue
+        if (len(int_ang_vel)>0):
+            int_id = np.where((int_ang_vel > xmax) | (int_ang_vel < xmin))[0]
+            int_ang_vel = np.delete(int_ang_vel, int_id)
+
+            plt.hist(int_ang_vel, alpha = 0.8, bins=75, color=yellow)
+
+        if (len(gas_ang_vel)>0):
+            gas_id = np.where((gas_ang_vel > xmax) | (gas_ang_vel < xmin))[0]
+            gas_ang_vel = np.delete(gas_ang_vel, gas_id)
+
+            plt.hist(gas_ang_vel, alpha = 0.8, bins=75, color=red)
+
+        green_patch = mpatches.Patch(color=green, label='Bulk')
+        yellow_patch = mpatches.Patch(color=yellow, label='Interface')
+        red_patch = mpatches.Patch(color=red, label='Gas')
+        plt.legend(handles=[green_patch, yellow_patch, red_patch], fancybox=True, framealpha=0.75, ncol=1, fontsize=18, loc='upper right',labelspacing=0.1, handletextpad=0.1)
+
+        plt.xlabel(r'angular velocity ($\phi$)', fontsize=18)
+        plt.ylabel('Number of particles', fontsize=18)
+        plt.xlim([xmin,xmax])
+
+        plt.xticks(fontsize=15)
+        plt.yticks(fontsize=15)
+        plt.text(0.03, 0.94, s=r'$\tau$' + ' = ' + '{:.2f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+            fontsize=18,transform = ax.transAxes,
+            bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+
+        plt.tight_layout()
+        plt.show()
+        #plt.savefig(outPath + 'lat_histo_' + out + pad + ".png", dpi=150)
+        #plt.close()
+
+    def ang_vel_bulk_sf_histogram(self, ang_vel, phasePart):
+
+        xmin = np.min(ang_vel)
+        xmax = np.max(ang_vel)
+
+        #Define colors for plots
+        yellow = ("#7570b3")
+        green = ("#77dd77")
+        red = ("#ff6961")
+
+        fastCol = '#e31a1c'
+        slowCol = '#081d58'
+
+        bulk_A_ang_vel = ang_vel[np.where((phasePart==0) & (self.typ==0))[0]]
+        bulk_B_ang_vel = ang_vel[np.where((phasePart==0) & (self.typ==1))[0]]
+
+        fig = plt.figure(figsize=(8,6))
+        ax = fig.add_subplot(111)
+
+        if (len(bulk_A_ang_vel)>0):
+            plt.hist(bulk_A_ang_vel, alpha = 1.0, bins=60, color=slowCol)
+        if (len(bulk_B_ang_vel)>0):
+            plt.hist(bulk_B_ang_vel, alpha = 0.5, bins=60, color=fastCol)
+
+        green_patch = mpatches.Patch(color=slowCol, label='A Bulk')
+        yellow_patch = mpatches.Patch(color=fastCol, label='B bulk')
+        plt.legend(handles=[green_patch, yellow_patch], fancybox=True, framealpha=0.75, ncol=1, fontsize=18, loc='upper right',labelspacing=0.1, handletextpad=0.1)
+
+        plt.xlabel(r'angular velocity ($\phi$)', fontsize=18)
+        plt.ylabel('Number of particles', fontsize=18)
+        plt.xlim([xmin,xmax])
+
+        plt.xticks(fontsize=15)
+        plt.yticks(fontsize=15)
+        plt.text(0.03, 0.94, s=r'$\tau$' + ' = ' + '{:.2f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+            fontsize=18,transform = ax.transAxes,
+            bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+
+        plt.tight_layout()
+        plt.show()
+        #plt.savefig(outPath + 'lat_histo_' + out + pad + ".png", dpi=150)
+        #plt.close()
+    def ang_vel_int_sf_histogram(self, ang_vel, phasePart):
+
+        xmin = np.min(ang_vel)
+        xmax = np.max(ang_vel)
+
+        #Define colors for plots
+        yellow = ("#7570b3")
+        green = ("#77dd77")
+        red = ("#ff6961")
+
+        fastCol = '#e31a1c'
+        slowCol = '#081d58'
+
+        int_A_ang_vel = ang_vel[np.where((phasePart==1) & (self.typ==0))[0]]
+        int_B_ang_vel = ang_vel[np.where((phasePart==1) & (self.typ==1))[0]]
+
+        fig = plt.figure(figsize=(8,6))
+        ax = fig.add_subplot(111)
+
+        if (len(int_A_ang_vel)>0):
+            plt.hist(int_A_ang_vel, alpha = 1.0, bins=60, color=slowCol)
+        if (len(int_B_ang_vel)>0):
+            plt.hist(int_B_ang_vel, alpha = 0.5, bins=60, color=fastCol)
+
+        green_patch = mpatches.Patch(color=slowCol, label='A Bulk')
+        yellow_patch = mpatches.Patch(color=fastCol, label='B bulk')
+        plt.legend(handles=[green_patch, yellow_patch], fancybox=True, framealpha=0.75, ncol=1, fontsize=18, loc='upper right',labelspacing=0.1, handletextpad=0.1)
+
+        plt.xlabel(r'angular velocity ($\phi$)', fontsize=18)
+        plt.ylabel('Number of particles', fontsize=18)
+        plt.xlim([xmin,xmax])
+
+        plt.xticks(fontsize=15)
+        plt.yticks(fontsize=15)
+        plt.text(0.03, 0.94, s=r'$\tau$' + ' = ' + '{:.2f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+            fontsize=18,transform = ax.transAxes,
+            bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+
+        plt.tight_layout()
+        plt.show()
+        #plt.savefig(outPath + 'lat_histo_' + out + pad + ".png", dpi=150)
+        #plt.close()
+
+    def ang_vel_gas_sf_histogram(self, ang_vel, phasePart):
+
+        xmin = np.min(ang_vel)
+        xmax = np.max(ang_vel)
+
+        #Define colors for plots
+        yellow = ("#7570b3")
+        green = ("#77dd77")
+        red = ("#ff6961")
+
+        fastCol = '#e31a1c'
+        slowCol = '#081d58'
+
+        gas_A_ang_vel = ang_vel[np.where((phasePart==2) & (self.typ==0))[0]]
+        gas_B_ang_vel = ang_vel[np.where((phasePart==2) & (self.typ==1))[0]]
+
+        fig = plt.figure(figsize=(8,6))
+        ax = fig.add_subplot(111)
+
+        if (len(gas_A_ang_vel)>0):
+            plt.hist(gas_A_ang_vel, alpha = 1.0, bins=60, color=slowCol)
+        if (len(gas_B_ang_vel)>0):
+            plt.hist(gas_B_ang_vel, alpha = 0.5, bins=60, color=fastCol)
+
+        green_patch = mpatches.Patch(color=slowCol, label='A Bulk')
+        yellow_patch = mpatches.Patch(color=fastCol, label='B bulk')
+        plt.legend(handles=[green_patch, yellow_patch], fancybox=True, framealpha=0.75, ncol=1, fontsize=18, loc='upper right',labelspacing=0.1, handletextpad=0.1)
+
+        plt.xlabel(r'angular velocity ($\phi$)', fontsize=18)
+        plt.ylabel('Number of particles', fontsize=18)
+        plt.xlim([xmin,xmax])
+
+        plt.xticks(fontsize=15)
+        plt.yticks(fontsize=15)
+        plt.text(0.03, 0.94, s=r'$\tau$' + ' = ' + '{:.2f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+            fontsize=18,transform = ax.transAxes,
+            bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+
+        plt.tight_layout()
+        plt.show()
+        #plt.savefig(outPath + 'lat_histo_' + out + pad + ".png", dpi=150)
+        #plt.close()

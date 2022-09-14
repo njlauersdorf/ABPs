@@ -270,7 +270,7 @@ class binning:
                                 ang_v += 2*np.pi
                             else:
                                 ang_v -= 2*np.pi
-
+                        print(ang_v)
                         ang_v_all[ix][iy] += ang_v/dt
                         if self.typ[h] == 0:
                             typ0_temp += 1
@@ -279,16 +279,16 @@ class binning:
                             typ1_temp += 1
                             ang_v_B[ix][iy] += ang_v/dt
 
-                        ang_v_part[h] = ang_v/dt
+                        ang_v_part[h] = (ang_v/dt)* (180/np.pi)
 
                 if len(binParts[ix][iy])>0:
-                    ang_v_avg[ix][iy] = ang_v_all[ix][iy] / len(binParts[ix][iy])
+                    ang_v_avg[ix][iy] = (ang_v_all[ix][iy] / len(binParts[ix][iy]))
 
                     if typ0_temp > 0:
-                        ang_v_avg_A[ix][iy] = ang_v_A[ix][iy] / typ0_temp
+                        ang_v_avg_A[ix][iy] = (ang_v_A[ix][iy] / typ0_temp)
 
                     if typ1_temp > 0:
-                        ang_v_avg_B[ix][iy] = ang_v_B[ix][iy] / typ1_temp
+                        ang_v_avg_B[ix][iy] = (ang_v_B[ix][iy] / typ1_temp)
 
 
         ang_vel_dict = {'bin': {'all': ang_v_avg,
