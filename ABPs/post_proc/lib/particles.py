@@ -63,7 +63,11 @@ class particle_props:
         B_dense_id = np.where((phasePart!=2) & (self.typ==1))[0]
         dense_id = np.where(phasePart!=2)[0]
 
-        phase_part_dict = {'bulk': {'all': bulk_id, 'A': A_bulk_id, 'B': B_bulk_id}, 'int': {'all': int_id, 'A': A_int_id, 'B': B_int_id}, 'gas': {'all': gas_id, 'A': A_gas_id, 'B': B_gas_id}, 'dense': {'all': dense_id, 'A': A_dense_id, 'B': B_dense_id}}
+        A_gas_int_id = np.where((phasePart!=0) & (self.typ==0))[0]
+        B_gas_int_id = np.where((phasePart!=0) & (self.typ==1))[0]
+        gas_int_id = np.where(phasePart!=0)[0]
+
+        phase_part_dict = {'bulk': {'all': bulk_id, 'A': A_bulk_id, 'B': B_bulk_id}, 'int': {'all': int_id, 'A': A_int_id, 'B': B_int_id}, 'gas': {'all': gas_id, 'A': A_gas_id, 'B': B_gas_id}, 'dense': {'all': dense_id, 'A': A_dense_id, 'B': B_dense_id}, 'gas_int': {'all': gas_int_id, 'A': A_gas_int_id, 'B': B_gas_int_id}}
         return phase_part_dict
 
     def particle_normal_fa(self):

@@ -37,6 +37,9 @@ sys.path.append(os.path.join(os.path.dirname(__file__), 'lib'))
 import theory
 import utility
 
+plt.rcParams["font.family"] = "Times New Roman"
+plt.rcParams['text.latex.preview'] = True
+
 from scipy.optimize import curve_fit
 
 class plotting:
@@ -272,6 +275,61 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
     def plot_type_B_density(self, num_dens_dict, sep_surface_dict, int_comp_dict):
 
         num_dens_B = num_dens_dict['bin']['B']
+        fig = plt.figure(figsize=(7,6))
+        ax = fig.add_subplot(111)
+        div_min = -3
+        min_n = 0.0
+        max_n = np.max(num_dens_B)
+        levels_text=40
+        level_boundaries = np.linspace(min_n, max_n, levels_text + 1)
+        im = plt.contourf(self.pos_x, self.pos_y, num_dens_B, level_boundaries, vmin=min_n, vmax=max_n, cmap='Blues', extend='both')
+        norm= matplotlib.colors.Normalize(vmin=min_n, vmax=max_n)
+
+        for m in range(0, len(sep_surface_dict)):
+            key = 'surface id ' + str(int(int_comp_dict['ids']['int id'][m]))
+            try:
+                pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
+                pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
+                plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
+            except:
+                pass
+
+            try:
+                pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
+                pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
+                plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
+            except:
+                pass
+
+        sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
+        sm.set_array([])
+        tick_lev = np.arange(min_n, max_n+max_n/10, (max_n-min_n)/10)
+        clb = fig.colorbar(sm, ticks=tick_lev, boundaries=level_boundaries,
+values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStrFormatter('%.2f'))
+        clb.ax.tick_params(labelsize=16)
+        clb.set_label(r'$\phi_\mathrm{B}$', labelpad=-40, y=1.07, rotation=0, fontsize=20)
+
+        plt.xlim(0, self.l_box)
+        plt.ylim(0, self.l_box)
+
+        plt.tick_params(axis='both', which='both',
+                        bottom=False, top=False, left=False, right=False,
+                        labelbottom=False, labeltop=False, labelleft=False, labelright=False)
+
+        plt.text(0.663, 0.04, s=r'$\tau$' + ' = ' + '{:.1f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+                fontsize=18, transform = ax.transAxes,
+                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+
+        ax.axis('off')
+        plt.tight_layout()
+        plt.show()
+        #plt.savefig(outPath + 'num_dens_' + out + pad + ".png", dpi=100)
+        #plt.close()
+
+    def plot_normal_fa_map(self, normal_fa_dict, sep_surface_dict, int_comp_dict):
+
+        num_dens_B = normal_fa_dict['bin']['all']
+        print(normal_fa_dict)
         fig = plt.figure(figsize=(7,6))
         ax = fig.add_subplot(111)
         div_min = -3
@@ -1473,6 +1531,256 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         plt.show()
         #plt.savefig(outPath + 'num_neigh_' + out + pad + ".png", dpi=100)
         #plt.close()
+
+
+
+
+    def plot_all_ori_of_all_parts(self, neigh_plot_dict, sep_surface_dict, int_comp_dict):
+        fig = plt.figure(figsize=(7,6))
+        ax = fig.add_subplot(111)
+        im = plt.scatter(neigh_plot_dict['all-all']['x']+self.h_box, neigh_plot_dict['all-all']['y']+self.h_box, c=neigh_plot_dict['all-all']['ori'], s=0.7)
+
+
+        #sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
+        #sm.set_array([])
+        min_n = np.amin(neigh_plot_dict['all-all']['ori'])
+        max_n = np.amax(neigh_plot_dict['all-all']['ori'])
+
+        tick_lev = np.arange(min_n, max_n+1, (max_n - min_n)/6)
+        clb = plt.colorbar(ticks=tick_lev, orientation="vertical", format=tick.FormatStrFormatter('%.2f'))
+
+        plt.tick_params(axis='both', which='both',
+                        bottom=False, top=False, left=False, right=False,
+                        labelbottom=False, labeltop=False, labelleft=False, labelright=False)
+        plt.text(0.663, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{r}$',
+                fontsize=18, transform = ax.transAxes,
+                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+        #plt.quiver(pos_box_x, pos_box_y, velocity_x_bin_plot, velocity_y_bin_plot, scale=20.0, color='black', alpha=0.8)
+        clb.ax.tick_params(labelsize=16)
+        clb.set_label('# neighbors for all particles', labelpad=25, y=0.5, rotation=270, fontsize=20)
+
+        for m in range(0, len(sep_surface_dict)):
+            key = 'surface id ' + str(int(int_comp_dict['ids']['int id'][m]))
+            try:
+                pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
+                pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
+                plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
+            except:
+                pass
+
+            try:
+                pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
+                pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
+                plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
+            except:
+                pass
+
+        plt.xlim(0, self.l_box)
+        plt.ylim(0, self.l_box)
+
+        ax.axis('off')
+        plt.tight_layout()
+        plt.show()
+        #plt.savefig(outPath + 'num_neigh_' + out + pad + ".png", dpi=100)
+        #plt.close()
+
+    def plot_A_ori_of_all_parts(self, neigh_plot_dict, sep_surface_dict, int_comp_dict):
+        fig = plt.figure(figsize=(7,6))
+        ax = fig.add_subplot(111)
+        im = plt.scatter(neigh_plot_dict['A-all']['x']+self.h_box, neigh_plot_dict['A-all']['y']+self.h_box, c=neigh_plot_dict['A-all']['ori'], s=0.7)
+
+
+        #sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
+        #sm.set_array([])
+        min_n = np.amin(neigh_plot_dict['A-all']['ori'])
+        max_n = np.amax(neigh_plot_dict['A-all']['ori'])
+
+        tick_lev = np.arange(min_n, max_n+1, (max_n - min_n)/6)
+        clb = plt.colorbar(ticks=tick_lev, orientation="vertical", format=tick.FormatStrFormatter('%.2f'))
+
+        plt.tick_params(axis='both', which='both',
+                        bottom=False, top=False, left=False, right=False,
+                        labelbottom=False, labeltop=False, labelleft=False, labelright=False)
+        plt.text(0.663, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{r}$',
+                fontsize=18, transform = ax.transAxes,
+                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+        #plt.quiver(pos_box_x, pos_box_y, velocity_x_bin_plot, velocity_y_bin_plot, scale=20.0, color='black', alpha=0.8)
+        clb.ax.tick_params(labelsize=16)
+        clb.set_label('# A neighbors for all particles', labelpad=25, y=0.5, rotation=270, fontsize=20)
+
+        for m in range(0, len(sep_surface_dict)):
+            key = 'surface id ' + str(int(int_comp_dict['ids']['int id'][m]))
+            try:
+                pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
+                pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
+                plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
+            except:
+                pass
+
+            try:
+                pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
+                pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
+                plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
+            except:
+                pass
+
+        plt.xlim(0, self.l_box)
+        plt.ylim(0, self.l_box)
+
+        ax.axis('off')
+        plt.tight_layout()
+        plt.show()
+        #plt.savefig(outPath + 'num_neigh_' + out + pad + ".png", dpi=100)
+        #plt.close()
+
+    def plot_B_ori_of_all_parts(self, neigh_plot_dict, sep_surface_dict, int_comp_dict):
+        fig = plt.figure(figsize=(7,6))
+        ax = fig.add_subplot(111)
+        im = plt.scatter(neigh_plot_dict['B-all']['x']+self.h_box, neigh_plot_dict['B-all']['y']+self.h_box, c=neigh_plot_dict['B-all']['ori'], s=0.7)
+
+
+        #sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
+        #sm.set_array([])
+        min_n = np.amin(neigh_plot_dict['B-all']['ori'])
+        max_n = np.amax(neigh_plot_dict['B-all']['ori'])
+
+        tick_lev = np.arange(min_n, max_n+1, (max_n - min_n)/6)
+        clb = plt.colorbar(ticks=tick_lev, orientation="vertical", format=tick.FormatStrFormatter('%.2f'))
+
+        plt.tick_params(axis='both', which='both',
+                        bottom=False, top=False, left=False, right=False,
+                        labelbottom=False, labeltop=False, labelleft=False, labelright=False)
+        plt.text(0.663, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{r}$',
+                fontsize=18, transform = ax.transAxes,
+                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+        #plt.quiver(pos_box_x, pos_box_y, velocity_x_bin_plot, velocity_y_bin_plot, scale=20.0, color='black', alpha=0.8)
+        clb.ax.tick_params(labelsize=16)
+        clb.set_label('# B neighbors for all particles', labelpad=25, y=0.5, rotation=270, fontsize=20)
+
+        for m in range(0, len(sep_surface_dict)):
+            key = 'surface id ' + str(int(int_comp_dict['ids']['int id'][m]))
+            try:
+                pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
+                pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
+                plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
+            except:
+                pass
+
+            try:
+                pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
+                pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
+                plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
+            except:
+                pass
+
+        plt.xlim(0, self.l_box)
+        plt.ylim(0, self.l_box)
+
+        ax.axis('off')
+        plt.tight_layout()
+        plt.show()
+        #plt.savefig(outPath + 'num_neigh_' + out + pad + ".png", dpi=100)
+        #plt.close()
+
+    def plot_all_ori_of_A_parts(self, neigh_plot_dict, sep_surface_dict, int_comp_dict):
+        fig = plt.figure(figsize=(7,6))
+        ax = fig.add_subplot(111)
+        im = plt.scatter(neigh_plot_dict['all-A']['x']+self.h_box, neigh_plot_dict['all-A']['y']+self.h_box, c=neigh_plot_dict['all-A']['ori'], s=0.7)
+
+
+        #sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
+        #sm.set_array([])
+        min_n = np.amin(neigh_plot_dict['all-A']['ori'])
+        max_n = np.amax(neigh_plot_dict['all-A']['ori'])
+
+        tick_lev = np.arange(min_n, max_n+1, (max_n - min_n)/6)
+        clb = plt.colorbar(ticks=tick_lev, orientation="vertical", format=tick.FormatStrFormatter('%.2f'))
+
+        plt.tick_params(axis='both', which='both',
+                        bottom=False, top=False, left=False, right=False,
+                        labelbottom=False, labeltop=False, labelleft=False, labelright=False)
+        plt.text(0.663, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{r}$',
+                fontsize=18, transform = ax.transAxes,
+                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+        #plt.quiver(pos_box_x, pos_box_y, velocity_x_bin_plot, velocity_y_bin_plot, scale=20.0, color='black', alpha=0.8)
+        clb.ax.tick_params(labelsize=16)
+        clb.set_label('# neighbors for A particles', labelpad=25, y=0.5, rotation=270, fontsize=20)
+
+        for m in range(0, len(sep_surface_dict)):
+            key = 'surface id ' + str(int(int_comp_dict['ids']['int id'][m]))
+            try:
+                pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
+                pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
+                plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
+            except:
+                pass
+
+            try:
+                pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
+                pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
+                plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
+            except:
+                pass
+
+        plt.xlim(0, self.l_box)
+        plt.ylim(0, self.l_box)
+
+        ax.axis('off')
+        plt.tight_layout()
+        plt.show()
+        #plt.savefig(outPath + 'num_neigh_' + out + pad + ".png", dpi=100)
+        #plt.close()
+
+    def plot_all_ori_of_B_parts(self, neigh_plot_dict, sep_surface_dict, int_comp_dict):
+        fig = plt.figure(figsize=(7,6))
+        ax = fig.add_subplot(111)
+        im = plt.scatter(neigh_plot_dict['all-B']['x']+self.h_box, neigh_plot_dict['all-B']['y']+self.h_box, c=neigh_plot_dict['all-B']['ori'], s=0.7)
+
+
+        #sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
+        #sm.set_array([])
+        min_n = np.amin(neigh_plot_dict['all-B']['ori'])
+        max_n = np.amax(neigh_plot_dict['all-B']['ori'])
+
+        tick_lev = np.arange(min_n, max_n+1, (max_n - min_n)/6)
+        clb = plt.colorbar(ticks=tick_lev, orientation="vertical", format=tick.FormatStrFormatter('%.2f'))
+
+        plt.tick_params(axis='both', which='both',
+                        bottom=False, top=False, left=False, right=False,
+                        labelbottom=False, labeltop=False, labelleft=False, labelright=False)
+        plt.text(0.663, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{r}$',
+                fontsize=18, transform = ax.transAxes,
+                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+        #plt.quiver(pos_box_x, pos_box_y, velocity_x_bin_plot, velocity_y_bin_plot, scale=20.0, color='black', alpha=0.8)
+        clb.ax.tick_params(labelsize=16)
+        clb.set_label('# neighbors for B particles', labelpad=25, y=0.5, rotation=270, fontsize=20)
+
+        for m in range(0, len(sep_surface_dict)):
+            key = 'surface id ' + str(int(int_comp_dict['ids']['int id'][m]))
+            try:
+                pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
+                pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
+                plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
+            except:
+                pass
+
+            try:
+                pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
+                pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
+                plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
+            except:
+                pass
+
+        plt.xlim(0, self.l_box)
+        plt.ylim(0, self.l_box)
+
+        ax.axis('off')
+        plt.tight_layout()
+        plt.show()
+        #plt.savefig(outPath + 'num_neigh_' + out + pad + ".png", dpi=100)
+        #plt.close()
+
+
     def plot_hexatic_order(self, pos, hexatic_order_param, sep_surface_dict, int_comp_dict):
 
         #Plot particles colorized by hexatic order parameter
@@ -1940,7 +2248,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         plt.show()
         #plt.savefig(outPath + 'lat_map_' + out + pad + ".png", dpi=100)
         #plt.close()
-    def plot_part_activity(self, pos, sep_surface_dict, int_comp_dict):
+    def plot_part_activity(self, pos, sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None):
 
         #Set plot colors
         fastCol = '#e31a1c'
@@ -2011,7 +2319,14 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                 leg.legendHandles[0].set_color(slowCol)
 
         elif mono == 1:
+
+            if (self.peA==0):
+                slowCol = '#081d58'
+            else:
+                slowCol = '#e31a1c'
+
             if mono_type == 0:
+
                 #Local each particle's positions
                 pos0=pos[typ0ind]                               # Find positions of type 0 particles
 
@@ -2028,6 +2343,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                 leg.legendHandles[0].set_color(slowCol)
 
             elif mono_type == 1:
+
                 #Local each particle's positions
                 pos1=pos[typ1ind]                               # Find positions of type 0 particles
 
@@ -2062,31 +2378,42 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                 fastGroup = mc.PatchCollection(ells1, facecolors=slowCol)
                 ax.add_collection(fastGroup)
 
-                leg = ax.legend(handles=[ells0[0]], labels=[r'$\mathrm{Pe} = $'+str(int(self.peB))], loc='upper right', prop={'size': 15}, markerscale=8.0)
-                leg.legendHandles[0].set_color(slowCol)
+                #leg = ax.legend(handles=[ells0[0]], labels=[r'$\mathrm{Pe} = $'+str(int(self.peB))], loc='upper right', prop={'size': 15}, markerscale=8.0)
+                #leg = ax.legend(handles=[ells0[0]], labels=[r'$F^\mathrm{a} = $'+str(int(self.peB))], loc='upper right', prop={'size': 28}, markerscale=8.0)
+                #leg.legendHandles[0].set_color(slowCol)
 
-        for m in range(0, len(sep_surface_dict)):
-            key = 'surface id ' + str(int(int_comp_dict['ids']['int id'][m]))
-            try:
-                pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
-                pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
-                plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
-            except:
-                pass
+        try:
+            if sep_surface_dict!=None:
+                for m in range(0, len(sep_surface_dict)):
+                    key = 'surface id ' + str(int(int_comp_dict['ids']['int id'][m]))
 
-            try:
-                pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
-                pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
-                plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
-            except:
-                pass
+                    try:
+                        pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
+                        pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
+                        plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
+                    except:
+                        pass
 
+                    try:
+                        pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
+                        pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
+                        plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
+                    except:
+                        pass
+        except:
+            pass
+
+        try:
+            if active_fa_dict!=None:
+                plt.quiver(self.pos_x, self.pos_y, active_fa_dict['bin']['x'], active_fa_dict['bin']['y'], scale=20.0, color='black', alpha=0.8)
+        except:
+            pass
         #Label time step
-        ax.text(0.95, 0.025, s=r'$\tau$' + ' = ' + '{:.2f}'.format(3*self.tst) + ' ' + r'$\tau_\mathrm{r}$',
-                horizontalalignment='right', verticalalignment='bottom',
-                transform=ax.transAxes,
-                fontsize=18,
-                bbox=dict(facecolor=(1,1,1,0.5), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+        #ax.text(0.95, 0.025, s=r'$\tau$' + ' = ' + '{:.2f}'.format(3*self.tst) + ' ' + r'$\tau_\mathrm{r}$',
+        #        horizontalalignment='right', verticalalignment='bottom',
+        #        transform=ax.transAxes,
+        #        fontsize=18,
+        #        bbox=dict(facecolor=(1,1,1,0.5), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
 
         #Set axes parameters
         ax.set_xlim(0, self.l_box)
@@ -2288,3 +2615,77 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         plt.show()
         #plt.savefig(outPath + 'lat_histo_' + out + pad + ".png", dpi=150)
         #plt.close()
+
+    def plot_vorticity(self, velocity, vorticity, sep_surface_dict, int_comp_dict, species='all'):
+
+        min_n_temp = np.abs(np.min(vorticity))
+        max_n_temp = np.abs(np.max(vorticity))
+
+        if min_n_temp > max_n_temp:
+            max_n = min_n_temp
+            min_n = -min_n_temp
+        else:
+            min_n = -max_n_temp
+            max_n = max_n_temp
+
+        fig = plt.figure(figsize=(7,6))
+        ax = fig.add_subplot(111)
+
+        levels_text=20
+        level_boundaries = np.linspace(min_n, max_n, levels_text + 1)
+        im = plt.contourf(self.pos_x, self.pos_y, vorticity, level_boundaries, vmin=min_n, vmax=max_n, cmap='seismic', extend='both')
+        norm= matplotlib.colors.Normalize(vmin=min_n, vmax=max_n)
+
+        sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
+        sm.set_array([])
+
+        tick_lev = np.arange(min_n, max_n+max_n/10, (max_n-min_n)/10)
+        clb = plt.colorbar(sm, ticks=tick_lev, boundaries=level_boundaries,
+        values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, orientation="vertical", format=tick.FormatStrFormatter('%.3f'))
+        plt.tick_params(axis='both', which='both',
+                        bottom=False, top=False, left=False, right=False,
+                        labelbottom=False, labeltop=False, labelleft=False, labelright=False)
+        plt.text(0.663, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+                fontsize=18, transform = ax.transAxes,
+                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+
+        for m in range(0, len(sep_surface_dict)):
+            key = 'surface id ' + str(int(int_comp_dict['ids']['int id'][m]))
+            try:
+                pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
+                pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
+                plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
+            except:
+                pass
+
+            try:
+                pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
+                pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
+                plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
+            except:
+                pass
+
+        clb.ax.tick_params(labelsize=16)
+        if species == 'all':
+            clb.set_label(r'$\nabla \times v$', labelpad=-40, y=1.07, rotation=0, fontsize=20)
+        elif species == 'A':
+            clb.set_label(r'$\nabla \times v_\mathrm{A}$', labelpad=-40, y=1.07, rotation=0, fontsize=20)
+        elif species == 'B':
+            clb.set_label(r'$\nabla \times v_\mathrm{B}$', labelpad=-40, y=1.07, rotation=0, fontsize=20)
+
+        plt.quiver(self.pos_x, self.pos_y, velocity['x'], velocity['y'], scale=20.0, color='black', alpha=0.8)
+
+
+        plt.xlim(0, self.l_box)
+        plt.ylim(0, self.l_box)
+
+        ax.axis('off')
+        plt.tight_layout()
+        if species == 'all':
+            plt.savefig(outPath + 'curl_map_' + out + pad + ".png", dpi=100)
+        elif species == 'A':
+            plt.savefig(outPath + 'curl_A_map_' + out + pad + ".png", dpi=100)
+        elif species == 'B':
+            plt.savefig(outPath + 'curl_B_map_' + out + pad + ".png", dpi=100)
+
+        plt.close()

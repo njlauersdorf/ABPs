@@ -311,8 +311,7 @@ class binning:
                             pe_sum += self.peA
                         else:
                             pe_sum += self.peB
-                    else:
-                        pe_avg[ix][iy] = pe_sum / len(binParts[ix][iy])
+                    pe_avg[ix][iy] = pe_sum / len(binParts[ix][iy])
 
         activ_dict = {'avg': pe_avg}
         return activ_dict
@@ -334,17 +333,16 @@ class binning:
                     for h in range(0, len(binParts[ix][iy])):
                         if typParts[ix][iy][h] == 0:
                             typ0_temp += 1
-                        else:
-                            if typParts[ix][iy][h] == 1:
-                                typ1_temp += 1
-                            area_frac[ix][iy] = len(binParts[ix][iy]) / self.sizeBin ** 2 * (math.pi / 4)
-                            area_frac_A[ix][iy] = typ0_temp / self.sizeBin ** 2 * (math.pi / 4)
-                            area_frac_B[ix][iy] = typ1_temp / self.sizeBin ** 2 * (math.pi / 4)
-                            fast_frac_arr[ix][iy] = area_frac_B[ix][iy] / area_frac[ix][iy]
-                            if self.peB >= self.peA:
-                                area_frac_dif[ix][iy] = area_frac_B[ix][iy] - area_frac_A[ix][iy]
-                            else:
-                                area_frac_dif[ix][iy] = area_frac_A[ix][iy] - area_frac_B[ix][iy]
+                        elif typParts[ix][iy][h] == 1:
+                            typ1_temp += 1
+                    area_frac[ix][iy] = len(binParts[ix][iy]) / self.sizeBin ** 2 * (math.pi / 4)
+                    area_frac_A[ix][iy] = typ0_temp / self.sizeBin ** 2 * (math.pi / 4)
+                    area_frac_B[ix][iy] = typ1_temp / self.sizeBin ** 2 * (math.pi / 4)
+                    fast_frac_arr[ix][iy] = area_frac_B[ix][iy] / area_frac[ix][iy]
+                    if self.peB >= self.peA:
+                        area_frac_dif[ix][iy] = area_frac_B[ix][iy] - area_frac_A[ix][iy]
+                    else:
+                        area_frac_dif[ix][iy] = area_frac_A[ix][iy] - area_frac_B[ix][iy]
 
         area_frac_dict = {'bin': {'all':area_frac,
          'A':area_frac_A,  'B':area_frac_B,  'dif':area_frac_dif,  'fast frac':fast_frac_arr}}
@@ -371,6 +369,8 @@ class binning:
         p_avg_xB = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
         p_avg_yB = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
         p_avg_magB = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
+        bin_part_x = np.zeros(self.partNum)
+        bin_part_y = np.zeros(self.partNum)
         for ix in range(0, self.NBins):
             for iy in range(0, self.NBins):
                 typ0_temp = 0
@@ -392,32 +392,33 @@ class binning:
                             typ0_temp += 1
                             p_A_x[ix][iy] += px
                             p_A_y[ix][iy] += py
-                        else:
-                            if typParts[ix][iy][h] == 1:
-                                typ1_temp += 1
-                                p_B_x[ix][iy] += px
-                                p_B_y[ix][iy] += py
-                            p_avg_x[ix][iy] = p_all_x[ix][iy] / len(binParts[ix][iy])
-                            p_avg_y[ix][iy] = p_all_y[ix][iy] / len(binParts[ix][iy])
-                            if typ0_temp > 0:
-                                p_avg_xA[ix][iy] = p_A_x[ix][iy] / typ0_temp
-                                p_avg_yA[ix][iy] = p_A_y[ix][iy] / typ0_temp
-                            else:
-                                p_avg_xA[ix][iy] = 0.0
-                                p_avg_yA[ix][iy] = 0.0
-                            if typ1_temp > 0:
-                                p_avg_xB[ix][iy] = p_B_x[ix][iy] / typ1_temp
-                                p_avg_yB[ix][iy] = p_B_y[ix][iy] / typ1_temp
-                            else:
-                                p_avg_xB[ix][iy] = 0.0
-                                p_avg_yB[ix][iy] = 0.0
-                            p_avg_mag[ix][iy] = (p_avg_x[ix][iy] ** 2 + p_avg_y[ix][iy] ** 2) ** 0.5
-                            p_avg_magA[ix][iy] = (p_avg_xA[ix][iy] ** 2 + p_avg_yA[ix][iy] ** 2) ** 0.5
-                            p_avg_magB[ix][iy] = (p_avg_xB[ix][iy] ** 2 + p_avg_yB[ix][iy] ** 2) ** 0.5
+                        elif typParts[ix][iy][h] == 1:
+                            typ1_temp += 1
+                            p_B_x[ix][iy] += px
+                            p_B_y[ix][iy] += py
+                        bin_part_x[binParts[ix][iy][h]]=px
+                        bin_part_y[binParts[ix][iy][h]]=py
+                    p_avg_x[ix][iy] = p_all_x[ix][iy] / len(binParts[ix][iy])
+                    p_avg_y[ix][iy] = p_all_y[ix][iy] / len(binParts[ix][iy])
+                    if typ0_temp > 0:
+                        p_avg_xA[ix][iy] = p_A_x[ix][iy] / typ0_temp
+                        p_avg_yA[ix][iy] = p_A_y[ix][iy] / typ0_temp
+                    else:
+                        p_avg_xA[ix][iy] = 0.0
+                        p_avg_yA[ix][iy] = 0.0
+                    if typ1_temp > 0:
+                        p_avg_xB[ix][iy] = p_B_x[ix][iy] / typ1_temp
+                        p_avg_yB[ix][iy] = p_B_y[ix][iy] / typ1_temp
+                    else:
+                        p_avg_xB[ix][iy] = 0.0
+                        p_avg_yB[ix][iy] = 0.0
+                    p_avg_mag[ix][iy] = (p_avg_x[ix][iy] ** 2 + p_avg_y[ix][iy] ** 2) ** 0.5
+                    p_avg_magA[ix][iy] = (p_avg_xA[ix][iy] ** 2 + p_avg_yA[ix][iy] ** 2) ** 0.5
+                    p_avg_magB[ix][iy] = (p_avg_xB[ix][iy] ** 2 + p_avg_yB[ix][iy] ** 2) ** 0.5
 
         orient_dict = {'bin': {'all':{'x':p_avg_x,
           'y':p_avg_y,  'mag':p_avg_mag},
-         'A':{'x':p_avg_xA,  'y':p_avg_yA,  'mag':p_avg_magA},  'B':{'x':p_avg_xB,  'y':p_avg_yB,  'mag':p_avg_magB}}}
+         'A':{'x':p_avg_xA,  'y':p_avg_yA,  'mag':p_avg_magA},  'B':{'x':p_avg_xB,  'y':p_avg_yB,  'mag':p_avg_magB}}, 'part': {'x': bin_part_x, 'y': bin_part_y}}
         return orient_dict
 
     def bin_active_press(self, align_dict, area_frac_dict):
@@ -440,6 +441,53 @@ class binning:
         press_dict = {'bin':{'all':press,
          'A':press_A,  'B':press_B,  'dif':press_dif}}
         return press_dict
+    def bin_active_fa(self, orient_dict, part_dict, phaseBin):
+        orient_x = orient_dict['part']['x']
+        orient_y = orient_dict['part']['y']
+        binParts = part_dict['id']
+        fa_x = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
+        fa_y = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
+        fa_mag = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
+        for ix in range(0, self.NBins):
+            for iy in range(0, self.NBins):
+                if phaseBin[ix][iy]==1:
+                    for h in binParts[ix][iy]:
+                        if self.typ[h]==0:
+                            fa_x[ix][iy] += orient_x[h] * self.peA
+                            fa_y[ix][iy] += orient_y[h] * self.peA
+                        else:
+                            fa_x[ix][iy] += orient_x[h] * self.peB
+                            fa_y[ix][iy] += orient_y[h] * self.peB
+                    fa_mag[ix][iy] = ( (fa_x[ix][iy]) ** 2 + (fa_y[ix][iy]) ** 2 ) ** 0.5
+
+        fa_x = fa_x / np.max(fa_mag)
+        fa_y = fa_y / np.max(fa_mag)
+
+        act_force_dict = {'bin':{'x': fa_x, 'y': fa_y}}
+        return act_force_dict
+
+    def bin_normal_active_fa(self, align_dict, area_frac_dict, activ_dict):
+        align_mag = align_dict['bin']['all']['mag']
+        align_A_mag = align_dict['bin']['A']['mag']
+        align_B_mag = align_dict['bin']['B']['mag']
+        area_frac = area_frac_dict['bin']['all']
+        area_frac_A = area_frac_dict['bin']['A']
+        area_frac_B = area_frac_dict['bin']['B']
+        fa = activ_dict['avg']
+        press = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
+        press_A = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
+        press_B = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
+        press_dif = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
+        for ix in range(0, self.NBins):
+            for iy in range(0, self.NBins):
+                press[ix][iy] = area_frac[ix][iy] * align_mag[ix][iy] * fa[ix][iy]
+                press_A[ix][iy] = area_frac_A[ix][iy] * align_A_mag[ix][iy] * self.peA
+                press_B[ix][iy] = area_frac_B[ix][iy] * align_B_mag[ix][iy] * self.peB
+                press_dif[ix][iy] = area_frac_B[ix][iy] * align_B_mag[ix][iy] * self.peB - area_frac_A[ix][iy] * align_A_mag[ix][iy] * self.peA
+        act_press_dict = {'bin':{'all':press,
+         'A':press_A,  'B':press_B,  'dif':press_dif}}
+        return act_press_dict
+
     def bin_interpart_press(self, pos, part_dict):
 
         binParts = part_dict['id']
@@ -542,9 +590,8 @@ class binning:
         curl_A = -dy_over_dx_A + dx_over_dy_A
         div_B = dx_over_dx_B + dy_over_dy_B
         curl_B = -dy_over_dx_B + dx_over_dy_B
-        grad_dict = {'all':{'div':div,
-          'curl':curl},
-         'A':{'div':div_A,  'curl':curl_A},  'B':{'div':div_B,  'curl':curl_B}}
+
+        grad_dict = {'div': {'all': div, 'A': div_A, 'B': div_B}, 'curl': {'all': curl, 'A': curl_A, 'B': curl_B} }
         return grad_dict
     def decrease_bin_size(self, phaseBin, phasePart, binParts, pos, typ, factor = 4):
 

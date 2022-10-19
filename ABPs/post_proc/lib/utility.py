@@ -48,7 +48,7 @@ class utility:
                   dif -= self.l_box
 
           return dif
-        
+
     def sep_dist_arr(self, pos1, pos2, difxy=False):
 
         difr = (pos1 - pos2)

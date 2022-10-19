@@ -156,7 +156,10 @@ new_brown = ("#b15928")
 lat_theory = theory_functs.conForRClust(peNet, eps)
 curPLJ = theory_functs.ljPress(lat_theory, peNet, eps)
 phi_theory = theory_functs.latToPhi(lat_theory)
-phi_g_theory = theory_functs.compPhiG(peNet, lat_theory)
+if peNet > 0:
+    phi_g_theory = theory_functs.compPhiG(peNet, lat_theory)
+else:
+    phi_g_theory = phi
 
 
 #Calculate activity-softness dependent variables
@@ -229,7 +232,7 @@ import time
 with hoomd.open(name=inFile, mode='rb') as t:
 
     dumps = int(t.__len__())
-    start = int(0/time_step)#205                                             # first frame to process
+    start = int(900/time_step)#205                                             # first frame to process
                                 # get number of timesteps dumped
     end = int(dumps/time_step)-1                                             # final frame to process
     snap = t[0]                                             # Take first snap for box
@@ -299,30 +302,33 @@ with hoomd.open(name=inFile, mode='rb') as t:
         large_clust_ind_all=np.where(clust_size>min_size)           #Identify all clusters larger than minimum size
         clust_large = np.amax(clust_size)
 
+
+        start_time = time.time()
+        partTyp=np.zeros(partNum)
+        partPhase=np.zeros(partNum)
+        edgePhase=np.zeros(partNum)
+        bulkPhase=np.zeros(partNum)
+
+        com_dict = plotting_utility_functs.com_view(pos, clp_all)
+        pos = com_dict['pos']
+
+        #Bin system to calculate orientation and alignment that will be used in vector plots
+        NBins = utility_functs.getNBins(l_box, bin_width)
+
+        sizeBin = utility_functs.roundUp(((l_box) / NBins), 6)
+
+        binning_functs = binning.binning(l_box, partNum, NBins, peA, peB, typ, eps)
+
+        pos_dict = binning_functs.create_bins()
+
+        part_dict = binning_functs.bin_parts(pos, ids, clust_size)
+
+        orient_dict = binning_functs.bin_orient(part_dict, pos, ang, com_dict['com'])
+        area_frac_dict = binning_functs.bin_area_frac(part_dict)
+        activ_dict = binning_functs.bin_activity(part_dict)
+
         if clust_large >= min_size:
-            start_time = time.time()
-            partTyp=np.zeros(partNum)
-            partPhase=np.zeros(partNum)
-            edgePhase=np.zeros(partNum)
-            bulkPhase=np.zeros(partNum)
 
-            com_dict = plotting_utility_functs.com_view(pos, clp_all)
-            pos = com_dict['pos']
-
-            #Bin system to calculate orientation and alignment that will be used in vector plots
-            NBins = utility_functs.getNBins(l_box, bin_width)
-
-            sizeBin = utility_functs.roundUp(((l_box) / NBins), 6)
-
-            binning_functs = binning.binning(l_box, partNum, NBins, peA, peB, typ, eps)
-
-            pos_dict = binning_functs.create_bins()
-
-            part_dict = binning_functs.bin_parts(pos, ids, clust_size)
-
-            orient_dict = binning_functs.bin_orient(part_dict, pos, ang, com_dict['com'])
-            area_frac_dict = binning_functs.bin_area_frac(part_dict)
-            activ_dict = binning_functs.bin_activity(part_dict)
 
             fa_all_tot = [[0 for b in range(NBins)] for a in range(NBins)]
             fa_all_x_tot = [[0 for b in range(NBins)] for a in range(NBins)]
@@ -340,6 +346,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
             pad = str(j).zfill(4)
 
             press_dict = binning_functs.bin_active_press(align_dict, area_frac_dict)
+
+            normal_fa_dict = binning_functs.bin_normal_active_fa(align_dict, area_frac_dict, activ_dict)
 
             #radial_density_function_analysis_binary_updates
             align_grad_dict = binning_functs.curl_and_div(align_dict)
@@ -586,11 +594,11 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
             bin_count_dict = phase_ident_functs.phase_bin_count(phase_dict, bulk_dict, int_dict, bulk_comp_dict, int_comp_dict)
 
+            active_fa_dict = binning_functs.bin_active_fa(orient_dict, part_dict, phase_dict['bin'])
 
             #interface = interface.interface()
 
             #Slow/fast composition of bulk phase
-
             part_count_dict = phase_ident_functs.phase_part_count(phase_dict, int_dict, int_comp_dict, bulk_dict, bulk_comp_dict, typ)
 
             #Colors for plotting each phase
@@ -661,7 +669,13 @@ with hoomd.open(name=inFile, mode='rb') as t:
             method1_align_dict, method2_align_dict = interface_functs.surface_alignment(all_surface_measurements, all_surface_curves, sep_surface_dict, int_dict, int_comp_dict)
             method1_align_dict, method2_align_dict = interface_functs.bulk_alignment(method1_align_dict, method2_align_dict, all_surface_measurements, all_surface_curves, sep_surface_dict, bulk_dict, bulk_comp_dict, int_comp_dict)
             method1_align_dict, method2_align_dict = interface_functs.gas_alignment(method1_align_dict, method2_align_dict, all_surface_measurements, all_surface_curves, sep_surface_dict, int_comp_dict)
-            if measurement_method == 'velocity':
+            if measurement_method == 'vorticity':
+                if j>(start*time_step):
+
+                    if plot == 'y':
+                        plotting_functs = plotting.plotting(orient_dict, pos_dict, l_box, NBins, sizeBin, peA, peB, parFrac, eps, typ, tst)
+                        plotting_functs.plot_vorticity(vel_dict['all'], vel_grad['curl']['all'], sep_surface_dict, int_comp_dict, species='all')
+            elif measurement_method == 'velocity':
                 if j>(start*time_step):
                     particle_prop_functs = particles.particle_props(l_box, partNum, NBins, peA, peB, typ, pos, ang)
 
@@ -678,12 +692,25 @@ with hoomd.open(name=inFile, mode='rb') as t:
                         plotting_functs.ang_vel_bulk_sf_histogram(ang_vel_dict['part'], phase_dict['part'])
                         plotting_functs.ang_vel_int_sf_histogram(ang_vel_dict['part'], phase_dict['part'])
                         plotting_functs.ang_vel_int_sf_histogram(ang_vel_dict['part'], phase_dict['part'])
+            elif measurement_method == 'normal_fa':
+
+                if plot == 'y':
+                    plotting_functs = plotting.plotting(orient_dict, pos_dict, l_box, NBins, sizeBin, peA, peB, parFrac, eps, typ, tst)
+                    plotting_functs.plot_normal_fa_map(normal_fa_dict, all_surface_curves, int_comp_dict)
+                    plotting_functs.plot_normal_fa_part(normal_fa_dict, all_surface_curves, int_comp_dict)
+                    stop
+            elif measurement_method == 'active_fa':
+
+                if plot == 'y':
+                    plotting_functs = plotting.plotting(orient_dict, pos_dict, l_box, NBins, sizeBin, peA, peB, parFrac, eps, typ, tst)
+                    plotting_functs.plot_part_activity(pos, all_surface_curves, int_comp_dict, active_fa_dict)
+                    stop
             elif measurement_method == 'activity':
 
                 if plot == 'y':
                     plotting_functs = plotting.plotting(orient_dict, pos_dict, l_box, NBins, sizeBin, peA, peB, parFrac, eps, typ, tst)
                     plotting_functs.plot_part_activity(pos, all_surface_curves, int_comp_dict)
-
+                    stop
             elif measurement_method == 'phases':
 
                 if plot == 'y':
@@ -721,6 +748,16 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     plotting_functs.plot_type_B_align(method2_align_dict, all_surface_curves, int_comp_dict)
                     #plotting_functs.plot_dif_align(method1_align_dict, all_surface_curves, int_comp_dict)
 
+            elif measurement_method == 'int_press':
+
+                lattice_structure_functs = measurement.measurement(l_box, NBins, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
+
+                stress_stat_dict, press_stat_dict, press_plot_dict = lattice_structure_functs.interparticle_pressure_nlist()
+
+                data_output_functs = data_output.data_output(l_box, sizeBin, tst, clust_large, dt_step)
+
+                data_output_functs.write_to_txt(stress_stat_dict, dataPath + 'interparticle_stress_' + outfile + '.txt')
+                data_output_functs.write_to_txt(press_stat_dict, dataPath + 'interparticle_press_' + outfile + '.txt')
 
             elif measurement_method == 'lattice_spacing':
 
@@ -731,7 +768,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 data_output_functs = data_output.data_output(l_box, sizeBin, tst, clust_large, dt_step)
 
                 data_output_functs.write_to_txt(lat_stat_dict, dataPath + 'lattice_spacing_' + outfile + '.txt')
-
+                stop
                 if plot == 'y':
 
                     plotting_functs = plotting.plotting(orient_dict, pos_dict, l_box, NBins, sizeBin, peA, peB, parFrac, eps, typ, tst)
@@ -772,16 +809,25 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                     plotting_functs.plot_general_adf(angular_df_dict)
                     plotting_functs.plot_all_adfs(angular_df_dict)
+            elif measurement_method == 'domain_size':
+
+                lattice_structure_functs = measurement.measurement(l_box, NBins, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
+
+                domain_size_dict = lattice_structure_functs.domain_size()
+
+                #data_output_functs = data_output.data_output(l_box, sizeBin, tst, clust_large, dt_step)
+                #data_output_functs.write_to_txt(neigh_stat_dict, dataPath + 'nearest_neighbors_' + outfile + '.txt')
+
 
             elif measurement_method == 'neighbors':
 
                 lattice_structure_functs = measurement.measurement(l_box, NBins, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
 
-                neigh_stat_dict, neigh_plot_dict = lattice_structure_functs.nearest_neighbors()
+                neigh_stat_dict, ori_stat_dict, neigh_plot_dict = lattice_structure_functs.nearest_neighbors()
 
                 data_output_functs = data_output.data_output(l_box, sizeBin, tst, clust_large, dt_step)
                 data_output_functs.write_to_txt(neigh_stat_dict, dataPath + 'nearest_neighbors_' + outfile + '.txt')
-
+                data_output_functs.write_to_txt(ori_stat_dict, dataPath + 'nearest_ori_' + outfile + '.txt')
                 if plot == 'y':
                     plotting_functs = plotting.plotting(orient_dict, pos_dict, l_box, NBins, sizeBin, peA, peB, parFrac, eps, typ, tst)
 
@@ -791,6 +837,12 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     plotting_functs.plot_A_neighbors_of_all_parts(neigh_plot_dict, all_surface_curves, int_comp_dict)
                     plotting_functs.plot_B_neighbors_of_all_parts(neigh_plot_dict, all_surface_curves, int_comp_dict)
 
+                    plotting_functs.plot_all_ori_of_all_parts(neigh_plot_dict, all_surface_curves, int_comp_dict)
+                    plotting_functs.plot_all_ori_of_A_parts(neigh_plot_dict, all_surface_curves, int_comp_dict)
+                    plotting_functs.plot_all_ori_of_B_parts(neigh_plot_dict, all_surface_curves, int_comp_dict)
+                    plotting_functs.plot_A_ori_of_all_parts(neigh_plot_dict, all_surface_curves, int_comp_dict)
+                    plotting_functs.plot_B_ori_of_all_parts(neigh_plot_dict, all_surface_curves, int_comp_dict)
+                stop
             elif measurement_method == 'interparticle_pressure':
                 stress_and_pressure_functs = stress_and_pressure.stress_and_pressure(l_box, NBins, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
 
@@ -816,6 +868,10 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                     plotting_functs.plot_interpart_press_binned(vp_bin_arr, all_surface_curves, int_comp_dict)
                     plotting_functs.interpart_press_map(pos, vp_part_arr, all_surface_curves, int_comp_dict)
+            elif measurement_method == 'interparticle_pressure_nlist':
+                stress_and_pressure_functs = stress_and_pressure.stress_and_pressure(l_box, NBins, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
+                stress_plot_dict, stress_stat_dict = stress_and_pressure_functs.interparticle_stress_nlist(phase_dict['part'])
+                stop
 
             elif measurement_method == 'com_interface_pressure':
                 stress_and_pressure_functs = stress_and_pressure.stress_and_pressure(l_box, NBins, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
@@ -906,7 +962,13 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     plotting_functs = plotting.plotting(orient_dict, pos_dict, l_box, NBins, sizeBin, peA, peB, parFrac, eps, typ, tst)
 
                     plotting_functs.plot_stein_order(pos, nematic_order_param, all_surface_curves, int_comp_dict)
+        else:
+            if measurement_method == 'activity':
 
+                if plot == 'y':
+                    plotting_functs = plotting.plotting(orient_dict, pos_dict, l_box, NBins, sizeBin, peA, peB, parFrac, eps, typ, tst)
+                    plotting_functs.plot_part_activity(pos)
+                    stop
         #if j == start:
         prev_pos = pos.copy()
         prev_ang = ang.copy()

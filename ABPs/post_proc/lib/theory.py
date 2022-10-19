@@ -200,7 +200,7 @@ class theory:
             r += j
 
         return r
-    def computeFLJ(self, r, x1, y1, x2, y2, eps, l_box):
+    def computeFLJ2(self, r, x1, y1, x2, y2, eps, l_box):
         f = (24. * eps / r) * ( (2*((self.sigma/r)**12)) - ((self.sigma/r)**6) )
         utility_functs = utility.utility(l_box)
         difx = utility_functs.sep_dist(x2, x1)
@@ -208,6 +208,24 @@ class theory:
 
         fx = f * difx / r
         fy = f * dify / r
+        return fx, fy
+
+    def computeFLJ(self, difr, difx, dify, eps):
+        f = (24. * eps / difr) * ( (2*((self.sigma/difr)**12)) - ((self.sigma/difr)**6) )
+
+        fx = f * difx / difr
+        fy = f * dify / difr
+        return fx, fy
+
+    def computeFLJ_arr(self, difr, difx, dify, eps):
+        fx = np.zeros(len(difr))
+        fy = np.zeros(len(difr))
+        for i in range(0, len(difr)):
+            
+            f = (24. * eps / difr[i]) * ( (2*((self.sigma/difr[i])**12)) - ((self.sigma/difr[i])**6) )
+
+            fx[i] = f * difx[i] / difr[i]
+            fy[i] = f * dify[i] / difr[i]
         return fx, fy
 
 

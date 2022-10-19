@@ -40,7 +40,7 @@ import utility
 import plotting_utility
 import phase_identification
 import binning
-
+import particles
 class stress_and_pressure:
     def __init__(self, l_box, NBins, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict):
 
@@ -99,6 +99,10 @@ class stress_and_pressure:
         self.plotting_utility = plotting_utility.plotting_utility(self.l_box, self.partNum, self.typ)
 
         self.phase_ident = phase_identification.phase_identification(self.area_frac_dict, self.align_dict, self.part_dict, self.press_dict, self.l_box, self.partNum, self.NBins, self.peA, self.peB, self.parFrac, self.eps, self.typ)
+
+        self.particle_prop_functs = particles.particle_props(self.l_box, self.partNum, self.NBins, self.peA, self.peB, self.typ, self.pos, self.ang)
+
+        self.theory_functs = theory.theory()
 
     def interparticle_stress(self):
 
@@ -193,8 +197,6 @@ class stress_and_pressure:
                             for h in binParts[ix][iy]:
                                 # Loop through all neighboring particles in indx,indy bin
                                 for j in binParts[indx][indy]:
-                                    difx_test = self.pos[h][0] - self.pos[j][0]
-                                    dify_test = self.pos[h][1] - self.pos[j][1]
 
                                     difx = self.utility_functs.sep_dist(self.pos[h][0], self.pos[j][0])
 
@@ -206,7 +208,7 @@ class stress_and_pressure:
                                     # If potential is on ...
                                     if 0.1 < difr <= self.r_cut:
                                         # Compute the x and y components of force
-                                        fx, fy = theory_functs.computeFLJ(difr, self.pos[j][0], self.pos[j][1], self.pos[h][0], self.pos[h][1], self.eps, self.l_box)
+                                        fx, fy = theory_functs.computeFLJ(difr, difx, dify, self.eps)
 
                                         SigXX = (fx * difx)
                                         SigYY = (fy * dify)
@@ -463,6 +465,333 @@ class stress_and_pressure:
 
         act_press_dict = {'all': act_press, 'A': act_pressA, 'B': act_pressB}
         return act_press_dict
+    def interparticle_stress_nlist(self, phasePart):
+
+        phase_part_dict = self.particle_prop_functs.particle_phase_ids(phasePart)
+
+        typ0ind = np.where(self.typ==0)[0]
+        pos_A=self.pos[typ0ind]                               # Find positions of type 0 particles
+        pos_A_bulk = self.pos[phase_part_dict['bulk']['A']]
+        pos_A_int = self.pos[phase_part_dict['int']['A']]
+        pos_A_gas = self.pos[phase_part_dict['gas']['A']]
+        pos_A_gas_int = [[] for i in range(3)]
+        for i in range(0, np.shape(pos_A_gas)[0]):
+            pos_A_gas_int[0].append(pos_A_gas[i,0])
+            pos_A_gas_int[1].append(pos_A_gas[i,1])
+            pos_A_gas_int[2].append(pos_A_gas[i,2])
+        for i in range(0, np.shape(pos_A_int)[0]):
+            pos_A_gas_int[0].append(pos_A_int[i,0])
+            pos_A_gas_int[1].append(pos_A_int[i,1])
+            pos_A_gas_int[2].append(pos_A_int[i,2])
+        pos_A_gas_int = np.array(pos_A_gas_int).reshape((np.shape(pos_A_gas_int)[1], np.shape(pos_A_gas_int)[0]))
+        pos_A_dense = self.pos[phase_part_dict['dense']['A']]
+
+        typ1ind = np.where(self.typ==1)[0]
+        pos_B=self.pos[typ1ind]                               # Find positions of type 0 particles
+        pos_B_bulk = self.pos[phase_part_dict['bulk']['B']]
+        pos_B_int = self.pos[phase_part_dict['int']['B']]
+        pos_B_gas = self.pos[phase_part_dict['gas']['B']]
+        pos_B_gas_int = [[] for i in range(3)]
+        for i in range(0, np.shape(pos_B_gas)[0]):
+            pos_B_gas_int[0].append(pos_B_gas[i,0])
+            pos_B_gas_int[1].append(pos_B_gas[i,1])
+            pos_B_gas_int[2].append(pos_B_gas[i,2])
+        for i in range(0, np.shape(pos_B_int)[0]):
+            pos_B_gas_int[0].append(pos_B_int[i,0])
+            pos_B_gas_int[1].append(pos_B_int[i,1])
+            pos_B_gas_int[2].append(pos_B_int[i,2])
+        pos_B_gas_int = np.array(pos_B_gas_int).reshape((np.shape(pos_B_gas_int)[1], np.shape(pos_B_gas_int)[0]))
+        pos_B_dense = self.pos[phase_part_dict['dense']['B']]
+
+        pos_bulk = self.pos[phase_part_dict['bulk']['all']]
+        pos_int = self.pos[phase_part_dict['int']['all']]
+        pos_gas = self.pos[phase_part_dict['gas']['all']]
+        pos_gas_int = [[] for i in range(3)]
+        for i in range(0, np.shape(pos_gas)[0]):
+            pos_gas_int[0].append(pos_gas[i,0])
+            pos_gas_int[1].append(pos_gas[i,1])
+            pos_gas_int[2].append(pos_gas[i,2])
+        for i in range(0, np.shape(pos_int)[0]):
+            pos_gas_int[0].append(pos_int[i,0])
+            pos_gas_int[1].append(pos_int[i,1])
+            pos_gas_int[2].append(pos_int[i,2])
+        pos_gas_int = np.array(pos_gas_int).reshape((np.shape(pos_gas_int)[1], np.shape(pos_gas_int)[0]))
+        pos_dense = self.pos[phase_part_dict['dense']['all']]
+
+        query_args = dict(mode='ball', r_min = 0.1, r_max=self.r_cut)
+
+        system_all_bulk = freud.AABBQuery(self.f_box, self.f_box.wrap(pos_dense))
+
+        A_bulk_nlist = system_all_bulk.query(self.f_box.wrap(pos_A_bulk), query_args).toNeighborList()
+        B_bulk_nlist = system_all_bulk.query(self.f_box.wrap(pos_B_bulk), query_args).toNeighborList()
+
+        difx_A, dify_A, difr_A = self.utility_functs.sep_dist_arr(pos_dense[A_bulk_nlist.point_indices], pos_A_bulk[A_bulk_nlist.query_point_indices], difxy=True)
+        difx_B, dify_B, difr_B = self.utility_functs.sep_dist_arr(pos_dense[B_bulk_nlist.point_indices], pos_B_bulk[B_bulk_nlist.query_point_indices], difxy=True)
+
+        difx = np.append(difx_A, difx_B)
+        dify = np.append(dify_A, dify_B)
+        difr = np.append(difr_A, difr_B)
+
+        fx = np.array([])
+        fy = np.array([])
+
+        bulk_A_ind = np.array([], dtype=int)
+        bulk_SigXX_A = np.array([])
+        bulk_SigYY_A = np.array([])
+        bulk_SigXY_A = np.array([])
+        bulk_SigYX_A = np.array([])
+
+        bulk_B_ind = np.array([], dtype=int)
+        bulk_SigXX_B = np.array([])
+        bulk_SigYY_B = np.array([])
+        bulk_SigXY_B = np.array([])
+        bulk_SigYX_B = np.array([])
+
+        for i in A_bulk_nlist.point_indices:
+            if i not in bulk_A_ind:
+                loc = np.where(A_bulk_nlist.point_indices==i)[0]
+                fx_arr, fy_arr = self.theory_functs.computeFLJ_arr(difr[loc], difx[loc], dify[loc], self.eps)
+                bulk_SigXX_A = np.append(bulk_SigXX_A, np.sum(fx_arr * difx[loc]))
+                bulk_SigYY_A = np.append(bulk_SigYY_A, np.sum(fy_arr * dify[loc]))
+                bulk_SigXY_A = np.append(bulk_SigXY_A, np.sum(fx_arr * dify[loc]))
+                bulk_SigYX_A = np.append(bulk_SigYX_A, np.sum(fy_arr * difx[loc]))
+                bulk_A_ind = np.append(bulk_A_ind, int(i))
+
+        bulk_SigXX_A_mean = np.mean(bulk_SigXX_A)
+        bulk_SigYY_A_mean = np.mean(bulk_SigYY_A)
+        bulk_SigXY_A_mean = np.mean(bulk_SigXY_A)
+        bulk_SigYX_A_mean = np.mean(bulk_SigYX_A)
+
+        bulk_SigXX_A_std = np.std(bulk_SigXX_A)
+        bulk_SigYY_A_std = np.std(bulk_SigYY_A)
+        bulk_SigXY_A_std = np.std(bulk_SigXY_A)
+        bulk_SigYX_A_std = np.std(bulk_SigYX_A)
+
+        for i in B_bulk_nlist.point_indices:
+            if i not in bulk_B_ind:
+                loc = np.where(B_bulk_nlist.point_indices==i)[0]
+                fx_arr, fy_arr = self.theory_functs.computeFLJ_arr(difr[loc], difx[loc], dify[loc], self.eps)
+                bulk_SigXX_B = np.append(bulk_SigXX_B, np.sum(fx_arr * difx[loc]))
+                bulk_SigYY_B = np.append(bulk_SigYY_B, np.sum(fy_arr * dify[loc]))
+                bulk_SigXY_B = np.append(bulk_SigXY_B, np.sum(fx_arr * dify[loc]))
+                bulk_SigYX_B = np.append(bulk_SigYX_B, np.sum(fy_arr * difx[loc]))
+                bulk_B_ind = np.append(bulk_B_ind, int(i))
+
+        bulk_SigXX_B_mean = np.mean(bulk_SigXX_B)
+        bulk_SigYY_B_mean = np.mean(bulk_SigYY_B)
+        bulk_SigXY_B_mean = np.mean(bulk_SigXY_B)
+        bulk_SigYX_B_mean = np.mean(bulk_SigYX_B)
+
+        bulk_SigXX_B_std = np.std(bulk_SigXX_B)
+        bulk_SigYY_B_std = np.std(bulk_SigYY_B)
+        bulk_SigXY_B_std = np.std(bulk_SigXY_B)
+        bulk_SigYX_B_std = np.std(bulk_SigYX_B)
+
+        bulk_SigXX = np.append(bulk_SigXX_A, bulk_SigXX_B)
+        bulk_SigYY = np.append(bulk_SigYY_A, bulk_SigYY_B)
+        bulk_SigXY = np.append(bulk_SigXY_A, bulk_SigXY_B)
+        bulk_SigYX = np.append(bulk_SigYX_A, bulk_SigYX_B)
+        bulk_ind = np.append(bulk_A_ind, bulk_B_ind)
+
+        bulk_SigXX_mean = np.mean(bulk_SigXX)
+        bulk_SigYY_mean = np.mean(bulk_SigYY)
+        bulk_SigXY_mean = np.mean(bulk_SigXY)
+        bulk_SigYX_mean = np.mean(bulk_SigYX)
+
+        bulk_SigXX_std = np.std(bulk_SigXX)
+        bulk_SigYY_std = np.std(bulk_SigYY)
+        bulk_SigXY_std = np.std(bulk_SigXY)
+        bulk_SigYX_std = np.std(bulk_SigYX)
+
+        system_all_int = freud.AABBQuery(self.f_box, self.f_box.wrap(self.pos))   #Calculate neighbor list
+
+        A_int_nlist = system_all_int.query(self.f_box.wrap(pos_A_int), query_args).toNeighborList()
+        B_int_nlist = system_all_int.query(self.f_box.wrap(pos_B_int), query_args).toNeighborList()
+
+        difx_A, dify_A, difr_A = self.utility_functs.sep_dist_arr(self.pos[A_int_nlist.point_indices], pos_A_int[A_int_nlist.query_point_indices], difxy=True)
+        difx_B, dify_B, difr_B = self.utility_functs.sep_dist_arr(self.pos[B_int_nlist.point_indices], pos_B_int[B_int_nlist.query_point_indices], difxy=True)
+
+        difx = np.append(difx_A, difx_B)
+        dify = np.append(dify_A, dify_B)
+        difr = np.append(difr_A, difr_B)
+
+        fx = np.array([])
+        fy = np.array([])
+
+        int_A_ind = np.array([], dtype=int)
+        int_SigXX_A = np.array([])
+        int_SigYY_A = np.array([])
+        int_SigXY_A = np.array([])
+        int_SigYX_A = np.array([])
+
+        int_B_ind = np.array([], dtype=int)
+        int_SigXX_B = np.array([])
+        int_SigYY_B = np.array([])
+        int_SigXY_B = np.array([])
+        int_SigYX_B = np.array([])
+
+        for i in A_int_nlist.point_indices:
+            if i not in int_A_ind:
+                loc = np.where(A_int_nlist.point_indices==i)[0]
+                fx_arr, fy_arr = self.theory_functs.computeFLJ_arr(difr[loc], difx[loc], dify[loc], self.eps)
+                int_SigXX_A = np.append(int_SigXX_A, np.sum(fx_arr * difx[loc]))
+                int_SigYY_A = np.append(int_SigYY_A, np.sum(fy_arr * dify[loc]))
+                int_SigXY_A = np.append(int_SigXY_A, np.sum(fx_arr * dify[loc]))
+                int_SigYX_A = np.append(int_SigYX_A, np.sum(fy_arr * difx[loc]))
+                int_A_ind = np.append(int_A_ind, int(i))
+
+        int_SigXX_A_mean = np.mean(int_SigXX_A)
+        int_SigYY_A_mean = np.mean(int_SigYY_A)
+        int_SigXY_A_mean = np.mean(int_SigXY_A)
+        int_SigYX_A_mean = np.mean(int_SigYX_A)
+
+        int_SigXX_A_std = np.std(int_SigXX_A)
+        int_SigYY_A_std = np.std(int_SigYY_A)
+        int_SigXY_A_std = np.std(int_SigXY_A)
+        int_SigYX_A_std = np.std(int_SigYX_A)
+
+        for i in B_int_nlist.point_indices:
+            if i not in int_B_ind:
+                loc = np.where(B_int_nlist.point_indices==i)[0]
+                fx_arr, fy_arr = self.theory_functs.computeFLJ_arr(difr[loc], difx[loc], dify[loc], self.eps)
+                int_SigXX_B = np.append(int_SigXX_B, np.sum(fx_arr * difx[loc]))
+                int_SigYY_B = np.append(int_SigYY_B, np.sum(fy_arr * dify[loc]))
+                int_SigXY_B = np.append(int_SigXY_B, np.sum(fx_arr * dify[loc]))
+                int_SigYX_B = np.append(int_SigYX_B, np.sum(fy_arr * difx[loc]))
+                int_B_ind = np.append(int_B_ind, int(i))
+
+        int_SigXX_B_mean = np.mean(int_SigXX_B)
+        int_SigYY_B_mean = np.mean(int_SigYY_B)
+        int_SigXY_B_mean = np.mean(int_SigXY_B)
+        int_SigYX_B_mean = np.mean(int_SigYX_B)
+
+        int_SigXX_B_std = np.std(int_SigXX_B)
+        int_SigYY_B_std = np.std(int_SigYY_B)
+        int_SigXY_B_std = np.std(int_SigXY_B)
+        int_SigYX_B_std = np.std(int_SigYX_B)
+
+        int_SigXX = np.append(int_SigXX_A, int_SigXX_B)
+        int_SigYY = np.append(int_SigYY_A, int_SigYY_B)
+        int_SigXY = np.append(int_SigXY_A, int_SigXY_B)
+        int_SigYX = np.append(int_SigYX_A, int_SigYX_B)
+        int_ind = np.append(int_A_ind, int_B_ind)
+
+        int_SigXX_mean = np.mean(int_SigXX)
+        int_SigYY_mean = np.mean(int_SigYY)
+        int_SigXY_mean = np.mean(int_SigXY)
+        int_SigYX_mean = np.mean(int_SigYX)
+
+        int_SigXX_std = np.std(int_SigXX)
+        int_SigYY_std = np.std(int_SigYY)
+        int_SigXY_std = np.std(int_SigXY)
+        int_SigYX_std = np.std(int_SigYX)
+
+        system_all_gas = freud.AABBQuery(self.f_box, self.f_box.wrap(pos_gas_int))   #Calculate neighbor list
+
+        A_gas_nlist = system_all_gas.query(self.f_box.wrap(pos_A_gas), query_args).toNeighborList()
+        B_gas_nlist = system_all_gas.query(self.f_box.wrap(pos_B_gas), query_args).toNeighborList()
+
+        difx_A, dify_A, difr_A = self.utility_functs.sep_dist_arr(pos_gas_int[A_gas_nlist.point_indices], pos_A_gas[A_gas_nlist.query_point_indices], difxy=True)
+        difx_B, dify_B, difr_B = self.utility_functs.sep_dist_arr(pos_gas_int[B_gas_nlist.point_indices], pos_B_gas[B_gas_nlist.query_point_indices], difxy=True)
+
+        difx = np.append(difx_A, difx_B)
+        dify = np.append(dify_A, dify_B)
+        difr = np.append(difr_A, difr_B)
+
+        fx = np.array([])
+        fy = np.array([])
+
+        gas_A_ind = np.array([], dtype=int)
+        gas_SigXX_A = np.array([])
+        gas_SigYY_A = np.array([])
+        gas_SigXY_A = np.array([])
+        gas_SigYX_A = np.array([])
+
+        gas_B_ind = np.array([], dtype=int)
+        gas_SigXX_B = np.array([])
+        gas_SigYY_B = np.array([])
+        gas_SigXY_B = np.array([])
+        gas_SigYX_B = np.array([])
+
+        for i in A_gas_nlist.point_indices:
+            if i not in gas_A_ind:
+                loc = np.where(A_gas_nlist.point_indices==i)[0]
+                fx_arr, fy_arr = self.theory_functs.computeFLJ_arr(difr[loc], difx[loc], dify[loc], self.eps)
+                gas_SigXX_A = np.append(gas_SigXX_A, np.sum(fx_arr * difx[loc]))
+                gas_SigYY_A = np.append(gas_SigYY_A, np.sum(fy_arr * dify[loc]))
+                gas_SigXY_A = np.append(gas_SigXY_A, np.sum(fx_arr * dify[loc]))
+                gas_SigYX_A = np.append(gas_SigYX_A, np.sum(fy_arr * difx[loc]))
+                gas_A_ind = np.append(gas_A_ind, int(i))
+
+        gas_SigXX_A_mean = np.mean(gas_SigXX_A)
+        gas_SigYY_A_mean = np.mean(gas_SigYY_A)
+        gas_SigXY_A_mean = np.mean(gas_SigXY_A)
+        gas_SigYX_A_mean = np.mean(gas_SigYX_A)
+
+        gas_SigXX_A_std = np.std(gas_SigXX_A)
+        gas_SigYY_A_std = np.std(gas_SigYY_A)
+        gas_SigXY_A_std = np.std(gas_SigXY_A)
+        gas_SigYX_A_std = np.std(gas_SigYX_A)
+
+        for i in B_gas_nlist.point_indices:
+            if i not in gas_B_ind:
+                loc = np.where(B_gas_nlist.point_indices==i)[0]
+                fx_arr, fy_arr = self.theory_functs.computeFLJ_arr(difr[loc], difx[loc], dify[loc], self.eps)
+                gas_SigXX_B = np.append(gas_SigXX_B, np.sum(fx_arr * difx[loc]))
+                gas_SigYY_B = np.append(gas_SigYY_B, np.sum(fy_arr * dify[loc]))
+                gas_SigXY_B = np.append(gas_SigXY_B, np.sum(fx_arr * dify[loc]))
+                gas_SigYX_B = np.append(gas_SigYX_B, np.sum(fy_arr * difx[loc]))
+                gas_B_ind = np.append(gas_B_ind, int(i))
+
+        gas_SigXX_B_mean = np.mean(gas_SigXX_B)
+        gas_SigYY_B_mean = np.mean(gas_SigYY_B)
+        gas_SigXY_B_mean = np.mean(gas_SigXY_B)
+        gas_SigYX_B_mean = np.mean(gas_SigYX_B)
+
+        gas_SigXX_B_std = np.std(gas_SigXX_B)
+        gas_SigYY_B_std = np.std(gas_SigYY_B)
+        gas_SigXY_B_std = np.std(gas_SigXY_B)
+        gas_SigYX_B_std = np.std(gas_SigYX_B)
+
+        gas_SigXX = np.append(gas_SigXX_A, gas_SigXX_B)
+        gas_SigYY = np.append(gas_SigYY_A, gas_SigYY_B)
+        gas_SigXY = np.append(gas_SigXY_A, gas_SigXY_B)
+        gas_SigYX = np.append(gas_SigYX_A, gas_SigYX_B)
+        gas_ind = np.append(gas_A_ind, gas_B_ind)
+
+        gas_SigXX_mean = np.mean(gas_SigXX)
+        gas_SigYY_mean = np.mean(gas_SigYY)
+        gas_SigXY_mean = np.mean(gas_SigXY)
+        gas_SigYX_mean = np.mean(gas_SigYX)
+
+        gas_SigXX_std = np.std(gas_SigXX)
+        gas_SigYY_std = np.std(gas_SigYY)
+        gas_SigXY_std = np.std(gas_SigXY)
+        gas_SigYX_std = np.std(gas_SigYX)
+
+        dense_ind = np.append(bulk_ind, int_ind)
+        all_ind = np.append(dense_ind, gas_ind)
+
+        pos_x_all = self.pos[all_ind, 0]
+        pos_y_all = self.pos[all_ind, 1]
+
+        dense_SigXX = np.append(bulk_SigXX, int_SigXX)
+        all_SigXX = np.append(dense_SigXX, gas_SigXX)
+
+        dense_SigYY = np.append(bulk_SigYY, int_SigYY)
+        all_SigYY = np.append(dense_SigYY, gas_SigYY)
+
+        dense_SigXY = np.append(bulk_SigXY, int_SigXY)
+        all_SigXY = np.append(dense_SigXY, gas_SigXY)
+
+        dense_SigYX = np.append(bulk_SigYX, int_SigYX)
+        all_SigYX = np.append(dense_SigYX, gas_SigYX)
+
+        stress_stat_dict = {'bulk': {'all': {'XX': {'mean': bulk_SigXX_mean, 'std': bulk_SigXX_std}, 'YY': {'mean': bulk_SigYY_mean, 'std': bulk_SigYY_std}, 'XY': {'mean': bulk_SigXY_mean, 'std': bulk_SigXY_std}, 'YX': {'mean': bulk_SigYX_mean, 'std': bulk_SigYX_std}}, 'A': {'XX': {'mean': bulk_SigXX_A_mean, 'std': bulk_SigXX_A_std}, 'YY': {'mean': bulk_SigYY_A_mean, 'std': bulk_SigYY_A_std}, 'XY': {'mean': bulk_SigXY_A_mean, 'std': bulk_SigXY_A_std}, 'YX': {'mean': bulk_SigYX_A_mean, 'std': bulk_SigYX_A_std}}, 'B': {'XX': {'mean': bulk_SigXX_B_mean, 'std': bulk_SigXX_B_std}, 'YY': {'mean': bulk_SigYY_B_mean, 'std': bulk_SigYY_B_std}, 'XY': {'mean': bulk_SigXY_B_mean, 'std': bulk_SigXY_B_std}, 'YX': {'mean': bulk_SigYX_B_mean, 'std': bulk_SigYX_B_std}}}, 'int': {'all': {'XX': {'mean': int_SigXX_mean, 'std': int_SigXX_std}, 'YY': {'mean': int_SigYY_mean, 'std': int_SigYY_std}, 'XY': {'mean': int_SigXY_mean, 'std': int_SigXY_std}, 'YX': {'mean': int_SigYX_mean, 'std': int_SigYX_std}}, 'A': {'XX': {'mean': int_SigXX_A_mean, 'std': int_SigXX_A_std}, 'YY': {'mean': int_SigYY_A_mean, 'std': int_SigYY_A_std}, 'XY': {'mean': int_SigXY_A_mean, 'std': int_SigXY_A_std}, 'YX': {'mean': int_SigYX_A_mean, 'std': int_SigYX_A_std}}, 'B': {'XX': {'mean': int_SigXX_B_mean, 'std': int_SigXX_B_std}, 'YY': {'mean': int_SigYY_B_mean, 'std': int_SigYY_B_std}, 'XY': {'mean': int_SigXY_B_mean, 'std': int_SigXY_B_std}, 'YX': {'mean': int_SigYX_B_mean, 'std': int_SigYX_B_std}}}, 'gas': {'all': {'XX': {'mean': gas_SigXX_mean, 'std': gas_SigXX_std}, 'YY': {'mean': gas_SigYY_mean, 'std': gas_SigYY_std}, 'XY': {'mean': gas_SigXY_mean, 'std': gas_SigXY_std}, 'YX': {'mean': gas_SigYX_mean, 'std': gas_SigYX_std}}, 'A': {'XX': {'mean': gas_SigXX_A_mean, 'std': gas_SigXX_A_std}, 'YY': {'mean': gas_SigYY_A_mean, 'std': gas_SigYY_A_std}, 'XY': {'mean': gas_SigXY_A_mean, 'std': gas_SigXY_A_std}, 'YX': {'mean': gas_SigYX_A_mean, 'std': gas_SigYX_A_std}}, 'B': {'XX': {'mean': gas_SigXX_B_mean, 'std': gas_SigXX_B_std}, 'YY': {'mean': gas_SigYY_B_mean, 'std': gas_SigYY_B_std}, 'XY': {'mean': gas_SigXY_B_mean, 'std': gas_SigXY_B_std}, 'YX': {'mean': gas_SigYX_B_mean, 'std': gas_SigYX_B_std}}}}
+
+        stress_plot_dict = {'part': {'XX': all_SigXX, 'YY': all_SigYY, 'XY': all_SigXY, 'YX': all_SigYX, 'x': pos_x_all, 'y': pos_y_all} }
+        return stress_stat_dict, stress_plot_dict
+
     """
     def radial_surface_active_force_pressure(self, int_comp_dict, all_surface_measurements, all_surface_curves):
 
