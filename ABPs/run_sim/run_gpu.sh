@@ -15,6 +15,8 @@ module load gcc/9.1.0
 module load cuda/11.4
 
 #eval "$(conda shell.bash hook)"
+conda init bash
+. ~/.bashrc
 conda activate rekt
 
 filename=$1
