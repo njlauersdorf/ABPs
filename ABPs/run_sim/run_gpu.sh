@@ -11,7 +11,7 @@ source ~/.bashrc
 module load gcc/9.1.0
 module load cuda/11.4
 
-conda init
+conda init bash
 conda activate rekt
 
 filename=$1
