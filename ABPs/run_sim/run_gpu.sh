@@ -1,4 +1,4 @@
-#!/bin/bash                    
+#!/bin/bash
 #SBATCH --partition=gpu
 #SBATCH --qos gpu_access                    # quality of service
 #SBATCH --gres=gpu:1                        # I want one gpus
@@ -11,8 +11,6 @@ source ~/.bashrc
 # Don't run this for now SBATCH --exclude=g0605
 module load gcc/9.1.0
 module load cuda/11.4
-
-#source ~/virtual_envs/rekt/bin/activate
 
 conda activate rekt
 
