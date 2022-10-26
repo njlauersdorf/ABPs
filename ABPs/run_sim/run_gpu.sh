@@ -16,7 +16,9 @@ module load gcc/9.1.0
 module load cuda/11.4
 
 source ~/miniconda3/etc/profile.d/conda.sh
+conda deactivate
 conda activate rekt
+conda deactivate
 
 filename=$1
 python3 $filename --mode=gpu # I want one gpu
