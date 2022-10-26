@@ -16,7 +16,7 @@ if [ $answer == "y" ]; then
     tempOne="$HOME/klotsa/ABPs/post_proc/lib/run_sim_sample.py"
 else
     sedtype='gsed'
-    submit='source'
+    submit='sh'
     script_path="$HOME/klotsa/ABPs/post_proc/lib/run_local.sh"
     tempOne="$HOME/klotsa/ABPs/post_proc/lib/run_sim_sample.py"
 fi
