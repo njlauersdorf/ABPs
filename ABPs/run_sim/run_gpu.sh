@@ -8,13 +8,13 @@
 #SBATCH --exclude=g0605
 #source ~/miniconda3/etc/profile.d/conda.sh
 #eval "$(conda shell.bash hook)"
-#source ~/.bashrc
+source ~/.bashrc
 
 # Don't run this for now SBATCH --exclude=g0605
 module load gcc/9.1.0
 module load cuda/11.4
 
-eval "$(conda shell.bash hook)"
+#eval "$(conda shell.bash hook)"
 conda activate rekt
 
 filename=$1
