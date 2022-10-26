@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 current=$( date "+%m_%d_%y" )
 this_path=$( pwd )
