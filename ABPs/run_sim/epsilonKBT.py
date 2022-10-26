@@ -98,7 +98,7 @@ if peB != 0:                        # B particles are NOT Brownian
     #epsB = kT
     tauB = computeTauLJ(epsB)
 else:                               # B particles are Brownian
-    vB = 0.0                        
+    vB = 0.0
     FpB = 0.0
     epsB = eps#kT
     tauB = computeTauLJ(epsB)
@@ -112,8 +112,8 @@ dt = 0.000001 * tauLJ                        # timestep size.  I use 0.000001 fo
 simLength = runFor * tauBrown               # how long to run (in tauBrown)
 simTauLJ = simLength / tauLJ                # how long to run (in tauLJ)
 totTsteps = int(simLength / dt)             # how many tsteps to run
-numDumps = float(simLength / 0.3)           # dump data every 0.1 tauBrown.  
-dumpFreq = float(totTsteps / numDumps)      # normalized dump frequency.  
+numDumps = float(simLength / 0.3)           # dump data every 0.1 tauBrown.
+dumpFreq = float(totTsteps / numDumps)      # normalized dump frequency.
 dumpFreq = int(dumpFreq)                    # ensure this is an integer
 
 print("Brownian tau in use:"+str(tauBrown))
@@ -126,10 +126,13 @@ print("Total number of timesteps:"+str(totTsteps))
 print("Total number of output frames:"+str(numDumps))
 print("File dump frequency:"+str(dumpFreq))
 
+print(sys.path)
+stop
+
 # Initialize system
 hoomd.context.initialize()
 
-#Randomly distrubte N particles with specified density phi_p (dictates simulation box size) 
+#Randomly distrubte N particles with specified density phi_p (dictates simulation box size)
 #of particle type name with minimum separation distance min_dist with random seed in 2 dimensions
 system = hoomd.deprecated.init.create_random(N = partNum,
                                              phi_p = phi,
@@ -282,7 +285,7 @@ except OSError:
     pass
 
 #Specify how often and what to save
-    
+
 # Options for what to save (dynamic)
 # 'attribute' important quantities: total particle number (N), types (types), which particles are each type (typeid),
 #  diameter of particle (diameter)
@@ -291,7 +294,7 @@ except OSError:
 # velocity calculation is incorrect in my current version of hoomd.  THe newer version seems to have fixed this I believe. They mis-calculated
 # the quaternions to angles.
 #'topology' is another option for working with molecules.
-    
+
 hoomd.dump.gsd(gsdName,
                period=dumpFreq,
                group=all,

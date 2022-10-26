@@ -45,8 +45,11 @@ class theory:
         self.D_r = (3.0 * self.D_t) / (self.sigma**2)  # rotational diffusion constant
         self.tauBrown = (self.sigma**2) / self.D_t     # brownian time scale (invariant)
 
+    def compPeNet(self, xA, peA, peB):
+        peNet = (peA * xA) + (peB * (1.-xA))
+        return peNet
 
-    def avgCollisionForce(self, peNet):
+    def avgCollisionForce(self, pe):
         '''
         Purpose: Average compressive force experienced by a reference particle in the
         bulk dense phase due to neighboring active forces computed from the integral
@@ -57,10 +60,84 @@ class theory:
         Output: Average magnitude of compressive forces experienced by a bulk particle
         '''
 
-        # A vector sum of the six nearest neighbors
-        magnitude = np.sqrt(28)
+        peCritical = 45.
 
-        return (magnitude * peNet) / (np.pi)
+        if pe < peCritical:
+            pe = 0
+        else:
+            pe -= peCritical
+
+        # A vector sum of the six nearest neighbors
+        magnitude = 1.92
+
+        return (magnitude * pe)
+
+    def avgCollisionForce2(self, peA, peB, beta_A, beta_B):
+        '''
+        Purpose: Average compressive force experienced by a reference particle in the
+        bulk dense phase due to neighboring active forces computed from the integral
+        of possible orientations
+
+        Inputs: Net activity of system
+
+        Output: Average magnitude of compressive forces experienced by a bulk particle
+        '''
+
+        peCritical = 45
+
+        if peA < peCritical:
+            peA = 0
+        else:
+            peA -= peCritical
+
+        if peB < peCritical:
+            peB = 0
+        else:
+            peB -= peCritical
+
+        return (peA/peB) * peA * beta_A + beta_B * peB
+
+    # Calculate cluster radius
+    def conForRClust(self, pe, eps):
+        '''
+        Purpose: Compute analytical radius of the custer given activity and softness
+
+        Inputs:
+            pe: net activity (peclet number)
+            eps: softness (magnitude of repulsive interparticle force)
+
+        Output: cluster radius (simulation distance units)
+        '''
+        out = []
+        r = 1.112
+        skip = [0.1, 0.01, 0.001, 0.0001, 0.00001, 0.000001, 0.0000001, 0.00000001]
+        for j in skip:
+            while self.ljForce(r, eps) < self.avgCollisionForce(pe):
+                r -= j
+            r += j
+        out = r
+        return out
+
+    # Calculate cluster radius
+    def conForRClust2(self, peA, peB, beta_A, beta_B, eps):
+        '''
+        Purpose: Compute analytical radius of the custer given activity and softness
+
+        Inputs:
+            pe: net activity (peclet number)
+            eps: softness (magnitude of repulsive interparticle force)
+
+        Output: cluster radius (simulation distance units)
+        '''
+        out = []
+        r = 1.112
+        skip = [0.1, 0.01, 0.001, 0.0001, 0.00001, 0.000001, 0.0000001, 0.00000001]
+        for j in skip:
+            while self.ljForce(r, eps) < self.avgCollisionForce2(peA, peB, beta_A, beta_B):
+                r -= j
+            r += j
+        out = r
+        return out
 
     def ljForce(self, r, eps, sigma=1.):
         '''
@@ -104,28 +181,6 @@ class theory:
         ljF = self.avgCollisionForce(pe)
 
         return (2. *np.sqrt(3) * ljF / r)
-
-
-    # Calculate cluster radius
-    def conForRClust(self, pe, eps):
-        '''
-        Purpose: Compute analytical radius of the custer given activity and softness
-
-        Inputs:
-            pe: net activity (peclet number)
-            eps: softness (magnitude of repulsive interparticle force)
-
-        Output: cluster radius (simulation distance units)
-        '''
-        out = []
-        r = 1.112
-        skip = [0.1, 0.01, 0.001, 0.0001, 0.00001, 0.000001, 0.0000001, 0.00000001]
-        for j in skip:
-            while self.ljForce(r, eps) < self.avgCollisionForce(pe):
-                r -= j
-            r += j
-        out = r
-        return out
 
     # Calculate dense phase area fraction from lattice spacing
     def latToPhi(self, latIn):
@@ -221,13 +276,12 @@ class theory:
         fx = np.zeros(len(difr))
         fy = np.zeros(len(difr))
         for i in range(0, len(difr)):
-            
+
             f = (24. * eps / difr[i]) * ( (2*((self.sigma/difr[i])**12)) - ((self.sigma/difr[i])**6) )
 
             fx[i] = f * difx[i] / difr[i]
             fy[i] = f * dify[i] / difr[i]
         return fx, fy
-
 
     def computeTauPerTstep(self, epsilon, mindt=0.000001):
         '''
