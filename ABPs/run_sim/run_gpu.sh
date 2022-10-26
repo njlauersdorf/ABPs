@@ -6,6 +6,8 @@
 #SBATCH --time=11-00:00                     # time (D-HH:MM)
 #SBATCH --constraint=rhel8
 #SBATCH --exclude=g0605
+source ~/miniconda3/etc/profile.d/conda.sh
+
 source ~/.bashrc
 
 # Don't run this for now SBATCH --exclude=g0605
