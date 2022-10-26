@@ -7,14 +7,25 @@
 #SBATCH --constraint=rhel8
 #SBATCH --exclude=g0605
 # Don't run this for now SBATCH --exclude=g0605
+
+echo test
+echo $SHELL
+
 source ~/.bashrc
+
+echo test2
+echo $SHELL
 
 module load gcc/9.1.0
 module load cuda/11.4
 
-echo test
+echo test3
 echo $SHELL
+
 conda activate rekt
+
+echo test4
+echo $SHELL
 
 filename=$1
 
