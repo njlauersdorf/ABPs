@@ -4,8 +4,7 @@ current=$( date "+%m_%d_%y" )
 this_path=$( pwd )
 
 
-#hoomd_path="$HOME/hoomd-blue/build/"
-hoomd_path='/nas/longleaf/home/njlauers/hoomd-blue/build/'
+hoomd_path="$HOME/hoomd-blue/build/"
 
 echo "Are you running on Longleaf (y/n)?"
 read answer
@@ -17,7 +16,7 @@ if [ $answer == "y" ]; then
     tempOne="$HOME/klotsa/ABPs/post_proc/lib/run_sim_sample.py"
 else
     sedtype='gsed'
-    submit='sh'
+    submit='source'
     script_path="$HOME/klotsa/ABPs/post_proc/lib/run_local.sh"
     tempOne="$HOME/klotsa/ABPs/post_proc/lib/run_sim_sample.py"
 fi
