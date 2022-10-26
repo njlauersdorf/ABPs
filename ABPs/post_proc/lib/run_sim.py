@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 # Initial imports
 import sys
 import os

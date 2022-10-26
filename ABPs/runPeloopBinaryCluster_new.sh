@@ -1,5 +1,12 @@
 #!/bin/bash
 
+source ~/miniconda3/etc/profile.d/conda.sh
+
+source ~/.bashrc
+
+source ~/miniconda3/etc/profile.d/conda.sh
+conda activate rekt
+
 current=$( date "+%m_%d_%y" )
 this_path=$( pwd )
 
