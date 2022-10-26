@@ -10,6 +10,7 @@ source ~/miniconda3/etc/profile.d/conda.sh
 
 source ~/.bashrc
 
+conda deactivate
 # Don't run this for now SBATCH --exclude=g0605
 module load gcc/9.1.0
 module load cuda/11.4
