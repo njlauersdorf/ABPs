@@ -4,8 +4,8 @@ current=$( date "+%m_%d_%y" )
 this_path=$( pwd )
 
 
-hoomd_path="$HOME/hoomd-blue/build/"
-
+#hoomd_path="$HOME/hoomd-blue/build/"
+hoomd_path='/nas/longleaf/home/njlauers/hoomd-blue/build/'
 
 echo "Are you running on Longleaf (y/n)?"
 read answer
