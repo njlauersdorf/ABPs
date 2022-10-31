@@ -105,8 +105,7 @@ class run_sim:
 
     def random_init(self):
 
-
-        sys.path.insert(0,self.hoomdPath)    # insert specified path to hoomdPath as first place to check for hoomd
+        #sys.path.insert(0,self.hoomdPath)    # insert specified path to hoomdPath as first place to check for hoomd
 
         import hoomd                    # import hoomd functions based on path
         from hoomd import md
@@ -601,7 +600,7 @@ class run_sim:
         for i in typ:
             pe.append(peList[i])
 
-        sys.path.insert(0,self.hoomdPath)    # insert specified path to hoomdPath as first place to check for hoomd
+        #sys.path.insert(0,self.hoomdPath)    # insert specified path to hoomdPath as first place to check for hoomd
 
         import hoomd                    # import hoomd functions based on path
         from hoomd import md
@@ -978,7 +977,7 @@ class run_sim:
         for i in typ:
             pe.append(peList[i])
 
-        sys.path.insert(0,self.hoomdPath)    # insert specified path to hoomdPath as first place to check for hoomd
+        #sys.path.insert(0,self.hoomdPath)    # insert specified path to hoomdPath as first place to check for hoomd
 
         import hoomd                    # import hoomd functions based on path
         from hoomd import md
@@ -1371,7 +1370,7 @@ class run_sim:
         for i in typ:
             pe.append(peList[i])
 
-        sys.path.insert(0,self.hoomdPath)    # insert specified path to hoomdPath as first place to check for hoomd
+        #sys.path.insert(0,self.hoomdPath)    # insert specified path to hoomdPath as first place to check for hoomd
 
         import hoomd                    # import hoomd functions based on path
         from hoomd import md
@@ -1797,7 +1796,7 @@ class run_sim:
         for i in typ:
             pe.append(peList[i])
 
-        sys.path.insert(0,self.hoomdPath)    # insert specified path to hoomdPath as first place to check for hoomd
+        #sys.path.insert(0,self.hoomdPath)    # insert specified path to hoomdPath as first place to check for hoomd
 
         import hoomd                    # import hoomd functions based on path
         from hoomd import md
@@ -1914,7 +1913,7 @@ class run_sim:
             ly = self.width * box_length
             hy = ly/2
 
-            sys.path.insert(0,self.hoomdPath)    # insert specified path to hoomdPath as first place to check for hoomd
+            #sys.path.insert(0,self.hoomdPath)    # insert specified path to hoomdPath as first place to check for hoomd
 
             import hoomd                    # import hoomd functions based on path
             from hoomd import md

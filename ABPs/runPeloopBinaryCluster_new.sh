@@ -12,8 +12,10 @@ read answer
 if [ $answer == "y" ]; then
     sedtype='sed'
     submit='sbatch'
-    script_path="$HOME/klotsa/ABPs/post_proc/lib/run_gpu.sh"
-    tempOne="$HOME/klotsa/ABPs/post_proc/lib/run_sim_sample.py"
+    script_path="$HOME/hoomd-blue/build/run_test/run_gpu.sh"
+    #script_path="$HOME/klotsa/ABPs/post_proc/lib/run_gpu.sh"
+    #tempOne="$HOME/klotsa/ABPs/post_proc/lib/run_sim_sample.py"
+    tempOne="$HOME/hoomd-blue/build/run_test/run_sim_sample.py"
 else
     sedtype='gsed'
     submit='sh'
