@@ -1905,6 +1905,9 @@ class run_sim:
         from hoomd import md
         from hoomd import deprecated
 
+        # Initialize system
+        hoomd.context.initialize()
+
         if self.length != self.width:
             import matplotlib.pyplot as plt
             area_ratio = self.length * self.width
@@ -2317,9 +2320,6 @@ class run_sim:
             pe = []
             for i in typ:
                 pe.append(peList[i])
-
-            hoomd.context.initialize()
-            set_box = hoomd.data.boxdim(Lx=lx, Ly=ly, Lz=0, dimensions=2)
 
             # A small shift to help with the periodic box
             snap = hoomd.data.make_snapshot(N = self.partNum,
