@@ -88,7 +88,7 @@ if [ $dont_run == "no" ]; then
     part_num=$(( 50000 ))
 
     declare -i runfor
-    runfor=$(( 50 ))
+    runfor=$(( 40 ))
 
     declare -i dump_freq
     dump_freq=$(( 20000 ))
