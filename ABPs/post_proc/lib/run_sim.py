@@ -2356,7 +2356,7 @@ class run_sim:
 
             hoomd.md.integrate.mode_standard(dt=self.dt)
             bd = hoomd.md.integrate.brownian(group=all, kT=self.kT, seed=self.seed1)
-            #hoomd.run(brownEquil)
+            hoomd.run(brownEquil)
 
             # Set activity of each group
             np.random.seed(self.seed2)                           # seed for random orientations
