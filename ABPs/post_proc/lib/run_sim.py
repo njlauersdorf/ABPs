@@ -1901,6 +1901,9 @@ class run_sim:
 
         import random
 
+        import hoomd                    # import hoomd functions based on path
+        from hoomd import md
+        from hoomd import deprecated
 
         if self.length != self.width:
             import matplotlib.pyplot as plt
@@ -1915,9 +1918,7 @@ class run_sim:
 
             #sys.path.insert(0,self.hoomdPath)    # insert specified path to hoomdPath as first place to check for hoomd
 
-            import hoomd                    # import hoomd functions based on path
-            from hoomd import md
-            from hoomd import deprecated
+
 
             peNet = self.theory_functs.compPeNet(self.partFracA, self.peA, self.peB)
 
