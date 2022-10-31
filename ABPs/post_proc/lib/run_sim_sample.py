@@ -50,3 +50,5 @@ elif init_cond == 'half_cluster':
     sim_functs.half_cluster()
 elif init_cond == 'slow_membrane':
     sim_functs.fast_penetrate_slow_membrane()
+elif init_cond == 'stationary_membrane':
+    sim_functs.fast_penetrate_stationary_membrane()

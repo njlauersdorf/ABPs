@@ -2922,7 +2922,7 @@ class run_sim:
             #    out += str(int(rList[i]))
             #    out += "_"
             #out += "rAlign_" + str(rAlign) + ".gsd"
-            out = "slow_membrane_pa" + str(int(self.peA))
+            out = "stationary_membrane_pa" + str(int(self.peA))
             out += "_pb" + str(int(self.peB))
             out += "_phi" + str(self.intPhi)
             out += "_eps" + str(self.eps)
