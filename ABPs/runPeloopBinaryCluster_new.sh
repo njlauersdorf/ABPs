@@ -88,7 +88,7 @@ if [ $dont_run == "no" ]; then
     part_num=$(( 50000 ))
 
     declare -i runfor
-    runfor=$(( 600 ))
+    runfor=$(( 50 ))
 
     declare -i dump_freq
     dump_freq=$(( 20000 ))
@@ -97,10 +97,10 @@ if [ $dont_run == "no" ]; then
     #pa=()
 
     declare -a pa
-    pa=(0)
+    pa=(0 50 100 150 250 450)
     #(0 50 100 150 200 250 350 450)
     declare -a pb
-    pb=(500)
+    pb=(50 100 150 250 450)
     #(0 50 100 150 200 250 350 450)
     #pb=(50 500)
     # List for particle fraction
