@@ -31,8 +31,8 @@ seed3 = ${seed3}                # seed for initial orientations
 seed4 = ${seed4}                # seed for A activity
 seed5 = ${seed5}                # seed for B activity
 
-#sys.path.append(os.path.expanduser('~') + '/klotsa/ABPs/post_proc/lib')
-sys.path.append(os.path.expanduser('~') + '/hoomd-blue/build/run_test/lib')
+sys.path.append(os.path.expanduser('~') + '/klotsa/ABPs/post_proc/lib')
+#sys.path.append(os.path.expanduser('~') + '/hoomd-blue/build/run_test/lib')
 
 import run_sim
 
