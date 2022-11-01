@@ -673,3 +673,24 @@ class binning:
         part_dict = {'typ':typParts_new,  'id':binParts_new}
         phase_dict = {'bin': phaseBin_new, 'part': phasePart}
         return phase_dict, part_dict
+    def phase_number_density(self, bin_count_dict, part_count_dict):
+
+        all_int_num_dens = part_count_dict['num']['int']['all']/(bin_count_dict['bin']['all int'] * self.sizeBin**2)
+        A_int_num_dens = part_count_dict['num']['int']['A']/(bin_count_dict['bin']['all int'] * self.sizeBin**2)
+        B_int_num_dens = part_count_dict['num']['int']['B']/(bin_count_dict['bin']['all int'] * self.sizeBin**2)
+
+        all_bulk_num_dens = part_count_dict['num']['bulk']['all']/(bin_count_dict['bin']['bulk'] * self.sizeBin**2)
+        A_bulk_num_dens = part_count_dict['num']['bulk']['A']/(bin_count_dict['bin']['bulk'] * self.sizeBin**2)
+        B_bulk_num_dens = part_count_dict['num']['bulk']['B']/(bin_count_dict['bin']['bulk'] * self.sizeBin**2)
+
+        all_gas_num_dens = part_count_dict['num']['gas']['all']/(bin_count_dict['bin']['gas'] * self.sizeBin**2)
+        A_gas_num_dens = part_count_dict['num']['gas']['A']/(bin_count_dict['bin']['gas'] * self.sizeBin**2)
+        B_gas_num_dens = part_count_dict['num']['gas']['B']/(bin_count_dict['bin']['gas'] * self.sizeBin**2)
+
+        all_dense_num_dens = (part_count_dict['num']['bulk']['all']+part_count_dict['num']['int']['all'])/((bin_count_dict['bin']['bulk']+bin_count_dict['bin']['all int']) * self.sizeBin**2)
+        A_dense_num_dens = (part_count_dict['num']['bulk']['A']+part_count_dict['num']['int']['A'])/((bin_count_dict['bin']['bulk']+bin_count_dict['bin']['all int']) * self.sizeBin**2)
+        B_dense_num_dens = (part_count_dict['num']['bulk']['B']+part_count_dict['num']['int']['B'])/((bin_count_dict['bin']['bulk']+bin_count_dict['bin']['all int']) * self.sizeBin**2)
+
+        num_dens_dict = {'bulk': {'all': all_bulk_num_dens, 'A': A_bulk_num_dens, 'B': B_bulk_num_dens}, 'int': {'all': all_int_num_dens, 'A': A_int_num_dens, 'B': B_int_num_dens}, 'gas': {'all': all_gas_num_dens, 'A': A_gas_num_dens, 'B': B_gas_num_dens}, 'dense': {'all': all_dense_num_dens, 'A': A_dense_num_dens, 'B': B_dense_num_dens}}
+
+        return num_dens_dict

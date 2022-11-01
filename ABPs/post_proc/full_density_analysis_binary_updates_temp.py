@@ -232,7 +232,7 @@ import time
 with hoomd.open(name=inFile, mode='rb') as t:
 
     dumps = int(t.__len__())
-    start = int(0/time_step)#205                                             # first frame to process
+    start = int(600/time_step)#205                                             # first frame to process
                                 # get number of timesteps dumped
     end = int(dumps/time_step)-1                                             # final frame to process
     snap = t[0]                                             # Take first snap for box
@@ -629,18 +629,35 @@ with hoomd.open(name=inFile, mode='rb') as t:
             g.write('{0:.0f}'.format(bubBin2-intBin).center(15) + '\n')
             g.close()
             '''
+            data_output_functs = data_output.data_output(l_box, sizeBin, tst, clust_large, dt_step)
 
             #Bin system to calculate orientation and alignment that will be used in vector plots
             all_surface_curves = {}
             sep_surface_dict = interface_functs.separate_surfaces(surface_dict, int_dict, int_comp_dict)
             all_surface_measurements = {}
 
+
             for m in range(0, len(sep_surface_dict)):
+                averaged_data_arr = {}
 
                 key = 'surface id ' + str(int(int_comp_dict['ids']['int id'][m]))
                 all_surface_curves[key] = {}
                 all_surface_measurements[key] = {}
+
+
+                if (int_comp_dict['ids']['int id'][m]!=999):
+                    print(np.max(int_comp_dict['comp']['all']))
+                    print(np.where(int_comp_dict['comp']['all']==np.max(int_comp_dict['comp']['all']))[0])
+                    averaged_data_arr['int_id'] = int(int_comp_dict['ids']['int id'][np.where(int_comp_dict['comp']['all']==np.max(int_comp_dict['comp']['all']))[0][0]])
+                    averaged_data_arr['bub_id'] = int(int_comp_dict['ids']['int id'][m])
+                    averaged_data_arr['Na'] = int(int_comp_dict['comp']['A'][m])
+                    averaged_data_arr['Nb'] = int(int_comp_dict['comp']['B'][m])
+                    averaged_data_arr['Nbin'] = int(bin_count_dict['ids']['int'][m])
+
                 if sep_surface_dict[key]['interior']['num']>0:
+
+
+
                     sort_interior_ids = interface_functs.sort_surface_points(sep_surface_dict[key]['interior'])
 
                     all_surface_curves[key]['interior'] = interface_functs.surface_curve_interp(sort_interior_ids)
@@ -651,6 +668,14 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     all_surface_measurements[key]['interior']['surface area'] = interface_functs.surface_area(com_pov_interior_pos['pos'])
                     #all_surface_measurements[key]['interior']['fourier'] = interface_functs.fourier_analysis(all_surface_measurements[key]['interior'])
 
+                    averaged_data_arr['int_mean_rad'] = all_surface_measurements[key]['interior']['mean radius']
+                    averaged_data_arr['int_std_rad'] = all_surface_measurements[key]['interior']['std radius']
+                    averaged_data_arr['int_sa'] = all_surface_measurements[key]['interior']['surface area']
+                else:
+                    averaged_data_arr['int_mean_rad'] = 0
+                    averaged_data_arr['int_std_rad'] = 0
+                    averaged_data_arr['int_sa'] = 0
+
                 if sep_surface_dict[key]['exterior']['num']>0:
                     sort_exterior_ids = interface_functs.sort_surface_points(sep_surface_dict[key]['exterior'])
 
@@ -660,15 +685,27 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     all_surface_measurements[key]['exterior'] = interface_functs.surface_radius(com_pov_exterior_pos['pos'])
                     all_surface_measurements[key]['exterior']['surface area'] = interface_functs.surface_area(com_pov_exterior_pos['pos'])
                     #all_surface_measurements[key]['exterior']['fourier'] = interface_functs.fourier_analysis(all_surface_measurements[key]['exterior'])
+                    averaged_data_arr['ext_mean_rad'] = all_surface_measurements[key]['exterior']['mean radius']
+                    averaged_data_arr['ext_std_rad'] = all_surface_measurements[key]['exterior']['std radius']
+                    averaged_data_arr['ext_sa'] = all_surface_measurements[key]['exterior']['surface area']
+                else:
+                    averaged_data_arr['ext_mean_rad'] = 0
+                    averaged_data_arr['ext_std_rad'] = 0
+                    averaged_data_arr['ext_sa'] = 0
 
                 if (sep_surface_dict[key]['exterior']['num']>0) & sep_surface_dict[key]['interior']['num']>0:
                     all_surface_measurements[key]['exterior']['surface width'] = interface_functs.surface_width(all_surface_measurements[key]['interior']['mean radius'], all_surface_measurements[key]['exterior']['mean radius'])
                     all_surface_measurements[key]['interior']['surface width'] = interface_functs.surface_width(all_surface_measurements[key]['interior']['mean radius'], all_surface_measurements[key]['exterior']['mean radius'])
-
+                    averaged_data_arr['width'] = all_surface_measurements[key]['exterior']['surface width']['width']
+                else:
+                    averaged_data_arr['width'] = 0
+                if measurement_method == 'interface_props':
+                    data_output_functs.write_to_txt(averaged_data_arr, dataPath + 'BubComp_' + outfile + '.txt')
 
             method1_align_dict, method2_align_dict = interface_functs.surface_alignment(all_surface_measurements, all_surface_curves, sep_surface_dict, int_dict, int_comp_dict)
             method1_align_dict, method2_align_dict = interface_functs.bulk_alignment(method1_align_dict, method2_align_dict, all_surface_measurements, all_surface_curves, sep_surface_dict, bulk_dict, bulk_comp_dict, int_comp_dict)
             method1_align_dict, method2_align_dict = interface_functs.gas_alignment(method1_align_dict, method2_align_dict, all_surface_measurements, all_surface_curves, sep_surface_dict, int_comp_dict)
+
             if measurement_method == 'vorticity':
                 if j>(start*time_step):
 
@@ -682,7 +719,6 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     part_ang_vel_dict = particle_prop_functs.angular_velocity(ang_vel_dict['part'], phase_dict['part'])
                     part_vel_dict = particle_prop_functs.velocity(vel_dict['part']['mag'], phase_dict['part'])
 
-                    data_output_functs = data_output.data_output(l_box, sizeBin, tst, clust_large, dt_step)
                     data_output_functs.write_to_txt(part_ang_vel_dict, dataPath + 'angular_velocity_' + outfile + '.txt')
                     data_output_functs.write_to_txt(part_vel_dict, dataPath + 'velocity_' + outfile + '.txt')
 
@@ -713,12 +749,17 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     stop
             elif measurement_method == 'phases':
 
+                data_output_functs.write_to_txt(part_count_dict, dataPath + 'PhaseComp_' + outfile + '.txt')
+                #data_output_functs.write_to_txt(lat_stat_dict, dataPath + 'BubComp_' + outfile + '.txt')
+
                 if plot == 'y':
                     plotting_functs = plotting.plotting(orient_dict, pos_dict, l_box, NBins, sizeBin, peA, peB, parFrac, eps, typ, tst)
                     plotting_functs.plot_phases(pos, part_count_dict, all_surface_curves, int_comp_dict)
 
             elif measurement_method == 'number_density':
 
+                num_dens_dict = binning_functs.phase_number_density(bin_count_dict, part_count_dict)
+                data_output_functs.write_to_txt(num_dens_dict, dataPath + 'Num_dens_' + outfile + '.txt')
                 if plot == 'y':
                     plotting_functs = plotting.plotting(orient_dict, pos_dict, l_box, NBins, sizeBin, peA, peB, parFrac, eps, typ, tst)
 
@@ -728,7 +769,6 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     plotting_functs.plot_dif_density(area_frac_dict, all_surface_curves, int_comp_dict)
                     plotting_functs.plot_type_B_frac(area_frac_dict, all_surface_curves, int_comp_dict)
                     plotting_functs.plot_dif_frac(area_frac_dict, all_surface_curves, int_comp_dict)
-
             elif measurement_method == 'com_alignment':
 
                 if plot == 'y':
@@ -754,8 +794,6 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                 stress_stat_dict, press_stat_dict, press_plot_dict = lattice_structure_functs.interparticle_pressure_nlist()
 
-                data_output_functs = data_output.data_output(l_box, sizeBin, tst, clust_large, dt_step)
-
                 data_output_functs.write_to_txt(stress_stat_dict, dataPath + 'interparticle_stress_' + outfile + '.txt')
                 data_output_functs.write_to_txt(press_stat_dict, dataPath + 'interparticle_press_' + outfile + '.txt')
 
@@ -765,10 +803,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                 lat_stat_dict, lat_plot_dict = lattice_structure_functs.lattice_spacing(bulk_dict)
 
-                data_output_functs = data_output.data_output(l_box, sizeBin, tst, clust_large, dt_step)
-
                 data_output_functs.write_to_txt(lat_stat_dict, dataPath + 'lattice_spacing_' + outfile + '.txt')
-                stop
+
                 if plot == 'y':
 
                     plotting_functs = plotting.plotting(orient_dict, pos_dict, l_box, NBins, sizeBin, peA, peB, parFrac, eps, typ, tst)
@@ -785,7 +821,6 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                 radial_df_dict = lattice_structure_functs.radial_df()
 
-                data_output_functs = data_output.data_output(l_box, sizeBin, tst, clust_large, dt_step)
                 data_output_functs.write_to_txt(radial_df_dict, dataPath + 'radial_df_' + outfile + '.txt')
 
                 if plot == 'y':
@@ -800,7 +835,6 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                 angular_df_dict = lattice_structure_functs.angular_df()
 
-                data_output_functs = data_output.data_output(l_box, sizeBin, tst, clust_large, dt_step)
                 data_output_functs.write_to_txt(angular_df_dict, dataPath + 'angular_df_' + outfile + '.txt')
 
                 if plot == 'y':
@@ -825,7 +859,6 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                 neigh_stat_dict, ori_stat_dict, neigh_plot_dict = lattice_structure_functs.nearest_neighbors()
 
-                data_output_functs = data_output.data_output(l_box, sizeBin, tst, clust_large, dt_step)
                 data_output_functs.write_to_txt(neigh_stat_dict, dataPath + 'nearest_neighbors_' + outfile + '.txt')
                 data_output_functs.write_to_txt(ori_stat_dict, dataPath + 'nearest_ori_' + outfile + '.txt')
                 if plot == 'y':
@@ -842,13 +875,12 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     plotting_functs.plot_all_ori_of_B_parts(neigh_plot_dict, all_surface_curves, int_comp_dict)
                     plotting_functs.plot_A_ori_of_all_parts(neigh_plot_dict, all_surface_curves, int_comp_dict)
                     plotting_functs.plot_B_ori_of_all_parts(neigh_plot_dict, all_surface_curves, int_comp_dict)
-                stop
+
             elif measurement_method == 'interparticle_pressure':
                 stress_and_pressure_functs = stress_and_pressure.stress_and_pressure(l_box, NBins, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
 
                 stress_plot_dict, stress_stat_dict = stress_and_pressure_functs.interparticle_stress()
 
-                data_output_functs = data_output.data_output(l_box, sizeBin, tst, clust_large, dt_step)
                 data_output_functs.write_to_txt(stress_stat_dict,  dataPath + 'interparticle_stress_' + outfile + '.txt')
 
                 press_dict = stress_and_pressure_functs.virial_pressure(stress_stat_dict)
@@ -882,7 +914,6 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                 com_radial_dict = stress_and_pressure_functs.radial_com_active_force_pressure(radial_fa_dict)
 
-                data_output_functs = data_output.data_output(l_box, sizeBin, tst, clust_large, dt_step)
                 data_output_functs.write_to_txt(com_radial_dict, dataPath + 'com_radial_' + outfile + '.txt')
 
                 act_press_dict = stress_and_pressure_functs.total_active_pressure(com_radial_dict)
@@ -896,15 +927,15 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                 radial_fa_dict = particle_prop_functs.radial_surface_normal_fa(method2_align_dict)
 
-                surface_radial_dict = stress_and_pressure_functs.radial_surface_active_force_pressure(radial_fa_dict, all_surface_measurements, all_surface_curves)
+                surface_radial_dict = stress_and_pressure_functs.radial_com_active_force_pressure(radial_fa_dict)
 
-                data_output_functs = data_output.data_output(l_box, sizeBin, tst, clust_large, dt_step)
                 data_output_functs.write_to_txt(surface_radial_dict, dataPath + 'surface_radial_' + outfile + '.txt')
 
-                act_press_dict = stress_and_pressure_functs.total_active_pressure(com_radial_dict)
+                act_press_dict = stress_and_pressure_functs.total_active_pressure(surface_radial_dict)
 
                 data_output_functs = data_output.data_output(l_box, sizeBin, tst, clust_large, dt_step)
                 data_output_functs.write_to_txt(act_press_dict, dataPath + 'surface_interface_pressure_' + outfile + '.txt')
+
             elif measurement_method == 'hexatic_order':
 
                 lattice_structure_functs = measurement.measurement(l_box, NBins, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)

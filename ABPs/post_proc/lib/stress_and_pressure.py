@@ -793,9 +793,12 @@ class stress_and_pressure:
         return stress_stat_dict, stress_plot_dict
 
     """
-    def radial_surface_active_force_pressure(self, int_comp_dict, all_surface_measurements, all_surface_curves):
+    def radial_surface_active_force_pressure(self, int_comp_dict, all_surface_measurements, all_surface_curves, radial_fa_dict):
 
         int_large_ids = int_comp_dict['ids']['int id']
+
+        print(radial_fa_dict)
+        stop
 
         for m in range(0, len(int_large_ids)):
             if int_large_ids[m]!=999:
@@ -807,112 +810,108 @@ class stress_and_pressure:
                 interior_rad = all_surface_measurements[key]['interior']['radius']
 
                 #X locations across interface for integration
-                xint = np.linspace(0, np.ceil(np.max(r_dist_tot_bub1)), num=int((int((int(np.ceil(np.ceil(np.max(r_dist_tot_bub1))))+1)))/3))
+                xint = np.linspace(0, np.ceil(np.max(radial_fa_dict['r'])), num=int((int((int(np.ceil(np.ceil(np.max(radial_fa_dict['r']))))+1)))/3))
 
                 #Pressure integrand components for each value of X
                 yfinal = np.zeros(len(xint))
                 alignfinal = np.zeros(len(xint))
                 densfinal = np.zeros(len(xint))
 
-                #If exterior and interior surfaces defined, continue...
-                if len(surface_area_ext)>0:
-                    if len(surface_area_int)>0:
+                #Flatten exterior and interior surfaces and line 2 ends up. Theta defines angle from y axis to overshot of exterior surface of interior surface
+                tan_theta = (surface_area_ext[0]-surface_area_int[0])/edge_width_arr[0]
 
-                        #Flatten exterior and interior surfaces and line 2 ends up. Theta defines angle from y axis to overshot of exterior surface of interior surface
-                        tan_theta = (surface_area_ext[0]-surface_area_int[0])/edge_width_arr[0]
+                #Can simplify geometric area into two components: rectangle which is defined as the product of interior surface length and the current step size across the interface (x)
+                #and triangle which accounts for the overlap of the exterior surface with the interior surface, which is defined as the product of the overlap length (exterior length - interior length) and half of the current step size across the interface (x)
+                area_rect_prev = 0
+                area_tri_prev = 0
 
-                        #Can simplify geometric area into two components: rectangle which is defined as the product of interior surface length and the current step size across the interface (x)
-                        #and triangle which accounts for the overlap of the exterior surface with the interior surface, which is defined as the product of the overlap length (exterior length - interior length) and half of the current step size across the interface (x)
-                        area_rect_prev = 0
-                        area_tri_prev = 0
+                #For each step across interface, calculate pressure in that step's area (averaged over angle from CoM)
+                for i in range(1, len(xint)):
+                    binx_nodup=np.array([])
+                    biny_nodup=np.array([])
 
-                        #For each step across interface, calculate pressure in that step's area (averaged over angle from CoM)
-                        for i in range(1, len(xint)):
-                            binx_nodup=np.array([])
-                            biny_nodup=np.array([])
+                    #Min and max location across interface of current step
+                    min_range = xint[i-1]
+                    max_range = xint[i]
 
-                            #Min and max location across interface of current step
-                            min_range = xint[i-1]
-                            max_range = xint[i]
+                    #Calculate area of rectangle for current step
+                    area_rect = (all_surface_measurements[key]['interior']['surface area'] * xint[i]) - area_rect_prev
 
-                            #Calculate area of rectangle for current step
-                            area_rect = (all_surface_measurements[key]['interior']['surface area'] * xint[i]) - area_rect_prev
+                    #Save total area of previous step sizes
+                    area_rect_prev = (all_surface_measurements[key]['interior']['radius'] * xint[i])
 
-                            #Save total area of previous step sizes
-                            area_rect_prev = (all_surface_measurements[key]['interior']['radius'] * xint[i])
+                    #Calculate the overshot length of current step
+                    dif_sa = tan_theta * xint[i]
 
-                            #Calculate the overshot length of current step
-                            dif_sa = tan_theta * xint[i]
+                    #Calculate area of triangle from overshot of exterior surface with interior surface
+                    area_tri = (dif_sa * xint[i])/2
 
-                            #Calculate area of triangle from overshot of exterior surface with interior surface
-                            area_tri = (dif_sa * xint[i])/2
+                    #Subtract total area of triangle from previous steps
+                    area_poly = area_tri - area_tri_prev
 
-                            #Subtract total area of triangle from previous steps
-                            area_poly = area_tri - area_tri_prev
+                    #Save total area of previous step sizes
+                    area_tri_prev = (dif_sa * xint[i])/2
 
-                            #Save total area of previous step sizes
-                            area_tri_prev = (dif_sa * xint[i])/2
+                    #Total area of slice we're calculating pressure over
+                    area_slice = area_poly + area_rect
 
-                            #Total area of slice we're calculating pressure over
-                            area_slice = area_poly + area_rect
+                    #Find particles that are housed within current slice
+                    points = np.where((min_range<=r_dist_tot_bub1) & (r_dist_tot_bub1<=max_range))[0]
 
-                            #Find particles that are housed within current slice
-                            points = np.where((min_range<=r_dist_tot_bub1) & (r_dist_tot_bub1<=max_range))[0]
+                    #If at least 1 particle in slice, continue...
+                    if len(points)>0:
 
-                            #If at least 1 particle in slice, continue...
-                            if len(points)>0:
+                        #If the force is defined, continue...
+                        points2 = np.logical_not(np.isnan(fa_all_tot_bub1[points]))
+                        if len(points2)>0:
 
-                                #If the force is defined, continue...
-                                points2 = np.logical_not(np.isnan(fa_all_tot_bub1[points]))
-                                if len(points2)>0:
+                            #Calculate total active force normal to interface in slice
+                            yfinal[i-1] = np.sum(fa_all_tot_bub1[points][points2])
+                            alignfinal[i-1] = np.mean(align_all_tot_bub1[points][points2])
+                            densfinal[i-1] = len(fa_all_tot_bub1[points][points2])
+                            #If either exterior or interior surface area failed to calculate, use the radii
+                            if len(surface_area_ext)==0:
+                                area_slice = np.pi * ((all_surface_measurements[key]['interior']['radius'] +xint[i])**2-(all_surface_measurements[key]['interior']['radius'] + xint[i-1])**2)
+                            if len(surface_area_int)==0:
+                                area_slice = np.pi * ((all_surface_measurements[key]['interior']['radius'] +xint[i])**2-(all_surface_measurements[key]['interior']['radius'] + xint[i-1])**2)
 
-                                    #Calculate total active force normal to interface in slice
-                                    yfinal[i-1] = np.sum(fa_all_tot_bub1[points][points2])
-                                    alignfinal[i-1] = np.mean(align_all_tot_bub1[points][points2])
-                                    densfinal[i-1] = len(fa_all_tot_bub1[points][points2])
-                                    #If either exterior or interior surface area failed to calculate, use the radii
-                                    if len(surface_area_ext)==0:
-                                        area_slice = np.pi * ((all_surface_measurements[key]['interior']['radius'] +xint[i])**2-(all_surface_measurements[key]['interior']['radius'] + xint[i-1])**2)
-                                    if len(surface_area_int)==0:
-                                        area_slice = np.pi * ((all_surface_measurements[key]['interior']['radius'] +xint[i])**2-(all_surface_measurements[key]['interior']['radius'] + xint[i-1])**2)
-
-                                    #If area of slice is non-zero, calculate the pressure [F/A]
-                                    if area_slice != 0:
-                                        yfinal[i-1] = yfinal[i-1]/area_slice
-                                        densfinal[i-1] = densfinal[i-1]/area_slice
-                                    else:
-                                        yfinal[i-1] = 0
-                                        alignfinal[i-1] = 0
-                                        densfinal[i-1] = 0
-                                else:
-                                    yfinal[i-1]=0
-                                    alignfinal[i-1] = 0
-                                    densfinal[i-1] = 0
+                            #If area of slice is non-zero, calculate the pressure [F/A]
+                            if area_slice != 0:
+                                yfinal[i-1] = yfinal[i-1]/area_slice
+                                densfinal[i-1] = densfinal[i-1]/area_slice
                             else:
-                                yfinal[i-1]=0
+                                yfinal[i-1] = 0
                                 alignfinal[i-1] = 0
                                 densfinal[i-1] = 0
+                        else:
+                            yfinal[i-1]=0
+                            alignfinal[i-1] = 0
+                            densfinal[i-1] = 0
+                    else:
+                        yfinal[i-1]=0
+                        alignfinal[i-1] = 0
+                        densfinal[i-1] = 0
 
-                        #Renaming variables
-                        yint = yfinal
-                        xint_final = xint
-                        yint_final = yint
+                #Renaming variables
+                yint = yfinal
+                xint_final = xint
+                yint_final = yint
 
-                        #Integrate force across interface using trapezoidal rule
-                        for o in range(1, len(xint_final)):
-                            int_sum_bub1 += ((xint_final[o]-xint_final[o-1])/2)*(yint_final[o]+yint_final[o-1])
-                        #plt.plot(xint, yfinal, linestyle='-', label='b1 pres', color='black')
-                        g = open(outPath2+outTxt_radial, 'a')
-                        for p in range(0, len(yfinal)-1):
-                            g.write('{0:.2f}'.format(tst).center(20) + ' ')
-                            g.write('{0:.6f}'.format(sizeBin).center(20) + ' ')
-                            g.write('{0:.0f}'.format(np.amax(clust_size)).center(20) + ' ')
-                            g.write('{0:.0f}'.format(interface_id).center(20) + ' ')
-                            g.write('{0:.0f}'.format(bub_size_id_arr[m]).center(20) + ' ')
-                            g.write('{0:.6f}'.format(xint[p]).center(20) + ' ')
-                            g.write('{0:.6f}'.format(xint[p+1]).center(20) + ' ')
-                            g.write('{0:.6f}'.format(alignfinal[p]).center(20) + ' ')
-                            g.write('{0:.6f}'.format(densfinal[p]).center(20) + ' ')
-                            g.write('{0:.6f}'.format(yfinal[p]).center(20) + '\n')
-                        g.close()
+                #Integrate force across interface using trapezoidal rule
+                for o in range(1, len(xint_final)):
+                    int_sum_bub1 += ((xint_final[o]-xint_final[o-1])/2)*(yint_final[o]+yint_final[o-1])
+                #plt.plot(xint, yfinal, linestyle='-', label='b1 pres', color='black')
+                g = open(outPath2+outTxt_radial, 'a')
+                for p in range(0, len(yfinal)-1):
+                    g.write('{0:.2f}'.format(tst).center(20) + ' ')
+                    g.write('{0:.6f}'.format(sizeBin).center(20) + ' ')
+                    g.write('{0:.0f}'.format(np.amax(clust_size)).center(20) + ' ')
+                    g.write('{0:.0f}'.format(interface_id).center(20) + ' ')
+                    g.write('{0:.0f}'.format(bub_size_id_arr[m]).center(20) + ' ')
+                    g.write('{0:.6f}'.format(xint[p]).center(20) + ' ')
+                    g.write('{0:.6f}'.format(xint[p+1]).center(20) + ' ')
+                    g.write('{0:.6f}'.format(alignfinal[p]).center(20) + ' ')
+                    g.write('{0:.6f}'.format(densfinal[p]).center(20) + ' ')
+                    g.write('{0:.6f}'.format(yfinal[p]).center(20) + '\n')
+                g.close()
     """

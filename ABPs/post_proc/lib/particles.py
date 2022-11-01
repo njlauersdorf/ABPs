@@ -218,9 +218,9 @@ class particle_props:
 
             #If particle is of type A, add alignment with nearest surface's normal for average calculation
             if self.typ[h] == 0:
-                fa_norm=np.append(fa_norm, r_dot_p*self.peA)
+                fa_norm=np.append(fa_norm, part_align[h]*self.peA)
             else:
-                fa_norm=np.append(fa_norm, r_dot_p*self.peB)
+                fa_norm=np.append(fa_norm, part_align[h]*self.peB)
 
             r_dist_norm = np.append(r_dist_norm, difr)
         radial_fa_dict = {'r': r_dist_norm, 'fa': fa_norm, 'align': part_align}
