@@ -232,7 +232,7 @@ import time
 with hoomd.open(name=inFile, mode='rb') as t:
 
     dumps = int(t.__len__())
-    start = int(600/time_step)#205                                             # first frame to process
+    start = int(0/time_step)#205                                             # first frame to process
                                 # get number of timesteps dumped
     end = int(dumps/time_step)-1                                             # final frame to process
     snap = t[0]                                             # Take first snap for box
@@ -734,19 +734,16 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     plotting_functs = plotting.plotting(orient_dict, pos_dict, l_box, NBins, sizeBin, peA, peB, parFrac, eps, typ, tst)
                     plotting_functs.plot_normal_fa_map(normal_fa_dict, all_surface_curves, int_comp_dict)
                     plotting_functs.plot_normal_fa_part(normal_fa_dict, all_surface_curves, int_comp_dict)
-                    stop
             elif measurement_method == 'active_fa':
 
                 if plot == 'y':
                     plotting_functs = plotting.plotting(orient_dict, pos_dict, l_box, NBins, sizeBin, peA, peB, parFrac, eps, typ, tst)
                     plotting_functs.plot_part_activity(pos, all_surface_curves, int_comp_dict, active_fa_dict)
-                    stop
             elif measurement_method == 'activity':
 
                 if plot == 'y':
                     plotting_functs = plotting.plotting(orient_dict, pos_dict, l_box, NBins, sizeBin, peA, peB, parFrac, eps, typ, tst)
                     plotting_functs.plot_part_activity(pos, all_surface_curves, int_comp_dict)
-                    stop
             elif measurement_method == 'phases':
 
                 data_output_functs.write_to_txt(part_count_dict, dataPath + 'PhaseComp_' + outfile + '.txt')
@@ -903,7 +900,6 @@ with hoomd.open(name=inFile, mode='rb') as t:
             elif measurement_method == 'interparticle_pressure_nlist':
                 stress_and_pressure_functs = stress_and_pressure.stress_and_pressure(l_box, NBins, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
                 stress_plot_dict, stress_stat_dict = stress_and_pressure_functs.interparticle_stress_nlist(phase_dict['part'])
-                stop
 
             elif measurement_method == 'com_interface_pressure':
                 stress_and_pressure_functs = stress_and_pressure.stress_and_pressure(l_box, NBins, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
@@ -999,7 +995,6 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 if plot == 'y':
                     plotting_functs = plotting.plotting(orient_dict, pos_dict, l_box, NBins, sizeBin, peA, peB, parFrac, eps, typ, tst)
                     plotting_functs.plot_part_activity(pos)
-                    stop
         #if j == start:
         prev_pos = pos.copy()
         prev_ang = ang.copy()
