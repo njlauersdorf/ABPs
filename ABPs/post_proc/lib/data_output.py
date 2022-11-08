@@ -250,6 +250,8 @@ class data_output:
                                 arr_ind += 1
 
                         else:
+                            print(data[i])
+                            print(type(data[i]))
                             if type(data[i])==list:
                                 f.write('{0:.6f}'.format(data[i][arr_ind]).center(20) + ' ')
                             elif type(data[i])==int:

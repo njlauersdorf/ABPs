@@ -232,7 +232,7 @@ import time
 with hoomd.open(name=inFile, mode='rb') as t:
 
     dumps = int(t.__len__())
-    start = int(400/time_step)#205                                             # first frame to process
+    start = int(0/time_step)#205                                             # first frame to process
                                 # get number of timesteps dumped
     end = int(dumps/time_step)-1                                             # final frame to process
     snap = t[0]                                             # Take first snap for box
@@ -368,14 +368,6 @@ with hoomd.open(name=inFile, mode='rb') as t:
             phase_dict = phase_ident_functs.phase_blur(phase_dict)
 
             phase_dict = phase_ident_functs.update_phasePart(phase_dict)
-            bulk_id = np.where(phase_dict['part']==0)[0]
-            int_id = np.where(phase_dict['part']==1)[0]
-            gas_id = np.where(phase_dict['part']==2)[0]
-
-            plt.scatter(pos[bulk_id,0], pos[bulk_id,1], c='green', s=0.7)
-            plt.scatter(pos[int_id,0], pos[int_id,1], c='yellow', s=0.7)
-            plt.scatter(pos[gas_id,0], pos[gas_id,1], c='red', s=0.7)
-            plt.show()
 
             count_dict = phase_ident_functs.phase_count(phase_dict)
 
@@ -391,16 +383,6 @@ with hoomd.open(name=inFile, mode='rb') as t:
             phase_dict, bulk_dict, int_dict = phase_ident_functs.reduce_gas_noise(phase_dict, bulk_dict, int_dict)
 
             phase_dict, bulk_dict, int_dict, int_comp_dict = phase_ident_functs.int_comp(part_dict, phase_dict, bulk_dict, int_dict)
-
-            bulk_id = np.where(phase_dict['part']==0)[0]
-            int_id = np.where(phase_dict['part']==1)[0]
-            gas_id = np.where(phase_dict['part']==2)[0]
-
-            plt.scatter(pos[bulk_id,0], pos[bulk_id,1], c='green', s=0.7)
-            plt.scatter(pos[int_id,0], pos[int_id,1], c='yellow', s=0.7)
-            plt.scatter(pos[gas_id,0], pos[gas_id,1], c='red', s=0.7)
-            plt.show()
-
 
             bulk_comp_dict = phase_ident_functs.bulk_comp(part_dict, phase_dict, bulk_dict)
 
@@ -628,7 +610,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
             #interface = interface.interface()
 
             #Slow/fast composition of bulk phase
-            part_count_dict = phase_ident_functs.phase_part_count(phase_dict, int_dict, int_comp_dict, bulk_dict, bulk_comp_dict, typ)
+            part_count_dict, part_id_dict = phase_ident_functs.phase_part_count(phase_dict, int_dict, int_comp_dict, bulk_dict, bulk_comp_dict, typ)
 
             #Colors for plotting each phase
             yellow = ("#fdfd96")        #Largest gas-dense interface
@@ -795,7 +777,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                 if plot == 'y':
                     plotting_functs = plotting.plotting(orient_dict, pos_dict, l_box, NBins, sizeBin, peA, peB, parFrac, eps, typ, tst)
-                    plotting_functs.plot_phases(pos, part_count_dict, all_surface_curves, int_comp_dict)
+                    plotting_functs.plot_phases(pos, part_id_dict, all_surface_curves, int_comp_dict)
             elif measurement_method == 'number_density':
 
                 num_dens_dict = binning_functs.phase_number_density(bin_count_dict, part_count_dict)

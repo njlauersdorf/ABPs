@@ -1017,10 +1017,10 @@ class phase_identification:
         small_bulk_B_part_ids = np.where((phaseBulk!=bulk_large_ids[0]) & (phaseBulk!=0) & (typ==1))[0]     #Largest gas-dense interface
 
         part_count_dict = {'bulk': {'all': bulk_num, 'A': bulk_A_num, 'B': bulk_B_num}, 'largest bulk': {'all': largest_bulk_num, 'A': largest_bulk_A_num, 'B': largest_bulk_B_num}, 'int': {'all': int_num, 'A': int_A_num, 'B': int_B_num}, 'largest int': {'all': largest_int_num, 'A': largest_int_A_num, 'B': largest_int_B_num}, 'gas': {'all': gas_num, 'A': gas_A_num, 'B': gas_B_num}}
+
         part_id_dict = {'bulk': {'all': bulk_part_ids, 'A': bulk_A_part_ids, 'B': bulk_B_part_ids}, 'largest bulk': {'all': largest_bulk_part_ids, 'A': largest_bulk_A_part_ids, 'B': largest_bulk_B_part_ids}, 'small bulk': {'all': small_bulk_part_ids, 'A': small_bulk_A_part_ids, 'B': small_bulk_B_part_ids}, 'int': {'all': int_part_ids, 'A': int_A_part_ids, 'B': int_B_part_ids}, 'largest int': {'all': largest_int_part_ids, 'A': largest_int_A_part_ids, 'B': largest_int_B_part_ids}, 'small int': {'all': small_int_part_ids, 'A': small_int_A_part_ids, 'B': small_int_B_part_ids}, 'gas': {'all': gas_part_ids, 'A': gas_A_part_ids, 'B': gas_B_part_ids}}
 
-        part_count_dict = {'num': part_count_dict, 'ids': part_id_dict}
-        return part_count_dict
+        return part_count_dict, part_id_dict
     def phase_bin_count(self, phase_dict, bulk_dict, int_dict, bulk_comp_dict, int_comp_dict):
 
         phaseBin = phase_dict['bin']

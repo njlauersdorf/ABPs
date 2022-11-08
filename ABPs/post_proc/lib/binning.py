@@ -315,23 +315,23 @@ class binning:
         binParts = part_dict['id']
 
         # Instantiate empty arrays for calculating total x and y direction velocities for each particle type ('all', 'A', or 'B')
-        v_all_x = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        v_all_y = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        v_A_x = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        v_A_y = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        v_B_x = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        v_B_y = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
+        v_all_x = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        v_all_y = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        v_A_x = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        v_A_y = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        v_B_x = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        v_B_y = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
 
         # Instantiate empty arrays for calculating average x direction, y direction, and magnitude of velocities for each particle type ('all', 'A', or 'B')
-        v_avg_x = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        v_avg_y = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        v_avg_xA = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        v_avg_yA = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        v_avg_xB = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        v_avg_yB = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        v_avg_mag = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        v_avg_magA = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        v_avg_magB = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
+        v_avg_x = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        v_avg_y = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        v_avg_xA = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        v_avg_yA = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        v_avg_xB = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        v_avg_yB = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        v_avg_mag = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        v_avg_magA = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        v_avg_magB = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
 
         # Instantiate empty arrays for calculating total x and y direction velocities for each particle
         v_x_part = np.zeros(self.partNum)
@@ -339,8 +339,8 @@ class binning:
         v_mag_part = np.zeros(self.partNum)
 
         # Loop over all bins
-        for ix in range(0, self.NBins):
-            for iy in range(0, self.NBins):
+        for ix in range(0, self.NBins_x):
+            for iy in range(0, self.NBins_y):
 
                 # Start sum of particle types summed over
                 typ0_temp = 0
@@ -353,9 +353,9 @@ class binning:
                     for h in binParts[ix][iy]:
 
                         # Calculate displacement between time steps
-                        difx = self.utility_functs.sep_dist(pos[h,0], prev_pos[h,0])
+                        difx = self.utility_functs.sep_dist_x(pos[h,0], prev_pos[h,0])
 
-                        dify = self.utility_functs.sep_dist(pos[h,1], prev_pos[h,1])
+                        dify = self.utility_functs.sep_dist_y(pos[h,1], prev_pos[h,1])
 
                         # Calculate velocity between time steps
                         vx = difx/dt
@@ -429,21 +429,21 @@ class binning:
         binParts = part_dict['id']
 
         # Instantiate empty arrays for calculating total angular velocities for each particle type ('all', 'A', or 'B')
-        ang_v_all = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        ang_v_A = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        ang_v_B = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
+        ang_v_all = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        ang_v_A = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        ang_v_B = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
 
         # Instantiate empty arrays for calculating average angular velocities for each particle type ('all', 'A', or 'B')
-        ang_v_avg = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        ang_v_avg_A = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        ang_v_avg_B = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
+        ang_v_avg = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        ang_v_avg_A = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        ang_v_avg_B = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
 
         # Instantiate empty arrays for calculating total angular velocities for each particle
         ang_v_part = np.zeros(self.partNum)
 
         # Loop over all particles
-        for ix in range(0, self.NBins):
-            for iy in range(0, self.NBins):
+        for ix in range(0, self.NBins_x):
+            for iy in range(0, self.NBins_y):
 
                 # Start sum of particle types summed over
                 typ0_temp = 0
