@@ -34,9 +34,11 @@ import numpy as np
 from scipy.optimize import curve_fit
 
 class plotting_utility:
-    def __init__(self, l_box, partNum, typ):
-        self.l_box = l_box
-        self.h_box = self.l_box/2
+    def __init__(self, lx_box, ly_box, partNum, typ):
+        self.lx_box = lx_box
+        self.hx_box = self.lx_box/2
+        self.ly_box = ly_box
+        self.hy_box = self.ly_box/2
         self.partNum = partNum
         self.typ = typ
     def normalize(self, input_dict):
@@ -93,15 +95,15 @@ class plotting_utility:
         if len(large_clust_ind_all[0])>0:
             query_points=clp_all.centers[lcID]
 
-            com_tmp_posX = query_points[0] + self.h_box
-            com_tmp_posY = query_points[1] + self.h_box
+            com_tmp_posX = query_points[0] + self.hx_box
+            com_tmp_posY = query_points[1] + self.hy_box
 
             com_tmp_posX_temp = query_points[0]
             com_tmp_posY_temp = query_points[1]
         else:
 
-            com_tmp_posX = self.h_box
-            com_tmp_posY = self.h_box
+            com_tmp_posX = self.hx_box
+            com_tmp_posY = self.hy_box
 
             com_tmp_posX_temp = 0
             com_tmp_posY_temp = 0
@@ -113,15 +115,15 @@ class plotting_utility:
 
         #Ensure particles are within simulation box (periodic boundary conditions)
         for i in range(0, self.partNum):
-                if pos[i,0]>self.h_box:
-                    pos[i,0]=pos[i,0]-self.l_box
-                elif pos[i,0]<-self.h_box:
-                    pos[i,0]=pos[i,0]+self.l_box
+                if pos[i,0]>self.hx_box:
+                    pos[i,0]=pos[i,0]-self.lx_box
+                elif pos[i,0]<-self.hx_box:
+                    pos[i,0]=pos[i,0]+self.lx_box
 
-                if pos[i,1]>self.h_box:
-                    pos[i,1]=pos[i,1]-self.l_box
-                elif pos[i,1]<-self.h_box:
-                    pos[i,1]=pos[i,1]+self.l_box
+                if pos[i,1]>self.hy_box:
+                    pos[i,1]=pos[i,1]-self.ly_box
+                elif pos[i,1]<-self.hy_box:
+                    pos[i,1]=pos[i,1]+self.ly_box
 
         com_dict = {'pos': pos, 'com': {'x': com_tmp_posX, 'y': com_tmp_posY}}
 

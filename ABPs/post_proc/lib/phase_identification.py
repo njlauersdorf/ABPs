@@ -38,7 +38,7 @@ import theory
 import utility
 
 class phase_identification:
-    def __init__(self, area_frac_dict, align_dict, part_dict, press_dict, l_box, partNum, NBins, peA, peB, parFrac, eps, typ):
+    def __init__(self, area_frac_dict, align_dict, part_dict, press_dict, lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, parFrac, eps, typ):
 
         self.align_x = align_dict['bin']['all']['x']
         self.align_y = align_dict['bin']['all']['y']
@@ -66,20 +66,24 @@ class phase_identification:
 
         theory_functs = theory.theory()
 
-        self.l_box = l_box
-        self.h_box = self.l_box/2
+        self.lx_box = lx_box
+        self.hx_box = self.lx_box/2
+        self.ly_box = ly_box
+        self.hy_box = self.ly_box/2
 
-        utility_functs = utility.utility(self.l_box)
+        utility_functs = utility.utility(self.lx_box, self.ly_box)
 
         self.partNum = partNum
         self.min_size=int(self.partNum/8)                                     #Minimum cluster size for measurements to happen
 
         try:
-            self.NBins = int(NBins)
+            self.NBins_x = int(NBins_x)
+            self.NBins_y = int(NBins_y)
         except:
             print('NBins must be either a float or an integer')
 
-        self.sizeBin = utility_functs.roundUp((self.l_box / self.NBins), 6)
+        self.sizeBin_x = utility_functs.roundUp((self.lx_box / self.NBins_x), 6)
+        self.sizeBin_y = utility_functs.roundUp((self.ly_box / self.NBins_y), 6)
 
         self.peA = peA
         self.peB = peB
@@ -98,7 +102,7 @@ class phase_identification:
 
     def phase_ident(self):
 
-        phaseBin = [[0 for b in range(self.NBins)] for a in range(self.NBins)]            #Label phase of each bin
+        phaseBin = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]            #Label phase of each bin
 
         phasePart=np.zeros(self.partNum)
 
@@ -152,8 +156,8 @@ class phase_identification:
         bulkBin_num=0
 
         #Label phase of bin per above criterion in number density and alignment
-        for ix in range(0, self.NBins):
-            for iy in range(0, self.NBins):
+        for ix in range(0, self.NBins_x):
+            for iy in range(0, self.NBins_y):
                 #Criterion for interface or gas
                 if (criterion[ix][iy]<criterion_min) & (self.area_frac[ix][iy] < phi_dense_theory_min):
 
@@ -193,24 +197,24 @@ class phase_identification:
 
         for f in range(0,2):
 
-            for ix in range(0, self.NBins):
+            for ix in range(0, self.NBins_x):
 
                 #Identify neighboring bin indices in x-direction
-                if (ix + 1) == self.NBins:
+                if (ix + 1) == self.NBins_x:
                     lookx = [ix-1, ix, 0]
                 elif ix==0:
-                    lookx=[self.NBins-1, ix, ix+1]
+                    lookx=[self.NBins_x-1, ix, ix+1]
                 else:
                     lookx = [ix-1, ix, ix+1]
 
                 # Loop through y index of mesh
-                for iy in range(0, self.NBins):
+                for iy in range(0, self.NBins_y):
 
                     #Identify neighboring bin indices in y-direction
-                    if (iy + 1) == self.NBins:
+                    if (iy + 1) == self.NBins_y:
                         looky = [iy-1, iy, 0]
                     elif iy==0:
-                        looky=[self.NBins-1, iy, iy+1]
+                        looky=[self.NBins_y-1, iy, iy+1]
                     else:
                         looky = [iy-1, iy, iy+1]
 
@@ -282,8 +286,8 @@ class phase_identification:
         phasePart = phase_dict['part']
 
         #Label individual particle phases from identified bin phases
-        for ix in range(0, self.NBins):
-            for iy in range(0, self.NBins):
+        for ix in range(0, self.NBins_x):
+            for iy in range(0, self.NBins_y):
                 for h in range(0, len(self.binParts[ix][iy])):
                     phasePart[self.binParts[ix][iy][h]]=phaseBin[ix][iy]
         phase_dict = {'bin': phaseBin, 'part': phasePart}
@@ -298,8 +302,8 @@ class phase_identification:
         int_num=0
         bulk_num=0
         gas_num=0
-        for ix in range(0, self.NBins):
-            for iy in range(0, self.NBins):
+        for ix in range(0, self.NBins_x):
+            for iy in range(0, self.NBins_y):
                 if phaseBin[ix][iy]==1:
                     int_num+=1
                 elif phaseBin[ix][iy]==0:
@@ -316,39 +320,39 @@ class phase_identification:
 
         bulk_num = count_dict['bulk']
 
-        com_x_ind = int(self.h_box / self.sizeBin)
+        com_x_ind = int(self.hx_box / self.sizeBin_x)
 
-        com_y_ind = int(self.h_box / self.sizeBin)
+        com_y_ind = int(self.hy_box / self.sizeBin_y)
 
         if phaseBin[com_x_ind][com_y_ind]==0:
             com_bulk_indx = com_x_ind
             com_bulk_indy = com_y_ind
         elif bulk_num>0:
             shortest_r = 10000
-            for ix in range(0, self.NBins):
-                for iy in range(0, self.NBins):
+            for ix in range(0, self.NBins_x):
+                for iy in range(0, self.NBins_y):
                     if phaseBin[ix][iy]==0:
-                        pos_x = ix * self.sizeBin
-                        pos_y = iy * self.sizeBin
-                        difx = (pos_x - self.h_box)
+                        pos_x = ix * self.sizeBin_x
+                        pos_y = iy * self.sizeBin_y
+                        difx = (pos_x - self.hx_box)
 
                         #Enforce periodic boundary conditions
                         difx_abs = np.abs(difx)
-                        if difx_abs>=self.h_box:
-                            if difx < -self.h_box:
-                                difx += self.l_box
+                        if difx_abs>=self.hx_box:
+                            if difx < -self.hx_box:
+                                difx += self.lx_box
                             else:
-                                difx -= self.l_box
+                                difx -= self.lx_box
 
-                        dify = (pos_y - self.h_box)
+                        dify = (pos_y - self.hy_box)
 
                         #Enforce periodic boundary conditions
                         dify_abs = np.abs(dify)
-                        if dify_abs>=self.h_box:
-                            if dify < -self.h_box:
-                                dify += self.l_box
+                        if dify_abs>=self.hy_box:
+                            if dify < -self.hy_box:
+                                dify += self.ly_box
                             else:
-                                dify -= self.l_box
+                                dify -= self.ly_box
 
                         difr = (difx**2 + dify**2)**0.5
 
@@ -376,7 +380,7 @@ class phase_identification:
 
         #initiate ix, iy bin id's to while-loop over
 
-        bulk_id=np.zeros((self.NBins, self.NBins), dtype=int)            #Label separate interfaces
+        bulk_id=np.zeros((self.NBins_x, self.NBins_y), dtype=int)            #Label separate interfaces
 
         bulk_num_current=0
         ix_ref = 0
@@ -404,17 +408,17 @@ class phase_identification:
                     for ix,iy in bulk_id_list:
 
                         #identify neighboring bins
-                        if (ix + 1) == self.NBins:
+                        if (ix + 1) == self.NBins_x:
                             lookx = [ix-1, ix, 0]
                         elif ix==0:
-                            lookx=[self.NBins-1, ix, ix+1]
+                            lookx=[self.NBins_x-1, ix, ix+1]
                         else:
                             lookx = [ix-1, ix, ix+1]
 
-                        if (iy + 1) == self.NBins:
+                        if (iy + 1) == self.NBins_y:
                             looky = [iy-1, iy, 0]
                         elif iy==0:
-                            looky=[self.NBins-1, iy, iy+1]
+                            looky=[self.NBins_y-1, iy, iy+1]
                         else:
                             looky = [iy-1, iy, iy+1]
 
@@ -442,18 +446,18 @@ class phase_identification:
 
                     #If bin has been identified as an interface, look at different reference bin
                 else:
-                        if (ix_ref==(self.NBins-1)) & (iy_ref==(self.NBins-1)):
+                        if (ix_ref==(self.NBins_x-1)) & (iy_ref==(self.NBins_y-1)):
                             break
-                        if ix_ref!=(self.NBins-1):
+                        if ix_ref!=(self.NBins_x-1):
                             ix_ref+=1
                         else:
                             ix_ref=0
                             iy_ref+=1
             #If bin is not an interface, go to different reference bin
             else:
-                if (ix_ref==(self.NBins-1)) & (iy_ref==(self.NBins-1)):
+                if (ix_ref==(self.NBins_x-1)) & (iy_ref==(self.NBins_y-1)):
                     break
-                if ix_ref!=(self.NBins-1):
+                if ix_ref!=(self.NBins_x-1):
                     ix_ref+=1
                 else:
                     ix_ref=0
@@ -477,7 +481,7 @@ class phase_identification:
         phaseBulk = bulk_dict['part']
         big_bulk_id = bulk_dict['largest id']
 
-        int_id=np.zeros((self.NBins, self.NBins), dtype=int)            #Label separate interfaces
+        int_id=np.zeros((self.NBins_x, self.NBins_y), dtype=int)            #Label separate interfaces
 
         #initiate ix, iy bin id's to while-loop over
         int_num_current = 0
@@ -514,16 +518,16 @@ class phase_identification:
                     for ix,iy in int_id_list:
 
                         #identify neighboring bins
-                        if (ix + 1) == self.NBins:
+                        if (ix + 1) == self.NBins_x:
                             lookx = [ix-1, ix, 0]
                         elif ix==0:
-                            lookx=[self.NBins-1, ix, ix+1]
+                            lookx=[self.NBins_x-1, ix, ix+1]
                         else:
                             lookx = [ix-1, ix, ix+1]
-                        if (iy + 1) == self.NBins:
+                        if (iy + 1) == self.NBins_y:
                             looky = [iy-1, iy, 0]
                         elif iy==0:
-                            looky=[self.NBins-1, iy, iy+1]
+                            looky=[self.NBins_y-1, iy, iy+1]
                         else:
                             looky = [iy-1, iy, iy+1]
 
@@ -566,8 +570,8 @@ class phase_identification:
 
                         #If more neighboring gas bins, reference bin is truly a gas bin
                         if gas_num>bulk_num:
-                            for ix in range(0, self.NBins):
-                                for iy in range(0, self.NBins):
+                            for ix in range(0, self.NBins_x):
+                                for iy in range(0, self.NBins_y):
                                     if int_id[ix][iy]==int_id_current:
                                         int_id[ix][iy]=0
                                         phaseBin[ix][iy]=2
@@ -578,8 +582,8 @@ class phase_identification:
 
                         #Else if more neighboring bulk bins, reference bin is truly a bulk bin
                         else:
-                            for ix in range(0, self.NBins):
-                                for iy in range(0, self.NBins):
+                            for ix in range(0, self.NBins_x):
+                                for iy in range(0, self.NBins_y):
                                     if int_id[ix][iy]==int_id_current:
                                         int_id[ix][iy]=0
                                         phaseBin[ix][iy]=0
@@ -592,18 +596,18 @@ class phase_identification:
 
                 #If bin has been identified as an interface, look at different reference bin
                 else:
-                    if (ix_ref==(self.NBins-1)) & (iy_ref==(self.NBins-1)):
+                    if (ix_ref==(self.NBins_x-1)) & (iy_ref==(self.NBins_y-1)):
                         break
-                    if ix_ref!=(self.NBins-1):
+                    if ix_ref!=(self.NBins_x-1):
                         ix_ref+=1
                     else:
                         ix_ref=0
                         iy_ref+=1
             #If bin is not an interface, go to different reference bin
             else:
-                if (ix_ref==(self.NBins-1)) & (iy_ref==(self.NBins-1)):
+                if (ix_ref==(self.NBins_x-1)) & (iy_ref==(self.NBins_y-1)):
                     break
-                if ix_ref!=(self.NBins-1):
+                if ix_ref!=(self.NBins_x-1):
                     ix_ref+=1
                 else:
                     ix_ref=0
@@ -630,32 +634,32 @@ class phase_identification:
         possible_int_ids = int_dict['largest ids']
 
         #Label which interface each particle belongs to
-        for ix in range(0, self.NBins):
-            for iy in range(0, self.NBins):
+        for ix in range(0, self.NBins_x):
+            for iy in range(0, self.NBins_y):
                 if (int_id[ix][iy] == 0) & (bulk_id[ix][iy]==0):
                     bulk_num=0
                     gas_num=0
                     bulk_id_list=[]
-                    if (ix + 2) == self.NBins:
+                    if (ix + 2) == self.NBins_x:
                         lookx = [ix-1, ix-1, ix, ix+1, 0]
-                    elif (ix + 1) == self.NBins:
+                    elif (ix + 1) == self.NBins_x:
                         lookx = [ix-2, ix-1, ix, 0, 1]
                     elif ix==0:
-                        lookx=[self.NBins-2, self.NBins-1, ix, ix+1, ix+2]
+                        lookx=[self.NBins_x-2, self.NBins_x-1, ix, ix+1, ix+2]
                     elif ix==1:
-                        lookx=[self.NBins-1, ix-1, ix, ix+1, ix+2]
+                        lookx=[self.NBins_x-1, ix-1, ix, ix+1, ix+2]
                     else:
                         lookx = [ix-2, ix-1, ix, ix+1, ix+2]
 
                     #Based on y-index (iy), find neighboring y-indices to loop through
-                    if (iy + 2) == self.NBins:
+                    if (iy + 2) == self.NBins_y:
                         looky = [iy-1, iy-1, iy, iy+1, 0]
-                    elif (iy + 1) == self.NBins:
+                    elif (iy + 1) == self.NBins_y:
                         looky = [iy-2, iy-1, iy, 0, 1]
                     elif iy==0:
-                        looky=[self.NBins-2, self.NBins-1, iy, iy+1, iy+2]
+                        looky=[self.NBins_y-2, self.NBins_y-1, iy, iy+1, iy+2]
                     elif iy==1:
-                        looky=[self.NBins-1, iy-1, iy, iy+1, iy+2]
+                        looky=[self.NBins_y-1, iy-1, iy, iy+1, iy+2]
                     else:
                         looky = [iy-2, iy-1, iy, iy+1, iy+2]
 
@@ -724,8 +728,8 @@ class phase_identification:
 
             int_id_bin_num=0
 
-            for ix in range(0, self.NBins):
-                for iy in range(0, self.NBins):
+            for ix in range(0, self.NBins_x):
+                for iy in range(0, self.NBins_y):
                     if int_id[ix][iy]==m:
                         int_id_bin_num +=1
 
@@ -734,8 +738,8 @@ class phase_identification:
                 int_small_num+=1
                 phaseInt[int_id_part]=0
 
-                for ix in range(0, self.NBins):
-                    for iy in range(0, self.NBins):
+                for ix in range(0, self.NBins_x):
+                    for iy in range(0, self.NBins_y):
 
                         bulk_id_list = []
                         gas_num=0
@@ -744,26 +748,26 @@ class phase_identification:
                         if int_id[ix][iy]==m:
                             if m in possible_int_ids:
                                 possible_int_ids.remove(m)
-                            if (ix + 2) == self.NBins:
+                            if (ix + 2) == self.NBins_x:
                                 lookx = [ix-1, ix-1, ix, ix+1, 0]
-                            elif (ix + 1) == self.NBins:
+                            elif (ix + 1) == self.NBins_x:
                                 lookx = [ix-2, ix-1, ix, 0, 1]
                             elif ix==0:
-                                lookx=[self.NBins-2, self.NBins-1, ix, ix+1, ix+2]
+                                lookx=[self.NBins_x-2, self.NBins_x-1, ix, ix+1, ix+2]
                             elif ix==1:
-                                lookx=[self.NBins-1, ix-1, ix, ix+1, ix+2]
+                                lookx=[self.NBins_x-1, ix-1, ix, ix+1, ix+2]
                             else:
                                 lookx = [ix-2, ix-1, ix, ix+1, ix+2]
 
                             #Based on y-index (iy), find neighboring y-indices to loop through
-                            if (iy + 2) == self.NBins:
+                            if (iy + 2) == self.NBins_y:
                                 looky = [iy-1, iy-1, iy, iy+1, 0]
-                            elif (iy + 1) == self.NBins:
+                            elif (iy + 1) == self.NBins_y:
                                 looky = [iy-2, iy-1, iy, 0, 1]
                             elif iy==0:
-                                looky=[self.NBins-2, self.NBins-1, iy, iy+1, iy+2]
+                                looky=[self.NBins_y-2, self.NBins_y-1, iy, iy+1, iy+2]
                             elif iy==1:
-                                looky=[self.NBins-1, iy-1, iy, iy+1, iy+2]
+                                looky=[self.NBins_y-1, iy-1, iy, iy+1, iy+2]
                             else:
                                 looky = [iy-2, iy-1, iy, iy+1, iy+2]
 
@@ -848,8 +852,8 @@ class phase_identification:
             bulk_id_part_num = len(bulk_id_part)
 
             bulk_id_bin_num=0
-            for ix in range(0, self.NBins):
-                for iy in range(0, self.NBins):
+            for ix in range(0, self.NBins_x):
+                for iy in range(0, self.NBins_y):
                     if bulk_id[ix][iy]==m:
                         bulk_id_bin_num +=1
 
@@ -1041,8 +1045,8 @@ class phase_identification:
         bulk_num_arr = np.zeros(len(bulk_large_ids))
 
         #Measure number of bins belong to each phase
-        for ix in range(0, self.NBins):
-            for iy in range(0, self.NBins):
+        for ix in range(0, self.NBins_x):
+            for iy in range(0, self.NBins_y):
                 if phaseBin[ix][iy]==0:
                     bulk_num+=1
                 elif phaseBin[ix][iy]==2:
@@ -1055,16 +1059,16 @@ class phase_identification:
         #Count number of bins belonging to each interface structure
         for m in range(0, len(int_large_ids)):
             if if_large_int[m]!=0:
-                for ix in range(0, self.NBins):
-                    for iy in range(0, self.NBins):
+                for ix in range(0, self.NBins_x):
+                    for iy in range(0, self.NBins_y):
                         if int_id[ix][iy] == int_large_ids[m]:
                             int_num_arr[m] +=1
 
         #Count number of bins belonging to each bulk phase structure
         for m in range(0, len(bulk_large_ids)):
             if if_large_bulk[m]!=0:
-                for ix in range(0, self.NBins):
-                    for iy in range(0, self.NBins):
+                for ix in range(0, self.NBins_x):
+                    for iy in range(0, self.NBins_y):
                         if bulk_id[ix][iy] == bulk_large_ids[m]:
                             bulk_num_arr[m] +=1
 

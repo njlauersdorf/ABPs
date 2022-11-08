@@ -7,4 +7,4 @@
 #Python template file
 inFile=$1
 
-python $inFile
+python3 $inFile

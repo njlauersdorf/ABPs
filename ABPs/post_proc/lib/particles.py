@@ -23,25 +23,27 @@ import theory, utility
 
 class particle_props:
 
-    def __init__(self, l_box, partNum, NBins, peA, peB, typ, pos, ang):
+    def __init__(self, lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, typ, pos, ang):
         theory_functs = theory.theory()
-        self.l_box = l_box
-        self.h_box = self.l_box / 2
-        utility_functs = utility.utility(self.l_box)
+        self.lx_box = lx_box
+        self.hx_box = self.lx_box / 2
+        self.ly_box = ly_box
+        self.hy_box = self.ly_box / 2
+        self.utility_functs = utility.utility(self.lx_box, self.ly_box)
         self.partNum = partNum
         self.min_size = int(self.partNum / 8)
         try:
-            self.NBins = int(NBins)
+            self.NBins_x = int(NBins_x)
+            self.NBins_y = int(NBins_y)
         except:
             print('NBins must be either a float or an integer')
-        self.sizeBin = utility_functs.roundUp(self.l_box / self.NBins, 6)
+        self.sizeBin_x = self.utility_functs.roundUp(self.lx_box / self.NBins_x, 6)
+        self.sizeBin_y = self.utility_functs.roundUp(self.ly_box / self.NBins_y, 6)
         self.peA = peA
         self.peB = peB
         self.r_cut=2**(1/6)                  #Cut off interaction radius (Per LJ Potential)
 
         self.typ = typ
-
-        self.utility_functs = utility.utility(self.l_box)
 
         self.pos = pos
         self.ang = ang

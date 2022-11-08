@@ -232,7 +232,7 @@ import time
 with hoomd.open(name=inFile, mode='rb') as t:
 
     dumps = int(t.__len__())
-    start = int(0/time_step)#205                                             # first frame to process
+    start = int(400/time_step)#205                                             # first frame to process
                                 # get number of timesteps dumped
     end = int(dumps/time_step)-1                                             # final frame to process
     snap = t[0]                                             # Take first snap for box
@@ -246,18 +246,23 @@ with hoomd.open(name=inFile, mode='rb') as t:
     # Get box dimensions
     box_data = snap.configuration.box
 
-    l_box = box_data[0]                                     #box length
-    h_box = l_box / 2.0                                     #half box length
-    utility_functs = utility.utility(l_box)
+    lx_box = box_data[0]                                     #box length
+    ly_box = box_data[1]
+    hx_box = lx_box / 2.0                                     #half box length
+    hy_box = ly_box / 2.0                                     #half box length
+    utility_functs = utility.utility(lx_box, ly_box)
 
     #2D binning of system
-    NBins = utility_functs.getNBins(l_box, r_cut)
-    sizeBin = utility_functs.roundUp((l_box / NBins), 6)
-    f_box = box.Box(Lx=l_box, Ly=l_box, is2D=True)
+    NBins_x = utility_functs.getNBins(lx_box, r_cut)
+    NBins_y = utility_functs.getNBins(ly_box, r_cut)
+    sizeBin_x = utility_functs.roundUp((lx_box / NBins_x), 6)
+    sizeBin_y = utility_functs.roundUp((ly_box / NBins_y), 6)
+
+    f_box = box.Box(Lx=lx_box, Ly=ly_box, is2D=True)
 
     time_arr=np.zeros(dumps)                                  #time step array
 
-    plotting_utility_functs = plotting_utility.plotting_utility(l_box, partNum, typ)
+    plotting_utility_functs = plotting_utility.plotting_utility(lx_box, ly_box, partNum, typ)
 
 
     dt=0
@@ -313,11 +318,13 @@ with hoomd.open(name=inFile, mode='rb') as t:
         pos = com_dict['pos']
 
         #Bin system to calculate orientation and alignment that will be used in vector plots
-        NBins = utility_functs.getNBins(l_box, bin_width)
+        NBins_x = utility_functs.getNBins(lx_box, bin_width)
+        NBins_y = utility_functs.getNBins(ly_box, bin_width)
 
-        sizeBin = utility_functs.roundUp(((l_box) / NBins), 6)
+        sizeBin_x = utility_functs.roundUp(((lx_box) / NBins_x), 6)
+        sizeBin_y = utility_functs.roundUp(((ly_box) / NBins_y), 6)
 
-        binning_functs = binning.binning(l_box, partNum, NBins, peA, peB, typ, eps)
+        binning_functs = binning.binning(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, typ, eps)
 
         pos_dict = binning_functs.create_bins()
 
@@ -330,15 +337,15 @@ with hoomd.open(name=inFile, mode='rb') as t:
         if clust_large >= min_size:
 
 
-            fa_all_tot = [[0 for b in range(NBins)] for a in range(NBins)]
-            fa_all_x_tot = [[0 for b in range(NBins)] for a in range(NBins)]
-            fa_all_y_tot = [[0 for b in range(NBins)] for a in range(NBins)]
-            fa_fast_tot = [[0 for b in range(NBins)] for a in range(NBins)]
-            fa_slow_tot = [[0 for b in range(NBins)] for a in range(NBins)]
+            fa_all_tot = [[0 for b in range(NBins_y)] for a in range(NBins_x)]
+            fa_all_x_tot = [[0 for b in range(NBins_y)] for a in range(NBins_x)]
+            fa_all_y_tot = [[0 for b in range(NBins_y)] for a in range(NBins_x)]
+            fa_fast_tot = [[0 for b in range(NBins_y)] for a in range(NBins_x)]
+            fa_slow_tot = [[0 for b in range(NBins_y)] for a in range(NBins_x)]
 
-            fa_all_num = [[0 for b in range(NBins)] for a in range(NBins)]
-            fa_fast_num = [[0 for b in range(NBins)] for a in range(NBins)]
-            fa_slow_num = [[0 for b in range(NBins)] for a in range(NBins)]
+            fa_all_num = [[0 for b in range(NBins_y)] for a in range(NBins_x)]
+            fa_fast_num = [[0 for b in range(NBins_y)] for a in range(NBins_x)]
+            fa_slow_num = [[0 for b in range(NBins_y)] for a in range(NBins_x)]
 
             align_dict = binning_functs.bin_align(orient_dict)
 
@@ -352,13 +359,23 @@ with hoomd.open(name=inFile, mode='rb') as t:
             #radial_density_function_analysis_binary_updates
             align_grad_dict = binning_functs.curl_and_div(align_dict)
 
-            phase_ident_functs = phase_identification.phase_identification(area_frac_dict, align_dict, part_dict, press_dict, l_box, partNum, NBins, peA, peB, parFrac, eps, typ)
+            plotting_functs = plotting.plotting(orient_dict, pos_dict, lx_box, ly_box, NBins_x, NBins_y, sizeBin_x, sizeBin_y, peA, peB, parFrac, eps, typ, tst, partNum)
+
+            phase_ident_functs = phase_identification.phase_identification(area_frac_dict, align_dict, part_dict, press_dict, lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, parFrac, eps, typ)
 
             phase_dict = phase_ident_functs.phase_ident()
 
             phase_dict = phase_ident_functs.phase_blur(phase_dict)
 
             phase_dict = phase_ident_functs.update_phasePart(phase_dict)
+            bulk_id = np.where(phase_dict['part']==0)[0]
+            int_id = np.where(phase_dict['part']==1)[0]
+            gas_id = np.where(phase_dict['part']==2)[0]
+
+            plt.scatter(pos[bulk_id,0], pos[bulk_id,1], c='green', s=0.7)
+            plt.scatter(pos[int_id,0], pos[int_id,1], c='yellow', s=0.7)
+            plt.scatter(pos[gas_id,0], pos[gas_id,1], c='red', s=0.7)
+            plt.show()
 
             count_dict = phase_ident_functs.phase_count(phase_dict)
 
@@ -370,9 +387,20 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
             phase_dict = phase_ident_functs.update_phasePart(phase_dict)
 
+
             phase_dict, bulk_dict, int_dict = phase_ident_functs.reduce_gas_noise(phase_dict, bulk_dict, int_dict)
 
             phase_dict, bulk_dict, int_dict, int_comp_dict = phase_ident_functs.int_comp(part_dict, phase_dict, bulk_dict, int_dict)
+
+            bulk_id = np.where(phase_dict['part']==0)[0]
+            int_id = np.where(phase_dict['part']==1)[0]
+            gas_id = np.where(phase_dict['part']==2)[0]
+
+            plt.scatter(pos[bulk_id,0], pos[bulk_id,1], c='green', s=0.7)
+            plt.scatter(pos[int_id,0], pos[int_id,1], c='yellow', s=0.7)
+            plt.scatter(pos[gas_id,0], pos[gas_id,1], c='red', s=0.7)
+            plt.show()
+
 
             bulk_comp_dict = phase_ident_functs.bulk_comp(part_dict, phase_dict, bulk_dict)
 
@@ -380,9 +408,10 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
             int_comp_dict = phase_ident_functs.int_sort2(int_comp_dict)
 
-            interface_functs = interface.interface(area_frac_dict, align_dict, part_dict, press_dict, l_box, partNum, NBins, peA, peB, parFrac, eps, typ, ang)
+            interface_functs = interface.interface(area_frac_dict, align_dict, part_dict, press_dict, lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, parFrac, eps, typ, ang)
 
             surface_dict = interface_functs.det_surface_points(phase_dict, int_dict, int_comp_dict)
+
 
             #Save positions of external and internal edges
             clust_true = 0
@@ -629,7 +658,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
             g.write('{0:.0f}'.format(bubBin2-intBin).center(15) + '\n')
             g.close()
             '''
-            data_output_functs = data_output.data_output(l_box, sizeBin, tst, clust_large, dt_step)
+            data_output_functs = data_output.data_output(lx_box, ly_box, sizeBin_x, sizeBin_y, tst, clust_large, dt_step)
 
             #Bin system to calculate orientation and alignment that will be used in vector plots
             all_surface_curves = {}
@@ -637,17 +666,21 @@ with hoomd.open(name=inFile, mode='rb') as t:
             all_surface_measurements = {}
 
 
+
             for m in range(0, len(sep_surface_dict)):
+                print('test')
+                print(m)
                 averaged_data_arr = {}
 
                 key = 'surface id ' + str(int(int_comp_dict['ids']['int id'][m]))
+                print(key)
                 all_surface_curves[key] = {}
                 all_surface_measurements[key] = {}
 
 
                 if (int_comp_dict['ids']['int id'][m]!=999):
-                    print(np.max(int_comp_dict['comp']['all']))
-                    print(np.where(int_comp_dict['comp']['all']==np.max(int_comp_dict['comp']['all']))[0])
+                    #print(np.max(int_comp_dict['comp']['all']))
+                    #print(np.where(int_comp_dict['comp']['all']==np.max(int_comp_dict['comp']['all']))[0])
                     averaged_data_arr['int_id'] = int(int_comp_dict['ids']['int id'][np.where(int_comp_dict['comp']['all']==np.max(int_comp_dict['comp']['all']))[0][0]])
                     averaged_data_arr['bub_id'] = int(int_comp_dict['ids']['int id'][m])
                     averaged_data_arr['Na'] = int(int_comp_dict['comp']['A'][m])
@@ -702,15 +735,20 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 if measurement_method == 'interface_props':
                     data_output_functs.write_to_txt(averaged_data_arr, dataPath + 'BubComp_' + outfile + '.txt')
 
+            print('test1')
             method1_align_dict, method2_align_dict = interface_functs.surface_alignment(all_surface_measurements, all_surface_curves, sep_surface_dict, int_dict, int_comp_dict)
+            print('test2')
             method1_align_dict, method2_align_dict = interface_functs.bulk_alignment(method1_align_dict, method2_align_dict, all_surface_measurements, all_surface_curves, sep_surface_dict, bulk_dict, bulk_comp_dict, int_comp_dict)
+            print('test3')
+            print(surface_dict)
+
             method1_align_dict, method2_align_dict = interface_functs.gas_alignment(method1_align_dict, method2_align_dict, all_surface_measurements, all_surface_curves, sep_surface_dict, int_comp_dict)
 
             if measurement_method == 'vorticity':
                 if j>(start*time_step):
 
                     if plot == 'y':
-                        plotting_functs = plotting.plotting(orient_dict, pos_dict, l_box, NBins, sizeBin, peA, peB, parFrac, eps, typ, tst)
+                        plotting_functs = plotting.plotting(orient_dict, pos_dict, lx_box, ly_box, NBins_x, NBins_y, sizeBin_x, sizeBin_y, peA, peB, parFrac, eps, typ, tst)
                         plotting_functs.plot_vorticity(vel_dict['all'], vel_grad['curl']['all'], sep_surface_dict, int_comp_dict, species='all')
             elif measurement_method == 'velocity':
                 if j>(start*time_step):
@@ -734,6 +772,11 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     plotting_functs = plotting.plotting(orient_dict, pos_dict, l_box, NBins, sizeBin, peA, peB, parFrac, eps, typ, tst)
                     plotting_functs.plot_normal_fa_map(normal_fa_dict, all_surface_curves, int_comp_dict)
                     plotting_functs.plot_normal_fa_part(normal_fa_dict, all_surface_curves, int_comp_dict)
+            elif measurement_method == 'voronoi':
+                if plot == 'y':
+                    plotting_functs = plotting.plotting(orient_dict, pos_dict, lx_box, ly_box, NBins_x, NBins_y, sizeBin_x, sizeBin_y, peA, peB, parFrac, eps, typ, tst)
+                    plotting_functs.plot_voronoi(pos)
+
             elif measurement_method == 'active_fa':
 
                 if plot == 'y':
@@ -744,6 +787,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 if plot == 'y':
                     plotting_functs = plotting.plotting(orient_dict, pos_dict, l_box, NBins, sizeBin, peA, peB, parFrac, eps, typ, tst)
                     plotting_functs.plot_part_activity(pos, all_surface_curves, int_comp_dict)
+                    stop
             elif measurement_method == 'phases':
 
                 data_output_functs.write_to_txt(part_count_dict, dataPath + 'PhaseComp_' + outfile + '.txt')
@@ -752,7 +796,6 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 if plot == 'y':
                     plotting_functs = plotting.plotting(orient_dict, pos_dict, l_box, NBins, sizeBin, peA, peB, parFrac, eps, typ, tst)
                     plotting_functs.plot_phases(pos, part_count_dict, all_surface_curves, int_comp_dict)
-
             elif measurement_method == 'number_density':
 
                 num_dens_dict = binning_functs.phase_number_density(bin_count_dict, part_count_dict)
@@ -793,6 +836,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                 data_output_functs.write_to_txt(stress_stat_dict, dataPath + 'interparticle_stress_' + outfile + '.txt')
                 data_output_functs.write_to_txt(press_stat_dict, dataPath + 'interparticle_press_' + outfile + '.txt')
+
+                if plot == 'y':
+                    plotting_functs = plotting.plotting(orient_dict, pos_dict, l_box, NBins, sizeBin, peA, peB, parFrac, eps, typ, tst)
 
             elif measurement_method == 'lattice_spacing':
 
@@ -852,18 +898,20 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
             elif measurement_method == 'neighbors':
 
-                lattice_structure_functs = measurement.measurement(l_box, NBins, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
+                lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
 
                 neigh_stat_dict, ori_stat_dict, neigh_plot_dict = lattice_structure_functs.nearest_neighbors()
 
                 data_output_functs.write_to_txt(neigh_stat_dict, dataPath + 'nearest_neighbors_' + outfile + '.txt')
                 data_output_functs.write_to_txt(ori_stat_dict, dataPath + 'nearest_ori_' + outfile + '.txt')
                 if plot == 'y':
-                    plotting_functs = plotting.plotting(orient_dict, pos_dict, l_box, NBins, sizeBin, peA, peB, parFrac, eps, typ, tst)
+                    plotting_functs = plotting.plotting(orient_dict, pos_dict, lx_box, ly_box, NBins_x, NBins_y, sizeBin_x, sizeBin_y, peA, peB, parFrac, eps, typ, tst, partNum)
+                    plotting_functs.local_orientational_order_map(neigh_plot_dict, all_surface_curves, int_comp_dict)
 
-                    plotting_functs.plot_all_neighbors_of_all_parts(neigh_plot_dict, all_surface_curves, int_comp_dict)
-                    plotting_functs.plot_all_neighbors_of_A_parts(neigh_plot_dict, all_surface_curves, int_comp_dict)
-                    plotting_functs.plot_all_neighbors_of_B_parts(neigh_plot_dict, all_surface_curves, int_comp_dict)
+                    plotting_functs.plot_neighbors(neigh_plot_dict, all_surface_curves, int_comp_dict, type='all-all')
+                    plotting_functs.plot_neighbors(neigh_plot_dict, all_surface_curves, int_comp_dict, type='all-A')
+                    plotting_functs.plot_neighbors(neigh_plot_dict, all_surface_curves, int_comp_dict, type='all-B')
+
                     plotting_functs.plot_A_neighbors_of_all_parts(neigh_plot_dict, all_surface_curves, int_comp_dict)
                     plotting_functs.plot_B_neighbors_of_all_parts(neigh_plot_dict, all_surface_curves, int_comp_dict)
 

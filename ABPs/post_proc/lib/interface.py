@@ -37,7 +37,7 @@ import utility
 
 
 class interface:
-    def __init__(self, area_frac_dict, align_dict, part_dict, press_dict, l_box, partNum, NBins, peA, peB, parFrac, eps, typ, ang):
+    def __init__(self, area_frac_dict, align_dict, part_dict, press_dict, lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, parFrac, eps, typ, ang):
 
         self.align_x = align_dict['bin']['all']['x']
         self.align_y = align_dict['bin']['all']['y']
@@ -65,20 +65,24 @@ class interface:
 
         self.theory_functs = theory.theory()
 
-        self.l_box = l_box
-        self.h_box = self.l_box/2
+        self.lx_box = lx_box
+        self.hx_box = self.lx_box/2
+        self.ly_box = ly_box
+        self.hy_box = self.ly_box/2
 
-        self.utility_functs = utility.utility(self.l_box)
+        self.utility_functs = utility.utility(self.lx_box, self.ly_box)
 
         self.partNum = partNum
         self.min_size=int(self.partNum/8)                                     #Minimum cluster size for measurements to happen
 
         try:
-            self.NBins = int(NBins)
+            self.NBins_x = int(NBins_x)
+            self.NBins_y = int(NBins_y)
         except:
             print('NBins must be either a float or an integer')
 
-        self.sizeBin = self.utility_functs.roundUp((self.l_box / self.NBins), 6)
+        self.sizeBin_x = self.utility_functs.roundUp((self.lx_box / self.NBins_x), 6)
+        self.sizeBin_y = self.utility_functs.roundUp((self.ly_box / self.NBins_y), 6)
 
         self.peA = peA
         self.peB = peB
@@ -105,16 +109,16 @@ class interface:
 
         int_large_ids = int_comp_dict['ids']['int id']
 
-        surface1_id=np.zeros((self.NBins, self.NBins), dtype=int)        #Label exterior edges of interfaces
-        surface2_id=np.zeros((self.NBins, self.NBins), dtype=int)        #Label interior edges of interfaces
+        surface1_id=np.zeros((self.NBins_x, self.NBins_y), dtype=int)        #Label exterior edges of interfaces
+        surface2_id=np.zeros((self.NBins_x, self.NBins_y), dtype=int)        #Label interior edges of interfaces
 
         surface1_phaseInt=np.zeros(self.partNum)
         surface2_phaseInt=np.zeros(self.partNum)
 
         # Individually label each interface until all edge bins identified using flood fill algorithm
         if len(int_large_ids)>0:
-            for ix in range(0, self.NBins):
-                for iy in range(0, self.NBins):
+            for ix in range(0, self.NBins_x):
+                for iy in range(0, self.NBins_y):
 
                     #If bin is an interface, continue
                     if phaseBin[ix][iy]==1:
@@ -124,17 +128,17 @@ class interface:
                         bulk_neigh_num=0
 
                         #identify neighboring bins
-                        if (ix + 1) == self.NBins:
+                        if (ix + 1) == self.NBins_x:
                             lookx = [ix-1, ix, 0]
                         elif ix==0:
-                            lookx=[self.NBins-1, ix, ix+1]
+                            lookx=[self.NBins_x-1, ix, ix+1]
                         else:
                             lookx = [ix-1, ix, ix+1]
 
-                        if (iy + 1) == self.NBins:
+                        if (iy + 1) == self.NBins_y:
                             looky = [iy-1, iy, 0]
                         elif iy==0:
-                            looky=[self.NBins-1, iy, iy+1]
+                            looky=[self.NBins_y-1, iy, iy+1]
                         else:
                             looky = [iy-1, iy, iy+1]
 
@@ -181,8 +185,8 @@ class interface:
                                             surface1_id[ix][iy]=1
 
         #Label phase of each particle
-        for ix in range(0, self.NBins):
-            for iy in range(0, self.NBins):
+        for ix in range(0, self.NBins_x):
+            for iy in range(0, self.NBins_y):
                 if len(self.binParts[ix][iy])>0:
                     for h in range(0, len(self.binParts[ix][iy])):
 
@@ -196,15 +200,15 @@ class interface:
         surface1_pos_y=np.array([])
 
         #Save positions of interior and exterior edge bins
-        for ix in range(0, self.NBins):
-            for iy in range(0, self.NBins):
+        for ix in range(0, self.NBins_x):
+            for iy in range(0, self.NBins_y):
                 if surface2_id[ix][iy]==1:
-                    surface2_pos_x=np.append(surface2_pos_x, (ix+0.5)*self.sizeBin)
-                    surface2_pos_y=np.append(surface2_pos_y, (iy+0.5)*self.sizeBin)
+                    surface2_pos_x=np.append(surface2_pos_x, (ix+0.5)*self.sizeBin_x)
+                    surface2_pos_y=np.append(surface2_pos_y, (iy+0.5)*self.sizeBin_y)
 
                 elif surface1_id[ix][iy]==1:
-                    surface1_pos_x=np.append(surface1_pos_x, (ix+0.5)*self.sizeBin)
-                    surface1_pos_y=np.append(surface1_pos_y, (iy+0.5)*self.sizeBin)
+                    surface1_pos_x=np.append(surface1_pos_x, (ix+0.5)*self.sizeBin_x)
+                    surface1_pos_y=np.append(surface1_pos_y, (iy+0.5)*self.sizeBin_y)
 
         surface_dict = {'surface 1': {'pos': {'x': surface1_pos_x, 'y': surface1_pos_y}, 'id': {'bin': surface1_id, 'part': surface1_phaseInt}}, 'surface 2': {'pos': {'x': surface2_pos_x, 'y': surface2_pos_y}, 'id': {'bin': surface2_id, 'part': surface2_phaseInt}}}
         return surface_dict
@@ -228,8 +232,8 @@ class interface:
                 shortest_length = 100000
                 for i in range(0, len(surface_pos_y)):
 
-                    difx = self.utility_functs.sep_dist(surface_pos_x_sorted[-1], surface_pos_x[i])
-                    dify = self.utility_functs.sep_dist(surface_pos_y_sorted[-1], surface_pos_y[i])
+                    difx = self.utility_functs.sep_dist_x(surface_pos_x_sorted[-1], surface_pos_x[i])
+                    dify = self.utility_functs.sep_dist_y(surface_pos_y_sorted[-1], surface_pos_y[i])
 
                     difr = (difx**2 + dify**2)**0.5
 
@@ -283,43 +287,43 @@ class interface:
             vert_wrap_bot = 0
             vert_wrap_top = 0
 
-            for ix in range(0, self.NBins):
-                for iy in range(0, self.NBins):
+            for ix in range(0, self.NBins_x):
+                for iy in range(0, self.NBins_y):
                     if (int_id[ix][iy]==int_large_ids[0]):
                         if (ix == 0):
                             hor_wrap_left = 1
-                        elif (ix == self.NBins-1):
+                        elif (ix == self.NBins_x-1):
                             hor_wrap_right = 1
                         if (iy == 0):
                             vert_wrap_bot = 1
-                        elif (iy == self.NBins-1):
+                        elif (iy == self.NBins_y-1):
                             vert_wrap_top = 1
 
             #Sum positions of external edges of interface
-            for ix in range(0, self.NBins):
-                for iy in range(0, self.NBins):
+            for ix in range(0, self.NBins_x):
+                for iy in range(0, self.NBins_y):
                     if len(surface2_pos_x)>0:
                         if (int_id[ix][iy]==int_large_ids[0]) & (surface2_id[ix][iy]==1):
-                            x_box_pos_temp = (ix+0.5)*self.sizeBin
-                            if (hor_wrap_right==1) & (hor_wrap_left==1) & (x_box_pos_temp<self.h_box):
-                                x_box_pos_temp += self.h_box
+                            x_box_pos_temp = (ix+0.5)*self.sizeBin_x
+                            if (hor_wrap_right==1) & (hor_wrap_left==1) & (x_box_pos_temp<self.hx_box):
+                                x_box_pos_temp += self.hx_box
 
-                            y_box_pos_temp = (iy+0.5)*self.sizeBin
-                            if (vert_wrap_bot==1) & (vert_wrap_top==1) & (y_box_pos_temp<self.h_box):
-                                y_box_pos_temp += self.h_box
+                            y_box_pos_temp = (iy+0.5)*self.sizeBin_y
+                            if (vert_wrap_bot==1) & (vert_wrap_top==1) & (y_box_pos_temp<self.hy_box):
+                                y_box_pos_temp += self.hy_box
 
                             x_box_pos += x_box_pos_temp
                             y_box_pos += y_box_pos_temp
                             surface_num +=1
                     elif len(surface1_pos_x)>0:
                         if (int_id[ix][iy]==int_large_ids[0]) & (surface1_id[ix][iy]==1):
-                            x_box_pos_temp = (ix+0.5)*self.sizeBin
-                            if (hor_wrap_right==1) & (hor_wrap_left==1) & (x_box_pos_temp<self.h_box):
-                                x_box_pos_temp += self.h_box
+                            x_box_pos_temp = (ix+0.5)*self.sizeBin_x
+                            if (hor_wrap_right==1) & (hor_wrap_left==1) & (x_box_pos_temp<self.hx_box):
+                                x_box_pos_temp += self.hx_box
 
-                            y_box_pos_temp = (iy+0.5)*self.sizeBin
-                            if (vert_wrap_bot==1) & (vert_wrap_top==1) & (y_box_pos_temp<self.h_box):
-                                y_box_pos_temp += self.h_box
+                            y_box_pos_temp = (iy+0.5)*self.sizeBin_y
+                            if (vert_wrap_bot==1) & (vert_wrap_top==1) & (y_box_pos_temp<self.hy_box):
+                                y_box_pos_temp += self.hy_box
 
                             x_box_pos += x_box_pos_temp
                             y_box_pos += y_box_pos_temp
@@ -331,18 +335,18 @@ class interface:
                 box_com_y = y_box_pos/surface_num
 
                 box_com_x_abs = np.abs(box_com_x)
-                if box_com_x_abs>=self.l_box:
-                    if box_com_x < -self.h_box:
-                        box_com_x += self.l_box
+                if box_com_x_abs>=self.lx_box:
+                    if box_com_x < -self.hx_box:
+                        box_com_x += self.lx_box
                     else:
-                        box_com_x -= self.l_box
+                        box_com_x -= self.lx_box
 
                 box_com_y_abs = np.abs(box_com_y)
-                if box_com_y_abs>=self.l_box:
-                    if box_com_y < -self.h_box:
-                        box_com_y += self.l_box
+                if box_com_y_abs>=self.ly_box:
+                    if box_com_y < -self.hy_box:
+                        box_com_y += self.ly_box
                     else:
-                        box_com_y -= self.l_box
+                        box_com_y -= self.ly_box
             else:
                 box_com_x=0
                 box_com_y=0
@@ -374,37 +378,37 @@ class interface:
             y_id = np.array([], dtype=int)
 
             #Calculate distance from CoM to external edge bin and angle from CoM
-            for ix in range(0, self.NBins):
-                for iy in range(0, self.NBins):
+            for ix in range(0, self.NBins_x):
+                for iy in range(0, self.NBins_y):
 
                     # If bin is interface and external edge, continue...
                     if (int_id[ix][iy]==int_large_ids[0]) & (surface2_id[ix][iy]==1):
 
                         #Reference bin location
-                        x_box_pos = (ix+0.5)*self.sizeBin
-                        y_box_pos = (iy+0.5)*self.sizeBin
+                        x_box_pos = (ix+0.5)*self.sizeBin_x
+                        y_box_pos = (iy+0.5)*self.sizeBin_y
 
                         #Calculate x-distance from CoM
                         difx=x_box_pos-box_com_x
 
                         #Enforce periodic boundary conditions
                         difx_abs = np.abs(difx)
-                        if difx_abs>=self.h_box:
-                            if difx < -self.h_box:
-                                difx += self.l_box
+                        if difx_abs>=self.hx_box:
+                            if difx < -self.hx_box:
+                                difx += self.lx_box
                             else:
-                                difx -= self.l_box
+                                difx -= self.lx_box
 
                         #Calculate y-distance from CoM
                         dify=y_box_pos-box_com_y
 
                         #Enforce periodic boundary conditions
                         dify_abs = np.abs(dify)
-                        if dify_abs>=self.h_box:
-                            if dify < -self.h_box:
-                                dify += self.l_box
+                        if dify_abs>=self.hy_box:
+                            if dify < -self.hy_box:
+                                dify += self.ly_box
                             else:
-                                dify -= self.l_box
+                                dify -= self.ly_box
 
                         #Calculate angle from CoM and x-axis
                         theta_val = np.arctan2(np.abs(dify), np.abs(difx))*(180/math.pi)
@@ -457,8 +461,8 @@ class interface:
         surface2_x_id = np.array([], dtype=int)
         surface2_y_id = np.array([], dtype=int)
 
-        int_surface_id=np.zeros((self.NBins, self.NBins), dtype=int)
-        ext_surface_id=np.zeros((self.NBins, self.NBins), dtype=int)
+        int_surface_id=np.zeros((self.NBins_x, self.NBins_y), dtype=int)
+        ext_surface_id=np.zeros((self.NBins_x, self.NBins_y), dtype=int)
 
         sep_surface_dict = {}
 
@@ -466,8 +470,8 @@ class interface:
         surface2_num = 0
         for m in range(0, len(int_large_ids)):
             if int_large_ids[m]!=999:
-                for ix in range(0, self.NBins):
-                    for iy in range(0, self.NBins):
+                for ix in range(0, self.NBins_x):
+                    for iy in range(0, self.NBins_y):
                         if int_id[ix][iy]==int_large_ids[m]:
                             if surface1_id[ix][iy]==1:
                                 surface1_num +=1
@@ -515,11 +519,11 @@ class interface:
                         int_surface_id[ext_surface_x[ix]][ext_surface_y[ix]]=0
                         ext_surface_id[ext_surface_x[ix]][ext_surface_y[ix]]=1
 
-                int_surface_pos_x = int_surface_x * self.sizeBin
-                int_surface_pos_y = int_surface_y * self.sizeBin
+                int_surface_pos_x = int_surface_x * self.sizeBin_x
+                int_surface_pos_y = int_surface_y * self.sizeBin_y
 
-                ext_surface_pos_x = ext_surface_x * self.sizeBin
-                ext_surface_pos_y = ext_surface_y * self.sizeBin
+                ext_surface_pos_x = ext_surface_x * self.sizeBin_x
+                ext_surface_pos_y = ext_surface_y * self.sizeBin_y
                 indiv_surface_dict = {'interior': {'x bin': int_surface_x, 'y bin': int_surface_y, 'ids': int_surface_id, 'num': int_surface_num}, 'exterior': {'x bin': ext_surface_x, 'y bin': ext_surface_y, 'ids': ext_surface_id, 'num': ext_surface_num}}
                 key_temp = 'surface id ' + str(int(int_large_ids[m]))
                 sep_surface_dict[key_temp] = indiv_surface_dict
@@ -548,7 +552,7 @@ class interface:
         #neighbor that is an interior surface bin of interface
         if len(surface_x)>0:
 
-            if ix < (self.NBins-1):
+            if ix < (self.NBins_x-1):
                 right = int(ix+1)
             else:
                 right= int(0)
@@ -556,9 +560,9 @@ class interface:
             if ix > 0:
                 left = int(ix-1)
             else:
-                left=int(self.NBins-1)
+                left=int(self.NBins_x-1)
 
-            if iy < (self.NBins-1):
+            if iy < (self.NBins_y-1):
                 up = int(iy+1)
             else:
                 up= int(0)
@@ -566,7 +570,7 @@ class interface:
             if iy > 0:
                 down = int(iy-1)
             else:
-                down= int(self.NBins-1)
+                down= int(self.NBins_y-1)
 
             if surface_id[right][iy]==1:
                 surface_x_sort = np.append(surface_x_sort, right)
@@ -646,15 +650,15 @@ class interface:
 
                     if past_size == current_size:
                         shortest_length = 100000.
-                        for ix in range(0, self.NBins):
-                            for iy in range(0, self.NBins):
+                        for ix in range(0, self.NBins_x):
+                            for iy in range(0, self.NBins_y):
                                 if (ix!=ix_ref) | (iy!=iy_ref):
                                     if surface_id[ix][iy]==1:
                                         loc_id = np.where((surface_x == ix) & (surface_y == iy))[0]
                                         if len(loc_id)>0:
 
-                                            difx = self.utility_functs.sep_dist((ix_ref+0.5)*self.sizeBin, (ix+0.5)*self.sizeBin)
-                                            dify = self.utility_functs.sep_dist((iy_ref+0.5)*self.sizeBin, (iy+0.5)*self.sizeBin)
+                                            difx = self.utility_functs.sep_dist_x((ix_ref+0.5)*self.sizeBin_x, (ix+0.5)*self.sizeBin_x)
+                                            dify = self.utility_functs.sep_dist_y((iy_ref+0.5)*self.sizeBin_y, (iy+0.5)*self.sizeBin_y)
 
                                             difr = (difx**2 + dify**2)**0.5
 
@@ -667,7 +671,7 @@ class interface:
                                                 shortest_idx = np.append(shortest_idx, ix)
                                                 shortest_idy = np.append(shortest_idy, iy)
 
-                        if shortest_length > self.h_box/10:
+                        if shortest_length > (self.hx_box+self.hy_box)/20:
                             break
 
                         if len(shortest_idx) > 1:
@@ -678,18 +682,18 @@ class interface:
                                 ix_ind = shortest_idx[ind]
                                 iy_ind = shortest_idy[ind]
 
-                                if (ix_ind + 1) == self.NBins:
+                                if (ix_ind + 1) == self.NBins_x:
                                     lookx = [ix_ind-1, ix_ind, 0]
                                 elif ix_ind==0:
-                                    lookx=[self.NBins-1, ix_ind, ix_ind+1]
+                                    lookx=[self.NBins_x-1, ix_ind, ix_ind+1]
                                 else:
                                     lookx = [ix_ind-1, ix_ind, ix_ind+1]
 
                                 #Identify neighboring bin indices in y-direction
-                                if (iy_ind + 1) == self.NBins:
+                                if (iy_ind + 1) == self.NBins_y:
                                     looky = [iy_ind-1, iy_ind, 0]
                                 elif iy_ind==0:
-                                    looky=[self.NBins-1, iy_ind, iy_ind+1]
+                                    looky=[self.NBins_y-1, iy_ind, iy_ind+1]
                                 else:
                                     looky = [iy_ind-1, iy_ind, iy_ind+1]
                                 for ix in lookx:
@@ -742,18 +746,18 @@ class interface:
                     if surface_id[ix_ref][iy_ref]==1:
 
                         #Identify neighboring bin indices in x-direction
-                        if (ix_ref + 1) == self.NBins:
+                        if (ix_ref + 1) == self.NBins_x:
                             lookx = [ix_ref-1, ix_ref, 0]
                         elif ix_ref==0:
-                            lookx=[self.NBins-1, ix_ref, ix_ref+1]
+                            lookx=[self.NBins_x-1, ix_ref, ix_ref+1]
                         else:
                             lookx = [ix_ref-1, ix_ref, ix_ref+1]
 
                         #Identify neighboring bin indices in y-direction
-                        if (iy_ref + 1) == self.NBins:
+                        if (iy_ref + 1) == self.NBins_y:
                             looky = [iy_ref-1, iy_ref, 0]
                         elif iy_ref==0:
-                            looky=[self.NBins-1, iy_ref, iy_ref+1]
+                            looky=[self.NBins_y-1, iy_ref, iy_ref+1]
                         else:
                             looky = [iy_ref-1, iy_ref, iy_ref+1]
 
@@ -764,8 +768,8 @@ class interface:
                                     loc_id = np.where((surface_x == ix) & (surface_y == iy))[0]
                                     if len(loc_id)>0:
                                         if surface_id[ix][iy]==1:
-                                            difx = self.utility_functs.sep_dist((ix+0.5)*self.sizeBin, (ix_ref+0.5)*self.sizeBin)
-                                            dify = self.utility_functs.sep_dist((iy+0.5)*self.sizeBin, (iy_ref+0.5)*self.sizeBin)
+                                            difx = self.utility_functs.sep_dist_x((ix+0.5)*self.sizeBin_x, (ix_ref+0.5)*self.sizeBin_x)
+                                            dify = self.utility_functs.sep_dist_y((iy+0.5)*self.sizeBin_y, (iy_ref+0.5)*self.sizeBin_y)
 
                                             difr = (difx**2 + dify**2)**0.5
 
@@ -785,18 +789,18 @@ class interface:
                                 ix_ind = shortest_idx[ind]
                                 iy_ind = shortest_idy[ind]
 
-                                if (ix_ind + 1) == self.NBins:
+                                if (ix_ind + 1) == self.NBins_x:
                                     lookx = [ix_ind-1, ix_ind, 0]
                                 elif ix_ind==0:
-                                    lookx=[self.NBins-1, ix_ind, ix_ind+1]
+                                    lookx=[self.NBins_x-1, ix_ind, ix_ind+1]
                                 else:
                                     lookx = [ix_ind-1, ix_ind, ix_ind+1]
 
                                 #Identify neighboring bin indices in y-direction
-                                if (iy_ind + 1) == self.NBins:
+                                if (iy_ind + 1) == self.NBins_y:
                                     looky = [iy_ind-1, iy_ind, 0]
                                 elif iy_ind==0:
-                                    looky=[self.NBins-1, iy_ind, iy_ind+1]
+                                    looky=[self.NBins_y-1, iy_ind, iy_ind+1]
                                 else:
                                     looky = [iy_ind-1, iy_ind, iy_ind+1]
 
@@ -858,8 +862,8 @@ class interface:
         surface_x_sort = sort_surface_ids['x']
         surface_y_sort = sort_surface_ids['y']
 
-        surface_x_sort_pos = surface_x_sort * self.sizeBin
-        surface_y_sort_pos = surface_y_sort * self.sizeBin
+        surface_x_sort_pos = surface_x_sort * self.sizeBin_x
+        surface_y_sort_pos = surface_y_sort * self.sizeBin_y
 
 
         adjacent_x = np.array([surface_x_sort[0]])
@@ -892,24 +896,24 @@ class interface:
                     dify_abs = np.abs(dify)
 
                     #Enforce periodic boundary conditions
-                    if difx_abs>=self.h_box:
-                        if difx < -self.h_box:
-                            surface_x_sort_pos[m:-1] += self.l_box
-                            surface_x_sort[m:-1] += self.NBins
+                    if difx_abs>=self.hx_box:
+                        if difx < -self.hx_box:
+                            surface_x_sort_pos[m:-1] += self.lx_box
+                            surface_x_sort[m:-1] += self.NBins_x
                         else:
-                            surface_x_sort_pos[m:-1] -= self.l_box
-                            surface_x_sort[m:-1] -= self.NBins
+                            surface_x_sort_pos[m:-1] -= self.lx_box
+                            surface_x_sort[m:-1] -= self.NBins_x
 
                     #Enforce periodic boundary conditions
-                    if dify_abs>=self.h_box:
-                        if dify < -self.h_box:
-                            surface_y_sort_pos[m:-1] += self.l_box
-                            surface_y_sort[m:-1] += self.NBins
+                    if dify_abs>=self.hy_box:
+                        if dify < -self.hy_box:
+                            surface_y_sort_pos[m:-1] += self.ly_box
+                            surface_y_sort[m:-1] += self.NBins_y
                         else:
-                            surface_y_sort_pos[m:-1] -= self.l_box
-                            surface_y_sort[m:-1] -= self.NBins
+                            surface_y_sort_pos[m:-1] -= self.ly_box
+                            surface_y_sort[m:-1] -= self.NBins_y
 
-                    if (difx_abs>=self.h_box) or (dify_abs>=self.h_box):
+                    if (difx_abs>=self.hx_box) or (dify_abs>=self.hy_box):
                         adjacent_x_discont = np.append(adjacent_x_discont, adjacent_x)
                         adjacent_x_discont_pos = np.append(adjacent_x_discont_pos, adjacent_x_pos)
                         adjacent_y_discont = np.append(adjacent_y_discont, adjacent_y)
@@ -993,30 +997,30 @@ class interface:
 
 
                 for m in range(0, len(xn)):
-                    xn_pos[m] = xn[m] * self.sizeBin
-                    yn_pos[m] = yn[m] * self.sizeBin
-                    xn_pos_non_per[m] = xn[m] * self.sizeBin
-                    yn_pos_non_per[m] = yn[m] * self.sizeBin
+                    xn_pos[m] = xn[m] * self.sizeBin_x
+                    yn_pos[m] = yn[m] * self.sizeBin_y
+                    xn_pos_non_per[m] = xn[m] * self.sizeBin_x
+                    yn_pos_non_per[m] = yn[m] * self.sizeBin_y
 
                     if xn[m] < 0:
-                        xn[m]+=self.NBins
-                    if xn[m]>=self.NBins:
-                        xn[m]-=self.NBins
+                        xn[m]+=self.NBins_x
+                    if xn[m]>=self.NBins_x:
+                        xn[m]-=self.NBins_x
 
                     if yn[m] < 0:
-                        yn[m]+=self.NBins
-                    if yn[m]>=self.NBins:
-                        yn[m]-=self.NBins
+                        yn[m]+=self.NBins_y
+                    if yn[m]>=self.NBins_y:
+                        yn[m]-=self.NBins_y
 
                     if xn_pos[m] < 0:
-                        xn_pos[m]+=self.l_box
-                    if xn_pos[m]>=self.l_box:
-                        xn_pos[m]-=self.l_box
+                        xn_pos[m]+=self.lx_box
+                    if xn_pos[m]>=self.lx_box:
+                        xn_pos[m]-=self.lx_box
 
                     if yn_pos[m] < 0:
-                        yn_pos[m]+=self.l_box
-                    if yn_pos[m]>=self.l_box:
-                        yn_pos[m]-=self.l_box
+                        yn_pos[m]+=self.ly_box
+                    if yn_pos[m]>=self.ly_box:
+                        yn_pos[m]-=self.ly_box
 
 
 
@@ -1031,29 +1035,29 @@ class interface:
 
                 xn_pos[0] = surface_x_interp[0]
                 yn_pos[0] = surface_y_interp[0]
-                xn_pos[0] = surface_x_interp[0] * self.sizeBin
-                yn_pos[0] = surface_y_interp[0] * self.sizeBin
-                xn_pos_non_per[0] = surface_x_interp[0] * self.sizeBin
-                yn_pos_non_per[0] = surface_y_interp[0] * self.sizeBin
+                xn_pos[0] = surface_x_interp[0] * self.sizeBin_x
+                yn_pos[0] = surface_y_interp[0] * self.sizeBin_y
+                xn_pos_non_per[0] = surface_x_interp[0] * self.sizeBin_x
+                yn_pos_non_per[0] = surface_y_interp[0] * self.sizeBin_y
                 if xn[0] < 0:
-                    xn[0]+=self.NBins
-                if xn[0]>=self.NBins:
-                    xn[0]-=self.NBins
+                    xn[0]+=self.NBins_x
+                if xn[0]>=self.NBins_x:
+                    xn[0]-=self.NBins_x
 
                 if yn[0] < 0:
-                    yn[0]+=self.NBins
-                if yn[0]>=self.NBins:
-                    yn[0]-=self.NBins
+                    yn[0]+=self.NBins_y
+                if yn[0]>=self.NBins_y:
+                    yn[0]-=self.NBins_y
 
                 if xn_pos[0] < 0:
-                    xn_pos[0]+=self.l_box
-                if xn_pos[0]>=self.l_box:
-                    xn_pos[0]-=self.l_box
+                    xn_pos[0]+=self.lx_box
+                if xn_pos[0]>=self.lx_box:
+                    xn_pos[0]-=self.lx_box
 
                 if yn_pos[0] < 0:
-                    yn_pos[0]+=self.l_box
-                if yn_pos[0]>=self.l_box:
-                    yn_pos[0]-=self.l_box
+                    yn_pos[0]+=self.ly_box
+                if yn_pos[0]>=self.ly_box:
+                    yn_pos[0]-=self.ly_box
 
         else:
 
@@ -1064,30 +1068,30 @@ class interface:
             xn_pos_non_per = np.copy(xn)
             yn_pos_non_per = np.copy(yn)
             for m in range(0, len(xn)):
-                xn_pos[m] = xn[m] * self.sizeBin
-                yn_pos[m] = yn[m] * self.sizeBin
-                xn_pos_non_per[m] = xn[m] * self.sizeBin
-                yn_pos_non_per[m] = yn[m] * self.sizeBin
+                xn_pos[m] = xn[m] * self.sizeBin_x
+                yn_pos[m] = yn[m] * self.sizeBin_y
+                xn_pos_non_per[m] = xn[m] * self.sizeBin_x
+                yn_pos_non_per[m] = yn[m] * self.sizeBin_y
 
                 if xn[m] < 0:
-                    xn[m]+=self.NBins
-                if xn[m]>=self.NBins:
-                    xn[m]-=self.NBins
+                    xn[m]+=self.NBins_x
+                if xn[m]>=self.NBins_x:
+                    xn[m]-=self.NBins_x
 
                 if yn[m] < 0:
-                    yn[m]+=self.NBins
-                if yn[m]>=self.NBins:
-                    yn[m]-=self.NBins
+                    yn[m]+=self.NBins_y
+                if yn[m]>=self.NBins_y:
+                    yn[m]-=self.NBins_y
 
                 if xn_pos[m] < 0:
-                    xn_pos[m]+=self.l_box
-                if xn_pos[m]>=self.l_box:
-                    xn_pos[m]-=self.l_box
+                    xn_pos[m]+=self.lx_box
+                if xn_pos[m]>=self.lx_box:
+                    xn_pos[m]-=self.lx_box
 
                 if yn_pos[m] < 0:
-                    yn_pos[m]+=self.l_box
-                if yn_pos[m]>=self.l_box:
-                    yn_pos[m]-=self.l_box
+                    yn_pos[m]+=self.ly_box
+                if yn_pos[m]>=self.ly_box:
+                    yn_pos[m]-=self.ly_box
 
         surface_curve_dict = {'id': {'x': xn, 'y': yn}, 'pos': {'x': xn_pos, 'y': yn_pos}}
         return surface_curve_dict
@@ -1102,8 +1106,8 @@ class interface:
         for id2 in range(1, len(surface_curve_xpos)):
 
             #Calculate position of interior edge bin
-            difx = self.utility_functs.sep_dist(surface_curve_xpos[id2-1], surface_curve_xpos[id2])
-            dify = self.utility_functs.sep_dist(surface_curve_ypos[id2-1], surface_curve_ypos[id2])
+            difx = self.utility_functs.sep_dist_x(surface_curve_xpos[id2-1], surface_curve_xpos[id2])
+            dify = self.utility_functs.sep_dist_y(surface_curve_ypos[id2-1], surface_curve_ypos[id2])
 
             #Calculate distance from interior edge bin to exterior edge bin
             difr = ( (difx)**2 + (dify)**2)**0.5
@@ -1189,36 +1193,36 @@ class interface:
             dify_abs = np.abs(dify)
 
             #Enforce periodic boundary conditions
-            if (difx_abs>=self.h_box) | (dify_abs>=self.h_box):
+            if (difx_abs>=self.hx_box) | (dify_abs>=self.hy_box):
 
-                if (difx_abs>=self.h_box):
+                if (difx_abs>=self.hx_box):
                     if (difx > 0):
-                        surface_curve_xpos[i:] -= self.l_box
+                        surface_curve_xpos[i:] -= self.lx_box
                     elif (difx < 0):
-                        surface_curve_xpos[i:] += self.l_box
+                        surface_curve_xpos[i:] += self.lx_box
 
-                if (dify_abs>=self.h_box):
+                if (dify_abs>=self.hy_box):
                     if (dify > 0):
-                        surface_curve_ypos[i:] -= self.l_box
+                        surface_curve_ypos[i:] -= self.ly_box
 
                     elif (dify < 0):
-                        surface_curve_ypos[i:] += self.l_box
+                        surface_curve_ypos[i:] += self.ly_box
 
         x_com = np.mean(surface_curve_xpos)
-        if x_com > self.l_box:
-            x_com -=self.l_box
-            surface_curve_xpos -= self.l_box
+        if x_com > self.lx_box:
+            x_com -=self.lx_box
+            surface_curve_xpos -= self.lx_box
         elif x_com < 0:
-            x_com += self.l_box
-            surface_curve_xpos += self.l_box
+            x_com += self.lx_box
+            surface_curve_xpos += self.lx_box
 
         y_com = np.mean(surface_curve_ypos)
-        if y_com > self.l_box:
-            y_com -=self.l_box
-            surface_curve_ypos -= self.l_box
+        if y_com > self.ly_box:
+            y_com -=self.ly_box
+            surface_curve_ypos -= self.ly_box
         elif y_com < 0:
-            y_com += self.l_box
-            surface_curve_ypos += self.l_box
+            y_com += self.ly_box
+            surface_curve_ypos += self.ly_box
 
         com_pos_dict = {'pos': {'x': surface_curve_xpos, 'y': surface_curve_ypos}, 'com': {'x': x_com, 'y': y_com}}
 
@@ -1246,9 +1250,9 @@ class interface:
             dify_abs = np.abs(dify)
 
             #Enforce periodic boundary conditions
-            if (difx_abs>=self.h_box) | (dify_abs>=self.h_box):
+            if (difx_abs>=self.hx_box) | (dify_abs>=self.hy_box):
 
-                if (difx_abs>=self.h_box):
+                if (difx_abs>=self.hx_box):
                     if (difx > 0):
                         from_right_to_left.append(0)
                         from_left_to_right.append(1)
@@ -1262,7 +1266,7 @@ class interface:
                     from_right_to_left.append(0)
                     from_left_to_right.append(0)
 
-                if (dify_abs>=self.h_box):
+                if (dify_abs>=self.hy_box):
                     if (dify > 0):
                         from_top_to_bot.append(0)
                         from_bot_to_top.append(1)
@@ -1335,8 +1339,8 @@ class interface:
 
         for i in range(0, len(surface_com_xpos)):
 
-            difx = self.utility_functs.sep_dist(surface_com_xpos[i], int_com_x)
-            dify = self.utility_functs.sep_dist(surface_com_ypos[i], int_com_y)
+            difx = self.utility_functs.sep_dist_x(surface_com_xpos[i], int_com_x)
+            dify = self.utility_functs.sep_dist_y(surface_com_ypos[i], int_com_y)
 
             #Calculate magnitude of distance from center of mass of mth interface structure
             radius_val = (difx**2 + dify**2)**0.5
@@ -1379,55 +1383,55 @@ class interface:
 
     def surface_alignment(self, surface_measurements, surface_curve, sep_surface_dict, int_dict, int_comp_dict):
 
-        new_align = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        new_align0 = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        new_align1 = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
+        new_align = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align0 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align1 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
 
-        new_align_x = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        new_align_x0 = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        new_align_x1 = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        new_align_y = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        new_align_y0 = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        new_align_y1 = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
+        new_align_x = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_x0 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_x1 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_y = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_y0 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_y1 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
 
-        new_align_trad = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        new_align_trad0 = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        new_align_trad1 = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
+        new_align_trad = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_trad0 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_trad1 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
 
-        new_align_trad_x = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        new_align_trad_x0 = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        new_align_trad_x1 = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        new_align_trad_y = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        new_align_trad_y0 = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        new_align_trad_y1 = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
+        new_align_trad_x = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_trad_x0 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_trad_x1 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_trad_y = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_trad_y0 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_trad_y1 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
 
-        new_align_avg = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        new_align_avg0 = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        new_align_avg1 = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
+        new_align_avg = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_avg0 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_avg1 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
 
-        new_align_avg_x = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        new_align_avg_x0 = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        new_align_avg_x1 = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        new_align_avg_y = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        new_align_avg_y0 = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        new_align_avg_y1 = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
+        new_align_avg_x = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_avg_x0 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_avg_x1 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_avg_y = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_avg_y0 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_avg_y1 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
 
-        new_align_avg_trad = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        new_align_avg_trad0 = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        new_align_avg_trad1 = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
+        new_align_avg_trad = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_avg_trad0 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_avg_trad1 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
 
-        new_align_avg_trad_x = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        new_align_avg_trad_x0 = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        new_align_avg_trad_x1 = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        new_align_avg_trad_y = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        new_align_avg_trad_y0 = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        new_align_avg_trad_y1 = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
+        new_align_avg_trad_x = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_avg_trad_x0 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_avg_trad_x1 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_avg_trad_y = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_avg_trad_y0 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_avg_trad_y1 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
 
-        new_align_num = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        new_align_num0 = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        new_align_num1 = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
+        new_align_num = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_num0 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_num1 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
 
-        new_align_avg_dif = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
+        new_align_avg_dif = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
 
         part_align = np.zeros(self.partNum)
         part_difr = np.zeros(self.partNum)
@@ -1480,8 +1484,8 @@ class interface:
 
             if (interior_exist == 1) | (exterior_exist == 1):
 
-                for ix in range(0, self.NBins):
-                    for iy in range(0, self.NBins):
+                for ix in range(0, self.NBins_x):
+                    for iy in range(0, self.NBins_y):
 
                         #If bin is part of mth interface structure, continue...
                         if int_id[ix][iy]==int_large_ids[m]:
@@ -1490,16 +1494,16 @@ class interface:
 
                                 #Calculate position of exterior edge bin
 
-                                xpos_ref = (ix+0.5)*self.sizeBin
-                                ypos_ref = (iy+0.5)*self.sizeBin
+                                xpos_ref = (ix+0.5)*self.sizeBin_x
+                                ypos_ref = (iy+0.5)*self.sizeBin_y
 
-                                difx_trad = self.utility_functs.sep_dist(xpos_ref, self.h_box)
+                                difx_trad = self.utility_functs.sep_dist_x(xpos_ref, self.hx_box)
 
-                                dify_trad = self.utility_functs.sep_dist(ypos_ref, self.h_box)
+                                dify_trad = self.utility_functs.sep_dist_y(ypos_ref, self.hy_box)
 
-                                difx_bub = self.utility_functs.sep_dist(xpos_ref, exterior_int_com_x)
+                                difx_bub = self.utility_functs.sep_dist_x(xpos_ref, exterior_int_com_x)
 
-                                dify_bub = self.utility_functs.sep_dist(ypos_ref, exterior_int_com_y)
+                                dify_bub = self.utility_functs.sep_dist_y(ypos_ref, exterior_int_com_y)
 
                                 x_norm_unitv = 0
                                 y_norm_unitv = 0
@@ -1521,9 +1525,9 @@ class interface:
 
                                 for id in range(0, len(exterior_surface_com_xpos)):
 
-                                    difx_width = self.utility_functs.sep_dist(xpos_ref, exterior_surface_com_xpos[id])
+                                    difx_width = self.utility_functs.sep_dist_x(xpos_ref, exterior_surface_com_xpos[id])
 
-                                    dify_width = self.utility_functs.sep_dist(ypos_ref, exterior_surface_com_ypos[id])
+                                    dify_width = self.utility_functs.sep_dist_y(ypos_ref, exterior_surface_com_ypos[id])
 
                                     #Calculate distance from interior edge bin to exterior edge bin
                                     difr = ( (difx_width)**2 + (dify_width)**2)**0.5
@@ -1587,16 +1591,16 @@ class interface:
 
 
                                 #Calculate position of exterior edge bin
-                                xpos_ref = (ix+0.5)*self.sizeBin
-                                ypos_ref = (iy+0.5)*self.sizeBin
+                                xpos_ref = (ix+0.5)*self.sizeBin_x
+                                ypos_ref = (iy+0.5)*self.sizeBin_y
 
-                                difx_trad = self.utility_functs.sep_dist(xpos_ref, self.h_box)
+                                difx_trad = self.utility_functs.sep_dist_x(xpos_ref, self.hx_box)
 
-                                dify_trad = self.utility_functs.sep_dist(ypos_ref, self.h_box)
+                                dify_trad = self.utility_functs.sep_dist_y(ypos_ref, self.hy_box)
 
-                                difx_bub = self.utility_functs.sep_dist(xpos_ref, exterior_int_com_x)
+                                difx_bub = self.utility_functs.sep_dist_x(xpos_ref, exterior_int_com_x)
 
-                                dify_bub = self.utility_functs.sep_dist(ypos_ref, exterior_int_com_y)
+                                dify_bub = self.utility_functs.sep_dist_y(ypos_ref, exterior_int_com_y)
 
                                 x_norm_unitv = 0
                                 y_norm_unitv = 0
@@ -1618,9 +1622,9 @@ class interface:
 
                                         #Calculate position of interior edge bin
 
-                                        difx_width = self.utility_functs.sep_dist(xpos_ref, interior_surface_com_xpos[id])
+                                        difx_width = self.utility_functs.sep_dist_x(xpos_ref, interior_surface_com_xpos[id])
 
-                                        dify_width = self.utility_functs.sep_dist(ypos_ref, interior_surface_com_ypos[id])
+                                        dify_width = self.utility_functs.sep_dist_y(ypos_ref, interior_surface_com_ypos[id])
 
                                         #Calculate distance from interior edge bin to exterior edge bin
                                         difr = ( (difx_width)**2 + (dify_width)**2)**0.5
@@ -1635,9 +1639,9 @@ class interface:
                                 else:
                                     #Calculate position of interior edge bin
 
-                                    difx_width = self.utility_functs.sep_dist(xpos_ref, self.h_box)
+                                    difx_width = self.utility_functs.sep_dist_x(xpos_ref, self.hx_box)
 
-                                    dify_width = self.utility_functs.sep_dist(ypos_ref, self.h_box)
+                                    dify_width = self.utility_functs.sep_dist_y(ypos_ref, self.hy_box)
 
                                     #Calculate distance from interior edge bin to exterior edge bin
                                     difr = ( (difx_width)**2 + (dify_width)**2)**0.5
@@ -1751,29 +1755,29 @@ class interface:
         #Calculate alignment of bulk particles
         #Loop over all bulk bins identified
 
-        new_align = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        new_align0 = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        new_align1 = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
+        new_align = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align0 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align1 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
 
-        new_align_x = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        new_align_x0 = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        new_align_x1 = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        new_align_y = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        new_align_y0 = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        new_align_y1 = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
+        new_align_x = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_x0 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_x1 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_y = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_y0 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_y1 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
 
-        new_align_trad = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        new_align_trad0 = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        new_align_trad1 = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
+        new_align_trad = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_trad0 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_trad1 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
 
-        new_align_trad_x = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        new_align_trad_x0 = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        new_align_trad_x1 = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        new_align_trad_y = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        new_align_trad_y0 = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        new_align_trad_y1 = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
+        new_align_trad_x = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_trad_x0 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_trad_x1 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_trad_y = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_trad_y0 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_trad_y1 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
 
-        new_align_avg_dif = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
+        new_align_avg_dif = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
 
         bulk_large_ids = bulk_comp_dict['ids']['bulk id']
 
@@ -1812,19 +1816,19 @@ class interface:
 
         for m in range(0, len(bulk_large_ids)):
 
-            for ix in range(0, self.NBins):
-                for iy in range(0, self.NBins):
+            for ix in range(0, self.NBins_x):
+                for iy in range(0, self.NBins_y):
                     if bulk_id[ix][iy] == bulk_large_ids[m]:
                         #If bin is part of mth interface structure, continue...
                         if new_align_num[ix][iy]==0:
                             #Calculate position of exterior edge bin
                             difr_short = 100000
-                            xpos_ref = (ix+0.5)*self.sizeBin
-                            ypos_ref = (iy+0.5)*self.sizeBin
+                            xpos_ref = (ix+0.5)*self.sizeBin_x
+                            ypos_ref = (iy+0.5)*self.sizeBin_y
 
-                            difx_trad = self.utility_functs.sep_dist(xpos_ref, self.h_box)
+                            difx_trad = self.utility_functs.sep_dist_x(xpos_ref, self.hx_box)
 
-                            dify_trad = self.utility_functs.sep_dist(ypos_ref, self.h_box)
+                            dify_trad = self.utility_functs.sep_dist_y(ypos_ref, self.hy_box)
 
                             difr_trad= ( (difx_trad )**2 + (dify_trad)**2)**0.5
                             difr_bub= ( (difx_trad )**2 + (dify_trad)**2)**0.5
@@ -1868,9 +1872,9 @@ class interface:
 
 
                                 if (exterior_exist == 1):
-                                    difx_ext = self.utility_functs.sep_dist(xpos_ref, exterior_int_com_x)
+                                    difx_ext = self.utility_functs.sep_dist_x(xpos_ref, exterior_int_com_x)
 
-                                    dify_ext = self.utility_functs.sep_dist(ypos_ref, exterior_int_com_y)
+                                    dify_ext = self.utility_functs.sep_dist_y(ypos_ref, exterior_int_com_y)
 
                                     difr_ext= ( (difx_ext )**2 + (dify_ext)**2)**0.5
 
@@ -1882,9 +1886,9 @@ class interface:
                                         exterior_bin_short = 0
 
                                 if (interior_exist == 1):
-                                    difx_int = self.utility_functs.sep_dist(xpos_ref, interior_int_com_x)
+                                    difx_int = self.utility_functs.sep_dist_x(xpos_ref, interior_int_com_x)
 
-                                    dify_int = self.utility_functs.sep_dist(ypos_ref, interior_int_com_y)
+                                    dify_int = self.utility_functs.sep_dist_y(ypos_ref, interior_int_com_y)
 
                                     difr_int= ( (difx_int )**2 + (dify_int)**2)**0.5
                                     if difr_int < difr_short:
@@ -1901,9 +1905,9 @@ class interface:
                                     for id in range(0, len(exterior_surface_com_xpos)):
                                         #If bin is an interior edge bin for mth interface structure, continue...
 
-                                        difx_width = self.utility_functs.sep_dist(xpos_ref, exterior_surface_com_xpos[id])
+                                        difx_width = self.utility_functs.sep_dist_x(xpos_ref, exterior_surface_com_xpos[id])
 
-                                        dify_width = self.utility_functs.sep_dist(ypos_ref, exterior_surface_com_ypos[id])
+                                        dify_width = self.utility_functs.sep_dist_y(ypos_ref, exterior_surface_com_ypos[id])
 
                                         #Calculate distance from interior edge bin to exterior edge bin
                                         difr = ( (difx_width)**2 + (dify_width)**2)**0.5
@@ -1920,9 +1924,9 @@ class interface:
                                         #If bin is an interior edge bin for mth interface structure, continue...
 
                                         #Calculate position of interior edge bin
-                                        difx_width = self.utility_functs.sep_dist(xpos_ref, interior_surface_com_xpos[id])
+                                        difx_width = self.utility_functs.sep_dist_x(xpos_ref, interior_surface_com_xpos[id])
 
-                                        dify_width = self.utility_functs.sep_dist(ypos_ref, interior_surface_com_ypos[id])
+                                        dify_width = self.utility_functs.sep_dist_y(ypos_ref, interior_surface_com_ypos[id])
 
 
                                         #Calculate distance from interior edge bin to exterior edge bin
@@ -1998,8 +2002,8 @@ class interface:
 
         #Calculate average alignment of bulk bins
         #Loop over bins in system
-        for ix in range(0, self.NBins):
-            for iy in range(0, self.NBins):
+        for ix in range(0, self.NBins_x):
+            for iy in range(0, self.NBins_y):
                 #If particle is notpart of an interface, continue
                 if bulk_id[ix][iy]>0:
                     #If summed alignment with nearest surface greater than zero (non-gas), continue...
@@ -2035,27 +2039,27 @@ class interface:
         return  method1_align_dict, method2_align_dict
     def gas_alignment(self, method1_align_dict, method2_align_dict, surface_measurements, surface_curve, sep_surface_dict, int_comp_dict):
 
-        new_align = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        new_align0 = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        new_align1 = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
+        new_align = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align0 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align1 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
 
-        new_align_x = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        new_align_x0 = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        new_align_x1 = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        new_align_y = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        new_align_y0 = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        new_align_y1 = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
+        new_align_x = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_x0 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_x1 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_y = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_y0 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_y1 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
 
-        new_align_trad = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        new_align_trad0 = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        new_align_trad1 = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
+        new_align_trad = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_trad0 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_trad1 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
 
-        new_align_trad_x = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        new_align_trad_x0 = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        new_align_trad_x1 = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        new_align_trad_y = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        new_align_trad_y0 = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
-        new_align_trad_y1 = [[0 for b in range(self.NBins)] for a in range(self.NBins)]
+        new_align_trad_x = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_trad_x0 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_trad_x1 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_trad_y = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_trad_y0 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_trad_y1 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
 
         new_align_avg_trad = method1_align_dict['bin']['all']['mag']
         new_align_avg_trad0 = method1_align_dict['bin']['A']['mag']
@@ -2090,12 +2094,12 @@ class interface:
 
         #Calculate alignment of gas bins
         #Loop over bins in system
-        for ix in range(0, self.NBins):
-            for iy in range(0, self.NBins):
+        for ix in range(0, self.NBins_x):
+            for iy in range(0, self.NBins_y):
                 if new_align_avg[ix][iy]==0:
                     #Calculate position of exterior edge bin
-                    xpos_ref = (ix+0.5)*self.sizeBin
-                    ypos_ref = (iy+0.5)*self.sizeBin
+                    xpos_ref = (ix+0.5)*self.sizeBin_x
+                    ypos_ref = (iy+0.5)*self.sizeBin_y
 
 
                     difr_short= 100000
@@ -2103,9 +2107,9 @@ class interface:
                     if len(sep_surface_dict) >= 0:
 
 
-                        difx_trad = self.utility_functs.sep_dist(xpos_ref, self.h_box)
+                        difx_trad = self.utility_functs.sep_dist_x(xpos_ref, self.hx_box)
 
-                        dify_trad = self.utility_functs.sep_dist(ypos_ref, self.h_box)
+                        dify_trad = self.utility_functs.sep_dist_y(ypos_ref, self.hy_box)
 
                         #Very large initial distance to calculate closest interior edge bin to this exterior edge bin
                         difr_trad= ( (difx_trad )**2 + (dify_trad)**2)**0.5
@@ -2152,9 +2156,9 @@ class interface:
                                     #If bin is an interior edge bin for mth interface structure, continue...
 
                                     #Calculate position of interior edge bin
-                                    difx_width = self.utility_functs.sep_dist(xpos_ref, exterior_surface_com_xpos[id])
+                                    difx_width = self.utility_functs.sep_dist_x(xpos_ref, exterior_surface_com_xpos[id])
 
-                                    dify_width = self.utility_functs.sep_dist(ypos_ref, exterior_surface_com_ypos[id])
+                                    dify_width = self.utility_functs.sep_dist_y(ypos_ref, exterior_surface_com_ypos[id])
 
                                     #Calculate distance from interior edge bin to exterior edge bin
                                     difr = ( (difx_width)**2 + (dify_width)**2)**0.5
@@ -2171,9 +2175,9 @@ class interface:
                                     #If bin is an interior edge bin for mth interface structure, continue...
 
                                     #Calculate position of interior edge bin
-                                    difx_width = self.utility_functs.sep_dist(xpos_ref, exterior_surface_com_xpos[id])
+                                    difx_width = self.utility_functs.sep_dist_x(xpos_ref, exterior_surface_com_xpos[id])
 
-                                    dify_width = self.utility_functs.sep_dist(ypos_ref, exterior_surface_com_ypos[id])
+                                    dify_width = self.utility_functs.sep_dist_y(ypos_ref, exterior_surface_com_ypos[id])
 
                                     #Calculate distance from interior edge bin to exterior edge bin
                                     difr = ( (difx_width)**2 + (dify_width)**2)**0.5
@@ -2247,8 +2251,8 @@ class interface:
 
         #Calculate average alignment per bin
         #Loop over bins in system
-        for ix in range(0, self.NBins):
-            for iy in range(0, self.NBins):
+        for ix in range(0, self.NBins_x):
+            for iy in range(0, self.NBins_y):
                 if new_align_avg[ix][iy]==0:
 
                     #Calculate alignment with nearest interfacial surface

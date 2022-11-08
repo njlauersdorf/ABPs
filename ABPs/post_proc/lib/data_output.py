@@ -43,11 +43,13 @@ import binning
 
 class data_output:
 
-    def __init__(self, l_box, sizeBin, tst, clust_large, dt_step):
+    def __init__(self, lx_box, ly_box, sizeBin_x, sizeBin_y, tst, clust_large, dt_step):
 
-        self.l_box = l_box
+        self.lx_box = lx_box
+        self.ly_box = ly_box
 
-        self.sizeBin = sizeBin
+        self.sizeBin_x = sizeBin_x
+        self.sizeBin_y = sizeBin_y
 
         self.tst = tst
 
@@ -60,8 +62,9 @@ class data_output:
         import csv
 
         #Output values for radial measurements from CoM
-        headers = ['tauB', 'sizeBin', 'clust_size']
-        data = [self.tst, self.sizeBin, self.clust_size]
+
+        headers = ['tauB', 'sizeBin_x', 'sizeBin_y', 'clust_size']
+        data = [self.tst, self.sizeBin_x, self.sizeBin_y, self.clust_size]
 
         is_file = os.path.isfile(outPath)
 
@@ -114,8 +117,8 @@ class data_output:
     def write_to_txt(self, input_dict, outPath):
 
         #Output values for radial measurements from CoM
-        headers = ['tauB', 'sizeBin', 'clust_size']
-        data = [self.tst, self.sizeBin, self.clust_size]
+        headers = ['tauB', 'sizeBin_x', 'sizeBin_y', 'clust_size']
+        data = [self.tst, self.sizeBin_x, self.sizeBin_y, self.clust_size]
 
         is_file = os.path.isfile(outPath)
 
@@ -187,8 +190,8 @@ class data_output:
     def write_to_txt(self, input_dict, outPath):
 
         #Output values for radial measurements from CoM
-        headers = ['tauB', 'sizeBin', 'clust_size']
-        data = [self.tst, self.sizeBin, self.clust_size]
+        headers = ['tauB', 'sizeBin_x', 'sizeBin_y', 'clust_size']
+        data = [self.tst, self.sizeBin_x, self.sizeBin_y, self.clust_size]
 
         is_file = os.path.isfile(outPath)
         for key, value in input_dict.items():
@@ -299,8 +302,8 @@ class data_output:
     def write_to_txt2(self, input_dict, outPath):
 
         #Output values for radial measurements from CoM
-        headers = ['tauB', 'sizeBin', 'clust_size']
-        data = [self.tst, self.sizeBin, self.clust_size]
+        headers = ['tauB', 'sizeBin_x', 'sizeBin_y', 'clust_size']
+        data = [self.tst, self.sizeBin_x, self.sizeBin_y, self.clust_size]
 
         is_file = os.path.isfile(outPath)
         for key, value in input_dict.items():

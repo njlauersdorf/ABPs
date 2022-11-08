@@ -52,3 +52,5 @@ elif init_cond == 'slow_membrane':
     sim_functs.fast_penetrate_slow_membrane()
 elif init_cond == 'stationary_membrane':
     sim_functs.fast_penetrate_stationary_membrane()
+elif init_cond == 'immobile_membrane':
+    sim_functs.fast_penetrate_immobile_membrane()
