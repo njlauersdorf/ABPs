@@ -31,92 +31,158 @@ import matplotlib.ticker as tick
 
 from scipy.optimize import curve_fit
 
+# Append '~/klotsa/ABPs/post_proc/lib' to path to get other module's functions
 sys.path.append(os.path.join(os.path.dirname(__file__), 'lib'))
 import theory
 import utility
 
-
+# Class of interface identification functions
 class interface:
     def __init__(self, area_frac_dict, align_dict, part_dict, press_dict, lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, parFrac, eps, typ, ang):
 
+        # Array (NBins_x, NBins_y) of average alignment of all particles per bin in either direction ('x', 'y', or 'mag'nitude)
         self.align_x = align_dict['bin']['all']['x']
         self.align_y = align_dict['bin']['all']['y']
         self.align_mag = align_dict['bin']['all']['mag']
 
+        # Array (NBins_x, NBins_y) of average alignment of A particles per bin in either direction ('x', 'y', or 'mag'nitude)
         self.align_x_A = align_dict['bin']['A']['x']
         self.align_y_A = align_dict['bin']['A']['y']
         self.align_mag_A = align_dict['bin']['A']['mag']
 
+        # Array (NBins_x, NBins_y) of average alignment of B particles per bin in either direction ('x', 'y', or 'mag'nitude)
         self.align_x_B = align_dict['bin']['B']['x']
         self.align_y_B = align_dict['bin']['B']['y']
         self.align_mag_B = align_dict['bin']['B']['mag']
 
+        # Array (NBins_x, NBins_y) of average area fraction of each particle type ('all', 'A', or 'B') per bin
         self.area_frac = area_frac_dict['bin']['all']
         self.area_frac_A = area_frac_dict['bin']['A']
         self.area_frac_B = area_frac_dict['bin']['B']
 
+        # Array (NBins_x, NBins_y) of whether bin is part of a cluster (1) or not (0)
         self.occParts = part_dict['clust']
+
+        # Array (NBins_x, NBins_y) of binned particle ids
         self.binParts = part_dict['id']
+
+        # Array (NBins_x, NBins_y) of binned particle types
         self.typParts = part_dict['typ']
 
+        # Array (NBins_x, NBins_y) of average aligned active force pressure of each particle type ('all', 'A', or 'B') per bin
         self.press = press_dict['bin']['all']
         self.press_A = press_dict['bin']['A']
         self.press_B = press_dict['bin']['B']
 
+        # Initialize theory functions for call back later
         self.theory_functs = theory.theory()
 
+        # Total x-length of box
         self.lx_box = lx_box
         self.hx_box = self.lx_box/2
+
+        # Total y-length of box
         self.ly_box = ly_box
         self.hy_box = self.ly_box/2
 
+        # Initialize utility functions for call back later
         self.utility_functs = utility.utility(self.lx_box, self.ly_box)
 
+        # Number of particles
         self.partNum = partNum
+
+        # Minimum cluster size
         self.min_size=int(self.partNum/8)                                     #Minimum cluster size for measurements to happen
 
         try:
+            # Total number of bins in x-direction
             self.NBins_x = int(NBins_x)
+
+            # Total number of bins in y-direction
             self.NBins_y = int(NBins_y)
         except:
             print('NBins must be either a float or an integer')
 
+        # X-length of bin
         self.sizeBin_x = self.utility_functs.roundUp((self.lx_box / self.NBins_x), 6)
+
+        # Y-length of bin
         self.sizeBin_y = self.utility_functs.roundUp((self.ly_box / self.NBins_y), 6)
 
+        # A type particle activity
         self.peA = peA
+
+        # B type particle activity
         self.peB = peB
+
+        # Fraction of A type particles in system
         self.parFrac = parFrac
 
+        # Net (average) particle activity
         self.peNet=peA*(parFrac/100)+peB*(1-(parFrac/100))   #Net activity of system
 
+        # Magnitude of WCA potential (softness)
         self.eps = eps
 
+        # Calculate lattice spacing from theory
         lat_theory = self.theory_functs.conForRClust(self.peNet, eps)
+
+        # Calculate interparticle pressure from theory
         curPLJ = self.theory_functs.ljPress(lat_theory, self.peNet, eps)
+
+        # Calculate dense phase area fraction from theory
         self.phi_theory = self.theory_functs.latToPhi(lat_theory)
+
+        # Calculate gas phase area fraction from theory
         self.phi_g_theory = self.theory_functs.compPhiG(self.peNet, lat_theory)
 
+        # Array (partNum) of particle types
         self.typ = typ
 
+        # Array (partNum) of particle orientations [-pi,pi]
         self.ang = ang
 
     def det_surface_points(self, phase_dict, int_dict, int_comp_dict):
+        '''
+        Purpose: Takes the phase and interface ids of each bin and computes the interior and exterior
+        surface bin ids and locations for that interface
 
+        Inputs:
+        phase_dict: dictionary of arrays labeling phase of each bin and particle
+
+        int_dict: dictionary of arrays labeling interface id of each bin and particle
+
+        int_comp_dict: dictionary of arrays containing composition information of each interface
+
+        Outputs:
+        surface_dict: dictionary containing x and y positions and ids of bins belonging to exterior (1) or interior surface (2)
+        '''
+
+        # Array (NBins_x, NBins_y) identifying whether bin is part of bulk (0), interface (1), or gas (2)
         phaseBin = phase_dict['bin']
 
+        # Array (NBins_x, NBins_y) identifying ids of which interface that bin is a part of
         int_id = int_dict['bin']
 
+        # ID (int) of largest interface per number of particles
         int_large_ids = int_comp_dict['ids']['int id']
 
+        # Instantiate empty array (NBins_x, NBins_y) that labels whether bin is part of exterior surface (1) or not (0)
         surface1_id=np.zeros((self.NBins_x, self.NBins_y), dtype=int)        #Label exterior edges of interfaces
+
+        # Instantiate empty array (NBins_x, NBins_y) that labels whether bin is part of interior surface (1) or not (0)
         surface2_id=np.zeros((self.NBins_x, self.NBins_y), dtype=int)        #Label interior edges of interfaces
 
+        # Instantiate empty array (partNum) that labels whether particle is part of exterior surface bins (1) or not (0)
         surface1_phaseInt=np.zeros(self.partNum)
+
+        # Instantiate empty array (partNum) that labels whether particle is part of interior surface bins (1) or not (0)
         surface2_phaseInt=np.zeros(self.partNum)
 
         # Individually label each interface until all edge bins identified using flood fill algorithm
         if len(int_large_ids)>0:
+
+            # Loop over all bins
             for ix in range(0, self.NBins_x):
                 for iy in range(0, self.NBins_y):
 
@@ -127,7 +193,7 @@ class interface:
                         gas_neigh_num=0
                         bulk_neigh_num=0
 
-                        #identify neighboring bins
+                        #identify neighboring x-bins
                         if (ix + 1) == self.NBins_x:
                             lookx = [ix-1, ix, 0]
                         elif ix==0:
@@ -135,6 +201,7 @@ class interface:
                         else:
                             lookx = [ix-1, ix, ix+1]
 
+                        #identify neighboring y-bins
                         if (iy + 1) == self.NBins_y:
                             looky = [iy-1, iy, 0]
                         elif iy==0:
@@ -210,39 +277,67 @@ class interface:
                     surface1_pos_x=np.append(surface1_pos_x, (ix+0.5)*self.sizeBin_x)
                     surface1_pos_y=np.append(surface1_pos_y, (iy+0.5)*self.sizeBin_y)
 
+        # Dictionary containing x and y positions and ids of bins belonging to exterior (1) or interior surface (2)
         surface_dict = {'surface 1': {'pos': {'x': surface1_pos_x, 'y': surface1_pos_y}, 'id': {'bin': surface1_id, 'part': surface1_phaseInt}}, 'surface 2': {'pos': {'x': surface2_pos_x, 'y': surface2_pos_y}, 'id': {'bin': surface2_id, 'part': surface2_phaseInt}}}
+
         return surface_dict
 
     def surface_sort(self, surface_pos_x, surface_pos_y):
+        '''
+        Purpose: Takes the interior or exterior surface point positions and organizes
+        the surface points in order of adjacency from the first surface ID such that
+        the curve can be accurately plotted
+
+        Inputs:
+        surface_pos_x: array of x-positions of bins belonging to respective interface surface
+
+        surface_pos_y: array of y-positions of bins belonging to respective interface surface
+
+        Outputs:
+        surface_pos_sort_dict: dictionary containing x and y positions bins belonging to exterior (1) or interior surface (2)
+        '''
 
         #Save positions of external and internal edges
         clust_true = 0
+
+        # Instantiate empty arrays for sorted x- and y- positions of surface points
         surface_pos_x_sorted=np.array([])
         surface_pos_y_sorted=np.array([])
 
+        # Loop over all surface points until all sorted
         while len(surface_pos_x)>0:
+
+            # If no surface points have been sorted, add the first point
             if len(surface_pos_x_sorted)==0:
+
+                # Save sorted surface positions
                 surface_pos_x_sorted = np.append(surface_pos_x_sorted, surface_pos_x[0])
                 surface_pos_y_sorted = np.append(surface_pos_y_sorted, surface_pos_y[0])
 
+                # Remove already sorted surface positions
                 surface_pos_x = np.delete(surface_pos_x, 0)
                 surface_pos_y = np.delete(surface_pos_y, 0)
 
             else:
+
+                # Set initial shortest length measured to unrealistically high number that will be immediately replaced by second surface bin
                 shortest_length = 100000
                 for i in range(0, len(surface_pos_y)):
 
+                    # Distance of reference surface bin from previously sorted surface bin
                     difx = self.utility_functs.sep_dist_x(surface_pos_x_sorted[-1], surface_pos_x[i])
                     dify = self.utility_functs.sep_dist_y(surface_pos_y_sorted[-1], surface_pos_y[i])
 
                     difr = (difx**2 + dify**2)**0.5
 
+                    # If separation distance shorter than all previous bins looked at, then replace it as currently nearest neighbor
                     if difr < shortest_length:
                         shortest_length = difr
                         shortest_xlength = difx
                         shortest_ylength = dify
                         shortest_id = i
 
+                    # If separation distance equal to previous bins looked at, then choose the bin that is to the left or below as nearest neighbor
                     elif difr == shortest_length:
                         if (difx<0) or (dify<0):
                             if (shortest_xlength <0) or (shortest_ylength<0):
@@ -254,25 +349,51 @@ class interface:
                                 pass
                         else:
                             pass
-
+                # Save identified nearest neighbor bin to sorted surface points
                 surface_pos_x_sorted = np.append(surface_pos_x_sorted, surface_pos_x[shortest_id])
                 surface_pos_y_sorted = np.append(surface_pos_y_sorted, surface_pos_y[shortest_id])
 
+                # Remove identified nearest neighbor bin to from unsorted surface points
                 surface_pos_x = np.delete(surface_pos_x, shortest_id)
                 surface_pos_y = np.delete(surface_pos_y, shortest_id)
+
+        # Dictionary containing the x- and y-positions of the sorted surface bin points.
         surface_pos_sort_dict = {'x': surface_pos_x_sorted, 'y': surface_pos_y_sorted}
+
         return surface_pos_sort_dict
 
     def surface_com(self, int_dict, int_comp_dict, surface_dict):
+        '''
+        Purpose: Takes the interior and exterior surface point positions and identifies
+        the center of mass of those surface points
 
+        Inputs:
+        int_dict: dictionary of arrays labeling interface id of each bin and particle
+
+        int_comp_dict: dictionary of arrays containing composition information of each interface
+
+        surface_dict: dictionary containing x and y positions and ids of bins belonging to exterior (1) or interior surface (2)
+
+        Outputs:
+        surface_com_dict: dictionary containing x and y positions of surface's center of mass
+        '''
+
+        # Array (NBins_x, NBins_y) identifying ids of which interface that bin is a part of
         int_id = int_dict['bin']
 
+        # ID (int) of largest interface per number of particles
         int_large_ids = int_comp_dict['ids']['int id']
 
+        # Arrays (NBins_x, NBins_y) that labels whether bin is part of exterior surface (1) or not (0)
         surface1_id = surface_dict['surface 1']['id']['bin']
+
+        # Arrays (NBins_x, NBins_y) that labels whether bin is part of interior surface (1) or not (0)
         surface2_id = surface_dict['surface 2']['id']['bin']
 
+        # Arrays (NBins_x, NBins_y) that lists exterior surface bin x-positions
         surface1_pos_x = surface_dict['surface 1']['pos']['x']
+
+        # Arrays (NBins_x, NBins_y) that lists interior surface bin x-positions
         surface2_pos_x = surface_dict['surface 2']['pos']['x']
 
         #If there is an interface (bubble), find the mid-point of the cluster's edges
@@ -287,9 +408,14 @@ class interface:
             vert_wrap_bot = 0
             vert_wrap_top = 0
 
+            # Loop over all bins
             for ix in range(0, self.NBins_x):
                 for iy in range(0, self.NBins_y):
+
+                    # If interface is largest interface...
                     if (int_id[ix][iy]==int_large_ids[0]):
+
+                        # If reference bin is at system's periodic boundary, label wrapping is needed for CoM calculation
                         if (ix == 0):
                             hor_wrap_left = 1
                         elif (ix == self.NBins_x-1):
@@ -300,10 +426,18 @@ class interface:
                             vert_wrap_top = 1
 
             #Sum positions of external edges of interface
+
+            # Loop over all bins
             for ix in range(0, self.NBins_x):
                 for iy in range(0, self.NBins_y):
+
+                    # If interior surface bins identified, prioritize those for CoM calculation
                     if len(surface2_pos_x)>0:
+
+                        # If reference bin is part of interior surface of largest interface...
                         if (int_id[ix][iy]==int_large_ids[0]) & (surface2_id[ix][iy]==1):
+
+                            # Identify mid-point position of reference bin and wrap across boundary if needed
                             x_box_pos_temp = (ix+0.5)*self.sizeBin_x
                             if (hor_wrap_right==1) & (hor_wrap_left==1) & (x_box_pos_temp<self.hx_box):
                                 x_box_pos_temp += self.hx_box
@@ -312,11 +446,18 @@ class interface:
                             if (vert_wrap_bot==1) & (vert_wrap_top==1) & (y_box_pos_temp<self.hy_box):
                                 y_box_pos_temp += self.hy_box
 
+                            # Sum wrapped position and number of surface bins for averaging later
                             x_box_pos += x_box_pos_temp
                             y_box_pos += y_box_pos_temp
                             surface_num +=1
+
+                    # Otherwise, if reference bin is part of exterior surface of largest interface...
                     elif len(surface1_pos_x)>0:
+
+                        # If reference bin is part of exterior surface of largest interface...
                         if (int_id[ix][iy]==int_large_ids[0]) & (surface1_id[ix][iy]==1):
+
+                            # Identify mid-point position of reference bin and wrap across boundary if needed
                             x_box_pos_temp = (ix+0.5)*self.sizeBin_x
                             if (hor_wrap_right==1) & (hor_wrap_left==1) & (x_box_pos_temp<self.hx_box):
                                 x_box_pos_temp += self.hx_box
@@ -325,15 +466,19 @@ class interface:
                             if (vert_wrap_bot==1) & (vert_wrap_top==1) & (y_box_pos_temp<self.hy_box):
                                 y_box_pos_temp += self.hy_box
 
+                            # Sum wrapped position and number of surface bins for averaging later
                             x_box_pos += x_box_pos_temp
                             y_box_pos += y_box_pos_temp
                             surface_num +=1
 
             #Determine mean location (CoM) of external edges of interface
             if surface_num>0:
+
+                # Average CoM location
                 box_com_x = x_box_pos/surface_num
                 box_com_y = y_box_pos/surface_num
 
+                # If CoM outside of simulation box, shift to simulation box using periodic boundary conditions
                 box_com_x_abs = np.abs(box_com_x)
                 if box_com_x_abs>=self.lx_box:
                     if box_com_x < -self.hx_box:
@@ -350,27 +495,58 @@ class interface:
             else:
                 box_com_x=0
                 box_com_y=0
-
+        # Dictionary containing the x- and y-positions of the CoM of the largest interface
         surface_com_dict = {'x': box_com_x, 'y': box_com_y}
+
         return surface_com_dict
 
     def surface_radius_bins(self, int_dict, int_comp_dict, surface_dict, surface_com_dict):
+        '''
+        Purpose: Takes the interior and exterior surface point positions and identifies
+        the center of mass of those surface points
 
+        Inputs:
+        int_dict: dictionary of arrays labeling interface id of each bin and particle
+
+        int_comp_dict: dictionary of arrays containing composition information of each interface
+
+        surface_dict: dictionary containing x and y positions and ids of bins belonging to exterior (1) or interior surface (2)
+
+        surface_com_dict: dictionary containing x and y positions of surface's center of mass
+
+        Outputs:
+        radius_dict: dictionary containing arrays of all distances and angle sof surface points from
+        largest interface's CoM in addition to the mean radius and angle
+        '''
+
+        # Array (NBins_x, NBins_y) identifying ids of which interface that bin is a part of
         int_id = int_dict['bin']
 
+        # ID (int) of largest interface per number of particles
         int_large_ids = int_comp_dict['ids']['int id']
 
+        # Arrays (NBins_x, NBins_y) that labels whether bin is part of exterior surface (1) or not (0)
         surface1_id = surface_dict['surface 1']['id']['bin']
+
+        # Arrays (NBins_x, NBins_y) that labels whether bin is part of interior surface (1) or not (0)
         surface2_id = surface_dict['surface 2']['id']['bin']
 
+        # Arrays (NBins_x, NBins_y) that lists exterior surface bin x-positions
         surface1_pos_x = surface_dict['surface 1']['pos']['x']
+
+        # Arrays (NBins_x, NBins_y) that lists interior surface bin x-positions
         surface2_pos_x = surface_dict['surface 2']['pos']['x']
 
+        # X-position of largest interface's CoM
         box_com_x = surface_com_dict['x']
+
+        # y-position of largest interface's CoM
         box_com_y = surface_com_dict['y']
 
+        # If there is an identified interface...
         if len(int_large_ids) > 0:
-            #Initialize empty arrays for calculation
+
+            #Initialize empty arrays for angle and distance from CoM of surface points and respective IDs
             thetas = np.array([])
             radii = np.array([])
 
@@ -378,6 +554,8 @@ class interface:
             y_id = np.array([], dtype=int)
 
             #Calculate distance from CoM to external edge bin and angle from CoM
+
+            # Loop over all bins
             for ix in range(0, self.NBins_x):
                 for iy in range(0, self.NBins_y):
 
@@ -432,10 +610,14 @@ class interface:
 
                         #Save radius from CoM of bin
                         radii = np.append(radii, (difx**2 + dify**2)**0.5)
+
+        # Dictionary containing an array of all distances/thetas and the mean distance/theta from the CoM for the largest interface
         radius_dict = {'radius': {'vals': radii, 'mean': np.mean(radii)}, 'theta': {'vals': thetas, 'mean': np.mean(thetas)}}
+
         return radius_dict
 
     def separate_surfaces(self, surface_dict, int_dict, int_comp_dict):
+        
         # Initialize empty arrays
         surface1_id = surface_dict['surface 1']['id']['bin']
         surface1_x = surface_dict['surface 1']['pos']['x']

@@ -35,9 +35,12 @@ from scipy.optimize import curve_fit
 class utility:
     def __init__(self, lx_box, ly_box):
 
+        # Total x-length of box
         self.lx_box = lx_box
-        self.ly_box = ly_box
         self.hx_box = self.lx_box/2
+
+        # Total x-length of box
+        self.ly_box = ly_box
         self.hy_box = self.ly_box/2
 
     def sep_dist_x(self, pos1, pos2):

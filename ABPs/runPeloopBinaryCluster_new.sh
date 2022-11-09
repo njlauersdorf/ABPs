@@ -76,7 +76,15 @@ else
                           init_cond="immobile_membrane"
                           dont_run='no'
                       else
-                          dont_run='yes'
+                        echo "Do you want immobile oriented membrane (y/n)?"
+                        read answer
+
+                        if [ $answer == "y" ]; then
+                            init_cond="immobile_orient_membrane"
+                            dont_run='no'
+                        else
+                            dont_run='yes'
+                        fi
                       fi
                   fi
                 fi
@@ -115,10 +123,10 @@ if [ $dont_run == "no" ]; then
     #pb=(50 500)
     # List for particle fraction
     declare -a xa
-    xa=(99)
+    xa=(20)
     # List for phi
     declare -a phi
-    phi=(10)
+    phi=(60)
     # List for epsilon
     #eps=(1.0 0.1 0.001) # LISTS CAN CONTAIN FLOATS!!!!
     declare -a eps
