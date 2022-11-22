@@ -33,31 +33,58 @@ import numpy as np
 
 from scipy.optimize import curve_fit
 
+# Class of plotting utility functions
 class plotting_utility:
     def __init__(self, lx_box, ly_box, partNum, typ):
+
+        # Total x-length of box
         self.lx_box = lx_box
         self.hx_box = self.lx_box/2
+
+        # Total y-length of box
         self.ly_box = ly_box
         self.hy_box = self.ly_box/2
-        self.partNum = partNum
-        self.typ = typ
-    def normalize(self, input_dict):
 
+        # Number of particles
+        self.partNum = partNum
+
+        # Array (partNum) of particle types
+        self.typ = typ
+
+    def normalize(self, input_dict):
+        '''
+        Purpose: Takes some input dictionary of binned vectors in the x- and y-
+        directions and normalizes them by the total vector's magnitude
+
+        Input:
+        input_dict: input dictionary of arrays (NBins_x, NBins_y) of binned vectors
+        in the x- and y-directions
+
+        Output:
+        norm_dict: dictionary of arrays (NBins_x, NBins_y) of binned unit vectors of
+        the normalized x- and y-vectors in the input dictionary
+        '''
+
+        # Binned x-direction vectors of each respective type ('all', 'A', or 'B')
         all_input_x = input_dict['avg']['x']
         A_input_x = input_dict['avg']['x']
         B_input_x = input_dict['avg']['x']
 
+        # Binned y-direction vectors of each respective type ('all', 'A', or 'B')
         all_input_y = input_dict['avg A']['y']
         A_input_y = input_dict['avg A']['y']
         B_input_y = input_dict['avg A']['y']
 
+        # Binned vector magnitudes of each respective type ('all', 'A', or 'B')
         all_input_mag = input_dict['avg B']['mag']
         A_input_mag = input_dict['avg B']['mag']
         B_input_mag = input_dict['avg B']['mag']
 
-        #Counts number of different particles belonging to each phase
+        # Loops over all bins to normalize and find unit vectors
         for ix in range(0, len(all_input_x)):
             for iy in range(0, len(all_input_y)):
+
+                # Calculates x- and y-direction unit vectors of all particles
                 if all_input_mag[ix][iy]>0:
                     all_input_x_norm[ix][iy] = all_input_x[ix][iy] / all_input_mag[ix][iy]
                     all_input_y_norm[ix][iy] = all_input_y[ix][iy] / all_input_mag[ix][iy]
@@ -65,6 +92,7 @@ class plotting_utility:
                     all_input_x_norm[ix][iy]=0
                     all_input_y_norm[ix][iy]=0
 
+                # Calculates x- and y-direction unit vectors of A particles
                 if A_input_mag[ix][iy]>0:
                     A_input_x_norm[ix][iy] = A_input_x[ix][iy] / A_input_mag[ix][iy]
                     A_input_y_norm[ix][iy] = A_input_y[ix][iy] / A_input_mag[ix][iy]
@@ -72,6 +100,7 @@ class plotting_utility:
                     A_input_x_norm[ix][iy] = 0
                     A_input_y_norm[ix][iy] = 0
 
+                # Calculates x- and y-direction unit vectors of B particles
                 if B_input_mag[ix][iy]>0:
                     B_input_x_norm[ix][iy] = B_input_x[ix][iy] / B_input_mag[ix][iy]
                     B_input_y_norm[ix][iy] = B_input_y[ix][iy] / B_input_mag[ix][iy]
@@ -79,57 +108,99 @@ class plotting_utility:
                     B_input_x_norm[ix][iy] = 0
                     B_input_y_norm[ix][iy] = 0
 
+        # Dictionary of arrays (NBins_x, NBins_y) of binned unit vectors of
+        # the normalized x- and y-vectors in the input dictionary
         norm_dict = {'avg': {'x': all_input_x_norm, 'y': all_input_y_norm}, 'avg A': {'x': A_input_x_norm, 'y': A_input_y_norm}, 'avg B': {'x': B_input_x_norm, 'y': B_input_y_norm}}
         return norm_dict
 
     def com_view(self, pos, clp_all):
+        '''
+        Purpose: Takes the position of particles and the largest cluster's CoM and
+        shifts the position of all particles so the largest cluster's CoM is at the
+        center of the system
 
+        Input:
+        pos: array (partNum) of positions (x,y,z) of each particle
+
+        clp_all: cluster properties defined from Freud neighbor list and cluster calculation
+
+        Output:
+        com_dict: dictionary containing the shifted position of every particle such that
+        the largest cluster's CoM is at the middle of the box (hx_box, hy_box) in addition to the
+        unshifted largest cluster's CoM position
+        '''
+
+        # Array of cluster sizes
         clust_size = clp_all.sizes                                  # find cluster sizes
 
+        # Minimum cluster size to consider
         min_size=int(self.partNum/8)                                     #Minimum cluster size for measurements to happen
 
+        # ID of largest cluster
         lcID = np.where(clust_size == np.amax(clust_size))[0][0]    #Identify largest cluster
+
+        # IDs of all clusters of sufficiently large size
         large_clust_ind_all=np.where(clust_size>min_size)           #Identify all clusters larger than minimum size
 
-        #If a single cluster is greater than minimum size, determine CoM of largest cluster
+        #If at least one cluster is sufficiently large, determine CoM of largest cluster
         if len(large_clust_ind_all[0])>0:
+
+            # Largest cluster's CoM position
             query_points=clp_all.centers[lcID]
 
+            # Largest cluster's CoM shifted to box size of x=[0, lx_box] and y=[0, ly_box]
             com_tmp_posX = query_points[0] + self.hx_box
             com_tmp_posY = query_points[1] + self.hy_box
 
+            # Largest cluster's CoM in natural box size of x=[-hx_box, hx_box] and y=[-hy_box, hy_box]
             com_tmp_posX_temp = query_points[0]
             com_tmp_posY_temp = query_points[1]
+
+        # If no sufficiently large clusters, set CoM position to middle of box (for plotting purposes)
         else:
 
+            # Middle of box of x=[0, lx_box] and y=[0, ly_box]
             com_tmp_posX = self.hx_box
             com_tmp_posY = self.hy_box
 
+            # Middle of box of x=[-hx_box, hx_box] and y=[-hy_box, hy_box]
             com_tmp_posX_temp = 0
             com_tmp_posY_temp = 0
 
-
-        #shift reference frame to center of mass of cluster
+        #shift reference frame positions such that CoM of largest cluster is at mid-point of simulation box
         pos[:,0]= pos[:,0]-com_tmp_posX_temp
         pos[:,1]= pos[:,1]-com_tmp_posY_temp
 
-        #Ensure particles are within simulation box (periodic boundary conditions)
+        #Loop over all particles to ensure particles are within simulation box (periodic boundary conditions)
         for i in range(0, self.partNum):
-                if pos[i,0]>self.hx_box:
-                    pos[i,0]=pos[i,0]-self.lx_box
-                elif pos[i,0]<-self.hx_box:
-                    pos[i,0]=pos[i,0]+self.lx_box
+            if pos[i,0]>self.hx_box:
+                pos[i,0]=pos[i,0]-self.lx_box
+            elif pos[i,0]<-self.hx_box:
+                pos[i,0]=pos[i,0]+self.lx_box
 
-                if pos[i,1]>self.hy_box:
-                    pos[i,1]=pos[i,1]-self.ly_box
-                elif pos[i,1]<-self.hy_box:
-                    pos[i,1]=pos[i,1]+self.ly_box
+            if pos[i,1]>self.hy_box:
+                pos[i,1]=pos[i,1]-self.ly_box
+            elif pos[i,1]<-self.hy_box:
+                pos[i,1]=pos[i,1]+self.ly_box
 
+        # Dictionary containing the shifted position of every particle such that
+        # the largest cluster's CoM is at the middle of the box (hx_box, hy_box) in addition to the
+        # unshifted largest cluster's CoM position
         com_dict = {'pos': pos, 'com': {'x': com_tmp_posX, 'y': com_tmp_posY}}
 
         return com_dict
+
     def grayscale_cmap(cmap):
-        """Return a grayscale version of the given colormap"""
+        '''
+        Purpose: Takes a colormap and returns the grayscale version of it
+
+        Input:
+        cmap: a colorized cmap object from matplotlib.pyplot.colormap
+
+        Output:
+        gray_cmap: a gray-scale cmap object from matplotlib.pyplot.colormap
+        '''
+
         cmap = plt.cm.get_cmap(cmap)
         colors = cmap(np.arange(cmap.N))
 
@@ -139,9 +210,21 @@ class plotting_utility:
         luminance = np.sqrt(np.dot(colors[:, :3] ** 2, RGB_weight))
         colors[:, :3] = luminance[:, np.newaxis]
 
-        return LinearSegmentedColormap.from_list(cmap.name + "_gray", colors, cmap.N)
+        gray_cmap = LinearSegmentedColormap.from_list(cmap.name + "_gray", colors, cmap.N)
+
+        return gray_cmap
+
     def view_colormap(cmap):
-        """Plot a colormap with its grayscale equivalent"""
+        '''
+        Purpose: Takes a colormap and plots a colormap with its grayscale equivalent version
+
+        Input:
+        cmap: a colorized cmap object from matplotlib.pyplot.colormap
+
+        Output:
+        gray_cmap: a gray-scale cmap object from matplotlib.pyplot.colormap
+        '''
+
         cmap = plt.cm.get_cmap(cmap)
         colors = cmap(np.arange(cmap.N))
 

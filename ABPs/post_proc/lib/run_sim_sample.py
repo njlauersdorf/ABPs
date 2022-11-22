@@ -56,3 +56,5 @@ elif init_cond == 'immobile_membrane':
     sim_functs.fast_penetrate_immobile_membrane()
 elif init_cond == 'immobile_orient_membrane':
     sim_functs.fast_orient_penetrate_immobile_membrane()
+elif init_cond == 'slow_constrained_membrane':
+    sim_functs.fast_penetrate_slow_constrained_membrane()

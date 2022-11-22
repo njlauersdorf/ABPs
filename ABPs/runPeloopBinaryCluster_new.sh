@@ -83,7 +83,15 @@ else
                             init_cond="immobile_orient_membrane"
                             dont_run='no'
                         else
-                            dont_run='yes'
+                          echo "Do you want slow constrained membrane (y/n)?"
+                          read answer
+
+                          if [ $answer == "y" ]; then
+                              init_cond="slow_constrained_membrane"
+                              dont_run='no'
+                          else
+                              dont_run='yes'
+                          fi
                         fi
                       fi
                   fi
@@ -101,10 +109,10 @@ aspect_ratio=$answer
 if [ $dont_run == "no" ]; then
     # Default values for simulations
     declare -i part_num
-    part_num=$(( 5000 ))
+    part_num=$(( 1000 ))
 
     declare -i runfor
-    runfor=$(( 5 ))
+    runfor=$(( 50 ))
 
     declare -i dump_freq
     dump_freq=$(( 20000 ))
@@ -117,20 +125,21 @@ if [ $dont_run == "no" ]; then
     # 50 100 150 250 450)
     #(0 50 100 150 200 250 350 450)
     declare -a pb
-    pb=(500)
+    pb=(50 150 300 500)
     # 100 150 250 450)
     #(0 50 100 150 200 250 350 450)
     #pb=(50 500)
     # List for particle fraction
     declare -a xa
-    xa=(20)
+    xa=(98)
     # List for phi
     declare -a phi
-    phi=(60)
+    #phi=(60)
+    phi=(60 70 80 90 100 110 120 130 140 150)
     # List for epsilon
     #eps=(1.0 0.1 0.001) # LISTS CAN CONTAIN FLOATS!!!!
     declare -a eps
-    eps=(1.0)
+    eps=(1.0 0.1 0.01 0.001)
     #(0.1 1.0)
 
     seed1=$$

@@ -165,7 +165,7 @@ class interface:
         int_id = int_dict['bin']
 
         # ID (int) of largest interface per number of particles
-        int_large_ids = int_comp_dict['ids']['int id']
+        int_large_ids = int_comp_dict['ids']
 
         # Instantiate empty array (NBins_x, NBins_y) that labels whether bin is part of exterior surface (1) or not (0)
         surface1_id=np.zeros((self.NBins_x, self.NBins_y), dtype=int)        #Label exterior edges of interfaces
@@ -382,7 +382,7 @@ class interface:
         int_id = int_dict['bin']
 
         # ID (int) of largest interface per number of particles
-        int_large_ids = int_comp_dict['ids']['int id']
+        int_large_ids = int_comp_dict['ids']
 
         # Arrays (NBins_x, NBins_y) that labels whether bin is part of exterior surface (1) or not (0)
         surface1_id = surface_dict['surface 1']['id']['bin']
@@ -495,6 +495,7 @@ class interface:
             else:
                 box_com_x=0
                 box_com_y=0
+
         # Dictionary containing the x- and y-positions of the CoM of the largest interface
         surface_com_dict = {'x': box_com_x, 'y': box_com_y}
 
@@ -523,7 +524,7 @@ class interface:
         int_id = int_dict['bin']
 
         # ID (int) of largest interface per number of particles
-        int_large_ids = int_comp_dict['ids']['int id']
+        int_large_ids = int_comp_dict['ids']
 
         # Arrays (NBins_x, NBins_y) that labels whether bin is part of exterior surface (1) or not (0)
         surface1_id = surface_dict['surface 1']['id']['bin']
@@ -617,44 +618,88 @@ class interface:
         return radius_dict
 
     def separate_surfaces(self, surface_dict, int_dict, int_comp_dict):
-        
-        # Initialize empty arrays
+        '''
+        Purpose: Takes the location and ids of each surface point (either interior or
+        exterior) for each interface and identifies which is the interior surface and
+        which is the exterior surface
+
+        Inputs:
+        surface_dict: dictionary containing x and y positions and ids of bins belonging to exterior (1) or interior surface (2)
+
+        int_dict: dictionary of arrays labeling interface id of each bin and particle
+
+        int_comp_dict: dictionary of arrays containing composition information of each interface
+
+        Outputs:
+        sep_surface_dict: dictionary that stores interior and exterior surface information for each respective interface of sufficient size
+        '''
+
+        # Arrays that labels whether bin is part of exterior surface (1) or not (0)
         surface1_id = surface_dict['surface 1']['id']['bin']
+
+        # Arrays that lists exterior surface bin x-positions
         surface1_x = surface_dict['surface 1']['pos']['x']
+
+        # Arrays that lists exterior surface bin y-positions
         surface1_y = surface_dict['surface 1']['pos']['y']
 
+        # Arrays that labels whether bin is part of interior surface (1) or not (0)
         surface2_id = surface_dict['surface 2']['id']['bin']
+
+        # Arrays that lists interior surface bin x-positions
         surface2_x = surface_dict['surface 2']['pos']['x']
+
+        # Arrays that lists interior surface bin y-positions
         surface2_y = surface_dict['surface 2']['pos']['y']
 
+        # Array (NBins_x, NBins_y) identifying ids of which interface that bin is a part of
         int_id = int_dict['bin']
 
-        int_large_ids = int_comp_dict['ids']['int id']
+        # ID (int) of largest interface per number of particles
+        int_large_ids = int_comp_dict['ids']
 
+        # Instantiate empty array that contains x- and y- indices for interior surface
         int_surface_x = np.array([], dtype=int)
         int_surface_y = np.array([], dtype=int)
 
+        # Instantiate empty array that contains x- and y- indices for exterior surface
         ext_surface_x = np.array([], dtype=int)
         ext_surface_y = np.array([], dtype=int)
 
+        # Instantiate empty array that contains x- and y- indices for either (1st or 2nd) interface surface
         surface1_x_id = np.array([], dtype=int)
         surface1_y_id = np.array([], dtype=int)
 
         surface2_x_id = np.array([], dtype=int)
         surface2_y_id = np.array([], dtype=int)
 
+        # Instantiate empty array (NBins_x, NBins_y) that labels whether bin is interior surface bin (1) or not (0)
         int_surface_id=np.zeros((self.NBins_x, self.NBins_y), dtype=int)
+
+        # Instantiate empty array (NBins_x, NBins_y) that labels whether bin is exterior surface bin (1) or not (0)
         ext_surface_id=np.zeros((self.NBins_x, self.NBins_y), dtype=int)
 
+        # Dictionary that stores interior and exterior surface information for each respective interface of sufficient size
         sep_surface_dict = {}
 
+        # Start count of number of bins belonging to either interface surface (1 or 2)
         surface1_num = 0
         surface2_num = 0
+
+        # Loop over all interfaces
         for m in range(0, len(int_large_ids)):
+
+            # If interface sufficiently large...
             if int_large_ids[m]!=999:
+
+                # Loop over all bins
                 for ix in range(0, self.NBins_x):
                     for iy in range(0, self.NBins_y):
+
+                        # If bin belongs to reference interface
                         if int_id[ix][iy]==int_large_ids[m]:
+
+                            # Save indices of current bin if part of either interface's surfaces
                             if surface1_id[ix][iy]==1:
                                 surface1_num +=1
                                 surface1_x_id = np.append(surface1_x_id, ix)
@@ -664,7 +709,11 @@ class interface:
                                 surface2_x_id = np.append(surface2_x_id, ix)
                                 surface2_y_id = np.append(surface2_y_id, iy)
 
+                # If two surfaces of reference interface are defined (one interior and one exterior)
+                # then find which is the interior and which is the exterior surface
                 if (surface1_num > 0) & (surface2_num > 0):
+
+                    # If surface 1 has more bins than surface 2, surface 1 is the exterior and surface 2 is the interior
                     if surface1_num>surface2_num:
                         for v in range(0, len(surface1_x_id)):
                             ext_surface_x = np.append(ext_surface_x, surface1_x_id[v])
@@ -672,6 +721,8 @@ class interface:
                         for v in range(0, len(surface2_x_id)):
                             int_surface_x = np.append(int_surface_x, surface2_x_id[v])
                             int_surface_y = np.append(int_surface_y, surface2_y_id[v])
+
+                    # If surface 2 has more bins than surface 1, surface 2 is the exterior and surface 1 is the interior
                     else:
                         for v in range(0, len(surface2_x_id)):
                             ext_surface_x = np.append(ext_surface_x, surface2_x_id[v])
@@ -679,19 +730,23 @@ class interface:
                         for v in range(0, len(surface1_x_id)):
                             int_surface_x = np.append(int_surface_x, surface1_x_id[v])
                             int_surface_y = np.append(int_surface_y, surface1_y_id[v])
+
+                # If only one surface of reference interface is defined (one interior or one exterior)
+                # then label the only surface as an exterior surface
                 elif (surface1_num > 0) & (surface2_num == 0):
                     for v in range(0, len(surface1_x_id)):
                         ext_surface_x = np.append(ext_surface_x, surface1_x_id[v])
                         ext_surface_y = np.append(ext_surface_y, surface1_y_id[v])
-
                 elif (surface1_num == 0) & (surface2_num > 0):
                     for v in range(0, len(surface2_x_id)):
                         ext_surface_x = np.append(ext_surface_x, surface2_x_id[v])
                         ext_surface_y = np.append(ext_surface_y, surface2_y_id[v])
 
+                # Number of bins belonging to interior and exterior surfaces
                 int_surface_num = len(int_surface_x)
                 ext_surface_num = len(ext_surface_x)
 
+                # If interior surface defined, label each bin as belonging to exterior/interior surface (1) or not (0)
                 if int_surface_num > 0:
                     for ix in range(0, len(int_surface_x)):
                         int_surface_id[int_surface_x[ix]][int_surface_y[ix]]=1
@@ -701,169 +756,270 @@ class interface:
                         int_surface_id[ext_surface_x[ix]][ext_surface_y[ix]]=0
                         ext_surface_id[ext_surface_x[ix]][ext_surface_y[ix]]=1
 
+                # Find x- and y- positions of each interior and exterior surface point
                 int_surface_pos_x = int_surface_x * self.sizeBin_x
                 int_surface_pos_y = int_surface_y * self.sizeBin_y
 
                 ext_surface_pos_x = ext_surface_x * self.sizeBin_x
                 ext_surface_pos_y = ext_surface_y * self.sizeBin_y
+
+                # Dictionary containing information on exterior and interior surfaces for reference interface
                 indiv_surface_dict = {'interior': {'x bin': int_surface_x, 'y bin': int_surface_y, 'ids': int_surface_id, 'num': int_surface_num}, 'exterior': {'x bin': ext_surface_x, 'y bin': ext_surface_y, 'ids': ext_surface_id, 'num': ext_surface_num}}
+
+                # Dictionary key labeling reference interface
                 key_temp = 'surface id ' + str(int(int_large_ids[m]))
+
+                # Reference interface surface dictionary saved to dictionary that contains exterior and interior surface information for all interfaces
                 sep_surface_dict[key_temp] = indiv_surface_dict
+
         return sep_surface_dict
 
     def sort_surface_points(self, surface_dict):
+        '''
+        Purpose: Takes the location and ids of each surface point (either interior or
+        exterior) for a given interface and identifies which sorts the points in terms of
+        adjacency such that a curve can be plotted
 
+        Inputs:
+        surface_dict: dictionary containing x and y positions and ids of bin for interior or
+        exterior surface depending on input dictionary, i.e. sep_surface_dict['surface id 1']['interior']
+        or sep_surface_dict['surface id 1']['exterior']
+
+        Outputs:
+        sep_surface_dict: dictionary that stores interior and exterior surface information for each respective interface of sufficient size
+        '''
+
+        # Arrays that lists surface bin x- and y-positions
         surface_x = surface_dict['x bin']
         surface_y = surface_dict['y bin']
+
+        # Array (NBins_x, NBins_y) that identifies whether bin is of the given interface surface (1) or not (0)
         surface_id = surface_dict['ids']
 
+        # Instantiate array with starting surface point to sort from in terms of adjacency
         surface_x_sort = np.array([surface_x[0]])
         surface_y_sort = np.array([surface_y[0]])
 
+        # Reference surface point IDs
         ix=int(surface_x_sort[0])
         iy=int(surface_y_sort[0])
 
+        # Nearest neighboring bins IDs
         shortest_idx = np.array([])
         shortest_idy = np.array([])
 
+        # Unsorted x- and y- IDs of given surface
         surface_x = np.delete(surface_x, 0)
         surface_y = np.delete(surface_y, 0)
+
+        #
         fail=0
 
         #Determine if first interior surface bin of interface has at least 1
         #neighbor that is an interior surface bin of interface
         if len(surface_x)>0:
 
+            # Identify x ID of bin to right
             if ix < (self.NBins_x-1):
                 right = int(ix+1)
             else:
                 right= int(0)
 
+            # Identify x ID of bin to left
             if ix > 0:
                 left = int(ix-1)
             else:
                 left=int(self.NBins_x-1)
 
+            # Identify y ID of bin above
             if iy < (self.NBins_y-1):
                 up = int(iy+1)
             else:
                 up= int(0)
 
+            # Identify y ID of bin below
             if iy > 0:
                 down = int(iy-1)
             else:
                 down= int(self.NBins_y-1)
 
+            # If bin to right of reference bin is part of the same surface, save it to sorted array
             if surface_id[right][iy]==1:
+
+                # Save neighbor bin to sorted array of surface IDs
                 surface_x_sort = np.append(surface_x_sort, right)
                 surface_y_sort = np.append(surface_y_sort, iy)
 
+                # Remove neighbor bin from unsorted array of surface IDs
                 loc_id = np.where((surface_x == right) & (surface_y == iy))[0]
 
                 surface_x = np.delete(surface_x, loc_id)
                 surface_y = np.delete(surface_y, loc_id)
+
+            # Otherwise, if bin above reference bin is part of the same surface, save it to sorted array
             elif surface_id[ix][up]==1:
+
+                # Save neighbor bin to sorted array of surface IDs
                 surface_x_sort = np.append(surface_x_sort, ix)
                 surface_y_sort = np.append(surface_y_sort, up)
 
+                # Remove neighbor bin from unsorted array of surface IDs
                 loc_id = np.where((surface_x == ix) & (surface_y == up))[0]
 
                 surface_x = np.delete(surface_x, loc_id)
                 surface_y = np.delete(surface_y, loc_id)
+
+            # Otherwise, if bin below reference bin is part of the same surface, save it to sorted array
             elif surface_id[ix][down]==1:
+
+                # Save neighbor bin to sorted array of surface IDs
                 surface_x_sort = np.append(surface_x_sort, ix)
                 surface_y_sort = np.append(surface_y_sort, down)
 
+                # Remove neighbor bin from unsorted array of surface IDs
                 loc_id = np.where((surface_x == ix) & (surface_y == down))[0]
 
                 surface_x = np.delete(surface_x, loc_id)
                 surface_y = np.delete(surface_y, loc_id)
+
+            # Otherwise, if bin left of reference bin is part of the same surface, save it to sorted array
             elif surface_id[left][iy]==1:
+
+                # Save neighbor bin to sorted array of surface IDs
                 surface_x_sort = np.append(surface_x_sort, left)
                 surface_y_sort = np.append(surface_y_sort, iy)
 
+                # Remove neighbor bin from unsorted array of surface IDs
                 loc_id = np.where((surface_x == left) & (surface_y == iy))[0]
 
                 surface_x = np.delete(surface_x, loc_id)
                 surface_y = np.delete(surface_y, loc_id)
+
+            # Otherwise, if bin upper left of reference bin is part of the same surface, save it to sorted array
             elif surface_id[left][up]==1:
+
+                # Save neighbor bin to sorted array of surface IDs
                 surface_x_sort = np.append(surface_x_sort, left)
                 surface_y_sort = np.append(surface_y_sort, up)
 
+                # Remove neighbor bin from unsorted array of surface IDs
                 loc_id = np.where((surface_x == left) & (surface_y == up))[0]
 
                 surface_x = np.delete(surface_x, loc_id)
                 surface_y = np.delete(surface_y, loc_id)
+
+            # Otherwise, if bin lower left of reference bin is part of the same surface, save it to sorted array
             elif surface_id[left][down]==1:
+
+                # Save neighbor bin to sorted array of surface IDs
                 surface_x_sort = np.append(surface_x_sort, left)
                 surface_y_sort = np.append(surface_y_sort, down)
 
+                # Remove neighbor bin from unsorted array of surface IDs
                 loc_id = np.where((surface_x == left) & (surface_y == down))[0]
 
                 surface_x = np.delete(surface_x, loc_id)
                 surfacer_y = np.delete(surface_y, loc_id)
+
+            # Otherwise, if bin upper right of reference bin is part of the same surface, save it to sorted array
             elif surface_id[right][up]==1:
+
+                # Save neighbor bin to sorted array of surface IDs
                 surface_x_sort = np.append(surface_x_sort, right)
                 surface_y_sort = np.append(surface_y_sort, up)
 
+                # Remove neighbor bin from unsorted array of surface IDs
                 loc_id = np.where((surface_x == right) & (surface_y == up))[0]
 
                 surface_x = np.delete(surface_x, loc_id)
                 surface_y = np.delete(surface_y, loc_id)
+
+            # Otherwise, if bin lower right of reference bin is part of the same surface, save it to sorted array
             elif surface_id[right][down]==1:
+
+                # Save neighbor bin to sorted array of surface IDs
                 surface_x_sort = np.append(surface_x_sort, right)
                 surface_y_sort = np.append(surface_y_sort, down)
 
+                # Remove neighbor bin from unsorted array of surface IDs
                 loc_id = np.where((surface_x == right) & (surface_y == down))[0]
 
                 surface_x = np.delete(surface_x, loc_id)
                 surface_y = np.delete(surface_y, loc_id)
+
+            # If none are of the same surface, fail the surface sorting mechanism
             else:
                 fail=1
 
-            #If found at least 1 interior surface bin neighbor
+            #If found at least 1 surface bin neighbor
             if fail==0:
+
+                # Reference surface bin ID
                 ix_ref=surface_x_sort[1]
                 iy_ref=surface_y_sort[1]
 
+                # Previous number of unsorted surface IDs
                 past_size=0
+
+                # While unsorted surface IDs, sort surface IDs
                 while len(surface_x)>0:
+
+                    # Current number onsorted surface IDs
                     current_size = len(surface_x)
 
+                    # If no surface ID was sorted in previous loop...
                     if past_size == current_size:
+
+                        # Shortest length to nearest, neighboring surface bin
                         shortest_length = 100000.
+
+                        # Loop over all bins
                         for ix in range(0, self.NBins_x):
                             for iy in range(0, self.NBins_y):
+
+                                # If not the same bin...
                                 if (ix!=ix_ref) | (iy!=iy_ref):
+
+                                    # If bin is of the reference surface
                                     if surface_id[ix][iy]==1:
+
+                                        # Find unsorted surface bin location
                                         loc_id = np.where((surface_x == ix) & (surface_y == iy))[0]
                                         if len(loc_id)>0:
 
+                                            # Find separation distance from reference bin
                                             difx = self.utility_functs.sep_dist_x((ix_ref+0.5)*self.sizeBin_x, (ix+0.5)*self.sizeBin_x)
                                             dify = self.utility_functs.sep_dist_y((iy_ref+0.5)*self.sizeBin_y, (iy+0.5)*self.sizeBin_y)
 
                                             difr = (difx**2 + dify**2)**0.5
 
+                                            # If separation distance from reference bin shorter than all prior surface bins, save it
                                             if difr < shortest_length:
                                                 shortest_length = difr
                                                 shortest_idx = np.array([ix])
                                                 shortest_idy = np.array([iy])
 
+                                            # If separation distance from reference bin same as at least one prior surface bins, save both
                                             elif difr == shortest_length:
                                                 shortest_idx = np.append(shortest_idx, ix)
                                                 shortest_idy = np.append(shortest_idy, iy)
 
+                        # If shortest length is too far, break the sorting loop
                         if shortest_length > (self.hx_box+self.hy_box)/20:
                             break
 
+                        # If multiple surface bins of same distance from reference bin found, find which to prioritize
                         if len(shortest_idx) > 1:
                             num_neigh = np.zeros(len(shortest_idx))
 
+                            # Loop over nearest surface bins
                             for ind in range(0, len(shortest_idx)):
 
+                                # Nearest surface bin IDs
                                 ix_ind = shortest_idx[ind]
                                 iy_ind = shortest_idy[ind]
 
+                                # Nearest shell of neighboring x-bin IDs to loop over
                                 if (ix_ind + 1) == self.NBins_x:
                                     lookx = [ix_ind-1, ix_ind, 0]
                                 elif ix_ind==0:
@@ -871,63 +1027,92 @@ class interface:
                                 else:
                                     lookx = [ix_ind-1, ix_ind, ix_ind+1]
 
-                                #Identify neighboring bin indices in y-direction
+                                # Nearest shell of neighboring y-bin IDs to loop over
                                 if (iy_ind + 1) == self.NBins_y:
                                     looky = [iy_ind-1, iy_ind, 0]
                                 elif iy_ind==0:
                                     looky=[self.NBins_y-1, iy_ind, iy_ind+1]
                                 else:
                                     looky = [iy_ind-1, iy_ind, iy_ind+1]
+
+                                # Loop over neighboring bins
                                 for ix in lookx:
                                     for iy in looky:
+
+                                        # If neighboring bin is different than nearest surface bin...
                                         if (ix != ix_ind) | (iy != iy_ind):
                                             loc_id = np.where((surface_x == ix) & (surface_y == iy))[0]
                                             if len(loc_id)>0:
+
+                                                # If neighboring bin is of the reference surface, count it
                                                 if surface_id[ix][iy]==1:
                                                     num_neigh[ind]+=1
+
+                            # Find nearest surface bin with fewest number of neighboring surface bins
                             min_inds = np.min(num_neigh)
                             loc_min_inds = np.where(num_neigh == min_inds)[0]
 
+                            # Prioritize sorting nearest surface bin with fewest surface bin neighbors
+
+                            # If only one nearest surface bin with fewest surface bin neighbors...
                             if len(loc_min_inds)==1:
 
+                                # Set nearest surface bin IDs with fewest surface bin neighbors to new reference bin
                                 ix_ref = shortest_idx[loc_min_inds][0]
                                 iy_ref = shortest_idy[loc_min_inds][0]
 
+                                # Save nearest surface bin with fewest surface bin neighbors to sorted list
                                 surface_x_sort = np.append(surface_x_sort, ix_ref)
                                 surface_y_sort = np.append(surface_y_sort, iy_ref)
 
+                                # Remove nearest surface bin with fewest surface bin neighbors from unsorted list
                                 loc_id = np.where((surface_x == ix_ref) & (surface_y == iy_ref))[0]
 
                                 surface_x = np.delete(surface_x, loc_id)
                                 surface_y = np.delete(surface_y, loc_id)
+
+                            # If multiple nearest surface bin with fewest surface bin neighbors...
                             else:
+
+                                # Set first identified nearest surface bin IDs with fewest surface bin neighbors to new reference bin
                                 ix_ref = shortest_idx[np.min(loc_min_inds)]
                                 iy_ref = shortest_idy[np.min(loc_min_inds)]
+
+                                # Save nearest surface bin with fewest surface bin neighbors to sorted list
                                 surface_x_sort = np.append(surface_x_sort, ix_ref)
                                 surface_y_sort = np.append(surface_y_sort, iy_ref)
 
+                                # Remove nearest surface bin with fewest surface bin neighbors from unsorted list
                                 loc_id = np.where((surface_x == ix_ref) & (surface_y == iy_ref))[0]
 
                                 surface_x = np.delete(surface_x, loc_id)
                                 surface_y = np.delete(surface_y, loc_id)
+
+                        # If one surface bin of same distance from reference bin found, sort it
                         elif len(shortest_idx)==1:
 
+                            # Set nearest surface bin to new reference bin
                             ix_ref = shortest_idx[0]
                             iy_ref = shortest_idy[0]
 
+                            # Save nearest surface bin to sorted list
                             surface_x_sort = np.append(surface_x_sort, ix_ref)
                             surface_y_sort = np.append(surface_y_sort, iy_ref)
 
+                            # Remove nearest surface bin from unsorted list
                             loc_id = np.where((surface_x == ix_ref) & (surface_y == iy_ref))[0]
 
                             surface_x = np.delete(surface_x, loc_id)
                             surface_y = np.delete(surface_y, loc_id)
+
+                        # If no surface bins found, break the loop
                         else:
                             break
 
+                    # If reference bin is of the reference surface...
                     if surface_id[ix_ref][iy_ref]==1:
 
-                        #Identify neighboring bin indices in x-direction
+                        # Nearest shell of neighboring x-bin IDs to loop over
                         if (ix_ref + 1) == self.NBins_x:
                             lookx = [ix_ref-1, ix_ref, 0]
                         elif ix_ref==0:
@@ -935,7 +1120,7 @@ class interface:
                         else:
                             lookx = [ix_ref-1, ix_ref, ix_ref+1]
 
-                        #Identify neighboring bin indices in y-direction
+                        # Nearest shell of neighboring y-bin IDs to loop over
                         if (iy_ref + 1) == self.NBins_y:
                             looky = [iy_ref-1, iy_ref, 0]
                         elif iy_ref==0:
@@ -943,34 +1128,54 @@ class interface:
                         else:
                             looky = [iy_ref-1, iy_ref, iy_ref+1]
 
+                        # Set nearest neighboring surface bin distance to unrealistically large value
                         shortest_length = 100000.
+
+                        # Loop over neighboring bins
                         for ix in lookx:
                             for iy in looky:
+
+                                # If neighboring bin is not reference bin...
                                 if (ix!=ix_ref) | (iy!=iy_ref):
+
+                                    # ID of surface bin in unsorted surface bin array
                                     loc_id = np.where((surface_x == ix) & (surface_y == iy))[0]
+
+                                    # If neighboring bin a member of unsorted surface bin array...
                                     if len(loc_id)>0:
+
+                                        # If neighboring bin is a member of reference surface...
                                         if surface_id[ix][iy]==1:
+
+                                            # Find separation distance of neighboring bin from reference bin
                                             difx = self.utility_functs.sep_dist_x((ix+0.5)*self.sizeBin_x, (ix_ref+0.5)*self.sizeBin_x)
                                             dify = self.utility_functs.sep_dist_y((iy+0.5)*self.sizeBin_y, (iy_ref+0.5)*self.sizeBin_y)
 
                                             difr = (difx**2 + dify**2)**0.5
 
+                                            # If separation distance less than all previous surface bins, save it
                                             if difr < shortest_length:
                                                 shortest_length = difr
                                                 shortest_idx = np.array([ix])
                                                 shortest_idy = np.array([iy])
 
+                                            # If separation distance is equal to at least one previous surface bin, save both
                                             elif difr == shortest_length:
                                                 shortest_idx = np.append(shortest_idx, ix)
                                                 shortest_idy = np.append(shortest_idy, iy)
 
+                        # If more than one neighboring surface bin nearest to reference bin...
                         if len(shortest_idx) > 1:
+
+                            # Instantiate empty array to count number of surface bins neighboring each nearest surface bin
                             num_neigh = np.zeros(len(shortest_idx))
 
+                            # Loop over neighboring bin nearest to reference bin
                             for ind in range(0, len(shortest_idx)):
                                 ix_ind = shortest_idx[ind]
                                 iy_ind = shortest_idy[ind]
 
+                                # Nearest shell of neighboring x-bin IDs to loop over
                                 if (ix_ind + 1) == self.NBins_x:
                                     lookx = [ix_ind-1, ix_ind, 0]
                                 elif ix_ind==0:
@@ -978,7 +1183,7 @@ class interface:
                                 else:
                                     lookx = [ix_ind-1, ix_ind, ix_ind+1]
 
-                                #Identify neighboring bin indices in y-direction
+                                # Nearest shell of neighboring y-bin IDs to loop over
                                 if (iy_ind + 1) == self.NBins_y:
                                     looky = [iy_ind-1, iy_ind, 0]
                                 elif iy_ind==0:
@@ -986,8 +1191,11 @@ class interface:
                                 else:
                                     looky = [iy_ind-1, iy_ind, iy_ind+1]
 
+                                # Loop over neighboring bins
                                 for ix in lookx:
                                     for iy in looky:
+
+                                        # If
                                         if (ix != ix_ind) | (iy != iy_ind):
                                             loc_id = np.where((surface_x == ix) & (surface_y == iy))[0]
                                             if len(loc_id)>0:
@@ -1281,6 +1489,7 @@ class interface:
 
     def surface_area(self, surface_curve_pos_dict):
 
+        # X- and Y- positions of reference surface
         surface_curve_xpos = surface_curve_pos_dict['x']
         surface_curve_ypos = surface_curve_pos_dict['y']
 
@@ -1620,10 +1829,10 @@ class interface:
 
         int_id = int_dict['bin']
 
-        int_large_ids = int_comp_dict['ids']['int id']
+        int_large_ids = int_comp_dict['ids']
 
         for m in range(0, len(sep_surface_dict)):
-            key = 'surface id ' + str(int(int_comp_dict['ids']['int id'][m]))
+            key = 'surface id ' + str(int(int_comp_dict['ids'][m]))
 
             try:
                 interior_radius = surface_measurements[key]['interior']['mean radius']
@@ -1961,7 +2170,7 @@ class interface:
 
         new_align_avg_dif = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
 
-        bulk_large_ids = bulk_comp_dict['ids']['bulk id']
+        bulk_large_ids = bulk_comp_dict['ids']
 
         bulk_id = bulk_dict['bin']
 
@@ -2022,7 +2231,7 @@ class interface:
                             y_norm_unitv_trad = (dify_trad) / difr_trad
 
                             for m in range(0, len(sep_surface_dict)):
-                                key = 'surface id ' + str(int(int_comp_dict['ids']['int id'][m]))
+                                key = 'surface id ' + str(int(int_comp_dict['ids'][m]))
 
                                 try:
                                     interior_surface_com_pos_dict = self.surface_com_pov(surface_curve[key]['interior']['pos'])
@@ -2221,91 +2430,124 @@ class interface:
         return  method1_align_dict, method2_align_dict
     def gas_alignment(self, method1_align_dict, method2_align_dict, surface_measurements, surface_curve, sep_surface_dict, int_comp_dict):
 
-        new_align = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
-        new_align0 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
-        new_align1 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        # Instantiate empty arrays for calculating average alignment
 
-        new_align_x = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
-        new_align_x0 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
-        new_align_x1 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
-        new_align_y = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
-        new_align_y0 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
-        new_align_y1 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        # Total alignment with nearest surface normal for each particle type ('all', 'A', or 'B') per bin
+        Surface_align = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        Surface_align_A = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        Surface_align_B = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
 
-        new_align_trad = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
-        new_align_trad0 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
-        new_align_trad1 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        # Total x-dimension alignment with nearest surface normal in x-dimension for each particle type ('all', 'A', or 'B') per bin
+        Surface_align_x = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        Surface_align_x_A = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        Surface_align_x_B = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
 
-        new_align_trad_x = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
-        new_align_trad_x0 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
-        new_align_trad_x1 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
-        new_align_trad_y = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
-        new_align_trad_y0 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
-        new_align_trad_y1 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        # Total y-dimension alignment with nearest surface normal in y-dimension for each particle type ('all', 'A', or 'B') per bin
+        Surface_align_y = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        Surface_align_y_A = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        Surface_align_y_B = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
 
-        new_align_avg_trad = method1_align_dict['bin']['all']['mag']
-        new_align_avg_trad0 = method1_align_dict['bin']['A']['mag']
-        new_align_avg_trad1 = method1_align_dict['bin']['B']['mag']
+        # Total alignment with largest cluster's CoM for each particle type ('all', 'A', or 'B') per bin
+        CoM_align = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        CoM_align_A = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        CoM_align_B = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
 
-        new_align_avg_trad_x = method1_align_dict['bin']['all']['x']
-        new_align_avg_trad_x0 = method1_align_dict['bin']['A']['x']
-        new_align_avg_trad_x1 = method1_align_dict['bin']['B']['x']
+        # Total x-dimension alignment with largest cluster's CoM for each particle type ('all', 'A', or 'B') per bin
+        CoM_align_x = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        CoM_align_x_A = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        CoM_align_x_B = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
 
-        new_align_avg_trad_y = method1_align_dict['bin']['all']['y']
-        new_align_avg_trad_y0 = method1_align_dict['bin']['A']['y']
-        new_align_avg_trad_y1 = method1_align_dict['bin']['B']['y']
+        # Total y-dimension alignment with largest cluster's CoM for each particle type ('all', 'A', or 'B') per bin
+        CoM_align_y = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        CoM_align_y_A = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        CoM_align_y_B = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
 
-        new_align_avg = method2_align_dict['bin']['all']['mag']
-        new_align_avg0 = method2_align_dict['bin']['A']['mag']
-        new_align_avg1 = method2_align_dict['bin']['B']['mag']
+        # Average alignment with largest cluster's CoM for each particle type ('all', 'A', or 'B') per bin
+        CoM_align_avg = method1_align_dict['bin']['all']['mag']
+        CoM_align_avg_A = method1_align_dict['bin']['A']['mag']
+        CoM_align_avg_B = method1_align_dict['bin']['B']['mag']
 
-        new_align_avg_x = method2_align_dict['bin']['all']['x']
-        new_align_avg_x0 = method2_align_dict['bin']['A']['x']
-        new_align_avg_x1 = method2_align_dict['bin']['B']['x']
+        # Average x-dimension alignment with largest cluster's CoM for each particle type ('all', 'A', or 'B') per bin
+        CoM_align_avg_x = method1_align_dict['bin']['all']['x']
+        CoM_align_avg_x_A = method1_align_dict['bin']['A']['x']
+        CoM_align_avg_x_B = method1_align_dict['bin']['B']['x']
 
-        new_align_avg_y = method2_align_dict['bin']['all']['y']
-        new_align_avg_y0 = method2_align_dict['bin']['A']['y']
-        new_align_avg_y1 = method2_align_dict['bin']['B']['y']
+        # Average y-dimension alignment with largest cluster's CoM for each particle type ('all', 'A', or 'B') per bin
+        CoM_align_avg_y = method1_align_dict['bin']['all']['y']
+        CoM_align_avg_y_A = method1_align_dict['bin']['A']['y']
+        CoM_align_avg_y_B = method1_align_dict['bin']['B']['y']
 
-        new_align_num = method1_align_dict['bin']['all']['num']
-        new_align_num0 = method1_align_dict['bin']['A']['num']
-        new_align_num1 = method1_align_dict['bin']['B']['num']
+        # Average alignment with nearest surface normal for each particle type ('all', 'A', or 'B') per bin
+        Surface_align_avg = method2_align_dict['bin']['all']['mag']
+        Surface_align_avg_A = method2_align_dict['bin']['A']['mag']
+        Surface_align_avg_B = method2_align_dict['bin']['B']['mag']
 
+        # Average x-dimension alignment with nearest surface normal in x-dimension for each particle type ('all', 'A', or 'B') per bin
+        Surface_align_avg_x = method2_align_dict['bin']['all']['x']
+        Surface_align_avg_x_A = method2_align_dict['bin']['A']['x']
+        Surface_align_avg_x_B = method2_align_dict['bin']['B']['x']
+
+        # Average y-dimension alignment with nearest surface normal in y-dimension for each particle type ('all', 'A', or 'B') per bin
+        Surface_align_avg_y = method2_align_dict['bin']['all']['y']
+        Surface_align_avg_y_A = method2_align_dict['bin']['A']['y']
+        Surface_align_avg_y_B = method2_align_dict['bin']['B']['y']
+
+        # Number of particles in each bin of respective particle type ('all', 'A', or 'B')
+        Align_num = method1_align_dict['bin']['all']['num']
+        Align_num_A = method1_align_dict['bin']['A']['num']
+        Align_num_B = method1_align_dict['bin']['B']['num']
+
+        # Alignment with nearest surface normal per particle
         part_align = method2_align_dict['part']['align']
+
+        # Separation distance with nearest surface normal per particle
         part_difr = method2_align_dict['part']['difr']
 
         #Calculate alignment of gas bins
-        #Loop over bins in system
+
+        #Loop over all bins
         for ix in range(0, self.NBins_x):
             for iy in range(0, self.NBins_y):
-                if new_align_avg[ix][iy]==0:
-                    #Calculate position of exterior edge bin
+
+                # If average alignment has not been calculated previously (gas)
+                if Surface_align_avg[ix][iy]==0:
+
+                    #Calculate reference bin position
                     xpos_ref = (ix+0.5)*self.sizeBin_x
                     ypos_ref = (iy+0.5)*self.sizeBin_y
 
 
                     difr_short= 100000
-                    #Loop over bins of system
+
+                    # If at least no surfaces have been defined...
                     if len(sep_surface_dict) >= 0:
 
-
+                        # Separation distance of reference bin from middle of simulation box
                         difx_trad = self.utility_functs.sep_dist_x(xpos_ref, self.hx_box)
-
                         dify_trad = self.utility_functs.sep_dist_y(ypos_ref, self.hy_box)
+                        difr_trad= ( (difx_trad )**2 + (dify_trad)**2)**0.5
 
                         #Very large initial distance to calculate closest interior edge bin to this exterior edge bin
-                        difr_trad= ( (difx_trad )**2 + (dify_trad)**2)**0.5
-                        difr_bub= ( (difx_trad )**2 + (dify_trad)**2)**0.5#10000000.
+                        difr_bub= ( (difx_trad )**2 + (dify_trad)**2)**0.5
 
-                        x_norm_unitv = difx_trad / difr_trad
-                        y_norm_unitv = dify_trad / difr_trad
+                        # Separation from nearest surface normal unit vectors
+                        Surface_x_norm_unitv = difx_trad / difr_trad
+                        Surface_y_norm_unitv = dify_trad / difr_trad
 
-                        x_norm_unitv_trad = (difx_trad) / difr_trad
-                        y_norm_unitv_trad = (dify_trad) / difr_trad
+                        # Separation from CoM unit vectors
+                        CoM_x_norm_unitv = (difx_trad) / difr_trad
+                        CoM_y_norm_unitv = (dify_trad) / difr_trad
+
+                    # If at least one surface has been defined...
                     if len(sep_surface_dict) >= 1:
-                        for m in range(0, len(sep_surface_dict)):
-                            key = 'surface id ' + str(int(int_comp_dict['ids']['int id'][m]))
 
+                        # Loop over all surfaces
+                        for m in range(0, len(sep_surface_dict)):
+
+                            # Define 'm' surface id's dictionary key
+                            key = 'surface id ' + str(int(int_comp_dict['ids'][m]))
+
+                            # Get 'm' surface id's interior surface positional information
                             try:
                                 interior_surface_com_pos_dict = self.surface_com_pov(surface_curve[key]['interior']['pos'])
                                 interior_surface_com_xpos = interior_surface_com_pos_dict['pos']['x']
@@ -2320,6 +2562,7 @@ class interface:
                                 interior_int_com_y = None
                                 interior_exist = 0
 
+                            # Get 'm' surface id's exterior surface positional information
                             try:
                                 exterior_surface_com_pos_dict = self.surface_com_pov(surface_curve[key]['exterior']['pos'])
                                 exterior_surface_com_xpos = exterior_surface_com_pos_dict['pos']['x']
@@ -2333,48 +2576,50 @@ class interface:
                                 exterior_surface_com_ypos = None
                                 exterior_int_com_x = None
                                 exterior_int_com_y = None
+
+                            # If an exterior surface exists for given surface id (m), find separation distance from nearest surface
                             if (exterior_exist == 1):
+
+                                # Loop over exterior surface id's positions
                                 for id in range(0, len(exterior_surface_com_xpos)):
                                     #If bin is an interior edge bin for mth interface structure, continue...
 
-                                    #Calculate position of interior edge bin
+                                    # Calculate separation distance of reference bin from exterior surface point
                                     difx_width = self.utility_functs.sep_dist_x(xpos_ref, exterior_surface_com_xpos[id])
-
                                     dify_width = self.utility_functs.sep_dist_y(ypos_ref, exterior_surface_com_ypos[id])
-
-                                    #Calculate distance from interior edge bin to exterior edge bin
                                     difr = ( (difx_width)**2 + (dify_width)**2)**0.5
 
-                                    #If this distance is the shortest calculated thus far, replace the value with it
+                                    #If this distance is the shortest separation distance thus far, save it as nearest surface point
                                     if difr<difr_short:
-                                        difr_short=difr
-                                        x_norm_unitv = difx_width / difr
-                                        y_norm_unitv = dify_width / difr
-                                        interior_bin_short = 0
-                                        exterior_bin_short = 1
+                                        difr_short=difr                         # Total separation distance from nearest surface point
+                                        Surface_x_norm_unitv = difx_width / difr        # X-separation unit vector from nearest surface point
+                                        Surface_y_norm_unitv = dify_width / difr        # Y-separation unit vector from nearest surface point
+                                        interior_bin_short = 0                  # If true (1), nearest surface is interior surface point
+                                        exterior_bin_short = 1                  # If true (1), nearest surface is exterior surface point
+
+                            # If an interior surface exists for given surface id (m), find separation distance from nearest surface
                             if (interior_exist == 1):
+
+                                # Loop over interior surface id's positions
                                 for id in range(0, len(interior_surface_com_xpos)):
-                                    #If bin is an interior edge bin for mth interface structure, continue...
 
-                                    #Calculate position of interior edge bin
+                                    # Calculate separation distance of reference bin from interior surface point
                                     difx_width = self.utility_functs.sep_dist_x(xpos_ref, exterior_surface_com_xpos[id])
-
                                     dify_width = self.utility_functs.sep_dist_y(ypos_ref, exterior_surface_com_ypos[id])
-
-                                    #Calculate distance from interior edge bin to exterior edge bin
                                     difr = ( (difx_width)**2 + (dify_width)**2)**0.5
 
-                                    #If this distance is the shortest calculated thus far, replace the value with it
+                                    #If this distance is the shortest separation distance thus far, save it as nearest surface point
                                     if difr<difr_short:
-                                        difr_short=difr
-                                        x_norm_unitv = difx_width / difr
-                                        y_norm_unitv = dify_width / difr
-                                        interior_bin_short = 1
-                                        exterior_bin_short = 0
+                                        difr_short=difr                         # Total separation distance from nearest surface point
+                                        Surface_x_norm_unitv = difx_width / difr        # X-separation unit vector from nearest surface point
+                                        Surface_y_norm_unitv = dify_width / difr        # Y-separation unit vector from nearest surface point
+                                        interior_bin_short = 1                  # If true (1), nearest surface is interior surface point
+                                        exterior_bin_short = 0                  # If true (1), nearest surface is exterior surface point
 
-                    #If particles in bin, continue...
+                    #If particles in reference bin, continue...
                     if len(self.binParts[ix][iy])>0:
-                        #Loop over particles in bin
+
+                        #Loop over particles in reference bin
                         for h in range(0, len(self.binParts[ix][iy])):
 
                             #Calculate x and y orientation of reference particle's active force
@@ -2383,90 +2628,96 @@ class interface:
 
                             #If nearest surface is exterior surface, calculate alignment with that surface
                             if exterior_bin_short == 1:
-                                x_dot_p = (-x_norm_unitv * px)
-                                y_dot_p = (-y_norm_unitv * py)
+                                Surface_x_dot_p = (-Surface_x_norm_unitv * px)
+                                Surface_y_dot_p = (-Surface_y_norm_unitv * py)
 
                             #If nearest surface is interior surface, calculate alignment with that surface
                             elif interior_bin_short == 1:
-                                x_dot_p = (x_norm_unitv * px)
-                                y_dot_p = (y_norm_unitv * px)
+                                Surface_x_dot_p = (Surface_x_norm_unitv * px)
+                                Surface_y_dot_p = (Surface_y_norm_unitv * px)
 
-                            r_dot_p = x_dot_p + y_dot_p
+                            # Total alignment with nearest surface
+                            Surface_r_dot_p = Surface_x_dot_p + Surface_y_dot_p
 
-                            #Calculate alignment towards CoM
-                            x_dot_p_trad = (-x_norm_unitv_trad * px)
-                            y_dot_p_trad = (-y_norm_unitv_trad * py)
-                            r_dot_p_trad = x_dot_p_trad + y_dot_p_trad
+                            #Calculate alignment towards largest cluster's CoM (or middle of simulation box if no cluster present)
+                            CoM_x_dot_p = (-CoM_x_norm_unitv * px)
+                            CoM_y_dot_p = (-CoM_y_norm_unitv * py)
+                            CoM_r_dot_p= CoM_x_dot_p + CoM_y_dot_p
 
-                            #Calculate total alignment and number of particles per bin for all particles
+                            # Save alignment of particle with nearest surface
+                            part_align[self.binParts[ix][iy][h]] = Surface_r_dot_p
 
-                            part_align[self.binParts[ix][iy][h]] = r_dot_p
+                            # Save alignment of particle with nearest surface
                             part_difr[self.binParts[ix][iy][h]] = difr_short
-                            new_align[ix][iy] += r_dot_p
-                            new_align_x[ix][iy] += x_dot_p
-                            new_align_y[ix][iy] += y_dot_p
-                            new_align_num[ix][iy]+= 1
-                            new_align_trad[ix][iy] += r_dot_p_trad
-                            new_align_trad_x[ix][iy] += x_dot_p_trad
-                            new_align_trad_y[ix][iy] += y_dot_p_trad
+
+                            # Total alignment of all particles per dimension with nearest surface in reference bin
+                            Surface_align[ix][iy] += Surface_r_dot_p
+                            Surface_align_x[ix][iy] += Surface_x_dot_p
+                            Surface_align_y[ix][iy] += Surface_y_dot_p
+                            Align_num[ix][iy]+= 1
+
+                            # Total alignment of all particles per dimension with largest cluster's CoM in reference bin
+                            CoM_align[ix][iy] += CoM_r_dot_p
+                            CoM_align_x[ix][iy] += CoM_x_dot_p
+                            CoM_align_y[ix][iy] += CoM_y_dot_p
 
                             #Calculate total alignment and number of particles per bin for type A particles
                             if self.typ[self.binParts[ix][iy][h]]==0:
-                                new_align0[ix][iy] += r_dot_p
-                                new_align_x0[ix][iy] += x_dot_p
-                                new_align_y0[ix][iy] += y_dot_p
-                                new_align_num0[ix][iy]+= 1
-                                new_align_trad0[ix][iy] += r_dot_p_trad
-                                new_align_trad_x0[ix][iy] += x_dot_p_trad
-                                new_align_trad_y0[ix][iy] += y_dot_p_trad
+                                Surface_align_A[ix][iy] += Surface_r_dot_p
+                                Surface_align_x_A[ix][iy] += Surface_x_dot_p
+                                Surface_align_y_A[ix][iy] += Surface_y_dot_p
+                                Align_num_A[ix][iy]+= 1
+                                CoM_align_A[ix][iy] += CoM_r_dot_p
+                                CoM_align_x_A[ix][iy] += CoM_x_dot_p
+                                CoM_align_y_A[ix][iy] += CoM_y_dot_p
 
                             #Calculate total alignment and number of particles per bin for type B particles
                             elif self.typ[self.binParts[ix][iy][h]]==1:
-                                new_align1[ix][iy] += r_dot_p
-                                new_align_x1[ix][iy] += x_dot_p
-                                new_align_y1[ix][iy] += y_dot_p
-                                new_align_num1[ix][iy]+= 1
-                                new_align_trad1[ix][iy] += r_dot_p_trad
-                                new_align_trad_x1[ix][iy] += x_dot_p_trad
-                                new_align_trad_y1[ix][iy] += y_dot_p_trad
+                                Surface_align_B[ix][iy] += Surface_r_dot_p
+                                Surface_align_x_B[ix][iy] += Surface_x_dot_p
+                                Surface_align_y_B[ix][iy] += Surface_y_dot_p
+                                Align_num_B[ix][iy]+= 1
+                                CoM_align_B[ix][iy] += CoM_r_dot_p
+                                CoM_align_x_B[ix][iy] += CoM_x_dot_p
+                                CoM_align_y_B[ix][iy] += CoM_y_dot_p
 
 
         #Calculate average alignment per bin
         #Loop over bins in system
         for ix in range(0, self.NBins_x):
             for iy in range(0, self.NBins_y):
-                if new_align_avg[ix][iy]==0:
+                if Surface_align_avg[ix][iy]==0:
 
                     #Calculate alignment with nearest interfacial surface
                     #If denominator is non-zero, continue...
-                    if new_align_num[ix][iy]>0:
-                        new_align_avg[ix][iy] = new_align[ix][iy] / new_align_num[ix][iy]
-                        new_align_avg_x[ix][iy] = new_align_x[ix][iy] / new_align_num[ix][iy]
-                        new_align_avg_y[ix][iy] = new_align_y[ix][iy] / new_align_num[ix][iy]
+                    if Align_num[ix][iy]>0:
+                        Surface_align_avg[ix][iy] = Surface_align[ix][iy] / Align_num[ix][iy]
+                        Surface_align_avg_x[ix][iy] = Surface_align_x[ix][iy] / Align_num[ix][iy]
+                        Surface_align_avg_y[ix][iy] = Surface_align_y[ix][iy] / Align_num[ix][iy]
 
-                        new_align_avg_trad[ix][iy] = new_align_trad[ix][iy] / new_align_num[ix][iy]
-                        new_align_avg_trad_x[ix][iy] = new_align_trad_x[ix][iy] / new_align_num[ix][iy]
-                        new_align_avg_trad_y[ix][iy] = new_align_trad_y[ix][iy] / new_align_num[ix][iy]
-                        if new_align_num0[ix][iy]>0:
-                            new_align_avg0[ix][iy] = new_align0[ix][iy] / new_align_num0[ix][iy]
-                            new_align_avg_x0[ix][iy] = new_align_x0[ix][iy] / new_align_num0[ix][iy]
-                            new_align_avg_y0[ix][iy] = new_align_y0[ix][iy] / new_align_num0[ix][iy]
+                        CoM_align_avg[ix][iy] = CoM_align[ix][iy] / Align_num[ix][iy]
+                        CoM_align_avg_x[ix][iy] = CoM_align_x[ix][iy] / Align_num[ix][iy]
+                        CoM_align_avg_y[ix][iy] = CoM_align_y[ix][iy] / Align_num[ix][iy]
+                        if Align_num_A[ix][iy]>0:
+                            Surface_align_avg_A[ix][iy] = Surface_align_A[ix][iy] / Align_num_A[ix][iy]
+                            Surface_align_avg_x_A[ix][iy] = Surface_align_x_A[ix][iy] / Align_num_A[ix][iy]
+                            Surface_align_avg_y_A[ix][iy] = Surface_align_y_A[ix][iy] / Align_num_A[ix][iy]
 
-                            new_align_avg_trad0[ix][iy] = new_align_trad0[ix][iy] / new_align_num0[ix][iy]
-                            new_align_avg_trad_x0[ix][iy] = new_align_trad_x0[ix][iy] / new_align_num0[ix][iy]
-                            new_align_avg_trad_y0[ix][iy] = new_align_trad_y0[ix][iy] / new_align_num0[ix][iy]
-                        if new_align_num1[ix][iy]>0:
-                            new_align_avg1[ix][iy] = new_align1[ix][iy] / new_align_num1[ix][iy]
-                            new_align_avg_x1[ix][iy] = new_align_x1[ix][iy] / new_align_num1[ix][iy]
-                            new_align_avg_y1[ix][iy] = new_align_y1[ix][iy] / new_align_num1[ix][iy]
+                            CoM_align_avg_A[ix][iy] = CoM_align_A[ix][iy] / Align_num_A[ix][iy]
+                            CoM_align_avg_x_A[ix][iy] = CoM_align_x_A[ix][iy] / Align_num_A[ix][iy]
+                            CoM_align_avg_y_A[ix][iy] = CoM_align_y_A[ix][iy] / Align_num_A[ix][iy]
+                        if Align_num_B[ix][iy]>0:
+                            Surface_align_avg_B[ix][iy] = Surface_align_B[ix][iy] / Align_num_B[ix][iy]
+                            Surface_align_avg_x_B[ix][iy] = Surface_align_x_B[ix][iy] / Align_num_B[ix][iy]
+                            Surface_align_avg_y_B[ix][iy] = Surface_align_y_B[ix][iy] / Align_num_B[ix][iy]
 
-                            new_align_avg_trad1[ix][iy] = new_align_trad1[ix][iy] / new_align_num1[ix][iy]
-                            new_align_avg_trad_x1[ix][iy] = new_align_trad_x1[ix][iy] / new_align_num1[ix][iy]
-                            new_align_avg_trad_y1[ix][iy] = new_align_trad_y1[ix][iy] / new_align_num1[ix][iy]
+                            CoM_align_avg_B[ix][iy] = CoM_align_B[ix][iy] / Align_num_B[ix][iy]
+                            CoM_align_avg_x_B[ix][iy] = CoM_align_x_B[ix][iy] / Align_num_B[ix][iy]
+                            CoM_align_avg_y_B[ix][iy] = CoM_align_y_B[ix][iy] / Align_num_B[ix][iy]
 
-        method1_align_dict = {'bin': {'all': {'x': new_align_avg_trad_x, 'y': new_align_avg_trad_y, 'mag': new_align_avg_trad, 'num': new_align_num}, 'A': {'x': new_align_avg_trad_x0, 'y': new_align_avg_trad_y0, 'mag': new_align_avg_trad0, 'num': new_align_num0}, 'B': {'x': new_align_avg_trad_x1, 'y': new_align_avg_trad_y1, 'mag': new_align_avg_trad1, 'num': new_align_num1}}, 'part': part_align}
-        method2_align_dict = {'bin': {'all': {'x': new_align_avg_x, 'y': new_align_avg_y, 'mag': new_align_avg, 'num': new_align_num}, 'A': {'x': new_align_avg_x0, 'y': new_align_avg_y0, 'mag': new_align_avg0, 'num': new_align_num0}, 'B': {'x': new_align_avg_x1, 'y': new_align_avg_y1, 'mag': new_align_avg1, 'num': new_align_num1}}, 'part': {'align': part_align, 'difr': part_difr}}
-        return  method1_align_dict, method2_align_dict
+        CoM_align_dict = {'bin': {'all': {'x': CoM_align_avg_x, 'y': CoM_align_avg_y, 'mag': CoM_align_avg, 'num': Align_num}, 'A': {'x': CoM_align_avg_x_A, 'y': CoM_align_avg_y_A, 'mag': CoM_align_avg_A, 'num': Align_num_A}, 'B': {'x': CoM_align_avg_x_B, 'y': CoM_align_avg_y_B, 'mag': CoM_align_avg_B, 'num': Align_num_B}}, 'part': part_align}
+        Surface_align_dict = {'bin': {'all': {'x': Surface_align_avg_x, 'y': Surface_align_avg_y, 'mag': Surface_align_avg, 'num': Align_num}, 'A': {'x': Surface_align_avg_x_A, 'y': Surface_align_avg_y_A, 'mag': Surface_align_avg_A, 'num': Align_num_A}, 'B': {'x': Surface_align_avg_x_B, 'y': Surface_align_avg_y_B, 'mag': Surface_align_avg_B, 'num': Align_num_B}}, 'part': {'align': part_align, 'difr': part_difr}}
+        return  CoM_align_dict, Surface_align_dict
     """
     def fourier_analysis(self, radius_dict, n_len = 21):
 

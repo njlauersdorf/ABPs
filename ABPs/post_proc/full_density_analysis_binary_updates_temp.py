@@ -232,7 +232,7 @@ import time
 with hoomd.open(name=inFile, mode='rb') as t:
 
     dumps = int(t.__len__())
-    start = int(0/time_step)#205                                             # first frame to process
+    start = int(400/time_step)#205                                             # first frame to process
                                 # get number of timesteps dumped
     end = int(dumps/time_step)-1                                             # final frame to process
     snap = t[0]                                             # Take first snap for box
@@ -379,16 +379,15 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
             phase_dict = phase_ident_functs.update_phasePart(phase_dict)
 
-
             phase_dict, bulk_dict, int_dict = phase_ident_functs.reduce_gas_noise(phase_dict, bulk_dict, int_dict)
 
             phase_dict, bulk_dict, int_dict, int_comp_dict = phase_ident_functs.int_comp(part_dict, phase_dict, bulk_dict, int_dict)
 
             bulk_comp_dict = phase_ident_functs.bulk_comp(part_dict, phase_dict, bulk_dict)
 
-            bulk_comp_dict = phase_ident_functs.bulk_sort2(bulk_comp_dict)
+            bulk_comp_dict = phase_ident_functs.phase_sort(bulk_comp_dict)
 
-            int_comp_dict = phase_ident_functs.int_sort2(int_comp_dict)
+            int_comp_dict = phase_ident_functs.phase_sort(int_comp_dict)
 
             interface_functs = interface.interface(area_frac_dict, align_dict, part_dict, press_dict, lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, parFrac, eps, typ, ang)
 
@@ -654,17 +653,17 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 print(m)
                 averaged_data_arr = {}
 
-                key = 'surface id ' + str(int(int_comp_dict['ids']['int id'][m]))
+                key = 'surface id ' + str(int(int_comp_dict['ids'][m]))
                 print(key)
                 all_surface_curves[key] = {}
                 all_surface_measurements[key] = {}
 
 
-                if (int_comp_dict['ids']['int id'][m]!=999):
+                if (int_comp_dict['ids'][m]!=999):
                     #print(np.max(int_comp_dict['comp']['all']))
                     #print(np.where(int_comp_dict['comp']['all']==np.max(int_comp_dict['comp']['all']))[0])
-                    averaged_data_arr['int_id'] = int(int_comp_dict['ids']['int id'][np.where(int_comp_dict['comp']['all']==np.max(int_comp_dict['comp']['all']))[0][0]])
-                    averaged_data_arr['bub_id'] = int(int_comp_dict['ids']['int id'][m])
+                    averaged_data_arr['int_id'] = int(int_comp_dict['ids'][np.where(int_comp_dict['comp']['all']==np.max(int_comp_dict['comp']['all']))[0][0]])
+                    averaged_data_arr['bub_id'] = int(int_comp_dict['ids'][m])
                     averaged_data_arr['Na'] = int(int_comp_dict['comp']['A'][m])
                     averaged_data_arr['Nb'] = int(int_comp_dict['comp']['B'][m])
                     averaged_data_arr['Nbin'] = int(bin_count_dict['ids']['int'][m])
@@ -824,15 +823,13 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
             elif measurement_method == 'lattice_spacing':
 
-                lattice_structure_functs = measurement.measurement(l_box, NBins, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
+                lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
 
-                lat_stat_dict, lat_plot_dict = lattice_structure_functs.lattice_spacing(bulk_dict)
+                lat_stat_dict, lat_plot_dict = lattice_structure_functs.lattice_spacing()
 
                 data_output_functs.write_to_txt(lat_stat_dict, dataPath + 'lattice_spacing_' + outfile + '.txt')
 
                 if plot == 'y':
-
-                    plotting_functs = plotting.plotting(orient_dict, pos_dict, l_box, NBins, sizeBin, peA, peB, parFrac, eps, typ, tst)
 
                     plotting_functs.lat_histogram(lat_plot_dict)
 
@@ -884,15 +881,20 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                 neigh_stat_dict, ori_stat_dict, neigh_plot_dict = lattice_structure_functs.nearest_neighbors()
 
+
                 data_output_functs.write_to_txt(neigh_stat_dict, dataPath + 'nearest_neighbors_' + outfile + '.txt')
                 data_output_functs.write_to_txt(ori_stat_dict, dataPath + 'nearest_ori_' + outfile + '.txt')
                 if plot == 'y':
                     plotting_functs = plotting.plotting(orient_dict, pos_dict, lx_box, ly_box, NBins_x, NBins_y, sizeBin_x, sizeBin_y, peA, peB, parFrac, eps, typ, tst, partNum)
-                    plotting_functs.local_orientational_order_map(neigh_plot_dict, all_surface_curves, int_comp_dict)
 
-                    plotting_functs.plot_neighbors(neigh_plot_dict, all_surface_curves, int_comp_dict, type='all-all')
-                    plotting_functs.plot_neighbors(neigh_plot_dict, all_surface_curves, int_comp_dict, type='all-A')
-                    plotting_functs.plot_neighbors(neigh_plot_dict, all_surface_curves, int_comp_dict, type='all-B')
+                    plotting_functs.plot_neighbors(neigh_plot_dict, all_surface_curves, int_comp_dict, pair='all-all')
+                    plotting_functs.plot_particle_orientations(neigh_plot_dict, all_surface_curves, int_comp_dict, pair='all-all')
+                    #plotting_functs.local_orientational_order_map(neigh_plot_dict, all_surface_curves, int_comp_dict, type='all-all')
+                    stop
+                    plotting_functs.plot_neighbors(neigh_plot_dict, all_surface_curves, int_comp_dict, pair='all-all')
+                    stop
+                    plotting_functs.plot_neighbors(neigh_plot_dict, all_surface_curves, int_comp_dict, pair='all-A')
+                    plotting_functs.plot_neighbors(neigh_plot_dict, all_surface_curves, int_comp_dict, pair='all-B')
 
                     plotting_functs.plot_A_neighbors_of_all_parts(neigh_plot_dict, all_surface_curves, int_comp_dict)
                     plotting_functs.plot_B_neighbors_of_all_parts(neigh_plot_dict, all_surface_curves, int_comp_dict)
@@ -964,7 +966,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
             elif measurement_method == 'hexatic_order':
 
-                lattice_structure_functs = measurement.measurement(l_box, NBins, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
+                lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
 
                 hexatic_order_dict= lattice_structure_functs.hexatic_order()
 
@@ -972,15 +974,14 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 #data_output_functs.write_to_txt(hexatic_order_dict, dataPath + 'hexatic_order_' + outfile + '.txt')
 
                 if plot == 'y':
-                    plotting_functs = plotting.plotting(orient_dict, pos_dict, l_box, NBins, sizeBin, peA, peB, parFrac, eps, typ, tst)
 
                     plotting_functs.plot_hexatic_order(pos, hexatic_order_dict['order'], all_surface_curves, int_comp_dict)
 
                     plotting_functs.plot_domain_angle(pos, hexatic_order_dict['theta'], all_surface_curves, int_comp_dict)
-
+                    stop
             elif measurement_method == 'translational_order':
 
-                lattice_structure_functs = measurement.measurement(l_box, NBins, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
+                lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
 
                 trans_order_param= lattice_structure_functs.translational_order()
 
@@ -988,7 +989,6 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 #data_output_functs.write_to_txt(hexatic_order_dict, dataPath + 'hexatic_order_' + outfile + '.txt')
 
                 if plot == 'y':
-                    plotting_functs = plotting.plotting(orient_dict, pos_dict, l_box, NBins, sizeBin, peA, peB, parFrac, eps, typ, tst)
 
                     plotting_functs.plot_trans_order(pos, trans_order_param, all_surface_curves, int_comp_dict)
 

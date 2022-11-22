@@ -32,6 +32,7 @@ class binning:
         # Total x-length of box
         self.lx_box = lx_box
         self.hx_box = self.lx_box / 2
+        
         # Total y-length of box
         self.ly_box = ly_box
         self.hy_box = self.ly_box / 2

@@ -111,17 +111,17 @@ class utility:
 
         difr = (pos1 - pos2)
 
-        difx_out = np.where(difr[:,0]>self.h_box)[0]
-        difr[difx_out,0] = difr[difx_out,0]-self.l_box
+        difx_out = np.where(difr[:,0]>self.hx_box)[0]
+        difr[difx_out,0] = difr[difx_out,0]-self.lx_box
 
-        difx_out = np.where(difr[:,0]<-self.h_box)[0]
-        difr[difx_out,0] = difr[difx_out,0]+self.l_box
+        difx_out = np.where(difr[:,0]<-self.hx_box)[0]
+        difr[difx_out,0] = difr[difx_out,0]+self.lx_box
 
-        dify_out = np.where(difr[:,1]>self.h_box)[0]
-        difr[dify_out,1] = difr[dify_out,1]-self.l_box
+        dify_out = np.where(difr[:,1]>self.hy_box)[0]
+        difr[dify_out,1] = difr[dify_out,1]-self.ly_box
 
-        dify_out = np.where(difr[:,1]<-self.h_box)[0]
-        difr[dify_out,1] = difr[dify_out,1]+self.l_box
+        dify_out = np.where(difr[:,1]<-self.hy_box)[0]
+        difr[dify_out,1] = difr[dify_out,1]+self.ly_box
 
         difr_mag = (difr[:,0]**2 + difr[:,1]**2)**0.5
 

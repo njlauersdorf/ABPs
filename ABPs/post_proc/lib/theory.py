@@ -196,6 +196,20 @@ class theory:
         phiCP = np.pi / (2. * np.sqrt(3.))
         return phiCP / (latIn**2)
 
+    # Calculate lattice spacing from dense phase area fraction
+    def phiToLat(self, phiIn):
+        '''
+        Purpose: Compute analytical lattice spacing given the area fraction of
+        the dense phase
+
+        Inputs:
+            phiIn: bulk area fraction
+
+        Output: lattice spacing
+        '''
+        phiCP = np.pi / (2. * np.sqrt(3.))
+        return np.sqrt(phiCP / phiIn)
+
 
     #Calculate gas phase area fraction
     def compPhiG(self, pe, a, kap=4.5):

@@ -34,6 +34,7 @@ import numpy as np
 
 from scipy.optimize import curve_fit
 
+# Append '~/klotsa/ABPs/post_proc/lib' to path to get other module's functions
 sys.path.append(os.path.join(os.path.dirname(__file__), 'lib'))
 import theory
 import utility
@@ -41,20 +42,30 @@ import plotting_utility
 import phase_identification
 import binning
 
+# Class of data output functions
 class data_output:
 
     def __init__(self, lx_box, ly_box, sizeBin_x, sizeBin_y, tst, clust_large, dt_step):
 
+        # Total x-length of box
         self.lx_box = lx_box
+
+        # Total y-length of box
         self.ly_box = ly_box
 
+        # X-length of bin
         self.sizeBin_x = sizeBin_x
+
+        # Y-length of bin
         self.sizeBin_y = sizeBin_y
 
+        # Current time step in Brownian time units
         self.tst = tst
 
+        # Dumped/saved time step size in Brownian time units
         self.dt_step = dt_step
 
+        # Largest cluster size
         self.clust_size = clust_large
 
     def write_to_csv(self, input_dict, outPath):

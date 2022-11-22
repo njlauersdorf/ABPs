@@ -37,6 +37,7 @@ import matplotlib.patches as patches
 import matplotlib.ticker as tick
 import matplotlib.ticker as ticker
 from matplotlib.lines import Line2D
+import matplotlib.collections
 
 import statistics
 from statistics import mode
@@ -140,11 +141,11 @@ class plotting:
         ax = fig.add_subplot(111)
 
         if len(bulk_part_ids)>0:
-            plt.scatter(pos[bulk_part_ids,0]+self.h_box, pos[bulk_part_ids,1]+self.h_box, s=0.75, marker='.', c=green)
+            plt.scatter(pos[bulk_part_ids,0]+self.hx_box, pos[bulk_part_ids,1]+self.hy_box, s=0.75, marker='.', c=green)
         if len(gas_part_ids)>0:
-            plt.scatter(pos[gas_part_ids,0]+self.h_box, pos[gas_part_ids,1]+self.h_box, s=0.75, marker='.', c=red)
+            plt.scatter(pos[gas_part_ids,0]+self.hx_box, pos[gas_part_ids,1]+self.hy_box, s=0.75, marker='.', c=red)
         if len(int_part_ids)>0:
-            plt.scatter(pos[int_part_ids,0]+self.h_box, pos[int_part_ids,1]+self.h_box, s=0.75, marker='.', c=yellow)
+            plt.scatter(pos[int_part_ids,0]+self.hx_box, pos[int_part_ids,1]+self.hy_box, s=0.75, marker='.', c=yellow)
 
         plt.quiver(self.pos_x, self.pos_y, self.orient_x, self.orient_y)
 
@@ -201,8 +202,8 @@ class plotting:
         mkSz = [0.1, 0.1, 0.15, 0.1, 0.1]
         msz=40
 
-        plt.xlim(0, self.l_box)
-        plt.ylim(0, self.l_box)
+        plt.xlim(0, self.lx_box)
+        plt.ylim(0, self.ly_box)
         red_patch = mpatches.Patch(color=red, label='Dilute')
         green_patch = mpatches.Patch(color=green, label='Bulk')
         yellow_patch = mpatches.Patch(color=yellow, label='Interface')
@@ -699,17 +700,66 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
 
         bulk_lat_mean = np.mean(lat_plot_dict['bulk']['all']['vals'])
+        dense_lats = lat_plot_dict['dense']['all']
+        
+        # If box is rectangular with long dimension of x-axis
+        if self.lx_box > self.ly_box:
 
-        fig = plt.figure(figsize=(7,6))
+            # Estimated area of dense phase
+            area_dense = (0.8 * self.partNum * (np.pi/4) / self.phiCP)
+
+            # Mid point of dense phase across longest box dimension (x)
+            dense_x_mid = np.mean(dense_lats['x']+self.hx_box)
+
+            # estimated shortest dimension length of dense phase (y)
+            dense_x_width = (area_dense / self.ly_box)
+
+            # Set maximum dimension length (x) of simulation box to be 12 inches (plus 1 inch color bar)
+            scaling = 13.0
+
+            # X and Y-dimension lengths (in inches)
+            x_dim = int(scaling + 1.0)
+            y_dim = int(scaling/ (dense_x_width / self.ly_box))
+
+        # If box is rectangular with long dimension of y-axis
+        elif self.lx_box < self.ly_box:
+
+            # Estimated area of dense phase
+            area_dense = (0.8 * self.partNum * (np.pi/4) / self.phiCP)
+
+            # Mid point of dense phase across longest box dimension (y)
+            mid_point = np.mean(dense_lats['y']+self.hy_box)
+
+            # estimated shorted dimension length of dense phase (x)
+            dense_x_width = (area_dense / self.lx_box)
+
+            # Set maximum dimension length (y) of simulation box to be 13 inches
+            scaling = 13.0
+
+            # X and Y-dimension lengths (in inches)
+            x_dim = int((scaling/(dense_x_width / self.lx_box)) + 1.0)
+            y_dim = int(scaling)
+
+        # If box is square
+        else:
+
+            # Minimum dimension length (in inches)
+            scaling =7.0
+
+            # X and Y-dimension lengths (in inches)
+            x_dim = int(scaling + 1.0)
+            y_dim = int(scaling)
+
+        # Generate figure of dimensions proportional to simulation box size (with added x-length for color bar)
+        fig = plt.figure(figsize=(x_dim,y_dim))
         ax = fig.add_subplot(111)
 
         # Scatter plot properties
-        dense_lats = lat_plot_dict['dense']['all']
         min_lat = 0.97*bulk_lat_mean
         max_lat = 1.03*bulk_lat_mean
 
         # Plot particle properties
-        im = plt.scatter(dense_lats['x']+self.h_box, dense_lats['y']+self.h_box, c=dense_lats['vals'], s=0.7, vmin=min_lat, vmax=max_lat)
+        im = plt.scatter(dense_lats['x']+self.hx_box, dense_lats['y']+self.hy_box, c=dense_lats['vals'], s=0.7, vmin=min_lat, vmax=max_lat)
         if velocity_dict!=None:
             plt.quiver(self.pos_x, self.pos_y, velocity_dict['bin']['all']['x'], velocity_dict['bin']['all']['y'], scale=20.0, color='black', alpha=0.8)
 
@@ -723,9 +773,44 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         clb.ax.tick_params(labelsize=16)
         clb.set_label('a', labelpad=-40, y=1.07, rotation=0, fontsize=20)
 
+
+
+        # Find min/max orientation
+        dense_lats = lat_plot_dict['dense']['all']
+        min_lat = 0.97*bulk_lat_mean
+        max_lat = 1.03*bulk_lat_mean
+
+        # Set plotted particle size
+        sz = 0.75
+        
+        ells = [Ellipse(xy=np.array([dense_lats['x']+self.hx_box,dense_lats['y']+self.hy_box]),
+                width=sz, height=sz)
+        for i in range(0,len(pos))]
+
+        # Plot position colored by neighbor number
+        neighborGroup = mc.PatchCollection(ells)
+        coll = ax.add_collection(neighborGroup)
+        coll.set_array(np.ravel(dense_lats['vals']))
+        
+        minClb = min_lat
+        maxClb = max_lat
+        coll.set_clim([minClb, maxClb])
+
+        # Modify colorbar properties
+        tick_lev = np.arange(min_lat, max_lat+1, (max_lat - min_lat)/5)
+
+        #level_boundaries = np.arange(min_ori-0.5, int(max_ori) + 1.5, 1)
+        clb = plt.colorbar(coll, ticks=tick_lev, orientation="vertical", format=tick.FormatStrFormatter('%.2f'))
+        clb.ax.tick_params(labelsize=16)
+
+        #clb.set_label(r'$g_6(r)$', labelpad=-55, y=1.04, rotation=0, fontsize=18)
+
+        clb.set_label(r'$a$', labelpad=25, y=0.5, rotation=270, fontsize=20)
+        plt.title('All Reference Particles', fontsize=20)
+
         # Plot interpolated inner and outer interface surface curves
         for m in range(0, len(sep_surface_dict)):
-            key = 'surface id ' + str(int(int_comp_dict['ids']['int id'][m]))
+            key = 'surface id ' + str(int(int_comp_dict['ids'][m]))
             try:
                 pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
                 pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
@@ -740,16 +825,24 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
             except:
                 pass
 
-        plt.text(0.663, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+        plt.text(0.8, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
                 fontsize=18, transform = ax.transAxes,
                 bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
-        plt.text(0.75, 0.92, s=r'$\overline{a}$' + ' = ' + '{:.3f}'.format(bulk_lat_mean),
+        plt.text(0.8, 0.92, s=r'$\overline{a}$' + ' = ' + '{:.3f}'.format(bulk_lat_mean),
                 fontsize=18, transform = ax.transAxes,
                 bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
 
-        # Modify plot parameters
-        plt.xlim(0, self.l_box)
-        plt.ylim(0, self.l_box)
+        # If rectangular box, reduce system size plotted
+        if self.lx_box > self.ly_box:
+            plt.xlim(dense_x_mid-(dense_x_width/2), dense_x_mid+(dense_x_width/2))
+            plt.ylim(0, self.ly_box)
+        elif self.lx_box < self.ly_box:
+            plt.ylim(dense_y_mid-(dense_y_width/2), dense_y_mid+(dense_y_width/2))
+            plt.xlim(0, self.lx_box)
+        # Plot entire system
+        else:
+            plt.ylim(0, self.ly_box)
+            plt.xlim(0, self.lx_box)
 
         plt.tick_params(axis='both', which='both',
                         bottom=False, top=False, left=False, right=False,
@@ -758,6 +851,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         ax.axis('off')
         plt.tight_layout()
         plt.show()
+        stop
         #plt.savefig(outPath + 'lat_map_' + out + pad + ".png", dpi=100)
         #plt.close()
     def plot_general_rdf(self, radial_df_dict):
@@ -1165,16 +1259,18 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         #plt.savefig(outPath + 'rdf_' + out + ".png", dpi=300)
         #plt.close()
 
-    def plot_neighbors(self, neigh_plot_dict, sep_surface_dict, int_comp_dict, type='all-all'):
+    def plot_neighbors(self, neigh_plot_dict, sep_surface_dict, int_comp_dict, pair='all-all'):
         """
         This function plots the number of neighbors of all dense phase particles
         at each location in space.
 
         Inputs:
-        neigh_plot_dict: dictionary (output from various bin_align() in
-        measurement.py) containing information on the nearest neighbors, averaged
-        over all neighbors (of a specific activity pairing) within the potential
-        cut-off radius, of each bulk and interface particle.
+        neigh_plot_dict: dictionary (output from various nearest_neighbors() in
+        measurement.py) containing information on the nearest neighbors of each
+        respective type ('all', 'A', or 'B') within the potential
+        cut-off radius for reference particles of each respective
+        type ('all', 'A', or 'B') for the dense phase, labeled as specific activity
+        pairings, i.e. 'all-A' means all neighbors of A reference particles.
 
         sep_surface_dict: dictionary (output from surface_curve_interp() in
         interface.py) that contains the interpolated curve representing the
@@ -1184,9 +1280,9 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         phase_identification.py) that contains information on each
         isolated/individual interface.
 
-        type (optional): string specifying whether the area fraction of all,
-        type A, type B should be plotted for either the reference particle or
-        nearest neighbor particles respectively (i.e. type='all-A' is all
+        pair (optional): string specifying whether the number of nearest neighbors
+        of reference particles of type all, A, or B should be plotted with the nearest
+        neighbors to be counted of type all, A, or B (i.e. pair='all-A' is all
         neighbors of A reference particles are counted and averaged over the
         number of A reference particles).
 
@@ -1194,215 +1290,261 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         .png file with the position of each particle plotted and color coded
         by the lattice spacing with color bar.
         """
-        area_parts = (0.8 * self.partNum * (np.pi/4) / self.phiCP)
 
-
+        # If box is rectangular with long dimension of x-axis
         if self.lx_box > self.ly_box:
-            mid_point = np.mean(neigh_plot_dict['all-all']['x']+self.hx_box)
-            box_length = (area_parts / self.ly_box)
 
-            if box_length >= self.lx_box:
-                scaling = 13.0 / (self.ly_box / box_length)
-                x_dim = int(((box_length / box_length) * scaling) + 1.0)
-                y_dim = int((self.ly_box / box_length) * scaling)
-            else:
-                scaling = 13.0 / (box_length / self.ly_box)
-                x_dim = int(((box_length / self.ly_box) * scaling) + 1.0)
-                y_dim = int((self.ly_box / self.ly_box) * scaling)
+            # Estimated area of dense phase
+            area_dense = (0.8 * self.partNum * (np.pi/4) / self.phiCP)
+
+            # Mid point of dense phase across longest box dimension (x)
+            dense_x_mid = np.mean(neigh_plot_dict['all-all']['x']+self.hx_box)
+
+            # estimated shortest dimension length of dense phase (y)
+            dense_x_width = (area_dense / self.ly_box)
+
+            # Set maximum dimension length (x) of simulation box to be 12 inches (plus 1 inch color bar)
+            scaling = 13.0
+
+            # X and Y-dimension lengths (in inches)
+            x_dim = int(scaling + 1.0)
+            y_dim = int(scaling/ (dense_x_width / self.ly_box))
+
+        # If box is rectangular with long dimension of y-axis
         elif self.lx_box < self.ly_box:
+
+            # Estimated area of dense phase
+            area_dense = (0.8 * self.partNum * (np.pi/4) / self.phiCP)
+
+            # Mid point of dense phase across longest box dimension (y)
             mid_point = np.mean(neigh_plot_dict['all-all']['y']+self.hy_box)
-            box_length = (area_parts / self.lx_box)
-            if box_length >= self.lx_box:
-                scaling = 13.0 / (self.lx_box / box_length)
-                x_dim = int(((self.lx_box / box_length) * scaling) + 1.0)
-                y_dim = int((box_length / box_length) * scaling)
-            else:
-                scaling = 13.0 / (box_length / self.lx_box)
-                x_dim = int(((self.lx_box / self.lx_box) * scaling) + 1.0)
-                y_dim = int((box_length / self.lx_box) * scaling)
+
+            # estimated shorted dimension length of dense phase (x)
+            dense_x_width = (area_dense / self.lx_box)
+
+            # Set maximum dimension length (y) of simulation box to be 13 inches
+            scaling = 13.0
+
+            # X and Y-dimension lengths (in inches)
+            x_dim = int((scaling/(dense_x_width / self.lx_box)) + 1.0)
+            y_dim = int(scaling)
+
+        # If box is square
         else:
+
+            # Minimum dimension length (in inches)
             scaling =7.0
+
+            # X and Y-dimension lengths (in inches)
             x_dim = int(scaling + 1.0)
             y_dim = int(scaling)
 
-        print(x_dim)
-        print(y_dim)
-        print(self.lx_box * self.ly_box)
-        print((x_dim-1) * y_dim)
-        print(((x_dim-1) * y_dim)/(self.lx_box * self.ly_box))
-        ratio = ((x_dim-1) * y_dim)/(self.lx_box * self.ly_box)
-        test2 = (ratio * (np.pi/4))
-        test = 6 / test2
-        print('final')
-        print(test)
-        part_area = 3264.7166538 * test2
-        print(part_area)
-
-
-        #self.sigma
-        #diameter = 6/4
-        #4d = markersize
-
-
+        # Generate figure of dimensions proportional to simulation box size (with added x-length for color bar)
         fig = plt.figure(figsize=(x_dim,y_dim))
         ax = fig.add_subplot(111)
 
-        min_neigh = 0
+        # Set plotted particle size
+        sz = 0.75
 
-        r = y_dim / self.ly_box
-        ax.set_xlim([0, self.lx_box])
-        ax.set_ylim([0, self.ly_box])
-        r=1.0
-        class scatter():
-            def __init__(self,x,y,ax,size=1,**kwargs):
-                self.n = len(x)
-                self.ax = ax
-                self.ax.figure.canvas.draw()
-                self.size_data=size
-                self.size = size
-                self.sc = ax.scatter(x,y,s=self.size,**kwargs)
-                self._resize()
-                self.cid = ax.figure.canvas.mpl_connect('draw_event', self._resize)
+        if pair == 'all-all':
 
-            def _resize(self,event=None):
-                ppd=72./self.ax.figure.dpi
-                trans = self.ax.transData.transform
-                s =  ((trans((1,self.size_data))-trans((0,0)))*ppd)[1]
-                if s != self.size:
-                    self.sc.set_sizes(s**2*np.ones(self.n))
-                    self.size = s
-                    self._redraw_later()
-
-            def _redraw_later(self):
-                self.timer = self.ax.figure.canvas.new_timer(interval=10)
-                self.timer.single_shot = True
-                self.timer.add_callback(lambda : self.ax.figure.canvas.draw_idle())
-                self.timer.start()
-        self.theory_functs = theory.theory()
-        latNet = self.theory_functs.conForRClust2(self.peA, self.peB, self.beta_A, self.beta_B, self.eps)
-        #for c in cm.tab10.colors: print(matplotlib.colors.to_hex(c))
-        latNet=50
-        if type == 'all-all':
+            # Find min/max number of neighbors
+            min_neigh = 0
             max_neigh = np.amax(neigh_plot_dict['all-all']['neigh'])
-            import matplotlib.collections
-            parts = [latNet for i in range(0, len(neigh_plot_dict['all-all']['x']))]
-            #XY IS WRONG! CHECK IN MORNING!
-            xy = np.array([neigh_plot_dict['all-all']['x']+self.hx_box, neigh_plot_dict['all-all']['y']]+self.hy_box)
-            print(np.max(neigh_plot_dict['all-all']['x']+self.hx_box))
-            print(np.min(neigh_plot_dict['all-all']['x']+self.hx_box))
-            print(np.max(neigh_plot_dict['all-all']['y']+self.hy_box))
-            print(np.min(neigh_plot_dict['all-all']['y']+self.hy_box))
-            xy = np.reshape(xy, (np.shape(xy)[1], np.shape(xy)[0]))
-            coll = matplotlib.collections.EllipseCollection(parts, parts,
-                                                        np.zeros_like(parts),
-                                                        offsets=xy, units='xy',
-                                                        cmap=plt.cm.get_cmap('tab10', int(max_neigh) + 1),
-                                                        transOffset=ax.transData)
+
+            # Generate list of ellipses for all particles to plot containing position (x,y) and point size that automatically scales with figure size
+            ells = [Ellipse(xy=np.array([neigh_plot_dict['all-all']['x'][i]+self.hx_box,neigh_plot_dict['all-all']['y'][i]+self.hy_box]),
+                    width=sz, height=sz)
+            for i in range(0,len(neigh_plot_dict['all-all']['x']))]
+
+            # Plot position colored by neighbor number
+            neighborGroup = mc.PatchCollection(ells, cmap=plt.cm.get_cmap('tab10', int(max_neigh) + 1))#facecolors=slowCol)
+            coll = ax.add_collection(neighborGroup)
             coll.set_array(np.ravel(neigh_plot_dict['all-all']['neigh']))
-            minCol = min_neigh-0.5
-            maxCol = int(max_neigh) + 1
-            coll.set_clim([minCol, maxCol])
-            ax.add_collection(coll)
-            """
-            max_neigh = np.amax(neigh_plot_dict['all-all']['neigh'])
-            scatter(neigh_plot_dict['all-all']['x']+self.hx_box, neigh_plot_dict['all-all']['y']+self.hy_box, ax, c=neigh_plot_dict['all-all']['neigh'], vmin = min_neigh-0.5, vmax = int(max_neigh) + 1, cmap=plt.cm.get_cmap('tab10', int(max_neigh) + 1))
-            plt.show()
-            """
-            #im = plt.scatter(1, 1, c=1, s=0, vmin = min_neigh-0.5, vmax = int(max_neigh) + 1, cmap=plt.cm.get_cmap('tab10', int(max_neigh) + 1))
-            """
-            print('test')
-            max_neigh = np.amax(neigh_plot_dict['all-all']['neigh'])
-            cmap_test = plt.cm.get_cmap('tab10', int(max_neigh) + 1)
-            print(cmap_test.colors)
-            colors = np.zeros((len(neigh_plot_dict['all-all']['neigh']),4))
-            for i in range(0, int(max_neigh)+1):
-                test = np.where((neigh_plot_dict['all-all']['neigh']>=(i-0.5)) & (neigh_plot_dict['all-all']['neigh']<(i+0.5)) )[0]
-                print(i)
-                print(len(test))
-                colors[test,:] = cmap_test.colors[i]
-            #colors = [cm.jet(color) for color in neigh_plot_dict['all-all']['neigh']]
-            print(len(colors))
-            circles = [plt.Circle((xi,yi), radius=latNet/2, linewidth=0.0, color='red') for xi,yi,color2 in zip(neigh_plot_dict['all-all']['x']+self.hx_box,neigh_plot_dict['all-all']['y']+self.hy_box,colors)]
-            c = matplotlib.collections.PatchCollection(circles)
-            plt.gca().add_collection(c)
-            im = plt.scatter(neigh_plot_dict['all-all']['x']+self.hx_box, neigh_plot_dict['all-all']['y']+self.hy_box, c=neigh_plot_dict['all-all']['neigh'], s=0, vmin = min_neigh-0.5, vmax = int(max_neigh) + 1, cmap=plt.cm.get_cmap('tab10', int(max_neigh) + 1))
-            """
-        elif type == 'all-A':
+
+        elif pair == 'all-A':
+
+            # Find min/max number of neighbors
+            min_neigh = 0
             max_neigh = np.amax(neigh_plot_dict['all-A']['neigh'])
-            im = plt.scatter(neigh_plot_dict['all-A']['x']+self.hx_box, neigh_plot_dict['all-A']['y']+self.hy_box, c=neigh_plot_dict['all-A']['neigh'], s=6.0, vmin = min_neigh-0.5, vmax = int(max_neigh) + 1, cmap=plt.cm.get_cmap('tab10', int(max_neigh) + 1))
 
-        elif type == 'all-B':
+            # Generate list of ellipses for A particles to plot containing position (x,y) and point size that automatically scales with figure size
+            ells = [Ellipse(xy=np.array([neigh_plot_dict['all-A']['x'][i]+self.hx_box,neigh_plot_dict['all-A']['y'][i]+self.hy_box]),
+                    width=sz, height=sz)
+            for i in range(0,len(neigh_plot_dict['all-A']['x']))]
+
+            # Plot position colored by number of all neighbors
+            neighborGroup = mc.PatchCollection(ells, cmap=plt.cm.get_cmap('tab10', int(max_neigh) + 1))#facecolors=slowCol)
+            coll = ax.add_collection(neighborGroup)
+            coll.set_array(np.ravel(neigh_plot_dict['all-A']['neigh']))
+
+        elif pair == 'all-B':
+
+            # Find min/max number of neighbors
+            min_neigh = 0
             max_neigh = np.amax(neigh_plot_dict['all-B']['neigh'])
-            im = plt.scatter(neigh_plot_dict['all-B']['x']+self.hx_box, neigh_plot_dict['all-B']['y']+self.hy_box, c=neigh_plot_dict['all-B']['neigh'], s=6.0, vmin = min_neigh-0.5, vmax = int(max_neigh) + 1, cmap=plt.cm.get_cmap('tab10', int(max_neigh) + 1))
 
-        elif type == 'A-all':
-            max_neigh= np.amax(neigh_plot_dict['A-all']['neigh'])
-            im = plt.scatter(neigh_plot_dict['A-all']['x']+self.hx_box, neigh_plot_dict['A-all']['y']+self.hy_box, c=neigh_plot_dict['A-all']['neigh'], s=6.0, vmin = min_neigh-0.5, vmax = int(max_neigh) + 1, cmap=plt.cm.get_cmap('tab10', int(max_neigh) + 1))
+            # Generate list of ellipses for B particles to plot containing position (x,y) and point size that automatically scales with figure size
+            ells = [Ellipse(xy=np.array([neigh_plot_dict['all-B']['x'][i]+self.hx_box,neigh_plot_dict['all-B']['y'][i]+self.hy_box]),
+                    width=sz, height=sz)
+            for i in range(0,len(neigh_plot_dict['all-B']['x']))]
 
-        elif type == 'B-all':
+            # Plot position colored by number of all neighbors
+            neighborGroup = mc.PatchCollection(ells, cmap=plt.cm.get_cmap('tab10', int(max_neigh) + 1))#facecolors=slowCol)
+            coll = ax.add_collection(neighborGroup)
+            coll.set_array(np.ravel(neigh_plot_dict['all-B']['neigh']))
+
+        elif pair == 'A-all':
+
+            # Find min/max number of neighbors
+            min_neigh = 0
+            max_neigh = np.amax(neigh_plot_dict['A-all']['neigh'])
+
+            # Generate list of ellipses for all particles to plot containing position (x,y) and point size that automatically scales with figure size
+            ells = [Ellipse(xy=np.array([neigh_plot_dict['A-all']['x'][i]+self.hx_box,neigh_plot_dict['A-all']['y'][i]+self.hy_box]),
+                    width=sz, height=sz)
+            for i in range(0,len(neigh_plot_dict['A-all']['x']))]
+
+            # Plot position colored by number of A neighbors
+            neighborGroup = mc.PatchCollection(ells, cmap=plt.cm.get_cmap('tab10', int(max_neigh) + 1))#facecolors=slowCol)
+            coll = ax.add_collection(neighborGroup)
+            coll.set_array(np.ravel(neigh_plot_dict['A-all']['neigh']))
+
+        elif pair == 'B-all':
+
+            # Find min/max number of neighbors
+            min_neigh = 0
             max_neigh = np.amax(neigh_plot_dict['B-all']['neigh'])
-            im = plt.scatter(neigh_plot_dict['B-all']['x']+self.hx_box, neigh_plot_dict['B-all']['y']+self.hy_box, c=neigh_plot_dict['B-all']['neigh'], s=6.0, vmin = min_neigh-0.5, vmax = int(max_neigh) + 1, cmap=plt.cm.get_cmap('tab10', int(max_neigh) + 1))
 
-        elif type == 'A-A':
+            # Generate list of ellipses for all particles to plot containing position (x,y) and point size that automatically scales with figure size
+            ells = [Ellipse(xy=np.array([neigh_plot_dict['B-all']['x'][i]+self.hx_box,neigh_plot_dict['B-all']['y'][i]+self.hy_box]),
+                    width=sz, height=sz)
+            for i in range(0,len(neigh_plot_dict['B-all']['x']))]
+
+            # Plot position colored by number of B neighbors
+            neighborGroup = mc.PatchCollection(ells, cmap=plt.cm.get_cmap('tab10', int(max_neigh) + 1))#facecolors=slowCol)
+            coll = ax.add_collection(neighborGroup)
+            coll.set_array(np.ravel(neigh_plot_dict['B-all']['neigh']))
+
+        elif pair == 'A-A':
+
+            # Find min/max number of neighbors
+            min_neigh = 0
             max_neigh = np.amax(neigh_plot_dict['A-A']['neigh'])
-            im = plt.scatter(neigh_plot_dict['A-A']['x']+self.hx_box, neigh_plot_dict['A-A']['y']+self.hy_box, c=neigh_plot_dict['A-A']['neigh'], s=6.0, vmin = min_neigh-0.5, vmax = int(max_neigh) + 1, cmap=plt.cm.get_cmap('tab10', int(max_neigh) + 1))
 
-        elif type == 'A-B':
+            # Generate list of ellipses for A particles to plot containing position (x,y) and point size that automatically scales with figure size
+            ells = [Ellipse(xy=np.array([neigh_plot_dict['A-A']['x'][i]+self.hx_box,neigh_plot_dict['A-A']['y'][i]+self.hy_box]),
+                    width=sz, height=sz)
+            for i in range(0,len(neigh_plot_dict['A-A']['x']))]
+
+            # Plot position colored by number of A neighbors
+            neighborGroup = mc.PatchCollection(ells, cmap=plt.cm.get_cmap('tab10', int(max_neigh) + 1))#facecolors=slowCol)
+            coll = ax.add_collection(neighborGroup)
+            coll.set_array(np.ravel(neigh_plot_dict['A-A']['neigh']))
+
+        elif pair == 'A-B':
+
+            # Find min/max number of neighbors
+            min_neigh = 0
             max_neigh = np.amax(neigh_plot_dict['A-B']['neigh'])
-            im = plt.scatter(neigh_plot_dict['A-B']['x']+self.hx_box, neigh_plot_dict['A-B']['y']+self.hy_box, c=neigh_plot_dict['A-B']['neigh'], s=6.0, vmin = min_neigh-0.5, vmax = int(max_neigh) + 1, cmap=plt.cm.get_cmap('tab10', int(max_neigh) + 1))
 
-        elif type == 'B-A':
+            # Generate list of ellipses for B particles to plot containing position (x,y) and point size that automatically scales with figure size
+            ells = [Ellipse(xy=np.array([neigh_plot_dict['A-B']['x'][i]+self.hx_box,neigh_plot_dict['A-B']['y'][i]+self.hy_box]),
+                    width=sz, height=sz)
+            for i in range(0,len(neigh_plot_dict['A-B']['x']))]
+
+            # Plot position colored by number of A neighbors
+            neighborGroup = mc.PatchCollection(ells, cmap=plt.cm.get_cmap('tab10', int(max_neigh) + 1))#facecolors=slowCol)
+            coll = ax.add_collection(neighborGroup)
+            coll.set_array(np.ravel(neigh_plot_dict['A-B']['neigh']))
+
+        elif pair == 'B-A':
+
+            # Find min/max number of neighbors
+            min_neigh = 0
             max_neigh = np.amax(neigh_plot_dict['B-A']['neigh'])
-            im = plt.scatter(neigh_plot_dict['B-A']['x']+self.hx_box, neigh_plot_dict['B-A']['y']+self.hy_box, c=neigh_plot_dict['B-A']['neigh'], s=6.0, vmin = min_neigh-0.5, vmax = int(max_neigh) + 1, cmap=plt.cm.get_cmap('tab10', int(max_neigh) + 1))
 
-        elif type == 'B-B':
+            # Generate list of ellipses for A particles to plot containing position (x,y) and point size that automatically scales with figure size
+            ells = [Ellipse(xy=np.array([neigh_plot_dict['B-A']['x'][i]+self.hx_box,neigh_plot_dict['B-A']['y'][i]+self.hy_box]),
+                    width=sz, height=sz)
+            for i in range(0,len(neigh_plot_dict['B-A']['x']))]
+
+            # Plot position colored by number of B neighbors
+            neighborGroup = mc.PatchCollection(ells, cmap=plt.cm.get_cmap('tab10', int(max_neigh) + 1))#facecolors=slowCol)
+            coll = ax.add_collection(neighborGroup)
+            coll.set_array(np.ravel(neigh_plot_dict['B-A']['neigh']))
+
+        elif pair == 'B-B':
+
+            # Find min/max number of neighbors
+            min_neigh = 0
             max_neigh = np.amax(neigh_plot_dict['B-B']['neigh'])
-            im = plt.scatter(neigh_plot_dict['B-B']['x']+self.hx_box, neigh_plot_dict['B-B']['y']+self.hy_box, c=neigh_plot_dict['B-B']['neigh'], s=6.0, vmin = min_neigh-0.5, vmax = int(max_neigh) + 1, cmap=plt.cm.get_cmap('tab10', int(max_neigh) + 1))
 
+            # Generate list of ellipses for B particles to plot containing position (x,y) and point size that automatically scales with figure size
+            ells = [Ellipse(xy=np.array([neigh_plot_dict['B-B']['x'][i]+self.hx_box,neigh_plot_dict['B-B']['y'][i]+self.hy_box]),
+                    width=sz, height=sz)
+            for i in range(0,len(neigh_plot_dict['B-B']['x']))]
 
-        # Modify colorbar properties
+            # Plot position colored by number of B neighbors
+            neighborGroup = mc.PatchCollection(ells, cmap=plt.cm.get_cmap('tab10', int(max_neigh) + 1))#facecolors=slowCol)
+            coll = ax.add_collection(neighborGroup)
+            coll.set_array(np.ravel(neigh_plot_dict['B-B']['neigh']))
+
+        # Define color bar min and max
+        minClb = min_neigh-0.5
+        maxClb = int(max_neigh) + 1
+
+        # Set color bar range
+        coll.set_clim([minClb, maxClb])
+
+        # Set tick levels
         tick_lev = np.arange(min_neigh, int(max_neigh)+1, 1)
 
+        # Define boundaries of colors (such that ticks at midpoints)
         level_boundaries = np.arange(min_neigh-0.5, int(max_neigh) + 1.5, 1)
+
+        # Define colorbar
         clb = plt.colorbar(coll, ticks=tick_lev, orientation="vertical", format=tick.FormatStrFormatter('%.0f'), boundaries=level_boundaries)
         clb.ax.tick_params(labelsize=16)
 
-        if type == 'all-all':
+        # Label respective reference and neighbor particle types
+
+        if pair == 'all-all':
             clb.set_label('# Neighbors', labelpad=25, y=0.5, rotation=270, fontsize=20)
             plt.title('All Reference Particles', fontsize=20)
-        elif type == 'all-A':
+        elif pair == 'all-A':
             clb.set_label('# Neighbors', labelpad=25, y=0.5, rotation=270, fontsize=20)
             plt.title('A Reference Particles', fontsize=20)
-        elif type == 'all-B':
+        elif pair == 'all-B':
             clb.set_label('# Neighbors', labelpad=25, y=0.5, rotation=270, fontsize=20)
             plt.title('B Reference Particles', fontsize=20)
-        elif type == 'A-all':
+        elif pair == 'A-all':
             clb.set_label('# A Neighbors', labelpad=25, y=0.5, rotation=270, fontsize=20)
             plt.title('All Reference Particles', fontsize=20)
-        elif type == 'B-all':
+        elif pair == 'B-all':
             clb.set_label('# B Neighbors', labelpad=25, y=0.5, rotation=270, fontsize=20)
             plt.title('All Reference Particles', fontsize=20)
-        elif type == 'A-A':
+        elif pair == 'A-A':
             clb.set_label('# A Neighbors', labelpad=25, y=0.5, rotation=270, fontsize=20)
             plt.title('A Reference Particles', fontsize=20)
-        elif type == 'A-B':
+        elif pair == 'A-B':
             clb.set_label('# A Neighbors', labelpad=25, y=0.5, rotation=270, fontsize=20)
             plt.title('B Reference Particles', fontsize=20)
-        elif type == 'B-A':
+        elif pair == 'B-A':
             clb.set_label('# B Neighbors', labelpad=25, y=0.5, rotation=270, fontsize=20)
             plt.title('A Reference Particles', fontsize=20)
-        elif type == 'B-B':
+        elif pair == 'B-B':
             clb.set_label('# B Neighbors', labelpad=25, y=0.5, rotation=270, fontsize=20)
             plt.title('B Reference Particles', fontsize=20)
 
         # Display current time step
-        plt.text(0.663, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{r}$',
+        plt.text(0.8, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{r}$',
                 fontsize=18, transform = ax.transAxes,
                 bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
-        """
+
         # Plot interpolated inner and outer interface surface curves
         for m in range(0, len(sep_surface_dict)):
-            key = 'surface id ' + str(int(int_comp_dict['ids']['int id'][m]))
+            key = 'surface id ' + str(int(int_comp_dict['ids'][m]))
             try:
                 pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
                 pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
@@ -1416,18 +1558,288 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                 plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
             except:
                 pass
-        """
+
+
+
+
+        # If rectangular box, reduce system size plotted
+        if self.lx_box > self.ly_box:
+            plt.xlim(dense_x_mid-(dense_x_width/2), dense_x_mid+(dense_x_width/2))
+            plt.ylim(0, self.ly_box)
+        elif self.lx_box < self.ly_box:
+            plt.ylim(dense_y_mid-(dense_y_width/2), dense_y_mid+(dense_y_width/2))
+            plt.xlim(0, self.lx_box)
+        # Plot entire system
+        else:
+            plt.ylim(0, self.ly_box)
+            plt.xlim(0, self.lx_box)
 
         # Modify plot parameters
         plt.tick_params(axis='both', which='both',
                         bottom=False, top=False, left=False, right=False,
                         labelbottom=False, labeltop=False, labelleft=False, labelright=False)
+        ax.axis('off')
+        plt.tight_layout()
+        plt.show()
+        #plt.savefig(outPath + 'num_neigh_' + out + pad + ".png", dpi=100)
+        #plt.close()
+
+
+    def plot_particle_orientations(self, neigh_plot_dict, sep_surface_dict, int_comp_dict, pair='all-all'):
+
+
+        # If box is rectangular with long dimension of x-axis
         if self.lx_box > self.ly_box:
-            plt.xlim(mid_point-(box_length/2), mid_point+(box_length/2))
+
+            # Estimated area of dense phase
+            area_dense = (0.8 * self.partNum * (np.pi/4) / self.phiCP)
+
+            # Mid point of dense phase across longest box dimension (x)
+            dense_x_mid = np.mean(neigh_plot_dict['all-all']['x']+self.hx_box)
+
+            # estimated shortest dimension length of dense phase (y)
+            dense_x_width = (area_dense / self.ly_box)
+
+            # Set maximum dimension length (x) of simulation box to be 12 inches (plus 1 inch color bar)
+            scaling = 13.0
+
+            # X and Y-dimension lengths (in inches)
+            x_dim = int(scaling + 1.0)
+            y_dim = int(scaling/ (dense_x_width / self.ly_box))
+
+        # If box is rectangular with long dimension of y-axis
+        elif self.lx_box < self.ly_box:
+
+            # Estimated area of dense phase
+            area_dense = (0.8 * self.partNum * (np.pi/4) / self.phiCP)
+
+            # Mid point of dense phase across longest box dimension (y)
+            mid_point = np.mean(neigh_plot_dict['all-all']['y']+self.hy_box)
+
+            # estimated shorted dimension length of dense phase (x)
+            dense_x_width = (area_dense / self.lx_box)
+
+            # Set maximum dimension length (y) of simulation box to be 13 inches
+            scaling = 13.0
+
+            # X and Y-dimension lengths (in inches)
+            x_dim = int((scaling/(dense_x_width / self.lx_box)) + 1.0)
+            y_dim = int(scaling)
+
+        # If box is square
+        else:
+
+            # Minimum dimension length (in inches)
+            scaling =7.0
+
+            # X and Y-dimension lengths (in inches)
+            x_dim = int(scaling + 1.0)
+            y_dim = int(scaling)
+
+        # Generate figure of dimensions proportional to simulation box size (with added x-length for color bar)
+        fig = plt.figure(figsize=(x_dim,y_dim))
+        ax = fig.add_subplot(111)
+
+        # Set plotted particle size
+        sz = 0.75
+        if pair == 'all-all':
+
+            # Find min/max orientation
+            min_ori = np.amin(neigh_plot_dict['all-all']['ori'])
+            max_ori = np.amax(neigh_plot_dict['all-all']['ori'])
+
+            ells = [Ellipse(xy=np.array([neigh_plot_dict['all-all']['x'][i]+self.hx_box,neigh_plot_dict['all-all']['y'][i]+self.hy_box]),
+                    width=sz, height=sz)
+            for i in range(0,len(neigh_plot_dict['all-all']['x']))]
+
+            # Plot position colored by neighbor number
+            neighborGroup = mc.PatchCollection(ells)
+            coll = ax.add_collection(neighborGroup)
+            coll.set_array(np.ravel(neigh_plot_dict['all-all']['ori']))
+        elif pair == 'all-A':
+
+            # Find min/max orientation
+            min_ori = np.amin(neigh_plot_dict['all-A']['ori'])
+            max_ori = np.amax(neigh_plot_dict['all-A']['ori'])
+
+            ells = [Ellipse(xy=np.array([neigh_plot_dict['all-A']['x'][i]+self.hx_box,neigh_plot_dict['all-A']['y'][i]+self.hy_box]),
+                    width=sz, height=sz)
+            for i in range(0,len(neigh_plot_dict['all-A']['x']))]
+
+            # Plot position colored by neighbor number
+            neighborGroup = mc.PatchCollection(ells)
+            coll = ax.add_collection(neighborGroup)
+            coll.set_array(np.ravel(neigh_plot_dict['all-A']['ori']))
+
+        elif pair == 'all-B':
+            # Find min/max orientation
+            min_ori = np.amin(neigh_plot_dict['all-B']['ori'])
+            max_ori = np.amax(neigh_plot_dict['all-B']['ori'])
+
+            ells = [Ellipse(xy=np.array([neigh_plot_dict['all-B']['x'][i]+self.hx_box,neigh_plot_dict['all-B']['y'][i]+self.hy_box]),
+                    width=sz, height=sz)
+            for i in range(0,len(neigh_plot_dict['all-B']['x']))]
+
+            # Plot position colored by neighbor number
+            slowCol='red'
+            neighborGroup = mc.PatchCollection(ells)
+            coll = ax.add_collection(neighborGroup)
+            coll.set_array(np.ravel(neigh_plot_dict['all-B']['ori']))
+        elif pair == 'A-all':
+            # Find min/max orientation
+            min_ori = np.amin(neigh_plot_dict['A-all']['ori'])
+            max_ori = np.amax(neigh_plot_dict['A-all']['ori'])
+
+            ells = [Ellipse(xy=np.array([neigh_plot_dict['A-all']['x'][i]+self.hx_box,neigh_plot_dict['A-all']['y'][i]+self.hy_box]),
+                    width=sz, height=sz)
+            for i in range(0,len(neigh_plot_dict['A-all']['x']))]
+
+            # Plot position colored by neighbor number
+            neighborGroup = mc.PatchCollection(ells)
+            coll = ax.add_collection(neighborGroup)
+            coll.set_array(np.ravel(neigh_plot_dict['A-all']['ori']))
+        elif pair == 'B-all':
+            # Find min/max orientation
+            min_ori = np.amin(neigh_plot_dict['B-all']['ori'])
+            max_ori = np.amax(neigh_plot_dict['B-all']['ori'])
+
+            ells = [Ellipse(xy=np.array([neigh_plot_dict['B-all']['x'][i]+self.hx_box,neigh_plot_dict['B-all']['y'][i]+self.hy_box]),
+                    width=sz, height=sz)
+            for i in range(0,len(neigh_plot_dict['B-all']['x']))]
+
+            # Plot position colored by neighbor number
+            slowCol='red'
+            neighborGroup = mc.PatchCollection(ells, facecolors=slowCol)
+            coll = ax.add_collection(neighborGroup)
+            coll.set_array(np.ravel(neigh_plot_dict['B-all']['ori']))
+        elif pair == 'A-A':
+            # Find min/max orientation
+            min_ori = np.amin(neigh_plot_dict['A-A']['ori'])
+            max_ori = np.amax(neigh_plot_dict['A-A']['ori'])
+
+            ells = [Ellipse(xy=np.array([neigh_plot_dict['A-A']['x'][i]+self.hx_box,neigh_plot_dict['A-A']['y'][i]+self.hy_box]),
+                    width=sz, height=sz)
+            for i in range(0,len(neigh_plot_dict['A-A']['x']))]
+
+            # Plot position colored by neighbor number
+            slowCol='red'
+            neighborGroup = mc.PatchCollection(ells, facecolors=slowCol)
+            coll = ax.add_collection(neighborGroup)
+            coll.set_array(np.ravel(neigh_plot_dict['A-A']['ori']))
+        elif pair == 'A-B':
+            # Find min/max orientation
+            min_ori = np.amin(neigh_plot_dict['A-B']['ori'])
+            max_ori = np.amax(neigh_plot_dict['A-B']['ori'])
+
+            ells = [Ellipse(xy=np.array([neigh_plot_dict['A-B']['x'][i]+self.hx_box,neigh_plot_dict['A-B']['y'][i]+self.hy_box]),
+                    width=sz, height=sz)
+            for i in range(0,len(neigh_plot_dict['A-B']['x']))]
+
+            # Plot position colored by neighbor number
+            slowCol='red'
+            neighborGroup = mc.PatchCollection(ells, facecolors=slowCol)
+            coll = ax.add_collection(neighborGroup)
+            coll.set_array(np.ravel(neigh_plot_dict['A-B']['ori']))
+        elif pair == 'B-A':
+            # Find min/max orientation
+            min_ori = np.amin(neigh_plot_dict['B-A']['ori'])
+            max_ori = np.amax(neigh_plot_dict['B-A']['ori'])
+
+            ells = [Ellipse(xy=np.array([neigh_plot_dict['B-A']['x'][i]+self.hx_box,neigh_plot_dict['B-A']['y'][i]+self.hy_box]),
+                    width=sz, height=sz)
+            for i in range(0,len(neigh_plot_dict['B-A']['x']))]
+
+            # Plot position colored by neighbor number
+            slowCol='red'
+            neighborGroup = mc.PatchCollection(ells, facecolors=slowCol)
+            coll = ax.add_collection(neighborGroup)
+            coll.set_array(np.ravel(neigh_plot_dict['B-A']['ori']))
+        elif pair == 'B-B':
+            # Find min/max orientation
+            min_ori = np.amin(neigh_plot_dict['B-B']['ori'])
+            max_ori = np.amax(neigh_plot_dict['B-B']['ori'])
+
+            ells = [Ellipse(xy=np.array([neigh_plot_dict['B-B']['x'][i]+self.hx_box,neigh_plot_dict['B-B']['y'][i]+self.hy_box]),
+                    width=sz, height=sz)
+            for i in range(0,len(neigh_plot_dict['B-B']['x']))]
+
+            # Plot position colored by neighbor number
+            slowCol='red'
+            neighborGroup = mc.PatchCollection(ells, facecolors=slowCol)
+            coll = ax.add_collection(neighborGroup)
+            coll.set_array(np.ravel(neigh_plot_dict['B-B']['ori']))
+
+        minClb = min_ori
+        maxClb = max_ori
+        coll.set_clim([minClb, maxClb])
+
+        # Modify colorbar properties
+        tick_lev = np.arange(min_ori, max_ori+1, (max_ori - min_ori)/6)
+
+        #level_boundaries = np.arange(min_ori-0.5, int(max_ori) + 1.5, 1)
+        clb = plt.colorbar(coll, ticks=tick_lev, orientation="vertical", format=tick.FormatStrFormatter('%.2f'))
+        clb.ax.tick_params(labelsize=16)
+
+        plt.tick_params(axis='both', which='both',
+                        bottom=False, top=False, left=False, right=False,
+                        labelbottom=False, labeltop=False, labelleft=False, labelright=False)
+        plt.text(0.8, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{r}$',
+                fontsize=18, transform = ax.transAxes,
+                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+        #plt.quiver(pos_box_x, pos_box_y, velocity_x_bin_plot, velocity_y_bin_plot, scale=20.0, color='black', alpha=0.8)
+
+        if pair == 'all-all':
+            clb.set_label(r'$\langle \mathbf{\hat{p}}_\mathrm{ref} \cdot \mathbf{\hat{p}}_\mathrm{neigh} \rangle$', labelpad=25, y=0.5, rotation=270, fontsize=20)
+            plt.title('All Reference Particles', fontsize=20)
+        elif pair == 'all-A':
+            clb.set_label(r'$\langle \mathbf{\hat{p}}_\mathrm{ref} \cdot \mathbf{\hat{p}}_\mathrm{neigh} \rangle$', labelpad=25, y=0.5, rotation=270, fontsize=20)
+            plt.title('A Reference Particles', fontsize=20)
+        elif pair == 'all-B':
+            clb.set_label(r'$\langle \mathbf{\hat{p}}_\mathrm{ref} \cdot \mathbf{\hat{p}}_\mathrm{neigh} \rangle$', labelpad=25, y=0.5, rotation=270, fontsize=20)
+            plt.title('B Reference Particles', fontsize=20)
+        elif pair == 'A-all':
+            clb.set_label(r'$\langle \mathbf{\hat{p}}_\mathrm{ref} \cdot \mathbf{\hat{p}}_\mathrm{neigh} \rangle$', labelpad=25, y=0.5, rotation=270, fontsize=20)
+            plt.title('All Reference Particles', fontsize=20)
+        elif pair == 'B-all':
+            clb.set_label(r'$\langle \mathbf{\hat{p}}_\mathrm{ref} \cdot \mathbf{\hat{p}}_\mathrm{neigh} \rangle$', labelpad=25, y=0.5, rotation=270, fontsize=20)
+            plt.title('All Reference Particles', fontsize=20)
+        elif pair == 'A-A':
+            clb.set_label(r'$\langle \mathbf{\hat{p}}_\mathrm{ref} \cdot \mathbf{\hat{p}}_\mathrm{neigh} \rangle$', labelpad=25, y=0.5, rotation=270, fontsize=20)
+            plt.title('A Reference Particles', fontsize=20)
+        elif pair == 'A-B':
+            clb.set_label(r'$\langle \mathbf{\hat{p}}_\mathrm{ref} \cdot \mathbf{\hat{p}}_\mathrm{neigh} \rangle$', labelpad=25, y=0.5, rotation=270, fontsize=20)
+            plt.title('B Reference Particles', fontsize=20)
+        elif pair == 'B-A':
+            clb.set_label(r'$\langle \mathbf{\hat{p}}_\mathrm{ref} \cdot \mathbf{\hat{p}}_\mathrm{neigh} \rangle$', labelpad=25, y=0.5, rotation=270, fontsize=20)
+            plt.title('A Reference Particles', fontsize=20)
+        elif pair == 'B-B':
+            clb.set_label(r'$\langle \mathbf{\hat{p}}_\mathrm{ref} \cdot \mathbf{\hat{p}}_\mathrm{neigh} \rangle$', labelpad=25, y=0.5, rotation=270, fontsize=20)
+            plt.title('B Reference Particles', fontsize=20)
+
+        for m in range(0, len(sep_surface_dict)):
+            key = 'surface id ' + str(int(int_comp_dict['ids'][m]))
+            try:
+                pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
+                pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
+                plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
+            except:
+                pass
+
+            try:
+                pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
+                pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
+                plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
+            except:
+                pass
+
+        # If rectangular box, reduce system size plotted
+        if self.lx_box > self.ly_box:
+            plt.xlim(dense_x_mid-(dense_x_width/2), dense_x_mid+(dense_x_width/2))
             plt.ylim(0, self.ly_box)
         elif self.lx_box < self.ly_box:
-            plt.ylim(mid_point-(box_length/2), mid_point+(box_length/2))
+            plt.ylim(dense_y_mid-(dense_y_width/2), dense_y_mid+(dense_y_width/2))
             plt.xlim(0, self.lx_box)
+        # Plot entire system
         else:
             plt.ylim(0, self.ly_box)
             plt.xlim(0, self.lx_box)
@@ -1435,482 +1847,101 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         ax.axis('off')
         plt.tight_layout()
         plt.show()
-        #plt.savefig(outPath + 'num_neigh_' + out + pad + ".png", dpi=100)
-        #plt.close()
         stop
-
-    def plot_A_neighbors_of_all_parts(self, neigh_plot_dict, sep_surface_dict, int_comp_dict):
-        fig = plt.figure(figsize=(7,6))
-        ax = fig.add_subplot(111)
-        im = plt.scatter(neigh_plot_dict['A-all']['x']+self.hx_box, neigh_plot_dict['A-all']['y']+self.hy_box, c=neigh_plot_dict['A-all']['neigh'], s=0.7)
-
-
-        #sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
-        #sm.set_array([])
-        min_n = 0.0
-        max_n = np.amax(neigh_plot_dict['A-all']['neigh'])
-
-        tick_lev = np.arange(min_n, max_n+1, 1)
-        clb = plt.colorbar(ticks=tick_lev, orientation="vertical", format=tick.FormatStrFormatter('%.0f'))
-
-        plt.tick_params(axis='both', which='both',
-                        bottom=False, top=False, left=False, right=False,
-                        labelbottom=False, labeltop=False, labelleft=False, labelright=False)
-        plt.text(0.663, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{r}$',
-                fontsize=18, transform = ax.transAxes,
-                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
-        #plt.quiver(pos_box_x, pos_box_y, velocity_x_bin_plot, velocity_y_bin_plot, scale=20.0, color='black', alpha=0.8)
-        clb.ax.tick_params(labelsize=16)
-        clb.set_label('# A neighbors for all particles', labelpad=25, y=0.5, rotation=270, fontsize=20)
-
-        for m in range(0, len(sep_surface_dict)):
-            key = 'surface id ' + str(int(int_comp_dict['ids']['int id'][m]))
-            try:
-                pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
-                pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
-                plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
-            except:
-                pass
-
-            try:
-                pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
-                pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
-                plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
-            except:
-                pass
-
-        plt.xlim(0, self.lx_box)
-        plt.ylim(0, self.ly_box)
-
-        ax.axis('off')
-        plt.tight_layout()
-        plt.show()
         #plt.savefig(outPath + 'num_neigh_' + out + pad + ".png", dpi=100)
         #plt.close()
-
-    def plot_B_neighbors_of_all_parts(self, neigh_plot_dict, sep_surface_dict, int_comp_dict):
-        fig = plt.figure(figsize=(7,6))
-        ax = fig.add_subplot(111)
-        im = plt.scatter(neigh_plot_dict['B-all']['x']+self.hx_box, neigh_plot_dict['B-all']['y']+self.hy_box, c=neigh_plot_dict['B-all']['neigh'], s=0.7)
-
-
-        #sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
-        #sm.set_array([])
-        min_n = 0.0
-        max_n = np.amax(neigh_plot_dict['B-all']['neigh'])
-
-        tick_lev = np.arange(min_n, max_n+1, 1)
-        clb = plt.colorbar(ticks=tick_lev, orientation="vertical", format=tick.FormatStrFormatter('%.0f'))
-
-        plt.tick_params(axis='both', which='both',
-                        bottom=False, top=False, left=False, right=False,
-                        labelbottom=False, labeltop=False, labelleft=False, labelright=False)
-        plt.text(0.663, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{r}$',
-                fontsize=18, transform = ax.transAxes,
-                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
-        #plt.quiver(pos_box_x, pos_box_y, velocity_x_bin_plot, velocity_y_bin_plot, scale=20.0, color='black', alpha=0.8)
-        clb.ax.tick_params(labelsize=16)
-        clb.set_label('# B neighbors for all particles', labelpad=25, y=0.5, rotation=270, fontsize=20)
-
-        for m in range(0, len(sep_surface_dict)):
-            key = 'surface id ' + str(int(int_comp_dict['ids']['int id'][m]))
-            try:
-                pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
-                pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
-                plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
-            except:
-                pass
-
-            try:
-                pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
-                pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
-                plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
-            except:
-                pass
-
-        plt.xlim(0, self.lx_box)
-        plt.ylim(0, self.ly_box)
-
-        ax.axis('off')
-        plt.tight_layout()
-        plt.show()
-        #plt.savefig(outPath + 'num_neigh_' + out + pad + ".png", dpi=100)
-        #plt.close()
-
-    def plot_all_neighbors_of_A_parts(self, neigh_plot_dict, sep_surface_dict, int_comp_dict):
-        fig = plt.figure(figsize=(7,6))
-        ax = fig.add_subplot(111)
-        im = plt.scatter(neigh_plot_dict['all-A']['x']+self.hx_box, neigh_plot_dict['all-A']['y']+self.hy_box, c=neigh_plot_dict['all-A']['neigh'], s=0.7)
-
-
-        #sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
-        #sm.set_array([])
-        min_n = 0.0
-        max_n = np.amax(neigh_plot_dict['all-A']['neigh'])
-
-        tick_lev = np.arange(min_n, max_n+1, 1)
-        clb = plt.colorbar(ticks=tick_lev, orientation="vertical", format=tick.FormatStrFormatter('%.0f'))
-
-        plt.tick_params(axis='both', which='both',
-                        bottom=False, top=False, left=False, right=False,
-                        labelbottom=False, labeltop=False, labelleft=False, labelright=False)
-        plt.text(0.663, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{r}$',
-                fontsize=18, transform = ax.transAxes,
-                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
-        #plt.quiver(pos_box_x, pos_box_y, velocity_x_bin_plot, velocity_y_bin_plot, scale=20.0, color='black', alpha=0.8)
-        clb.ax.tick_params(labelsize=16)
-        clb.set_label('# neighbors for A particles', labelpad=25, y=0.5, rotation=270, fontsize=20)
-
-        for m in range(0, len(sep_surface_dict)):
-            key = 'surface id ' + str(int(int_comp_dict['ids']['int id'][m]))
-            try:
-                pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
-                pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
-                plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
-            except:
-                pass
-
-            try:
-                pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
-                pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
-                plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
-            except:
-                pass
-
-        plt.xlim(0, self.lx_box)
-        plt.ylim(0, self.ly_box)
-
-        ax.axis('off')
-        plt.tight_layout()
-        plt.show()
-        #plt.savefig(outPath + 'num_neigh_' + out + pad + ".png", dpi=100)
-        #plt.close()
-
-    def plot_all_neighbors_of_B_parts(self, neigh_plot_dict, sep_surface_dict, int_comp_dict):
-        fig = plt.figure(figsize=(7,6))
-        ax = fig.add_subplot(111)
-        im = plt.scatter(neigh_plot_dict['all-B']['x']+self.hx_box, neigh_plot_dict['all-B']['y']+self.hy_box, c=neigh_plot_dict['all-B']['neigh'], s=0.7)
-
-
-        #sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
-        #sm.set_array([])
-        min_n = 0.0
-        max_n = np.amax(neigh_plot_dict['all-B']['neigh'])
-
-        tick_lev = np.arange(min_n, max_n+1, 1)
-        clb = plt.colorbar(ticks=tick_lev, orientation="vertical", format=tick.FormatStrFormatter('%.0f'))
-
-        plt.tick_params(axis='both', which='both',
-                        bottom=False, top=False, left=False, right=False,
-                        labelbottom=False, labeltop=False, labelleft=False, labelright=False)
-        plt.text(0.663, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{r}$',
-                fontsize=18, transform = ax.transAxes,
-                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
-        #plt.quiver(pos_box_x, pos_box_y, velocity_x_bin_plot, velocity_y_bin_plot, scale=20.0, color='black', alpha=0.8)
-        clb.ax.tick_params(labelsize=16)
-        clb.set_label('# neighbors for B particles', labelpad=25, y=0.5, rotation=270, fontsize=20)
-
-        for m in range(0, len(sep_surface_dict)):
-            key = 'surface id ' + str(int(int_comp_dict['ids']['int id'][m]))
-            try:
-                pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
-                pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
-                plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
-            except:
-                pass
-
-            try:
-                pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
-                pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
-                plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
-            except:
-                pass
-
-        plt.xlim(0, self.lx_box)
-        plt.ylim(0, self.ly_box)
-
-        ax.axis('off')
-        plt.tight_layout()
-        plt.show()
-        #plt.savefig(outPath + 'num_neigh_' + out + pad + ".png", dpi=100)
-        #plt.close()
-
-
-
-
-    def plot_all_ori_of_all_parts(self, neigh_plot_dict, sep_surface_dict, int_comp_dict):
-        fig = plt.figure(figsize=(7,6))
-        ax = fig.add_subplot(111)
-        im = plt.scatter(neigh_plot_dict['all-all']['x']+self.hx_box, neigh_plot_dict['all-all']['y']+self.hy_box, c=neigh_plot_dict['all-all']['ori'], s=0.7)
-
-
-        #sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
-        #sm.set_array([])
-        min_n = np.amin(neigh_plot_dict['all-all']['ori'])
-        max_n = np.amax(neigh_plot_dict['all-all']['ori'])
-
-        tick_lev = np.arange(min_n, max_n+1, (max_n - min_n)/6)
-        clb = plt.colorbar(ticks=tick_lev, orientation="vertical", format=tick.FormatStrFormatter('%.2f'))
-
-        plt.tick_params(axis='both', which='both',
-                        bottom=False, top=False, left=False, right=False,
-                        labelbottom=False, labeltop=False, labelleft=False, labelright=False)
-        plt.text(0.663, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{r}$',
-                fontsize=18, transform = ax.transAxes,
-                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
-        #plt.quiver(pos_box_x, pos_box_y, velocity_x_bin_plot, velocity_y_bin_plot, scale=20.0, color='black', alpha=0.8)
-        clb.ax.tick_params(labelsize=16)
-        clb.set_label('# neighbors for all particles', labelpad=25, y=0.5, rotation=270, fontsize=20)
-
-        for m in range(0, len(sep_surface_dict)):
-            key = 'surface id ' + str(int(int_comp_dict['ids']['int id'][m]))
-            try:
-                pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
-                pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
-                plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
-            except:
-                pass
-
-            try:
-                pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
-                pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
-                plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
-            except:
-                pass
-
-        plt.xlim(0, self.lx_box)
-        plt.ylim(0, self.ly_box)
-
-        ax.axis('off')
-        plt.tight_layout()
-        plt.show()
-        #plt.savefig(outPath + 'num_neigh_' + out + pad + ".png", dpi=100)
-        #plt.close()
-
-    def plot_A_ori_of_all_parts(self, neigh_plot_dict, sep_surface_dict, int_comp_dict):
-        fig = plt.figure(figsize=(7,6))
-        ax = fig.add_subplot(111)
-        im = plt.scatter(neigh_plot_dict['A-all']['x']+self.hx_box, neigh_plot_dict['A-all']['y']+self.hy_box, c=neigh_plot_dict['A-all']['ori'], s=0.7)
-
-
-        #sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
-        #sm.set_array([])
-        min_n = np.amin(neigh_plot_dict['A-all']['ori'])
-        max_n = np.amax(neigh_plot_dict['A-all']['ori'])
-
-        tick_lev = np.arange(min_n, max_n+1, (max_n - min_n)/6)
-        clb = plt.colorbar(ticks=tick_lev, orientation="vertical", format=tick.FormatStrFormatter('%.2f'))
-
-        plt.tick_params(axis='both', which='both',
-                        bottom=False, top=False, left=False, right=False,
-                        labelbottom=False, labeltop=False, labelleft=False, labelright=False)
-        plt.text(0.663, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{r}$',
-                fontsize=18, transform = ax.transAxes,
-                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
-        #plt.quiver(pos_box_x, pos_box_y, velocity_x_bin_plot, velocity_y_bin_plot, scale=20.0, color='black', alpha=0.8)
-        clb.ax.tick_params(labelsize=16)
-        clb.set_label('# A neighbors for all particles', labelpad=25, y=0.5, rotation=270, fontsize=20)
-
-        for m in range(0, len(sep_surface_dict)):
-            key = 'surface id ' + str(int(int_comp_dict['ids']['int id'][m]))
-            try:
-                pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
-                pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
-                plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
-            except:
-                pass
-
-            try:
-                pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
-                pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
-                plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
-            except:
-                pass
-
-        plt.xlim(0, self.lx_box)
-        plt.ylim(0, self.ly_box)
-
-        ax.axis('off')
-        plt.tight_layout()
-        plt.show()
-        #plt.savefig(outPath + 'num_neigh_' + out + pad + ".png", dpi=100)
-        #plt.close()
-
-    def plot_B_ori_of_all_parts(self, neigh_plot_dict, sep_surface_dict, int_comp_dict):
-        fig = plt.figure(figsize=(7,6))
-        ax = fig.add_subplot(111)
-        im = plt.scatter(neigh_plot_dict['B-all']['x']+self.hx_box, neigh_plot_dict['B-all']['y']+self.hy_box, c=neigh_plot_dict['B-all']['ori'], s=0.7)
-
-
-        #sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
-        #sm.set_array([])
-        min_n = np.amin(neigh_plot_dict['B-all']['ori'])
-        max_n = np.amax(neigh_plot_dict['B-all']['ori'])
-
-        tick_lev = np.arange(min_n, max_n+1, (max_n - min_n)/6)
-        clb = plt.colorbar(ticks=tick_lev, orientation="vertical", format=tick.FormatStrFormatter('%.2f'))
-
-        plt.tick_params(axis='both', which='both',
-                        bottom=False, top=False, left=False, right=False,
-                        labelbottom=False, labeltop=False, labelleft=False, labelright=False)
-        plt.text(0.663, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{r}$',
-                fontsize=18, transform = ax.transAxes,
-                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
-        #plt.quiver(pos_box_x, pos_box_y, velocity_x_bin_plot, velocity_y_bin_plot, scale=20.0, color='black', alpha=0.8)
-        clb.ax.tick_params(labelsize=16)
-        clb.set_label('# B neighbors for all particles', labelpad=25, y=0.5, rotation=270, fontsize=20)
-
-        for m in range(0, len(sep_surface_dict)):
-            key = 'surface id ' + str(int(int_comp_dict['ids']['int id'][m]))
-            try:
-                pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
-                pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
-                plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
-            except:
-                pass
-
-            try:
-                pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
-                pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
-                plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
-            except:
-                pass
-
-        plt.xlim(0, self.lx_box)
-        plt.ylim(0, self.ly_box)
-
-        ax.axis('off')
-        plt.tight_layout()
-        plt.show()
-        #plt.savefig(outPath + 'num_neigh_' + out + pad + ".png", dpi=100)
-        #plt.close()
-
-    def plot_all_ori_of_A_parts(self, neigh_plot_dict, sep_surface_dict, int_comp_dict):
-        fig = plt.figure(figsize=(7,6))
-        ax = fig.add_subplot(111)
-        im = plt.scatter(neigh_plot_dict['all-A']['x']+self.hx_box, neigh_plot_dict['all-A']['y']+self.hy_box, c=neigh_plot_dict['all-A']['ori'], s=0.7)
-
-
-        #sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
-        #sm.set_array([])
-        min_n = np.amin(neigh_plot_dict['all-A']['ori'])
-        max_n = np.amax(neigh_plot_dict['all-A']['ori'])
-
-        tick_lev = np.arange(min_n, max_n+1, (max_n - min_n)/6)
-        clb = plt.colorbar(ticks=tick_lev, orientation="vertical", format=tick.FormatStrFormatter('%.2f'))
-
-        plt.tick_params(axis='both', which='both',
-                        bottom=False, top=False, left=False, right=False,
-                        labelbottom=False, labeltop=False, labelleft=False, labelright=False)
-        plt.text(0.663, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{r}$',
-                fontsize=18, transform = ax.transAxes,
-                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
-        #plt.quiver(pos_box_x, pos_box_y, velocity_x_bin_plot, velocity_y_bin_plot, scale=20.0, color='black', alpha=0.8)
-        clb.ax.tick_params(labelsize=16)
-        clb.set_label('# neighbors for A particles', labelpad=25, y=0.5, rotation=270, fontsize=20)
-
-        for m in range(0, len(sep_surface_dict)):
-            key = 'surface id ' + str(int(int_comp_dict['ids']['int id'][m]))
-            try:
-                pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
-                pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
-                plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
-            except:
-                pass
-
-            try:
-                pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
-                pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
-                plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
-            except:
-                pass
-
-        plt.xlim(0, self.lx_box)
-        plt.ylim(0, self.ly_box)
-
-        ax.axis('off')
-        plt.tight_layout()
-        plt.show()
-        #plt.savefig(outPath + 'num_neigh_' + out + pad + ".png", dpi=100)
-        #plt.close()
-
-    def plot_all_ori_of_B_parts(self, neigh_plot_dict, sep_surface_dict, int_comp_dict):
-        fig = plt.figure(figsize=(7,6))
-        ax = fig.add_subplot(111)
-        im = plt.scatter(neigh_plot_dict['all-B']['x']+self.hx_box, neigh_plot_dict['all-B']['y']+self.hy_box, c=neigh_plot_dict['all-B']['ori'], s=0.7)
-
-
-        #sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
-        #sm.set_array([])
-        min_n = np.amin(neigh_plot_dict['all-B']['ori'])
-        max_n = np.amax(neigh_plot_dict['all-B']['ori'])
-
-        tick_lev = np.arange(min_n, max_n+1, (max_n - min_n)/6)
-        clb = plt.colorbar(ticks=tick_lev, orientation="vertical", format=tick.FormatStrFormatter('%.2f'))
-
-        plt.tick_params(axis='both', which='both',
-                        bottom=False, top=False, left=False, right=False,
-                        labelbottom=False, labeltop=False, labelleft=False, labelright=False)
-        plt.text(0.663, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{r}$',
-                fontsize=18, transform = ax.transAxes,
-                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
-        #plt.quiver(pos_box_x, pos_box_y, velocity_x_bin_plot, velocity_y_bin_plot, scale=20.0, color='black', alpha=0.8)
-        clb.ax.tick_params(labelsize=16)
-        clb.set_label('# neighbors for B particles', labelpad=25, y=0.5, rotation=270, fontsize=20)
-
-        for m in range(0, len(sep_surface_dict)):
-            key = 'surface id ' + str(int(int_comp_dict['ids']['int id'][m]))
-            try:
-                pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
-                pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
-                plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
-            except:
-                pass
-
-            try:
-                pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
-                pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
-                plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
-            except:
-                pass
-
-        plt.xlim(0, self.lx_box)
-        plt.ylim(0, self.ly_box)
-
-        ax.axis('off')
-        plt.tight_layout()
-        plt.show()
-        #plt.savefig(outPath + 'num_neigh_' + out + pad + ".png", dpi=100)
-        #plt.close()
-
 
     def plot_hexatic_order(self, pos, hexatic_order_param, sep_surface_dict, int_comp_dict):
 
-        #Plot particles colorized by hexatic order parameter
-        fig = plt.figure(figsize=(7,6))
+        # If box is rectangular with long dimension of x-axis
+        if self.lx_box > self.ly_box:
+
+            # Estimated area of dense phase
+            area_dense = (0.8 * self.partNum * (np.pi/4) / self.phiCP)
+
+            # Mid point of dense phase across longest box dimension (x)
+            dense_x_mid = np.mean(pos[:,0]+self.hx_box)
+
+            # estimated shortest dimension length of dense phase (y)
+            dense_x_width = (area_dense / self.ly_box)
+
+            # Set maximum dimension length (x) of simulation box to be 12 inches (plus 1 inch color bar)
+            scaling = 13.0
+
+            # X and Y-dimension lengths (in inches)
+            x_dim = int(scaling + 1.0)
+            y_dim = int(scaling/ (dense_x_width / self.ly_box))
+
+        # If box is rectangular with long dimension of y-axis
+        elif self.lx_box < self.ly_box:
+
+            # Estimated area of dense phase
+            area_dense = (0.8 * self.partNum * (np.pi/4) / self.phiCP)
+
+            # Mid point of dense phase across longest box dimension (y)
+            mid_point = np.mean(pos[:,1]+self.hy_box)
+
+            # estimated shorted dimension length of dense phase (x)
+            dense_x_width = (area_dense / self.lx_box)
+
+            # Set maximum dimension length (y) of simulation box to be 13 inches
+            scaling = 13.0
+
+            # X and Y-dimension lengths (in inches)
+            x_dim = int((scaling/(dense_x_width / self.lx_box)) + 1.0)
+            y_dim = int(scaling)
+
+        # If box is square
+        else:
+
+            # Minimum dimension length (in inches)
+            scaling =7.0
+
+            # X and Y-dimension lengths (in inches)
+            x_dim = int(scaling + 1.0)
+            y_dim = int(scaling)
+
+        # Generate figure of dimensions proportional to simulation box size (with added x-length for color bar)
+        fig = plt.figure(figsize=(x_dim,y_dim))
         ax = fig.add_subplot(111)
-        div_min = -3
-        min_n = 0.9
-        max_n = 1.0
         levels_text=40
-        level_boundaries = np.linspace(min_n, max_n, levels_text + 1)
         tick_locs   = [0.0,np.pi/6,np.pi/3]
         tick_labels = ['0',r'$\pi/6$',r'$\pi/3$']
 
-        im = plt.scatter(pos[:,0]+self.h_box, pos[:,1]+self.h_box, c=hexatic_order_param, s=0.7, vmin=min_n, vmax=max_n, cmap='viridis')
-        norm= matplotlib.colors.Normalize(vmin=min_n, vmax=max_n)
+        # Find min/max orientation
+        min_hex = 0.0
+        max_hex = 1.0
 
-        sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
-        sm.set_array([])
-        tick_lev = np.arange(min_n, max_n+max_n/10, (max_n-min_n)/10)
-        clb = fig.colorbar(sm, ticks=tick_lev, boundaries=level_boundaries,
-values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStrFormatter('%.2f'))
+        # Set plotted particle size
+        sz = 0.75
+        
+        ells = [Ellipse(xy=np.array([pos[i,0]+self.hx_box,pos[i,1]+self.hy_box]),
+                width=sz, height=sz)
+        for i in range(0,len(pos))]
 
+        # Plot position colored by neighbor number
+        neighborGroup = mc.PatchCollection(ells)
+        coll = ax.add_collection(neighborGroup)
+        coll.set_array(np.ravel(hexatic_order_param))
+        
+        minClb = min_hex
+        maxClb = max_hex
+        coll.set_clim([minClb, maxClb])
+
+        # Modify colorbar properties
+        tick_lev = np.arange(min_hex, max_hex+1, (max_hex - min_hex)/5)
+
+        #level_boundaries = np.arange(min_ori-0.5, int(max_ori) + 1.5, 1)
+        clb = plt.colorbar(coll, ticks=tick_lev, orientation="vertical", format=tick.FormatStrFormatter('%.2f'))
         clb.ax.tick_params(labelsize=16)
-        clb.set_label(r'$\Psi$', labelpad=-55, y=1.04, rotation=0, fontsize=18)
 
+        #clb.set_label(r'$g_6(r)$', labelpad=-55, y=1.04, rotation=0, fontsize=18)
+
+        clb.set_label(r'$g_6(a)$', labelpad=25, y=0.5, rotation=270, fontsize=20)
+        plt.title('All Reference Particles', fontsize=20)
+        
         for m in range(0, len(sep_surface_dict)):
-            key = 'surface id ' + str(int(int_comp_dict['ids']['int id'][m]))
+            key = 'surface id ' + str(int(int_comp_dict['ids'][m]))
             try:
                 pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
                 pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
@@ -1925,14 +1956,23 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
             except:
                 pass
 
-        plt.xlim(0, self.l_box)
-        plt.ylim(0, self.l_box)
+        # If rectangular box, reduce system size plotted
+        if self.lx_box > self.ly_box:
+            plt.xlim(dense_x_mid-(dense_x_width/2), dense_x_mid+(dense_x_width/2))
+            plt.ylim(0, self.ly_box)
+        elif self.lx_box < self.ly_box:
+            plt.ylim(dense_y_mid-(dense_y_width/2), dense_y_mid+(dense_y_width/2))
+            plt.xlim(0, self.lx_box)
+        # Plot entire system
+        else:
+            plt.ylim(0, self.ly_box)
+            plt.xlim(0, self.lx_box)
 
         plt.tick_params(axis='both', which='both',
                         bottom=False, top=False, left=False, right=False,
                         labelbottom=False, labeltop=False, labelleft=False, labelright=False)
 
-        plt.text(0.663, 0.04, s=r'$\tau$' + ' = ' + '{:.1f}'.format(3*self.tst) + ' ' + r'$\tau_\mathrm{r}$',
+        plt.text(0.8, 0.04, s=r'$\tau$' + ' = ' + '{:.1f}'.format(3*self.tst) + ' ' + r'$\tau_\mathrm{r}$',
                 fontsize=18, transform = ax.transAxes,
                 bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
 
@@ -1947,28 +1987,94 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         tick_locs   = [0.0,np.pi/6,np.pi/3]
         tick_labels = ['0',r'$\pi/6$',r'$\pi/3$']
 
-        #Plot particles colorized by bond orientation angle
-        fig = plt.figure(figsize=(7,6))
+        # If box is rectangular with long dimension of x-axis
+        if self.lx_box > self.ly_box:
+
+            # Estimated area of dense phase
+            area_dense = (0.8 * self.partNum * (np.pi/4) / self.phiCP)
+
+            # Mid point of dense phase across longest box dimension (x)
+            dense_x_mid = np.mean(pos[:,0]+self.hx_box)
+
+            # estimated shortest dimension length of dense phase (y)
+            dense_x_width = (area_dense / self.ly_box)
+
+            # Set maximum dimension length (x) of simulation box to be 12 inches (plus 1 inch color bar)
+            scaling = 13.0
+
+            # X and Y-dimension lengths (in inches)
+            x_dim = int(scaling + 1.0)
+            y_dim = int(scaling/ (dense_x_width / self.ly_box))
+
+        # If box is rectangular with long dimension of y-axis
+        elif self.lx_box < self.ly_box:
+
+            # Estimated area of dense phase
+            area_dense = (0.8 * self.partNum * (np.pi/4) / self.phiCP)
+
+            # Mid point of dense phase across longest box dimension (y)
+            mid_point = np.mean(pos[:,1]+self.hy_box)
+
+            # estimated shorted dimension length of dense phase (x)
+            dense_x_width = (area_dense / self.lx_box)
+
+            # Set maximum dimension length (y) of simulation box to be 13 inches
+            scaling = 13.0
+
+            # X and Y-dimension lengths (in inches)
+            x_dim = int((scaling/(dense_x_width / self.lx_box)) + 1.0)
+            y_dim = int(scaling)
+
+        # If box is square
+        else:
+
+            # Minimum dimension length (in inches)
+            scaling =7.0
+
+            # X and Y-dimension lengths (in inches)
+            x_dim = int(scaling + 1.0)
+            y_dim = int(scaling)
+
+        # Generate figure of dimensions proportional to simulation box size (with added x-length for color bar)
+        fig = plt.figure(figsize=(x_dim,y_dim))
         ax = fig.add_subplot(111)
-        div_min = -3
-        min_n = np.min(relative_angles)
-        max_n = np.max(relative_angles)
-        levels_text=40
-        level_boundaries = np.linspace(min_n, max_n, levels_text + 1)
-        im = plt.scatter(pos[:,0]+self.h_box, pos[:,1]+self.h_box, c=relative_angles, s=0.7, vmin=0.0, vmax=np.pi/3, cmap='viridis')
-        norm= matplotlib.colors.Normalize(vmin=0.0, vmax=np.pi/3)
-        sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
-        sm.set_array([])
-        tick_lev = np.arange(min_n, max_n+max_n/10, (max_n-min_n)/10)
-        clb = fig.colorbar(sm)
+
+        # Find min/max orientation
+        min_theta = 0.0
+        max_theta = np.pi/3
+
+        # Set plotted particle size
+        sz = 0.75
+        
+        ells = [Ellipse(xy=np.array([pos[i,0]+self.hx_box,pos[i,1]+self.hy_box]),
+                width=sz, height=sz)
+        for i in range(0,len(pos))]
+
+        # Plot position colored by neighbor number
+        neighborGroup = mc.PatchCollection(ells)
+        coll = ax.add_collection(neighborGroup)
+        coll.set_array(np.ravel(relative_angles))
+        
+        minClb = min_theta
+        maxClb = max_theta
+        coll.set_clim([minClb, maxClb])
+
+        # Modify colorbar properties
+        tick_lev = np.arange(min_theta, max_theta+1, (max_theta - min_theta)/6)
+
+        #level_boundaries = np.arange(min_ori-0.5, int(max_ori) + 1.5, 1)
+        clb = plt.colorbar(coll, ticks=tick_lev, orientation="vertical", format=tick.FormatStrFormatter('%.2f'))
         clb.ax.tick_params(labelsize=16)
-        clb.set_label(r'$\theta$', labelpad=-38, y=1.05, rotation=0, fontsize=18)
+
+        clb.set_label(r'$\theta_6(a)$', labelpad=25, y=0.5, rotation=270, fontsize=20)
+        plt.title('All Reference Particles', fontsize=20)
+
         clb.locator     = matplotlib.ticker.FixedLocator(tick_locs)
         clb.formatter   = matplotlib.ticker.FixedFormatter(tick_labels)
         clb.update_ticks()
 
         for m in range(0, len(sep_surface_dict)):
-            key = 'surface id ' + str(int(int_comp_dict['ids']['int id'][m]))
+            key = 'surface id ' + str(int(int_comp_dict['ids'][m]))
             try:
                 pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
                 pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
@@ -1983,14 +2089,24 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
             except:
                 pass
 
-        plt.xlim(0, self.l_box)
-        plt.ylim(0, self.l_box)
+        # If rectangular box, reduce system size plotted
+        if self.lx_box > self.ly_box:
+            plt.xlim(dense_x_mid-(dense_x_width/2), dense_x_mid+(dense_x_width/2))
+            plt.ylim(0, self.ly_box)
+        elif self.lx_box < self.ly_box:
+            plt.ylim(dense_y_mid-(dense_y_width/2), dense_y_mid+(dense_y_width/2))
+            plt.xlim(0, self.lx_box)
+        # Plot entire system
+        else:
+            plt.ylim(0, self.ly_box)
+            plt.xlim(0, self.lx_box)
+
 
         plt.tick_params(axis='both', which='both',
                         bottom=False, top=False, left=False, right=False,
                         labelbottom=False, labeltop=False, labelleft=False, labelright=False)
 
-        plt.text(0.663, 0.04, s=r'$\tau$' + ' = ' + '{:.1f}'.format(3*self.tst) + ' ' + r'$\tau_\mathrm{r}$',
+        plt.text(0.8, 0.04, s=r'$\tau$' + ' = ' + '{:.1f}'.format(3*self.tst) + ' ' + r'$\tau_\mathrm{r}$',
                 fontsize=18, transform = ax.transAxes,
                 bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
 
@@ -2003,33 +2119,90 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
     def plot_trans_order(self, pos, trans_param, sep_surface_dict, int_comp_dict):
 
-        #Plot particles colorized by translational order parameter
-        fig = plt.figure(figsize=(7,6))
+        # If box is rectangular with long dimension of x-axis
+        if self.lx_box > self.ly_box:
+
+            # Estimated area of dense phase
+            area_dense = (0.8 * self.partNum * (np.pi/4) / self.phiCP)
+
+            # Mid point of dense phase across longest box dimension (x)
+            dense_x_mid = np.mean(pos[:,0]+self.hx_box)
+
+            # estimated shortest dimension length of dense phase (y)
+            dense_x_width = (area_dense / self.ly_box)
+
+            # Set maximum dimension length (x) of simulation box to be 12 inches (plus 1 inch color bar)
+            scaling = 13.0
+
+            # X and Y-dimension lengths (in inches)
+            x_dim = int(scaling + 1.0)
+            y_dim = int(scaling/ (dense_x_width / self.ly_box))
+
+        # If box is rectangular with long dimension of y-axis
+        elif self.lx_box < self.ly_box:
+
+            # Estimated area of dense phase
+            area_dense = (0.8 * self.partNum * (np.pi/4) / self.phiCP)
+
+            # Mid point of dense phase across longest box dimension (y)
+            mid_point = np.mean(pos[:,1]+self.hy_box)
+
+            # estimated shorted dimension length of dense phase (x)
+            dense_x_width = (area_dense / self.lx_box)
+
+            # Set maximum dimension length (y) of simulation box to be 13 inches
+            scaling = 13.0
+
+            # X and Y-dimension lengths (in inches)
+            x_dim = int((scaling/(dense_x_width / self.lx_box)) + 1.0)
+            y_dim = int(scaling)
+
+        # If box is square
+        else:
+
+            # Minimum dimension length (in inches)
+            scaling =7.0
+
+            # X and Y-dimension lengths (in inches)
+            x_dim = int(scaling + 1.0)
+            y_dim = int(scaling)
+
+        # Generate figure of dimensions proportional to simulation box size (with added x-length for color bar)
+        fig = plt.figure(figsize=(x_dim,y_dim))
         ax = fig.add_subplot(111)
-        div_min = -3
-        min_n = np.min(trans_param)
-        max_n = 1.0
-        levels_text=40
-        level_boundaries = np.linspace(min_n, max_n, levels_text + 1)
-        tick_locs   = [0.0,np.pi/6,np.pi/3]
-        tick_labels = ['0',r'$\pi/6$',r'$\pi/3$']
 
+        # Find min/max orientation
+        min_tran = np.min(trans_param)
+        max_tran = 1.0
 
+        # Set plotted particle size
+        sz = 0.75
+        
+        ells = [Ellipse(xy=np.array([pos[i,0]+self.hx_box,pos[i,1]+self.hy_box]),
+                width=sz, height=sz)
+        for i in range(0,len(pos))]
 
-        im = plt.scatter(pos[:,0]+self.h_box, pos[:,1]+self.h_box, c=trans_param, s=0.7, vmin=min_n, vmax=max_n, cmap='viridis')
-        norm= matplotlib.colors.Normalize(vmin=min_n, vmax=max_n)
+        # Plot position colored by neighbor number
+        neighborGroup = mc.PatchCollection(ells)
+        coll = ax.add_collection(neighborGroup)
+        coll.set_array(np.ravel(trans_param))
+        
+        minClb = min_tran
+        maxClb = max_tran
+        coll.set_clim([minClb, maxClb])
 
-        sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
-        sm.set_array([])
-        tick_lev = np.arange(min_n, max_n+max_n/10, (max_n-min_n)/10)
-        clb = fig.colorbar(sm, ticks=tick_lev, boundaries=level_boundaries,
-values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStrFormatter('%.2f'))
+        # Modify colorbar properties
+        tick_lev = np.arange(min_tran, max_tran+1, (max_tran - min_tran)/6)
 
+        #level_boundaries = np.arange(min_ori-0.5, int(max_ori) + 1.5, 1)
+        clb = plt.colorbar(coll, ticks=tick_lev, orientation="vertical", format=tick.FormatStrFormatter('%.2f'))
         clb.ax.tick_params(labelsize=16)
-        clb.set_label(r'$\Psi$', labelpad=-55, y=1.04, rotation=0, fontsize=18)
+
+        clb.set_label(r'$\Psi_6(a)$', labelpad=25, y=0.5, rotation=270, fontsize=20)
+        plt.title('All Reference Particles', fontsize=20)
 
         for m in range(0, len(sep_surface_dict)):
-            key = 'surface id ' + str(int(int_comp_dict['ids']['int id'][m]))
+            key = 'surface id ' + str(int(int_comp_dict['ids'][m]))
             try:
                 pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
                 pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
@@ -2044,14 +2217,23 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
             except:
                 pass
 
-        plt.xlim(0, self.l_box)
-        plt.ylim(0, self.l_box)
+        # If rectangular box, reduce system size plotted
+        if self.lx_box > self.ly_box:
+            plt.xlim(dense_x_mid-(dense_x_width/2), dense_x_mid+(dense_x_width/2))
+            plt.ylim(0, self.ly_box)
+        elif self.lx_box < self.ly_box:
+            plt.ylim(dense_y_mid-(dense_y_width/2), dense_y_mid+(dense_y_width/2))
+            plt.xlim(0, self.lx_box)
+        # Plot entire system
+        else:
+            plt.ylim(0, self.ly_box)
+            plt.xlim(0, self.lx_box)
 
         plt.tick_params(axis='both', which='both',
                         bottom=False, top=False, left=False, right=False,
                         labelbottom=False, labeltop=False, labelleft=False, labelright=False)
 
-        plt.text(0.663, 0.04, s=r'$\tau$' + ' = ' + '{:.1f}'.format(3*self.tst) + ' ' + r'$\tau_\mathrm{r}$',
+        plt.text(0.8, 0.04, s=r'$\tau$' + ' = ' + '{:.1f}'.format(3*self.tst) + ' ' + r'$\tau_\mathrm{r}$',
                 fontsize=18, transform = ax.transAxes,
                 bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
 
@@ -2061,7 +2243,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         #pad = str(j).zfill(4)
         #plt.savefig(outPath + 'translational_order_' + out + pad + ".png", dpi=100)
         #plt.close()
-
+        stop
     def plot_stein_order(self, pos, stein_param, sep_surface_dict, int_comp_dict):
 
         #Plot particles colorized by translational order parameter
@@ -2077,7 +2259,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
 
 
-        im = plt.scatter(pos[:,0]+self.h_box, pos[:,1]+self.h_box, c=stein_param, s=0.7, vmin=min_n, vmax=max_n, cmap='viridis')
+        im = plt.scatter(pos[:,0]+self.hx_box, pos[:,1]+self.hy_box, c=stein_param, s=0.7, vmin=min_n, vmax=max_n, cmap='viridis')
         norm= matplotlib.colors.Normalize(vmin=min_n, vmax=max_n)
 
         sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
@@ -2138,7 +2320,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
 
 
-        im = plt.scatter(pos[:,0]+self.h_box, pos[:,1]+self.h_box, c=nematic_param, s=0.7, vmin=min_n, vmax=max_n, cmap='viridis')
+        im = plt.scatter(pos[:,0]+self.hx_box, pos[:,1]+self.hy_box, c=nematic_param, s=0.7, vmin=min_n, vmax=max_n, cmap='viridis')
         norm= matplotlib.colors.Normalize(vmin=min_n, vmax=max_n)
 
         sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
@@ -2328,7 +2510,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         clb.set_label(r'$\hat{\Pi}_\mathrm{d}^\mathrm{P}$', labelpad=-90, y=1.08, rotation=0, fontsize=20)
 
         for m in range(0, len(sep_surface_dict)):
-            key = 'surface id ' + str(int(int_comp_dict['ids']['int id'][m]))
+            key = 'surface id ' + str(int(int_comp_dict['ids'][m]))
             try:
                 pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
                 pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
@@ -2362,7 +2544,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
         fig = plt.figure(figsize=(7,6))
         ax = fig.add_subplot(111)
-        im = plt.scatter(pos[:,0]+self.h_box, pos[:,1]+self.h_box, c=interpart_press_part, s=0.7, vmin=min_n, vmax=max_n)
+        im = plt.scatter(pos[:,0]+self.hx_box, pos[:,1]+self.hy_box, c=interpart_press_part, s=0.7, vmin=min_n, vmax=max_n)
 
 
 
