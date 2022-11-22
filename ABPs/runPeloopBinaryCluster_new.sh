@@ -139,7 +139,7 @@ if [ $dont_run == "no" ]; then
     # List for epsilon
     #eps=(1.0 0.1 0.001) # LISTS CAN CONTAIN FLOATS!!!!
     declare -a eps
-    eps=(1.0 0.1 0.01 0.001)
+    eps=(1.0)
     #(0.1 1.0)
 
     seed1=$$
