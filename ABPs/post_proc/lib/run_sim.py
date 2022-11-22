@@ -78,11 +78,11 @@ class run_sim:
         self.tauLJ = (tauA if (tauA <= tauB) else tauB)  # use the smaller tauLJ.  Doesn't matter since these are the same
         self.epsA = (self.epsA if (self.epsA >= self.epsB) else self.epsB)   # use the larger epsilon. Doesn't matter since these are the same
 
-        self.dt = 0.000001 * self.tauLJ                        # timestep size.  I use 0.000001 for dt=tauLJ* (eps/10^6) generally
+        self.dt = 0.0000001 * self.tauLJ                        # timestep size.  I use 0.000001 for dt=tauLJ* (eps/10^6) generally
         self.simLength = self.runFor * self.tauBrown               # how long to run (in tauBrown)
         self.simTauLJ = self.simLength / self.tauLJ                # how long to run (in tauLJ)
         self.totTsteps = int(self.simLength / self.dt)             # how many tsteps to run
-        self.numDumps = float(self.simLength / 0.05)           # dump data every 0.1 tauBrown.
+        self.numDumps = float(self.simLength / 0.025)           # dump data every 0.1 tauBrown.
 
         if self.dumpFreq==0:
             self.dumpFreq = float(totTsteps / numDumps)      # normalized dump frequency.
