@@ -42,23 +42,28 @@ import phase_identification
 import binning
 import particles
 class stress_and_pressure:
-    def __init__(self, l_box, NBins, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict):
+    def __init__(self, lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict):
 
         import freud
 
-        self.l_box = l_box
-        self.h_box = self.l_box/2
+        self.lx_box = lx_box
+        self.hx_box = self.lx_box/2
 
-        self.f_box = box.Box(Lx=l_box, Ly=l_box, is2D=True)
+        self.ly_box = ly_box
+        self.hy_box = self.ly_box/2
+
+        self.f_box = box.Box(Lx=lx_box, Ly=ly_box, is2D=True)
 
         try:
-            self.NBins = int(NBins)
+            self.NBins_x = int(NBins_x)
+            self.NBins_y = int(NBins_y)
         except:
             print('NBins must be either a float or an integer')
 
-        self.utility_functs = utility.utility(self.l_box)
+        self.utility_functs = utility.utility(self.lx_box, self.ly_box)
 
-        self.sizeBin = self.utility_functs.roundUp((l_box / NBins), 6)
+        self.sizeBin_x = self.utility_functs.roundUp((lx_box / NBins_x), 6)
+        self.sizeBin_y = self.utility_functs.roundUp((ly_box / NBins_y), 6)
 
         self.partNum = partNum
 
@@ -94,13 +99,13 @@ class stress_and_pressure:
 
         self.press_dict = press_dict
 
-        self.binning = binning.binning(self.l_box, self.partNum, self.NBins, self.peA, self.peB, self.ang, self.eps)
+        self.binning = binning.binning(self.lx_box, self.ly_box, self.partNum, self.NBins_x, self.NBins_y, self.peA, self.peB, self.ang, self.eps)
 
-        self.plotting_utility = plotting_utility.plotting_utility(self.l_box, self.partNum, self.typ)
+        self.plotting_utility = plotting_utility.plotting_utility(self.lx_box, self.ly_box, self.partNum, self.typ)
 
-        self.phase_ident = phase_identification.phase_identification(self.area_frac_dict, self.align_dict, self.part_dict, self.press_dict, self.l_box, self.partNum, self.NBins, self.peA, self.peB, self.parFrac, self.eps, self.typ)
+        self.phase_ident = phase_identification.phase_identification(self.area_frac_dict, self.align_dict, self.part_dict, self.press_dict, self.lx_box, self.ly_box, self.partNum, self.NBins_x, self.NBins_y, self.peA, self.peB, self.parFrac, self.eps, self.typ)
 
-        self.particle_prop_functs = particles.particle_props(self.l_box, self.partNum, self.NBins, self.peA, self.peB, self.typ, self.pos, self.ang)
+        self.particle_prop_functs = particles.particle_props(self.lx_box, self.ly_box, self.partNum, self.NBins_x, self.NBins_y, self.peA, self.peB, self.typ, self.pos, self.ang)
 
         self.theory_functs = theory.theory()
 

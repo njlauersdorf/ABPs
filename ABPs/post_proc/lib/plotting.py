@@ -133,24 +133,93 @@ class plotting:
         green = ("#77dd77")
         red = ("#ff6961")
 
-        bulk_part_ids = phase_ids_dict['ids']['bulk']['all']
-        gas_part_ids = phase_ids_dict['ids']['gas']['all']
-        int_part_ids = phase_ids_dict['ids']['int']['all']
+        bulk_part_ids = phase_ids_dict['bulk']['all']
+        gas_part_ids = phase_ids_dict['gas']['all']
+        int_part_ids = phase_ids_dict['int']['all']
 
-        fig = plt.figure(figsize=(8.5,8))
+        # If box is rectangular with long dimension of x-axis
+        if self.lx_box > self.ly_box:
+
+            # Estimated area of dense phase
+            area_dense = (0.8 * self.partNum * (np.pi/4) / self.phiCP)
+
+            # Mid point of dense phase across longest box dimension (x)
+            dense_x_mid = np.mean(pos[:,0]+self.hx_box)
+
+            # estimated shortest dimension length of dense phase (y)
+            dense_x_width = (area_dense / self.ly_box)
+
+            # Set maximum dimension length (x) of simulation box to be 12 inches (plus 1 inch color bar)
+            scaling = 13.0
+
+            # X and Y-dimension lengths (in inches)
+            x_dim = int(scaling + 1.0)
+            y_dim = int(scaling/ (dense_x_width / self.ly_box))
+
+        # If box is rectangular with long dimension of y-axis
+        elif self.lx_box < self.ly_box:
+
+            # Estimated area of dense phase
+            area_dense = (0.8 * self.partNum * (np.pi/4) / self.phiCP)
+
+            # Mid point of dense phase across longest box dimension (y)
+            mid_point = np.mean(pos[:,1]+self.hy_box)
+
+            # estimated shorted dimension length of dense phase (x)
+            dense_x_width = (area_dense / self.lx_box)
+
+            # Set maximum dimension length (y) of simulation box to be 13 inches
+            scaling = 13.0
+
+            # X and Y-dimension lengths (in inches)
+            x_dim = int((scaling/(dense_x_width / self.lx_box)) + 1.0)
+            y_dim = int(scaling)
+
+        # If box is square
+        else:
+
+            # Minimum dimension length (in inches)
+            scaling =7.0
+
+            # X and Y-dimension lengths (in inches)
+            x_dim = int(scaling + 1.0)
+            y_dim = int(scaling)
+
+        # Generate figure of dimensions proportional to simulation box size (with added x-length for color bar)
+        fig = plt.figure(figsize=(x_dim,y_dim))
         ax = fig.add_subplot(111)
 
+        # Set plotted particle size
+        sz = 0.75
+
+        # Plot position colored by neighbor number
+        
         if len(bulk_part_ids)>0:
-            plt.scatter(pos[bulk_part_ids,0]+self.hx_box, pos[bulk_part_ids,1]+self.hy_box, s=0.75, marker='.', c=green)
+            ells_bulk = [Ellipse(xy=np.array([pos[bulk_part_ids[i],0]+self.hx_box,pos[bulk_part_ids[i],1]+self.hy_box]),
+                width=sz, height=sz)
+        for i in range(0,len(bulk_part_ids))]
+            bulkGroup = mc.PatchCollection(ells_bulk, facecolor=green)
+            ax.add_collection(bulkGroup)
+
         if len(gas_part_ids)>0:
-            plt.scatter(pos[gas_part_ids,0]+self.hx_box, pos[gas_part_ids,1]+self.hy_box, s=0.75, marker='.', c=red)
+            ells_gas = [Ellipse(xy=np.array([pos[gas_part_ids[i],0]+self.hx_box,pos[gas_part_ids[i],1]+self.hy_box]),
+                width=sz, height=sz)
+        for i in range(0,len(gas_part_ids))]
+            gasGroup = mc.PatchCollection(ells_gas, facecolor=red)
+            ax.add_collection(gasGroup)
+
         if len(int_part_ids)>0:
-            plt.scatter(pos[int_part_ids,0]+self.hx_box, pos[int_part_ids,1]+self.hy_box, s=0.75, marker='.', c=yellow)
+            ells_int = [Ellipse(xy=np.array([pos[int_part_ids[i],0]+self.hx_box,pos[int_part_ids[i],1]+self.hy_box]),
+                width=sz, height=sz)
+        for i in range(0,len(int_part_ids))]
+
+            intGroup = mc.PatchCollection(ells_int, facecolor=yellow)
+            ax.add_collection(intGroup)
 
         plt.quiver(self.pos_x, self.pos_y, self.orient_x, self.orient_y)
 
         for m in range(0, len(sep_surface_dict)):
-            key = 'surface id ' + str(int(int_comp_dict['ids']['int id'][m]))
+            key = 'surface id ' + str(int(int_comp_dict['ids'][m]))
             try:
                 pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
                 pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
@@ -168,10 +237,11 @@ class plotting:
 
 
 
-        pos_ticks = np.linspace(0, self.NBins, self.NBins + 1) * self.sizeBin
+        pos_x_ticks = np.linspace(0, self.NBins_x, self.NBins_x + 1) * self.sizeBin_x
+        pos_y_ticks = np.linspace(0, self.NBins_y, self.NBins_y + 1) * self.sizeBin_y
 
-        plt.xticks(pos_ticks)
-        plt.yticks(pos_ticks)
+        plt.xticks(pos_x_ticks)
+        plt.yticks(pos_y_ticks)
 
         plt.tick_params(
                                 axis='x',          # changes apply to the x-axis
@@ -193,17 +263,34 @@ class plotting:
         plt.tick_params(axis='both', which='both',
                         bottom=False, top=False, left=False, right=False,
                         labelbottom=False, labeltop=False, labelleft=False, labelright=False)
-
-        plt.text(0.77, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
-                fontsize=18,transform = ax.transAxes,
+        
+        # Label simulation time
+        if self.lx_box == self.ly_box:
+            plt.text(0.75, 0.04, s=r'$\tau$' + ' = ' + '{:.1f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+                fontsize=18, transform = ax.transAxes,
                 bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+        elif self.lx_box > self.ly_box:
+            plt.text(0.85, 0.1, s=r'$\tau$' + ' = ' + '{:.1f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+                fontsize=18, transform = ax.transAxes,
+                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+
 
         eps_leg=[]
         mkSz = [0.1, 0.1, 0.15, 0.1, 0.1]
         msz=40
 
-        plt.xlim(0, self.lx_box)
-        plt.ylim(0, self.ly_box)
+        # If rectangular box, reduce system size plotted
+        if self.lx_box > self.ly_box:
+            plt.xlim(dense_x_mid-(dense_x_width/2), dense_x_mid+(dense_x_width/2))
+            plt.ylim(0, self.ly_box)
+        elif self.lx_box < self.ly_box:
+            plt.ylim(dense_y_mid-(dense_y_width/2), dense_y_mid+(dense_y_width/2))
+            plt.xlim(0, self.lx_box)
+        # Plot entire system
+        else:
+            plt.ylim(0, self.ly_box)
+            plt.xlim(0, self.lx_box)
+
         red_patch = mpatches.Patch(color=red, label='Dilute')
         green_patch = mpatches.Patch(color=green, label='Bulk')
         yellow_patch = mpatches.Patch(color=yellow, label='Interface')
@@ -213,7 +300,7 @@ class plotting:
         plt.show()
         #plt.savefig(outPath + 'plot_phases_' + out + pad + ".png", dpi=100)
         #plt.close()
-    def plot_area_fraction(self, area_frac_dict, sep_surface_dict, int_comp_dict, type='all'):#, int_comp_dict):#sep_surface_dict, int_comp_dict):
+    def plot_area_fraction(self, area_frac_dict, sep_surface_dict, int_comp_dict, pos, type='all'):#, int_comp_dict):#sep_surface_dict, int_comp_dict):
         """
         This function plots the binned average area fraction at each location
         in space.
@@ -251,7 +338,56 @@ class plotting:
         elif type == 'dif':
             area_frac = area_frac_dict['bin']['dif']
 
-        fig = plt.figure(figsize=(7,6))
+        # If box is rectangular with long dimension of x-axis
+        if self.lx_box > self.ly_box:
+
+            # Estimated area of dense phase
+            area_dense = (0.8 * self.partNum * (np.pi/4) / self.phiCP)
+
+            # Mid point of dense phase across longest box dimension (x)
+            dense_x_mid = np.mean(pos[:,0]+self.hx_box)
+
+            # estimated shortest dimension length of dense phase (y)
+            dense_x_width = (area_dense / self.ly_box)
+
+            # Set maximum dimension length (x) of simulation box to be 12 inches (plus 1 inch color bar)
+            scaling = 13.0
+
+            # X and Y-dimension lengths (in inches)
+            x_dim = int(scaling + 1.0)
+            y_dim = int(scaling/ (dense_x_width / self.ly_box))
+
+        # If box is rectangular with long dimension of y-axis
+        elif self.lx_box < self.ly_box:
+
+            # Estimated area of dense phase
+            area_dense = (0.8 * self.partNum * (np.pi/4) / self.phiCP)
+
+            # Mid point of dense phase across longest box dimension (y)
+            mid_point = np.mean(pos[:,1]+self.hy_box)
+
+            # estimated shorted dimension length of dense phase (x)
+            dense_x_width = (area_dense / self.lx_box)
+
+            # Set maximum dimension length (y) of simulation box to be 13 inches
+            scaling = 13.0
+
+            # X and Y-dimension lengths (in inches)
+            x_dim = int((scaling/(dense_x_width / self.lx_box)) + 1.0)
+            y_dim = int(scaling)
+
+        # If box is square
+        else:
+
+            # Minimum dimension length (in inches)
+            scaling =7.0
+
+            # X and Y-dimension lengths (in inches)
+            x_dim = int(scaling + 1.0)
+            y_dim = int(scaling)
+
+        # Generate figure of dimensions proportional to simulation box size (with added x-length for color bar)
+        fig = plt.figure(figsize=(x_dim,y_dim))
         ax = fig.add_subplot(111)
 
         # Contour plot properties
@@ -284,17 +420,29 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
         clb.ax.tick_params(labelsize=16)
         if type == 'all':
-            clb.set_label(r'$\phi$', labelpad=-40, y=1.07, rotation=0, fontsize=20)
+            if self.lx_box == self.ly_box:
+                clb.set_label(r'$\phi$', labelpad=-40, y=1.05, rotation=0, fontsize=20)
+            elif self.lx_box > self.ly_box:
+                clb.set_label(r'$\phi$', labelpad=-30, y=1.15, rotation=0, fontsize=20)
         elif type == 'A':
-            clb.set_label(r'$\phi_\mathrm{A}$', labelpad=-40, y=1.07, rotation=0, fontsize=20)
+            if self.lx_box == self.ly_box:
+                clb.set_label(r'$\phi_\mathrm{A}$', labelpad=-40, y=1.05, rotation=0, fontsize=20)
+            elif self.lx_box > self.ly_box:
+                clb.set_label(r'$\phi_\mathrm{A}$', labelpad=-30, y=1.15, rotation=0, fontsize=20)
         elif type == 'B':
-            clb.set_label(r'$\phi_\mathrm{B}$', labelpad=-40, y=1.07, rotation=0, fontsize=20)
+            if self.lx_box == self.ly_box:
+                clb.set_label(r'$\phi_\mathrm{B}$', labelpad=-40, y=1.05, rotation=0, fontsize=20)
+            elif self.lx_box > self.ly_box:
+                clb.set_label(r'$\phi_\mathrm{B}$', labelpad=-30, y=1.15, rotation=0, fontsize=20)
         elif type == 'dif':
-            clb.set_label(r'$\phi_\mathrm{B}-\phi_\mathrm{A}$', labelpad=-30, y=1.07, rotation=0, fontsize=20)
-
+            if self.lx_box == self.ly_box:
+                clb.set_label(r'$\phi_\mathrm{B}-\phi_\mathrm{A}$', labelpad=-30, y=1.05, rotation=0, fontsize=20)
+            elif self.lx_box > self.ly_box:
+                clb.set_label(r'$\phi_\mathrm{B}-\phi_\mathrm{A}$', labelpad=-25, y=1.15, rotation=0, fontsize=20)
+                
         # Plot interpolated inner and outer interface surface curves
         for m in range(0, len(sep_surface_dict)):
-            key = 'surface id ' + str(int(int_comp_dict['ids']['int id'][m]))
+            key = 'surface id ' + str(int(int_comp_dict['ids'][m]))
             try:
                 pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
                 pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
@@ -311,13 +459,26 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
 
         # Label simulation time
-        plt.text(0.663, 0.04, s=r'$\tau$' + ' = ' + '{:.1f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+        if self.lx_box == self.ly_box:
+            plt.text(0.75, 0.04, s=r'$\tau$' + ' = ' + '{:.1f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+                fontsize=18, transform = ax.transAxes,
+                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+        elif self.lx_box > self.ly_box:
+            plt.text(0.85, 0.1, s=r'$\tau$' + ' = ' + '{:.1f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
                 fontsize=18, transform = ax.transAxes,
                 bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
 
-        # modify plot parameters
-        plt.xlim(0, self.lx_box)
-        plt.ylim(0, self.ly_box)
+       # If rectangular box, reduce system size plotted
+        if self.lx_box > self.ly_box:
+            plt.xlim(dense_x_mid-(dense_x_width/2), dense_x_mid+(dense_x_width/2))
+            plt.ylim(0, self.ly_box)
+        elif self.lx_box < self.ly_box:
+            plt.ylim(dense_y_mid-(dense_y_width/2), dense_y_mid+(dense_y_width/2))
+            plt.xlim(0, self.lx_box)
+        # Plot entire system
+        else:
+            plt.ylim(0, self.ly_box)
+            plt.xlim(0, self.lx_box)
 
         plt.tick_params(axis='both', which='both',
                         bottom=False, top=False, left=False, right=False,
@@ -383,7 +544,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         #plt.savefig(outPath + 'num_dens_' + out + pad + ".png", dpi=100)
         #plt.close()
 
-    def plot_particle_fraction(self, num_dens_dict, sep_surface_dict, int_comp_dict, type='A'):
+    def plot_particle_fraction(self, num_dens_dict, sep_surface_dict, int_comp_dict, pos, type='A'):
         """
         This function plots the fraction of particles of a given type per bin
         at each location in space.
@@ -414,11 +575,60 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         if type == 'A':
             part_frac = num_dens_dict['bin']['fast frac']
         elif type == 'B':
-            part_frac = np.ones(np.shape(fast_frac)) - num_dens_dict['bin']['fast frac']
+            part_frac = np.ones(np.shape(num_dens_dict['bin']['fast frac'])) - num_dens_dict['bin']['fast frac']
         elif type == 'dif':
-            part_frac = num_dens_dict['bin']['fast frac'] - (np.ones(np.shape(fast_frac)) - num_dens_dict['bin']['fast frac'])
+            part_frac = num_dens_dict['bin']['fast frac'] - (np.ones(np.shape(num_dens_dict['bin']['fast frac'])) - num_dens_dict['bin']['fast frac'])
 
-        fig = plt.figure(figsize=(7,6))
+        # If box is rectangular with long dimension of x-axis
+        if self.lx_box > self.ly_box:
+
+            # Estimated area of dense phase
+            area_dense = (0.8 * self.partNum * (np.pi/4) / self.phiCP)
+
+            # Mid point of dense phase across longest box dimension (x)
+            dense_x_mid = np.mean(pos[:,0]+self.hx_box)
+
+            # estimated shortest dimension length of dense phase (y)
+            dense_x_width = (area_dense / self.ly_box)
+
+            # Set maximum dimension length (x) of simulation box to be 12 inches (plus 1 inch color bar)
+            scaling = 13.0
+
+            # X and Y-dimension lengths (in inches)
+            x_dim = int(scaling + 1.0)
+            y_dim = int(scaling/ (dense_x_width / self.ly_box))
+
+        # If box is rectangular with long dimension of y-axis
+        elif self.lx_box < self.ly_box:
+
+            # Estimated area of dense phase
+            area_dense = (0.8 * self.partNum * (np.pi/4) / self.phiCP)
+
+            # Mid point of dense phase across longest box dimension (y)
+            mid_point = np.mean(pos[:,1]+self.hy_box)
+
+            # estimated shorted dimension length of dense phase (x)
+            dense_x_width = (area_dense / self.lx_box)
+
+            # Set maximum dimension length (y) of simulation box to be 13 inches
+            scaling = 13.0
+
+            # X and Y-dimension lengths (in inches)
+            x_dim = int((scaling/(dense_x_width / self.lx_box)) + 1.0)
+            y_dim = int(scaling)
+
+        # If box is square
+        else:
+
+            # Minimum dimension length (in inches)
+            scaling =7.0
+
+            # X and Y-dimension lengths (in inches)
+            x_dim = int(scaling + 1.0)
+            y_dim = int(scaling)
+
+        # Generate figure of dimensions proportional to simulation box size (with added x-length for color bar)
+        fig = plt.figure(figsize=(x_dim,y_dim))
         ax = fig.add_subplot(111)
 
         # Contour plot properties
@@ -436,25 +646,33 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         im = plt.contourf(self.pos_x, self.pos_y, part_frac, level_boundaries, vmin=min_part_frac, vmax=max_part_frac, cmap='seismic', extend='both')
 
         # Modify color bar properties
-        norm= matplotlib.colors.Normalize(vmin=min_n, vmax=max_n)
+        norm= matplotlib.colors.Normalize(vmin=min_part_frac, vmax=max_part_frac)
         sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
         sm.set_array([])
-        tick_lev = np.arange(min_n, max_n+max_n/10, (max_n-min_n)/10)
+        tick_lev = np.arange(min_part_frac, max_part_frac+max_part_frac/10, (max_part_frac-min_part_frac)/10)
         clb = fig.colorbar(sm, ticks=tick_lev, boundaries=level_boundaries,
 values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStrFormatter('%.2f'))
         clb.ax.tick_params(labelsize=16)
 
         if type == 'A':
-            clb.set_label(r'$\chi_\mathrm{A}$', labelpad=-40, y=1.07, rotation=0, fontsize=20)
+            if self.lx_box == self.ly_box:
+                clb.set_label(r'$\chi_\mathrm{A}$', labelpad=-40, y=1.05, rotation=0, fontsize=20)
+            elif self.lx_box > self.ly_box:
+                clb.set_label(r'$\chi_\mathrm{A}$', labelpad=-30, y=1.15, rotation=0, fontsize=20)
         elif type == 'B':
-            clb.set_label(r'$\chi_\mathrm{B}$', labelpad=-40, y=1.07, rotation=0, fontsize=20)
+            if self.lx_box == self.ly_box:
+                clb.set_label(r'$\chi_\mathrm{B}$', labelpad=-40, y=1.05, rotation=0, fontsize=20)
+            elif self.lx_box > self.ly_box:
+                clb.set_label(r'$\chi_\mathrm{B}$', labelpad=-30, y=1.15, rotation=0, fontsize=20)
         elif type == 'dif':
-            clb.set_label(r'$\chi_\mathrm{B}-\chi_\mathrm{A}$', labelpad=-30, y=1.07, rotation=0, fontsize=20)
-
+            if self.lx_box == self.ly_box:
+                clb.set_label(r'$\chi_\mathrm{B}-\chi_\mathrm{A}$', labelpad=-30, y=1.05, rotation=0, fontsize=20)
+            elif self.lx_box > self.ly_box:
+                clb.set_label(r'$\chi_\mathrm{B}-\chi_\mathrm{A}$', labelpad=-25, y=1.15, rotation=0, fontsize=20)
 
         # Plot interpolated inner and outer interface surface curves
         for m in range(0, len(sep_surface_dict)):
-            key = 'surface id ' + str(int(int_comp_dict['ids']['int id'][m]))
+            key = 'surface id ' + str(int(int_comp_dict['ids'][m]))
             try:
                 pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
                 pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
@@ -470,13 +688,26 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                 pass
 
         # Label simulation time
-        plt.text(0.663, 0.04, s=r'$\tau$' + ' = ' + '{:.1f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+        if self.lx_box == self.ly_box:
+            plt.text(0.75, 0.04, s=r'$\tau$' + ' = ' + '{:.1f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+                fontsize=18, transform = ax.transAxes,
+                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+        elif self.lx_box > self.ly_box:
+            plt.text(0.85, 0.1, s=r'$\tau$' + ' = ' + '{:.1f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
                 fontsize=18, transform = ax.transAxes,
                 bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
 
-        # Modify plot parameters
-        plt.xlim(0, self.l_box)
-        plt.ylim(0, self.l_box)
+        # If rectangular box, reduce system size plotted
+        if self.lx_box > self.ly_box:
+            plt.xlim(dense_x_mid-(dense_x_width/2), dense_x_mid+(dense_x_width/2))
+            plt.ylim(0, self.ly_box)
+        elif self.lx_box < self.ly_box:
+            plt.ylim(dense_y_mid-(dense_y_width/2), dense_y_mid+(dense_y_width/2))
+            plt.xlim(0, self.lx_box)
+        # Plot entire system
+        else:
+            plt.ylim(0, self.ly_box)
+            plt.xlim(0, self.lx_box)
 
         plt.tick_params(axis='both', which='both',
                         bottom=False, top=False, left=False, right=False,
@@ -488,7 +719,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         #plt.savefig(outPath + 'num_dens_' + out + pad + ".png", dpi=100)
         #plt.close()
 
-    def plot_alignment(self, align_dict, sep_surface_dict, int_comp_dict, type='all'):
+    def plot_alignment(self, align_dict, sep_surface_dict, int_comp_dict, pos, type='all'):
 
         """
         This function plots the average alignment (toward cluster surface
@@ -529,7 +760,56 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         elif type == 'dif':
             align = align_dict['bin']['B']['mag'] - align_dict['bin']['A']['mag']
 
-        fig = plt.figure(figsize=(7,6))
+        # If box is rectangular with long dimension of x-axis
+        if self.lx_box > self.ly_box:
+
+            # Estimated area of dense phase
+            area_dense = (0.8 * self.partNum * (np.pi/4) / self.phiCP)
+
+            # Mid point of dense phase across longest box dimension (x)
+            dense_x_mid = np.mean(pos[:,0]+self.hx_box)
+
+            # estimated shortest dimension length of dense phase (y)
+            dense_x_width = (area_dense / self.ly_box)
+
+            # Set maximum dimension length (x) of simulation box to be 12 inches (plus 1 inch color bar)
+            scaling = 13.0
+
+            # X and Y-dimension lengths (in inches)
+            x_dim = int(scaling + 1.0)
+            y_dim = int(scaling/ (dense_x_width / self.ly_box))
+
+        # If box is rectangular with long dimension of y-axis
+        elif self.lx_box < self.ly_box:
+
+            # Estimated area of dense phase
+            area_dense = (0.8 * self.partNum * (np.pi/4) / self.phiCP)
+
+            # Mid point of dense phase across longest box dimension (y)
+            mid_point = np.mean(pos[:,1]+self.hy_box)
+
+            # estimated shorted dimension length of dense phase (x)
+            dense_x_width = (area_dense / self.lx_box)
+
+            # Set maximum dimension length (y) of simulation box to be 13 inches
+            scaling = 13.0
+
+            # X and Y-dimension lengths (in inches)
+            x_dim = int((scaling/(dense_x_width / self.lx_box)) + 1.0)
+            y_dim = int(scaling)
+
+        # If box is square
+        else:
+
+            # Minimum dimension length (in inches)
+            scaling =7.0
+
+            # X and Y-dimension lengths (in inches)
+            x_dim = int(scaling + 1.0)
+            y_dim = int(scaling)
+
+        # Generate figure of dimensions proportional to simulation box size (with added x-length for color bar)
+        fig = plt.figure(figsize=(x_dim,y_dim))
         ax = fig.add_subplot(111)
 
         # Contour plot properties
@@ -541,36 +821,46 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
             max_align = 1.0
 
         levels_text=40
-        level_boundaries = np.linspace(min_n, max_n, levels_text + 1)
+        level_boundaries = np.linspace(min_align, max_align, levels_text + 1)
 
         # Plot particle binned properties
-        im = plt.contourf(self.pos_x, self.pos_y, align, level_boundaries, vmin=min_n, vmax=max_n, cmap='seismic', extend='both')
+        im = plt.contourf(self.pos_x, self.pos_y, align, level_boundaries, vmin=min_align, vmax=max_align, cmap='seismic', extend='both')
         plt.quiver(self.pos_x, self.pos_y, self.orient_x, self.orient_y)
 
         # Modify color bar properties
-        norm= matplotlib.colors.Normalize(vmin=min_n, vmax=max_n)
+        norm= matplotlib.colors.Normalize(vmin=min_align, vmax=max_align)
         sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
         sm.set_array([])
-        tick_lev = np.arange(min_n, max_n+max_n/10, (max_n-min_n)/10)
+        tick_lev = np.arange(min_align, max_align+max_align/10, (max_align-min_align)/10)
         clb = fig.colorbar(sm, ticks=tick_lev, boundaries=level_boundaries,
 values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStrFormatter('%.2f'))
         clb.ax.tick_params(labelsize=16)
-
+        print('test')
+        print(type)
         if type == 'all':
-            clb.set_label(r'$\alpha$', labelpad=-40, y=1.07, rotation=0, fontsize=20)
+            if self.lx_box == self.ly_box:
+                clb.set_label(r'$\alpha}$', labelpad=-40, y=1.05, rotation=0, fontsize=20)
+            elif self.lx_box > self.ly_box:
+                clb.set_label(r'$\alpha$', labelpad=-30, y=1.15, rotation=0, fontsize=20)
         elif type == 'A':
-            clb.set_label(r'$\alpha_\mathrm{A}$', labelpad=-40, y=1.07, rotation=0, fontsize=20)
+            if self.lx_box == self.ly_box:
+                clb.set_label(r'$\alpha_\mathrm{A}$', labelpad=-40, y=1.05, rotation=0, fontsize=20)
+            elif self.lx_box > self.ly_box:
+                clb.set_label(r'$\alpha_\mathrm{A}$', labelpad=-30, y=1.15, rotation=0, fontsize=20)
         elif type == 'B':
-            clb.set_label(r'$\alpha_\mathrm{B}$', labelpad=-40, y=1.07, rotation=0, fontsize=20)
+            if self.lx_box == self.ly_box:
+                clb.set_label(r'$\alpha_\mathrm{B}$', labelpad=-40, y=1.05, rotation=0, fontsize=20)
+            elif self.lx_box > self.ly_box:
+                clb.set_label(r'$\alpha_\mathrm{B}$', labelpad=-30, y=1.15, rotation=0, fontsize=20)
         elif type == 'dif':
-            clb.set_label(r'$\alpha_\mathrm{B}-\alpha_\mathrm{A}$', labelpad=-30, y=1.07, rotation=0, fontsize=20)
-
-
-        clb.set_label(r'$\alpha$', labelpad=-40, y=1.07, rotation=0, fontsize=20)
+            if self.lx_box == self.ly_box:
+                clb.set_label(r'$\alpha_\mathrm{B}-\alpha_\mathrm{A}$', labelpad=-30, y=1.05, rotation=0, fontsize=20)
+            elif self.lx_box > self.ly_box:
+                clb.set_label(r'$\alpha_\mathrm{B}-\alpha_\mathrm{A}$', labelpad=-25, y=1.15, rotation=0, fontsize=20)
 
         # Plot interpolated inner and outer interface surface curves
         for m in range(0, len(sep_surface_dict)):
-            key = 'surface id ' + str(int(int_comp_dict['ids']['int id'][m]))
+            key = 'surface id ' + str(int(int_comp_dict['ids'][m]))
             try:
                 pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
                 pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
@@ -586,14 +876,28 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                 pass
 
         # Label simulation time
-        plt.text(0.663, 0.04, s=r'$\tau$' + ' = ' + '{:.1f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+        if self.lx_box == self.ly_box:
+            plt.text(0.75, 0.04, s=r'$\tau$' + ' = ' + '{:.1f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+                fontsize=18, transform = ax.transAxes,
+                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+        elif self.lx_box > self.ly_box:
+            plt.text(0.85, 0.1, s=r'$\tau$' + ' = ' + '{:.1f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
                 fontsize=18, transform = ax.transAxes,
                 bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
 
         # Modify plot parameters
 
-        plt.xlim(0, self.lx_box)
-        plt.ylim(0, self.ly_box)
+        # If rectangular box, reduce system size plotted
+        if self.lx_box > self.ly_box:
+            plt.xlim(dense_x_mid-(dense_x_width/2), dense_x_mid+(dense_x_width/2))
+            plt.ylim(0, self.ly_box)
+        elif self.lx_box < self.ly_box:
+            plt.ylim(dense_y_mid-(dense_y_width/2), dense_y_mid+(dense_y_width/2))
+            plt.xlim(0, self.lx_box)
+        # Plot entire system
+        else:
+            plt.ylim(0, self.ly_box)
+            plt.xlim(0, self.lx_box)
 
         plt.tick_params(axis='both', which='both',
                         bottom=False, top=False, left=False, right=False,
@@ -635,7 +939,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         bulk_lat_mean = np.mean(lat_plot_dict['bulk']['all']['vals'])
 
         xmin = 0.85*bulk_lat_mean
-        xmax = 1.1*bulk_lat_mean
+        xmax = 1.15*bulk_lat_mean
 
         if (len(bulk_lats)>0):
             bulk_id = np.where((bulk_lats > xmax) | (bulk_lats < xmin))[0]
@@ -701,7 +1005,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
         bulk_lat_mean = np.mean(lat_plot_dict['bulk']['all']['vals'])
         dense_lats = lat_plot_dict['dense']['all']
-        
+
         # If box is rectangular with long dimension of x-axis
         if self.lx_box > self.ly_box:
 
@@ -754,38 +1058,17 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         fig = plt.figure(figsize=(x_dim,y_dim))
         ax = fig.add_subplot(111)
 
-        # Scatter plot properties
-        min_lat = 0.97*bulk_lat_mean
-        max_lat = 1.03*bulk_lat_mean
-
-        # Plot particle properties
-        im = plt.scatter(dense_lats['x']+self.hx_box, dense_lats['y']+self.hy_box, c=dense_lats['vals'], s=0.7, vmin=min_lat, vmax=max_lat)
-        if velocity_dict!=None:
-            plt.quiver(self.pos_x, self.pos_y, velocity_dict['bin']['all']['x'], velocity_dict['bin']['all']['y'], scale=20.0, color='black', alpha=0.8)
-
-        # Modify color bar parameters
-        if bulk_lat_mean != 0.0:
-            tick_lev = np.arange(min_lat, max_lat+(max_lat-min_lat)/6, (max_lat - min_lat)/6)
-            clb = plt.colorbar(ticks=tick_lev, orientation="vertical", format=tick.FormatStrFormatter('%.3f'))
-        else:
-            clb = plt.colorbar(orientation="vertical", format=tick.FormatStrFormatter('%.3f'))
-
-        clb.ax.tick_params(labelsize=16)
-        clb.set_label('a', labelpad=-40, y=1.07, rotation=0, fontsize=20)
-
-
-
         # Find min/max orientation
         dense_lats = lat_plot_dict['dense']['all']
-        min_lat = 0.97*bulk_lat_mean
-        max_lat = 1.03*bulk_lat_mean
+        min_lat = 0.85*bulk_lat_mean
+        max_lat = 1.15*bulk_lat_mean
 
         # Set plotted particle size
         sz = 0.75
         
-        ells = [Ellipse(xy=np.array([dense_lats['x']+self.hx_box,dense_lats['y']+self.hy_box]),
+        ells = [Ellipse(xy=np.array([dense_lats['x'][i]+self.hx_box,dense_lats['y'][i]+self.hy_box]),
                 width=sz, height=sz)
-        for i in range(0,len(pos))]
+        for i in range(0,len(dense_lats['x']))]
 
         # Plot position colored by neighbor number
         neighborGroup = mc.PatchCollection(ells)
@@ -1537,8 +1820,13 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
             clb.set_label('# B Neighbors', labelpad=25, y=0.5, rotation=270, fontsize=20)
             plt.title('B Reference Particles', fontsize=20)
 
-        # Display current time step
-        plt.text(0.8, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{r}$',
+        # Label simulation time
+        if self.lx_box == self.ly_box:
+            plt.text(0.8, 0.04, s=r'$\tau$' + ' = ' + '{:.1f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+                fontsize=18, transform = ax.transAxes,
+                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+        elif self.lx_box > self.ly_box:
+            plt.text(0.9, 0.1, s=r'$\tau$' + ' = ' + '{:.1f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
                 fontsize=18, transform = ax.transAxes,
                 bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
 
@@ -1783,10 +2071,18 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         plt.tick_params(axis='both', which='both',
                         bottom=False, top=False, left=False, right=False,
                         labelbottom=False, labeltop=False, labelleft=False, labelright=False)
-        plt.text(0.8, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{r}$',
+
+        # Label simulation time
+        if self.lx_box == self.ly_box:
+            plt.text(0.8, 0.04, s=r'$\tau$' + ' = ' + '{:.1f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
                 fontsize=18, transform = ax.transAxes,
                 bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
-        #plt.quiver(pos_box_x, pos_box_y, velocity_x_bin_plot, velocity_y_bin_plot, scale=20.0, color='black', alpha=0.8)
+        elif self.lx_box > self.ly_box:
+            plt.text(0.9, 0.1, s=r'$\tau$' + ' = ' + '{:.1f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+                fontsize=18, transform = ax.transAxes,
+                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+
+        #plt.quiver(self.pos_x, self.pos_y, velocity_x_bin_plot, velocity_y_bin_plot, scale=20.0, color='black', alpha=0.8)
 
         if pair == 'all-all':
             clb.set_label(r'$\langle \mathbf{\hat{p}}_\mathrm{ref} \cdot \mathbf{\hat{p}}_\mathrm{neigh} \rangle$', labelpad=25, y=0.5, rotation=270, fontsize=20)
@@ -1972,7 +2268,13 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                         bottom=False, top=False, left=False, right=False,
                         labelbottom=False, labeltop=False, labelleft=False, labelright=False)
 
-        plt.text(0.8, 0.04, s=r'$\tau$' + ' = ' + '{:.1f}'.format(3*self.tst) + ' ' + r'$\tau_\mathrm{r}$',
+        # Label simulation time
+        if self.lx_box == self.ly_box:
+            plt.text(0.75, 0.04, s=r'$\tau$' + ' = ' + '{:.1f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+                fontsize=18, transform = ax.transAxes,
+                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+        elif self.lx_box > self.ly_box:
+            plt.text(0.85, 0.1, s=r'$\tau$' + ' = ' + '{:.1f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
                 fontsize=18, transform = ax.transAxes,
                 bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
 
@@ -2106,7 +2408,13 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                         bottom=False, top=False, left=False, right=False,
                         labelbottom=False, labeltop=False, labelleft=False, labelright=False)
 
-        plt.text(0.8, 0.04, s=r'$\tau$' + ' = ' + '{:.1f}'.format(3*self.tst) + ' ' + r'$\tau_\mathrm{r}$',
+        # Label simulation time
+        if self.lx_box == self.ly_box:
+            plt.text(0.75, 0.04, s=r'$\tau$' + ' = ' + '{:.1f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+                fontsize=18, transform = ax.transAxes,
+                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+        elif self.lx_box > self.ly_box:
+            plt.text(0.85, 0.1, s=r'$\tau$' + ' = ' + '{:.1f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
                 fontsize=18, transform = ax.transAxes,
                 bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
 
@@ -2233,7 +2541,13 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                         bottom=False, top=False, left=False, right=False,
                         labelbottom=False, labeltop=False, labelleft=False, labelright=False)
 
-        plt.text(0.8, 0.04, s=r'$\tau$' + ' = ' + '{:.1f}'.format(3*self.tst) + ' ' + r'$\tau_\mathrm{r}$',
+        # Label simulation time
+        if self.lx_box == self.ly_box:
+            plt.text(0.75, 0.04, s=r'$\tau$' + ' = ' + '{:.1f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+                fontsize=18, transform = ax.transAxes,
+                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+        elif self.lx_box > self.ly_box:
+            plt.text(0.85, 0.1, s=r'$\tau$' + ' = ' + '{:.1f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
                 fontsize=18, transform = ax.transAxes,
                 bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
 
@@ -2246,33 +2560,101 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         stop
     def plot_stein_order(self, pos, stein_param, sep_surface_dict, int_comp_dict):
 
-        #Plot particles colorized by translational order parameter
-        fig = plt.figure(figsize=(7,6))
+        # If box is rectangular with long dimension of x-axis
+        if self.lx_box > self.ly_box:
+
+            # Estimated area of dense phase
+            area_dense = (0.8 * self.partNum * (np.pi/4) / self.phiCP)
+
+            # Mid point of dense phase across longest box dimension (x)
+            dense_x_mid = np.mean(pos[:,0]+self.hx_box)
+
+            # estimated shortest dimension length of dense phase (y)
+            dense_x_width = (area_dense / self.ly_box)
+
+            # Set maximum dimension length (x) of simulation box to be 12 inches (plus 1 inch color bar)
+            scaling = 13.0
+
+            # X and Y-dimension lengths (in inches)
+            x_dim = int(scaling + 1.0)
+            y_dim = int(scaling/ (dense_x_width / self.ly_box))
+
+        # If box is rectangular with long dimension of y-axis
+        elif self.lx_box < self.ly_box:
+
+            # Estimated area of dense phase
+            area_dense = (0.8 * self.partNum * (np.pi/4) / self.phiCP)
+
+            # Mid point of dense phase across longest box dimension (y)
+            mid_point = np.mean(pos[:,1]+self.hy_box)
+
+            # estimated shorted dimension length of dense phase (x)
+            dense_x_width = (area_dense / self.lx_box)
+
+            # Set maximum dimension length (y) of simulation box to be 13 inches
+            scaling = 13.0
+
+            # X and Y-dimension lengths (in inches)
+            x_dim = int((scaling/(dense_x_width / self.lx_box)) + 1.0)
+            y_dim = int(scaling)
+
+        # If box is square
+        else:
+
+            # Minimum dimension length (in inches)
+            scaling =7.0
+
+            # X and Y-dimension lengths (in inches)
+            x_dim = int(scaling + 1.0)
+            y_dim = int(scaling)
+        
+        # Generate figure of dimensions proportional to simulation box size (with added x-length for color bar)
+        fig = plt.figure(figsize=(x_dim,y_dim))
         ax = fig.add_subplot(111)
-        div_min = -3
-        min_n = np.mean(stein_param)
-        max_n = np.max(stein_param)
+
+
+
+
+        # Find min/max orientation
+        min_stein = np.min(stein_param)
+        max_stein = 1.0
+
+
         levels_text=40
-        level_boundaries = np.linspace(min_n, max_n, levels_text + 1)
+        level_boundaries = np.linspace(min_stein, max_stein, levels_text + 1)
         tick_locs   = [0.0,np.pi/6,np.pi/3]
         tick_labels = ['0',r'$\pi/6$',r'$\pi/3$']
 
+        # Set plotted particle size
+        sz = 0.75
+        
+        ells = [Ellipse(xy=np.array([pos[i,0]+self.hx_box,pos[i,1]+self.hy_box]),
+                width=sz, height=sz)
+        for i in range(0,len(pos))]
 
+        # Plot position colored by neighbor number
+        neighborGroup = mc.PatchCollection(ells)
+        coll = ax.add_collection(neighborGroup)
+        coll.set_array(np.ravel(stein_param))
+        
+        minClb = min_stein
+        maxClb = max_stein
+        coll.set_clim([minClb, maxClb])
 
-        im = plt.scatter(pos[:,0]+self.hx_box, pos[:,1]+self.hy_box, c=stein_param, s=0.7, vmin=min_n, vmax=max_n, cmap='viridis')
-        norm= matplotlib.colors.Normalize(vmin=min_n, vmax=max_n)
+        # Modify colorbar properties
+        tick_lev = np.arange(min_stein, max_stein+1, (max_stein - min_stein)/6)
 
-        sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
-        sm.set_array([])
-        tick_lev = np.arange(min_n, max_n+max_n/10, (max_n-min_n)/10)
-        clb = fig.colorbar(sm, ticks=tick_lev, boundaries=level_boundaries,
-values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStrFormatter('%.2f'))
-
+        #level_boundaries = np.arange(min_ori-0.5, int(max_ori) + 1.5, 1)
+        clb = plt.colorbar(coll, ticks=tick_lev, orientation="vertical", format=tick.FormatStrFormatter('%.2f'))
         clb.ax.tick_params(labelsize=16)
-        clb.set_label(r'$\Psi$', labelpad=-55, y=1.04, rotation=0, fontsize=18)
 
+        clb.set_label(r'$q_6(a)$', labelpad=25, y=0.5, rotation=270, fontsize=20)
+        plt.title('All Reference Particles', fontsize=20)
+
+
+        
         for m in range(0, len(sep_surface_dict)):
-            key = 'surface id ' + str(int(int_comp_dict['ids']['int id'][m]))
+            key = 'surface id ' + str(int(int_comp_dict['ids'][m]))
             try:
                 pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
                 pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
@@ -2287,14 +2669,29 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
             except:
                 pass
 
-        plt.xlim(0, self.l_box)
-        plt.ylim(0, self.l_box)
+        # If rectangular box, reduce system size plotted
+        if self.lx_box > self.ly_box:
+            plt.xlim(dense_x_mid-(dense_x_width/2), dense_x_mid+(dense_x_width/2))
+            plt.ylim(0, self.ly_box)
+        elif self.lx_box < self.ly_box:
+            plt.ylim(dense_y_mid-(dense_y_width/2), dense_y_mid+(dense_y_width/2))
+            plt.xlim(0, self.lx_box)
+        # Plot entire system
+        else:
+            plt.ylim(0, self.ly_box)
+            plt.xlim(0, self.lx_box)
 
         plt.tick_params(axis='both', which='both',
                         bottom=False, top=False, left=False, right=False,
                         labelbottom=False, labeltop=False, labelleft=False, labelright=False)
 
-        plt.text(0.663, 0.04, s=r'$\tau$' + ' = ' + '{:.1f}'.format(3*self.tst) + ' ' + r'$\tau_\mathrm{r}$',
+        # Label simulation time
+        if self.lx_box == self.ly_box:
+            plt.text(0.75, 0.04, s=r'$\tau$' + ' = ' + '{:.1f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+                fontsize=18, transform = ax.transAxes,
+                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+        elif self.lx_box > self.ly_box:
+            plt.text(0.85, 0.1, s=r'$\tau$' + ' = ' + '{:.1f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
                 fontsize=18, transform = ax.transAxes,
                 bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
 
@@ -2591,6 +2988,54 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         #plt.close()
     def plot_part_activity(self, pos, sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None):
 
+        # If box is rectangular with long dimension of x-axis
+        if self.lx_box > self.ly_box:
+
+            # Estimated area of dense phase
+            area_dense = (0.8 * self.partNum * (np.pi/4) / self.phiCP)
+
+            # Mid point of dense phase across longest box dimension (x)
+            dense_x_mid = np.mean(pos[:,0]+self.hx_box)
+
+            # estimated shortest dimension length of dense phase (y)
+            dense_x_width = (area_dense / self.ly_box)
+
+            # Set maximum dimension length (x) of simulation box to be 12 inches (plus 1 inch color bar)
+            scaling = 13.0
+
+            # X and Y-dimension lengths (in inches)
+            x_dim = int(scaling + 1.0)
+            y_dim = int(scaling/ (dense_x_width / self.ly_box))
+
+        # If box is rectangular with long dimension of y-axis
+        elif self.lx_box < self.ly_box:
+
+            # Estimated area of dense phase
+            area_dense = (0.8 * self.partNum * (np.pi/4) / self.phiCP)
+
+            # Mid point of dense phase across longest box dimension (y)
+            mid_point = np.mean(pos[:,1]+self.hy_box)
+
+            # estimated shorted dimension length of dense phase (x)
+            dense_x_width = (area_dense / self.lx_box)
+
+            # Set maximum dimension length (y) of simulation box to be 13 inches
+            scaling = 13.0
+
+            # X and Y-dimension lengths (in inches)
+            x_dim = int((scaling/(dense_x_width / self.lx_box)) + 1.0)
+            y_dim = int(scaling)
+
+        # If box is square
+        else:
+
+            # Minimum dimension length (in inches)
+            scaling =7.0
+
+            # X and Y-dimension lengths (in inches)
+            x_dim = int(scaling + 1.0)
+            y_dim = int(scaling)
+
         #Set plot colors
         fastCol = '#e31a1c'
         slowCol = '#081d58'
@@ -2613,8 +3058,8 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         else:
             mono=0
 
-        #Plot each particle as a point color-coded by activity and labeled by their activity
-        fig = plt.figure(figsize=(6.5,6))
+        # Generate figure of dimensions proportional to simulation box size (with added x-length for color bar)
+        fig = plt.figure(figsize=(x_dim,y_dim))
         ax = fig.add_subplot(111)
 
         sz = 0.75
@@ -2626,12 +3071,12 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
             #Assign type 0 particles to plot
 
-            ells0 = [Ellipse(xy=pos0[i,:]+self.h_box,
+            ells0 = [Ellipse(xy=np.array([pos0[i,0]+self.hx_box, pos0[i,1]+self.hy_box]),
                     width=sz, height=sz, label='PeA: '+str(self.peA))
             for i in range(0,len(typ0ind))]
 
             #Assign type 1 particles to plot
-            ells1 = [Ellipse(xy=pos1[i,:]+self.h_box,
+            ells1 = [Ellipse(xy=np.array([pos1[i,0]+self.hx_box, pos1[i,1]+self.hy_box]),
                     width=sz, height=sz, label='PeB: '+str(self.peB))
             for i in range(0,len(typ1ind))]
 
@@ -2672,7 +3117,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                 pos0=pos[typ0ind]                               # Find positions of type 0 particles
 
                 #Assign type 0 particles to plot
-                ells0 = [Ellipse(xy=pos0[i,:]+self.h_box,
+                ells0 = [Ellipse(xy=np.array([pos0[i,0]+self.hx_box, pos0[i,1]+self.hy_box]),
                         width=sz, height=sz, label='Pe: '+str(self.peA))
                 for i in range(0,len(typ0ind))]
 
@@ -2689,7 +3134,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                 pos1=pos[typ1ind]                               # Find positions of type 0 particles
 
                 #Assign type 0 particles to plot
-                ells1 = [Ellipse(xy=pos1[i,:]+self.h_box,
+                ells1 = [Ellipse(xy=np.array([pos1[i,0]+self.hx_box, pos1[i,1]+self.hy_box]),
                         width=sz, height=sz, label='Pe: '+str(self.peB))
                 for i in range(0,len(typ1ind))]
 
@@ -2706,10 +3151,10 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                 pos1=pos[typ1ind]
 
                 #Assign type 0 particles to plot
-                ells0 = [Ellipse(xy=pos0[i,:]+self.h_box,
+                ells0 = [Ellipse(xy=np.array([pos0[i,0]+self.hx_box, pos0[i,1]+self.hy_box]),
                         width=sz, height=sz, label='Pe: '+str(self.peA))
                 for i in range(0,len(typ0ind))]
-                ells1 = [Ellipse(xy=pos1[i,:]+self.h_box,
+                ells1 = [Ellipse(xy=np.array([pos1[i,0]+self.hx_box, pos1[i,1]+self.hy_box]),
                         width=sz, height=sz, label='Pe: '+str(self.peB))
                 for i in range(0,len(typ1ind))]
 
@@ -2757,8 +3202,28 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         #        bbox=dict(facecolor=(1,1,1,0.5), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
 
         #Set axes parameters
-        ax.set_xlim(0, self.l_box)
-        ax.set_ylim(0, self.l_box)
+        # If rectangular box, reduce system size plotted
+        if self.lx_box > self.ly_box:
+            plt.xlim(dense_x_mid-(dense_x_width/2), dense_x_mid+(dense_x_width/2))
+            plt.ylim(0, self.ly_box)
+        elif self.lx_box < self.ly_box:
+            plt.ylim(dense_y_mid-(dense_y_width/2), dense_y_mid+(dense_y_width/2))
+            plt.xlim(0, self.lx_box)
+        # Plot entire system
+        else:
+            plt.ylim(0, self.ly_box)
+            plt.xlim(0, self.lx_box)
+
+        # Label simulation time
+        if self.lx_box == self.ly_box:
+            plt.text(0.75, 0.04, s=r'$\tau$' + ' = ' + '{:.1f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+                fontsize=18, transform = ax.transAxes,
+                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+        elif self.lx_box > self.ly_box:
+            plt.text(0.85, 0.1, s=r'$\tau$' + ' = ' + '{:.1f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+                fontsize=18, transform = ax.transAxes,
+                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+
         ax.axes.set_xticks([])
         ax.axes.set_yticks([])
         ax.axes.set_xticklabels([])

@@ -112,7 +112,7 @@ if [ $dont_run == "no" ]; then
     part_num=$(( 1000 ))
 
     declare -i runfor
-    runfor=$(( 30 ))
+    runfor=$(( 60 ))
 
     declare -i dump_freq
     dump_freq=$(( 20000 ))
@@ -125,7 +125,7 @@ if [ $dont_run == "no" ]; then
     # 50 100 150 250 450)
     #(0 50 100 150 200 250 350 450)
     declare -a pb
-    pb=(50 150 300 500)
+    pb=(0 50 150 300 500)
     # 100 150 250 450)
     #(0 50 100 150 200 250 350 450)
     #pb=(50 500)
@@ -135,7 +135,7 @@ if [ $dont_run == "no" ]; then
     # List for phi
     declare -a phi
     #phi=(60)
-    phi=(60 70 80 90 100 110 120 130 140 150)
+    phi=(60 70 80 90 100 105 110 115 120 125 130)
     # List for epsilon
     #eps=(1.0 0.1 0.001) # LISTS CAN CONTAIN FLOATS!!!!
     declare -a eps

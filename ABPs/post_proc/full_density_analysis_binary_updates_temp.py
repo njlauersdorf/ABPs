@@ -759,31 +759,35 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     plotting_functs.plot_voronoi(pos)
 
             elif measurement_method == 'active_fa':
-
+                #DONE
                 if plot == 'y':
                     plotting_functs = plotting.plotting(orient_dict, pos_dict, l_box, NBins, sizeBin, peA, peB, parFrac, eps, typ, tst)
                     plotting_functs.plot_part_activity(pos, all_surface_curves, int_comp_dict, active_fa_dict)
             elif measurement_method == 'activity':
 
                 if plot == 'y':
-                    plotting_functs = plotting.plotting(orient_dict, pos_dict, l_box, NBins, sizeBin, peA, peB, parFrac, eps, typ, tst)
+                   # plotting_functs = plotting.plotting(orient_dict, pos_dict, l_box, NBins, sizeBin, peA, peB, parFrac, eps, typ, tst)
                     plotting_functs.plot_part_activity(pos, all_surface_curves, int_comp_dict)
                     stop
             elif measurement_method == 'phases':
-
+                #DONE
                 data_output_functs.write_to_txt(part_count_dict, dataPath + 'PhaseComp_' + outfile + '.txt')
                 #data_output_functs.write_to_txt(lat_stat_dict, dataPath + 'BubComp_' + outfile + '.txt')
 
                 if plot == 'y':
-                    plotting_functs = plotting.plotting(orient_dict, pos_dict, l_box, NBins, sizeBin, peA, peB, parFrac, eps, typ, tst)
                     plotting_functs.plot_phases(pos, part_id_dict, all_surface_curves, int_comp_dict)
+                stop
             elif measurement_method == 'number_density':
-
+                #DONE
                 num_dens_dict = binning_functs.phase_number_density(bin_count_dict, part_count_dict)
                 data_output_functs.write_to_txt(num_dens_dict, dataPath + 'Num_dens_' + outfile + '.txt')
                 if plot == 'y':
-                    plotting_functs = plotting.plotting(orient_dict, pos_dict, l_box, NBins, sizeBin, peA, peB, parFrac, eps, typ, tst)
-
+                    plotting_functs.plot_area_fraction(area_frac_dict, all_surface_curves, int_comp_dict, pos, type='all')
+                    plotting_functs.plot_area_fraction(area_frac_dict, all_surface_curves, int_comp_dict, pos, type='A')
+                    plotting_functs.plot_area_fraction(area_frac_dict, all_surface_curves, int_comp_dict, pos, type='B')
+                    plotting_functs.plot_area_fraction(area_frac_dict, all_surface_curves, int_comp_dict, pos, type='dif')
+                    plotting_functs.plot_particle_fraction(area_frac_dict, all_surface_curves, int_comp_dict, pos, type='B')
+                    stop
                     plotting_functs.plot_all_density(area_frac_dict, all_surface_curves, int_comp_dict)
                     plotting_functs.plot_type_A_density(area_frac_dict, all_surface_curves, int_comp_dict)
                     plotting_functs.plot_type_B_density(area_frac_dict, all_surface_curves, int_comp_dict)
@@ -791,27 +795,23 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     plotting_functs.plot_type_B_frac(area_frac_dict, all_surface_curves, int_comp_dict)
                     plotting_functs.plot_dif_frac(area_frac_dict, all_surface_curves, int_comp_dict)
             elif measurement_method == 'com_alignment':
-
+                # DONE
                 if plot == 'y':
-                    plotting_functs = plotting.plotting(orient_dict, pos_dict, l_box, NBins, sizeBin, peA, peB, parFrac, eps, typ, tst)
-
-                    plotting_functs.plot_all_align(method1_align_dict, all_surface_curves, int_comp_dict)
-                    plotting_functs.plot_type_A_align(method1_align_dict, all_surface_curves, int_comp_dict)
-                    plotting_functs.plot_type_B_align(method1_align_dict, all_surface_curves, int_comp_dict)
-                    #plotting_functs.plot_dif_align(method1_align_dict, all_surface_curves, int_comp_dict)
+                    plotting_functs.plot_alignment(method1_align_dict, all_surface_curves, int_comp_dict, pos, type='all')
+                    plotting_functs.plot_alignment(method1_align_dict, all_surface_curves, int_comp_dict, pos, type='A')
+                    plotting_functs.plot_alignment(method1_align_dict, all_surface_curves, int_comp_dict, pos, type='B')
+                    stop
+                    
             elif measurement_method == 'surface_alignment':
-
+                #DONE
                 if plot == 'y':
-                    plotting_functs = plotting.plotting(orient_dict, pos_dict, l_box, NBins, sizeBin, peA, peB, parFrac, eps, typ, tst)
-
-                    plotting_functs.plot_all_align(method2_align_dict, all_surface_curves, int_comp_dict)
-                    plotting_functs.plot_type_A_align(method2_align_dict, all_surface_curves, int_comp_dict)
-                    plotting_functs.plot_type_B_align(method2_align_dict, all_surface_curves, int_comp_dict)
-                    #plotting_functs.plot_dif_align(method1_align_dict, all_surface_curves, int_comp_dict)
-
+                    plotting_functs.plot_alignment(method2_align_dict, all_surface_curves, int_comp_dict, pos, type='all') 
+                    plotting_functs.plot_alignment(method2_align_dict, all_surface_curves, int_comp_dict, pos, type='A')
+                    plotting_functs.plot_alignment(method2_align_dict, all_surface_curves, int_comp_dict, pos, type='B')                    
+                stop
             elif measurement_method == 'int_press':
-
-                lattice_structure_functs = measurement.measurement(l_box, NBins, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
+                stress_and_pressure_functs = stress_and_pressure.stress_and_pressure(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
+                lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
 
                 stress_stat_dict, press_stat_dict, press_plot_dict = lattice_structure_functs.interparticle_pressure_nlist()
 
@@ -819,10 +819,14 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 data_output_functs.write_to_txt(press_stat_dict, dataPath + 'interparticle_press_' + outfile + '.txt')
 
                 if plot == 'y':
-                    plotting_functs = plotting.plotting(orient_dict, pos_dict, l_box, NBins, sizeBin, peA, peB, parFrac, eps, typ, tst)
+                    vp_bin_arr = stress_and_pressure_functs.virial_pressure_binned(stress_plot_dict)
+                    vp_part_arr = stress_and_pressure_functs.virial_pressure_part(stress_plot_dict)
 
+                    plotting_functs.plot_interpart_press_binned(vp_bin_arr, all_surface_curves, int_comp_dict)
+                    plotting_functs.interpart_press_map(pos, vp_part_arr, all_surface_curves, int_comp_dict)                
+                stop
             elif measurement_method == 'lattice_spacing':
-
+                #DONE
                 lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
 
                 lat_stat_dict, lat_plot_dict = lattice_structure_functs.lattice_spacing()
@@ -839,7 +843,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                         plotting_functs.lat_map(lat_plot_dict, all_surface_curves, int_comp_dict)
 
             elif measurement_method == 'radial_df':
-                lattice_structure_functs = measurement.measurement(l_box, NBins, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
+                # Done but inaccurate in planar system
+                lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
 
                 radial_df_dict = lattice_structure_functs.radial_df()
 
@@ -847,13 +852,12 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                 if plot == 'y':
 
-                    plotting_functs = plotting.plotting(orient_dict, pos_dict, l_box, NBins, sizeBin, peA, peB, parFrac, eps, typ, tst)
-
                     plotting_functs.plot_general_rdf(radial_df_dict)
                     plotting_functs.plot_all_rdfs(radial_df_dict)
-
+                stop
             elif measurement_method == 'angular_df':
-                lattice_structure_functs = measurement.measurement(l_box, NBins, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
+                # Done but inaccurate in planar system
+                lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
 
                 angular_df_dict = lattice_structure_functs.angular_df()
 
@@ -861,10 +865,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                 if plot == 'y':
 
-                    plotting_functs = plotting.plotting(orient_dict, pos_dict, l_box, NBins, sizeBin, peA, peB, parFrac, eps, typ, tst)
-
                     plotting_functs.plot_general_adf(angular_df_dict)
                     plotting_functs.plot_all_adfs(angular_df_dict)
+                stop
             elif measurement_method == 'domain_size':
 
                 lattice_structure_functs = measurement.measurement(l_box, NBins, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
@@ -876,7 +879,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
 
             elif measurement_method == 'neighbors':
-
+                #DONE
                 lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
 
                 neigh_stat_dict, ori_stat_dict, neigh_plot_dict = lattice_structure_functs.nearest_neighbors()
@@ -965,6 +968,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 data_output_functs.write_to_txt(act_press_dict, dataPath + 'surface_interface_pressure_' + outfile + '.txt')
 
             elif measurement_method == 'hexatic_order':
+                #DONE
 
                 lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
 
@@ -980,7 +984,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     plotting_functs.plot_domain_angle(pos, hexatic_order_dict['theta'], all_surface_curves, int_comp_dict)
                     stop
             elif measurement_method == 'translational_order':
-
+                #DONE
                 lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
 
                 trans_order_param= lattice_structure_functs.translational_order()
@@ -993,8 +997,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     plotting_functs.plot_trans_order(pos, trans_order_param, all_surface_curves, int_comp_dict)
 
             elif measurement_method == 'steinhardt_order':
-
-                lattice_structure_functs = measurement.measurement(l_box, NBins, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
+                #DONE
+                lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
 
                 stein_order_param= lattice_structure_functs.steinhardt_order()
 
@@ -1002,10 +1006,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 #data_output_functs.write_to_txt(hexatic_order_dict, dataPath + 'hexatic_order_' + outfile + '.txt')
 
                 if plot == 'y':
-                    plotting_functs = plotting.plotting(orient_dict, pos_dict, l_box, NBins, sizeBin, peA, peB, parFrac, eps, typ, tst)
 
                     plotting_functs.plot_stein_order(pos, stein_order_param, all_surface_curves, int_comp_dict)
-
+                stop
             elif measurement_method == 'nematic_order':
 
                 lattice_structure_functs = measurement.measurement(l_box, NBins, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
@@ -1021,7 +1024,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     plotting_functs.plot_stein_order(pos, nematic_order_param, all_surface_curves, int_comp_dict)
         else:
             if measurement_method == 'activity':
-
+                #DONE
                 if plot == 'y':
                     plotting_functs = plotting.plotting(orient_dict, pos_dict, l_box, NBins, sizeBin, peA, peB, parFrac, eps, typ, tst)
                     plotting_functs.plot_part_activity(pos)

@@ -2528,11 +2528,12 @@ class run_sim:
         # Compute gas phase density, phiG
 
 
-
-        phiG = self.theory_functs.compPhiG(peNet, latNet)
-
+        if peNet >= 50:
+            phiG = self.theory_functs.compPhiG(peNet, latNet)
+        else:
+            phiG = 0
         phi_theory = self.theory_functs.latToPhi(latNet)
-
+        
         Nl = int(round(self.partNum * ((phi_theory * (phiG - self.phi)) / (self.phi * (phiG - phi_theory)))))
 
         # Now you need to convert this to a cluster radius
@@ -2595,7 +2596,7 @@ class run_sim:
         rOrient = []
         # z-value for simulation initialization
         z = 0.5
-
+        
         for i in range(0,len(peList)):
 
             rMin = rList[i]             # starting distance for particle placement
@@ -2892,6 +2893,7 @@ class run_sim:
 
         tooClose = latNet / 2
         wall_distance = 0
+        lx = 4 * (rList[-1] + (tooClose))
         while count < NGas:
             place = 1
             # Generate random position

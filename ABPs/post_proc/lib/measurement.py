@@ -1243,9 +1243,9 @@ class measurement:
         phase_count_dict = self.phase_ident_functs.phase_count(self.phase_dict)
 
         # Calculate area of each phase
-        bulk_area = phase_count_dict['bulk'] * (self.sizeBin**2)
-        int_area = phase_count_dict['int'] * (self.sizeBin**2)
-        gas_area = phase_count_dict['gas'] * (self.sizeBin**2)
+        bulk_area = phase_count_dict['bulk'] * (self.sizeBin_x * self.sizeBin_y)
+        int_area = phase_count_dict['int'] * (self.sizeBin_x * self.sizeBin_y)
+        gas_area = phase_count_dict['gas'] * (self.sizeBin_x * self.sizeBin_y)
         dense_area = bulk_area + int_area
 
         # Position and orientation arrays of type A particles in respective phase
@@ -1338,8 +1338,8 @@ class measurement:
                     else:
 
                         # Calculate interparticle separation distances
-                        difx = self.utility_functs.sep_dist(pos_A_bulk[i][0], pos_A_dense[AA_bulk_nlist.point_indices[loc]][0][0])
-                        dify = self.utility_functs.sep_dist(pos_A_bulk[i][1], pos_A_dense[AA_bulk_nlist.point_indices[loc]][0][1])
+                        difx = self.utility_functs.sep_dist_x(pos_A_bulk[i][0], pos_A_dense[AA_bulk_nlist.point_indices[loc]][0][0])
+                        dify = self.utility_functs.sep_dist_y(pos_A_bulk[i][1], pos_A_dense[AA_bulk_nlist.point_indices[loc]][0][1])
                         difr = ( (difx)**2 + (dify)**2)**0.5
 
                         # Calculate interparticle force
@@ -1424,8 +1424,8 @@ class measurement:
                     else:
 
                         # Calculate interparticle separation distances
-                        difx = self.utility_functs.sep_dist(pos_A_bulk[i][0], pos_B_dense[BA_bulk_nlist.point_indices[loc]][0][0])
-                        dify = self.utility_functs.sep_dist(pos_A_bulk[i][1], pos_B_dense[BA_bulk_nlist.point_indices[loc]][0][1])
+                        difx = self.utility_functs.sep_dist_x(pos_A_bulk[i][0], pos_B_dense[BA_bulk_nlist.point_indices[loc]][0][0])
+                        dify = self.utility_functs.sep_dist_y(pos_A_bulk[i][1], pos_B_dense[BA_bulk_nlist.point_indices[loc]][0][1])
                         difr = ( (difx)**2 + (dify)**2)**0.5
 
                         # Calculate interparticle forces
@@ -1510,8 +1510,8 @@ class measurement:
 
                     else:
                         # Calculate interparticle separation distances
-                        difx = self.utility_functs.sep_dist(pos_B_bulk[i][0], pos_A_dense[AB_bulk_nlist.point_indices[loc]][0][0])
-                        dify = self.utility_functs.sep_dist(pos_B_bulk[i][1], pos_A_dense[AB_bulk_nlist.point_indices[loc]][0][1])
+                        difx = self.utility_functs.sep_dist_x(pos_B_bulk[i][0], pos_A_dense[AB_bulk_nlist.point_indices[loc]][0][0])
+                        dify = self.utility_functs.sep_dist_y(pos_B_bulk[i][1], pos_A_dense[AB_bulk_nlist.point_indices[loc]][0][1])
                         difr = ( (difx)**2 + (dify)**2)**0.5
 
                         # Calculate interparticle forces
@@ -1593,8 +1593,8 @@ class measurement:
                         SigYX_BB_bulk_part_num[i] += len(SigYX)
 
                     else:
-                        difx = self.utility_functs.sep_dist(pos_B_bulk[i][0], pos_B_dense[BB_bulk_nlist.point_indices[loc]][0][0])
-                        dify = self.utility_functs.sep_dist(pos_B_bulk[i][1], pos_B_dense[BB_bulk_nlist.point_indices[loc]][0][1])
+                        difx = self.utility_functs.sep_dist_x(pos_B_bulk[i][0], pos_B_dense[BB_bulk_nlist.point_indices[loc]][0][0])
+                        dify = self.utility_functs.sep_dist_y(pos_B_bulk[i][1], pos_B_dense[BB_bulk_nlist.point_indices[loc]][0][1])
                         difr = ( (difx)**2 + (dify)**2)**0.5
                         fx, fy = self.theory_functs.computeFLJ(difr, difx, dify, self.eps)
 
@@ -1686,8 +1686,8 @@ class measurement:
 
                     else:
                         # Calculate interparticle separation distances
-                        difx = self.utility_functs.sep_dist(pos_A_int[i][0], pos_A[AA_int_nlist.point_indices[loc]][0][0])
-                        dify = self.utility_functs.sep_dist(pos_A_int[i][1], pos_A[AA_int_nlist.point_indices[loc]][0][1])
+                        difx = self.utility_functs.sep_dist_x(pos_A_int[i][0], pos_A[AA_int_nlist.point_indices[loc]][0][0])
+                        dify = self.utility_functs.sep_dist_y(pos_A_int[i][1], pos_A[AA_int_nlist.point_indices[loc]][0][1])
                         difr = ( (difx)**2 + (dify)**2)**0.5
 
                         # Calculate interparticle separation forces
@@ -1771,8 +1771,8 @@ class measurement:
                     else:
 
                         # Calculate interparticle separation distances
-                        difx = self.utility_functs.sep_dist(pos_A_int[i][0], pos_B[BA_int_nlist.point_indices[loc]][0][0])
-                        dify = self.utility_functs.sep_dist(pos_A_int[i][1], pos_B[BA_int_nlist.point_indices[loc]][0][1])
+                        difx = self.utility_functs.sep_dist_x(pos_A_int[i][0], pos_B[BA_int_nlist.point_indices[loc]][0][0])
+                        dify = self.utility_functs.sep_dist_y(pos_A_int[i][1], pos_B[BA_int_nlist.point_indices[loc]][0][1])
                         difr = ( (difx)**2 + (dify)**2)**0.5
 
                         # Calculate interparticle separation forces
@@ -1856,8 +1856,8 @@ class measurement:
                     else:
 
                         # Calculate interparticle separation distances
-                        difx = self.utility_functs.sep_dist(pos_B_int[i][0], pos_A[AB_int_nlist.point_indices[loc]][0][0])
-                        dify = self.utility_functs.sep_dist(pos_B_int[i][1], pos_A[AB_int_nlist.point_indices[loc]][0][1])
+                        difx = self.utility_functs.sep_dist_x(pos_B_int[i][0], pos_A[AB_int_nlist.point_indices[loc]][0][0])
+                        dify = self.utility_functs.sep_dist_y(pos_B_int[i][1], pos_A[AB_int_nlist.point_indices[loc]][0][1])
                         difr = ( (difx)**2 + (dify)**2)**0.5
 
                         # Calculate interparticle separation forces
@@ -1941,8 +1941,8 @@ class measurement:
                     else:
 
                         # Calculate interparticle separation distances
-                        difx = self.utility_functs.sep_dist(pos_B_int[i][0], pos_B[BB_int_nlist.point_indices[loc]][0][0])
-                        dify = self.utility_functs.sep_dist(pos_B_int[i][1], pos_B[BB_int_nlist.point_indices[loc]][0][1])
+                        difx = self.utility_functs.sep_dist_x(pos_B_int[i][0], pos_B[BB_int_nlist.point_indices[loc]][0][0])
+                        dify = self.utility_functs.sep_dist_y(pos_B_int[i][1], pos_B[BB_int_nlist.point_indices[loc]][0][1])
                         difr = ( (difx)**2 + (dify)**2)**0.5
 
                         # Calculate interparticle separation forces
@@ -2035,8 +2035,8 @@ class measurement:
 
                     else:
                         # Calculate interparticle separation distances
-                        difx = self.utility_functs.sep_dist(pos_A_gas[i][0], pos_A_gas_int[AA_gas_nlist.point_indices[loc]][0][0])
-                        dify = self.utility_functs.sep_dist(pos_A_gas[i][1], pos_A_gas_int[AA_gas_nlist.point_indices[loc]][0][1])
+                        difx = self.utility_functs.sep_dist_x(pos_A_gas[i][0], pos_A_gas_int[AA_gas_nlist.point_indices[loc]][0][0])
+                        dify = self.utility_functs.sep_dist_y(pos_A_gas[i][1], pos_A_gas_int[AA_gas_nlist.point_indices[loc]][0][1])
                         difr = ( (difx)**2 + (dify)**2)**0.5
 
                         # Calculate interparticle separation forces
@@ -2120,8 +2120,8 @@ class measurement:
                     else:
 
                         # Calculate interparticle separation distances
-                        difx = self.utility_functs.sep_dist(pos_A_gas[i][0], pos_B_gas_int[BA_gas_nlist.point_indices[loc]][0][0])
-                        dify = self.utility_functs.sep_dist(pos_A_gas[i][1], pos_B_gas_int[BA_gas_nlist.point_indices[loc]][0][1])
+                        difx = self.utility_functs.sep_dist_x(pos_A_gas[i][0], pos_B_gas_int[BA_gas_nlist.point_indices[loc]][0][0])
+                        dify = self.utility_functs.sep_dist_y(pos_A_gas[i][1], pos_B_gas_int[BA_gas_nlist.point_indices[loc]][0][1])
                         difr = ( (difx)**2 + (dify)**2)**0.5
 
                         # Calculate interparticle separation forces
@@ -2204,8 +2204,8 @@ class measurement:
 
                     else:
                         # Calculate interparticle separation distances
-                        difx = self.utility_functs.sep_dist(pos_B_gas[i][0], pos_A_gas_int[AB_gas_nlist.point_indices[loc]][0][0])
-                        dify = self.utility_functs.sep_dist(pos_B_gas[i][1], pos_A_gas_int[AB_gas_nlist.point_indices[loc]][0][1])
+                        difx = self.utility_functs.sep_dist_x(pos_B_gas[i][0], pos_A_gas_int[AB_gas_nlist.point_indices[loc]][0][0])
+                        dify = self.utility_functs.sep_dist_y(pos_B_gas[i][1], pos_A_gas_int[AB_gas_nlist.point_indices[loc]][0][1])
                         difr = ( (difx)**2 + (dify)**2)**0.5
 
                         # Calculate interparticle separation forces
@@ -2290,8 +2290,8 @@ class measurement:
                     else:
 
                         # Calculate interparticle separation distances
-                        difx = self.utility_functs.sep_dist(pos_B_gas[i][0], pos_B_gas_int[BB_gas_nlist.point_indices[loc]][0][0])
-                        dify = self.utility_functs.sep_dist(pos_B_gas[i][1], pos_B_gas_int[BB_gas_nlist.point_indices[loc]][0][1])
+                        difx = self.utility_functs.sep_dist_x(pos_B_gas[i][0], pos_B_gas_int[BB_gas_nlist.point_indices[loc]][0][0])
+                        dify = self.utility_functs.sep_dist_y(pos_B_gas[i][1], pos_B_gas_int[BB_gas_nlist.point_indices[loc]][0][1])
                         difr = ( (difx)**2 + (dify)**2)**0.5
 
                         # Calculate interparticle separation forces
