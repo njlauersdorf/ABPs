@@ -125,7 +125,7 @@ if [ $dont_run == "no" ]; then
     # 50 100 150 250 450)
     #(0 50 100 150 200 250 350 450)
     declare -a pb
-    pb=(300)
+    pb=(150)
     # 100 150 250 450)
     #(0 50 100 150 200 250 350 450)
     #pb=(50 500)
@@ -135,7 +135,7 @@ if [ $dont_run == "no" ]; then
     # List for phi
     declare -a phi
     #phi=(60)
-    phi=(60 70 80 90 110 120)
+    phi=(60 70 80 100 110)
     # List for epsilon
     #eps=(1.0 0.1 0.001) # LISTS CAN CONTAIN FLOATS!!!!
     declare -a eps
