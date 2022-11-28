@@ -776,7 +776,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                 if plot == 'y':
                     plotting_functs.plot_phases(pos, part_id_dict, all_surface_curves, int_comp_dict)
-                stop
+                
             elif measurement_method == 'number_density':
                 #DONE
                 num_dens_dict = binning_functs.phase_number_density(bin_count_dict, part_count_dict)
