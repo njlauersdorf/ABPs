@@ -241,7 +241,7 @@ class data_output:
                     arr_len_temp = len(data[i])
                     if arr_len_temp > arr_len:
                         arr_len = arr_len_temp
-
+            
             with open(outPath, 'a') as f:
                 while arr_ind < arr_len:
                     #print(arr_ind)

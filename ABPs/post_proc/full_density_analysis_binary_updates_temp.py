@@ -772,7 +772,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
             elif measurement_method == 'phases':
                 #DONE
                 data_output_functs.write_to_txt(part_count_dict, dataPath + 'PhaseComp_' + outfile + '.txt')
-                #data_output_functs.write_to_txt(lat_stat_dict, dataPath + 'BubComp_' + outfile + '.txt')
+                data_output_functs.write_to_txt(bin_count_dict['bin'], dataPath + 'PhaseComp_bins_' + outfile + '.txt')
 
                 if plot == 'y':
                     plotting_functs.plot_phases(pos, part_id_dict, all_surface_curves, int_comp_dict)
