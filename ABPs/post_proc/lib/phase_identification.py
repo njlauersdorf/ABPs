@@ -1630,10 +1630,10 @@ class phase_identification:
         small_bulk_B_part_ids = np.where((phaseBulk!=bulk_large_ids[0]) & (phaseBulk!=0) & (typ==1))[0]     #Largest gas-dense interface
 
         # Dictionary containing the number of particles (int) of each type ('all', 'A', or 'B') within each phase
-        part_count_dict = {'bulk': {'all': bulk_num, 'A': bulk_A_num, 'B': bulk_B_num}, 'largest bulk': {'all': largest_bulk_num, 'A': largest_bulk_A_num, 'B': largest_bulk_B_num}, 'int': {'all': int_num, 'A': int_A_num, 'B': int_B_num}, 'largest int': {'all': largest_int_num, 'A': largest_int_A_num, 'B': largest_int_B_num}, 'gas': {'all': gas_num, 'A': gas_A_num, 'B': gas_B_num}}
+        part_count_dict = {'bulk': {'all': bulk_num, 'A': bulk_A_num, 'B': bulk_B_num}, 'largest_bulk': {'all': largest_bulk_num, 'A': largest_bulk_A_num, 'B': largest_bulk_B_num}, 'int': {'all': int_num, 'A': int_A_num, 'B': int_B_num}, 'largest_int': {'all': largest_int_num, 'A': largest_int_A_num, 'B': largest_int_B_num}, 'gas': {'all': gas_num, 'A': gas_A_num, 'B': gas_B_num}}
 
         # Dictionary containing the arrays of particle ids of each type ('all', 'A', or 'B') within each phase
-        part_id_dict = {'bulk': {'all': bulk_part_ids, 'A': bulk_A_part_ids, 'B': bulk_B_part_ids}, 'largest bulk': {'all': largest_bulk_part_ids, 'A': largest_bulk_A_part_ids, 'B': largest_bulk_B_part_ids}, 'small bulk': {'all': small_bulk_part_ids, 'A': small_bulk_A_part_ids, 'B': small_bulk_B_part_ids}, 'int': {'all': int_part_ids, 'A': int_A_part_ids, 'B': int_B_part_ids}, 'largest int': {'all': largest_int_part_ids, 'A': largest_int_A_part_ids, 'B': largest_int_B_part_ids}, 'small int': {'all': small_int_part_ids, 'A': small_int_A_part_ids, 'B': small_int_B_part_ids}, 'gas': {'all': gas_part_ids, 'A': gas_A_part_ids, 'B': gas_B_part_ids}}
+        part_id_dict = {'bulk': {'all': bulk_part_ids, 'A': bulk_A_part_ids, 'B': bulk_B_part_ids}, 'largest_bulk': {'all': largest_bulk_part_ids, 'A': largest_bulk_A_part_ids, 'B': largest_bulk_B_part_ids}, 'small_bulk': {'all': small_bulk_part_ids, 'A': small_bulk_A_part_ids, 'B': small_bulk_B_part_ids}, 'int': {'all': int_part_ids, 'A': int_A_part_ids, 'B': int_B_part_ids}, 'largest_int': {'all': largest_int_part_ids, 'A': largest_int_A_part_ids, 'B': largest_int_B_part_ids}, 'small_int': {'all': small_int_part_ids, 'A': small_int_A_part_ids, 'B': small_int_B_part_ids}, 'gas': {'all': gas_part_ids, 'A': gas_A_part_ids, 'B': gas_B_part_ids}}
 
         return part_count_dict, part_id_dict
 
@@ -1724,7 +1724,7 @@ class phase_identification:
                             bulk_num_arr[m] +=1
 
         # Dictionary containing the number of bins for each phase and each individual bulk and interface
-        bin_count_dict = {'bin': {'bulk': bulk_num, 'largest int': largest_int_num, 'gas': gas_num, 'all int': all_int_num}, 'ids': {'int': int_num_arr, 'bulk': bulk_num_arr}}
+        bin_count_dict = {'bin': {'bulk': bulk_num, 'largest_int': largest_int_num, 'gas': gas_num, 'int': all_int_num}, 'ids': {'int': int_num_arr, 'bulk': bulk_num_arr}}
 
         return bin_count_dict
     """

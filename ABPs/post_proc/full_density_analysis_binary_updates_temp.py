@@ -232,7 +232,7 @@ import time
 with hoomd.open(name=inFile, mode='rb') as t:
 
     dumps = int(t.__len__())
-    start = 0 #int(400/time_step)#205                                             # first frame to process
+    start = int(400/time_step)#205                                             # first frame to process
                                 # get number of timesteps dumped
     end = int(dumps/time_step)-1                                             # final frame to process
     snap = t[0]                                             # Take first snap for box
