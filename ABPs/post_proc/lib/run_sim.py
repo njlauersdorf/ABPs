@@ -70,8 +70,7 @@ class run_sim:
         self.simTauLJ = self.simLength / self.tauLJ                # how long to run (in tauLJ)
         self.totTsteps = int(self.simLength / self.dt)             # how many tsteps to run
         self.numDumps = float(self.simLength / self.dumpFreq)           # dump data every 0.1 tauBrown.
-        print(self.numDumps)
-        stop
+
         #if self.dumpFreq==0:
         self.dumpFreq = float(self.totTsteps / self.numDumps)      # normalized dump frequency.
         #self.dumpFreq = int(dumpFreq)                    # ensure this is an integer
