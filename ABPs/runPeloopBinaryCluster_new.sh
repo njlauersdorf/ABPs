@@ -112,10 +112,10 @@ if [ $dont_run == "no" ]; then
     part_num=$(( 1000 ))
 
     declare -i runfor
-    runfor=$(( 40 ))
+    runfor=$(( 80 ))
 
-    declare -i dump_freq
-    dump_freq=$(( 20000 ))
+    declare -a dump_freq
+    dump_freq=( 0.0025 )
     # Lists for activity of A and B species
     #pa=(0 5 10 15 20 25 30 35 40 45 50)
     #pa=()
@@ -125,8 +125,7 @@ if [ $dont_run == "no" ]; then
     # 50 100 150 250 450)
     #(0 50 100 150 200 250 350 450)
     declare -a pb
-    pb=(150)
-    # 100 150 250 450)
+    pb=(0 50 100 150 300 500)
     #(0 50 100 150 200 250 350 450)
     #pb=(50 500)
     # List for particle fraction
@@ -135,7 +134,8 @@ if [ $dont_run == "no" ]; then
     # List for phi
     declare -a phi
     #phi=(60)
-    phi=(60 70 80 100 110)
+    phi=(80 90 100 110 120)
+    # 70 80 100 110)
     # List for epsilon
     #eps=(1.0 0.1 0.001) # LISTS CAN CONTAIN FLOATS!!!!
     declare -a eps

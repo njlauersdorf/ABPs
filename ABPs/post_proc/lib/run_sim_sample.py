@@ -35,8 +35,38 @@ sys.path.append(os.path.expanduser('~') + '/klotsa/ABPs/post_proc/lib')
 #sys.path.append(os.path.expanduser('~') + '/hoomd-blue/build/run_test/lib')
 
 import run_sim
+import theory
 
-sim_functs = run_sim.run_sim(hoomdPath, runFor, dumpFreq, partPercA, peA, peB, partNum, intPhi, eps, aspect_ratio, seed1, seed2, seed3, seed4, seed5)
+# Set some constants
+kT = 1.0                        # temperature
+threeEtaPiSigma = 1.0           # drag coefficient
+sigma = 1.0                     # particle diameter
+r_cut = 2**(1./6.)
+
+theory_functs = theory.theory()
+
+# Compute parameters from activities
+if peA != 0:                        # A particles are NOT Brownian
+    epsA = eps
+    tauA = theory_functs.computeTauLJ(epsA)
+else:                               # A particles are Brownian
+    epsA = eps#kT
+    tauA = theory_functs.computeTauLJ(epsA)
+
+if peB != 0:                        # B particles are NOT Brownian
+    epsB=eps
+    tauB = theory_functs.computeTauLJ(epsB)
+else:                               # B particles are Brownian
+    epsB = eps#kT
+    tauB = theory_functs.computeTauLJ(epsB)
+    
+tauLJ = (tauA if (tauA <= tauB) else tauB)  # use the smaller tauLJ.  Doesn't matter since these are the same
+epsA = (epsA if (epsA >= epsB) else epsB)   # use the larger epsilon. Doesn't matter since these are the same
+
+
+dt = 0.0000001 * tauLJ                        # timestep size.  I use 0.000001 for dt=tauLJ* (eps/10^6) generally
+
+sim_functs = run_sim.run_sim(hoomdPath, runFor, dumpFreq, partPercA, peA, peB, partNum, intPhi, eps, aspect_ratio, seed1, seed2, seed3, seed4, seed5, kT, threeEtaPiSigma, sigma, r_cut, tauLJ, epsA, epsB, dt)
 
 if init_cond == 'random_init':
     sim_functs.random_init()

@@ -9,7 +9,7 @@ import numpy as np
 import theory
 
 class run_sim:
-    def __init__(self, hoomdPath, runFor, dumpFreq, partPercA, peA, peB, partNum, intPhi, eps, aspect_ratio, seed1, seed2, seed3, seed4, seed5):
+    def __init__(self, hoomdPath, runFor, dumpFreq, partPercA, peA, peB, partNum, intPhi, eps, aspect_ratio, seed1, seed2, seed3, seed4, seed5, kT, threeEtaPiSigma, sigma, r_cut, tauLJ, epsA, epsB, dt):
 
         # Read in bash arguments
         self.hoomdPath = hoomdPath # path to where you installed hoomd-blue '/.../hoomd-blue/build/'
@@ -48,45 +48,33 @@ class run_sim:
                 print('aspect ratio must have 2 integers separated separated by a colon, i.e. 2:1 where the x-dimension box length is twice as large as the y-dimension box width')
 
         # Set some constants
-        self.kT = 1.0                        # temperature
-        self.threeEtaPiSigma = 1.0           # drag coefficient
-        self.sigma = 1.0                     # particle diameter
+        self.kT = kT                        # temperature
+        self.threeEtaPiSigma = threeEtaPiSigma           # drag coefficient
+        self.sigma = sigma                     # particle diameter
         self.D_t = self.kT / self.threeEtaPiSigma      # translational diffusion constant
         self.D_r = (3.0 * self.D_t) / (self.sigma**2)  # rotational diffusion constant
         self.tauBrown = (self.sigma**2) / self.D_t     # brownian time scale (invariant)
-        self.r_cut = 2**(1./6.)
+        self.r_cut = r_cut
 
         self.theory_functs = theory.theory()
 
-        # Compute parameters from activities
-        if self.peA != 0:                        # A particles are NOT Brownian
-            self.epsA = eps
-            tauA = self.theory_functs.computeTauLJ(self.epsA)
-        else:                               # A particles are Brownian
-            self.epsA = eps#kT
-            tauA = self.theory_functs.computeTauLJ(self.epsA)
-
-        if self.peB != 0:                        # B particles are NOT Brownian
-            self.epsB=eps
-            tauB = self.theory_functs.computeTauLJ(self.epsB)
-        else:                               # B particles are Brownian
-            self.epsB = eps#kT
-            tauB = self.theory_functs.computeTauLJ(self.epsB)
-
-        #epsAB = (epsA + epsB + 1) / 2.0             # AB interaction well depth
-        self.epsAB=self.epsA                                  # assign AB interaction well depth to same as A and B
-        self.tauLJ = (tauA if (tauA <= tauB) else tauB)  # use the smaller tauLJ.  Doesn't matter since these are the same
+        self.epsA = epsA
+        self.epsB = epsB
         self.epsA = (self.epsA if (self.epsA >= self.epsB) else self.epsB)   # use the larger epsilon. Doesn't matter since these are the same
+        self.epsAB = (self.epsA + self.epsB) / 2.0             # AB interaction well depth
 
-        self.dt = 0.00000001 * self.tauLJ                        # timestep size.  I use 0.000001 for dt=tauLJ* (eps/10^6) generally
+        self.tauLJ = tauLJ  # use the smaller tauLJ.  Doesn't matter since these are the same
+
+        self.dt = dt 
         self.simLength = self.runFor * self.tauBrown               # how long to run (in tauBrown)
         self.simTauLJ = self.simLength / self.tauLJ                # how long to run (in tauLJ)
         self.totTsteps = int(self.simLength / self.dt)             # how many tsteps to run
-        self.numDumps = float(self.simLength / 0.025)           # dump data every 0.1 tauBrown.
-
-        if self.dumpFreq==0:
-            self.dumpFreq = float(totTsteps / numDumps)      # normalized dump frequency.
-            self.dumpFreq = int(dumpFreq)                    # ensure this is an integer
+        self.numDumps = float(self.simLength / self.dumpFreq)           # dump data every 0.1 tauBrown.
+        print(self.numDumps)
+        stop
+        #if self.dumpFreq==0:
+        self.dumpFreq = float(self.totTsteps / self.numDumps)      # normalized dump frequency.
+        #self.dumpFreq = int(dumpFreq)                    # ensure this is an integer
 
         print("Brownian tau in use:"+str(self.tauBrown))
         print("Lennard-Jones tau in use:"+str(self.tauLJ))
