@@ -2728,10 +2728,6 @@ class run_sim:
                     x += latNet
         import matplotlib.pyplot as plt
         x, y, z_new = zip(*pos)
-        plt.scatter(x,y, s=0.7)
-        plt.xlim([-hx, hx])
-        plt.ylim([-hy, hy])
-        plt.show()
 
         if lx < ly:
             max_x = np.where(x == np.max(x))[0]
@@ -2979,10 +2975,6 @@ class run_sim:
         pos_final = pos_final + gaspos
 
         x, y, z = zip(*pos_final)
-        plt.scatter(x,y, s=0.7)
-        plt.xlim([-hx, hx])
-        plt.ylim([-hy, hy])
-        plt.show()
 
         typ_arr=np.array(typ)
         id0=np.where(typ_arr==0)
