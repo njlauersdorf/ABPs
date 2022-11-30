@@ -3085,12 +3085,12 @@ class run_sim:
         lj3=md.wall.lj(wallstructure2, r_cut=self.r_cut)
         lj4=md.wall.lj(wallstructure3, r_cut=self.r_cut)
 
-        lj2.force_coeff.set('A', sigma=wall_width,epsilon=10.0)  #plotted below in red
+        lj2.force_coeff.set('A', sigma=wall_width,epsilon=1.0)  #plotted below in red
         lj2.force_coeff.set('B', sigma=wall_width,epsilon=0.0)  #plotted below in red
-        lj3.force_coeff.set('A', sigma=wall_width,epsilon=10.0)  #plotted below in red
-        lj3.force_coeff.set('B', sigma=wall_width,epsilon=10.0)  #plotted below in red
-        lj4.force_coeff.set('A', sigma=wall_width,epsilon=10.0)  #plotted below in red
-        lj4.force_coeff.set('B', sigma=wall_width,epsilon=10.0)  #plotted below in red
+        lj3.force_coeff.set('A', sigma=wall_width,epsilon=1.0)  #plotted below in red
+        lj3.force_coeff.set('B', sigma=wall_width,epsilon=1.0)  #plotted below in red
+        lj4.force_coeff.set('A', sigma=wall_width,epsilon=1.0)  #plotted below in red
+        lj4.force_coeff.set('B', sigma=wall_width,epsilon=1.0)  #plotted below in red
 
         # Brownian integration
         brownEquil = 10000
