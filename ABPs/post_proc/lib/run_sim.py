@@ -2877,16 +2877,24 @@ class run_sim:
         tooClose = latNet / 2
         wall_distance = 0
         lx = 4 * (rList[-1] + (tooClose))
+        x3, y3, z3 = zip(*pos_final)
         while count < NGas:
             place = 1
             # Generate random position
-            gasx = (np.random.rand() - 0.5) * lx
-            gasy = (np.random.rand() - 0.5) * ly
+            if lx > ly: 
+                gasy = 0
+                gasx = np.max(x3) + latNet/2
+            else:
+                gasx = 0
+                gasy = np.max(y3) + latNet/2
+            
+            #gasx = (np.random.rand() - 0.5) * lx
+            #gasy = (np.random.rand() - 0.5) * ly
 
-            if (lx <= ly) & (gasy <= (rList[-1] + (tooClose))):
-                continue
-            elif (ly <= lx) & (gasx <= (rList[-1] + (tooClose))):
-                continue
+            #if (lx <= ly) & (gasy <= (rList[-1] + (tooClose))):
+            #    continue
+            #elif (ly <= lx) & (gasx <= (rList[-1] + (tooClose))):
+            #    continue
 
             # Are any gas particles too close?
             tmpx = gasx + hx
@@ -2934,7 +2942,7 @@ class run_sim:
                     if v == 2 and vlist[v] == 0:
                         wrapY += ly
                     # Compute distance between particles
-
+                    """
                     if binParts[hlist[h]][vlist[v]]:
                         for b in range(0, len(binParts[hlist[h]][vlist[v]])):
                             # Get index of nearby particle
@@ -2948,6 +2956,7 @@ class run_sim:
                             if r <= tooClose:
                                 place = 0
                                 break
+                    """
                     if place == 0:
                         break
                 if place == 0:
@@ -2970,7 +2979,7 @@ class run_sim:
         #print("N_liq + N_gas: {}").format(len(pos) + len(gaspos))
         #print("Intended N: {}").format(partNum)
         #x2, y2, z2 = zip(*gaspos)
-        x3, y3, z3 = zip(*pos_final)
+        
         pos_final = pos_final + gaspos
 
         x, y, z = zip(*pos_final)
@@ -3063,7 +3072,7 @@ class run_sim:
         wallstructure3=md.wall.group()
         
         if lx > ly:
-            rMax_temp = np.max(x3) + wall_width + latNet/2
+            rMax_temp = np.max(x3) + latNet/2
             phi_temp = round(( NLiq * (np.pi/4) ) / ( rMax_temp * 2 * ly ), 2)
         else:
             rMax_temp = np.max(y3) + latNet/2
@@ -3081,16 +3090,16 @@ class run_sim:
             wallstructure.add_plane(origin=(0,rMax_temp,0),normal=(0,-1,0))
             wallstructure3.add_plane(origin=(0,hy,0),normal=(0,-1,0))
 
-        lj2=md.wall.lj(wallstructure, r_cut=self.r_cut + wall_width)
-        lj3=md.wall.lj(wallstructure2, r_cut=self.r_cut + wall_width)
-        lj4=md.wall.lj(wallstructure3, r_cut=self.r_cut + wall_width)
+        lj2=md.wall.lj(wallstructure, r_cut=self.r_cut)
+        lj3=md.wall.lj(wallstructure2, r_cut=self.r_cut)
+        lj4=md.wall.lj(wallstructure3, r_cut=self.r_cut)
 
-        lj2.force_coeff.set('A', sigma=wall_width,epsilon=1.0)  #plotted below in red
-        lj2.force_coeff.set('B', sigma=wall_width,epsilon=0.0)  #plotted below in red
-        lj3.force_coeff.set('A', sigma=wall_width,epsilon=1.0)  #plotted below in red
-        lj3.force_coeff.set('B', sigma=wall_width,epsilon=1.0)  #plotted below in red
-        lj4.force_coeff.set('A', sigma=wall_width,epsilon=1.0)  #plotted below in red
-        lj4.force_coeff.set('B', sigma=wall_width,epsilon=1.0)  #plotted below in red
+        lj2.force_coeff.set('A', sigma=wall_width, epsilon=1.0)  #plotted below in red
+        lj2.force_coeff.set('B', sigma=wall_width, epsilon=0.0)  #plotted below in red
+        lj3.force_coeff.set('A', sigma=wall_width, epsilon=1.0)  #plotted below in red
+        lj3.force_coeff.set('B', sigma=wall_width, epsilon=1.0)  #plotted below in red
+        lj4.force_coeff.set('A', sigma=wall_width, epsilon=1.0)  #plotted below in red
+        lj4.force_coeff.set('B', sigma=wall_width, epsilon=1.0)  #plotted below in red
 
         # Brownian integration
         brownEquil = 10000
