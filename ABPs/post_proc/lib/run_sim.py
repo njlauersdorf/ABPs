@@ -2878,23 +2878,36 @@ class run_sim:
         wall_distance = 0
         lx = 4 * (rList[-1] + (tooClose))
         x3, y3, z3 = zip(*pos_final)
+        if lx > ly:
+            rMax_temp = np.max(x3) + latNet/2
+        else:
+            rMax_temp = np.max(y3) + latNet/2
+
+        
         while count < NGas:
             place = 1
             # Generate random position
-            if lx > ly: 
+            #if lx > ly: 
+            #    gasy = 0
+            #    gasx = np.max(x3) + latNet/2
+            #else:
+            #    gasx = 0
+            #    gasy = np.max(y3) + latNet/2
+            if lx > ly:
+                gas_width = rMax_temp + (hx - rMax_temp) * 0.4
                 gasy = 0
-                gasx = np.max(x3) + latNet/2
+                gasx = (np.random.rand() - 0.5) * lx
             else:
+                gas_width = rMax_temp + (hy - rMax_temp) * 0.4
                 gasx = 0
-                gasy = np.max(y3) + latNet/2
-            
-            #gasx = (np.random.rand() - 0.5) * lx
-            #gasy = (np.random.rand() - 0.5) * ly
+                gasy = (np.random.rand() - 0.5) * ly
 
-            #if (lx <= ly) & (gasy <= (rList[-1] + (tooClose))):
-            #    continue
-            #elif (ly <= lx) & (gasx <= (rList[-1] + (tooClose))):
-            #    continue
+            if (lx <= ly):
+                if (gasy <= (rList[-1] + (tooClose))) | (gasy>=gas_width):
+                    continue
+            elif (ly <= lx):
+                if (gasx <= (rList[-1] + (tooClose))) | (gasx>=gas_width):
+                    continue
 
             # Are any gas particles too close?
             tmpx = gasx + hx
@@ -2942,7 +2955,7 @@ class run_sim:
                     if v == 2 and vlist[v] == 0:
                         wrapY += ly
                     # Compute distance between particles
-                    """
+                    
                     if binParts[hlist[h]][vlist[v]]:
                         for b in range(0, len(binParts[hlist[h]][vlist[v]])):
                             # Get index of nearby particle
@@ -2956,7 +2969,7 @@ class run_sim:
                             if r <= tooClose:
                                 place = 0
                                 break
-                    """
+                    
                     if place == 0:
                         break
                 if place == 0:
@@ -2970,7 +2983,49 @@ class run_sim:
                 rOrient.append(1)       # not oriented
                 typ.append(1)           # final particle type, same as outer ring
                 count += 1              # increment count
-
+        print(type(gaspos))
+        print(type(pos_final))
+        pos_final = pos_final + gaspos
+        print(type(pos_final))
+        x2, y2, z2 = zip(*pos_final)
+        plt.scatter(x2,y2, s=1.0)
+        plt.xlim([-hx, hx])
+        plt.ylim([-hy, hy])
+        plt.show()
+        """
+        wallpos = []
+        if lx > ly: 
+            y_val = -hy
+            x_val = np.max(x3) + latNet/2
+            while y_val < hy:
+                wallpos.append((x_val, y_val, z))
+                wallpos.append((-x_val, y_val, z))
+                rOrient.append(0)       # not oriented
+                rOrient.append(0)       # not oriented
+                typ.append(2)           # final particle type, same as outer ring
+                typ.append(2)           # final particle type, same as outer ring
+                y_val += 0.1
+        else:
+            y_val = np.max(y3) + latNet/2
+            x_val = -hx
+            while x_val < hx:
+                wallpos.append((x_val, y_val, z))
+                wallpos.append((x_val, -y_val, z))
+                rOrient.append(0)       # not oriented
+                rOrient.append(0)       # not oriented
+                typ.append(2)           # final particle type, same as outer ring
+                typ.append(2)           # final particle type, same as outer ring
+                x_val += 0.1
+        
+            gasy = 0
+            gasx = np.max(x3) + latNet/2
+        pos_final2 = pos_final + wallpos
+        x, y, z = zip(*pos_final2)
+        plt.scatter(x,y, s=1.0)
+        plt.xlim([-hx, hx])
+        plt.ylim([-hy, hy])
+        plt.show()
+        """
         ## Get each coordinate in a list
         #print("N_liq: {}").format(len(pos))
         #print("Intended N_liq: {}").format(NLiq)
@@ -2979,10 +3034,6 @@ class run_sim:
         #print("N_liq + N_gas: {}").format(len(pos) + len(gaspos))
         #print("Intended N: {}").format(partNum)
         #x2, y2, z2 = zip(*gaspos)
-        
-        pos_final = pos_final + gaspos
-
-        x, y, z = zip(*pos_final)
 
         typ_arr=np.array(typ)
         id0=np.where(typ_arr==0)
@@ -3002,6 +3053,7 @@ class run_sim:
         #ax = plt.gca()
         #ax.set_aspect('equal')
         partNum = len(pos_final)
+        #peList = [ self.peA, self.peB, 0.]
         peList = [ self.peA, self.peB]
         # Get the number of types
         uniqueTyp = []
@@ -3030,6 +3082,7 @@ class run_sim:
         # Now we make the system in hoomd
         hoomd.context.initialize()
         partNum = len(pos_final)
+        
         # A small shift to help with the periodic box
         snap = hoomd.data.make_snapshot(N = partNum,
                                         box = hoomd.data.boxdim(Lx=lx,
@@ -3070,6 +3123,8 @@ class run_sim:
         wallstructure=md.wall.group()
         wallstructure2=md.wall.group()
         wallstructure3=md.wall.group()
+        wallstructure4=md.wall.group()
+        wallstructure5=md.wall.group()
         
         if lx > ly:
             rMax_temp = np.max(x3) + latNet/2
@@ -3085,14 +3140,21 @@ class run_sim:
             wallstructure2.add_plane(origin=(-rMax_temp,0,0),normal=(1,0,0))
             wallstructure.add_plane(origin=(rMax_temp,0,0),normal=(-1,0,0))
             wallstructure3.add_plane(origin=(hx,0,0),normal=(-1,0,0))
+            wallstructure4.add_plane(origin=(0,hy,0),normal=(0,-1,0))
+            wallstructure5.add_plane(origin=(0,-hy,0),normal=(0,1,0))
         else:
             wallstructure2.add_plane(origin=(0,-rMax_temp,0),normal=(0,1,0))
             wallstructure.add_plane(origin=(0,rMax_temp,0),normal=(0,-1,0))
             wallstructure3.add_plane(origin=(0,hy,0),normal=(0,-1,0))
+            wallstructure4.add_plane(origin=(hx,0,0),normal=(-1,0,0))
+            wallstructure5.add_plane(origin=(-hx,0,0),normal=(1,0,0))
 
         lj2=md.wall.lj(wallstructure, r_cut=self.r_cut)
         lj3=md.wall.lj(wallstructure2, r_cut=self.r_cut)
         lj4=md.wall.lj(wallstructure3, r_cut=self.r_cut)
+        lj5=md.wall.lj(wallstructure4, r_cut=self.r_cut)
+        lj6=md.wall.lj(wallstructure5, r_cut=self.r_cut)
+
 
         lj2.force_coeff.set('A', sigma=wall_width, epsilon=1.0)  #plotted below in red
         lj2.force_coeff.set('B', sigma=wall_width, epsilon=0.0)  #plotted below in red
@@ -3100,6 +3162,10 @@ class run_sim:
         lj3.force_coeff.set('B', sigma=wall_width, epsilon=1.0)  #plotted below in red
         lj4.force_coeff.set('A', sigma=wall_width, epsilon=1.0)  #plotted below in red
         lj4.force_coeff.set('B', sigma=wall_width, epsilon=1.0)  #plotted below in red
+        lj5.force_coeff.set('A', sigma=wall_width, epsilon=1.0)  #plotted below in red
+        lj5.force_coeff.set('B', sigma=wall_width, epsilon=1.0)  #plotted below in red
+        lj6.force_coeff.set('A', sigma=wall_width, epsilon=1.0)  #plotted below in red
+        lj6.force_coeff.set('B', sigma=wall_width, epsilon=1.0)  #plotted below in red
 
         # Brownian integration
         brownEquil = 10000
