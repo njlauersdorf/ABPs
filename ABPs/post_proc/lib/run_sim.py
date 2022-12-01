@@ -2988,10 +2988,6 @@ class run_sim:
         pos_final = pos_final + gaspos
         print(type(pos_final))
         x2, y2, z2 = zip(*pos_final)
-        plt.scatter(x2,y2, s=1.0)
-        plt.xlim([-hx, hx])
-        plt.ylim([-hy, hy])
-        plt.show()
         """
         wallpos = []
         if lx > ly: 
@@ -3536,10 +3532,7 @@ class run_sim:
 
             import matplotlib.pyplot as plt
             x, y, z = zip(*pos)
-            plt.scatter(x,y, s=0.7)
-            plt.xlim([-hx, hx])
-            plt.ylim([-hy, hy])
-            plt.show()
+
             print('x')
             print(np.max(x))
             print(np.min(x))
