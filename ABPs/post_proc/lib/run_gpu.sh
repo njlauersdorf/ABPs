@@ -5,7 +5,7 @@
 #SBATCH --nodes=1                     # partition to run on
 #SBATCH --time=11-00:00                     # time (D-HH:MM)
 #SBATCH --constraint=rhel8
-#SBATCH --exclude=g0605
+#SBATCH --exclude=g0604
 source ~/.bashrc
 
 # Don't run this for now SBATCH --exclude=g0605
