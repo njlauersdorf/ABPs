@@ -3072,23 +3072,14 @@ class run_sim:
         part_frac_temp = round(( (partNum - NGas) / partNum), 3)
         
 
-        #if lx > ly:
-        #    wallstructure2.add_plane(origin=(-rMax_temp,0,0),normal=(1,0,0))
-        #    wallstructure.add_plane(origin=(rMax_temp,0,0),normal=(-1,0,0))
-        #    wallstructure3.add_plane(origin=(hx,0,0),normal=(-1,0,0))
-        #else:
-        #    wallstructure2.add_plane(origin=(0,-rMax_temp,0),normal=(0,1,0))
-        #    wallstructure.add_plane(origin=(0,rMax_temp,0),normal=(0,-1,0))
-        #    wallstructure3.add_plane(origin=(0,hy,0),normal=(0,-1,0))
-
         if lx > ly:
-            wallstructure2.add_plane(origin=(-rMax_temp,0,0),normal=(0,0,1))
-            wallstructure.add_plane(origin=(rMax_temp,0,0),normal=(0,0,1))
-            wallstructure3.add_plane(origin=(hx,0,0),normal=(0,0,1))
+            wallstructure2.add_plane(origin=(-rMax_temp,0,0),normal=(1,0,0))
+            wallstructure.add_plane(origin=(rMax_temp,0,0),normal=(-1,0,0))
+            wallstructure3.add_plane(origin=(hx,0,0),normal=(-1,0,0))
         else:
-            wallstructure2.add_plane(origin=(0,-rMax_temp,0),normal=(0,0,1))
-            wallstructure.add_plane(origin=(0,rMax_temp,0),normal=(0,0,1))
-            wallstructure3.add_plane(origin=(0,hy,0),normal=(0,0,1))
+            wallstructure2.add_plane(origin=(0,-rMax_temp,0),normal=(0,1,0))
+            wallstructure.add_plane(origin=(0,rMax_temp,0),normal=(0,-1,0))
+            wallstructure3.add_plane(origin=(0,hy,0),normal=(0,-1,0))
 
         lj2=md.wall.lj(wallstructure, r_cut=self.r_cut + wall_width)
         lj3=md.wall.lj(wallstructure2, r_cut=self.r_cut + wall_width)
