@@ -1578,7 +1578,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         if self.lx_box > self.ly_box:
 
             # Estimated area of dense phase
-            area_dense = (0.8 * self.partNum * (np.pi/4) / self.phiCP)
+            area_dense = (1.0 * self.partNum * (np.pi/4) / self.phiCP)
 
             # Mid point of dense phase across longest box dimension (x)
             dense_x_mid = np.mean(neigh_plot_dict['all-all']['x']+self.hx_box)

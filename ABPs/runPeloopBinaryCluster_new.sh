@@ -109,7 +109,7 @@ aspect_ratio=$answer
 if [ $dont_run == "no" ]; then
     # Default values for simulations
     declare -i part_num
-    part_num=$(( 2000 ))
+    part_num=$(( 10000 ))
 
     declare -i runfor
     runfor=$(( 60 ))
