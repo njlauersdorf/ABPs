@@ -3118,7 +3118,6 @@ class run_sim:
         # Add wall
         wallstructure=md.wall.group()
         wallstructure2=md.wall.group()
-        wallstructure3=md.wall.group()
         wallstructure4=md.wall.group()
         wallstructure5=md.wall.group()
         
@@ -3135,19 +3134,16 @@ class run_sim:
         if lx > ly:
             wallstructure2.add_plane(origin=(-rMax_temp,0,0),normal=(1,0,0))
             wallstructure.add_plane(origin=(rMax_temp,0,0),normal=(-1,0,0))
-            wallstructure3.add_plane(origin=(hx,0,0),normal=(-1,0,0))
             wallstructure4.add_plane(origin=(0,hy,0),normal=(0,-1,0))
             wallstructure5.add_plane(origin=(0,-hy,0),normal=(0,1,0))
         else:
             wallstructure2.add_plane(origin=(0,-rMax_temp,0),normal=(0,1,0))
             wallstructure.add_plane(origin=(0,rMax_temp,0),normal=(0,-1,0))
-            wallstructure3.add_plane(origin=(0,hy,0),normal=(0,-1,0))
             wallstructure4.add_plane(origin=(hx,0,0),normal=(-1,0,0))
             wallstructure5.add_plane(origin=(-hx,0,0),normal=(1,0,0))
 
         lj2=md.wall.lj(wallstructure, r_cut=self.r_cut)
         lj3=md.wall.lj(wallstructure2, r_cut=self.r_cut)
-        lj4=md.wall.lj(wallstructure3, r_cut=self.r_cut)
         lj5=md.wall.lj(wallstructure4, r_cut=self.r_cut)
         lj6=md.wall.lj(wallstructure5, r_cut=self.r_cut)
 
@@ -3155,13 +3151,11 @@ class run_sim:
         lj2.force_coeff.set('A', sigma=wall_width, epsilon=1.0)  #plotted below in red
         lj2.force_coeff.set('B', sigma=wall_width, epsilon=0.0)  #plotted below in red
         lj3.force_coeff.set('A', sigma=wall_width, epsilon=1.0)  #plotted below in red
-        lj3.force_coeff.set('B', sigma=wall_width, epsilon=1.0)  #plotted below in red
-        lj4.force_coeff.set('A', sigma=wall_width, epsilon=1.0)  #plotted below in red
-        lj4.force_coeff.set('B', sigma=wall_width, epsilon=1.0)  #plotted below in red
+        lj3.force_coeff.set('B', sigma=wall_width, epsilon=0.0)  #plotted below in red
         lj5.force_coeff.set('A', sigma=wall_width, epsilon=1.0)  #plotted below in red
-        lj5.force_coeff.set('B', sigma=wall_width, epsilon=1.0)  #plotted below in red
+        lj5.force_coeff.set('B', sigma=wall_width, epsilon=0.0)  #plotted below in red
         lj6.force_coeff.set('A', sigma=wall_width, epsilon=1.0)  #plotted below in red
-        lj6.force_coeff.set('B', sigma=wall_width, epsilon=1.0)  #plotted below in red
+        lj6.force_coeff.set('B', sigma=wall_width, epsilon=0.0)  #plotted below in red
 
         # Brownian integration
         brownEquil = 10000
