@@ -2725,6 +2725,7 @@ class run_sim:
 
                     # Increment counter
                     x += latNet
+        
         import matplotlib.pyplot as plt
         x, y, z_new = zip(*pos)
 
@@ -2766,8 +2767,10 @@ class run_sim:
                 x, y, z_new = zip(*pos)
 
                 pos_final = []
+                y_min = np.min(y)
+                y_max = np.max(y)
                 for i in range(0, len(x)):
-                    pos_final.append((x[i], y[i] - (np.max(y) + np.min(y))/2, z_new[i]))
+                    pos_final.append((x[i], y[i] - (y_max + y_min)/2, z_new[i]))
 
                 x, y, z_new = zip(*pos_final)
                 lx = 2 * np.max(x) + ver
@@ -2788,8 +2791,9 @@ class run_sim:
 
             min_x = np.min(x)
             max_x = np.max(x)
-
+            
             if (min_x_top_edge == min_x_bot_edge) & (max_x_top_edge == max_x_bot_edge):
+                
                 if min_x_top_edge == min_x:
                     x_min_new_top_edge = min_x_top_edge + hor
                 else:
@@ -2800,6 +2804,8 @@ class run_sim:
                 new_x = np.linspace(x_min_new_top_edge, np.abs(x_min_new_top_edge), num=num_x+1)
 
                 new_y = np.ones(len(new_x)) * np.max(y) + ver
+
+                
                 for i in range(0, len(new_x)):
                     pos.append((new_x[i], new_y[i], z))
                     if new_x[i] > (rList[1]):
@@ -2813,10 +2819,11 @@ class run_sim:
                 x, y, z_new = zip(*pos)
 
                 pos_final = []
-
+                y_max = np.max(y)
+                y_min = np.min(y)
                 for i in range(0, len(x)):
-                    pos_final.append((x[i], y[i] - (np.max(y) + np.min(y))/2, z_new[i]))
-
+                    pos_final.append((x[i], y[i] - (y_max + y_min)/2, z_new[i]))
+                
                 x, y, z_new = zip(*pos_final)
 
                 ly = 2 * np.max(y) + ver
@@ -2825,6 +2832,7 @@ class run_sim:
                 hx = lx / 2
 
         else:
+            
             x, y, z_new = zip(*pos)
             pos_final = []
             for i in range(0, len(x)):
@@ -2837,13 +2845,14 @@ class run_sim:
                     rOrient.append(0)
                 typ.append(0)
         # Update number of particles in gas and dense phase
-
+        
         NLiq = len(pos_final)
         if NLiq < self.partNum:
             NGas = self.partNum - NLiq
         else:
             NGas = 1
-
+        NGas = 1
+        
         typ_A=0
         typ_B=0
 
@@ -2882,7 +2891,6 @@ class run_sim:
             rMax_temp = np.max(x3) + latNet/2
         else:
             rMax_temp = np.max(y3) + latNet/2
-
         
         while count < NGas:
             place = 1
@@ -2895,6 +2903,7 @@ class run_sim:
             #    gasy = np.max(y3) + latNet/2
             if lx > ly:
                 gas_width = rMax_temp + (hx - rMax_temp) * 0.4
+                
                 gasy = 0
                 gasx = (np.random.rand() - 0.5) * lx
             else:
@@ -2908,7 +2917,7 @@ class run_sim:
             elif (ly <= lx):
                 if (gasx <= (rList[-1] + (tooClose))) | (gasx>=gas_width):
                     continue
-
+            
             # Are any gas particles too close?
             tmpx = gasx + hx
             tmpy = gasy + hy
@@ -2969,13 +2978,11 @@ class run_sim:
                             if r <= tooClose:
                                 place = 0
                                 break
-                    
                     if place == 0:
                         break
                 if place == 0:
                     break
-
-
+            
             # Is it safe to append the particle?
             if place == 1:
                 binParts[indx][indy].append(count)
@@ -2988,6 +2995,7 @@ class run_sim:
         pos_final = pos_final + gaspos
         print(type(pos_final))
         x2, y2, z2 = zip(*pos_final)
+        
         """
         wallpos = []
         if lx > ly: 
