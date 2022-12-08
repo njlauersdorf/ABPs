@@ -2990,10 +2990,9 @@ class run_sim:
                 rOrient.append(1)       # not oriented
                 typ.append(1)           # final particle type, same as outer ring
                 count += 1              # increment count
-        print(type(gaspos))
-        print(type(pos_final))
         pos_final = pos_final + gaspos
-        print(type(pos_final))
+        #pos_final = gaspos
+        #typ = [typ[-1]]
         x2, y2, z2 = zip(*pos_final)
         
         """
@@ -3038,7 +3037,7 @@ class run_sim:
         #print("N_liq + N_gas: {}").format(len(pos) + len(gaspos))
         #print("Intended N: {}").format(partNum)
         #x2, y2, z2 = zip(*gaspos)
-
+        
         typ_arr=np.array(typ)
         id0=np.where(typ_arr==0)
         id1=np.where(typ_arr==1)
@@ -3086,7 +3085,7 @@ class run_sim:
         # Now we make the system in hoomd
         hoomd.context.initialize()
         partNum = len(pos_final)
-        
+
         # A small shift to help with the periodic box
         snap = hoomd.data.make_snapshot(N = partNum,
                                         box = hoomd.data.boxdim(Lx=lx,
@@ -3196,6 +3195,7 @@ class run_sim:
             tuple = (x, y, z)
             activity.append(tuple)
         # Implement the activities in hoomd
+        self.D_r = 0.
         hoomd.md.force.active(group=all,
                               seed=self.seed3,
                               f_lst=activity,
@@ -3670,7 +3670,6 @@ class run_sim:
             #print("N_liq + N_gas: {}").format(len(pos) + len(gaspos))
             #print("Intended N: {}").format(partNum)
             pos = pos + gaspos
-
             typ_arr=np.array(typ)
             id0=np.where(typ_arr==0)[0]
             id1=np.where(typ_arr==1)[0]
