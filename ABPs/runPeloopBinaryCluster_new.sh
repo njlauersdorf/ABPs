@@ -124,7 +124,7 @@ if [ $dont_run == "no" ]; then
     runfor=$(( 100 ))
 
     declare -a dump_freq
-    dump_freq=( 0.001 )
+    dump_freq=( 0.0025 )
     # (0.0025) for segregation
     # Lists for activity of A and B species
     #pa=(0 5 10 15 20 25 30 35 40 45 50)
