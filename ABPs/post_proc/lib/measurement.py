@@ -2896,7 +2896,7 @@ class measurement:
         '''
         # Neighbor list query arguments to find interacting particles
         query_args = dict(mode='nearest', r_min = 0.1, num_neighbors=6)
-
+        
         # Locate potential neighbor particles in the system
         system_all = freud.AABBQuery(self.f_box, self.f_box.wrap(self.pos))
 

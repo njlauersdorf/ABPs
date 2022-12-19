@@ -232,7 +232,7 @@ import time
 with hoomd.open(name=inFile, mode='rb') as t:
 
     dumps = int(t.__len__())
-    start = int(0/time_step)#205                                             # first frame to process
+    start = int(400/time_step)#205                                             # first frame to process
                                 # get number of timesteps dumped
     end = int(dumps/time_step)-1                                             # final frame to process
     snap = t[0]                                             # Take first snap for box
@@ -393,6 +393,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
             surface_dict = interface_functs.det_surface_points(phase_dict, int_dict, int_comp_dict)
 
+            plt.scatter(surface_dict['surface 1']['pos']['x'], surface_dict['surface 1']['pos']['y'], s=1.0, c='red')
+            plt.scatter(surface_dict['surface 2']['pos']['x'], surface_dict['surface 2']['pos']['y'], s=1.0, c='black')
 
             #Save positions of external and internal edges
             clust_true = 0
@@ -731,9 +733,23 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     if plot == 'y':
                         plotting_functs = plotting.plotting(orient_dict, pos_dict, lx_box, ly_box, NBins_x, NBins_y, sizeBin_x, sizeBin_y, peA, peB, parFrac, eps, typ, tst)
                         plotting_functs.plot_vorticity(vel_dict['all'], vel_grad['curl']['all'], sep_surface_dict, int_comp_dict, species='all')
+            elif measurement_method == 'single_velocity':
+                if j>(start * time_step):
+                    particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, typ, pos, ang)
+                    
+                    try:
+                        part_msd_dict = particle_prop_functs.single_msd(prev_pos, displace_dict)
+                    except:
+                        displace_dict = {'A': {'x': np.array([]), 'y': np.array([]), 'mag': np.array([])}, 'B': {'x': np.array([]), 'y': np.array([]), 'mag': np.array([])} }
+                        part_msd_dict = particle_prop_functs.single_msd(prev_pos, displace_dict)
+
+                    stop
+                    part_vel_dict = particle_prop_functs.single_velocity(vel_dict['part'], prev_pos, prev_ang, ori)
+                    stop
+
             elif measurement_method == 'velocity':
                 if j>(start*time_step):
-                    particle_prop_functs = particles.particle_props(l_box, partNum, NBins, peA, peB, typ, pos, ang)
+                    particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, typ, pos, ang)
 
                     part_ang_vel_dict = particle_prop_functs.angular_velocity(ang_vel_dict['part'], phase_dict['part'])
                     part_vel_dict = particle_prop_functs.velocity(vel_dict['part']['mag'], phase_dict['part'])
@@ -747,6 +763,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                         plotting_functs.ang_vel_bulk_sf_histogram(ang_vel_dict['part'], phase_dict['part'])
                         plotting_functs.ang_vel_int_sf_histogram(ang_vel_dict['part'], phase_dict['part'])
                         plotting_functs.ang_vel_int_sf_histogram(ang_vel_dict['part'], phase_dict['part'])
+                    stop
             elif measurement_method == 'normal_fa':
 
                 if plot == 'y':

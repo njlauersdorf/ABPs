@@ -1,6 +1,9 @@
 import sys, os
 from gsd import hoomd
-import freud, numpy as np, math
+from freud import box
+import freud
+import numpy as np
+import math
 from scipy.interpolate import interp1d
 from scipy import interpolate
 from scipy import ndimage
@@ -38,6 +41,9 @@ class particle_props:
         # Total y-length of box
         self.ly_box = ly_box
         self.hy_box = self.ly_box / 2
+
+        # Instantiated simulation box
+        self.f_box = box.Box(Lx=lx_box, Ly=ly_box, is2D=True)
 
         # Initialize utility functions for call back later
         self.utility_functs = utility.utility(self.lx_box, self.ly_box)
@@ -869,3 +875,176 @@ class particle_props:
         vel_phase_dict = {'bulk': {'all': {'avg': bulk_vel_avg, 'std': bulk_vel_std}, 'A': {'avg': bulk_A_vel_avg, 'std': bulk_A_vel_std}, 'B': {'avg': bulk_B_vel_avg, 'std': bulk_B_vel_std} }, 'int': {'all': {'avg': int_vel_avg, 'std': int_vel_std}, 'A': {'avg': int_A_vel_avg, 'std': int_A_vel_std}, 'B': {'avg': int_B_vel_avg, 'std': int_B_vel_std}}, 'gas': {'all': {'avg': gas_vel_avg, 'std': gas_vel_std}, 'A': {'avg': gas_A_vel_avg, 'std': gas_A_vel_std}, 'B': {'avg': gas_B_vel_avg, 'std': gas_B_vel_std}}}
 
         return vel_phase_dict
+    
+    def single_velocity(self, vel, prev_pos, prev_ang, ori):
+        '''
+        Purpose: Takes the velocity and phase of each particle
+        to calculate the mean and standard deviation of each phase for each
+        respective particle type
+
+        Inputs:
+        vel: array (partNum) of velocities of each particle
+
+        phasePart: array (partNum) labeling whether particle is a member of bulk (0),
+        interface (1), or gas (2) phase
+
+        Output:
+        vel_phase_dict: dictionary containing the average and standard deviation of velocity
+        of each phase and each respective type ('all', 'A', or 'B')
+        '''
+        
+        dx, dy, dr = self.utility_functs.sep_dist_arr(self.pos, prev_pos, difxy=True)
+    
+        typ0ind = np.where(self.typ==0)[0]
+        typ1ind = np.where(self.typ==1)[0]
+
+        if len(typ1ind)>0:
+
+            # Add to total bulk velocity
+            typ0_vel_mag = vel['mag'][typ0ind]
+            typ0_vel_x = vel['x'][typ0ind]
+            typ0_vel_y = vel['y'][typ0ind]
+
+            typ1_vel_mag = vel['mag'][typ1ind]
+            typ1_vel_x = vel['x'][typ1ind]
+            typ1_vel_y = vel['y'][typ1ind]
+
+            typ0_avg = np.mean(typ1_vel_mag)
+
+            r = np.arange(self.r_cut, 10*self.r_cut, self.r_cut)
+            
+            for r_dist in r:
+
+                # Neighbor list query arguments to find interacting particles
+                if r_dist == self.r_cut:
+                    r_start = 0.1
+                else:
+                    r_start = self.r_cut+0.000001
+                
+                query_args = dict(mode='ball', r_min = r_start, r_max = r_dist)#r_max=self.theory_functs.conForRClust(peNet_int-45., self.eps) * 1.0)
+                
+                # Locate potential neighbor particles by type in the dense phase
+                system_A = freud.AABBQuery(self.f_box, self.f_box.wrap(prev_pos[typ0ind]))
+                system_B = freud.AABBQuery(self.f_box, self.f_box.wrap(prev_pos[typ1ind]))
+
+                # Generate neighbor list of dense phase particles (per query args) of respective type A neighboring bulk phase reference particles of type B
+                AB_nlist = system_A.query(self.f_box.wrap(prev_pos[typ1ind]), query_args).toNeighborList()                
+                if len(AB_nlist.query_point_indices) > 0:
+                    
+                    # Find neighbors list IDs where 0 is reference particle
+                    loc = np.where(AB_nlist.query_point_indices==0)[0]
+
+                    fast_dx, fast_dy, fast_dr = self.utility_functs.sep_dist_arr(self.pos[typ0ind][AB_nlist.point_indices[loc]], prev_pos[typ0ind][AB_nlist.point_indices[loc]], difxy=True)
+
+                    near_dr = dr[typ1ind][AB_nlist.query_point_indices[loc]]
+                    near_dx = dy[typ1ind][AB_nlist.query_point_indices[loc]]
+                    near_dy = dy[typ1ind][AB_nlist.query_point_indices[loc]]
+                    
+                    difx, dify, difr = self.utility_functs.sep_dist_arr(prev_pos[typ0ind][AB_nlist.point_indices[loc]], prev_pos[typ1ind][AB_nlist.query_point_indices[loc]], difxy=True)
+
+                    vel_x_corr_loc = (difx/difr) * (near_dx/near_dr)
+                    vel_y_corr_loc = (dify/difr) * (near_dy/near_dr)
+                    #vel_r_corr_loc = ( vel_x_corr_loc ** 2 + vel_y_corr_loc ** 2 ) ** 0.5         
+
+                    theta = np.arctan(dify, difx)
+                    print(theta)
+                    print(np.shape(ori))
+                    
+                    fx = ori[typ1ind,1]
+                    fy = ori[typ1ind,2]
+                    print(fx)
+                    print(fy)
+                    print(dx[typ1ind])
+                    print(dy[typ1ind])
+                    print(fx * dx[typ1ind]/dr[typ1ind])
+                    print(fy * dx[typ1ind]/dr[typ1ind])
+                    stop
+                    print(self.ang[typ1ind])
+                    print(prev_ang[typ1ind])
+
+
+                    stop
+                    difx2, dify2, difr2 = self.utility_functs.sep_dist_arr(self.pos[typ0ind][AB_nlist.point_indices[loc]], prev_pos[typ0ind][AB_nlist.point_indices[loc]], difxy=True)
+                    
+                    vel_x_corr_disp = (difx2/difr2) * (near_dx/near_dr)
+                    vel_y_corr_disp = (dify2/difr2) * (near_dy/near_dr)
+                    #vel_r_corr_disp = ( vel_x_corr_disp ** 2 + vel_y_corr_disp ** 2 ) ** 0.5
+
+                    #near_vel_corr = 
+                    print(vel_x_corr_loc)
+                    print(vel_y_corr_loc)
+
+                    print(vel_x_corr_disp)
+                    print(vel_y_corr_disp)
+                    stop
+                    #Save nearest neighbor information to array
+
+
+            # Dictionary containing the average and standard deviation of velocity
+            # of each phase and each respective type ('all', 'A', or 'B')
+            vel_dict = {'A': {'x': typ0_vel_x, 'y': typ0_vel_y, 'mag': typ0_vel_mag}, 'B': {'x': typ1_vel_x, 'y': typ1_vel_y, 'mag': typ1_vel_mag} }
+
+            return vel_dict
+    def single_msd(self, pos_prev, displace_dict):
+
+        displace_x_typ0 = displace_dict['A']['x']
+        displace_y_typ0 = displace_dict['A']['y']
+        displace_r_typ0 = displace_dict['A']['mag']
+
+        displace_x_typ1 = displace_dict['B']['x']
+        displace_y_typ1 = displace_dict['B']['y']
+        displace_r_typ1 = displace_dict['B']['mag']
+
+        typ0ind = np.where(self.typ==0)[0]
+        typ1ind = np.where(self.typ==1)[0]
+        
+        difx_typ0, dify_typ0, difr_typ0 = self.utility_functs.sep_dist_arr(self.pos[typ0ind], pos_prev[typ0ind], difxy=True)
+        
+        periodic_right = np.where(difx_typ0>self.hx_box)[0]
+        periodic_left = np.where(difx_typ0<-self.hx_box)[0]
+
+        periodic_top = np.where(dify_typ0>self.hy_box)[0]
+        periodic_bot = np.where(dify_typ0<-self.hy_box)[0]
+        print(np.min(self.pos[:,0]))
+        print(np.max(self.pos[:,0]))
+        stop
+        #periodic_right * h_box
+        difx_typ0_sim, dify_typ0_sim, difr_typ0_sim = self.utility_functs.sep_dist_arr(self.pos[typ0ind], pos_prev[typ0ind], difxy=True)
+
+        difx_typ0_bulk, dify_typ0_bulk, difr_typ0_bulk = self.utility_functs.sep_dist_arr(self.pos[typ0ind], pos_prev[typ0ind], difxy=True)
+        
+        difx_typ0_bulk
+        difx_typ1_sim, dify_typ1_sim, difr_typ1_sim = self.utility_functs.sep_dist_arr(self.pos[typ1ind], pos_prev[typ1ind], difxy=True)
+        difx_typ1_bulk, dify_typ1_bulk, difr_typ1_bulk = self.utility_functs.sep_dist_arr(self.pos[typ1ind], pos_prev[typ1ind], difxy=True)
+        
+        displace_x_typ0 = np.append(displace_x_typ0, np.mean(difx_typ0_bulk))
+        displace_y_typ0 = np.append(displace_y_typ0, np.mean(dify_typ0_bulk))
+        displace_r_typ0 = np.append(displace_r_typ0, np.mean(difr_typ0_bulk))
+
+        displace_x_typ1 = np.append(displace_x_typ1, np.mean(difx_typ1_bulk))
+        displace_y_typ1 = np.append(displace_y_typ1, np.mean(dify_typ1_bulk))
+        displace_r_typ1 = np.append(displace_r_typ1, np.mean(difr_typ1_bulk))
+
+        x_max_typ0 = np.max(self.pos[typ0ind,0])
+        y_max_typ0 = np.max(self.pos[typ0ind,1])
+
+        x_max_typ1 = np.max(self.pos[typ1ind,0])
+        y_max_typ1 = np.max(self.pos[typ1ind,1])
+
+        msd_x_typ0 = np.zeros(len(typ0ind))
+        msd_y_typ0 = np.zeros(len(typ0ind))
+        msd_r_typ0 = np.zeros(len(typ0ind))
+
+        for i in range(0, len(displace_x_typ0)):
+            msd_x_typ0 = np.append(msd_x_typ0, np.sum(displace_x_typ0[i:i+1]) )
+            msd_y_typ0 = np.append(msd_y_typ0, np.sum(displace_y_typ0[i:i+1]) )
+            msd_r_typ0 = np.append(msd_r_typ0, np.sum(displace_r_typ0[i:i+1]) )
+
+        for i in range(0, len(displace_x_typ1)):
+            msd_x_typ1 = np.append(msd_x_typ1, np.sum(displace_x_typ1[i:i+1]) )
+            msd_y_typ1 = np.append(msd_y_typ1, np.sum(displace_y_typ1[i:i+1]) )
+            msd_r_typ1 = np.append(msd_r_typ1, np.sum(displace_r_typ1[i:i+1]) )
+
+        displace_dict = {'A': {'x': displace_x_typ0, 'y': displace_y_typ0, 'mag': displace_r_typ0}, 'B': {'x': displace_x_typ1, 'y': displace_y_typ1, 'mag': displace_r_typ1} }
+        msd_dict = {'A': {'x': msd_x_typ0, 'y': msd_y_typ0, 'mag': msd_r_typ0}, 'B': {'x': msd_x_typ1, 'y': msd_y_typ1, 'mag': msd_r_typ1} }
+        return displace_dict, msd_dict
