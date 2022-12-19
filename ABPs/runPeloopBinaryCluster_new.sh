@@ -121,7 +121,7 @@ if [ $dont_run == "no" ]; then
     #100 500 1000 3000 5000)
 
     declare -i runfor
-    runfor=$(( 30 ))
+    runfor=$(( 100 ))
 
     declare -a dump_freq
     dump_freq=( 0.001 )
