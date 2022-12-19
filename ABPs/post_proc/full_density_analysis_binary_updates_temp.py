@@ -232,7 +232,7 @@ import time
 with hoomd.open(name=inFile, mode='rb') as t:
 
     dumps = int(t.__len__())
-    start = int(400/time_step)#205                                             # first frame to process
+    start = int(0/time_step)#205                                             # first frame to process
                                 # get number of timesteps dumped
     end = int(dumps/time_step)-1                                             # final frame to process
     snap = t[0]                                             # Take first snap for box
@@ -746,6 +746,16 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     stop
                     part_vel_dict = particle_prop_functs.single_velocity(vel_dict['part'], prev_pos, prev_ang, ori)
                     stop
+            elif measurement_method == 'adsorption':
+                particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, typ, pos, ang)
+                
+                
+                kinetics_dict = particle_prop_functs.adsorption_nlist()
+                collision_dict = particle_prop_functs.collision_rate()
+                
+                data_output_functs.write_to_txt(kinetics_dict, dataPath + 'kinetics_' + outfile + '.txt')
+                data_output_functs.write_to_txt(collision_dict, dataPath + 'collision_' + outfile + '.txt')
+
 
             elif measurement_method == 'velocity':
                 if j>(start*time_step):
