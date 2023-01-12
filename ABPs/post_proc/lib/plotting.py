@@ -1544,8 +1544,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         plt.show()
         #plt.savefig(outPath + 'rdf_' + out + ".png", dpi=300)
         #plt.close()
-
-    def plot_neighbors(self, neigh_plot_dict, sep_surface_dict, int_comp_dict, ang, pos, pair='all-all'):
+    def plot_neighbors(self, neigh_plot_dict, ang, pos, sep_surface_dict=None, int_comp_dict=None, pair='all-all'):
         """
         This function plots the number of neighbors of all dense phase particles
         at each location in space.
@@ -3273,7 +3272,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         #pad = str(j).zfill(4)
 
         plt.tight_layout()
-        plt.savefig(self.outPath + 'part_activity_' + self.outFile + ".png", dpi=50, transparent=False)
+        plt.savefig(self.outPath + 'part_activity_' + self.outFile + ".png", dpi=75, transparent=False)
         plt.close()        
 
         

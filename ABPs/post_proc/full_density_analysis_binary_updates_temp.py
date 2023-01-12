@@ -244,7 +244,6 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                 # get number of timesteps dumped
     
     end = int(dumps/time_step)-1                                             # final frame to process
-    #end = start + 200
     snap = t[0]                                             # Take first snap for box
     first_tstep = snap.configuration.step                   # First time step
 
@@ -346,7 +345,14 @@ with hoomd.open(name=inFile, mode='rb') as t:
         orient_dict = binning_functs.bin_orient(part_dict, pos, ang, com_dict['com'])
         area_frac_dict = binning_functs.bin_area_frac(part_dict)
         activ_dict = binning_functs.bin_activity(part_dict)
-        
+        clust_large = 0
+
+        outfile = 'pa'+str(int(peA))+'_pb'+str(int(peB))+'_xa'+str(int(parFrac))+'_eps'+str(eps)+'_phi'+str(phi)+'_pNum' + str(int(partNum)) + '_bin' + str(int(bin_width)) + '_time' + str(int(time_step))
+        out = outfile + "_frame_"
+        pad = str(j).zfill(5)
+        outFile = out + pad
+
+
         if clust_large >= min_size:
 
             clust_size_arr = np.append(clust_size_arr, clust_large)
@@ -374,11 +380,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
             #radial_density_function_analysis_binary_updates
             align_grad_dict = binning_functs.curl_and_div(align_dict)
 
-            outfile = 'pa'+str(int(peA))+'_pb'+str(int(peB))+'_xa'+str(int(parFrac))+'_eps'+str(eps)+'_phi'+str(phi)+'_pNum' + str(int(partNum)) + '_bin' + str(int(bin_width)) + '_time' + str(int(time_step))
-            out = outfile + "_frame_"
-            pad = str(j).zfill(5)
-            outFile = out + pad
-
+            
             plotting_functs = plotting.plotting(orient_dict, pos_dict, lx_box, ly_box, NBins_x, NBins_y, sizeBin_x, sizeBin_y, peA, peB, parFrac, eps, typ, tst, partNum, picPath, outFile)
 
             phase_ident_functs = phase_identification.phase_identification(area_frac_dict, align_dict, part_dict, press_dict, lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, parFrac, eps, typ)
@@ -942,15 +944,6 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                     data_output_functs.write_to_txt(penetration_dict, dataPath + 'penetration_depth_' + outfile + '.txt')
 
-                if plot == 'y':
-
-                    plotting_functs.lat_histogram(lat_plot_dict)
-
-                    if j>(start*time_step):
-                        plotting_functs.lat_map(lat_plot_dict, all_surface_curves, int_comp_dict, velocity_dict = vel_dict)
-                    else:
-                        plotting_functs.lat_map(lat_plot_dict, all_surface_curves, int_comp_dict)
-
             elif measurement_method == 'radial_df':
                 # Done but inaccurate in planar system
                 lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
@@ -1140,6 +1133,31 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     plotting_functs = plotting.plotting(orient_dict, pos_dict, lx_box, ly_box, NBins_x, NBins_y, sizeBin_x, sizeBin_y, peA, peB, parFrac, eps, typ, tst, partNum, picPath, outFile)
 
                     plotting_functs.plot_part_activity(pos)
+            elif measurement_method == 'neighbors':
+                #DONE
+                particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, typ, pos, ang)
+                
+                neigh_stat_dict, ori_stat_dict, neigh_plot_dict = particle_prop_functs.nearest_neighbors_penetrate()                
+                
+                data_output_functs = data_output.data_output(lx_box, ly_box, sizeBin_x, sizeBin_y, tst, clust_large, dt_step)
+
+                data_output_functs.write_to_txt(neigh_stat_dict, dataPath + 'nearest_neighbors_' + outfile + '.txt')
+                if plot == 'y':
+
+                    plotting_functs = plotting.plotting(orient_dict, pos_dict, lx_box, ly_box, NBins_x, NBins_y, sizeBin_x, sizeBin_y, peA, peB, parFrac, eps, typ, tst, partNum, picPath, outFile)
+
+
+                    plotting_functs.plot_neighbors(neigh_plot_dict, ang, pos, pair='all-all')
+            elif measurement_method == 'penetration':
+                #DONE
+                particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, typ, pos, ang)
+                if j>(start*time_step):
+                    penetration_dict, start_dict = particle_prop_functs.penetration_depth(start_dict, prev_pos)
+
+                    data_output_functs = data_output.data_output(lx_box, ly_box, sizeBin_x, sizeBin_y, tst, clust_large, dt_step)
+
+                    data_output_functs.write_to_txt(penetration_dict, dataPath + 'penetration_depth_' + outfile + '.txt')
+
         #if j == start:
         prev_pos = pos.copy()
         prev_ang = ang.copy()
@@ -1151,4 +1169,5 @@ with hoomd.open(name=inFile, mode='rb') as t:
             adsorption_dict = kinetic_functs.particle_flux(partPhase_time, in_clust_arr, partPhase_time_arr, clust_size_arr)
 
             data_output_functs.write_all_time_to_txt(adsorption_dict, dataPath + 'adsorption_final_' + outfile + '.txt')
+
     

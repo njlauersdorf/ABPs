@@ -1431,3 +1431,255 @@ class particle_props:
         displace_dict = {'A': {'x': displace_x_typ0, 'y': displace_y_typ0, 'mag': displace_r_typ0}, 'B': {'x': displace_x_typ1, 'y': displace_y_typ1, 'mag': displace_r_typ1} }
         msd_dict = {'A': {'x': msd_x_typ0, 'y': msd_y_typ0, 'mag': msd_r_typ0}, 'B': {'x': msd_x_typ1, 'y': msd_y_typ1, 'mag': msd_r_typ1} }
         return displace_dict, msd_dict
+    def nearest_neighbors_penetrate(self):
+        '''
+        Purpose: Takes the composition of each phase and uses neighbor lists to find the
+        nearest, interacting neighbors and calculates the number of neighbors of each
+        type for each particle and averaged over all particles of each phase.
+
+        Outputs:
+        neigh_stat_dict: dictionary containing the mean and standard deviation of the
+        number of neighbors of each type ('all', 'A', or 'B') for a reference particle of
+        a given type ('all', 'A', or 'B'), averaged over all particles in each phase.
+
+        ori_stat_dict: dictionary containing the mean and standard deviation of the
+        orientational correlation between a reference particle of
+        a given type ('all', 'A', or 'B') and neighbors of each type ('all', 'A', or 'B'),
+        averaged over all particles in each phase.
+
+        neigh_plot_dict: dictionary containing information on the number of nearest
+        neighbors of each bulk and interface reference particle of each type ('all', 'A', or 'B').
+        '''
+
+        # Position and orientation arrays of type A particles in respective phase
+        typ0ind = np.where(self.typ==0)[0]
+        pos_A=self.pos[typ0ind]                               # Find positions of type 0 particles
+        ang_A=self.ang[typ0ind]
+
+        # Position and orientation arrays of type B particles in respective phase
+        typ1ind = np.where(self.typ==1)[0]
+        pos_B=self.pos[typ1ind]
+        ang_B=self.ang[typ1ind]
+        
+        # Neighbor list query arguments to find interacting particles
+        query_args = dict(mode='ball', r_min = 0.1, r_max = self.r_cut)#r_max=self.theory_functs.conForRClust(peNet_int-45., self.eps) * 1.0)
+
+        # Locate potential neighbor particles by type in the dense phase
+        system_A = freud.AABBQuery(self.f_box, self.f_box.wrap(pos_A))
+        system_B = freud.AABBQuery(self.f_box, self.f_box.wrap(pos_B))
+        
+        # Generate neighbor list of dense phase particles (per query args) of respective type (A or B) neighboring bulk phase reference particles of respective type (A or B)
+        AA_nlist = system_A.query(self.f_box.wrap(pos_A), query_args).toNeighborList()
+        AB_nlist = system_A.query(self.f_box.wrap(pos_B), query_args).toNeighborList()
+        BA_nlist = system_B.query(self.f_box.wrap(pos_A), query_args).toNeighborList()
+        BB_nlist = system_B.query(self.f_box.wrap(pos_B), query_args).toNeighborList()
+        
+        #Initiate empty arrays for finding nearest A neighboring dense particles surrounding type A bulk particles
+        AA_neigh_ind = np.array([], dtype=int)
+        AA_num_neigh = np.array([])
+        AA_dot = np.array([])
+        
+        #Loop over neighbor pairings of A-A neighbor pairs to calculate number of nearest neighbors
+        for i in range(0, len(pos_A)):
+            if i in AA_nlist.query_point_indices:
+                if i not in AA_neigh_ind:
+                    # Find neighbors list IDs where i is reference particle
+                    loc = np.where(AA_nlist.query_point_indices==i)[0]
+
+                    #Save nearest neighbor information to array
+                    AA_num_neigh = np.append(AA_num_neigh, len(loc))
+                    AA_neigh_ind = np.append(AA_neigh_ind, int(i))
+                    AA_dot = np.append(AA_dot, np.sum(np.cos(ang_A[i]-ang_A[AA_nlist.point_indices[loc]])))
+            else:
+                #Save nearest neighbor information to array
+                AA_num_neigh = np.append(AA_num_neigh, 0)
+                AA_neigh_ind = np.append(AA_neigh_ind, int(i))
+                AA_dot = np.append(AA_dot, 0)
+        #Initiate empty arrays for finding nearest B neighboring dense particles surrounding type A bulk particles
+        BA_neigh_ind = np.array([], dtype=int)
+        BA_num_neigh = np.array([])
+        BA_dot = np.array([])
+
+        #Loop over neighbor pairings of B-A neighbor pairs to calculate number of nearest neighbors
+        for i in range(0, len(pos_A)):
+            if i in BA_nlist.query_point_indices:
+                if i not in BA_neigh_ind:
+                    # Find neighbors list IDs where i is reference particle
+                    loc = np.where(BA_nlist.query_point_indices==i)[0]
+
+                    #Save nearest neighbor information to array
+                    BA_num_neigh = np.append(BA_num_neigh, len(loc))
+                    BA_neigh_ind = np.append(BA_neigh_ind, int(i))
+                    BA_dot = np.append(BA_dot, np.sum(np.cos(ang_A[i]-ang_B[BA_nlist.point_indices[loc]])))
+            else:
+                #Save nearest neighbor information to array
+                BA_num_neigh = np.append(BA_num_neigh, 0)
+                BA_neigh_ind = np.append(BA_neigh_ind, int(i))
+                BA_dot = np.append(BA_dot, 0)
+
+        #Initiate empty arrays for finding nearest A neighboring dense particles surrounding type B bulk particles
+        AB_neigh_ind = np.array([], dtype=int)
+        AB_num_neigh = np.array([])
+        AB_dot = np.array([])
+
+        #Loop over neighbor pairings of A-B neighbor pairs to calculate number of nearest neighbors
+        for i in range(0, len(pos_B)):
+            if i in AB_nlist.query_point_indices:
+                if i not in AB_neigh_ind:
+                    # Find neighbors list IDs where i is reference particle
+                    loc = np.where(AB_nlist.query_point_indices==i)[0]
+
+                    #Save nearest neighbor information to array
+                    AB_num_neigh = np.append(AB_num_neigh, len(loc))
+                    AB_dot = np.append(AB_dot, np.sum(np.cos(ang_B[i]-ang_A[AB_nlist.point_indices[loc]])))
+                    AB_neigh_ind = np.append(AB_neigh_ind, int(i))
+            else:
+                #Save nearest neighbor information to array
+                AB_num_neigh = np.append(AB_num_neigh, 0)
+                AB_neigh_ind = np.append(AB_neigh_ind, int(i))
+                AB_dot = np.append(AB_dot, 0)
+
+        #Initiate empty arrays for finding nearest B neighboring dense particles surrounding type B bulk particles
+        BB_neigh_ind = np.array([], dtype=int)
+        BB_num_neigh = np.array([])
+        BB_dot = np.array([])
+
+        #Loop over neighbor pairings of B-B neighbor pairs to calculate number of nearest neighbors
+        for i in range(0, len(pos_B)):
+            if i in BB_nlist.query_point_indices:
+                if i not in BB_neigh_ind:
+                    # Find neighbors list IDs where i is reference particle
+                    loc = np.where(BB_nlist.query_point_indices==i)[0]
+
+                    #Save nearest neighbor information to array
+                    BB_num_neigh = np.append(BB_num_neigh, len(loc))
+                    BB_neigh_ind = np.append(BB_neigh_ind, int(i))
+                    BB_dot = np.append(BB_dot, np.sum(np.cos(ang_B[i]-ang_B[BB_nlist.point_indices[loc]])))
+            else:
+                #Save nearest neighbor information to array
+                BB_num_neigh = np.append(BB_num_neigh, 0)
+                BB_neigh_ind = np.append(BB_neigh_ind, int(i))
+                BB_dot = np.append(BB_dot, 0)
+
+        
+        # Save neighbor and local orientational order to arrays for all reference particles of the respective phase with B nearest neighbors
+        allB_num_neigh = AB_num_neigh + BB_num_neigh
+        allB_dot = BB_dot + AB_dot
+
+        # Save neighbor and local orientational order to arrays for all reference particles of the respective phase with A nearest neighbors
+        allA_num_neigh = AA_num_neigh + BA_num_neigh
+        allA_dot = AA_dot + BA_dot
+
+        # Save neighbor and local orientational order to arrays for all B reference particles of the respective phase with all nearest neighbors
+        Ball_num_neigh = np.append(BA_num_neigh, BB_num_neigh)
+        Ball_dot = np.append(BA_dot, BB_dot)
+
+        # Save neighbor and local orientational order to arrays for all A reference particles of the respective phase with all nearest neighbors
+        Aall_num_neigh = np.append(AB_num_neigh, AA_num_neigh)
+        Aall_dot = np.append(AB_dot, AA_dot)
+
+        # Save neighbor, local orientational order, and position to arrays for all bulk reference particles with all nearest neighbors
+        allall_num_neigh = np.append(allA_num_neigh, allB_num_neigh)
+        allall_dot = np.append(allA_dot, allB_dot)
+        allall_pos_x = np.append(pos_A[:,0], pos_B[:,0])
+        allall_pos_y = np.append(pos_A[:,1], pos_B[:,1])
+
+        # Average orientational order over all neighbors for each particle
+        for i in range(0, len(allB_dot)):
+            if allB_num_neigh[i]>0:
+                allB_dot[i] = allB_dot[i]/allB_num_neigh[i]
+
+        for i in range(0, len(allA_dot)):
+            if allA_num_neigh[i]>0:
+                allA_dot[i] = allA_dot[i]/allA_num_neigh[i]
+
+        for i in range(0, len(allall_dot)):
+            if allall_num_neigh[i]>0:
+                allall_dot[i] = allall_dot[i]/allall_num_neigh[i]
+
+        for i in range(0, len(Aall_dot)):
+            if Aall_num_neigh[i]>0:
+                Aall_dot[i] = Aall_dot[i]/Aall_num_neigh[i]
+
+        for i in range(0, len(Ball_dot)):
+            if Ball_num_neigh[i]>0:
+                Ball_dot[i] = Ball_dot[i]/Ball_num_neigh[i]
+
+        # Create output dictionary for statistical averages of total nearest neighbor numbers on each particle per phase/activity pairing
+        neigh_stat_dict = {'all-all': {'mean': np.mean(allall_num_neigh), 'std': np.std(allall_num_neigh)}, 'all-A': {'mean': np.mean(allA_num_neigh), 'std': np.std(allA_num_neigh)}, 'all-B': {'mean': np.mean(allB_num_neigh), 'std': np.std(allB_num_neigh)}, 'A-A': {'mean': np.mean(AA_num_neigh), 'std': np.std(AA_num_neigh)}, 'A-B': {'mean': np.mean(AB_num_neigh), 'std': np.std(AB_num_neigh)}, 'B-B': {'mean': np.mean(BB_num_neigh), 'std': np.std(BB_num_neigh)}}
+
+
+        # Create output dictionary for statistical averages of total nearest neighbor orientational correlation on each particle per phase/activity pairing
+        ori_stat_dict = {'all-all': {'mean': np.mean(allall_dot), 'std': np.std(allall_dot)}, 'all-A': {'mean': np.mean(allA_dot), 'std': np.std(allA_dot)}, 'all-B': {'mean': np.mean(allB_dot), 'std': np.std(allB_dot)}, 'A-A': {'mean': np.mean(AA_dot), 'std': np.std(AA_dot)}, 'A-B': {'mean': np.mean(AB_dot), 'std': np.std(AB_dot)}, 'B-B': {'mean': np.mean(BB_dot), 'std': np.std(BB_dot)}}
+
+        # Create output dictionary for plotting of nearest neighbor information of each particle per phase/activity pairing and their respective x-y locations
+        neigh_plot_dict = {'all-all': {'neigh': allall_num_neigh, 'ori': allall_dot, 'x': allall_pos_x, 'y': allall_pos_y}, 'all-A': {'neigh': allA_num_neigh, 'ori': allA_dot, 'x': pos_A[:,0], 'y': pos_A[:,1]}, 'all-B': {'neigh': allB_num_neigh, 'ori': allB_dot, 'x': pos_B[:,0], 'y': pos_B[:,1]}, 'A-all': {'neigh': Aall_num_neigh, 'ori': Aall_dot, 'x': self.pos[:,0], 'y': self.pos[:,1]}, 'B-all': {'neigh': Ball_num_neigh, 'ori': Ball_dot, 'x': self.pos[:,0], 'y': self.pos[:,1]}}
+
+        
+        return neigh_stat_dict, ori_stat_dict, neigh_plot_dict
+    def penetration_depth(self, start_dict, pos_prev):
+
+        typ0ind = np.where(self.typ==0)[0]
+        typ1ind = np.where(self.typ==1)[0]
+
+        wall_x = np.amax(self.pos[typ0ind,0])
+
+        if ((self.pos[typ1ind,0] <= (wall_x - 1.0)) & (self.pos[typ1ind,0] >= -(wall_x - 1.0))) | ((pos_prev[typ1ind,0] <= (wall_x - 1.0)) & (pos_prev[typ1ind,0] >= -(wall_x - 1.0))):
+            if ((pos_prev[typ1ind,0] > (wall_x - 1.0)) | (pos_prev[typ1ind,0] < -(wall_x - 1.0))) & ((self.pos[typ1ind,0] <= (wall_x - 1.0)) & (self.pos[typ1ind,0] >= -(wall_x - 1.0))):
+                action = 'enter'
+                start_x = self.pos[typ1ind,0]
+                start_y = self.pos[typ1ind,1]
+
+            elif (pos_prev[typ1ind,0] <= (wall_x - 1.0)) & (pos_prev[typ1ind,0] >= -(wall_x - 1.0)) & ((self.pos[typ1ind,0] > (wall_x - 1.0)) & (self.pos[typ1ind,0] < -(wall_x - 1.0))): 
+                action = 'exit'
+                start_x = start_dict['x']
+                start_y = start_dict['y']
+            else:
+                action = 'bulk'  
+                start_x = start_dict['x']
+                start_y = start_dict['y']              
+
+            if np.abs(self.pos[typ1ind,1]-pos_prev[typ1ind,1])>self.hy_box:
+                if (self.pos[typ1ind,1]<0) & (pos_prev[typ1ind,1]>0):
+                    vertical_shift += self.ly_box
+                elif (self.pos[typ1ind,1]>0) & (pos_prev[typ1ind,1]<0):
+                    vertical_shift -= self.ly_box
+                    
+            if start_x < 0:
+                penetration_depth = wall_x+self.pos[typ1ind,0]
+                difx = wall_x + self.pos[typ1ind,0]
+            else:
+                penetration_depth = wall_x-self.pos[typ1ind,0]
+                difx = self.pos[typ1ind,0]  - wall_x
+
+            if start_y < 0:
+                dify =  (self.pos[typ1ind,1] + vertical_shift) - start_y
+            else:
+                dify =  (self.pos[typ1ind,1] + vertical_shift)- start_y
+            
+            difr = (difx ** 2 + dify **2 ) ** 0.5 
+            
+
+            difx_prev = sep_dist_x(self.pos[typ1ind,0], pos_prev[typ1ind,0])
+            dify_prev = sep_dist_y(self.pos[typ1ind,1], pos_prev[typ1ind,1])
+            difr_prev = (difx_prev ** 2 + dify_prev ** 2 ) ** 0.5
+            
+            
+            MSD = ( difx ** 2 + dify ** 2 )
+        else:
+            action = 'gas'
+            MSD = 0
+            dify = 0
+            difx_prev = 0
+            dify_prev = 0
+            difr_prev = 0
+            difx = 0
+            difr = 0
+            penetration_depth = 0
+            start_x = 0
+            start_y = 0
+
+        penetration_dict = {'wall_x': wall_x, 'displace': {'x': difx_prev, 'y': dify_prev, 'r': difr_prev}, 'total_displace':{'x': difx, 'y': dify, 'r': difr, 'MSD': MSD, 'depth': penetration_depth}, 'action': action}
+        start_dict = {'x': start_x, 'y': start_y}
+
+        return penetration_dict, start_dict
