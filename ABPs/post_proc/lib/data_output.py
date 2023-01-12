@@ -222,7 +222,7 @@ class data_output:
             else:
                 headers.append(key)
                 data.append(value)
-
+        
         if is_file == 0:
             header_string = ''
             with open(outPath, 'w+') as f:
@@ -250,11 +250,14 @@ class data_output:
                             if type(data[i])==list:
                                 f.write('{0:.6f}'.format(data[i][arr_ind]).center(20) + '\n')
                                 arr_ind += 1
-                            elif type(data[i])==int:
+                            elif (type(data[i])==int) | (type(data[i])==np.uint32):
                                 f.write('{0:.0f}'.format(data[i]).center(20) + '\n')
                                 arr_ind += 1
-                            elif type(data[i])==float:
+                            elif (type(data[i])==float) | (type(data[i])==np.float64) | (type(data[i])==np.float32):
                                 f.write('{0:.6f}'.format(data[i]).center(20) + '\n')
+                                arr_ind += 1
+                            elif type(data[i])==str:
+                                f.write('{}'.format(data[i]).center(20) + '\n')
                                 arr_ind += 1
                             else:
                                 f.write('{0:.6f}'.format(data[i][arr_ind]).center(20) + '\n')
@@ -265,10 +268,12 @@ class data_output:
                             print(type(data[i]))
                             if type(data[i])==list:
                                 f.write('{0:.6f}'.format(data[i][arr_ind]).center(20) + ' ')
-                            elif type(data[i])==int:
+                            elif (type(data[i])==int) | (type(data[i])==np.uint32):
                                 f.write('{0:.0f}'.format(data[i]).center(20) + ' ')
-                            elif type(data[i])==float:
+                            elif (type(data[i])==float) | (type(data[i])==np.float64) | (type(data[i])==np.float32):
                                 f.write('{0:.6f}'.format(data[i]).center(20) + ' ')
+                            elif type(data[i])==str:
+                                f.write('{}'.format(data[i]).center(20) + ' ')
                             else:
                                 f.write('{0:.6f}'.format(data[i][arr_ind]).center(20) + ' ')
 
@@ -292,11 +297,14 @@ class data_output:
                             if type(data[i])==list:
                                 f.write('{0:.6f}'.format(data[i][arr_ind]).center(20) + '\n')
                                 arr_ind += 1
-                            elif type(data[i])==int:
+                            elif (type(data[i])==int) | (type(data[i])==np.uint32):
                                 f.write('{0:.0f}'.format(data[i]).center(20) + '\n')
                                 arr_ind += 1
-                            elif type(data[i])==float:
+                            elif (type(data[i])==float) | (type(data[i])==np.float64) | (type(data[i])==np.float32):
                                 f.write('{0:.6f}'.format(data[i]).center(20) + '\n')
+                                arr_ind += 1
+                            elif type(data[i])==str:
+                                f.write('{}'.format(data[i]).center(20) + '\n')
                                 arr_ind += 1
                             else:
                                 f.write('{0:.6f}'.format(data[i][arr_ind]).center(20) + '\n')
@@ -305,10 +313,12 @@ class data_output:
                         else:
                             if type(data[i])==list:
                                 f.write('{0:.6f}'.format(data[i][arr_ind]).center(20) + ' ')
-                            elif type(data[i])==int:
+                            elif (type(data[i])==int) | (type(data[i])==np.uint32):
                                 f.write('{0:.0f}'.format(data[i]).center(20) + ' ')
-                            elif type(data[i])==float:
+                            elif (type(data[i])==float) | (type(data[i])==np.float64) | (type(data[i])==np.float32):
                                 f.write('{0:.6f}'.format(data[i]).center(20) + ' ')
+                            elif type(data[i])==str:
+                                f.write('{}'.format(data[i]).center(20) + ' ')
                             else:
                                 f.write('{0:.6f}'.format(data[i][arr_ind]).center(20) + ' ')
 

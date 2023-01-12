@@ -1545,7 +1545,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         #plt.savefig(outPath + 'rdf_' + out + ".png", dpi=300)
         #plt.close()
 
-    def plot_neighbors(self, neigh_plot_dict, sep_surface_dict, int_comp_dict, pair='all-all'):
+    def plot_neighbors(self, neigh_plot_dict, sep_surface_dict, int_comp_dict, ang, pos, pair='all-all'):
         """
         This function plots the number of neighbors of all dense phase particles
         at each location in space.
@@ -1577,6 +1577,9 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         by the lattice spacing with color bar.
         """
 
+        typ0ind = np.where(self.typ == 0)[0]
+        typ1ind = np.where(self.typ == 1)[0]
+
         # If box is rectangular with long dimension of x-axis
         if self.lx_box > self.ly_box:
 
@@ -1584,17 +1587,17 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
             area_dense = (1.0 * self.partNum * (np.pi/4) / self.phiCP)
 
             # Mid point of dense phase across longest box dimension (x)
-            dense_x_mid = np.mean(neigh_plot_dict['all-all']['x']+self.hx_box)
+            dense_x_mid = self.hx_box
 
             # estimated shortest dimension length of dense phase (y)
-            dense_x_width = (area_dense / self.ly_box)
+            dense_x_width = np.amax(neigh_plot_dict['all-all']['x'][typ0ind]) * 1.5 #(area_dense / self.ly_box)
 
             # Set maximum dimension length (x) of simulation box to be 12 inches (plus 1 inch color bar)
             scaling = 13.0
 
             # X and Y-dimension lengths (in inches)
-            x_dim = int(scaling + 1.0)
-            y_dim = int(scaling/ (dense_x_width / self.ly_box))
+            x_dim = int(scaling)
+            y_dim = int(scaling/ (2*dense_x_width / self.ly_box))
 
         # If box is rectangular with long dimension of y-axis
         elif self.lx_box < self.ly_box:
@@ -1648,6 +1651,11 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
             coll = ax.add_collection(neighborGroup)
             coll.set_array(np.ravel(neigh_plot_dict['all-all']['neigh']))
 
+            px = np.sin(ang[typ1ind])
+            py = -np.cos(ang[typ1ind])
+
+            #plt.scatter(neigh_plot_dict['all-all']['x'][typ1ind]+self.hx_box, neigh_plot_dict['all-all']['y'][typ1ind]+self.hy_box, c='black', s=sz)
+            plt.quiver(pos[typ1ind,0]+self.hx_box, pos[typ1ind,1]+self.hy_box, px, py, color='black', width=0.003)
         elif pair == 'all-A':
 
             # Find min/max number of neighbors
@@ -1825,14 +1833,15 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
         # Label simulation time
         if self.lx_box == self.ly_box:
-            plt.text(0.8, 0.04, s=r'$\tau$' + ' = ' + '{:.1f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+            plt.text(0.8, 0.04, s=r'$\tau$' + ' = ' + '{:.4f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
                 fontsize=18, transform = ax.transAxes,
                 bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
         elif self.lx_box > self.ly_box:
-            plt.text(0.9, 0.1, s=r'$\tau$' + ' = ' + '{:.1f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+            plt.text(0.85, 0.1, s=r'$\tau$' + ' = ' + '{:.4f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
                 fontsize=18, transform = ax.transAxes,
                 bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
 
+        """
         # Plot interpolated inner and outer interface surface curves
         for m in range(0, len(sep_surface_dict)):
             key = 'surface id ' + str(int(int_comp_dict['ids'][m]))
@@ -1849,21 +1858,22 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                 plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
             except:
                 pass
+        """
 
 
 
-
-        # If rectangular box, reduce system size plotted
         if self.lx_box > self.ly_box:
-            plt.xlim(dense_x_mid-(dense_x_width/2), dense_x_mid+(dense_x_width/2))
-            plt.ylim(0, self.ly_box)
+            plt.xlim(-(dense_x_width)+self.hx_box, (dense_x_width)+self.hx_box)
+            plt.ylim(0.0, self.ly_box)
         elif self.lx_box < self.ly_box:
-            plt.ylim(dense_y_mid-(dense_y_width/2), dense_y_mid+(dense_y_width/2))
-            plt.xlim(0, self.lx_box)
+            plt.ylim(dense_y_mid-(dense_y_width), dense_y_mid+(dense_y_width))
+            plt.xlim(0.0, self.lx_box)
         # Plot entire system
         else:
             plt.ylim(0, self.ly_box)
             plt.xlim(0, self.lx_box)
+
+        
 
         # Modify plot parameters
         plt.tick_params(axis='both', which='both',
@@ -1871,9 +1881,9 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                         labelbottom=False, labeltop=False, labelleft=False, labelright=False)
         ax.axis('off')
         plt.tight_layout()
-        plt.show()
-        #plt.savefig(outPath + 'num_neigh_' + out + pad + ".png", dpi=100)
-        #plt.close()
+        #plt.show()
+        plt.savefig(self.outPath + 'all_all_neigh_' + self.outFile + ".png", dpi=75, transparent=False)
+        plt.close()        
 
 
     def plot_particle_orientations(self, neigh_plot_dict, sep_surface_dict, int_comp_dict, pair='all-all'):
@@ -1942,11 +1952,12 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
             ells = [Ellipse(xy=np.array([neigh_plot_dict['all-all']['x'][i]+self.hx_box,neigh_plot_dict['all-all']['y'][i]+self.hy_box]),
                     width=sz, height=sz)
             for i in range(0,len(neigh_plot_dict['all-all']['x']))]
-
+            
             # Plot position colored by neighbor number
             neighborGroup = mc.PatchCollection(ells)
             coll = ax.add_collection(neighborGroup)
             coll.set_array(np.ravel(neigh_plot_dict['all-all']['ori']))
+            
         elif pair == 'all-A':
 
             # Find min/max orientation

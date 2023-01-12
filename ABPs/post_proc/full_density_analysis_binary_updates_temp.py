@@ -174,7 +174,7 @@ n_len = 21
 n_arr = np.linspace(0, n_len-1, n_len)      #Fourier modes
 popt_sum = np.zeros(n_len)                  #Fourier Coefficients
 
-
+start_dict = None
 #Import modules
 import gsd
 from gsd import hoomd
@@ -244,7 +244,6 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                 # get number of timesteps dumped
     
     end = int(dumps/time_step)-1                                             # final frame to process
-    
     #end = start + 200
     snap = t[0]                                             # Take first snap for box
     first_tstep = snap.configuration.step                   # First time step
@@ -935,6 +934,22 @@ with hoomd.open(name=inFile, mode='rb') as t:
                         plotting_functs.lat_map(lat_plot_dict, all_surface_curves, int_comp_dict, velocity_dict = vel_dict)
                     else:
                         plotting_functs.lat_map(lat_plot_dict, all_surface_curves, int_comp_dict)
+            elif measurement_method == 'penetration':
+                #DONE
+                lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
+                if j>(start*time_step):
+                    penetration_dict, start_dict = lattice_structure_functs.penetration_depth(start_dict, prev_pos)
+
+                    data_output_functs.write_to_txt(penetration_dict, dataPath + 'penetration_depth_' + outfile + '.txt')
+
+                if plot == 'y':
+
+                    plotting_functs.lat_histogram(lat_plot_dict)
+
+                    if j>(start*time_step):
+                        plotting_functs.lat_map(lat_plot_dict, all_surface_curves, int_comp_dict, velocity_dict = vel_dict)
+                    else:
+                        plotting_functs.lat_map(lat_plot_dict, all_surface_curves, int_comp_dict)
 
             elif measurement_method == 'radial_df':
                 # Done but inaccurate in planar system
@@ -975,32 +990,34 @@ with hoomd.open(name=inFile, mode='rb') as t:
             elif measurement_method == 'neighbors':
                 #DONE
                 lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
-
-                neigh_stat_dict, ori_stat_dict, neigh_plot_dict = lattice_structure_functs.nearest_neighbors()
-
+                
+                if lx_box == ly_box:
+                    neigh_stat_dict, ori_stat_dict, neigh_plot_dict = lattice_structure_functs.nearest_neighbors()
+                else:
+                    neigh_stat_dict, ori_stat_dict, neigh_plot_dict = lattice_structure_functs.nearest_neighbors_penetrate()                
+                
 
                 data_output_functs.write_to_txt(neigh_stat_dict, dataPath + 'nearest_neighbors_' + outfile + '.txt')
                 data_output_functs.write_to_txt(ori_stat_dict, dataPath + 'nearest_ori_' + outfile + '.txt')
                 if plot == 'y':
-                    plotting_functs = plotting.plotting(orient_dict, pos_dict, lx_box, ly_box, NBins_x, NBins_y, sizeBin_x, sizeBin_y, peA, peB, parFrac, eps, typ, tst, partNum)
-
-                    plotting_functs.plot_neighbors(neigh_plot_dict, all_surface_curves, int_comp_dict, pair='all-all')
-                    plotting_functs.plot_particle_orientations(neigh_plot_dict, all_surface_curves, int_comp_dict, pair='all-all')
+                    plotting_functs.plot_neighbors(neigh_plot_dict, all_surface_curves, int_comp_dict, ang, pos, pair='all-all')
+                    #plotting_functs.plot_particle_orientations(neigh_plot_dict, all_surface_curves, int_comp_dict, pair='all-all')
+                    #stop
                     #plotting_functs.local_orientational_order_map(neigh_plot_dict, all_surface_curves, int_comp_dict, type='all-all')
-                    stop
-                    plotting_functs.plot_neighbors(neigh_plot_dict, all_surface_curves, int_comp_dict, pair='all-all')
-                    stop
-                    plotting_functs.plot_neighbors(neigh_plot_dict, all_surface_curves, int_comp_dict, pair='all-A')
-                    plotting_functs.plot_neighbors(neigh_plot_dict, all_surface_curves, int_comp_dict, pair='all-B')
+                    #stop
+                    #plotting_functs.plot_neighbors(neigh_plot_dict, all_surface_curves, int_comp_dict, pair='all-all')
+                    #stop
+                    #plotting_functs.plot_neighbors(neigh_plot_dict, all_surface_curves, int_comp_dict, pair='all-A')
+                    #plotting_functs.plot_neighbors(neigh_plot_dict, all_surface_curves, int_comp_dict, pair='all-B')
 
-                    plotting_functs.plot_A_neighbors_of_all_parts(neigh_plot_dict, all_surface_curves, int_comp_dict)
-                    plotting_functs.plot_B_neighbors_of_all_parts(neigh_plot_dict, all_surface_curves, int_comp_dict)
+                    #plotting_functs.plot_A_neighbors_of_all_parts(neigh_plot_dict, all_surface_curves, int_comp_dict)
+                    #plotting_functs.plot_B_neighbors_of_all_parts(neigh_plot_dict, all_surface_curves, int_comp_dict)
 
-                    plotting_functs.plot_all_ori_of_all_parts(neigh_plot_dict, all_surface_curves, int_comp_dict)
-                    plotting_functs.plot_all_ori_of_A_parts(neigh_plot_dict, all_surface_curves, int_comp_dict)
-                    plotting_functs.plot_all_ori_of_B_parts(neigh_plot_dict, all_surface_curves, int_comp_dict)
-                    plotting_functs.plot_A_ori_of_all_parts(neigh_plot_dict, all_surface_curves, int_comp_dict)
-                    plotting_functs.plot_B_ori_of_all_parts(neigh_plot_dict, all_surface_curves, int_comp_dict)
+                    #plotting_functs.plot_all_ori_of_all_parts(neigh_plot_dict, all_surface_curves, int_comp_dict)
+                    #plotting_functs.plot_all_ori_of_A_parts(neigh_plot_dict, all_surface_curves, int_comp_dict)
+                    #plotting_functs.plot_all_ori_of_B_parts(neigh_plot_dict, all_surface_curves, int_comp_dict)
+                    #plotting_functs.plot_A_ori_of_all_parts(neigh_plot_dict, all_surface_curves, int_comp_dict)
+                    #plotting_functs.plot_B_ori_of_all_parts(neigh_plot_dict, all_surface_curves, int_comp_dict)
 
             elif measurement_method == 'interparticle_pressure':
                 stress_and_pressure_functs = stress_and_pressure.stress_and_pressure(l_box, NBins, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
@@ -1134,3 +1151,4 @@ with hoomd.open(name=inFile, mode='rb') as t:
             adsorption_dict = kinetic_functs.particle_flux(partPhase_time, in_clust_arr, partPhase_time_arr, clust_size_arr)
 
             data_output_functs.write_all_time_to_txt(adsorption_dict, dataPath + 'adsorption_final_' + outfile + '.txt')
+    
