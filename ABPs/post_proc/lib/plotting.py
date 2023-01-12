@@ -2991,6 +2991,9 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         #plt.close()
     def plot_part_activity(self, pos, sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None):
 
+        typ0ind = np.where(self.typ == 0)[0]
+        typ1ind = np.where(self.typ == 1)[0]
+
         # If box is rectangular with long dimension of x-axis
         if self.lx_box > self.ly_box:
 
@@ -2998,17 +3001,17 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
             area_dense = (0.8 * self.partNum * (np.pi/4) / self.phiCP)
 
             # Mid point of dense phase across longest box dimension (x)
-            dense_x_mid = np.mean(pos[:,0]+self.hx_box)
+            dense_x_mid = self.hx_box
 
             # estimated shortest dimension length of dense phase (y)
-            dense_x_width = (area_dense / self.ly_box)
+            dense_x_width = np.amax(pos[typ0ind,0]) * 1.5 #(area_dense / self.ly_box)
 
             # Set maximum dimension length (x) of simulation box to be 12 inches (plus 1 inch color bar)
             scaling = 13.0
 
             # X and Y-dimension lengths (in inches)
-            x_dim = int(scaling + 1.0)
-            y_dim = int(scaling/ (dense_x_width / self.ly_box))
+            x_dim = int(scaling)
+            y_dim = int(scaling/ (2*dense_x_width / self.ly_box))
 
         # If box is rectangular with long dimension of y-axis
         elif self.lx_box < self.ly_box:
@@ -3043,8 +3046,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         fastCol = '#e31a1c'
         slowCol = '#081d58'
 
-        typ0ind = np.where(self.typ == 0)[0]
-        typ1ind = np.where(self.typ == 1)[0]
+        
 
         if (len(typ1ind)==0):
             mono=1
@@ -3117,8 +3119,8 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
             ax.add_collection(fastGroup)
 
             #Create legend for binary system
-            if (len(typ0ind)==0) | (len(typ1ind)==0):
-                leg = ax.legend(handles=[ells0[0], ells1[1]], labels=[r'$\mathrm{Pe}_\mathrm{A} = $'+str(int(self.peA)), r'$\mathrm{Pe}_\mathrm{B} = $'+str(int(self.peB))], loc='upper right', prop={'size': 15}, markerscale=8.0)
+            if (len(typ0ind)!=0) & (len(typ1ind)!=0):
+                leg = ax.legend(handles=[ells0[0], ells1[0]], labels=[r'$\mathrm{Pe}_\mathrm{A} = $'+str(int(self.peA)), r'$\mathrm{Pe}_\mathrm{B} = $'+str(int(self.peB))], loc='upper right', prop={'size': 15}, markerscale=8.0)
                 if self.peA <= self.peB:
                     leg.legendHandles[0].set_color(slowCol)
                     leg.legendHandles[1].set_color(fastCol)
@@ -3127,7 +3129,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                     leg.legendHandles[1].set_color(slowCol)
             #Create legend for monodisperse system
             else:
-                leg = ax.legend(handles=[ells0[0]], labels=[r'$\mathrm{Pe} = $'+str(int(self.peA)), r'$\mathrm{Pe} = $'+str(int(self.peA))], loc='upper right', prop={'size': 15}, markerscale=8.0)
+                leg = ax.legend(handles=[ells0[0]], labels=[r'$\mathrm{Pe}_\mathrm{A} = $'+str(int(self.peA)), r'$\mathrm{Pe}_\mathrm{A} = $'+str(int(self.peA))], loc='upper right', prop={'size': 15}, markerscale=8.0)
                 leg.legendHandles[0].set_color(slowCol)
 
         elif mono == 1:
@@ -3193,7 +3195,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                 #leg = ax.legend(handles=[ells0[0]], labels=[r'$\mathrm{Pe} = $'+str(int(self.peB))], loc='upper right', prop={'size': 15}, markerscale=8.0)
                 #leg = ax.legend(handles=[ells0[0]], labels=[r'$F^\mathrm{a} = $'+str(int(self.peB))], loc='upper right', prop={'size': 28}, markerscale=8.0)
                 #leg.legendHandles[0].set_color(slowCol)
-
+        """
         try:
             if sep_surface_dict!=None:
                 for m in range(0, len(sep_surface_dict)):
@@ -3214,7 +3216,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                         pass
         except:
             pass
-
+        """
         try:
             if active_fa_dict!=None:
                 plt.quiver(self.pos_x, self.pos_y, active_fa_dict['bin']['x'], active_fa_dict['bin']['y'], scale=20.0, color='black', alpha=0.8)
@@ -3230,10 +3232,10 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         #Set axes parameters
         # If rectangular box, reduce system size plotted
         if self.lx_box > self.ly_box:
-            plt.xlim(dense_x_mid-(dense_x_width/2), dense_x_mid+(dense_x_width/2))
+            plt.xlim(-(dense_x_width)+self.hx_box, (dense_x_width)+self.hx_box)
             plt.ylim(0.0, self.ly_box)
         elif self.lx_box < self.ly_box:
-            plt.ylim(dense_y_mid-(dense_y_width/2), dense_y_mid+(dense_y_width/2))
+            plt.ylim(dense_y_mid-(dense_y_width), dense_y_mid+(dense_y_width))
             plt.xlim(0.0, self.lx_box)
         # Plot entire system
         else:
@@ -3242,11 +3244,11 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
         # Label simulation time
         if self.lx_box == self.ly_box:
-            plt.text(0.75, 0.04, s=r'$\tau$' + ' = ' + '{:.5f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+            plt.text(0.8, 0.04, s=r'$\tau$' + ' = ' + '{:.4f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
                 fontsize=18, transform = ax.transAxes,
                 bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
         elif self.lx_box > self.ly_box:
-            plt.text(0.85, 0.1, s=r'$\tau$' + ' = ' + '{:.5f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+            plt.text(0.85, 0.1, s=r'$\tau$' + ' = ' + '{:.4f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
                 fontsize=18, transform = ax.transAxes,
                 bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
 
@@ -3261,8 +3263,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
         plt.tight_layout()
         plt.savefig(self.outPath + 'part_activity_' + self.outFile + ".png", dpi=50, transparent=False)
-        plt.close()
-        
+        plt.close()        
 
         
     def ang_vel_histogram(self, ang_vel, phasePart):
