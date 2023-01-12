@@ -31,6 +31,7 @@ import os
 hoomdPath=str(sys.argv[2])
 outPath = str(sys.argv[3])
 
+
 #outPath2=str(sys.argv[11])
 #outPath=str(sys.argv[12])
 
@@ -79,6 +80,7 @@ import theory
 import plotting
 import utility
 import measurement
+import kinetics
 import stress_and_pressure
 import data_output
 import particles
@@ -118,10 +120,12 @@ peNet=peA*(parFrac/100)+peB*(1-(parFrac/100))   #Net activity of system
 eps = float(sys.argv[7])                        #Softness, coefficient of interparticle repulsion (epsilon)
 
 #Set system area fraction (phi)
+
+
 try:
+    
     phi = float(sys.argv[8])
-    intPhi = int(phi)
-    phi /= 100.
+    intPhi = int(phi * 100)
 except:
     phi = 0.6
     intPhi = 60
@@ -228,13 +232,20 @@ out = outfile + "_frame_"
 dataPath = outPath + '_txt_files/'
 picPath = outPath + '_pic_files/'
 
+partPhase_time = np.array([])
+partPhase_time_arr = np.array([])
+clust_size_arr = np.array([])
+
 import time
 with hoomd.open(name=inFile, mode='rb') as t:
 
     dumps = int(t.__len__())
     start = int(0/time_step)#205                                             # first frame to process
                                 # get number of timesteps dumped
+    
     end = int(dumps/time_step)-1                                             # final frame to process
+    
+    #end = start + 200
     snap = t[0]                                             # Take first snap for box
     first_tstep = snap.configuration.step                   # First time step
 
@@ -266,6 +277,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
 
     dt=0
+
+    steady_state_once = 'False'
 
     for p in range(start, end):
         j=int(p*time_step)
@@ -306,6 +319,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
         lcID = np.where(clust_size == np.amax(clust_size))[0][0]    #Identify largest cluster
         large_clust_ind_all=np.where(clust_size>min_size)           #Identify all clusters larger than minimum size
         clust_large = np.amax(clust_size)
+        
 
 
         start_time = time.time()
@@ -333,10 +347,10 @@ with hoomd.open(name=inFile, mode='rb') as t:
         orient_dict = binning_functs.bin_orient(part_dict, pos, ang, com_dict['com'])
         area_frac_dict = binning_functs.bin_area_frac(part_dict)
         activ_dict = binning_functs.bin_activity(part_dict)
-
+        
         if clust_large >= min_size:
 
-
+            clust_size_arr = np.append(clust_size_arr, clust_large)
             fa_all_tot = [[0 for b in range(NBins_y)] for a in range(NBins_x)]
             fa_all_x_tot = [[0 for b in range(NBins_y)] for a in range(NBins_x)]
             fa_all_y_tot = [[0 for b in range(NBins_y)] for a in range(NBins_x)]
@@ -350,25 +364,57 @@ with hoomd.open(name=inFile, mode='rb') as t:
             align_dict = binning_functs.bin_align(orient_dict)
 
             #Time frame for plots
-            pad = str(j).zfill(4)
+            pad = str(j).zfill(5)
 
             press_dict = binning_functs.bin_active_press(align_dict, area_frac_dict)
-
+            #plt.contourf(pos_dict['mid point']['x'], pos_dict['mid point']['y'], press_dict['bin']['all'])
+            #plt.show()
+            #stop
             normal_fa_dict = binning_functs.bin_normal_active_fa(align_dict, area_frac_dict, activ_dict)
 
             #radial_density_function_analysis_binary_updates
             align_grad_dict = binning_functs.curl_and_div(align_dict)
 
-            plotting_functs = plotting.plotting(orient_dict, pos_dict, lx_box, ly_box, NBins_x, NBins_y, sizeBin_x, sizeBin_y, peA, peB, parFrac, eps, typ, tst, partNum)
+            outfile = 'pa'+str(int(peA))+'_pb'+str(int(peB))+'_xa'+str(int(parFrac))+'_eps'+str(eps)+'_phi'+str(phi)+'_pNum' + str(int(partNum)) + '_bin' + str(int(bin_width)) + '_time' + str(int(time_step))
+            out = outfile + "_frame_"
+            pad = str(j).zfill(5)
+            outFile = out + pad
+
+            plotting_functs = plotting.plotting(orient_dict, pos_dict, lx_box, ly_box, NBins_x, NBins_y, sizeBin_x, sizeBin_y, peA, peB, parFrac, eps, typ, tst, partNum, picPath, outFile)
 
             phase_ident_functs = phase_identification.phase_identification(area_frac_dict, align_dict, part_dict, press_dict, lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, parFrac, eps, typ)
 
             phase_dict = phase_ident_functs.phase_ident()
+            phase_dict = phase_ident_functs.phase_ident_planar()
+            bulk_id = np.where(phase_dict['part']==0)[0]
+            int_id = np.where(phase_dict['part']==1)[0]
+            gas_id = np.where(phase_dict['part']==2)[0]
+
+            #plt.scatter(pos[bulk_id,0]+hx_box, pos[bulk_id,1]+hy_box, s=10.0, c='green')
+            #plt.scatter(pos[int_id,0]+hx_box, pos[int_id,1]+hy_box, s=10.0, c='purple')
+            #plt.scatter(pos[gas_id,0]+hx_box, pos[gas_id,1]+hy_box, s=10.0, c='red')
+            #plt.xlim(0, lx_box)
+            #plt.ylim(0, ly_box)
+            #plt.show()
+
+            
 
             phase_dict = phase_ident_functs.phase_blur(phase_dict)
 
             phase_dict = phase_ident_functs.update_phasePart(phase_dict)
 
+            bulk_id = np.where(phase_dict['part']==0)[0]
+            int_id = np.where(phase_dict['part']==1)[0]
+            gas_id = np.where(phase_dict['part']==2)[0]
+
+            #plt.scatter(pos[bulk_id,0]+hx_box, pos[bulk_id,1]+hy_box, s=10.0, c='green')
+            #plt.scatter(pos[int_id,0]+hx_box, pos[int_id,1]+hy_box, s=10.0, c='purple')
+            #plt.scatter(pos[gas_id,0]+hx_box, pos[gas_id,1]+hy_box, s=10.0, c='red')
+            #plt.xlim(0, lx_box)
+            #plt.ylim(0, ly_box)
+            #plt.show()
+
+            
             count_dict = phase_ident_functs.phase_count(phase_dict)
 
             bulk_com_dict = phase_ident_functs.com_bulk(phase_dict, count_dict)
@@ -393,9 +439,14 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
             surface_dict = interface_functs.det_surface_points(phase_dict, int_dict, int_comp_dict)
 
-            plt.scatter(surface_dict['surface 1']['pos']['x'], surface_dict['surface 1']['pos']['y'], s=1.0, c='red')
-            plt.scatter(surface_dict['surface 2']['pos']['x'], surface_dict['surface 2']['pos']['y'], s=1.0, c='black')
-
+            #planar_surface_dict = interface_functs.det_planar_surface_points(phase_dict, int_dict, int_comp_dict)
+            #plt.scatter(surface_dict['surface 1']['pos']['x'], surface_dict['surface 1']['pos']['y'], s=10.0, c='red')
+            #plt.scatter(surface_dict['surface 2']['pos']['x'], surface_dict['surface 2']['pos']['y'], s=10.0, c='blue')
+            #plt.scatter(pos[:,0]+hx_box, pos[:,1]+hy_box, s=3.0, c='black')
+            #plt.xlim(0, lx_box)
+            #plt.ylim(0, ly_box)
+            #plt.show()
+            
             #Save positions of external and internal edges
             clust_true = 0
 
@@ -717,7 +768,23 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     averaged_data_arr['width'] = 0
                 if measurement_method == 'interface_props':
                     data_output_functs.write_to_txt(averaged_data_arr, dataPath + 'BubComp_' + outfile + '.txt')
-
+            print('test_five')
+            print(steady_state_once)
+            if steady_state_once == 'False':
+                in_clust_arr = np.zeros(partNum)
+                clust_id_time = np.where(ids==lcID)[0]
+                in_clust_arr[clust_id_time]=1
+                partPhase_time = partPhase
+                partPhase_time_arr = np.append(partPhase_time_arr, tst)
+                steady_state_once = 'True'
+            else:
+                clust_id_time = np.where(ids==lcID)[0]
+                in_clust_temp = np.zeros(partNum)
+                in_clust_temp[clust_id_time]=1
+                in_clust_arr = np.vstack((in_clust_arr, in_clust_temp))
+                partPhase_time_arr = np.append(partPhase_time_arr, tst)
+                partPhase_time = np.vstack((partPhase_time, partPhase))
+            print(np.shape(partPhase_time))
             print('test1')
             method1_align_dict, method2_align_dict = interface_functs.surface_alignment(all_surface_measurements, all_surface_curves, sep_surface_dict, int_dict, int_comp_dict)
             print('test2')
@@ -752,6 +819,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 
                 kinetics_dict = particle_prop_functs.adsorption_nlist()
                 collision_dict = particle_prop_functs.collision_rate()
+
                 
                 data_output_functs.write_to_txt(kinetics_dict, dataPath + 'kinetics_' + outfile + '.txt')
                 data_output_functs.write_to_txt(collision_dict, dataPath + 'collision_' + outfile + '.txt')
@@ -795,7 +863,6 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 if plot == 'y':
                    # plotting_functs = plotting.plotting(orient_dict, pos_dict, l_box, NBins, sizeBin, peA, peB, parFrac, eps, typ, tst)
                     plotting_functs.plot_part_activity(pos, all_surface_curves, int_comp_dict)
-                    stop
             elif measurement_method == 'phases':
                 #DONE
                 data_output_functs.write_to_txt(part_count_dict, dataPath + 'PhaseComp_' + outfile + '.txt')
@@ -897,7 +964,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 stop
             elif measurement_method == 'domain_size':
 
-                lattice_structure_functs = measurement.measurement(l_box, NBins, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
+                lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
 
                 domain_size_dict = lattice_structure_functs.domain_size()
 
@@ -1053,8 +1120,17 @@ with hoomd.open(name=inFile, mode='rb') as t:
             if measurement_method == 'activity':
                 #DONE
                 if plot == 'y':
-                    plotting_functs = plotting.plotting(orient_dict, pos_dict, l_box, NBins, sizeBin, peA, peB, parFrac, eps, typ, tst)
+                    plotting_functs = plotting.plotting(orient_dict, pos_dict, lx_box, ly_box, NBins_x, NBins_y, sizeBin_x, sizeBin_y, peA, peB, parFrac, eps, typ, tst, partNum, picPath, outFile)
+
                     plotting_functs.plot_part_activity(pos)
         #if j == start:
         prev_pos = pos.copy()
         prev_ang = ang.copy()
+    if measurement_method == 'adsorption_final':
+        
+        if steady_state_once == 'True':
+            kinetic_functs = kinetics.kinetic_props(lx_box, ly_box, NBins_x, NBins_y, partNum, typ, eps, peA, peB, parFrac)
+
+            adsorption_dict = kinetic_functs.particle_flux(partPhase_time, in_clust_arr, partPhase_time_arr, clust_size_arr)
+
+            data_output_functs.write_all_time_to_txt(adsorption_dict, dataPath + 'adsorption_final_' + outfile + '.txt')

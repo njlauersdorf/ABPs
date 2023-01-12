@@ -141,6 +141,87 @@ class phase_identification:
         # Array (partNum) of particle types
         self.typ = typ
 
+    def phase_ident_planar(self):
+        '''
+        Purpose: Takes the average orientation, area fraction, and pressure of each bin
+        and determines whether the bins and belong to the bulk (0), interface (1), or gas (2)
+        phase
+
+        Outputs:
+        phase_dict: dictionary containing arrays that identify the phase of each bin and each particle.
+        Bulk=0, Interface=1, Gas=2.
+        '''
+        # Instantiate empty array (NBins_x, NBins_y) that identifies whether bin is bulk (0), interface (1), or gas (2)
+        phaseBin = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]            #Label phase of each bin
+
+        # Instantiate empty array (partNum) that identifies whether bin is bulk (0), interface (1), or gas (2)
+        phasePart=np.zeros(self.partNum)
+        
+        #Calculate density ranges for phase identification (gas, interface, bulk) based on theory
+        
+        phi_dense_theory_min=self.phi_theory*0.95
+
+        phi_gas_theory_max= self.phi_g_theory*4.0
+
+        print(self.phi_theory)
+        print(self.phi_g_theory)
+        
+        #Gradient of pressure
+        press_grad = np.gradient(self.press)
+        press_grad_mag = press_grad[0]#np.sqrt(press_grad[0]**2 + press_grad[1]**2)
+
+        
+
+        #Weighted criterion for determining interface (more weighted to alignment than number density)
+        criterion = self.align_mag*press_grad_mag
+
+        # Criterion ranges for differentiating interface
+        criterion_min = 0.05*np.max(criterion)
+        criterion_max = np.max(criterion)
+
+        #Initialize count of bins for each phase
+        gasBin_num=0
+        edgeBin_num=0
+        bulkBin_num=0
+
+        #Label phase of bin per above criterion in number density and alignment
+
+        # Loop over all bins
+        for ix in range(0, self.NBins_x):
+            for iy in range(0, self.NBins_y):
+
+                #Criterion for interface or gas
+                if (criterion[ix][iy]<criterion_min) & (self.area_frac[ix][iy] < phi_dense_theory_min):
+
+                    #Criterion for gas
+                    if self.area_frac[ix][iy]<phi_gas_theory_max:
+                        phaseBin[ix][iy]=2
+                        gasBin_num+=1
+
+                    #Criterion for interface
+                    else:
+                        phaseBin[ix][iy]=1
+                        edgeBin_num+=1
+
+                #Criterion for interface
+                elif (criterion[ix][iy]>criterion_min) | (self.area_frac[ix][iy] < phi_dense_theory_min):
+                    phaseBin[ix][iy]=1
+                    edgeBin_num+=1
+
+                #Otherwise, label it as bulk
+                else:
+                    phaseBin[ix][iy]=0
+                    bulkBin_num+=1
+
+                #Label each particle with same phase
+                for h in range(0, len(self.binParts[ix][iy])):
+                    phasePart[self.binParts[ix][iy][h]]=phaseBin[ix][iy]
+
+        # Dictionary containing arrays for the phase of each bin and each particle
+        phase_dict = {'bin': phaseBin, 'part': phasePart}
+
+        return phase_dict
+
     def phase_ident(self):
         '''
         Purpose: Takes the average orientation, area fraction, and pressure of each bin
@@ -156,13 +237,11 @@ class phase_identification:
 
         # Instantiate empty array (partNum) that identifies whether bin is bulk (0), interface (1), or gas (2)
         phasePart=np.zeros(self.partNum)
-
+        
         #Calculate density ranges for phase identification (gas, interface, bulk) based on theory
-        phi_dense_theory_max=self.phi_theory*1.3
         phi_dense_theory_min=self.phi_theory*0.95
 
         phi_gas_theory_max= self.phi_g_theory*4.0
-        phi_gas_theory_min=0.0
 
         #Gradient of pressure
         press_grad = np.gradient(self.press)

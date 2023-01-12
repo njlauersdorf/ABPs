@@ -1326,7 +1326,7 @@ class particle_props:
 
         AA_collision_num = 0
         AB_collision_num = 0
-        
+
         return {'AA': AA_collision_num, 'AB': AB_collision_num, 'BB': BB_collision_num}
 
     def adsorption_nlist(self):

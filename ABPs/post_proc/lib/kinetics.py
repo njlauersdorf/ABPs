@@ -40,67 +40,66 @@ import utility
 import plotting_utility
 import phase_identification
 import binning
+import particles
 
-class stress_and_pressure:
-    def __init__(self, l_box, NBins, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict):
+class kinetic_props:
+    def __init__(self, lx_box, ly_box, NBins_x, NBins_y, partNum, typ, eps, peA, peB, parFrac):
 
         import freud
 
-        self.l_box = l_box
-        self.h_box = self.l_box/2
+        # Total x-length of box
+        self.lx_box = lx_box
+        self.hx_box = self.lx_box/2
 
-        self.f_box = box.Box(Lx=l_box, Ly=l_box, is2D=True)
+        # Total y-length of box
+        self.ly_box = ly_box
+        self.hy_box = self.ly_box/2
+
+        # Instantiated simulation box
+        self.f_box = box.Box(Lx=lx_box, Ly=ly_box, is2D=True)
 
         try:
-            self.NBins = int(NBins)
+            # Total number of bins in x-direction
+            self.NBins_x = int(NBins_x)
+
+            # Total number of bins in y-direction
+            self.NBins_y = int(NBins_y)
         except:
             print('NBins must be either a float or an integer')
 
-        self.utility_functs = utility.utility(self.l_box)
+        # Initialize utility functions for call back later
+        self.utility_functs = utility.utility(self.lx_box, self.ly_box)
 
-        self.sizeBin = self.utility_functs.roundUp((l_box / NBins), 6)
+        # X-length of bin
+        self.sizeBin_x = self.utility_functs.roundUp((lx_box / NBins_x), 6)
 
+        # Y-length of bin
+        self.sizeBin_y = self.utility_functs.roundUp((ly_box / NBins_y), 6)
+
+        # Number of particles
         self.partNum = partNum
 
-        self.phasePart = phase_dict['part']
-
-        self.phaseBin = phase_dict['bin']
-
-        self.phase_dict = phase_dict
-
-        self.part_dict = part_dict
-
-        self.pos = pos
-
+        # Array (partNum) of particle types
         self.typ = typ
 
-        self.ang = ang
-
-        self.binParts = part_dict['id']
-
+        # Cut off radius of WCA potential
         self.r_cut=2**(1/6)                  #Cut off interaction radius (Per LJ Potential)
 
+        # Magnitude of WCA potential (softness)
         self.eps = eps
 
+        # A type particle activity
         self.peA = peA
 
+        # B type particle activity
         self.peB = peB
 
+        # Fraction of particles of type A
         self.parFrac = parFrac
 
-        self.align_dict = align_dict
-
-        self.area_frac_dict = area_frac_dict
-
-        self.press_dict = press_dict
-
-        self.binning = binning.binning(self.l_box, self.partNum, self.NBins, self.peA, self.peB, self.ang, self.eps)
-
-        self.plotting_utility = plotting_utility.plotting_utility(self.l_box, self.partNum, self.typ)
-
-        self.phase_ident = phase_identification.phase_identification(self.area_frac_dict, self.align_dict, self.part_dict, self.press_dict, self.l_box, self.partNum, self.NBins, self.peA, self.peB, self.parFrac, self.eps, self.typ)
-
-    def particle_flux(self):
+        # Initialize theory functions for call back later
+        self.theory_functs = theory.theory()
+    def particle_flux(self, partPhase_time, in_clust_arr, partPhase_time_arr, clust_size_arr):
 
         start_part_phase = partPhase_time[:,0]
         start_bulk_id = np.where(partPhase_time[0,:]==0)[0]
@@ -225,8 +224,8 @@ class stress_and_pressure:
 
             if len(clust_now_in_gas2)>0:
                 num_clust_to_gas2 = np.append(num_clust_to_gas2, len(clust_now_in_gas2[0]))
-                num_slow_clust_to_gas2 = np.append(num_slow_clust_to_gas2, len(np.where(typ[clust_now_in_gas2[0].astype('int')]==0)[0]))
-                num_fast_clust_to_gas2 = np.append(num_fast_clust_to_gas2, len(np.where(typ[clust_now_in_gas2[0].astype('int')]==1)[0]))
+                num_slow_clust_to_gas2 = np.append(num_slow_clust_to_gas2, len(np.where(self.typ[clust_now_in_gas2[0].astype('int')]==0)[0]))
+                num_fast_clust_to_gas2 = np.append(num_fast_clust_to_gas2, len(np.where(self.typ[clust_now_in_gas2[0].astype('int')]==1)[0]))
             else:
                 num_clust_to_gas2 = np.append(num_clust_to_gas2, 0)
                 num_slow_clust_to_gas2 = np.append(num_slow_clust_to_gas2, 0)
@@ -234,8 +233,8 @@ class stress_and_pressure:
 
             if len(gas2_now_in_clust)>0:
                 num_gas2_to_clust = np.append(num_gas2_to_clust, len(gas2_now_in_clust[0]))
-                num_slow_gas2_to_clust = np.append(num_slow_gas2_to_clust, len(np.where(typ[gas2_now_in_clust[0].astype('int')]==0)[0]))
-                num_fast_gas2_to_clust = np.append(num_fast_gas2_to_clust, len(np.where(typ[gas2_now_in_clust[0].astype('int')]==1)[0]))
+                num_slow_gas2_to_clust = np.append(num_slow_gas2_to_clust, len(np.where(self.typ[gas2_now_in_clust[0].astype('int')]==0)[0]))
+                num_fast_gas2_to_clust = np.append(num_fast_gas2_to_clust, len(np.where(self.typ[gas2_now_in_clust[0].astype('int')]==1)[0]))
             else:
                 num_gas2_to_clust = np.append(num_gas2_to_clust, 0)
                 num_slow_gas2_to_clust = np.append(num_slow_gas2_to_clust, 0)
@@ -243,8 +242,8 @@ class stress_and_pressure:
 
             if len(bulk_now_in_gas)>0:
                 num_bulk_to_gas_no_int = np.append(num_bulk_to_gas_no_int, len(bulk_now_in_gas_no_int[0]))
-                num_slow_bulk_to_gas_no_int = np.append(num_slow_bulk_to_gas_no_int, len(np.where(typ[bulk_now_in_gas_no_int[0].astype('int')]==0)[0]))
-                num_fast_bulk_to_gas_no_int = np.append(num_fast_bulk_to_gas_no_int, len(np.where(typ[bulk_now_in_gas_no_int[0].astype('int')]==1)[0]))
+                num_slow_bulk_to_gas_no_int = np.append(num_slow_bulk_to_gas_no_int, len(np.where(self.typ[bulk_now_in_gas_no_int[0].astype('int')]==0)[0]))
+                num_fast_bulk_to_gas_no_int = np.append(num_fast_bulk_to_gas_no_int, len(np.where(self.typ[bulk_now_in_gas_no_int[0].astype('int')]==1)[0]))
             else:
                 num_bulk_to_gas_no_int = np.append(num_bulk_to_gas_no_int, 0)
                 num_slow_bulk_to_gas_no_int = np.append(num_slow_bulk_to_gas_no_int, 0)
@@ -252,8 +251,8 @@ class stress_and_pressure:
 
             if len(gas_now_in_bulk)>0:
                 num_gas_to_bulk_no_int = np.append(num_gas_to_bulk_no_int, len(gas_now_in_bulk_no_int[0]))
-                num_slow_gas_to_bulk_no_int = np.append(num_slow_gas_to_bulk_no_int, len(np.where(typ[gas_now_in_bulk_no_int[0].astype('int')]==0)[0]))
-                num_fast_gas_to_bulk_no_int = np.append(num_fast_gas_to_bulk_no_int, len(np.where(typ[gas_now_in_bulk_no_int[0].astype('int')]==1)[0]))
+                num_slow_gas_to_bulk_no_int = np.append(num_slow_gas_to_bulk_no_int, len(np.where(self.typ[gas_now_in_bulk_no_int[0].astype('int')]==0)[0]))
+                num_fast_gas_to_bulk_no_int = np.append(num_fast_gas_to_bulk_no_int, len(np.where(self.typ[gas_now_in_bulk_no_int[0].astype('int')]==1)[0]))
             else:
                 num_gas_to_bulk_no_int = np.append(num_gas_to_bulk_no_int, 0)
                 num_slow_gas_to_bulk_no_int = np.append(num_slow_gas_to_bulk_no_int, 0)
@@ -262,8 +261,8 @@ class stress_and_pressure:
             if len(bulk_now_in_int)>0:
                 num_bulk_to_int = np.append(num_bulk_to_int, len(bulk_now_in_int[0]))
 
-                num_slow_bulk_to_int = np.append(num_slow_bulk_to_int, len(np.where(typ[bulk_now_in_int[0].astype('int')]==0)[0]))
-                num_fast_bulk_to_int = np.append(num_fast_bulk_to_int, len(np.where(typ[bulk_now_in_int[0].astype('int')]==1)[0]))
+                num_slow_bulk_to_int = np.append(num_slow_bulk_to_int, len(np.where(self.typ[bulk_now_in_int[0].astype('int')]==0)[0]))
+                num_fast_bulk_to_int = np.append(num_fast_bulk_to_int, len(np.where(self.typ[bulk_now_in_int[0].astype('int')]==1)[0]))
             else:
                 num_bulk_to_int = np.append(num_bulk_to_int, 0)
                 num_slow_bulk_to_int = np.append(num_slow_bulk_to_int, 0)
@@ -271,8 +270,8 @@ class stress_and_pressure:
 
             if len(int_now_in_bulk)>0:
                 num_int_to_bulk = np.append(num_int_to_bulk, len(int_now_in_bulk[0]))
-                num_slow_int_to_bulk = np.append(num_slow_int_to_bulk, len(np.where(typ[int_now_in_bulk[0].astype('int')]==0)[0]))
-                num_fast_int_to_bulk = np.append(num_fast_int_to_bulk, len(np.where(typ[int_now_in_bulk[0].astype('int')]==1)[0]))
+                num_slow_int_to_bulk = np.append(num_slow_int_to_bulk, len(np.where(self.typ[int_now_in_bulk[0].astype('int')]==0)[0]))
+                num_fast_int_to_bulk = np.append(num_fast_int_to_bulk, len(np.where(self.typ[int_now_in_bulk[0].astype('int')]==1)[0]))
             else:
                 num_int_to_bulk = np.append(num_int_to_bulk, 0)
                 num_slow_int_to_bulk = np.append(num_slow_int_to_bulk, 0)
@@ -280,8 +279,8 @@ class stress_and_pressure:
 
             if len(gas_now_in_int)>0:
                 num_gas_to_int = np.append(num_gas_to_int, len(gas_now_in_int[0]))
-                num_slow_gas_to_int = np.append(num_slow_gas_to_int, len(np.where(typ[gas_now_in_int[0].astype('int')]==0)[0]))
-                num_fast_gas_to_int = np.append(num_fast_gas_to_int, len(np.where(typ[gas_now_in_int[0].astype('int')]==1)[0]))
+                num_slow_gas_to_int = np.append(num_slow_gas_to_int, len(np.where(self.typ[gas_now_in_int[0].astype('int')]==0)[0]))
+                num_fast_gas_to_int = np.append(num_fast_gas_to_int, len(np.where(self.typ[gas_now_in_int[0].astype('int')]==1)[0]))
             else:
                 num_gas_to_int = np.append(num_gas_to_int, 0)
                 num_slow_gas_to_int = np.append(num_slow_gas_to_int, 0)
@@ -289,8 +288,8 @@ class stress_and_pressure:
 
             if len(int_now_in_gas)>0:
                 num_int_to_gas = np.append(num_int_to_gas, len(int_now_in_gas[0]))
-                num_slow_int_to_gas = np.append(num_slow_int_to_gas, len(np.where(typ[int_now_in_gas[0].astype('int')]==0)[0]))
-                num_fast_int_to_gas = np.append(num_fast_int_to_gas, len(np.where(typ[int_now_in_gas[0].astype('int')]==1)[0]))
+                num_slow_int_to_gas = np.append(num_slow_int_to_gas, len(np.where(self.typ[int_now_in_gas[0].astype('int')]==0)[0]))
+                num_fast_int_to_gas = np.append(num_fast_int_to_gas, len(np.where(self.typ[int_now_in_gas[0].astype('int')]==1)[0]))
             else:
                 num_int_to_gas = np.append(num_int_to_gas, 0)
                 num_slow_int_to_gas = np.append(num_slow_int_to_gas, 0)
@@ -298,8 +297,8 @@ class stress_and_pressure:
 
             if len(gas_now_in_bulk)>0:
                 num_gas_to_bulk = np.append(num_gas_to_bulk, len(gas_now_in_bulk[0]))
-                num_slow_gas_to_bulk = np.append(num_slow_gas_to_bulk, len(np.where(typ[gas_now_in_bulk[0].astype('int')]==0)[0]))
-                num_fast_gas_to_bulk = np.append(num_fast_gas_to_bulk, len(np.where(typ[gas_now_in_bulk[0].astype('int')]==1)[0]))
+                num_slow_gas_to_bulk = np.append(num_slow_gas_to_bulk, len(np.where(self.typ[gas_now_in_bulk[0].astype('int')]==0)[0]))
+                num_fast_gas_to_bulk = np.append(num_fast_gas_to_bulk, len(np.where(self.typ[gas_now_in_bulk[0].astype('int')]==1)[0]))
             else:
                 num_gas_to_bulk = np.append(num_gas_to_bulk, 0)
                 num_slow_gas_to_bulk = np.append(num_slow_gas_to_bulk, 0)
@@ -307,8 +306,8 @@ class stress_and_pressure:
 
             if len(bulk_now_in_gas)>0:
                 num_bulk_to_gas = np.append(num_bulk_to_gas, len(bulk_now_in_gas[0]))
-                num_slow_bulk_to_gas = np.append(num_slow_bulk_to_gas, len(np.where(typ[bulk_now_in_gas[0].astype('int')]==0)[0]))
-                num_fast_bulk_to_gas = np.append(num_fast_bulk_to_gas, len(np.where(typ[bulk_now_in_gas[0].astype('int')]==1)[0]))
+                num_slow_bulk_to_gas = np.append(num_slow_bulk_to_gas, len(np.where(self.typ[bulk_now_in_gas[0].astype('int')]==0)[0]))
+                num_fast_bulk_to_gas = np.append(num_fast_bulk_to_gas, len(np.where(self.typ[bulk_now_in_gas[0].astype('int')]==1)[0]))
             else:
                 num_bulk_to_gas = np.append(num_bulk_to_gas, 0)
                 num_slow_bulk_to_gas = np.append(num_slow_bulk_to_gas, 0)
@@ -383,3 +382,6 @@ class stress_and_pressure:
             start_int_id_with_int = np.append(start_int_id_with_int, now_in_int_comb)
             start_gas_id_with_int = np.append(start_gas_id_with_int, now_in_gas_comb)
             start_bulk_id_with_int = np.append(start_bulk_id_with_int, now_in_bulk_comb)
+        
+        adsorption_dict = {'tauB': partPhase_time_arr[1:], 'clust_size': clust_size_arr, 'gas_to_clust': {'all': num_gas2_to_clust, 'A': num_slow_gas2_to_clust,'B': num_fast_gas2_to_clust}, 'clust_to_gas': {'all': num_clust_to_gas2, 'A': num_slow_clust_to_gas2,'B': num_fast_clust_to_gas2}, 'gas_to_dense': {'all': num_gas_to_bulk + num_gas_to_int, 'A': num_slow_gas_to_bulk + num_slow_gas_to_int,'B': num_fast_gas_to_bulk + num_fast_gas_to_int}, 'dense_to_gas': {'all': num_bulk_to_gas + num_int_to_gas, 'A': num_slow_bulk_to_gas + num_slow_int_to_gas,'B': num_fast_bulk_to_gas + num_fast_int_to_gas}, 'gas_to_bulk': {'all': num_gas_to_bulk, 'A': num_slow_gas_to_bulk,'B': num_fast_gas_to_bulk}, 'bulk_to_gas': {'all': num_bulk_to_gas, 'A': num_slow_bulk_to_gas,'B': num_fast_bulk_to_gas}, 'int_to_bulk': {'all': num_int_to_bulk, 'A': num_slow_int_to_bulk,'B': num_fast_int_to_bulk}, 'bulk_to_int': {'all': num_bulk_to_int, 'A': num_slow_bulk_to_int,'B': num_fast_bulk_to_int}, 'gas_to_int': {'all': num_gas_to_int, 'A': num_slow_gas_to_int,'B': num_fast_gas_to_int}, 'int_to_gas': {'all': num_int_to_gas, 'A': num_slow_int_to_gas,'B': num_fast_int_to_gas}, 'gas_to_bulk_no_int': {'all': num_gas_to_bulk_no_int, 'A': num_slow_gas_to_bulk_no_int,'B': num_fast_gas_to_bulk_no_int}, 'bulk_to_gas_no_int': {'all': num_bulk_to_gas_no_int, 'A': num_slow_bulk_to_gas_no_int,'B': num_fast_bulk_to_gas_no_int}}
+        return adsorption_dict

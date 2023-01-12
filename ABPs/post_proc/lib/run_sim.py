@@ -3664,6 +3664,12 @@ class run_sim:
             NGas = self.partNum - NLiq
         else:
             NGas = 1
+
+        NGas = (NLiq - self.partFracA * NLiq) / self.partFracA
+        #print(round(NGas))
+        #print(NLiq / (NLiq + NGas))
+        #print(self.partFracA)
+        #stop
         NGas = self.partNum
         
         typ_A=0

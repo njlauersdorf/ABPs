@@ -57,7 +57,7 @@ plt.rcParams['text.latex.preview'] = True
 
 
 class plotting:
-    def __init__(self, orient_dict, pos_dict, lx_box, ly_box, NBins_x, NBins_y, sizeBin_x, sizeBin_y, peA, peB, parFrac, eps, typ, tst, partNum):
+    def __init__(self, orient_dict, pos_dict, lx_box, ly_box, NBins_x, NBins_y, sizeBin_x, sizeBin_y, peA, peB, parFrac, eps, typ, tst, partNum, outPath, outFile):
 
         # Values from theory
         self.phiCP = np.pi / (2. * np.sqrt(3.))                                     # critical packing fraction of HCP lattice
@@ -104,6 +104,9 @@ class plotting:
 
         self.beta_A = 1.0
         self.beta_B = 2.3
+
+        self.outPath = outPath
+        self.outFile = outFile
 
     def plot_phases(self, pos, phase_ids_dict, sep_surface_dict, int_comp_dict):
         """
@@ -3043,11 +3046,11 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         typ0ind = np.where(self.typ == 0)[0]
         typ1ind = np.where(self.typ == 1)[0]
 
-        if (self.parFrac == 100.):
+        if (len(typ1ind)==0):
             mono=1
             mono_activity=self.peA
             mono_type = 0
-        elif (self.parFrac == 0.):
+        elif (len(typ0ind)==0):
             mono = 1
             mono_activity=self.peB
             mono_type = 1
@@ -3063,14 +3066,14 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         ax = fig.add_subplot(111)
 
         sz = 0.75
-
+              
         if mono==0:
             #Local each particle's positions
             pos0=pos[typ0ind]                               # Find positions of type 0 particles
             pos1=pos[typ1ind]
 
             #Assign type 0 particles to plot
-
+            
             ells0 = [Ellipse(xy=np.array([pos0[i,0]+self.hx_box, pos0[i,1]+self.hy_box]),
                     width=sz, height=sz, label='PeA: '+str(self.peA))
             for i in range(0,len(typ0ind))]
@@ -3079,6 +3082,29 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
             ells1 = [Ellipse(xy=np.array([pos1[i,0]+self.hx_box, pos1[i,1]+self.hy_box]),
                     width=sz, height=sz, label='PeB: '+str(self.peB))
             for i in range(0,len(typ1ind))]
+
+            if self.lx_box > self.ly_box:
+                ells0_top = [Ellipse(xy=np.array([pos0[i,0]+self.hx_box, pos0[i,1]+self.hy_box+self.ly_box]),
+                    width=sz, height=sz, label='PeA: '+str(self.peA))
+                for i in range(0,len(typ0ind))]
+                ells0_bottom = [Ellipse(xy=np.array([pos0[i,0]+self.hx_box, pos0[i,1]+self.hy_box-self.ly_box]),
+                        width=sz, height=sz, label='PeA: '+str(self.peA))
+                for i in range(0,len(typ0ind))]
+                ells1_top = [Ellipse(xy=np.array([pos1[i,0]+self.hx_box, pos1[i,1]+self.hy_box + self.ly_box]),
+                    width=sz, height=sz, label='PeB: '+str(self.peB))
+                for i in range(0,len(typ1ind))]
+                ells1_bottom = [Ellipse(xy=np.array([pos1[i,0]+self.hx_box, pos1[i,1]+self.hy_box - self.ly_box]),
+                    width=sz, height=sz, label='PeB: '+str(self.peB))
+                for i in range(0,len(typ1ind))]
+                if self.peA <= self.peB:
+                    slowGroup_bottom = mc.PatchCollection(ells0_bottom, facecolors=slowCol)
+                    slowGroup_top = mc.PatchCollection(ells0_top, facecolors=slowCol)
+                    fastGroup_bottom = mc.PatchCollection(ells1_bottom,facecolors=fastCol)
+                    fastGroup_top = mc.PatchCollection(ells1_top,facecolors=fastCol)
+                    ax.add_collection(slowGroup_bottom)
+                    ax.add_collection(slowGroup_top)
+                    ax.add_collection(fastGroup_bottom)
+                    ax.add_collection(fastGroup_top)
 
             # Plot position colored by neighbor number
             if self.peA <= self.peB:
@@ -3091,7 +3117,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
             ax.add_collection(fastGroup)
 
             #Create legend for binary system
-            if self.parFrac<100.0:
+            if (len(typ0ind)==0) | (len(typ1ind)==0):
                 leg = ax.legend(handles=[ells0[0], ells1[1]], labels=[r'$\mathrm{Pe}_\mathrm{A} = $'+str(int(self.peA)), r'$\mathrm{Pe}_\mathrm{B} = $'+str(int(self.peB))], loc='upper right', prop={'size': 15}, markerscale=8.0)
                 if self.peA <= self.peB:
                     leg.legendHandles[0].set_color(slowCol)
@@ -3205,10 +3231,10 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         # If rectangular box, reduce system size plotted
         if self.lx_box > self.ly_box:
             plt.xlim(dense_x_mid-(dense_x_width/2), dense_x_mid+(dense_x_width/2))
-            plt.ylim(0, self.ly_box)
+            plt.ylim(0.0, self.ly_box)
         elif self.lx_box < self.ly_box:
             plt.ylim(dense_y_mid-(dense_y_width/2), dense_y_mid+(dense_y_width/2))
-            plt.xlim(0, self.lx_box)
+            plt.xlim(0.0, self.lx_box)
         # Plot entire system
         else:
             plt.ylim(0, self.ly_box)
@@ -3216,11 +3242,11 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
         # Label simulation time
         if self.lx_box == self.ly_box:
-            plt.text(0.75, 0.04, s=r'$\tau$' + ' = ' + '{:.1f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+            plt.text(0.75, 0.04, s=r'$\tau$' + ' = ' + '{:.5f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
                 fontsize=18, transform = ax.transAxes,
                 bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
         elif self.lx_box > self.ly_box:
-            plt.text(0.85, 0.1, s=r'$\tau$' + ' = ' + '{:.1f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+            plt.text(0.85, 0.1, s=r'$\tau$' + ' = ' + '{:.5f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
                 fontsize=18, transform = ax.transAxes,
                 bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
 
@@ -3234,9 +3260,11 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         #pad = str(j).zfill(4)
 
         plt.tight_layout()
-        #plt.savefig(outPath+out + pad + ".png", dpi=150, transparent=False)
-        #plt.close()
-        plt.show()
+        plt.savefig(self.outPath + 'part_activity_' + self.outFile + ".png", dpi=50, transparent=False)
+        plt.close()
+        
+
+        
     def ang_vel_histogram(self, ang_vel, phasePart):
 
         xmin = np.min(ang_vel)

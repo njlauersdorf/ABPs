@@ -2785,8 +2785,8 @@ class measurement:
         clust_size_A = clp_A.sizes                                  # find cluster sizes
         clust_size_B = clp_B.sizes                                  # find cluster sizes
 
-        lcID_A = np.where(clust_size_A >= 1)[0]    #Identify largest cluster
-        lcID_B = np.where(clust_size_B >= 1)[0]    #Identify largest cluster
+        lcID_A = np.where(clust_size_A >= 2)[0]    #Identify largest cluster
+        lcID_B = np.where(clust_size_B >= 2)[0]    #Identify largest cluster
 
         print(clust_size_A[lcID_A])
         print(clust_size_B[lcID_B])
@@ -2806,7 +2806,11 @@ class measurement:
         print(1-(len(clust_size_A[lcID_A])/len(pos_A_dense)))
         print(1-(len(clust_size_B[lcID_B])/len(pos_B_dense)))
 
+        clust_A_area = (clust_size_A * np.pi * (1.0/4) / (np.pi/(2*np.sqrt(3))))
+        clust_B_area = (clust_size_B * np.pi * (1.0/4) / (np.pi/(2*np.sqrt(3))))
 
+        #print(clust_A_area)
+        #print(clust_B_area)
         stop
         AA_bulk_neigh_ind = np.array([], dtype=int)
         AA_bulk_num_neigh = np.array([])

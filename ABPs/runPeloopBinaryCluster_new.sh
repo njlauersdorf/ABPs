@@ -141,7 +141,7 @@ if [ $dont_run == "no" ]; then
     #pb=(50 500)
     # List for particle fraction
     declare -a xa
-    xa=(98)
+    xa=(90)
     # List for phi
     declare -a phi
     #phi=(60)

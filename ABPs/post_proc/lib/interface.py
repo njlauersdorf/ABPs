@@ -108,7 +108,7 @@ class interface:
 
         # Y-length of bin
         self.sizeBin_y = self.utility_functs.roundUp((self.ly_box / self.NBins_y), 6)
-
+        
         # A type particle activity
         self.peA = peA
 
@@ -2718,6 +2718,44 @@ class interface:
         CoM_align_dict = {'bin': {'all': {'x': CoM_align_avg_x, 'y': CoM_align_avg_y, 'mag': CoM_align_avg, 'num': Align_num}, 'A': {'x': CoM_align_avg_x_A, 'y': CoM_align_avg_y_A, 'mag': CoM_align_avg_A, 'num': Align_num_A}, 'B': {'x': CoM_align_avg_x_B, 'y': CoM_align_avg_y_B, 'mag': CoM_align_avg_B, 'num': Align_num_B}}, 'part': part_align}
         Surface_align_dict = {'bin': {'all': {'x': Surface_align_avg_x, 'y': Surface_align_avg_y, 'mag': Surface_align_avg, 'num': Align_num}, 'A': {'x': Surface_align_avg_x_A, 'y': Surface_align_avg_y_A, 'mag': Surface_align_avg_A, 'num': Align_num_A}, 'B': {'x': Surface_align_avg_x_B, 'y': Surface_align_avg_y_B, 'mag': Surface_align_avg_B, 'num': Align_num_B}}, 'part': {'align': part_align, 'difr': part_difr}}
         return  CoM_align_dict, Surface_align_dict
+    def det_planar_surface_points(self):
+
+        #Compute cluster parameters using system_all neighbor list
+        system_all = freud.AABBQuery(self.f_box, self.f_box.wrap(self.pos))
+        cl_all=freud.cluster.Cluster()                              #Define cluster
+        cl_all.compute(system_all, neighbors={'r_max': self.r_cut})        # Calculate clusters given neighbor list, positions,
+                                                                    # and maximal radial interaction distance
+        clp_all = freud.cluster.ClusterProperties()                 #Define cluster properties
+        ids = cl_all.cluster_idx                                    # get id of each cluster
+
+        clp_all.compute(system_all, ids)                            # Calculate cluster properties given cluster IDs
+        clust_size = clp_all.sizes                                  # find cluster sizes
+
+        in_clust = np.where(clust_size == np.amax(clust_size) )[0][0]
+        not_in_clust = np.where(clust_size != np.amax(clust_size) )[0][0]
+
+        slow_clust_ids = np.where( (ids==in_clust) & (self.typ==0) )[0]
+        fast_clust_ids = np.where( (ids==in_clust) & (self.typ==1) )[0]
+        slow_not_clust_ids = np.where( (ids!=in_clust) & (self.typ==0) )[0]
+        fast_not_clust_ids = np.where( (ids!=in_clust) & (self.typ==1) )[0]
+
+
+        #if self.lx_box >= self.ly_box:
+        #    mem_max = np.max(self.pos[typ0ind,0])
+        #    mem_min = np.min(self.pos[typ0ind,0])
+        #else:
+        #    mem_max = np.max(self.pos[typ0ind,1])
+        #    mem_min = np.min(self.pos[typ0ind,1])
+
+        #print(mem_min)
+        #print(mem_max)
+
+        #right_ads = np.where((self.pos[typ1ind,0]<(mem_max + 10.0)) & (self.pos[typ1ind,0]>0))
+        #left_ads = np.where((self.pos[typ1ind,0]>(mem_min - 10.0)) & (self.pos[typ1ind,0]<0))
+        
+        kinetics_dict = {'in_clust': {'all': len(slow_clust_ids) + len(fast_clust_ids), 'A': len(slow_clust_ids), 'B': len(fast_clust_ids)}, 'out_clust': {'all': len(slow_not_clust_ids) + len(fast_not_clust_ids), 'A': len(slow_not_clust_ids), 'B': len(fast_not_clust_ids)}}
+        
+        return kinetics_dict
     """
     def fourier_analysis(self, radius_dict, n_len = 21):
 
