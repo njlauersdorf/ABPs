@@ -347,7 +347,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
         orient_dict = binning_functs.bin_orient(part_dict, pos, ang, com_dict['com'])
         area_frac_dict = binning_functs.bin_area_frac(part_dict)
         activ_dict = binning_functs.bin_activity(part_dict)
-        if self.lx_box != self.ly_box:
+        if lx_box != ly_box:
             clust_large = 0
 
         outfile = 'pa'+str(int(peA))+'_pb'+str(int(peB))+'_xa'+str(int(parFrac))+'_eps'+str(eps)+'_phi'+str(phi)+'_pNum' + str(int(partNum)) + '_bin' + str(int(bin_width)) + '_time' + str(int(time_step))
