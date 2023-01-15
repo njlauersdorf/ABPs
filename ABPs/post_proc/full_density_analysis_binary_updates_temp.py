@@ -922,7 +922,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                     plotting_functs.plot_interpart_press_binned(vp_bin_arr, all_surface_curves, int_comp_dict)
                     plotting_functs.interpart_press_map(pos, vp_part_arr, all_surface_curves, int_comp_dict)                
-                stop
+                
             elif measurement_method == 'lattice_spacing':
                 #DONE
                 lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
