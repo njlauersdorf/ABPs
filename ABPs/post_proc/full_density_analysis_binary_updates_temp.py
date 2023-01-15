@@ -236,11 +236,13 @@ partPhase_time = np.array([])
 partPhase_time_arr = np.array([])
 clust_size_arr = np.array([])
 
+vertical_shift = 0
+dify_long = 0
 import time
 with hoomd.open(name=inFile, mode='rb') as t:
 
     dumps = int(t.__len__())
-    start = int(0/time_step)#205                                             # first frame to process
+    start = int(5/time_step)#205                                             # first frame to process
                                 # get number of timesteps dumped
     
     end = int(dumps/time_step)-1                                             # final frame to process
@@ -1132,7 +1134,11 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 if plot == 'y':
                     plotting_functs = plotting.plotting(orient_dict, pos_dict, lx_box, ly_box, NBins_x, NBins_y, sizeBin_x, sizeBin_y, peA, peB, parFrac, eps, typ, tst, partNum, picPath, outFile)
 
-                    plotting_functs.plot_part_activity(pos)
+                    plotting_functs.plot_part_activity(pos, ang)
+                    if j>(start*time_step):
+                        plotting_functs.plot_part_activity2(pos, prev_pos, ang)
+                    else:
+                        plotting_functs.plot_part_activity(pos, ang)
             elif measurement_method == 'neighbors':
                 #DONE
                 particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, typ, pos, ang)
@@ -1146,13 +1152,16 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                     plotting_functs = plotting.plotting(orient_dict, pos_dict, lx_box, ly_box, NBins_x, NBins_y, sizeBin_x, sizeBin_y, peA, peB, parFrac, eps, typ, tst, partNum, picPath, outFile)
 
+                    if j>(start*time_step):
+                        plotting_functs.plot_neighbors2(neigh_plot_dict, ang, pos, prev_pos, pair='all-all')
+                    else:
+                        plotting_functs.plot_neighbors(neigh_plot_dict, ang, pos, pair='all-all')
 
-                    plotting_functs.plot_neighbors(neigh_plot_dict, ang, pos, pair='all-all')
             elif measurement_method == 'penetration':
                 #DONE
                 particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, typ, pos, ang)
                 if j>(start*time_step):
-                    penetration_dict, start_dict = particle_prop_functs.penetration_depth(start_dict, prev_pos)
+                    penetration_dict, start_dict, vertical_shift, dify_long = particle_prop_functs.penetration_depth(start_dict, prev_pos, vertical_shift, dify_long)
 
                     data_output_functs = data_output.data_output(lx_box, ly_box, sizeBin_x, sizeBin_y, tst, clust_large, dt_step)
 

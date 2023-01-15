@@ -1617,7 +1617,7 @@ class particle_props:
 
         
         return neigh_stat_dict, ori_stat_dict, neigh_plot_dict
-    def penetration_depth(self, start_dict, pos_prev):
+    def penetration_depth(self, start_dict, pos_prev, vertical_shift, dify_long):
 
         typ0ind = np.where(self.typ==0)[0]
         typ1ind = np.where(self.typ==1)[0]
@@ -1641,10 +1641,14 @@ class particle_props:
 
             if np.abs(self.pos[typ1ind,1]-pos_prev[typ1ind,1])>self.hy_box:
                 if (self.pos[typ1ind,1]<0) & (pos_prev[typ1ind,1]>0):
-                    vertical_shift += self.ly_box
+                    vertical_shift = dify_long + self.hy_box-start_y
+                    dify_long = vertical_shift
+                    start_y = -self.hy_box
                 elif (self.pos[typ1ind,1]>0) & (pos_prev[typ1ind,1]<0):
-                    vertical_shift -= self.ly_box
-                    
+                    vertical_shift = dify_long + -self.hy_box-start_y
+                    dify_long = vertical_shift
+                    start_y = self.hy_box
+                             
             if start_x < 0:
                 penetration_depth = wall_x+self.pos[typ1ind,0]
                 difx = wall_x + self.pos[typ1ind,0]
@@ -1652,16 +1656,14 @@ class particle_props:
                 penetration_depth = wall_x-self.pos[typ1ind,0]
                 difx = self.pos[typ1ind,0]  - wall_x
 
-            if start_y < 0:
-                dify =  (self.pos[typ1ind,1] + vertical_shift) - start_y
-            else:
-                dify =  (self.pos[typ1ind,1] + vertical_shift)- start_y
+            #dify =  (self.pos[typ1ind,1] + vertical_shift) - start_y
+            dify =  dify_long + (self.pos[typ1ind,1]- start_y)
             
             difr = (difx ** 2 + dify **2 ) ** 0.5 
             
 
-            difx_prev = sep_dist_x(self.pos[typ1ind,0], pos_prev[typ1ind,0])
-            dify_prev = sep_dist_y(self.pos[typ1ind,1], pos_prev[typ1ind,1])
+            difx_prev = self.utility_functs.sep_dist_x(self.pos[typ1ind,0], pos_prev[typ1ind,0])
+            dify_prev = self.utility_functs.sep_dist_y(self.pos[typ1ind,1], pos_prev[typ1ind,1])
             difr_prev = (difx_prev ** 2 + dify_prev ** 2 ) ** 0.5
             
             
@@ -1678,8 +1680,10 @@ class particle_props:
             penetration_depth = 0
             start_x = 0
             start_y = 0
+            vertical_shift = 0
+            dify_long = 0
 
         penetration_dict = {'wall_x': wall_x, 'displace': {'x': difx_prev, 'y': dify_prev, 'r': difr_prev}, 'total_displace':{'x': difx, 'y': dify, 'r': difr, 'MSD': MSD, 'depth': penetration_depth}, 'action': action}
         start_dict = {'x': start_x, 'y': start_y}
 
-        return penetration_dict, start_dict
+        return penetration_dict, start_dict, vertical_shift, dify_long
