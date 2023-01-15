@@ -2904,7 +2904,7 @@ class run_sim:
             if lx > ly:
                 gas_width = rMax_temp + (hx - rMax_temp) * 0.4
                 
-                gasy = 0
+                gasy = ver#0
                 gasx = (np.random.rand() - 0.5) * lx
             else:
                 gas_width = rMax_temp + (hy - rMax_temp) * 0.4

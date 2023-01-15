@@ -117,7 +117,7 @@ aspect_ratio=$answer
 if [ $dont_run == "no" ]; then
     # Default values for simulations
     declare -i part_num
-    part_num=( 1000 )
+    part_num=( 3000 )
     #100 500 1000 3000 5000)
 
     declare -i runfor
@@ -141,11 +141,11 @@ if [ $dont_run == "no" ]; then
     #pb=(50 500)
     # List for particle fraction
     declare -a xa
-    xa=(90)
+    xa=(99)
     # List for phi
     declare -a phi
     #phi=(60)
-    phi=(1 5 10 20 30 40)
+    phi=(100)
     #60 70 80 90 100 110 120 130)
     # 70 80 100 110)
     # List for epsilon
