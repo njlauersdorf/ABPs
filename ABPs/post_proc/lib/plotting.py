@@ -1589,14 +1589,14 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
             # estimated shortest dimension length of dense phase (y)
             dense_x_width = np.amax(neigh_plot_dict['all-all']['x'][typ0ind]) * 1.5 #(area_dense / self.ly_box)
-            dense_x_width = 42.23 * 1.5
+            #dense_x_width = 42.23 * 1.5
             # Set maximum dimension length (x) of simulation box to be 12 inches (plus 1 inch color bar)
             scaling = 13.0
 
             # X and Y-dimension lengths (in inches)
             x_dim = int(scaling)
             y_dim = int(scaling/ (2*dense_x_width / self.ly_box))
-            y_dim = y_dim * 3
+            #y_dim = y_dim# * 3
         # If box is rectangular with long dimension of y-axis
         elif self.lx_box < self.ly_box:
 
@@ -1871,7 +1871,8 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
 
         if self.lx_box > self.ly_box:
-            plt.xlim(-(0.5*dense_x_width)+self.hx_box, (0.5*dense_x_width)+self.hx_box)
+            #plt.xlim(-(0.5*dense_x_width)+self.hx_box, (0.5*dense_x_width)+self.hx_box)
+            plt.xlim(-(dense_x_width)+self.hx_box, (dense_x_width)+self.hx_box)
             plt.ylim(0.0, self.ly_box)
         elif self.lx_box < self.ly_box:
             plt.ylim(dense_y_mid-(dense_y_width), dense_y_mid+(dense_y_width))
@@ -1943,14 +1944,14 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
             # estimated shortest dimension length of dense phase (y)
             dense_x_width = np.amax(neigh_plot_dict['all-all']['x'][typ0ind]) * 1.5 #(area_dense / self.ly_box)
-            dense_x_width = 42.23 * 1.5
+            #dense_x_width = 42.23 * 1.5
             # Set maximum dimension length (x) of simulation box to be 12 inches (plus 1 inch color bar)
             scaling = 13.0
 
             # X and Y-dimension lengths (in inches)
             x_dim = int(scaling)
             y_dim = int(scaling/ (2*dense_x_width / self.ly_box))
-            y_dim = y_dim * 3
+            y_dim = y_dim# * 3
         # If box is rectangular with long dimension of y-axis
         elif self.lx_box < self.ly_box:
 
@@ -2228,7 +2229,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
 
         if self.lx_box > self.ly_box:
-            plt.xlim(-(0.5*dense_x_width)+self.hx_box, (0.5*dense_x_width)+self.hx_box)
+            plt.xlim(-(dense_x_width)+self.hx_box, (dense_x_width)+self.hx_box)
             plt.ylim(0.0, self.ly_box)
         elif self.lx_box < self.ly_box:
             plt.ylim(dense_y_mid-(dense_y_width), dense_y_mid+(dense_y_width))

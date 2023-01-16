@@ -97,7 +97,15 @@ else
                                   init_cond="slow_adsorb_constrained_membrane"
                                   dont_run='no'
                               else
-                                  dont_run='yes'
+                                echo "Do you want slow interior constrained membrane (y/n)?"
+                                read answer
+
+                                if [ $answer == "y" ]; then
+                                    init_cond="slow_int_constrained_membrane"
+                                    dont_run='no'
+                                else
+                                    dont_run='yes'
+                                fi
                               fi
                           fi
                         fi
@@ -121,7 +129,7 @@ if [ $dont_run == "no" ]; then
     #100 500 1000 3000 5000)
 
     declare -i runfor
-    runfor=$(( 100 ))
+    runfor=$(( 5 ))
 
     declare -a dump_freq
     dump_freq=( 0.0025 )
@@ -135,8 +143,7 @@ if [ $dont_run == "no" ]; then
     # 50 100 150 250 450)
     #(0 50 100 150 200 250 350 450)
     declare -a pb
-    pb=(500)
-    #0 50 100 150 300 500)
+    pb=(0 50 100 150 300 500)
     #(0 50 100 150 200 250 350 450)
     #pb=(50 500)
     # List for particle fraction
@@ -145,8 +152,7 @@ if [ $dont_run == "no" ]; then
     # List for phi
     declare -a phi
     #phi=(60)
-    phi=(100)
-    #60 70 80 90 100 110 120 130)
+    phi=(60 70 80 90 100 110 120 130)
     # 70 80 100 110)
     # List for epsilon
     #eps=(1.0 0.1 0.001) # LISTS CAN CONTAIN FLOATS!!!!
