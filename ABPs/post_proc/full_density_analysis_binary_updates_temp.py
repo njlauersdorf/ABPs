@@ -218,7 +218,7 @@ snap = f[0]
 typ = snap.particles.typeid
 partNum = len(typ)
 
-
+action_arr = np.array([])
 
 #Set output file names
 bin_width = float(sys.argv[10])
@@ -322,33 +322,62 @@ with hoomd.open(name=inFile, mode='rb') as t:
         
 
 
-        start_time = time.time()
-        partTyp=np.zeros(partNum)
-        partPhase=np.zeros(partNum)
-        edgePhase=np.zeros(partNum)
-        bulkPhase=np.zeros(partNum)
-
-        com_dict = plotting_utility_functs.com_view(pos, clp_all)
-        pos = com_dict['pos']
-
-        #Bin system to calculate orientation and alignment that will be used in vector plots
-        NBins_x = utility_functs.getNBins(lx_box, bin_width)
-        NBins_y = utility_functs.getNBins(ly_box, bin_width)
-
-        sizeBin_x = utility_functs.roundUp(((lx_box) / NBins_x), 6)
-        sizeBin_y = utility_functs.roundUp(((ly_box) / NBins_y), 6)
-
-        binning_functs = binning.binning(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, typ, eps)
-
-        pos_dict = binning_functs.create_bins()
-
-        part_dict = binning_functs.bin_parts(pos, ids, clust_size)
-
-        orient_dict = binning_functs.bin_orient(part_dict, pos, ang, com_dict['com'])
-        area_frac_dict = binning_functs.bin_area_frac(part_dict)
-        activ_dict = binning_functs.bin_activity(part_dict)
+        
         if lx_box != ly_box:
             clust_large = 0
+
+            start_time = time.time()
+            partTyp=np.zeros(partNum)
+            partPhase=np.zeros(partNum)
+            edgePhase=np.zeros(partNum)
+            bulkPhase=np.zeros(partNum)
+
+            com_dict = plotting_utility_functs.com_view(pos, clp_all)
+
+            #Bin system to calculate orientation and alignment that will be used in vector plots
+            NBins_x = utility_functs.getNBins(lx_box, bin_width)
+            NBins_y = utility_functs.getNBins(ly_box, bin_width)
+
+            sizeBin_x = utility_functs.roundUp(((lx_box) / NBins_x), 6)
+            sizeBin_y = utility_functs.roundUp(((ly_box) / NBins_y), 6)
+
+            binning_functs = binning.binning(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, typ, eps)
+
+            pos_dict = binning_functs.create_bins()
+
+            part_dict = binning_functs.bin_parts(pos, ids, clust_size)
+
+            orient_dict = binning_functs.bin_orient(part_dict, pos, ang, com_dict['com'])
+            area_frac_dict = binning_functs.bin_area_frac(part_dict)
+            activ_dict = binning_functs.bin_activity(part_dict)
+
+        else:
+            start_time = time.time()
+            partTyp=np.zeros(partNum)
+            partPhase=np.zeros(partNum)
+            edgePhase=np.zeros(partNum)
+            bulkPhase=np.zeros(partNum)
+
+            com_dict = plotting_utility_functs.com_view(pos, clp_all)
+            pos = com_dict['pos']
+
+            #Bin system to calculate orientation and alignment that will be used in vector plots
+            NBins_x = utility_functs.getNBins(lx_box, bin_width)
+            NBins_y = utility_functs.getNBins(ly_box, bin_width)
+
+            sizeBin_x = utility_functs.roundUp(((lx_box) / NBins_x), 6)
+            sizeBin_y = utility_functs.roundUp(((ly_box) / NBins_y), 6)
+
+            binning_functs = binning.binning(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, typ, eps)
+
+            pos_dict = binning_functs.create_bins()
+
+            part_dict = binning_functs.bin_parts(pos, ids, clust_size)
+
+            orient_dict = binning_functs.bin_orient(part_dict, pos, ang, com_dict['com'])
+            area_frac_dict = binning_functs.bin_area_frac(part_dict)
+            activ_dict = binning_functs.bin_activity(part_dict)
+
 
         outfile = 'pa'+str(int(peA))+'_pb'+str(int(peB))+'_xa'+str(int(parFrac))+'_eps'+str(eps)+'_phi'+str(phi)+'_pNum' + str(int(partNum)) + '_bin' + str(int(bin_width)) + '_time' + str(int(time_step))
         out = outfile + "_frame_"
@@ -1142,7 +1171,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                         plotting_functs.plot_part_activity(pos, ang)
             elif measurement_method == 'neighbors':
                 #DONE
-                particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, typ, pos, ang)
+                particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, eps, typ, pos, ang)
                 
                 neigh_stat_dict, ori_stat_dict, neigh_plot_dict = particle_prop_functs.nearest_neighbors_penetrate()                
                 
@@ -1160,7 +1189,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
             elif measurement_method == 'penetration':
                 #DONE
-                particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, typ, pos, ang)
+                
+                particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, eps, typ, pos, ang)
                 if j>(start*time_step):
                     penetration_dict, start_dict, vertical_shift, dify_long = particle_prop_functs.penetration_depth(start_dict, prev_pos, vertical_shift, dify_long)
 
@@ -1168,9 +1198,25 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                     data_output_functs.write_to_txt(penetration_dict, dataPath + 'penetration_depth_' + outfile + '.txt')
 
+                    action_arr = np.append(action_arr, penetration_dict['action'])
+            elif measurement_method == 'single_velocity':
+                if j>(start * time_step):
+                    particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, eps, typ, pos, ang)
+                    
+                    #try:
+                    #    part_msd_dict = particle_prop_functs.single_msd(prev_pos, displace_dict)
+                    #except:
+                        #displace_dict = {'A': {'x': np.array([]), 'y': np.array([]), 'mag': np.array([])}, 'B': {'x': np.array([]), 'y': np.array([]), 'mag': np.array([])} }
+                        #part_msd_dict = particle_prop_functs.single_msd(prev_pos, displace_dict)
+
+                    
+                    part_vel_dict = particle_prop_functs.single_velocity(prev_pos, prev_ang, ori)
+                    stop
         #if j == start:
         prev_pos = pos.copy()
         prev_ang = ang.copy()
+
+    
     if measurement_method == 'adsorption_final':
         
         if steady_state_once == 'True':
@@ -1179,5 +1225,95 @@ with hoomd.open(name=inFile, mode='rb') as t:
             adsorption_dict = kinetic_functs.particle_flux(partPhase_time, in_clust_arr, partPhase_time_arr, clust_size_arr)
 
             data_output_functs.write_all_time_to_txt(adsorption_dict, dataPath + 'adsorption_final_' + outfile + '.txt')
+    elif measurement_method == 'penetration':
+        
+        x = 1
+        num_frames = 0
+        bulk_press_num = np.zeros(len(typ0ind))
+        bulk_press_sum = 0
 
+        while x == 1:
+            snap_temp = t[num_frames]                                 #Take current frame
+            #Arrays of particle data
+            pos_temp = snap_temp.particles.position               # position
+            pos_temp[:,-1] = 0.0                             # 2D system
+
+            typ = snap_temp.particles.typeid                 # Particle type
+            typ0ind=np.where(typ==0)      # Calculate which particles are type 0
+            typ1ind=np.where(typ==1)      # Calculate which particles are type 1
+            
+
+            if (action_arr[num_frames]=='gas') & (np.abs(pos_temp[typ1ind,0])>(np.amax(pos_temp[typ0ind,0])+r_cut)):
+                particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, eps, typ, pos, ang)
+
+                stress_stat_dict, press_stat_dict, press_plot_dict = particle_prop_functs.interparticle_pressure_nlist()
+                num_frames += 1
+                bulk_press_sum += press_plot_dict['all-A']['press']
+                bulk_press_num += 1
+            else:
+                x = 0
+
+        if x == 0:
+            bulk_ss_press = np.mean(bulk_press_sum / bulk_press_num)
+            bulk_ss_press_std = np.std(bulk_press_sum / bulk_press_num)
+
+            vertical_shift = 0
+            dify_long = 0
+            start_dict = None
+            for p in range(start, end):
+                j=int(p*time_step)
+
+                snap = t[j]                                 #Take current frame
+
+                #Arrays of particle data
+                pos = snap.particles.position               # position
+                pos[:,-1] = 0.0                             # 2D system
+                xy = np.delete(pos, 2, 1)
+
+                ori = snap.particles.orientation            #Orientation (quaternions)
+                ang = np.array(list(map(utility_functs.quatToAngle, ori))) # convert to [-pi, pi]
+
+
+                typ = snap.particles.typeid                 # Particle type
+                typ0ind=np.where(typ==0)[0]      # Calculate which particles are type 0
+                typ1ind=np.where(typ==1)[0]      # Calculate which particles are type 1
+
+                tst = snap.configuration.step               # timestep
+                tst -= first_tstep                          # normalize by first timestep
+                tst *= dtau                                 # convert to Brownian time
+                
+                outfile = 'pa'+str(int(peA))+'_pb'+str(int(peB))+'_xa'+str(int(parFrac))+'_eps'+str(eps)+'_phi'+str(phi)+'_pNum' + str(int(partNum)) + '_bin' + str(int(bin_width)) + '_time' + str(int(time_step))
+                out = outfile + "_frame_"
+                pad = str(j).zfill(5)
+                outFile = out + pad
+
+                if j>(start*time_step):
+                    particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, eps, typ, pos, ang)
+
+                    penetration_dict, start_dict, vertical_shift, dify_long = particle_prop_functs.penetration_depth(start_dict, prev_pos, vertical_shift, dify_long)
+                    stress_stat_dict, press_stat_dict, press_plot_dict = particle_prop_functs.interparticle_pressure_nlist()
+                    adjusted_press = np.array([])
+                    if (penetration_dict['action']=='gas') & (np.abs(pos[typ1ind,0])>(np.amax(pos[typ0ind,0])+r_cut)):
+                        press_dif = press_plot_dict['all-A']['press'] - bulk_ss_press
+                        adjusted_press = np.append(press_dif, press_plot_dict['all-B']['press'])
+                    else:
+                        adjusted_press = press_plot_dict['all-all']['press'] - bulk_ss_press
+                    press_plot_dict['all-A']['press'] = press_plot_dict['all-A']['press'] - bulk_ss_press
+                    press_plot_dict['all-all']['press'] = adjusted_press
+                    data_output_functs = data_output.data_output(lx_box, ly_box, sizeBin_x, sizeBin_y, tst, clust_large, dt_step)
+
+                    data_output_functs.write_to_txt(stress_stat_dict, dataPath + 'interparticle_stress_' + outfile + '.txt')
+                    data_output_functs.write_to_txt(press_stat_dict, dataPath + 'interparticle_press_' + outfile + '.txt')
+                    if plot == 'y':
+
+                        #vp_part_arr = particle_prop_functs.virial_pressure_part(stress_stat_dict)
+
+                        plotting_functs = plotting.plotting(orient_dict, pos_dict, lx_box, ly_box, NBins_x, NBins_y, sizeBin_x, sizeBin_y, peA, peB, parFrac, eps, typ, tst, partNum, picPath, outFile)
+
+
+                        plotting_functs.interpart_press_map2(press_plot_dict, pos, prev_pos, ang)     
+                    if j == 500:
+                        stop
+                prev_pos = pos.copy()
+                prev_ang = ang.copy()
     

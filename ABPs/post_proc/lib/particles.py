@@ -29,7 +29,7 @@ import theory, utility
 # Class of individual particle property measurements
 class particle_props:
 
-    def __init__(self, lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, typ, pos, ang):
+    def __init__(self, lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, eps, typ, pos, ang):
 
         # Initialize theory functions for call back later
         theory_functs = theory.theory()
@@ -75,6 +75,9 @@ class particle_props:
         # B type particle activity
         self.peB = peB
 
+        # Magnitude of WCA potential (softness)
+        self.eps = eps
+
         # Cut off radius of WCA potential
         self.r_cut=2**(1/6)                  #Cut off interaction radius (Per LJ Potential)
 
@@ -86,6 +89,9 @@ class particle_props:
 
         # Array (partNum) of particle orientations
         self.ang = ang
+
+        # Initialize theory functions for call back later
+        self.theory_functs = theory.theory()
 
     def particle_phase_ids(self, phasePart):
         '''
@@ -876,7 +882,7 @@ class particle_props:
 
         return vel_phase_dict
     
-    def single_velocity(self, vel, prev_pos, prev_ang, ori):
+    def single_velocity(self, prev_pos, prev_ang, ori):
         '''
         Purpose: Takes the velocity and phase of each particle
         to calculate the mean and standard deviation of each phase for each
@@ -898,93 +904,75 @@ class particle_props:
         typ0ind = np.where(self.typ==0)[0]
         typ1ind = np.where(self.typ==1)[0]
 
-        if len(typ1ind)>0:
 
-            # Add to total bulk velocity
-            typ0_vel_mag = vel['mag'][typ0ind]
-            typ0_vel_x = vel['x'][typ0ind]
-            typ0_vel_y = vel['y'][typ0ind]
+        # Add to total bulk velocity
+        typ0_vel_x = dx[typ0ind]
+        typ0_vel_y = dy[typ0ind]
+        typ0_vel_mag = (typ0_vel_x**2 + typ0_vel_y**2) ** 0.5
+        pos0 = self.pos[typ0ind]
 
-            typ1_vel_mag = vel['mag'][typ1ind]
-            typ1_vel_x = vel['x'][typ1ind]
-            typ1_vel_y = vel['y'][typ1ind]
+        typ1_vel_x = dx[typ1ind]
+        typ1_vel_y = dy[typ1ind]
+        typ1_vel_mag = (typ1_vel_x**2 + typ1_vel_y**2) ** 0.5
+        pos1 = self.pos[typ1ind]
 
-            typ0_avg = np.mean(typ1_vel_mag)
+        typ0_avg = np.mean(typ0_vel_mag)
+        typ1_avg = np.mean(typ1_vel_mag)
 
-            r = np.arange(self.r_cut, 10*self.r_cut, self.r_cut)
+        r = np.arange(self.r_cut, 7*self.r_cut, self.r_cut)
+        
+        for r_dist in r:
+
+            # Neighbor list query arguments to find interacting particles
+            if r_dist == self.r_cut:
+                r_start = 0.1
+            else:
+                r_start = self.r_cut+0.000001
             
-            for r_dist in r:
+            query_args = dict(mode='ball', r_min = r_start, r_max = r_dist)#r_max=self.theory_functs.conForRClust(peNet_int-45., self.eps) * 1.0)
+            
+            # Locate potential neighbor particles by type in the dense phase
+            system_A = freud.AABBQuery(self.f_box, self.f_box.wrap(prev_pos[typ0ind]))
 
-                # Neighbor list query arguments to find interacting particles
-                if r_dist == self.r_cut:
-                    r_start = 0.1
-                else:
-                    r_start = self.r_cut+0.000001
+            # Generate neighbor list of dense phase particles (per query args) of respective type A neighboring bulk phase reference particles of type B
+            AB_nlist = system_A.query(self.f_box.wrap(prev_pos[typ1ind]), query_args).toNeighborList()                
+
+            if len(AB_nlist.query_point_indices) > 0:
                 
-                query_args = dict(mode='ball', r_min = r_start, r_max = r_dist)#r_max=self.theory_functs.conForRClust(peNet_int-45., self.eps) * 1.0)
+                # Find neighbors list IDs where 0 is reference particle
+                loc = np.where(AB_nlist.query_point_indices==0)[0]
+
+                slow_displace_dx, slow_displace_dy, slow_displace_dr = self.utility_functs.sep_dist_arr(self.pos[typ0ind][AB_nlist.point_indices[loc]], prev_pos[typ0ind][AB_nlist.point_indices[loc]], difxy=True)
+
+                fast_displace_dr = dr[typ1ind][AB_nlist.query_point_indices[loc]]
+                fast_displace_dx = dy[typ1ind][AB_nlist.query_point_indices[loc]]
+                fast_displace_dy = dy[typ1ind][AB_nlist.query_point_indices[loc]]
                 
-                # Locate potential neighbor particles by type in the dense phase
-                system_A = freud.AABBQuery(self.f_box, self.f_box.wrap(prev_pos[typ0ind]))
-                system_B = freud.AABBQuery(self.f_box, self.f_box.wrap(prev_pos[typ1ind]))
-
-                # Generate neighbor list of dense phase particles (per query args) of respective type A neighboring bulk phase reference particles of type B
-                AB_nlist = system_A.query(self.f_box.wrap(prev_pos[typ1ind]), query_args).toNeighborList()                
-                if len(AB_nlist.query_point_indices) > 0:
-                    
-                    # Find neighbors list IDs where 0 is reference particle
-                    loc = np.where(AB_nlist.query_point_indices==0)[0]
-
-                    fast_dx, fast_dy, fast_dr = self.utility_functs.sep_dist_arr(self.pos[typ0ind][AB_nlist.point_indices[loc]], prev_pos[typ0ind][AB_nlist.point_indices[loc]], difxy=True)
-
-                    near_dr = dr[typ1ind][AB_nlist.query_point_indices[loc]]
-                    near_dx = dy[typ1ind][AB_nlist.query_point_indices[loc]]
-                    near_dy = dy[typ1ind][AB_nlist.query_point_indices[loc]]
-                    
-                    difx, dify, difr = self.utility_functs.sep_dist_arr(prev_pos[typ0ind][AB_nlist.point_indices[loc]], prev_pos[typ1ind][AB_nlist.query_point_indices[loc]], difxy=True)
-
-                    vel_x_corr_loc = (difx/difr) * (near_dx/near_dr)
-                    vel_y_corr_loc = (dify/difr) * (near_dy/near_dr)
-                    #vel_r_corr_loc = ( vel_x_corr_loc ** 2 + vel_y_corr_loc ** 2 ) ** 0.5         
-
-                    theta = np.arctan(dify, difx)
-                    print(theta)
-                    print(np.shape(ori))
-                    
-                    fx = ori[typ1ind,1]
-                    fy = ori[typ1ind,2]
-                    print(fx)
-                    print(fy)
-                    print(dx[typ1ind])
-                    print(dy[typ1ind])
-                    print(fx * dx[typ1ind]/dr[typ1ind])
-                    print(fy * dx[typ1ind]/dr[typ1ind])
-                    stop
-                    print(self.ang[typ1ind])
-                    print(prev_ang[typ1ind])
+                sep_difx, sep_dify, sep_difr = self.utility_functs.sep_dist_arr(prev_pos[typ0ind][AB_nlist.point_indices[loc]], prev_pos[typ1ind][AB_nlist.query_point_indices[loc]], difxy=True)
 
 
-                    stop
-                    difx2, dify2, difr2 = self.utility_functs.sep_dist_arr(self.pos[typ0ind][AB_nlist.point_indices[loc]], prev_pos[typ0ind][AB_nlist.point_indices[loc]], difxy=True)
-                    
-                    vel_x_corr_disp = (difx2/difr2) * (near_dx/near_dr)
-                    vel_y_corr_disp = (dify2/difr2) * (near_dy/near_dr)
-                    #vel_r_corr_disp = ( vel_x_corr_disp ** 2 + vel_y_corr_disp ** 2 ) ** 0.5
+                vel_x_corr_loc = (slow_displace_dx/slow_displace_dr) * (fast_displace_dx/fast_displace_dr)
+                vel_y_corr_loc = (slow_displace_dy/slow_displace_dr) * (fast_displace_dy/fast_displace_dr)
+                vel_r_corr_loc = ( vel_x_corr_loc ** 2 + vel_y_corr_loc ** 2 ) ** 0.5         
 
-                    #near_vel_corr = 
-                    print(vel_x_corr_loc)
-                    print(vel_y_corr_loc)
+                theta = np.arctan(dify, difx)
 
-                    print(vel_x_corr_disp)
-                    print(vel_y_corr_disp)
-                    stop
-                    #Save nearest neighbor information to array
+                fx = ori[typ1ind,1]
+                fy = ori[typ1ind,2]
+
+                f_x_corr_loc = (slow_displace_dx/slow_displace_dr) * (fx)
+                f_y_corr_loc = (slow_displace_dy/slow_displace_dr) * (fy)
+                f_r_corr_loc = (f_x_corr_loc ** 2 + f_y_corr_loc ** 2) ** 0.5
+
 
 
             # Dictionary containing the average and standard deviation of velocity
             # of each phase and each respective type ('all', 'A', or 'B')
-            vel_dict = {'A': {'x': typ0_vel_x, 'y': typ0_vel_y, 'mag': typ0_vel_mag}, 'B': {'x': typ1_vel_x, 'y': typ1_vel_y, 'mag': typ1_vel_mag} }
+            vel_plot_dict = {'A': {'x': typ0_vel_x, 'y': typ0_vel_y, 'mag': typ0_vel_mag, 'pos': pos0}, 'B': {'x': typ1_vel_x, 'y': typ1_vel_y, 'mag': typ1_vel_mag, 'pos': pos1} }
+            corr_dict = {'f': {'x': f_x_corr_loc, 'y': f_y_corr_loc, 'r': f_r_corr_loc}, 'v': {'x': vel_x_corr_loc, 'y': vel_y_corr_loc, 'r': vel_r_corr_loc}}
+            vel_stat_dict = {'A': {'mag': typ0_avg}, 'B': {'mag': typ1_avg} }
 
-            return vel_dict
+            return vel_plot_dict, corr_dict, vel_stat_dict
     def adsorption(self):
 
         typ0ind = np.where(self.typ==0)[0]
@@ -1617,6 +1605,7 @@ class particle_props:
 
         
         return neigh_stat_dict, ori_stat_dict, neigh_plot_dict
+
     def penetration_depth(self, start_dict, pos_prev, vertical_shift, dify_long):
 
         typ0ind = np.where(self.typ==0)[0]
@@ -1687,3 +1676,524 @@ class particle_props:
         start_dict = {'x': start_x, 'y': start_y}
 
         return penetration_dict, start_dict, vertical_shift, dify_long
+    def interparticle_pressure_nlist(self):
+        '''
+        Purpose: Takes the composition of each phase and uses neighbor lists to find the
+        nearest, interacting neighbors and calculates the total interparticle stress all,
+        interacting neighbors acting on each reference particle.
+
+        Outputs:
+        stress_stat_dict: dictionary containing the total interparticle stress
+        between a reference particle of a given type ('all', 'A', or 'B')
+        and its nearest, interacting neighbors of each type ('all', 'A', or 'B')
+        in each direction ('XX', 'XY', 'YX', 'YY'), averaged over all reference particles in each phase.
+
+        press_stat_dict: dictionary containing the average interparticle pressure and
+        shear stress between a reference particle of a given type ('all', 'A', or 'B')
+        and its nearest, interacting neighbors of each type ('all', 'A', or 'B'),
+        averaged over all reference particles in each phase.
+
+        press_plot_dict: dictionary containing information on the interparticle stress
+        and pressure of each bulk and interface reference particle of each type
+        ('all', 'A', or 'B').
+        '''
+
+        
+        # Position and orientation arrays of type A particles in respective phase
+        typ0ind = np.where(self.typ==0)[0]
+        pos_A=self.pos[typ0ind]                               # Find positions of type 0 particles
+
+        # Position and orientation arrays of type B particles in respective phase
+        typ1ind = np.where(self.typ==1)[0]
+        pos_B=self.pos[typ1ind]
+
+        # Calculate area of each phase
+        if self.lx_box > self.ly_box:
+            bulk_area = 2 * np.amax(pos_A[:,0]) * self.ly_box
+        else:
+            bulk_area = 2 * np.amax(pos_A[:,1]) * self.lx_box
+
+        # Neighbor list query arguments to find interacting particles
+        query_args = dict(mode='ball', r_min = 0.1, r_max=self.r_cut)
+
+        # Locate potential neighbor particles by type in the dense phase
+        system_A = freud.AABBQuery(self.f_box, self.f_box.wrap(pos_A))
+        system_B = freud.AABBQuery(self.f_box, self.f_box.wrap(pos_B))
+
+        # Generate neighbor list of dense phase particles (per query args) of respective type (A or B) neighboring bulk phase reference particles of respective type (A or B)
+        AA_nlist = system_A.query(self.f_box.wrap(pos_A), query_args).toNeighborList()
+        AB_nlist = system_A.query(self.f_box.wrap(pos_B), query_args).toNeighborList()
+        BA_nlist = system_B.query(self.f_box.wrap(pos_A), query_args).toNeighborList()
+        BB_nlist = system_B.query(self.f_box.wrap(pos_B), query_args).toNeighborList()
+
+        #Initiate empty arrays for finding stress in given direction from type A dense particles acting on type A bulk particles
+        AA_neigh_ind = np.array([], dtype=int)
+        AA_num_neigh = np.array([])
+
+        SigXX_AA_part=np.zeros(len(pos_A))        #Sum of normal stress in x direction
+        SigXY_AA_part=np.zeros(len(pos_A))        #Sum of tangential stress in x-y direction
+        SigYX_AA_part=np.zeros(len(pos_A))        #Sum of tangential stress in y-x direction
+        SigYY_AA_part=np.zeros(len(pos_A))        #Sum of normal stress in y direction
+
+        SigXX_AA_part_num=np.zeros(len(pos_A))    #Number of interparticle stresses summed in normal x direction
+        SigXY_AA_part_num=np.zeros(len(pos_A))    #Number of interparticle stresses summed in tangential x-y direction
+        SigYX_AA_part_num=np.zeros(len(pos_A))    #Number of interparticle stresses summed in tangential y-x direction
+        SigYY_AA_part_num=np.zeros(len(pos_A))    #Number of interparticle stresses summed in normal y direction
+
+        #Loop over neighbor pairings of A-A neighbor pairs to calculate interparticle stress in each direction
+        for i in range(0, len(pos_A)):
+            if i in AA_nlist.query_point_indices:
+                if i not in AA_neigh_ind:
+
+                    # Find neighbors list IDs where i is reference particle
+                    loc = np.where(AA_nlist.query_point_indices==i)[0]
+                    if len(loc)>1:
+
+                        # Array of reference particle location
+                        pos_temp = np.ones((len(loc), 3))* pos_A[i]
+
+                        # Calculate interparticle separation distances
+                        difx, dify, difr = self.utility_functs.sep_dist_arr(pos_temp, pos_A[AA_nlist.point_indices[loc]], difxy=True)
+
+                        #Calculate interparticle forces
+                        fx, fy = self.theory_functs.computeFLJ_arr(difr, difx, dify, self.eps)
+
+                        # Calculate array of stresses for each neighbor list pairing acting on i reference particle
+                        SigXX = (fx * difx)
+                        SigYY = (fy * dify)
+                        SigXY = (fx * dify)
+                        SigYX = (fy * difx)
+
+                        # Calculate total stress acting on i reference particle
+                        SigXX_AA_part[i] += np.sum(SigXX)
+                        SigYY_AA_part[i] += np.sum(SigYY)
+                        SigXY_AA_part[i] += np.sum(SigXY)
+                        SigYX_AA_part[i] += np.sum(SigYX)
+
+                        # Calculate number of neighbor pairs summed over
+                        SigXX_AA_part_num[i] += len(SigXX)
+                        SigYY_AA_part_num[i] += len(SigYY)
+                        SigXY_AA_part_num[i] += len(SigXY)
+                        SigYX_AA_part_num[i] += len(SigYX)
+
+                    else:
+
+                        # Calculate interparticle separation distances
+                        difx = self.utility_functs.sep_dist_x(pos_A[i][0], pos_A[AA_nlist.point_indices[loc]][0][0])
+                        dify = self.utility_functs.sep_dist_y(pos_A[i][1], pos_A[AA_nlist.point_indices[loc]][0][1])
+                        difr = ( (difx)**2 + (dify)**2)**0.5
+
+                        # Calculate interparticle force
+                        fx, fy = self.theory_functs.computeFLJ(difr, difx, dify, self.eps)
+
+                        # Calculate array of stresses for each neighbor list pairing acting on i reference particle
+                        SigXX = (fx * difx)
+                        SigYY = (fy * dify)
+                        SigXY = (fx * dify)
+                        SigYX = (fy * difx)
+
+                        # Calculate total stress acting on i reference particle
+                        SigXX_AA_part[i] = SigXX
+                        SigYY_AA_part[i] = SigYY
+                        SigXY_AA_part[i] = SigXY
+                        SigYX_AA_part[i] = SigYX
+
+                        # Calculate number of neighbor pairs summed over
+                        SigXX_AA_part_num[i] += 1
+                        SigYY_AA_part_num[i] += 1
+                        SigXY_AA_part_num[i] += 1
+                        SigYX_AA_part_num[i] += 1
+
+                    # Save nearest neighbor information for i reference particle
+                    AA_num_neigh = np.append(AA_num_neigh, len(loc))
+                    AA_neigh_ind = np.append(AA_neigh_ind, int(i))
+            else:
+
+                # Save nearest neighbor information for i reference particle
+                AA_num_neigh = np.append(AA_num_neigh, 0)
+                AA_neigh_ind = np.append(AA_neigh_ind, int(i))
+
+        #Initiate empty arrays for finding stress in given direction from type B dense particles acting on type A bulk particles
+        BA_neigh_ind = np.array([], dtype=int)
+        BA_num_neigh = np.array([])
+
+        SigXX_BA_part=np.zeros(len(pos_A))
+        SigXY_BA_part=np.zeros(len(pos_A))
+        SigYX_BA_part=np.zeros(len(pos_A))
+        SigYY_BA_part=np.zeros(len(pos_A))
+
+        SigXX_BA_part_num=np.zeros(len(pos_A))
+        SigXY_BA_part_num=np.zeros(len(pos_A))
+        SigYX_BA_part_num=np.zeros(len(pos_A))
+        SigYY_BA_part_num=np.zeros(len(pos_A))
+
+        #Loop over neighbor pairings of B-A neighbor pairs to calculate interparticle stress in each direction
+        for i in range(0, len(pos_A)):
+            if i in BA_nlist.query_point_indices:
+                if i not in BA_neigh_ind:
+                    # Find neighbors list IDs where i is reference particle
+                    loc = np.where(BA_nlist.query_point_indices==i)[0]
+                    if len(loc)>1:
+
+                        # Array of reference particle location
+                        pos_temp = np.ones((len(loc), 3))* pos_A[i]
+
+                        # Calculate interparticle separation distances
+                        difx, dify, difr = self.utility_functs.sep_dist_arr(pos_temp, pos_B[BA_nlist.point_indices[loc]], difxy=True)
+
+                        # Calculate interparticle forces
+                        fx, fy = self.theory_functs.computeFLJ_arr(difr, difx, dify, self.eps)
+
+                        # Calculate array of stresses for each neighbor list pairing acting on i reference particle
+                        SigXX = (fx * difx)
+                        SigYY = (fy * dify)
+                        SigXY = (fx * dify)
+                        SigYX = (fy * difx)
+
+                        # Calculate total stress acting on i reference particle
+                        SigXX_BA_part[i] += np.sum(SigXX)
+                        SigYY_BA_part[i] += np.sum(SigYY)
+                        SigXY_BA_part[i] += np.sum(SigXY)
+                        SigYX_BA_part[i] += np.sum(SigYX)
+
+                        # Calculate number of neighbor pairs summed over
+                        SigXX_BA_part_num[i] += len(SigXX)
+                        SigYY_BA_part_num[i] += len(SigYY)
+                        SigXY_BA_part_num[i] += len(SigXY)
+                        SigYX_BA_part_num[i] += len(SigYX)
+
+                    else:
+
+                        # Calculate interparticle separation distances
+                        difx = self.utility_functs.sep_dist_x(pos_A[i][0], pos_B[BA_nlist.point_indices[loc]][0][0])
+                        dify = self.utility_functs.sep_dist_y(pos_A[i][1], pos_B[BA_nlist.point_indices[loc]][0][1])
+                        difr = ( (difx)**2 + (dify)**2)**0.5
+
+                        # Calculate interparticle forces
+                        fx, fy = self.theory_functs.computeFLJ(difr, difx, dify, self.eps)
+
+                        # Calculate array of stresses for each neighbor list pairing acting on i reference particle
+                        SigXX = (fx * difx)
+                        SigYY = (fy * dify)
+                        SigXY = (fx * dify)
+                        SigYX = (fy * difx)
+
+                        # Calculate total stress acting on i reference particle
+                        SigXX_BA_part[i] = SigXX
+                        SigYY_BA_part[i] = SigYY
+                        SigXY_BA_part[i] = SigXY
+                        SigYX_BA_part[i] = SigYX
+
+                        # Calculate number of neighbor pairs summed over
+                        SigXX_BA_part_num[i] += 1
+                        SigYY_BA_part_num[i] += 1
+                        SigXY_BA_part_num[i] += 1
+                        SigYX_BA_part_num[i] += 1
+
+                    # Save nearest neighbor information for i reference particle
+                    BA_num_neigh = np.append(BA_num_neigh, len(loc))
+                    BA_neigh_ind = np.append(BA_neigh_ind, int(i))
+            else:
+
+                # Save nearest neighbor information for i reference particle
+                BA_num_neigh = np.append(BA_num_neigh, 0)
+                BA_neigh_ind = np.append(BA_neigh_ind, int(i))
+
+        #Initiate empty arrays for finding stress in given direction from type A dense particles acting on type B bulk particles
+        AB_neigh_ind = np.array([], dtype=int)
+        AB_num_neigh = np.array([])
+
+        SigXX_AB_part=np.zeros(len(pos_B))
+        SigXY_AB_part=np.zeros(len(pos_B))
+        SigYX_AB_part=np.zeros(len(pos_B))
+        SigYY_AB_part=np.zeros(len(pos_B))
+
+        SigXX_AB_part_num=np.zeros(len(pos_B))
+        SigXY_AB_part_num=np.zeros(len(pos_B))
+        SigYX_AB_part_num=np.zeros(len(pos_B))
+        SigYY_AB_part_num=np.zeros(len(pos_B))
+
+
+        #Loop over neighbor pairings of A-B neighbor pairs to calculate interparticle stress in each direction
+        for i in range(0, len(pos_B)):
+            if i in AB_nlist.query_point_indices:
+                if i not in AB_neigh_ind:
+                    # Find neighbors list IDs where i is reference particle
+                    loc = np.where(AB_nlist.query_point_indices==i)[0]
+                    if len(loc)>1:
+
+                        # Array of reference particle location
+                        pos_temp = np.ones((len(loc), 3))* pos_B[i]
+
+                        # Calculate interparticle separation distances
+                        difx, dify, difr = self.utility_functs.sep_dist_arr(pos_temp, pos_A[AB_nlist.point_indices[loc]], difxy=True)
+
+                        # Calculate interparticle forces
+                        fx, fy = self.theory_functs.computeFLJ_arr(difr, difx, dify, self.eps)
+
+                        # Calculate array of stresses for each neighbor list pairing acting on i reference particle
+                        SigXX = (fx * difx)
+                        SigYY = (fy * dify)
+                        SigXY = (fx * dify)
+                        SigYX = (fy * difx)
+
+                        # Calculate total stress acting on i reference particle
+                        SigXX_AB_part[i] += np.sum(SigXX)
+                        SigYY_AB_part[i] += np.sum(SigYY)
+                        SigXY_AB_part[i] += np.sum(SigXY)
+                        SigYX_AB_part[i] += np.sum(SigYX)
+
+                        # Calculate number of neighbor pairs summed over
+                        SigXX_AB_part_num[i] += len(SigXX)
+                        SigYY_AB_part_num[i] += len(SigYY)
+                        SigXY_AB_part_num[i] += len(SigXY)
+                        SigYX_AB_part_num[i] += len(SigYX)
+
+                    else:
+                        # Calculate interparticle separation distances
+                        difx = self.utility_functs.sep_dist_x(pos_B[i][0], pos_A[AB_nlist.point_indices[loc]][0][0])
+                        dify = self.utility_functs.sep_dist_y(pos_B[i][1], pos_A[AB_nlist.point_indices[loc]][0][1])
+                        difr = ( (difx)**2 + (dify)**2)**0.5
+
+                        # Calculate interparticle forces
+                        fx, fy = self.theory_functs.computeFLJ(difr, difx, dify, self.eps)
+
+                        # Calculate array of stresses for each neighbor list pairing acting on i reference particle
+                        SigXX = (fx * difx)
+                        SigYY = (fy * dify)
+                        SigXY = (fx * dify)
+                        SigYX = (fy * difx)
+
+                        # Calculate total stress acting on i reference particle
+                        SigXX_AB_part[i] += SigXX
+                        SigYY_AB_part[i] += SigYY
+                        SigXY_AB_part[i] += SigXY
+                        SigYX_AB_part[i] += SigYX
+
+                        # Calculate number of neighbor pairs summed over
+                        SigXX_AB_part_num[i] += 1
+                        SigYY_AB_part_num[i] += 1
+                        SigXY_AB_part_num[i] += 1
+                        SigYX_AB_part_num[i] += 1
+
+                    # Save nearest neighbor information for i reference particle
+                    AB_num_neigh = np.append(AB_num_neigh, len(loc))
+                    AB_neigh_ind = np.append(AB_neigh_ind, int(i))
+            else:
+                # Save nearest neighbor information for i reference particle
+                AB_num_neigh = np.append(AB_num_neigh, 0)
+                AB_neigh_ind = np.append(AB_neigh_ind, int(i))
+
+        #Initiate empty arrays for finding stress in given direction from type B dense particles acting on type B bulk particles
+        BB_neigh_ind = np.array([], dtype=int)
+        BB_num_neigh = np.array([])
+
+        SigXX_BB_part=np.zeros(len(pos_B))
+        SigXY_BB_part=np.zeros(len(pos_B))
+        SigYX_BB_part=np.zeros(len(pos_B))
+        SigYY_BB_part=np.zeros(len(pos_B))
+
+        SigXX_BB_part_num=np.zeros(len(pos_B))
+        SigXY_BB_part_num=np.zeros(len(pos_B))
+        SigYX_BB_part_num=np.zeros(len(pos_B))
+        SigYY_BB_part_num=np.zeros(len(pos_B))
+
+        #Loop over neighbor pairings of B-B neighbor pairs to calculate interparticle stress in each direction
+        for i in range(0, len(pos_B)):
+            if i in BB_nlist.query_point_indices:
+                if i not in BB_neigh_ind:
+                    # Find neighbors list IDs where i is reference particle
+                    loc = np.where(BB_nlist.query_point_indices==i)[0]
+                    if len(loc)>1:
+
+                        # Array of reference particle location
+                        pos_temp = np.ones((len(loc), 3))* pos_B[i]
+
+                        # Calculate interparticle separation distances
+                        difx, dify, difr = self.utility_functs.sep_dist_arr(pos_temp, pos_B[BB_nlist.point_indices[loc]], difxy=True)
+
+                        # Calculate interparticle separation forces
+                        fx, fy = self.theory_functs.computeFLJ_arr(difr, difx, dify, self.eps)
+
+                        # Calculate array of stresses for each neighbor list pairing acting on i reference particle
+                        SigXX = (fx * difx)
+                        SigYY = (fy * dify)
+                        SigXY = (fx * dify)
+                        SigYX = (fy * difx)
+
+                        # Calculate total stress acting on i reference particle
+                        SigXX_BB_part[i] += np.sum(SigXX)
+                        SigYY_BB_part[i] += np.sum(SigYY)
+                        SigXY_BB_part[i] += np.sum(SigXY)
+                        SigYX_BB_part[i] += np.sum(SigYX)
+
+                        # Calculate number of neighbor pairs summed over
+                        SigXX_BB_part_num[i] += len(SigXX)
+                        SigYY_BB_part_num[i] += len(SigYY)
+                        SigXY_BB_part_num[i] += len(SigXY)
+                        SigYX_BB_part_num[i] += len(SigYX)
+
+                    else:
+                        difx = self.utility_functs.sep_dist_x(pos_B[i][0], pos_B[BB_nlist.point_indices[loc]][0][0])
+                        dify = self.utility_functs.sep_dist_y(pos_B[i][1], pos_B[BB_nlist.point_indices[loc]][0][1])
+                        difr = ( (difx)**2 + (dify)**2)**0.5
+                        fx, fy = self.theory_functs.computeFLJ(difr, difx, dify, self.eps)
+
+                        # Calculate array of stresses for each neighbor list pairing acting on i reference particle
+                        SigXX = (fx * difx)
+                        SigYY = (fy * dify)
+                        SigXY = (fx * dify)
+                        SigYX = (fy * difx)
+
+                        # Calculate total stress acting on i reference particle
+                        SigXX_BB_part[i] += SigXX
+                        SigYY_BB_part[i] += SigYY
+                        SigXY_BB_part[i] += SigXY
+                        SigYX_BB_part[i] += SigYX
+
+                        # Calculate number of neighbor pairs summed over
+                        SigXX_BB_part_num[i] += 1
+                        SigYY_BB_part_num[i] += 1
+                        SigXY_BB_part_num[i] += 1
+                        SigYX_BB_part_num[i] += 1
+
+                    # Save nearest neighbor information for i reference particle
+                    BB_num_neigh = np.append(BB_num_neigh, len(loc))
+                    BB_neigh_ind = np.append(BB_neigh_ind, int(i))
+            else:
+
+                # Save nearest neighbor information for i reference particle
+                BB_num_neigh = np.append(BB_num_neigh, 0)
+                BB_neigh_ind = np.append(BB_neigh_ind, int(i))
+
+        ###Bulk stress
+
+        # Calculate total stress and number of neighbor pairs summed over for B bulk reference particles and all dense neighbors
+        allB_SigXX_part = SigXX_BB_part + SigXX_AB_part
+        allB_SigXX_part_num = SigXX_BB_part_num + SigXX_AB_part_num
+        allB_SigXY_part = SigXY_BB_part + SigXY_AB_part
+        allB_SigXY_part_num = SigXY_BB_part_num + SigXY_AB_part_num
+        allB_SigYX_part = SigYX_BB_part + SigYX_AB_part
+        allB_SigYX_part_num = SigYX_BB_part_num + SigYX_AB_part_num
+        allB_SigYY_part = SigYY_BB_part + SigYY_AB_part
+        allB_SigYY_part_num = SigYY_BB_part_num + SigYY_AB_part_num
+
+        # Calculate total stress and number of neighbor pairs summed over for all bulk reference particles and B dense neighbors
+        Ball_SigXX_part = np.append(SigXX_BA_part, SigXX_BB_part)
+        Ball_SigXX_part_num = np.append(SigXX_BA_part_num, SigXX_BB_part_num)
+        Ball_SigXY_part = np.append(SigXY_BA_part, SigXY_BB_part)
+        Ball_SigXY_part_num = np.append(SigXY_BA_part_num, SigXY_BB_part_num)
+        Ball_SigYX_part = np.append(SigYX_BA_part, SigYX_BB_part)
+        Ball_SigYX_part_num = np.append(SigYX_BA_part_num, SigYX_BB_part_num)
+        Ball_SigYY_part = np.append(SigYY_BA_part, SigYY_BB_part)
+        Ball_SigYY_part_num = np.append(SigYY_BA_part_num, SigYY_BB_part_num)
+
+        # Calculate total stress and number of neighbor pairs summed over for A bulk reference particles and all dense neighbors
+        allA_SigXX_part = SigXX_AA_part + SigXX_BA_part
+        allA_SigXX_part_num = SigXX_AA_part_num + SigXX_BA_part_num
+        allA_SigXY_part = SigXY_AA_part + SigXY_BA_part
+        allA_SigXY_part_num = SigXY_AA_part_num + SigXY_BA_part_num
+        allA_SigYX_part = SigYX_AA_part + SigYX_BA_part
+        allA_SigYX_part_num = SigYX_AA_part_num + SigYX_BA_part_num
+        allA_SigYY_part = SigYY_AA_part + SigYY_BA_part
+        allA_SigYY_part_num = SigYY_AA_part_num + SigYY_BA_part_num
+
+        # Calculate total stress and number of neighbor pairs summed over for all bulk reference particles and A dense neighbors
+        Aall_SigXX_part = np.append(SigXX_AB_part, SigXX_AA_part)
+        Aall_SigXX_part_num = np.append(SigXX_AB_part_num, SigXX_AA_part_num)
+        Aall_SigXY_part = np.append(SigXY_AB_part, SigXY_AA_part)
+        Aall_SigXY_part_num = np.append(SigXY_AB_part_num, SigXY_AA_part_num)
+        Aall_SigYX_part = np.append(SigYX_AB_part, SigYX_AA_part)
+        Aall_SigYX_part_num = np.append(SigYX_AB_part_num, SigYX_AA_part_num)
+        Aall_SigYY_part = np.append(SigYY_AB_part, SigYY_AA_part)
+        Aall_SigYY_part_num = np.append(SigYY_AB_part_num, SigYY_AA_part_num)
+
+        # Calculate total stress and number of neighbor pairs summed over for all bulk reference particles and all dense neighbors
+        allall_SigXX_part = np.append(allA_SigXX_part, allB_SigXX_part)
+        allall_SigXX_part_num = np.append(allA_SigXX_part_num, allB_SigXX_part_num)
+        allall_SigXY_part = np.append(allA_SigXY_part, allB_SigXY_part)
+        allall_SigXY_part_num = np.append(allA_SigXY_part_num, allB_SigXY_part_num)
+        allall_SigYX_part = np.append(allA_SigYX_part, allB_SigYX_part)
+        allall_SigYX_part_num = np.append(allA_SigYX_part_num, allB_SigYX_part_num)
+        allall_SigYY_part = np.append(allA_SigYY_part, allB_SigYY_part)
+        allall_SigYY_part_num = np.append(allA_SigYY_part_num, allB_SigYY_part_num)
+
+        ###Interparticle pressure
+
+        # Calculate total interparticle pressure experienced by all particles in each phase
+        allall_int_press = np.sum(allall_SigXX_part + allall_SigYY_part)/(2*bulk_area)
+
+        # Calculate total interparticle pressure experienced by all particles in each phase from all A particles
+        allA_int_press = np.sum(allA_SigXX_part + allA_SigYY_part)/(2*bulk_area)
+
+        # Calculate total interparticle pressure experienced by all A particles in each phase
+        Aall_int_press = np.sum(Aall_SigXX_part + Aall_SigYY_part)/(2*bulk_area)
+
+        # Calculate total interparticle pressure experienced by all particles in each phase from all B particles
+        allB_int_press = np.sum(allB_SigXX_part + allB_SigYY_part)/(2*bulk_area)
+
+        # Calculate total interparticle pressure experienced by all B particles in each phase
+        Ball_int_press = np.sum(Ball_SigXX_part + Ball_SigYY_part)/(2*bulk_area)
+
+        # Calculate total interparticle pressure experienced by all A particles in each phase from all A particles
+        AA_int_press = np.sum(SigXX_AA_part + SigYY_AA_part)/(2*bulk_area)
+
+        # Calculate total interparticle pressure experienced by all A particles in each phase from all B particles
+        AB_int_press = np.sum(SigXX_AB_part + SigYY_AB_part)/(2*bulk_area)
+
+        # Calculate total interparticle pressure experienced by all B particles in each phase from all A particles
+        BA_int_press = np.sum(SigXX_BA_part + SigYY_BA_part)/(2*bulk_area)
+
+        # Calculate total interparticle pressure experienced by all B particles in each phase from all B particles
+        BB_int_press = np.sum(SigXX_BB_part + SigYY_BB_part)/(2*bulk_area)
+
+        # Calculate total shear stress experienced by all particles in each phase from all particles
+        allall_shear_stress = np.sum(allall_SigXY_part)/(bulk_area)
+
+        # Calculate total shear stress experienced by all particles in each phase from A particles
+        allA_shear_stress = np.sum(allA_SigXY_part)/(bulk_area)
+
+        # Calculate total shear stress experienced by all A particles in each phase from all particles
+        Aall_shear_stress = np.sum(Aall_SigXY_part)/(bulk_area)
+
+        # Calculate total shear stress experienced by all particles in each phase from B particles
+        allB_shear_stress = np.sum(allB_SigXY_part)/(bulk_area)
+
+        # Calculate total shear stress experienced by all B particles in each phase from all particles
+        Ball_shear_stress = np.sum(Ball_SigXY_part)/(bulk_area)
+
+        # Calculate total shear stress experienced by all A particles in each phase from all A particles
+        AA_shear_stress = np.sum(SigXY_AA_part)/(bulk_area)
+
+        # Calculate total shear stress experienced by all A particles in each phase from all B particles
+        AB_shear_stress = np.sum(SigXY_AB_part)/(bulk_area)
+
+        # Calculate total shear stress experienced by all B particles in each phase from all A particles
+        BA_shear_stress = np.sum(SigXY_BA_part)/(bulk_area)
+
+        # Calculate total shear stress experienced by all B particles in each phase from all B particles
+        BB_shear_stress = np.sum(SigXY_BB_part)/(bulk_area)
+
+        # Make position arrays for plotting total stress on each particle for various activity pairings and phases
+        allall_pos_x = np.append(pos_A[:,0], pos_B[:,0])
+        allall_pos_y = np.append(pos_A[:,1], pos_B[:,1])
+
+        allall_part_int_press = (allall_SigXX_part + allall_SigYY_part)/(2)
+        allall_part_shear_stress = (allall_SigXY_part)
+
+        allA_part_int_press = (allA_SigXX_part + allA_SigYY_part)/(2)
+        allA_part_shear_stress = (allA_SigXY_part)
+
+        allB_part_int_press = (allB_SigXX_part + allB_SigYY_part)/(2)
+        allB_part_shear_stress = (allB_SigXY_part)
+
+        # Create output dictionary for statistical averages of total stress on each particle per phase/activity pairing
+        stress_stat_dict = {'all-all': {'XX': np.sum(allall_SigXX_part), 'XY': np.sum(allall_SigXY_part), 'YX': np.sum(allall_SigYX_part), 'YY': np.sum(allall_SigYY_part)}, 'all-A': {'XX': np.sum(allA_SigXX_part), 'XY': np.sum(allA_SigXY_part), 'YX': np.sum(allA_SigYX_part), 'YY': np.sum(allA_SigYY_part)}, 'all-B': {'XX': np.sum(allB_SigXX_part), 'XY': np.sum(allB_SigXY_part), 'YX': np.sum(allB_SigYX_part), 'YY': np.sum(allB_SigYY_part)}, 'A-A': {'XX': np.sum(SigXX_AA_part), 'XY': np.sum(SigXY_AA_part), 'YX': np.sum(SigYX_AA_part), 'YY': np.sum(SigYY_AA_part)}, 'A-B': {'XX': np.sum(SigXX_AB_part), 'XY': np.sum(SigXY_AB_part), 'YX': np.sum(SigYX_AB_part), 'YY': np.sum(SigYY_AB_part)}, 'B-B': {'XX': np.sum(SigXX_BB_part), 'XY': np.sum(SigXY_BB_part), 'YX': np.sum(SigYX_BB_part), 'YY': np.sum(SigYY_BB_part)}}
+
+        # Create output dictionary for statistical averages of total pressure and shear stress on each particle per phase/activity pairing
+        press_stat_dict = {'all-all': {'press': allall_int_press, 'shear': allall_shear_stress}, 'all-A': {'press': allA_int_press, 'shear': allA_shear_stress}, 'all-B': {'press': allB_int_press, 'shear': allB_shear_stress}, 'A-A': {'press': AA_int_press, 'shear': AA_shear_stress}, 'A-B': {'press': AB_int_press, 'shear': AB_shear_stress}, 'B-B': {'press': BB_int_press, 'shear': BB_shear_stress}}
+
+        # Create output dictionary for plotting of total stress/pressure on each particle per phase/activity pairing and their respective x-y locations
+        press_plot_dict = {'all-all': {'press': allall_part_int_press, 'shear': allall_part_shear_stress, 'x': allall_pos_x, 'y': allall_pos_y}, 'all-A': {'press': allA_part_int_press, 'shear': allA_part_shear_stress, 'x': pos_A[:,0], 'y': pos_A[:,1]}, 'all-B': {'press': allB_part_int_press, 'shear': allB_part_shear_stress, 'x': pos_B[:,0], 'y': pos_B[:,1]}}
+
+        return stress_stat_dict, press_stat_dict, press_plot_dict

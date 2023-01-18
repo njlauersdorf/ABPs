@@ -14,6 +14,7 @@ import os
 
 from gsd import hoomd
 import freud
+from freud import box
 import numpy as np
 import math
 from scipy.interpolate import interp1d
@@ -107,6 +108,12 @@ class plotting:
 
         self.outPath = outPath
         self.outFile = outFile
+
+        # Cut off radius of WCA potential
+        self.r_cut=2**(1/6)                  #Cut off interaction radius (Per LJ Potential)
+
+        # Initialize theory functions for call back later
+        self.theory_functs = theory.theory()
 
     def plot_phases(self, pos, phase_ids_dict, sep_surface_dict, int_comp_dict):
         """
@@ -3366,6 +3373,238 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         plt.show()
         #plt.savefig(outPath + 'lat_map_' + out + pad + ".png", dpi=100)
         #plt.close()
+    
+    def interpart_press_map2(self, interpart_press_part, pos, prev_pos, ang):
+        
+        typ0ind = np.where(self.typ == 0)[0]
+        typ1ind = np.where(self.typ == 1)[0]
+        
+        # Position and orientation arrays of type A particles in respective phase
+        pos_A=pos[typ0ind]                               # Find positions of type 0 particles
+
+        # Position and orientation arrays of type B particles in respective phase
+        pos_B=pos[typ1ind]
+
+        # Calculate interparticle distance between type A reference particle and type A neighbor
+        difx, dify, difr = self.utility_functs.sep_dist_arr(pos[typ0ind], prev_pos[typ0ind], difxy=True)
+        
+        mean_dify = np.mean(dify)
+        mean_dify = 0
+        # If box is rectangular with long dimension of x-axis
+        if self.lx_box > self.ly_box:
+
+            # Estimated area of dense phase
+            area_dense = (1.0 * self.partNum * (np.pi/4) / self.phiCP)
+
+            # Mid point of dense phase across longest box dimension (x)
+            dense_x_mid = self.hx_box
+
+            # estimated shortest dimension length of dense phase (y)
+            dense_x_width = dense_x_width = np.amax(pos[typ0ind,0]) * 1.5 #(area_dense / self.ly_box)
+            # Set maximum dimension length (x) of simulation box to be 12 inches (plus 1 inch color bar)
+            scaling = 13.0
+
+            # X and Y-dimension lengths (in inches)
+            x_dim = int(scaling)
+            y_dim = int(scaling/ (2*dense_x_width / self.ly_box))
+            y_dim = y_dim
+
+        # If box is rectangular with long dimension of y-axis
+        elif self.lx_box < self.ly_box:
+
+            # Estimated area of dense phase
+            area_dense = (0.8 * self.partNum * (np.pi/4) / self.phiCP)
+
+            # Mid point of dense phase across longest box dimension (y)
+            mid_point = np.mean(pos[:,1]+self.hy_box)
+
+            # estimated shorted dimension length of dense phase (x)
+            dense_x_width = (area_dense / self.lx_box)
+
+            # Set maximum dimension length (y) of simulation box to be 13 inches
+            scaling = 13.0
+
+            # X and Y-dimension lengths (in inches)
+            x_dim = int((scaling/(dense_x_width / self.lx_box)) + 1.0)
+            y_dim = int(scaling)
+
+        # If box is square
+        else:
+
+            # Minimum dimension length (in inches)
+            scaling =7.0
+
+            # X and Y-dimension lengths (in inches)
+            x_dim = int(scaling + 1.0)
+            y_dim = int(scaling)
+
+        pos_x_arr = np.append(interpart_press_part['all-all']['x']+self.hx_box, interpart_press_part['all-all']['x']+self.hx_box)
+        pos_x_arr = np.append(pos_x_arr, interpart_press_part['all-all']['x']+self.hx_box)
+
+        pos_y_arr = np.append(interpart_press_part['all-all']['y']+self.hy_box-mean_dify, interpart_press_part['all-all']['y']+self.hy_box+self.ly_box-mean_dify)
+        pos_y_arr = np.append(pos_y_arr, interpart_press_part['all-all']['y']+self.hy_box-self.ly_box-mean_dify)
+
+        num_neigh_arr = np.append(interpart_press_part['all-all']['press'], interpart_press_part['all-all']['press'])
+        num_neigh_arr = np.append(num_neigh_arr, interpart_press_part['all-all']['press'])
+        
+        # Instantiated simulation box
+        f_box = box.Box(Lx=self.lx_box, Ly=self.ly_box, is2D=True)
+
+        query_args = dict(mode='ball', r_min = 0.1, r_max=5.0)
+        system_A = freud.AABBQuery(f_box, f_box.wrap(pos_A))
+        AB_nlist = system_A.query(f_box.wrap(pos_B), query_args).toNeighborList()
+
+        #Initiate empty arrays for finding stress in given direction from type A dense particles acting on type B bulk particles
+        AB_neigh_ind = np.array([], dtype=int)
+        AB_num_neigh = np.array([])
+
+
+        #Loop over neighbor pairings of A-B neighbor pairs to calculate interparticle stress in each direction
+        #fy_arr = np.zeros()
+        print('test')
+        for i in range(0, len(pos_A)):
+            if i in AB_nlist.point_indices:
+                if i not in AB_neigh_ind:
+                    # Find neighbors list IDs where i is reference particle
+                    # Save nearest neighbor information for i reference particle
+                    AB_neigh_ind = np.append(AB_neigh_ind, int(i))
+        
+        filter_id = np.where(interpart_press_part['all-all']['press'][typ0ind[AB_neigh_ind]]>=100)[0]
+        pos_A_ref = pos_A[AB_neigh_ind[filter_id]]
+        if len(filter_id)>0:
+            print('test2')
+
+            
+
+            query_args = dict(mode='ball', r_min = 0.1, r_max=self.r_cut)
+            system = freud.AABBQuery(f_box, f_box.wrap(pos))
+            allall_nlist = system_A.query(f_box.wrap(pos_A_ref), query_args).toNeighborList()
+
+            allall_neigh_ind = np.array([], dtype=int)
+            print('test1')
+            #Loop over neighbor pairings of A-B neighbor pairs to calculate interparticle stress in each direction
+            fx_arr = np.zeros(len(pos_A_ref))
+            fy_arr = np.zeros(len(pos_A_ref))
+
+            for i in range(0, len(pos_A_ref)):
+                if i in allall_nlist.query_point_indices:
+                    if i not in allall_neigh_ind:
+                        # Find neighbors list IDs where i is reference particle
+                        loc = np.where(allall_nlist.query_point_indices==i)[0]
+                        if len(loc)>1:
+                            
+                            # Array of reference particle location
+                            pos_temp = np.ones((len(loc), 3))* pos_A_ref[i]
+
+                            # Calculate interparticle separation distances
+                            difx, dify, difr = self.utility_functs.sep_dist_arr(pos_temp, pos[allall_nlist.point_indices[loc]], difxy=True)
+
+                            # Calculate interparticle forces
+                            fx, fy = self.theory_functs.computeFLJ_arr(difr, difx, dify, self.eps)
+
+                            fx_arr[i]+=np.sum(fx)
+                            fy_arr[i]+=np.sum(fy)
+                        # Save nearest neighbor information for i reference particle
+                        allall_neigh_ind = np.append(allall_neigh_ind, int(i))
+
+            
+        fig = plt.figure(figsize=(x_dim,y_dim))
+        ax = fig.add_subplot(111)
+
+
+        # Set plotted particle size
+        sz = 0.75
+
+        
+
+            # Generate list of ellipses for all particles to plot containing position (x,y) and point size that automatically scales with figure size
+
+
+            # Plot position colored by neighbor number
+            
+
+
+        bulk_lat_mean = np.mean(interpart_press_part['all-all']['press'])
+
+        min_n = 0.0#np.min(interpart_press_part['all-A']['press'])
+        max_n = self.peB*(2/3)#np.max(interpart_press_part['all-A']['press'])
+        ells = [Ellipse(xy=np.array([pos_x_arr[i],pos_y_arr[i]]),
+                    width=sz, height=sz)
+            for i in range(0,len(pos_x_arr))]
+
+        neighborGroup = mc.PatchCollection(ells, cmap='Reds')#facecolors=slowCol)
+        coll = ax.add_collection(neighborGroup)
+        coll.set_array(np.ravel(num_neigh_arr))
+
+        px = np.sin(ang[typ1ind])
+        py = -np.cos(ang[typ1ind])
+
+        #plt.scatter(neigh_plot_dict['all-all']['x'][typ1ind]+self.hx_box, neigh_plot_dict['all-all']['y'][typ1ind]+self.hy_box, c='black', s=sz)
+        plt.quiver(pos[typ1ind,0]+self.hx_box, pos[typ1ind,1]+self.hy_box-mean_dify, px, py, color='black', width=0.003)
+        plt.quiver(pos[typ1ind,0]+self.hx_box, pos[typ1ind,1]+self.hy_box+self.ly_box-mean_dify, px, py, color='black', width=0.003)
+        plt.quiver(pos[typ1ind,0]+self.hx_box, pos[typ1ind,1]+self.hy_box-self.ly_box-mean_dify, px, py, color='black', width=0.003)
+
+        #if len(pos_A_ref)>0:
+        #    plt.quiver(pos_A_ref[:,0]+self.hx_box, pos_A_ref[:,1]+self.hy_box-mean_dify, fx_arr, fy_arr, color='green', width=0.003, linestyle='dashed')
+        #    plt.quiver(pos_A_ref[:,0]+self.hx_box, pos_A_ref[:,1]+self.hy_box+self.ly_box-mean_dify, fx_arr, fy_arr, color='green', width=0.003, linestyle='dashed')
+        #    plt.quiver(pos_A_ref[:,0]+self.hx_box, pos_A_ref[:,1]+self.hy_box-self.ly_box-mean_dify, fx_arr, fy_arr, color='green', width=0.003, linestyle='dashed')
+
+        # Define color bar min and max
+
+
+        # Set color bar range
+        coll.set_clim([min_n, max_n])
+
+        # Set tick levels
+        #tick_lev = np.arange(min_neigh, int(max_neigh)+1, 1) ticks=tick_lev, 
+
+        # Define colorbar
+        clb = plt.colorbar(coll, orientation="vertical", format=tick.FormatStrFormatter('%.0f'))
+        clb.ax.tick_params(labelsize=16)
+
+        # Label respective reference and neighbor particle types
+
+        clb.set_label('Interparticle Stress', labelpad=25, y=0.5, rotation=270, fontsize=20)
+        plt.title('All Reference Particles', fontsize=20)
+
+
+        # Label simulation time
+        if self.lx_box == self.ly_box:
+            plt.text(0.8, 0.04, s=r'$\tau$' + ' = ' + '{:.4f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+                fontsize=18, transform = ax.transAxes,
+                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+        elif self.lx_box > self.ly_box:
+            plt.text(0.85, 0.1, s=r'$\tau$' + ' = ' + '{:.4f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+                fontsize=18, transform = ax.transAxes,
+                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+
+        if self.lx_box > self.ly_box:
+            plt.xlim(-(dense_x_width)+self.hx_box, (dense_x_width)+self.hx_box)
+            plt.ylim(0.0, self.ly_box)
+        elif self.lx_box < self.ly_box:
+            plt.ylim(dense_y_mid-(dense_y_width), dense_y_mid+(dense_y_width))
+            plt.xlim(0.0, self.lx_box)
+        # Plot entire system
+        else:
+            plt.ylim(0, self.ly_box)
+            plt.xlim(0, self.lx_box)
+
+        
+
+        # Modify plot parameters
+        plt.tick_params(axis='both', which='both',
+                        bottom=False, top=False, left=False, right=False,
+                        labelbottom=False, labeltop=False, labelleft=False, labelright=False)
+        ax.axis('off')
+        plt.tight_layout()
+        #plt.show()
+        plt.savefig(self.outPath + 'force_lines_' + self.outFile + ".png", dpi=75, transparent=False)
+        plt.close()  
+
+        #plt.savefig(outPath + 'lat_map_' + out + pad + ".png", dpi=100)
+        #plt.close()
+    
+
     def plot_part_activity(self, pos, ang, sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None):
 
         typ0ind = np.where(self.typ == 0)[0]
