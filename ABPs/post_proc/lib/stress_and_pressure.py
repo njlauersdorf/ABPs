@@ -105,7 +105,7 @@ class stress_and_pressure:
 
         self.phase_ident = phase_identification.phase_identification(self.area_frac_dict, self.align_dict, self.part_dict, self.press_dict, self.lx_box, self.ly_box, self.partNum, self.NBins_x, self.NBins_y, self.peA, self.peB, self.parFrac, self.eps, self.typ)
 
-        self.particle_prop_functs = particles.particle_props(self.lx_box, self.ly_box, self.partNum, self.NBins_x, self.NBins_y, self.peA, self.peB, self.typ, self.pos, self.ang)
+        self.particle_prop_functs = particles.particle_props(self.lx_box, self.ly_box, self.partNum, self.NBins_x, self.NBins_y, self.peA, self.peB, self.eps, self.typ, self.pos, self.ang)
 
         self.theory_functs = theory.theory()
 
@@ -373,7 +373,12 @@ class stress_and_pressure:
     def radial_com_active_force_pressure(self, radial_fa_dict):
 
         #X locations across interface for integration
-        r = np.linspace(0, self.h_box, num=int((np.ceil(self.h_box)+1)/3))
+        if self.hx_box<self.hy_box:
+            r = np.linspace(0, self.hx_box, num=int((np.ceil(self.hx_box)+1)/3))
+        elif self.hy_box<self.hx_box:
+            r = np.linspace(0, self.hy_box, num=int((np.ceil(self.hy_box)+1)/3))
+        else:
+             r = np.linspace(0, self.hx_box, num=int((np.ceil(self.hx_box)+1)/3))
 
         #Pressure integrand components for each value of X
         act_press_r = []

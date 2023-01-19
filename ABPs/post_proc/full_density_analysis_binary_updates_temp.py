@@ -1076,9 +1076,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 stress_plot_dict, stress_stat_dict = stress_and_pressure_functs.interparticle_stress_nlist(phase_dict['part'])
 
             elif measurement_method == 'com_interface_pressure':
-                stress_and_pressure_functs = stress_and_pressure.stress_and_pressure(l_box, NBins, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
+                stress_and_pressure_functs = stress_and_pressure.stress_and_pressure(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
 
-                particle_prop_functs = particles.particle_props(l_box, partNum, NBins, peA, peB, typ, pos, ang)
+                particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, eps, typ, pos, ang)
 
                 radial_fa_dict = particle_prop_functs.radial_normal_fa()
 
@@ -1088,7 +1088,6 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                 act_press_dict = stress_and_pressure_functs.total_active_pressure(com_radial_dict)
 
-                data_output_functs = data_output.data_output(l_box, sizeBin, tst, clust_large, dt_step)
                 data_output_functs.write_to_txt(act_press_dict, dataPath + 'com_interface_pressure_' + outfile + '.txt')
             elif measurement_method == 'surface_interface_pressure':
                 stress_and_pressure_functs = stress_and_pressure.stress_and_pressure(l_box, NBins, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)

@@ -1201,9 +1201,9 @@ class binning:
         '''
 
         # Average interface number density of each particle type ('all', 'A', or 'B')
-        all_int_num_dens = part_count_dict['int']['all']/(bin_count_dict['bin']['all int'] * self.sizeBin_x * self.sizeBin_y)
-        A_int_num_dens = part_count_dict['int']['A']/(bin_count_dict['bin']['all int'] * self.sizeBin_x * self.sizeBin_y)
-        B_int_num_dens = part_count_dict['int']['B']/(bin_count_dict['bin']['all int'] * self.sizeBin_x * self.sizeBin_y)
+        all_int_num_dens = part_count_dict['int']['all']/(bin_count_dict['bin']['int'] * self.sizeBin_x * self.sizeBin_y)
+        A_int_num_dens = part_count_dict['int']['A']/(bin_count_dict['bin']['int'] * self.sizeBin_x * self.sizeBin_y)
+        B_int_num_dens = part_count_dict['int']['B']/(bin_count_dict['bin']['int'] * self.sizeBin_x * self.sizeBin_y)
 
         # Average bulk number density of each particle type ('all', 'A', or 'B')
         all_bulk_num_dens = part_count_dict['bulk']['all']/(bin_count_dict['bin']['bulk'] * self.sizeBin_x * self.sizeBin_y)
@@ -1216,9 +1216,9 @@ class binning:
         B_gas_num_dens = part_count_dict['gas']['B']/(bin_count_dict['bin']['gas'] * self.sizeBin_x * self.sizeBin_y)
 
         # Average dense number density of each particle type ('all', 'A', or 'B')
-        all_dense_num_dens = (part_count_dict['bulk']['all']+part_count_dict['int']['all'])/((bin_count_dict['bin']['bulk']+bin_count_dict['bin']['all int']) * self.sizeBin_x * self.sizeBin_y)
-        A_dense_num_dens = (part_count_dict['bulk']['A']+part_count_dict['int']['A'])/((bin_count_dict['bin']['bulk']+bin_count_dict['bin']['all int']) * self.sizeBin_x * self.sizeBin_y)
-        B_dense_num_dens = (part_count_dict['bulk']['B']+part_count_dict['int']['B'])/((bin_count_dict['bin']['bulk']+bin_count_dict['bin']['all int']) * self.sizeBin_x * self.sizeBin_y)
+        all_dense_num_dens = (part_count_dict['bulk']['all']+part_count_dict['int']['all'])/((bin_count_dict['bin']['bulk']+bin_count_dict['bin']['int']) * self.sizeBin_x * self.sizeBin_y)
+        A_dense_num_dens = (part_count_dict['bulk']['A']+part_count_dict['int']['A'])/((bin_count_dict['bin']['bulk']+bin_count_dict['bin']['int']) * self.sizeBin_x * self.sizeBin_y)
+        B_dense_num_dens = (part_count_dict['bulk']['B']+part_count_dict['int']['B'])/((bin_count_dict['bin']['bulk']+bin_count_dict['bin']['int']) * self.sizeBin_x * self.sizeBin_y)
 
         # Dictionary containing average number density of each phase for each particle type ('all', 'A', or 'B')
         num_dens_dict = {'bulk': {'all': all_bulk_num_dens, 'A': A_bulk_num_dens, 'B': B_bulk_num_dens}, 'int': {'all': all_int_num_dens, 'A': A_int_num_dens, 'B': B_int_num_dens}, 'gas': {'all': all_gas_num_dens, 'A': A_gas_num_dens, 'B': B_gas_num_dens}, 'dense': {'all': all_dense_num_dens, 'A': A_dense_num_dens, 'B': B_dense_num_dens}}
