@@ -245,7 +245,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
     start = int(0/time_step)#205                                             # first frame to process
                                 # get number of timesteps dumped
     
-    end = start + 50 #int(dumps/time_step)-1                                             # final frame to process
+    end = start#int(dumps/time_step)-1                                             # final frame to process
     snap = t[0]                                             # Take first snap for box
     first_tstep = snap.configuration.step                   # First time step
 
@@ -1323,8 +1323,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
 
                         plotting_functs.interpart_press_map2(press_plot_dict, pos, prev_pos, ang)     
-                    if j == 500:
-                        stop
+
                 prev_pos = pos.copy()
                 prev_ang = ang.copy()
     
