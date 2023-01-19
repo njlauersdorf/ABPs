@@ -1672,6 +1672,10 @@ class particle_props:
             vertical_shift = 0
             dify_long = 0
 
+            difx_prev = self.utility_functs.sep_dist_x(self.pos[typ1ind,0], pos_prev[typ1ind,0])
+            dify_prev = self.utility_functs.sep_dist_y(self.pos[typ1ind,1], pos_prev[typ1ind,1])
+            difr_prev = (difx_prev ** 2 + dify_prev ** 2 ) ** 0.5
+
         penetration_dict = {'wall_x': wall_x, 'displace': {'x': difx_prev, 'y': dify_prev, 'r': difr_prev}, 'total_displace':{'x': difx, 'y': dify, 'r': difr, 'MSD': MSD, 'depth': penetration_depth}, 'action': action}
         start_dict = {'x': start_x, 'y': start_y}
 

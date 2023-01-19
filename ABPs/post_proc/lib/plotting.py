@@ -2029,6 +2029,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
             plt.quiver(pos[typ1ind,0]+self.hx_box, pos[typ1ind,1]+self.hy_box-mean_dify, px, py, color='black', width=0.003)
             plt.quiver(pos[typ1ind,0]+self.hx_box, pos[typ1ind,1]+self.hy_box+self.ly_box-mean_dify, px, py, color='black', width=0.003)
             plt.quiver(pos[typ1ind,0]+self.hx_box, pos[typ1ind,1]+self.hy_box-self.ly_box-mean_dify, px, py, color='black', width=0.003)
+        
         elif pair == 'all-A':
 
             # Find min/max number of neighbors
@@ -3527,7 +3528,10 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         bulk_lat_mean = np.mean(interpart_press_part['all-all']['press'])
 
         min_n = 0.0#np.min(interpart_press_part['all-A']['press'])
-        max_n = self.peB*(2/3)#np.max(interpart_press_part['all-A']['press'])
+        if self.peB > self.peA:
+            max_n = self.peB*(2/3)#np.max(interpart_press_part['all-A']['press'])
+        else:
+            max_n = self.peA*(2/3)
         ells = [Ellipse(xy=np.array([pos_x_arr[i],pos_y_arr[i]]),
                     width=sz, height=sz)
             for i in range(0,len(pos_x_arr))]
@@ -3540,9 +3544,9 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         py = -np.cos(ang[typ1ind])
 
         #plt.scatter(neigh_plot_dict['all-all']['x'][typ1ind]+self.hx_box, neigh_plot_dict['all-all']['y'][typ1ind]+self.hy_box, c='black', s=sz)
-        plt.quiver(pos[typ1ind,0]+self.hx_box, pos[typ1ind,1]+self.hy_box-mean_dify, px, py, color='black', width=0.003)
-        plt.quiver(pos[typ1ind,0]+self.hx_box, pos[typ1ind,1]+self.hy_box+self.ly_box-mean_dify, px, py, color='black', width=0.003)
-        plt.quiver(pos[typ1ind,0]+self.hx_box, pos[typ1ind,1]+self.hy_box-self.ly_box-mean_dify, px, py, color='black', width=0.003)
+        plt.quiver(pos[typ1ind,0]+self.hx_box, pos[typ1ind,1]+self.hy_box-mean_dify, px, py, color='black', width=0.002)
+        plt.quiver(pos[typ1ind,0]+self.hx_box, pos[typ1ind,1]+self.hy_box+self.ly_box-mean_dify, px, py, color='black', width=0.002)
+        plt.quiver(pos[typ1ind,0]+self.hx_box, pos[typ1ind,1]+self.hy_box-self.ly_box-mean_dify, px, py, color='black', width=0.002)
 
         #if len(pos_A_ref)>0:
         #    plt.quiver(pos_A_ref[:,0]+self.hx_box, pos_A_ref[:,1]+self.hy_box-mean_dify, fx_arr, fy_arr, color='green', width=0.003, linestyle='dashed')

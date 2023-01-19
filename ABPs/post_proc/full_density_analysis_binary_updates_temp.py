@@ -245,7 +245,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
     start = int(0/time_step)#205                                             # first frame to process
                                 # get number of timesteps dumped
     
-    end = int(dumps/time_step)-1                                             # final frame to process
+    end = start + 50 #int(dumps/time_step)-1                                             # final frame to process
     snap = t[0]                                             # Take first snap for box
     first_tstep = snap.configuration.step                   # First time step
 
@@ -285,7 +285,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
         print('j')
         print(j)
-
+        
         snap = t[j]                                 #Take current frame
 
         #Arrays of particle data
@@ -322,8 +322,11 @@ with hoomd.open(name=inFile, mode='rb') as t:
         
 
 
-        
+        particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, eps, typ, pos, ang)
+
         if lx_box != ly_box:
+
+            
             clust_large = 0
 
             start_time = time.time()
@@ -331,7 +334,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
             partPhase=np.zeros(partNum)
             edgePhase=np.zeros(partNum)
             bulkPhase=np.zeros(partNum)
-
+            
             com_dict = plotting_utility_functs.com_view(pos, clp_all)
 
             #Bin system to calculate orientation and alignment that will be used in vector plots
@@ -350,7 +353,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
             orient_dict = binning_functs.bin_orient(part_dict, pos, ang, com_dict['com'])
             area_frac_dict = binning_functs.bin_area_frac(part_dict)
             activ_dict = binning_functs.bin_activity(part_dict)
-
+            
         else:
             start_time = time.time()
             partTyp=np.zeros(partNum)
@@ -1182,10 +1185,10 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                     plotting_functs = plotting.plotting(orient_dict, pos_dict, lx_box, ly_box, NBins_x, NBins_y, sizeBin_x, sizeBin_y, peA, peB, parFrac, eps, typ, tst, partNum, picPath, outFile)
 
-                    if j>(start*time_step):
-                        plotting_functs.plot_neighbors2(neigh_plot_dict, ang, pos, prev_pos, pair='all-all')
-                    else:
-                        plotting_functs.plot_neighbors(neigh_plot_dict, ang, pos, pair='all-all')
+                    #if j>(start*time_step):
+                    #    plotting_functs.plot_neighbors2(neigh_plot_dict, ang, pos, prev_pos, pair='all-all')
+                    #else:
+                    plotting_functs.plot_neighbors(neigh_plot_dict, ang, pos, pair='all-all')
 
             elif measurement_method == 'penetration':
                 #DONE
@@ -1213,8 +1216,16 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     part_vel_dict = particle_prop_functs.single_velocity(prev_pos, prev_ang, ori)
                     stop
         #if j == start:
+        particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, eps, typ, pos, ang)
+
+        utility_functs = utility.utility(lx_box, ly_box)
+
         prev_pos = pos.copy()
         prev_ang = ang.copy()
+
+        particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, eps, typ, pos, ang)
+
+        utility_functs = utility.utility(lx_box, ly_box)
 
     
     if measurement_method == 'adsorption_final':
