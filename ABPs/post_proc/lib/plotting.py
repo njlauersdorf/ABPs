@@ -1901,7 +1901,202 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         plt.savefig(self.outPath + 'all_all_neigh_' + self.outFile + ".png", dpi=75, transparent=False)
         plt.close()        
         
-    
+    def plot_clustering(self, neigh_plot_dict, ang, pos, sep_surface_dict=None, int_comp_dict=None, pair='all-all'):
+        """
+        This function plots the number of neighbors of all dense phase particles
+        at each location in space.
+
+        Inputs:
+        neigh_plot_dict: dictionary (output from various nearest_neighbors() in
+        measurement.py) containing information on the nearest neighbors of each
+        respective type ('all', 'A', or 'B') within the potential
+        cut-off radius for reference particles of each respective
+        type ('all', 'A', or 'B') for the dense phase, labeled as specific activity
+        pairings, i.e. 'all-A' means all neighbors of A reference particles.
+
+        sep_surface_dict: dictionary (output from surface_curve_interp() in
+        interface.py) that contains the interpolated curve representing the
+        inner and outer surfaces of each interface.
+
+        int_comp_dict: dictionary (output from int_sort2() in
+        phase_identification.py) that contains information on each
+        isolated/individual interface.
+
+        pair (optional): string specifying whether the number of nearest neighbors
+        of reference particles of type all, A, or B should be plotted with the nearest
+        neighbors to be counted of type all, A, or B (i.e. pair='all-A' is all
+        neighbors of A reference particles are counted and averaged over the
+        number of A reference particles).
+
+        Outputs:
+        .png file with the position of each particle plotted and color coded
+        by the lattice spacing with color bar.
+        """
+        typ0ind = np.where(self.typ == 0)[0]
+        typ1ind = np.where(self.typ == 1)[0]
+
+        # If box is rectangular with long dimension of x-axis
+        if self.lx_box > self.ly_box:
+
+            # Estimated area of dense phase
+            area_dense = (1.0 * self.partNum * (np.pi/4) / self.phiCP)
+
+            # Mid point of dense phase across longest box dimension (x)
+            dense_x_mid = self.hx_box
+
+            # estimated shortest dimension length of dense phase (y)
+            dense_x_width = np.amax(neigh_plot_dict['all-all']['x'][typ0ind]) * 1.5 #(area_dense / self.ly_box)
+            #dense_x_width = 42.23 * 1.5
+            # Set maximum dimension length (x) of simulation box to be 12 inches (plus 1 inch color bar)
+            scaling = 13.0
+
+            # X and Y-dimension lengths (in inches)
+            x_dim = int(scaling)
+            y_dim = int(scaling/ (2*dense_x_width / self.ly_box))
+            #y_dim = y_dim# * 3
+        # If box is rectangular with long dimension of y-axis
+        elif self.lx_box < self.ly_box:
+
+            # Estimated area of dense phase
+            area_dense = (0.8 * self.partNum * (np.pi/4) / self.phiCP)
+
+            # Mid point of dense phase across longest box dimension (y)
+            mid_point = np.mean(neigh_plot_dict['all-all']['y']+self.hy_box)
+
+            # estimated shorted dimension length of dense phase (x)
+            dense_x_width = (area_dense / self.lx_box)
+
+            # Set maximum dimension length (y) of simulation box to be 13 inches
+            scaling = 13.0
+
+            # X and Y-dimension lengths (in inches)
+            x_dim = int((scaling/(dense_x_width / self.lx_box)) + 1.0)
+            y_dim = int(scaling)
+
+        # If box is square
+        else:
+
+            # Minimum dimension length (in inches)
+            scaling =7.0
+
+            # X and Y-dimension lengths (in inches)
+            x_dim = int(scaling + 1.0)
+            y_dim = int(scaling)
+
+        # Generate figure of dimensions proportional to simulation box size (with added x-length for color bar)
+        fig = plt.figure(figsize=(x_dim,y_dim))
+        ax = fig.add_subplot(111)
+
+        # Set plotted particle size
+        sz = 0.75
+        if pair == 'all':
+
+            # Find min/max number of neighbors
+            min_neigh = 0
+            max_neigh = np.amax(neigh_plot_dict['all']['clust'])
+
+            # Generate list of ellipses for all particles to plot containing position (x,y) and point size that automatically scales with figure size
+            ells = [Ellipse(xy=np.array([neigh_plot_dict['all']['pos']['x'][i]+self.hx_box,neigh_plot_dict['all']['pos']['y'][i]+self.hy_box]),
+                    width=sz, height=sz)
+            for i in range(0,len(neigh_plot_dict['all']['pos']['x']))]
+
+            # Plot position colored by number of A neighbors
+            neighborGroup = mc.PatchCollection(ells, cmap=plt.cm.get_cmap('tab10', 6))#facecolors=slowCol)
+            coll = ax.add_collection(neighborGroup)
+            coll.set_array(np.ravel(neigh_plot_dict['all']['clust']))
+
+        elif pair == 'A':
+
+            # Find min/max number of neighbors
+            min_neigh = 0
+            max_neigh = np.amax(neigh_plot_dict['A']['clust'])
+
+            # Generate list of ellipses for all particles to plot containing position (x,y) and point size that automatically scales with figure size
+            ells = [Ellipse(xy=np.array([neigh_plot_dict['A']['pos']['x'][i]+self.hx_box,neigh_plot_dict['A']['pos']['y'][i]+self.hy_box]),
+                    width=sz, height=sz)
+            for i in range(0,len(neigh_plot_dict['A']['pos']['x']))]
+
+            # Plot position colored by number of A neighbors
+            neighborGroup = mc.PatchCollection(ells, cmap=plt.cm.get_cmap('tab10', 6))#facecolors=slowCol)
+            coll = ax.add_collection(neighborGroup)
+            coll.set_array(np.ravel(neigh_plot_dict['A']['clust']))
+
+        elif pair == 'B':
+
+            # Find min/max number of neighbors
+            min_neigh = 0
+            max_neigh = np.amax(neigh_plot_dict['B']['clust'])
+
+            # Generate list of ellipses for all particles to plot containing position (x,y) and point size that automatically scales with figure size
+            ells = [Ellipse(xy=np.array([neigh_plot_dict['B']['pos']['x'][i]+self.hx_box,neigh_plot_dict['B']['pos']['y'][i]+self.hy_box]),
+                    width=sz, height=sz)
+            for i in range(0,len(neigh_plot_dict['B']['pos']['x']))]
+
+            # Plot position colored by number of B neighbors
+            neighborGroup = mc.PatchCollection(ells, cmap=plt.cm.get_cmap('tab10', 6))#facecolors=slowCol)
+            coll = ax.add_collection(neighborGroup)
+            coll.set_array(np.ravel(neigh_plot_dict['B']['clust']))
+
+        # Define color bar min and max
+        minClb = 0.0
+        maxClb = 1.0
+        # Set color bar range
+        coll.set_clim([minClb, maxClb])
+
+        # Set tick levels
+        tick_lev = np.linspace(minClb, maxClb, 6)
+
+        # Define boundaries of colors (such that ticks at midpoints)
+        level_boundaries = np.linspace(minClb, maxClb, 6)
+        print(tick_lev)
+        print(level_boundaries)
+        
+        # Define colorbar
+        clb = plt.colorbar(coll, ticks=tick_lev, orientation="vertical", format=tick.FormatStrFormatter('%.2f'), boundaries=level_boundaries)
+        clb.ax.tick_params(labelsize=16)
+
+        # Label respective reference and neighbor particle types
+
+        clb.set_label('Clustering Coeff', labelpad=25, y=0.5, rotation=270, fontsize=20)
+        plt.title('All Reference Particles', fontsize=20)
+
+        # Label simulation time
+        if self.lx_box == self.ly_box:
+            plt.text(0.8, 0.04, s=r'$\tau$' + ' = ' + '{:.4f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+                fontsize=18, transform = ax.transAxes,
+                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+        elif self.lx_box > self.ly_box:
+            plt.text(0.85, 0.1, s=r'$\tau$' + ' = ' + '{:.4f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+                fontsize=18, transform = ax.transAxes,
+                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+        
+
+
+
+        if self.lx_box > self.ly_box:
+            #plt.xlim(-(0.5*dense_x_width)+self.hx_box, (0.5*dense_x_width)+self.hx_box)
+            plt.xlim(-(dense_x_width)+self.hx_box, (dense_x_width)+self.hx_box)
+            plt.ylim(0.0, self.ly_box)
+        elif self.lx_box < self.ly_box:
+            plt.ylim(dense_y_mid-(dense_y_width), dense_y_mid+(dense_y_width))
+            plt.xlim(0.0, self.lx_box)
+        # Plot entire system
+        else:
+            plt.ylim(0, self.ly_box)
+            plt.xlim(0, self.lx_box)
+
+        
+
+        # Modify plot parameters
+        plt.tick_params(axis='both', which='both',
+                        bottom=False, top=False, left=False, right=False,
+                        labelbottom=False, labeltop=False, labelleft=False, labelright=False)
+        ax.axis('off')
+        plt.tight_layout()
+        #plt.show()
+        plt.savefig(self.outPath + pair + '_clustering_' + self.outFile + ".png", dpi=150, transparent=False)
+        plt.close()  
+        
     def plot_neighbors2(self, neigh_plot_dict, ang, pos, prev_pos, sep_surface_dict=None, int_comp_dict=None, pair='all-all'):
         """
         This function plots the number of neighbors of all dense phase particles

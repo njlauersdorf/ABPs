@@ -1009,11 +1009,23 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                 lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
 
-                domain_size_dict = lattice_structure_functs.domain_size()
+                domain_stat_dict = lattice_structure_functs.domain_size()
 
-                #data_output_functs = data_output.data_output(l_box, sizeBin, tst, clust_large, dt_step)
+                data_output_functs.write_to_txt(domain_stat_dict, dataPath + 'domain_' + outfile + '.txt')
+
+            elif measurement_method == 'clustering':
+                #DONE
+                lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
+                
+                neigh_plot_dict = lattice_structure_functs.clustering_coefficient()
+                
+                plotting_functs.plot_clustering(neigh_plot_dict, all_surface_curves, int_comp_dict, ang, pos, pair='all')
+                plotting_functs.plot_clustering(neigh_plot_dict, all_surface_curves, int_comp_dict, ang, pos, pair='A')
+                plotting_functs.plot_clustering(neigh_plot_dict, all_surface_curves, int_comp_dict, ang, pos, pair='B')
+                
+                stop
                 #data_output_functs.write_to_txt(neigh_stat_dict, dataPath + 'nearest_neighbors_' + outfile + '.txt')
-
+                #data_output_functs.write_to_txt(ori_stat_dict, dataPath + 'nearest_ori_' + outfile + '.txt')
 
             elif measurement_method == 'neighbors':
                 #DONE
