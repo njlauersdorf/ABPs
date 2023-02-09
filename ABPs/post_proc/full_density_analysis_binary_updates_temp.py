@@ -943,17 +943,21 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 stress_and_pressure_functs = stress_and_pressure.stress_and_pressure(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
                 lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
 
-                stress_stat_dict, press_stat_dict, press_plot_dict = lattice_structure_functs.interparticle_pressure_nlist()
+                stress_stat_dict, press_stat_dict, press_plot_dict, stress_plot_dict = lattice_structure_functs.interparticle_pressure_nlist()
 
                 data_output_functs.write_to_txt(stress_stat_dict, dataPath + 'interparticle_stress_' + outfile + '.txt')
                 data_output_functs.write_to_txt(press_stat_dict, dataPath + 'interparticle_press_' + outfile + '.txt')
+                 
+                
+                radial_int_press_dict = particle_prop_functs.radial_int_press(stress_plot_dict)
 
+                com_radial_int_press_dict = stress_and_pressure_functs.radial_com_interparticle_pressure(radial_int_press_dict)
+
+                data_output_functs.write_to_txt(com_radial_int_press_dict, dataPath + 'com_interparticle_pressure_radial_' + outfile + '.txt')
                 if plot == 'y':
-                    vp_bin_arr = stress_and_pressure_functs.virial_pressure_binned(stress_plot_dict)
-                    vp_part_arr = stress_and_pressure_functs.virial_pressure_part(stress_plot_dict)
 
-                    plotting_functs.plot_interpart_press_binned(vp_bin_arr, all_surface_curves, int_comp_dict)
-                    plotting_functs.interpart_press_map(pos, vp_part_arr, all_surface_curves, int_comp_dict)                
+                    #plotting_functs.plot_interpart_press_binned(vp_bin_arr, all_surface_curves, int_comp_dict)
+                    plotting_functs.interpart_press_map_final(stress_plot_dict, all_surface_curves, int_comp_dict)                               
                 
             elif measurement_method == 'lattice_spacing':
                 #DONE
@@ -1040,7 +1044,11 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 data_output_functs.write_to_txt(neigh_stat_dict, dataPath + 'nearest_neighbors_' + outfile + '.txt')
                 data_output_functs.write_to_txt(ori_stat_dict, dataPath + 'nearest_ori_' + outfile + '.txt')
                 if plot == 'y':
-                    plotting_functs.plot_neighbors(neigh_plot_dict, all_surface_curves, int_comp_dict, ang, pos, pair='all-all')
+                    #plotting_functs.plot_neighbors(neigh_plot_dict, all_surface_curves, int_comp_dict, ang, pos, pair='all-all')
+                    plotting_functs.plot_neighbors_ori(neigh_plot_dict, all_surface_curves, int_comp_dict, ang, pos, pair='all-all')
+                    plotting_functs.plot_neighbors_ori(neigh_plot_dict, all_surface_curves, int_comp_dict, ang, pos, pair='all-A')
+                    plotting_functs.plot_neighbors_ori(neigh_plot_dict, all_surface_curves, int_comp_dict, ang, pos, pair='all-B')
+                    stop
                     #plotting_functs.plot_particle_orientations(neigh_plot_dict, all_surface_curves, int_comp_dict, pair='all-all')
                     #stop
                     #plotting_functs.local_orientational_order_map(neigh_plot_dict, all_surface_curves, int_comp_dict, type='all-all')
@@ -1096,25 +1104,24 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                 com_radial_dict = stress_and_pressure_functs.radial_com_active_force_pressure(radial_fa_dict)
 
-                data_output_functs.write_to_txt(com_radial_dict, dataPath + 'com_radial_' + outfile + '.txt')
+                data_output_functs.write_to_txt(com_radial_dict, dataPath + 'com_interface_pressure_radial_' + outfile + '.txt')
 
                 act_press_dict = stress_and_pressure_functs.total_active_pressure(com_radial_dict)
 
                 data_output_functs.write_to_txt(act_press_dict, dataPath + 'com_interface_pressure_' + outfile + '.txt')
             elif measurement_method == 'surface_interface_pressure':
-                stress_and_pressure_functs = stress_and_pressure.stress_and_pressure(l_box, NBins, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
+                stress_and_pressure_functs = stress_and_pressure.stress_and_pressure(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
 
-                particle_prop_functs = particles.particle_props(l_box, partNum, NBins, peA, peB, typ, pos, ang)
+                particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, eps, typ, pos, ang)
 
                 radial_fa_dict = particle_prop_functs.radial_surface_normal_fa(method2_align_dict)
 
                 surface_radial_dict = stress_and_pressure_functs.radial_com_active_force_pressure(radial_fa_dict)
 
-                data_output_functs.write_to_txt(surface_radial_dict, dataPath + 'surface_radial_' + outfile + '.txt')
+                data_output_functs.write_to_txt(surface_radial_dict, dataPath + 'surface_interface_pressure_radial_' + outfile + '.txt')
 
                 act_press_dict = stress_and_pressure_functs.total_active_pressure(surface_radial_dict)
 
-                data_output_functs = data_output.data_output(l_box, sizeBin, tst, clust_large, dt_step)
                 data_output_functs.write_to_txt(act_press_dict, dataPath + 'surface_interface_pressure_' + outfile + '.txt')
 
             elif measurement_method == 'hexatic_order':

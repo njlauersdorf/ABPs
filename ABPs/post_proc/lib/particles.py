@@ -258,6 +258,87 @@ class particle_props:
             part_difr[h] = difr
 
         return part_difr
+    def radial_int_press(self, stress_plot_dict):
+        '''
+        Purpose: Takes the orientation, position, and active force of each particle
+        to calculate the active force magnitude toward, alignment toward, and separation
+        distance from largest cluster's CoM
+
+        Output:
+        radial_fa_dict: dictionary containing each particle's alignment and aligned active force toward
+        largest cluster's CoM as a function of separation distance from largest custer's CoM
+        '''
+
+        stress_xx = np.append(stress_plot_dict['dense']['all-all']['XX'], stress_plot_dict['gas']['all-all']['XX'])
+        stress_yy = np.append(stress_plot_dict['dense']['all-all']['YY'], stress_plot_dict['gas']['all-all']['YY'])
+        stress_xy = np.append(stress_plot_dict['dense']['all-all']['XY'], stress_plot_dict['gas']['all-all']['XY'])
+        stress_yx = np.append(stress_plot_dict['dense']['all-all']['YX'], stress_plot_dict['gas']['all-all']['YX'])
+
+        pos_x = np.append(stress_plot_dict['dense']['pos']['all']['x'], stress_plot_dict['gas']['pos']['all']['x'])
+        pos_y = np.append(stress_plot_dict['dense']['pos']['all']['y'], stress_plot_dict['gas']['pos']['all']['y'])
+        
+        typ = np.append(stress_plot_dict['dense']['typ'], stress_plot_dict['gas']['typ'])
+
+        # Instantiate empty array (partNum) containing the average active force magnitude
+        # towards the largest cluster's CoM
+        stress_xx_arr = np.array([])
+        stress_yy_arr = np.array([])
+        stress_xy_arr = np.array([])
+        stress_yx_arr = np.array([])
+
+        stress_xx_A_arr = np.array([])
+        stress_yy_A_arr = np.array([])
+        stress_xy_A_arr = np.array([])
+        stress_yx_A_arr = np.array([])
+
+        stress_xx_B_arr = np.array([])
+        stress_yy_B_arr = np.array([])
+        stress_xy_B_arr = np.array([])
+        stress_yx_B_arr = np.array([])
+
+        # Instantiate empty array (partNum) containing the distance from largest cluster's CoM
+        r_dist_norm = np.array([])
+        rA_dist_norm = np.array([])
+        rB_dist_norm = np.array([])
+
+        # Loop over all particles
+        for h in range(0, len(pos_x)):
+
+            # Separation distance from largest custer's CoM (middle of box)
+            difx = pos_x[h] - 0
+            dify = pos_y[h] - 0
+
+            difr= ( (difx )**2 + (dify)**2)**0.5
+
+            # Save active force magnitude toward largest cluster's CoM
+            if typ[h] == 0:
+                stress_xx_A_arr =np.append(stress_xx_A_arr, stress_xx[h])
+                stress_yy_A_arr =np.append(stress_yy_A_arr, stress_yy[h])
+                stress_xy_A_arr =np.append(stress_xy_A_arr, stress_xy[h])
+                stress_yx_A_arr =np.append(stress_yx_A_arr, stress_yx[h])
+                rA_dist_norm = np.append(rA_dist_norm, difr)
+            else:
+                stress_xx_B_arr =np.append(stress_xx_B_arr, stress_xx[h])
+                stress_yy_B_arr =np.append(stress_yy_B_arr, stress_yy[h])
+                stress_xy_B_arr =np.append(stress_xy_B_arr, stress_xy[h])
+                stress_yx_B_arr =np.append(stress_yx_B_arr, stress_yx[h])
+                rB_dist_norm = np.append(rB_dist_norm, difr)
+            
+            stress_xx_arr =np.append(stress_xx_arr, stress_xx[h])
+            stress_yy_arr =np.append(stress_yy_arr, stress_yy[h])
+            stress_xy_arr =np.append(stress_xy_arr, stress_xy[h])
+            stress_yx_arr =np.append(stress_yx_arr, stress_yx[h])
+
+            
+            # Save separation distance from largest cluster's CoM
+            r_dist_norm = np.append(r_dist_norm, difr)
+
+        # Dictionary containing each particle's alignment and aligned active force toward
+        # largest cluster's CoM as a function of separation distance from largest custer's CoM
+
+        radial_stress_dict = {'all': {'XX': stress_xx_arr, 'YY': stress_yy_arr, 'XY': stress_xy_arr, 'YX': stress_yx_arr, 'r': r_dist_norm}, 'A': {'XX': stress_xx_A_arr, 'YY': stress_yy_A_arr, 'XY': stress_xy_A_arr, 'YX': stress_yx_A_arr, 'r': rA_dist_norm}, 'B': {'XX': stress_xx_B_arr, 'YY': stress_yy_B_arr, 'XY': stress_xy_B_arr, 'YX': stress_yx_B_arr, 'r': rB_dist_norm}, 'typ': typ}
+
+        return radial_stress_dict
 
     def radial_normal_fa(self):
         '''
@@ -273,13 +354,19 @@ class particle_props:
         # Instantiate empty array (partNum) containing the average active force alignment
         # towards the largest cluster's CoM
         align_norm = np.array([])
+        alignA_norm = np.array([])
+        alignB_norm = np.array([])
 
         # Instantiate empty array (partNum) containing the average active force magnitude
         # towards the largest cluster's CoM
         fa_norm = np.array([])
+        faA_norm = np.array([])
+        faB_norm = np.array([])
 
         # Instantiate empty array (partNum) containing the distance from largest cluster's CoM
         r_dist_norm = np.array([])
+        rA_dist_norm = np.array([])
+        rB_dist_norm = np.array([])
 
         # Loop over all particles
         for h in range(0, len(self.pos)):
@@ -307,15 +394,21 @@ class particle_props:
             # Save active force magnitude toward largest cluster's CoM
             if self.typ[h] == 0:
                 fa_norm=np.append(fa_norm, r_dot_p*self.peA)
+                faA_norm=np.append(faA_norm, r_dot_p*self.peA)
+                alignA_norm=np.append(alignA_norm, r_dot_p)
+                rA_dist_norm = np.append(rA_dist_norm, difr)
             else:
                 fa_norm=np.append(fa_norm, r_dot_p*self.peB)
+                faB_norm=np.append(faB_norm, r_dot_p*self.peB)
+                alignB_norm=np.append(alignB_norm, r_dot_p)
+                rB_dist_norm = np.append(rB_dist_norm, difr)
 
             # Save separation distance from largest cluster's CoM
             r_dist_norm = np.append(r_dist_norm, difr)
 
         # Dictionary containing each particle's alignment and aligned active force toward
         # largest cluster's CoM as a function of separation distance from largest custer's CoM
-        radial_fa_dict = {'r': r_dist_norm, 'fa': fa_norm, 'align': align_norm}
+        radial_fa_dict = {'all': {'r': r_dist_norm, 'fa': fa_norm, 'align': align_norm}, 'A': {'r': rA_dist_norm, 'fa': faA_norm, 'align': alignA_norm}, 'B': {'r': rB_dist_norm, 'fa': faB_norm, 'align': alignB_norm}}
 
         return radial_fa_dict
 
@@ -342,9 +435,17 @@ class particle_props:
         # Instantiate empty array (partNum) containing the average active force magnitude
         # toward the nearest interface surface normal
         fa_norm = np.array([])
+        faA_norm = np.array([])
+        faB_norm = np.array([])
 
         # Instantiate empty array (partNum) containing the distance from the nearest interface surface
         r_dist_norm = np.array([])
+        rA_dist_norm = np.array([])
+        rB_dist_norm = np.array([])
+
+        align_norm = np.array([])
+        alignA_norm = np.array([])
+        alignB_norm = np.array([])
 
         # Loop over all particles
         for h in range(0, len(self.pos)):
@@ -358,16 +459,23 @@ class particle_props:
             # Save active force magnitude toward the nearest interface surface normal
             if self.typ[h] == 0:
                 fa_norm=np.append(fa_norm, part_align[h]*self.peA)
+                faA_norm=np.append(faA_norm, part_align[h]*self.peA)
+                rA_dist_norm = np.append(rA_dist_norm, difr)
+                alignA_norm=np.append(alignA_norm, part_align[h])
             else:
                 fa_norm=np.append(fa_norm, part_align[h]*self.peB)
+                faB_norm=np.append(faB_norm, part_align[h]*self.peB)
+                alignB_norm=np.append(alignB_norm, part_align[h])
+                rB_dist_norm = np.append(rB_dist_norm, difr)
 
             # Save separation distance from the nearest interface surface
             r_dist_norm = np.append(r_dist_norm, difr)
+            align_norm=np.append(align_norm, part_align[h])
 
         # Dictionary containing each particle's alignment and aligned active force toward
         # the nearest interface surface normal as a function of separation distance from
         # largest custer's CoM
-        radial_fa_dict = {'r': r_dist_norm, 'fa': fa_norm, 'align': part_align}
+        radial_fa_dict = {'all': {'r': r_dist_norm, 'fa': fa_norm, 'align': align_norm}, 'A': {'r': rA_dist_norm, 'fa': faA_norm, 'align': alignA_norm}, 'B': {'r': rB_dist_norm, 'fa': faB_norm, 'align': alignB_norm}}
 
         return radial_fa_dict
 
