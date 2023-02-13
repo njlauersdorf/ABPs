@@ -1030,6 +1030,14 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 stop
                 #data_output_functs.write_to_txt(neigh_stat_dict, dataPath + 'nearest_neighbors_' + outfile + '.txt')
                 #data_output_functs.write_to_txt(ori_stat_dict, dataPath + 'nearest_ori_' + outfile + '.txt')
+            elif measurement_method == 'local_density':
+                #DONE
+                lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
+                
+                if lx_box == ly_box:
+                    local_dens_stat_dict = lattice_structure_functs.local_density()
+
+                data_output_functs.write_to_txt(local_dens_stat_dict, dataPath + 'local_density_' + outfile + '.txt')
 
             elif measurement_method == 'neighbors':
                 #DONE
