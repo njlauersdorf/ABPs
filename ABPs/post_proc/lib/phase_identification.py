@@ -27,7 +27,7 @@ import matplotlib.patches as patches
 import matplotlib.ticker as tick
 
 import statistics
-from statistics import mode
+from statistics import multimode
 
 #from symfit import parameters, variables, sin, cos, Fit
 
@@ -163,9 +163,6 @@ class phase_identification:
 
         phi_gas_theory_max= self.phi_g_theory*4.0
 
-        print(self.phi_theory)
-        print(self.phi_g_theory)
-        
         #Gradient of pressure
         press_grad = np.gradient(self.press)
         press_grad_mag = press_grad[0]#np.sqrt(press_grad[0]**2 + press_grad[1]**2)
@@ -909,12 +906,12 @@ class phase_identification:
                                         phaseBin[ix][iy]=0
 
                                         # Label bin as most common bulk ID of neighboring bins
-                                        bulk_id[ix][iy]=mode(bulk_id_list)
+                                        bulk_id[ix][iy]=multimode(bulk_id_list)[0]
 
                                         # Loop over all particles in neighboring bin and label as most common neighboring
                                         # bins' bulk ID
                                         for h in range(0, len(self.binParts[ix][iy])):
-                                            phaseBulk[self.binParts[ix][iy][h]]=mode(bulk_id_list)
+                                            phaseBulk[self.binParts[ix][iy][h]]=multimode(bulk_id_list)[0]
 
                                         # Loop over all particles in neighboring bin and remove interface ID (0)
                                         for h in range(0, len(self.binParts[ix][iy])):
@@ -1062,7 +1059,7 @@ class phase_identification:
                     # If more bulk neighbors than gas, make reference bin bulk with most common bulk ID of neighbors
                     if bulk_num>=gas_num:
                         phaseBin[ix][iy]=0
-                        bulk_id[ix][iy]=mode(bulk_id_list)
+                        bulk_id[ix][iy]=multimode(bulk_id_list)[0]
 
                     # Otherwise, keep it gas
                     else:
@@ -1269,7 +1266,7 @@ class phase_identification:
                                 if len(self.binParts[ix][iy])>0:
                                     for h in range(0, len(self.binParts[ix][iy])):
                                         phasePart[self.binParts[ix][iy][h]]=0
-                                        phaseBulk[self.binParts[ix][iy][h]]=mode(bulk_id_list)
+                                        phaseBulk[self.binParts[ix][iy][h]]=multimode(bulk_id_list)[0]
 
             #If more than 100 particles belong to interface ID of 'm', then it is most likely significant and we should account for it
             else:

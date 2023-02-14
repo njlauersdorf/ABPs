@@ -243,6 +243,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
     dumps = int(t.__len__())
     start = int(0/time_step)#205                                             # first frame to process
+    
                                 # get number of timesteps dumped
     
     end = int(dumps/time_step)-1                                             # final frame to process
@@ -303,6 +304,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
         tst = snap.configuration.step               # timestep
         tst -= first_tstep                          # normalize by first timestep
         tst *= dtau                                 # convert to Brownian time
+
         time_arr[j]=tst
 
         #Compute cluster parameters using system_all neighbor list
@@ -738,12 +740,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
 
             for m in range(0, len(sep_surface_dict)):
-                print('test')
-                print(m)
                 averaged_data_arr = {}
 
                 key = 'surface id ' + str(int(int_comp_dict['ids'][m]))
-                print(key)
                 all_surface_curves[key] = {}
                 all_surface_measurements[key] = {}
 
@@ -804,8 +803,6 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     averaged_data_arr['width'] = 0
                 if measurement_method == 'interface_props':
                     data_output_functs.write_to_txt(averaged_data_arr, dataPath + 'BubComp_' + outfile + '.txt')
-            print('test_five')
-            print(steady_state_once)
             if steady_state_once == 'False':
                 in_clust_arr = np.zeros(partNum)
                 clust_id_time = np.where(ids==lcID)[0]
@@ -820,13 +817,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 in_clust_arr = np.vstack((in_clust_arr, in_clust_temp))
                 partPhase_time_arr = np.append(partPhase_time_arr, tst)
                 partPhase_time = np.vstack((partPhase_time, partPhase))
-            print(np.shape(partPhase_time))
-            print('test1')
+
             method1_align_dict, method2_align_dict = interface_functs.surface_alignment(all_surface_measurements, all_surface_curves, sep_surface_dict, int_dict, int_comp_dict)
-            print('test2')
             method1_align_dict, method2_align_dict = interface_functs.bulk_alignment(method1_align_dict, method2_align_dict, all_surface_measurements, all_surface_curves, sep_surface_dict, bulk_dict, bulk_comp_dict, int_comp_dict)
-            print('test3')
-            print(surface_dict)
 
             method1_align_dict, method2_align_dict = interface_functs.gas_alignment(method1_align_dict, method2_align_dict, all_surface_measurements, all_surface_curves, sep_surface_dict, int_comp_dict)
 

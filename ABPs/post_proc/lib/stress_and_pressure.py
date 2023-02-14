@@ -452,10 +452,7 @@ class stress_and_pressure:
                         num_dens_r[i-1] = num_dens_r[i-1]/area
 
                     partsA_defined = np.logical_not(np.isnan(radial_stress_dict['A']['XX'][partsA_inrange]))
-                    print(len(radial_stress_dict['A']['XX']))
-                    print(len(radial_stress_dict['A']['YY']))
-                    print(len(radial_stress_dict['A']['XY']))
-                    print(len(radial_stress_dict['A']['YX']))
+
                     if len(partsA_defined)>0:
                         int_stressA_XX_r.append(np.sum((radial_stress_dict['A']['XX'][partsA_inrange][partsA_defined])))
                         int_stressA_YY_r.append(np.sum((radial_stress_dict['A']['YY'][partsA_inrange][partsA_defined])))
