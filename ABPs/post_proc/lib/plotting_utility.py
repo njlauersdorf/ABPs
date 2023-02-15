@@ -230,7 +230,6 @@ class plotting_utility:
 
         cmap2 = plt.cm.get_cmap('Greys')
         colors2 = cmap2(np.arange(cmap2.N))
-        print(cmap2(np.arange(cmap2.N))[:,:-1])
         colors2[:,:-1] = [1., 1., 1.]
 
         cmap3 = plt.cm.get_cmap('BuPu')

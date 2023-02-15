@@ -1093,14 +1093,9 @@ class particle_props:
             mem_max = np.max(self.pos[typ0ind,1])
             mem_min = np.min(self.pos[typ0ind,1])
 
-        print(mem_min)
-        print(mem_max)
-
         right_ads = np.where((self.pos[typ1ind,0]<(mem_max + 10.0)) & (self.pos[typ1ind,0]>0))
         left_ads = np.where((self.pos[typ1ind,0]>(mem_min - 10.0)) & (self.pos[typ1ind,0]<0))
-        print(self.hx_box)
-        print(right_ads)
-        print(left_ads)
+
         return mem_min
     def adsorption3(partPhase_time, clust_time):
         start_part_phase = partPhase_time[:,0]
@@ -1484,8 +1479,7 @@ class particle_props:
 
         periodic_top = np.where(dify_typ0>self.hy_box)[0]
         periodic_bot = np.where(dify_typ0<-self.hy_box)[0]
-        print(np.min(self.pos[:,0]))
-        print(np.max(self.pos[:,0]))
+
         stop
         #periodic_right * h_box
         difx_typ0_sim, dify_typ0_sim, difr_typ0_sim = self.utility_functs.sep_dist_arr(self.pos[typ0ind], pos_prev[typ0ind], difxy=True)

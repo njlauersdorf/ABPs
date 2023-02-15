@@ -1266,9 +1266,6 @@ class interface:
         adjacent_y_discont = np.array([])
         adjacent_y_discont_pos = np.array([])
 
-        print(surface_x_sort)
-        print(len(surface_x_sort))
-
         if len(surface_x_sort)>1:
             for m in range(1, len(surface_x_sort)):
                 if len(adjacent_x) == 0:

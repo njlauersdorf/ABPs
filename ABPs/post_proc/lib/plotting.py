@@ -502,7 +502,6 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
     def plot_normal_fa_map(self, normal_fa_dict, sep_surface_dict, int_comp_dict):
 
         num_dens_B = normal_fa_dict['bin']['all']
-        print(normal_fa_dict)
         fig = plt.figure(figsize=(7,6))
         ax = fig.add_subplot(111)
         div_min = -3
@@ -845,8 +844,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         clb = fig.colorbar(sm, ticks=tick_lev, boundaries=level_boundaries,
 values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStrFormatter('%.2f'))
         clb.ax.tick_params(labelsize=16)
-        print('test')
-        print(type)
+
         if type == 'all':
             if self.lx_box == self.ly_box:
                 clb.set_label(r'$\alpha}$', labelpad=-40, y=1.05, rotation=0, fontsize=20)
@@ -2065,8 +2063,6 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
         # Define boundaries of colors (such that ticks at midpoints)
         level_boundaries = np.linspace(minClb, maxClb, 10)
-        print(tick_lev)
-        print(level_boundaries)
         
         # Define colorbar
         clb = plt.colorbar(coll, ticks=tick_lev, orientation="vertical", format=tick.FormatStrFormatter('%.2f'), boundaries=level_boundaries)
@@ -2277,8 +2273,6 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
         # Define boundaries of colors (such that ticks at midpoints)
         level_boundaries = np.linspace(minClb, maxClb, 10)
-        print(tick_lev)
-        print(level_boundaries)
         
         # Define colorbar
         clb = plt.colorbar(coll, ticks=tick_lev, orientation="vertical", format=tick.FormatStrFormatter('%.2f'), boundaries=level_boundaries)
@@ -3946,7 +3940,6 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
         #Loop over neighbor pairings of A-B neighbor pairs to calculate interparticle stress in each direction
         #fy_arr = np.zeros()
-        print('test')
         for i in range(0, len(pos_A)):
             if i in AB_nlist.point_indices:
                 if i not in AB_neigh_ind:
@@ -3957,7 +3950,6 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         filter_id = np.where(interpart_press_part['all-all']['press'][typ0ind[AB_neigh_ind]]>=100)[0]
         pos_A_ref = pos_A[AB_neigh_ind[filter_id]]
         if len(filter_id)>0:
-            print('test2')
 
             
 
@@ -3966,7 +3958,6 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
             allall_nlist = system_A.query(f_box.wrap(pos_A_ref), query_args).toNeighborList()
 
             allall_neigh_ind = np.array([], dtype=int)
-            print('test1')
             #Loop over neighbor pairings of A-B neighbor pairs to calculate interparticle stress in each direction
             fx_arr = np.zeros(len(pos_A_ref))
             fy_arr = np.zeros(len(pos_A_ref))

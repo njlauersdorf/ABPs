@@ -423,17 +423,11 @@ with hoomd.open(name=inFile, mode='rb') as t:
             phase_ident_functs = phase_identification.phase_identification(area_frac_dict, align_dict, part_dict, press_dict, lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, parFrac, eps, typ)
 
             phase_dict = phase_ident_functs.phase_ident()
-            phase_dict = phase_ident_functs.phase_ident_planar()
+            #phase_dict = phase_ident_functs.phase_ident_planar()
             bulk_id = np.where(phase_dict['part']==0)[0]
             int_id = np.where(phase_dict['part']==1)[0]
             gas_id = np.where(phase_dict['part']==2)[0]
-
-            #plt.scatter(pos[bulk_id,0]+hx_box, pos[bulk_id,1]+hy_box, s=10.0, c='green')
-            #plt.scatter(pos[int_id,0]+hx_box, pos[int_id,1]+hy_box, s=10.0, c='purple')
-            #plt.scatter(pos[gas_id,0]+hx_box, pos[gas_id,1]+hy_box, s=10.0, c='red')
-            #plt.xlim(0, lx_box)
-            #plt.ylim(0, ly_box)
-            #plt.show()
+            
 
             
 
@@ -444,14 +438,6 @@ with hoomd.open(name=inFile, mode='rb') as t:
             bulk_id = np.where(phase_dict['part']==0)[0]
             int_id = np.where(phase_dict['part']==1)[0]
             gas_id = np.where(phase_dict['part']==2)[0]
-
-            #plt.scatter(pos[bulk_id,0]+hx_box, pos[bulk_id,1]+hy_box, s=10.0, c='green')
-            #plt.scatter(pos[int_id,0]+hx_box, pos[int_id,1]+hy_box, s=10.0, c='purple')
-            #plt.scatter(pos[gas_id,0]+hx_box, pos[gas_id,1]+hy_box, s=10.0, c='red')
-            #plt.xlim(0, lx_box)
-            #plt.ylim(0, ly_box)
-            #plt.show()
-
             
             count_dict = phase_ident_functs.phase_count(phase_dict)
 

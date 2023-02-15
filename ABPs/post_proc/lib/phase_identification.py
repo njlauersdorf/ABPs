@@ -242,15 +242,22 @@ class phase_identification:
 
         phi_gas_theory_max= self.phi_g_theory*4.0
 
+        align_grad = np.gradient(self.align_mag)
+        align_grad_mag = np.sqrt(align_grad[0]**2 + align_grad[1]**2)
+
+        area_frac_grad = np.gradient(self.area_frac)
+        area_frac_grad_mag = np.sqrt(area_frac_grad[0]**2 + area_frac_grad[1]**2)
+
         #Gradient of pressure
         press_grad = np.gradient(self.press)
         press_grad_mag = np.sqrt(press_grad[0]**2 + press_grad[1]**2)
 
         #Weighted criterion for determining interface (more weighted to alignment than number density)
-        criterion = self.align_mag*press_grad_mag
+        criterion = self.align_mag * press_grad_mag#align_grad_mag * area_frac_grad_mag
 
         # Criterion ranges for differentiating interface
         criterion_min = 0.05*np.max(criterion)
+
         criterion_max = np.max(criterion)
 
         #Initialize count of bins for each phase
