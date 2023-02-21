@@ -884,7 +884,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 data_output_functs.write_to_txt(bin_count_dict['bin'], dataPath + 'PhaseComp_bins_' + outfile + '.txt')
 
                 if plot == 'y':
-                    plotting_functs.plot_phases(pos, part_id_dict, all_surface_curves, int_comp_dict)
+                    plotting_functs.plot_phases(pos, part_id_dict, all_surface_curves, int_comp_dict, phase_dict)
                 
             elif measurement_method == 'number_density':
                 #DONE
@@ -918,6 +918,22 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     plotting_functs.plot_alignment(method2_align_dict, all_surface_curves, int_comp_dict, pos, type='A')
                     plotting_functs.plot_alignment(method2_align_dict, all_surface_curves, int_comp_dict, pos, type='B')                    
                 stop
+            elif measurement_method == 'fluctuations':
+                stress_and_pressure_functs = stress_and_pressure.stress_and_pressure(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
+                lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
+
+                stress_stat_dict, press_stat_dict, press_plot_dict, stress_plot_dict = lattice_structure_functs.interparticle_pressure_nlist()
+
+                part_count_dict
+
+                plotting_functs.lat_histogram(lat_plot_dict)
+
+                plotting_functs.plot_clust_fluctuations(pos, all_surface_curves, int_comp_dict)
+
+
+
+
+
             elif measurement_method == 'int_press':
                 stress_and_pressure_functs = stress_and_pressure.stress_and_pressure(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
                 lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)

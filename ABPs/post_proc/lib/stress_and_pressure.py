@@ -380,35 +380,34 @@ class stress_and_pressure:
             r = np.linspace(0, self.hx_box, num=int((np.ceil(self.hx_box)+1)/3))
 
         #Pressure integrand components for each value of X
-        int_stress_XX_r = []
-        int_stress_YY_r = []
-        int_stress_XY_r = []
-        int_stress_YX_r = []
-        int_press_r = []
+        int_stress_XX_r = np.zeros((len(r)-1))
+        int_stress_YY_r = np.zeros((len(r)-1))
+        int_stress_XY_r = np.zeros((len(r)-1))
+        int_stress_YX_r = np.zeros((len(r)-1))
+        int_press_r = np.zeros((len(r)-1))
         #act_fa_r = []
         #lat_r = []
-        num_dens_r = []
+        num_dens_r = np.zeros((len(r)-1))
 
-        int_stressA_XX_r = []
-        int_stressA_YY_r = []
-        int_stressA_XY_r = []
-        int_stressA_YX_r = []
-        int_pressA_r = []
+        int_stressA_XX_r = np.zeros((len(r)-1))
+        int_stressA_YY_r = np.zeros((len(r)-1))
+        int_stressA_XY_r = np.zeros((len(r)-1))
+        int_stressA_YX_r = np.zeros((len(r)-1))
+        int_pressA_r = np.zeros((len(r)-1))
 
         #act_faA_r = []
         #latA_r = []
-        num_densA_r = []
+        num_densA_r = np.zeros((len(r)-1))
 
-        int_stressB_XX_r = []
-        int_stressB_YY_r = []
-        int_stressB_XY_r = []
-        int_stressB_YX_r = []
-        int_pressB_r = []
+        int_stressB_XX_r = np.zeros((len(r)-1))
+        int_stressB_YY_r = np.zeros((len(r)-1))
+        int_stressB_XY_r = np.zeros((len(r)-1))
+        int_stressB_YX_r = np.zeros((len(r)-1))
+        int_pressB_r = np.zeros((len(r)-1))
         #act_faB_r = []
         #latB_r = []
-        num_densB_r = []
+        num_densB_r = np.zeros((len(r)-1))
 
-        rad_arr = []
         #If exterior and interior surfaces defined, continue...
 
         area_prev = 0
@@ -439,13 +438,13 @@ class stress_and_pressure:
 
                 if len(parts_defined)>0:
                     #Calculate total active force normal to interface in slice
-                    int_stress_XX_r.append(np.sum((radial_stress_dict['all']['XX'][parts_inrange][parts_defined])))
-                    int_stress_YY_r.append(np.sum((radial_stress_dict['all']['YY'][parts_inrange][parts_defined])))
-                    int_stress_XY_r.append(np.sum((radial_stress_dict['all']['XY'][parts_inrange][parts_defined])))
-                    int_stress_YX_r.append(np.sum((radial_stress_dict['all']['YX'][parts_inrange][parts_defined])))
-                    int_press_r.append(np.sum((radial_stress_dict['all']['XX'][parts_inrange][parts_defined] + radial_stress_dict['all']['YY'][parts_inrange][parts_defined])/2))
+                    int_stress_XX_r[i-1] = np.sum((radial_stress_dict['all']['XX'][parts_inrange][parts_defined]))
+                    int_stress_YY_r[i-1] = np.sum((radial_stress_dict['all']['YY'][parts_inrange][parts_defined]))
+                    int_stress_XY_r[i-1] = np.sum((radial_stress_dict['all']['XY'][parts_inrange][parts_defined]))
+                    int_stress_YX_r[i-1] = np.sum((radial_stress_dict['all']['YX'][parts_inrange][parts_defined]))
+                    int_press_r[i-1] = np.sum((radial_stress_dict['all']['XX'][parts_inrange][parts_defined] + radial_stress_dict['all']['YY'][parts_inrange][parts_defined])/2)
                     #Calculate density
-                    num_dens_r.append(len(parts_defined))
+                    num_dens_r[i-1] = len(parts_defined)
                     #If area of slice is non-zero, calculate the pressure [F/A]
                     if area > 0:
                         int_press_r[i-1] = int_press_r[i-1]/area
@@ -454,13 +453,13 @@ class stress_and_pressure:
                     partsA_defined = np.logical_not(np.isnan(radial_stress_dict['A']['XX'][partsA_inrange]))
 
                     if len(partsA_defined)>0:
-                        int_stressA_XX_r.append(np.sum((radial_stress_dict['A']['XX'][partsA_inrange][partsA_defined])))
-                        int_stressA_YY_r.append(np.sum((radial_stress_dict['A']['YY'][partsA_inrange][partsA_defined])))
-                        int_stressA_XY_r.append(np.sum((radial_stress_dict['A']['XY'][partsA_inrange][partsA_defined])))
-                        int_stressA_YX_r.append(np.sum((radial_stress_dict['A']['YX'][partsA_inrange][partsA_defined])))
-                        int_pressA_r.append(np.sum((radial_stress_dict['A']['XX'][partsA_inrange][partsA_defined] + radial_stress_dict['A']['YY'][partsA_inrange][partsA_defined])/2))
+                        int_stressA_XX_r[i-1] = np.sum((radial_stress_dict['A']['XX'][partsA_inrange][partsA_defined]))
+                        int_stressA_YY_r[i-1] = np.sum((radial_stress_dict['A']['YY'][partsA_inrange][partsA_defined]))
+                        int_stressA_XY_r[i-1] = np.sum((radial_stress_dict['A']['XY'][partsA_inrange][partsA_defined]))
+                        int_stressA_YX_r[i-1] = np.sum((radial_stress_dict['A']['YX'][partsA_inrange][partsA_defined]))
+                        int_pressA_r[i-1] = np.sum((radial_stress_dict['A']['XX'][partsA_inrange][partsA_defined] + radial_stress_dict['A']['YY'][partsA_inrange][partsA_defined])/2)
                         #Calculate density
-                        num_densA_r.append(len([partsA_defined]))
+                        num_densA_r[i-1] = len([partsA_defined])
                         #If area of slice is non-zero, calculate the pressure [F/A]
                         if area > 0:
                             int_pressA_r[i-1] = int_pressA_r[i-1]/area
@@ -468,20 +467,19 @@ class stress_and_pressure:
 
                     partsB_defined = np.logical_not(np.isnan(radial_stress_dict['B']['XX'][partsB_inrange]))
                     if len(partsB_defined)>0:
-                        int_stressB_XX_r.append(np.sum((radial_stress_dict['B']['XX'][partsB_inrange][partsB_defined])))
-                        int_stressB_YY_r.append(np.sum((radial_stress_dict['B']['YY'][partsB_inrange][partsB_defined])))
-                        int_stressB_XY_r.append(np.sum((radial_stress_dict['B']['XY'][partsB_inrange][partsB_defined])))
-                        int_stressB_YX_r.append(np.sum((radial_stress_dict['B']['YX'][partsB_inrange][partsB_defined])))
-                        int_pressB_r.append(np.sum((radial_stress_dict['B']['XX'][partsB_inrange][partsB_defined] + radial_stress_dict['B']['YY'][partsB_inrange][partsB_defined])/2))
+                        int_stressB_XX_r[i-1] = np.sum((radial_stress_dict['B']['XX'][partsB_inrange][partsB_defined]))
+                        int_stressB_YY_r[i-1] = np.sum((radial_stress_dict['B']['YY'][partsB_inrange][partsB_defined]))
+                        int_stressB_XY_r[i-1] = np.sum((radial_stress_dict['B']['XY'][partsB_inrange][partsB_defined]))
+                        int_stressB_YX_r[i-1] = np.sum((radial_stress_dict['B']['YX'][partsB_inrange][partsB_defined]))
+                        int_pressB_r[i-1] = np.sum((radial_stress_dict['B']['XX'][partsB_inrange][partsB_defined] + radial_stress_dict['B']['YY'][partsB_inrange][partsB_defined])/2)
                         #Calculate density
-                        num_densB_r.append(len([partsB_defined]))
+                        num_densB_r[i-1] = len([partsB_defined])
                         #If area of slice is non-zero, calculate the pressure [F/A]
                         if area > 0:
                             int_pressB_r[i-1] = int_pressB_r[i-1]/area
                             num_densB_r[i-1] = num_densB_r[i-1]/area
                 
-                rad_arr.append(r[i])
-        com_radial_dict = {'r': rad_arr, 'all': {'XX': int_stress_XX_r, 'YY': int_stress_YY_r, 'XY': int_stress_XY_r, 'YX': int_stress_YX_r, 'press': int_press_r, 'num_dens': num_dens_r}, 'A': {'XX': int_stressA_XX_r, 'YY': int_stressA_YY_r, 'XY': int_stressA_XY_r, 'YX': int_stressA_YX_r, 'press': int_pressA_r, 'num_dens': num_densA_r}, 'B': {'XX': int_stressB_XX_r, 'YY': int_stressB_YY_r, 'XY': int_stressB_XY_r, 'YX': int_stressB_YX_r, 'press': int_pressB_r, 'num_dens': num_densB_r}}
+        com_radial_dict = {'r': r[1:].tolist(), 'all': {'XX': int_stress_XX_r.tolist(), 'YY': int_stress_YY_r.tolist(), 'XY': int_stress_XY_r.tolist(), 'YX': int_stress_YX_r.tolist(), 'press': int_press_r.tolist(), 'num_dens': num_dens_r.tolist()}, 'A': {'XX': int_stressA_XX_r.tolist(), 'YY': int_stressA_YY_r.tolist(), 'XY': int_stressA_XY_r.tolist(), 'YX': int_stressA_YX_r.tolist(), 'press': int_pressA_r.tolist(), 'num_dens': num_densA_r.tolist()}, 'B': {'XX': int_stressB_XX_r.tolist(), 'YY': int_stressB_YY_r.tolist(), 'XY': int_stressB_XY_r.tolist(), 'YX': int_stressB_YX_r.tolist(), 'press': int_pressB_r.tolist(), 'num_dens': num_densB_r.tolist()}}
         return com_radial_dict
 
     def radial_com_active_force_pressure(self, radial_fa_dict):
@@ -495,22 +493,22 @@ class stress_and_pressure:
              r = np.linspace(0, self.hx_box, num=int((np.ceil(self.hx_box)+1)/3))
 
         #Pressure integrand components for each value of X
-        act_press_r = []
-        act_fa_r = []
-        align_r = []
-        num_dens_r = []
+        act_press_r = np.zeros((len(r)-1))
+        act_fa_r = np.zeros((len(r)-1))
+        align_r = np.zeros((len(r)-1))
+        num_dens_r = np.zeros((len(r)-1))
 
-        act_pressA_r = []
-        act_faA_r = []
-        alignA_r = []
-        num_densA_r = []
+        act_pressA_r = np.zeros((len(r)-1))
+        act_faA_r = np.zeros((len(r)-1))
+        alignA_r = np.zeros((len(r)-1))
+        num_densA_r = np.zeros((len(r)-1))
 
-        act_pressB_r = []
-        act_faB_r = []
-        alignB_r = []
-        num_densB_r = []
+        act_pressB_r = np.zeros((len(r)-1))
+        act_faB_r = np.zeros((len(r)-1))
+        alignB_r = np.zeros((len(r)-1))
+        num_densB_r = np.zeros((len(r)-1))
 
-        rad_arr = []
+        rad_arr = np.zeros((len(r)-1))
         #If exterior and interior surfaces defined, continue...
 
         area_prev = 0
@@ -541,10 +539,10 @@ class stress_and_pressure:
 
                 if len(parts_defined)>0:
                     #Calculate total active force normal to interface in slice
-                    act_press_r.append(np.sum(radial_fa_dict['all']['fa'][parts_inrange][parts_defined]))
-                    act_fa_r.append(np.mean(radial_fa_dict['all']['fa'][parts_inrange][parts_defined]))
-                    align_r.append(np.mean(radial_fa_dict['all']['align'][parts_inrange][parts_defined]))
-                    num_dens_r.append(len(parts_defined))
+                    act_press_r[i-1] = np.sum(radial_fa_dict['all']['fa'][parts_inrange][parts_defined])
+                    act_fa_r[i-1] = np.mean(radial_fa_dict['all']['fa'][parts_inrange][parts_defined])
+                    align_r[i-1] = np.mean(radial_fa_dict['all']['align'][parts_inrange][parts_defined])
+                    num_dens_r[i-1] = len(parts_defined)
                     #If area of slice is non-zero, calculate the pressure [F/A]
                     if area > 0:
                         act_press_r[i-1] = act_press_r[i-1]/area
@@ -552,10 +550,10 @@ class stress_and_pressure:
 
                     partsA_defined = np.logical_not(np.isnan(radial_fa_dict['A']['fa'][partsA_inrange]))
                     if len(partsA_defined)>0:
-                        act_pressA_r.append(np.sum(radial_fa_dict['A']['fa'][partsA_inrange][partsA_defined]))
-                        act_faA_r.append(np.mean(radial_fa_dict['A']['fa'][partsA_inrange][partsA_defined]))
-                        alignA_r.append(np.mean(radial_fa_dict['A']['align'][partsA_inrange][partsA_defined]))
-                        num_densA_r.append(len(partsA_defined))
+                        act_pressA_r[i-1] = np.sum(radial_fa_dict['A']['fa'][partsA_inrange][partsA_defined])
+                        act_faA_r[i-1] = np.mean(radial_fa_dict['A']['fa'][partsA_inrange][partsA_defined])
+                        alignA_r[i-1] = np.mean(radial_fa_dict['A']['align'][partsA_inrange][partsA_defined])
+                        num_densA_r[i-1] = len(partsA_defined)
                         #If area of slice is non-zero, calculate the pressure [F/A]
                         if area > 0:
                             act_pressA_r[i-1] = act_pressA_r[i-1]/area
@@ -563,18 +561,17 @@ class stress_and_pressure:
 
                     partsB_defined = np.logical_not(np.isnan(radial_fa_dict['B']['fa'][partsB_inrange]))
                     if len(partsB_defined)>0:
-                        act_pressB_r.append(np.sum(radial_fa_dict['B']['fa'][partsB_inrange][partsB_defined]))
-                        act_faB_r.append(np.mean(radial_fa_dict['B']['fa'][partsB_inrange][partsB_defined]))
-                        alignB_r.append(np.mean(radial_fa_dict['B']['align'][partsB_inrange][partsB_defined]))
+                        act_pressB_r[i-1] = np.sum(radial_fa_dict['B']['fa'][partsB_inrange][partsB_defined])
+                        act_faB_r[i-1] = np.mean(radial_fa_dict['B']['fa'][partsB_inrange][partsB_defined])
+                        alignB_r[i-1] = np.mean(radial_fa_dict['B']['align'][partsB_inrange][partsB_defined])
                         #Calculate density
-                        num_densB_r.append(len(partsB_defined))
+                        num_densB_r[i-1] = len(partsB_defined)
                         #If area of slice is non-zero, calculate the pressure [F/A]
                         if area > 0:
                             act_pressB_r[i-1] = act_pressB_r[i-1]/area
                             num_densB_r[i-1] = num_densB_r[i-1]/area
 
-                rad_arr.append(r[i])
-        com_radial_dict = {'r': rad_arr, 'fa_press': {'all': act_press_r, 'A': act_pressA_r, 'B': act_pressB_r}, 'fa': {'all': act_fa_r, 'A': act_faA_r, 'B': act_faB_r}, 'align': {'all': align_r, 'A': alignA_r, 'B': alignB_r}, 'num_dens': {'all': num_dens_r, 'A': num_densA_r, 'B': num_densB_r}}
+        com_radial_dict = {'r': r[i-1].tolist(), 'fa_press': {'all': act_press_r.tolist(), 'A': act_pressA_r.tolist(), 'B': act_pressB_r.tolist()}, 'fa': {'all': act_fa_r.tolist(), 'A': act_faA_r.tolist(), 'B': act_faB_r.tolist()}, 'align': {'all': align_r.tolist(), 'A': alignA_r.tolist(), 'B': alignB_r.tolist()}, 'num_dens': {'all': num_dens_r.tolist(), 'A': num_densA_r.tolist(), 'B': num_densB_r.tolist()}}
         return com_radial_dict
 
     def total_active_pressure(self, com_radial_dict):
