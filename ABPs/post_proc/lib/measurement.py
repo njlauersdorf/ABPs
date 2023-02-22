@@ -1295,7 +1295,7 @@ class measurement:
 
         import time
         # Neighbor list query arguments to find interacting particles
-        rad_dist = [0, self.r_cut, 2*self.r_cut, 3*self.r_cut, 4*self.r_cut, 5*self.r_cut, 6*self.r_cut, 7*self.r_cut]
+        rad_dist = [0, self.r_cut, 2*self.r_cut, 3*self.r_cut, 4*self.r_cut, 5*self.r_cut]
 
         AA_bulk_num_neigh = np.zeros(len(pos_A_bulk))
         AA_bulk_neigh_ind = np.zeros(len(pos_A_bulk))
