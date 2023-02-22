@@ -924,11 +924,10 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                 stress_stat_dict, press_stat_dict, press_plot_dict, stress_plot_dict = lattice_structure_functs.interparticle_pressure_nlist()
 
-                part_count_dict
+                #part_count_dict
 
-                plotting_functs.lat_histogram(lat_plot_dict)
-
-                plotting_functs.plot_clust_fluctuations(pos, all_surface_curves, int_comp_dict)
+                plotting_functs.plot_clust_fluctuations(pos, outfile, all_surface_curves, int_comp_dict)
+                stop
 
 
 

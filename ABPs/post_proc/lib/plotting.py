@@ -306,9 +306,6 @@ class plotting:
         pos_x = np.linspace(0, self.lx_box, num=self.NBins_x)
         pos_y = np.linspace(0, self.ly_box, num=self.NBins_x)
 
-        print(pos_x)
-        print(self.pos_x)
-
         for i in range(0, len(pos_x)):
             plt.plot([pos_x[i], pos_x[i]], [0, self.ly_box], color='black', linestyle='-', linewidth=0.7, alpha=0.7)
 
@@ -326,7 +323,6 @@ class plotting:
 
         plt.savefig(self.outPath + 'plot_phases_' + self.outFile + ".png", dpi=200, transparent=False)
         plt.close()  
-        stop
     def plot_area_fraction(self, area_frac_dict, sep_surface_dict, int_comp_dict, pos, type='all'):#, int_comp_dict):#sep_surface_dict, int_comp_dict):
         """
         This function plots the binned average area fraction at each location
@@ -4101,7 +4097,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         #plt.close()
     
 
-    def plot_clust_fluctuations(self, pos, ang, sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None):
+    def plot_clust_fluctuations(self, pos, outfile_name, ang, sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None):
 
         typ0ind = np.where(self.typ == 0)[0]
         typ1ind = np.where(self.typ == 1)[0]
@@ -4178,12 +4174,9 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
         # Generate figure of dimensions proportional to simulation box size (with added x-length for color bar)
 
-        fig, axs = plt.subplots(2)
-
-        fig = plt.figure(figsize=(x_dim,y_dim))
-        ax = fig.add_subplot(121)
-        plt.show()
-        stop
+        #fig = plt.figure(figsize=(x_dim,y_dim*2))
+        #ax = fig.add_subplot(121, gridspec_kw={'height_ratios': [2, 1]})
+        fig, (ax0, ax1) = plt.subplots(2, 1, figsize=(6,8), gridspec_kw={'height_ratios': [1.6, 1]})
 
         sz = 0.75
         
@@ -4233,12 +4226,12 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
             else:
                 slowGroup = mc.PatchCollection(ells1, facecolors=slowCol)
                 fastGroup = mc.PatchCollection(ells0,facecolors=fastCol)
-            ax.add_collection(slowGroup)
-            ax.add_collection(fastGroup)
+            ax0.add_collection(slowGroup)
+            ax0.add_collection(fastGroup)
 
             #Create legend for binary system
             if (len(typ0ind)!=0) & (len(typ1ind)!=0):
-                leg = ax.legend(handles=[ells0[0], ells1[0]], labels=[r'$\mathrm{Pe}_\mathrm{A} = $'+str(int(self.peA)), r'$\mathrm{Pe}_\mathrm{B} = $'+str(int(self.peB))], loc='upper right', prop={'size': 15}, markerscale=8.0)
+                leg = ax0.legend(handles=[ells0[0], ells1[0]], labels=[r'$\mathrm{Pe}_\mathrm{A} = $'+str(int(self.peA)), r'$\mathrm{Pe}_\mathrm{B} = $'+str(int(self.peB))], loc='upper right', prop={'size': 15}, markerscale=8.0)
                 if self.peA <= self.peB:
                     leg.legendHandles[0].set_color(slowCol)
                     leg.legendHandles[1].set_color(fastCol)
@@ -4247,16 +4240,16 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                     leg.legendHandles[1].set_color(slowCol)
             #Create legend for monodisperse system
             else:
-                leg = ax.legend(handles=[ells0[0]], labels=[r'$\mathrm{Pe}_\mathrm{A} = $'+str(int(self.peA)), r'$\mathrm{Pe}_\mathrm{A} = $'+str(int(self.peA))], loc='upper right', prop={'size': 15}, markerscale=8.0)
+                leg = ax0.legend(handles=[ells0[0]], labels=[r'$\mathrm{Pe}_\mathrm{A} = $'+str(int(self.peA)), r'$\mathrm{Pe}_\mathrm{A} = $'+str(int(self.peA))], loc='upper right', prop={'size': 15}, markerscale=8.0)
                 leg.legendHandles[0].set_color(slowCol)
 
-            px = np.sin(ang[typ1ind])
-            py = -np.cos(ang[typ1ind])
+            #px = np.sin(ang[typ1ind])
+            #py = -np.cos(ang[typ1ind])
 
             #plt.scatter(neigh_plot_dict['all-all']['x'][typ1ind]+self.hx_box, neigh_plot_dict['all-all']['y'][typ1ind]+self.hy_box, c='black', s=sz)
-            plt.quiver(pos[typ1ind,0]+self.hx_box, pos[typ1ind,1]+self.hy_box, px, py, color='black', width=0.003)
-            plt.quiver(pos[typ1ind,0]+self.hx_box, pos[typ1ind,1]+self.hy_box+self.ly_box, px, py, color='black', width=0.003)
-            plt.quiver(pos[typ1ind,0]+self.hx_box, pos[typ1ind,1]+self.hy_box-self.ly_box, px, py, color='black', width=0.003)
+            #ax0.quiver(pos[typ1ind,0]+self.hx_box, pos[typ1ind,1]+self.hy_box, px, py, color='black', width=0.003)
+            #ax0.quiver(pos[typ1ind,0]+self.hx_box, pos[typ1ind,1]+self.hy_box+self.ly_box, px, py, color='black', width=0.003)
+            #ax0.quiver(pos[typ1ind,0]+self.hx_box, pos[typ1ind,1]+self.hy_box-self.ly_box, px, py, color='black', width=0.003)
 
         elif mono == 1:
 
@@ -4277,9 +4270,9 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
                 # Plot position colored by neighbor number
                 slowGroup = mc.PatchCollection(ells0, facecolors=slowCol)
-                ax.add_collection(slowGroup)
+                ax0.add_collection(slowGroup)
 
-                leg = ax.legend(handles=[ells0[0]], labels=[r'$\mathrm{Pe} = $'+str(int(self.peA))], loc='upper right', prop={'size': 15}, markerscale=8.0)
+                leg = ax0.legend(handles=[ells0[0]], labels=[r'$\mathrm{Pe} = $'+str(int(self.peA))], loc='upper right', prop={'size': 15}, markerscale=8.0)
                 leg.legendHandles[0].set_color(slowCol)
 
             elif mono_type == 1:
@@ -4294,9 +4287,9 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
                 # Plot position colored by neighbor number
                 slowGroup = mc.PatchCollection(ells1, facecolors=slowCol)
-                ax.add_collection(slowGroup)
+                ax0.add_collection(slowGroup)
 
-                leg = ax.legend(handles=[ells1[0]], labels=[r'$\mathrm{Pe} = $'+str(int(self.peB))], loc='upper right', prop={'size': 15}, markerscale=8.0)
+                leg = ax0.legend(handles=[ells1[0]], labels=[r'$\mathrm{Pe} = $'+str(int(self.peB))], loc='upper right', prop={'size': 15}, markerscale=8.0)
                 leg.legendHandles[0].set_color(slowCol)
 
             elif mono_type == 2:
@@ -4314,9 +4307,9 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
                 # Plot position colored by neighbor number
                 slowGroup = mc.PatchCollection(ells0, facecolors=slowCol)
-                ax.add_collection(slowGroup)
+                ax0.add_collection(slowGroup)
                 fastGroup = mc.PatchCollection(ells1, facecolors=slowCol)
-                ax.add_collection(fastGroup)
+                ax0.add_collection(fastGroup)
 
                 #leg = ax.legend(handles=[ells0[0]], labels=[r'$\mathrm{Pe} = $'+str(int(self.peB))], loc='upper right', prop={'size': 15}, markerscale=8.0)
                 #leg = ax.legend(handles=[ells0[0]], labels=[r'$F^\mathrm{a} = $'+str(int(self.peB))], loc='upper right', prop={'size': 28}, markerscale=8.0)
@@ -4345,7 +4338,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         """
         try:
             if active_fa_dict!=None:
-                plt.quiver(self.pos_x, self.pos_y, active_fa_dict['bin']['x'], active_fa_dict['bin']['y'], scale=20.0, color='black', alpha=0.8)
+                ax0.quiver(self.pos_x, self.pos_y, active_fa_dict['bin']['x'], active_fa_dict['bin']['y'], scale=20.0, color='black', alpha=0.8)
         except:
             pass
         #Label time step
@@ -4358,38 +4351,128 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         #Set axes parameters
         # If rectangular box, reduce system size plotted
         if self.lx_box > self.ly_box:
-            plt.xlim(-(0.5*dense_x_width)+self.hx_box, (0.5*dense_x_width)+self.hx_box)
-            plt.ylim(0.0, self.ly_box)
+            ax0.set_xlim(-(0.5*dense_x_width)+self.hx_box, (0.5*dense_x_width)+self.hx_box)
+            ax0.set_ylim(0.0, self.ly_box)
         elif self.lx_box < self.ly_box:
-            plt.ylim(dense_y_mid-(dense_y_width), dense_y_mid+(dense_y_width))
-            plt.xlim(0.0, self.lx_box)
+            ax0.set_ylim(dense_y_mid-(dense_y_width), dense_y_mid+(dense_y_width))
+            ax0.set_xlim(0.0, self.lx_box)
         # Plot entire system
         else:
-            plt.ylim(0, self.ly_box)
-            plt.xlim(0, self.lx_box)
+            ax0.set_ylim(0, self.ly_box)
+            ax0.set_xlim(0, self.lx_box)
 
         # Label simulation time
         if self.lx_box == self.ly_box:
-            plt.text(0.8, 0.04, s=r'$\tau$' + ' = ' + '{:.4f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
-                fontsize=18, transform = ax.transAxes,
+            ax0.text(0.65, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+                fontsize=18, transform = ax0.transAxes,
                 bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
         elif self.lx_box > self.ly_box:
-            plt.text(0.85, 0.1, s=r'$\tau$' + ' = ' + '{:.4f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
-                fontsize=18, transform = ax.transAxes,
+            ax0.text(0.65, 0.1, s=r'$\tau$' + ' = ' + '{:.2f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+                fontsize=18, transform = ax0.transAxes,
                 bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
 
-        ax.axes.set_xticks([])
-        ax.axes.set_yticks([])
-        ax.axes.set_xticklabels([])
-        ax.axes.set_yticks([])
-        ax.set_aspect('equal')
+        ax0.axes.set_xticks([])
+        ax0.axes.set_yticks([])
+        ax0.axes.set_xticklabels([])
+        ax0.axes.set_yticks([])
+        ax0.set_aspect('equal')
 
         # Create frame pad for images
         #pad = str(j).zfill(4)
+        print(outfile_name)
+        txtFile1 = 'com_interface_pressure_' + outfile_name + '.txt'
+        file1 = open('/Volumes/EXTERNAL2/temp_files_new/com_interface_pressure/' + txtFile1, 'r')
+        Lines = file1.readlines()
+        count = 0
+
+        time_arr = np.array([])
+        clust_size_arr = np.array([])
+        press_all_arr = np.array([])
+        press_A_arr = np.array([])
+        press_B_arr = np.array([])
+        # Strips the newline character
+        for line in Lines:
+            data = line.split()
+            if count>0:
+                print(data[0])
+                time_arr = np.append(time_arr, float(data[0]))
+                clust_size_arr = np.append(clust_size_arr, float(data[3]))
+                press_all_arr = np.append(press_all_arr, float(data[4]))
+                press_A_arr = np.append(press_A_arr, float(data[5]))
+                press_B_arr = np.append(press_B_arr, float(data[6]))
+            count += 1
+
+        txtFile2 = 'interparticle_press_' + outfile_name + '.txt'
+        file2 = open('/Volumes/EXTERNAL2/temp_files_new/interparticle_press/' + txtFile2, 'r')
+        Lines = file2.readlines()
+        count = 0
+
+        time_arr2 = np.array([])
+        clust_size_arr2 = np.array([])
+        press_all_arr2 = np.array([])
+        press_A_arr2 = np.array([])
+        press_B_arr2 = np.array([])
+
+        # Strips the newline character
+        for line in Lines:
+            data = line.split()
+            if count>0:
+                time_arr2 = np.append(time_arr2, float(data[0]))
+                clust_size_arr2 = np.append(clust_size_arr2, float(data[3]))
+                press_all_arr2 = np.append(press_all_arr2, float(data[15]))
+                press_A_arr2 = np.append(press_A_arr2, float(data[23]))
+                press_B_arr2 = np.append(press_B_arr2, float(data[31]))
+            count += 1
+
+        rstop = 10.
+        if np.max(press_all_arr) >= np.max(press_all_arr2):
+            max_n = np.max(press_all_arr)
+        else:
+            max_n = np.max(press_all_arr2)
+
+        x_arr = np.array([self.tst,self.tst])
+        y_arr = np.array([0.0, max_n])
+
+        if np.mean(press_all_arr) >= np.mean(press_all_arr2):
+            max_n = np.mean(press_all_arr)
+            min_n = np.mean(press_all_arr2)
+        else:
+            max_n = np.mean(press_all_arr2)
+            min_n = np.mean(press_all_arr)
+
+        #plt.plot(x_arr, y_arr, c='black', lw=1.0, ls='--')
+
+        plt.plot(time_arr, press_all_arr,
+                    c='purple', lw=3.0, ls='-', alpha=1, label='Interface Pressure')
+        plt.plot(time_arr2, press_all_arr2,
+                    c='green', lw=3.0, ls='-', alpha=1, label='Bulk Pressure')
+        fsize=5
+
+
+        #ax1.set_ylim(np.mean(press_all_arr)-0.5*np.mean(press_all_arr), np.mean(press_all_arr)+0.5*np.mean(press_all_arr))
+
+
+        ax1.set_xlabel(r'Simulation Time ($\tau_\mathrm{B}$)', fontsize=fsize*2.8)
+
+        ax1.set_ylabel(r'Dense Pressure ($\Pi_\mathrm{d}$)', fontsize=fsize*2.8)
+
+        #lat_theory = np.mean(lat_theory_arr)
+        # Set all the x ticks for radial plots
+        ax1.set_ylim(0.5 * min_n, 2.0*max_n)
+        ax1.set_xlim(0, np.max(time_arr))
+        ax1.legend(loc='upper right', fontsize=fsize*2.6)
+        #step = 2.0
+        # Set y ticks
+
+        # Left middle plot
+        ax1.tick_params(axis='x', labelsize=fsize*2.5)
+        ax1.tick_params(axis='y', labelsize=fsize*2.5)
+
 
         plt.tight_layout()
-        plt.savefig(self.outPath + 'clust_fluctuations_' + self.outFile + ".png", dpi=75, transparent=False)
-        plt.close()     
+        #plt.savefig(self.outPath + 'clust_fluctuations_' + self.outFile + ".png", dpi=75, transparent=False)
+        #plt.close()     
+        plt.show()
 
     def plot_part_activity(self, pos, ang, sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None):
 
@@ -4463,6 +4546,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
             mono=1
             mono_activity=self.peA
             mono_type = 2
+            mono=0
         else:
             mono=0
 
@@ -4523,7 +4607,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
             #Create legend for binary system
             if (len(typ0ind)!=0) & (len(typ1ind)!=0):
-                leg = ax.legend(handles=[ells0[0], ells1[0]], labels=[r'$\mathrm{Pe}_\mathrm{A} = $'+str(int(self.peA)), r'$\mathrm{Pe}_\mathrm{B} = $'+str(int(self.peB))], loc='upper right', prop={'size': 15}, markerscale=8.0)
+                leg = ax.legend(handles=[ells0[0], ells1[0]], labels=[r'$\mathrm{Pe}_\mathrm{A} = $'+str(int(self.peA)), r'$\mathrm{Pe}_\mathrm{B} = $'+str(int(self.peB))], loc='upper right', prop={'size': 22}, markerscale=8.0)
                 if self.peA <= self.peB:
                     leg.legendHandles[0].set_color(slowCol)
                     leg.legendHandles[1].set_color(fastCol)
@@ -4532,16 +4616,16 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                     leg.legendHandles[1].set_color(slowCol)
             #Create legend for monodisperse system
             else:
-                leg = ax.legend(handles=[ells0[0]], labels=[r'$\mathrm{Pe}_\mathrm{A} = $'+str(int(self.peA)), r'$\mathrm{Pe}_\mathrm{A} = $'+str(int(self.peA))], loc='upper right', prop={'size': 15}, markerscale=8.0)
+                leg = ax.legend(handles=[ells0[0]], labels=[r'$\mathrm{Pe}_\mathrm{A} = $'+str(int(self.peA)), r'$\mathrm{Pe}_\mathrm{A} = $'+str(int(self.peA))], loc='upper right', prop={'size': 22}, markerscale=8.0)
                 leg.legendHandles[0].set_color(slowCol)
 
-            px = np.sin(ang[typ1ind])
-            py = -np.cos(ang[typ1ind])
+            #px = np.sin(ang[typ1ind])
+            #py = -np.cos(ang[typ1ind])
 
             #plt.scatter(neigh_plot_dict['all-all']['x'][typ1ind]+self.hx_box, neigh_plot_dict['all-all']['y'][typ1ind]+self.hy_box, c='black', s=sz)
-            plt.quiver(pos[typ1ind,0]+self.hx_box, pos[typ1ind,1]+self.hy_box, px, py, color='black', width=0.003)
-            plt.quiver(pos[typ1ind,0]+self.hx_box, pos[typ1ind,1]+self.hy_box+self.ly_box, px, py, color='black', width=0.003)
-            plt.quiver(pos[typ1ind,0]+self.hx_box, pos[typ1ind,1]+self.hy_box-self.ly_box, px, py, color='black', width=0.003)
+            #plt.quiver(pos[typ1ind,0]+self.hx_box, pos[typ1ind,1]+self.hy_box, px, py, color='black', width=0.003)
+            #plt.quiver(pos[typ1ind,0]+self.hx_box, pos[typ1ind,1]+self.hy_box+self.ly_box, px, py, color='black', width=0.003)
+            #plt.quiver(pos[typ1ind,0]+self.hx_box, pos[typ1ind,1]+self.hy_box-self.ly_box, px, py, color='black', width=0.003)
 
         elif mono == 1:
 
@@ -4603,9 +4687,18 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                 fastGroup = mc.PatchCollection(ells1, facecolors=slowCol)
                 ax.add_collection(fastGroup)
 
-                #leg = ax.legend(handles=[ells0[0]], labels=[r'$\mathrm{Pe} = $'+str(int(self.peB))], loc='upper right', prop={'size': 15}, markerscale=8.0)
+                fast_leg = []
+
+                #fast_leg.append(Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=slowCol, label=r'$\mathrm{Pe} = $'+str(int(self.peB)), markersize=25))
+
+                #leg = ax.legend(handles=[ells0[0]], labels=[r'$\mathrm{Pe} = $'+str(int(self.peB))], loc='upper right', prop={'size': 24}, markerscale=8.0, edgecolor='black')
                 #leg = ax.legend(handles=[ells0[0]], labels=[r'$F^\mathrm{a} = $'+str(int(self.peB))], loc='upper right', prop={'size': 28}, markerscale=8.0)
                 #leg.legendHandles[0].set_color(slowCol)
+                #one_leg = ax.legend(handles=fast_leg, loc='upper right', borderpad=0.3, labelspacing=0.2, handletextpad=0.0, bbox_transform=ax.transAxes, bbox_to_anchor=[1.0, 1.0], handlelength=1.5, columnspacing=0.0, fontsize=25, ncol=1, fancybox=True, framealpha=0.5, facecolor='white', edgecolor='black')
+                #ax.add_artist(one_leg)
+
+                leg = ax.legend(handles=[ells0[0]], labels=[r'$\mathrm{Pe} = $'+str(int(self.peA))], loc='upper right', prop={'size': 22}, markerscale=8.0)
+                leg.legendHandles[0].set_color(slowCol)
         """
         try:
             if sep_surface_dict!=None:
@@ -4655,8 +4748,11 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
         # Label simulation time
         if self.lx_box == self.ly_box:
-            plt.text(0.8, 0.04, s=r'$\tau$' + ' = ' + '{:.4f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
-                fontsize=18, transform = ax.transAxes,
+            #plt.text(0.69, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+            #    fontsize=24, transform = ax.transAxes,
+            #    bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+            plt.text(0.69, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+                fontsize=22, transform = ax.transAxes,
                 bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
         elif self.lx_box > self.ly_box:
             plt.text(0.85, 0.1, s=r'$\tau$' + ' = ' + '{:.4f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
@@ -4673,8 +4769,10 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         #pad = str(j).zfill(4)
 
         plt.tight_layout()
-        plt.savefig(self.outPath + 'part_activity_' + self.outFile + ".png", dpi=75, transparent=False)
-        plt.close()        
+        plt.savefig(self.outPath + 'part_activity_' + self.outFile + ".png", dpi=150, transparent=False)
+        plt.close()  
+        
+        
 
     def plot_part_activity2(self, pos, prev_pos, ang, sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None):
 

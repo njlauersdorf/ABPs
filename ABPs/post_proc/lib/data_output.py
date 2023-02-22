@@ -264,8 +264,6 @@ class data_output:
                                 arr_ind += 1
 
                         else:
-                            print(data[i])
-                            print(type(data[i]))
                             if type(data[i])==list:
                                 f.write('{0:.6f}'.format(data[i][arr_ind]).center(20) + ' ')
                             elif (type(data[i])==int) | (type(data[i])==np.uint32):
@@ -491,9 +489,6 @@ class data_output:
                     #print(arr_ind)
                     
                     for i in range(0, len(data)):
-                        print('test')
-                        print(arr_ind)
-                        print(arr_len)
                         if i == len(data)-1:
                             if type(data[i])==list:
                                 f.write('{0:.6f}'.format(data[i][arr_ind]).center(20) + '\n')
@@ -509,8 +504,6 @@ class data_output:
                                 arr_ind += 1
 
                         else:
-                            print(data)
-                            print(data[i])
                             if type(data[i])==list:
                                 f.write('{0:.6f}'.format(data[i][arr_ind]).center(20) + ' ')
                             elif type(data[i])==int:
