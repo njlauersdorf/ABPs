@@ -878,6 +878,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 if plot == 'y':
                    # plotting_functs = plotting.plotting(orient_dict, pos_dict, l_box, NBins, sizeBin, peA, peB, parFrac, eps, typ, tst)
                     plotting_functs.plot_part_activity(pos, all_surface_curves, int_comp_dict)
+                    
             elif measurement_method == 'phases':
                 #DONE
                 data_output_functs.write_to_txt(part_count_dict, dataPath + 'PhaseComp_' + outfile + '.txt')
@@ -930,8 +931,14 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 stop
 
 
+            elif measurement_method == 'compressibility':
+                lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
 
+                radial_df_dict = lattice_structure_functs.radial_df()
 
+                compress_dict = lattice_structure_functs.compressibility(radial_df_dict)
+
+                data_output_functs.write_to_txt(compress_dict, dataPath + 'compressibility_' + outfile + '.txt')
 
             elif measurement_method == 'int_press':
                 stress_and_pressure_functs = stress_and_pressure.stress_and_pressure(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)

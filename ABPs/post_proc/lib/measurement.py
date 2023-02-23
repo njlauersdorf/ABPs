@@ -623,6 +623,47 @@ class measurement:
         # Create output dictionary for plotting of RDF vs separation distance
         rad_df_dict = {'r': r_arr, 'all-all': g_r_allall_bulk, 'all-A': g_r_allA_bulk, 'all-B': g_r_allB_bulk, 'A-A': g_r_AA_bulk, 'A-B': g_r_AB_bulk, 'B-B': g_r_BB_bulk}
         return rad_df_dict
+    def compressibility(self, rad_df_dict):
+
+        num_dens_mean_dict = self.num_dens_mean(self.area_frac_dict)
+        
+
+        r_arr = rad_df_dict['r']
+        g_r_allall_bulk = rad_df_dict['all-all']
+        #ideal_swim_press = 
+
+        allall_compressibility = ((1/num_dens_mean_dict['all'])*(1 + num_dens_mean_dict['all'] * np.trapz(np.array(g_r_allall_bulk) - 1, x=np.array(r_arr))))
+        allA_compressibility = ((1/num_dens_mean_dict['all'])*(1 + num_dens_mean_dict['all'] * np.trapz(np.array(g_r_allA_bulk) - 1, x=np.array(r_arr))))
+        allB_compressibility = ((1/num_dens_mean_dict['all'])*(1 + num_dens_mean_dict['all'] * np.trapz(np.array(g_r_allB_bulk) - 1, x=np.array(r_arr))))
+
+        return {'compress': {'all': allall_compressibility, 'A': allA_compressibility, 'B': allB_compressibility}}
+
+    def structure_factor(self, rad_df_dict):
+        '''
+        Purpose: Takes the composition of each phase and uses neighbor lists to compute the
+        interparticle separation distance between each pair of reference particle
+        and one of their nearest, interacting neighbor and averages over the system to
+        provide the probability of finding a neighbor of a given species at each
+        separation distance from a reference particle of a given species (i.e. radial
+        distribution function, RDF)
+
+        Outputs:
+        rad_df_dict: dictionary containing arrays of the probability distribution
+        function of finding a particle of a given species ('all', 'A', or 'B') at
+        a given radial distance ('r') from a reference particle of a given species
+        ('all', 'A', or 'B') for a given reference-neighbor pair within the bulk phase (i.e. all-A means
+        all reference particles with A neighbors).
+        '''
+
+        
+        r_arr = rad_df_dict['r']
+        g_r_allall_bulk = rad_df_dict['all-all']
+
+
+        # Create output dictionary for plotting of RDF vs separation distance
+        rad_df_dict = {'r': r_arr, 'all-all': g_r_allall_bulk, 'all-A': g_r_allA_bulk, 'all-B': g_r_allB_bulk, 'A-A': g_r_AA_bulk, 'A-B': g_r_AB_bulk, 'B-B': g_r_BB_bulk}
+        return rad_df_dict
+    
     def angular_df(self):
         '''
         Purpose: Takes the composition of each phase and uses neighbor lists to compute the
@@ -3340,9 +3381,10 @@ class measurement:
         fourth_max_id = np.where(clust_B_third_temp==fourth_max_clust_B)[0]
         clust_B_fourth_temp = np.delete(clust_B_third_temp, fourth_max_id)
         fifth_max_clust_B = np.max(clust_B_fourth_temp)
+        
 
         domain_stat_dict = {'A': {'pop': len(pos_A_dense), 'avg_size': np.mean(clust_size_A[lcID_A]), 'std_size': np.std(clust_size_A[lcID_A]), 'num': len(clust_size_A[lcID_A]), 'first': first_max_clust_A, 'second': second_max_clust_A, 'third': third_max_clust_A, 'fourth': fourth_max_clust_A, 'fifth': fifth_max_clust_A}, 'B': {'pop': len(pos_B_dense), 'avg_size': np.mean(clust_size_B[lcID_B]), 'std_size': np.std(clust_size_B[lcID_B]), 'num': len(clust_size_B[lcID_B]), 'first': first_max_clust_B, 'second': second_max_clust_B, 'third': third_max_clust_B, 'fourth': fourth_max_clust_B, 'fifth': fifth_max_clust_B}}
-
+        
         return domain_stat_dict
 
     def hexatic_order(self):
