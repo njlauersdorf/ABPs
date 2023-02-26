@@ -1,0 +1,251 @@
+body {
+    background: (123, 275, 212);
+    display: flex;
+    justify-content: center;
+    min-height: 100vh;
+    overflow: hidden;
+}
+
+.clock_face {
+  width: 300px;
+  height: 300px;
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+  border: 12px solid black;
+  position: relative;
+}
+
+.clock_face .number {
+  --deg: 0;
+  position: absolute;
+  width: 100%;
+  height: 85%;
+  text-align: center;
+  transform: translate(0%, 9%) rotate(var(--deg));
+  font-size: 2.0rem;
+  font-family: Arial;
+}
+
+.clock_face .number1 { --deg: 30deg; }
+.clock_face .number2 { --deg: 60deg; }
+.clock_face .number3 { --deg: 90deg; }
+.clock_face .number4 { --deg: 120deg; }
+.clock_face .number5 { --deg: 150deg; }
+.clock_face .number6 { --deg: 180deg; }
+.clock_face .number7 { --deg: 210deg; }
+.clock_face .number8 { --deg: 240deg; }
+.clock_face .number9 { --deg: 270deg; }
+.clock_face .number10 { --deg: 300deg; }
+.clock_face .number11 { --deg: 330deg; }
+
+.clock_face .dash {
+  --deg: 0;
+  position: absolute;
+  bottom: 50%;
+  left: 50%;
+  width: 1px;
+  height: 3%;
+  background-color: black;
+  border: 1px solid white;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+  transform-origin: 0% -1200%;
+  transform: translate(0%, 1300%) rotate(var(--deg));
+
+}
+
+.clock_face .bigdash {
+  --deg: 0;
+  position: absolute;
+  bottom: 50%;
+  left: 50%;
+  width: 3px;
+  height: 5%;
+  background-color: black;
+  border: 1px solid white;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+  transform-origin: 0% -750%;
+  transform: translate(0%, 850%) rotate(var(--deg));
+
+}
+
+.clock_face .bigdash1 { --deg: 0deg; }
+.clock_face .dash2 { --deg: 6deg; }
+.clock_face .dash3 { --deg: 12deg; }
+.clock_face .dash4 { --deg: 18deg; }
+.clock_face .dash5 { --deg: 24deg; }
+.clock_face .bigdash6 { --deg: 30deg; }
+.clock_face .dash7 { --deg: 36deg; }
+.clock_face .dash8 { --deg: 42deg; }
+.clock_face .dash9 { --deg: 48deg; }
+.clock_face .dash10 { --deg: 54deg; }
+.clock_face .bigdash11 { --deg: 60deg; }
+.clock_face .dash12 { --deg: 66deg; }
+.clock_face .dash13 { --deg: 72deg; }
+.clock_face .dash14 { --deg: 78deg; }
+.clock_face .dash15 { --deg: 84deg; }
+.clock_face .bigdash16 { --deg: 90deg; }
+.clock_face .dash17 { --deg: 96deg; }
+.clock_face .dash18 { --deg: 102deg; }
+.clock_face .dash19 { --deg: 108deg; }
+.clock_face .dash20 { --deg: 114deg; }
+.clock_face .bigdash21 { --deg: 120deg; }
+.clock_face .dash22 { --deg: 126deg; }
+.clock_face .dash23 { --deg: 132deg; }
+.clock_face .dash24 { --deg: 138deg; }
+.clock_face .dash25 { --deg: 144deg; }
+.clock_face .bigdash26 { --deg: 150deg; }
+.clock_face .dash27 { --deg: 156deg; }
+.clock_face .dash28 { --deg: 162deg; }
+.clock_face .dash29 { --deg: 168deg; }
+.clock_face .dash30 { --deg: 174deg; }
+.clock_face .bigdash31 { --deg: 180deg; }
+.clock_face .dash32 { --deg: 186deg; }
+.clock_face .dash33 { --deg: 192deg; }
+.clock_face .dash34 { --deg: 198deg; }
+.clock_face .dash35 { --deg: 204deg; }
+.clock_face .bigdash36 { --deg: 210deg; }
+.clock_face .dash37 { --deg: 216deg; }
+.clock_face .dash38 { --deg: 222deg; }
+.clock_face .dash39 { --deg: 228deg; }
+.clock_face .dash40 { --deg: 234deg; }
+.clock_face .bigdash41 { --deg: 240deg; }
+.clock_face .dash42 { --deg: 246deg; }
+.clock_face .dash43 { --deg: 252deg; }
+.clock_face .dash44 { --deg: 258deg; }
+.clock_face .dash45 { --deg: 264deg; }
+.clock_face .bigdash46 { --deg: 270deg; }
+.clock_face .dash47 { --deg: 276deg; }
+.clock_face .dash48 { --deg: 282deg; }
+.clock_face .dash49 { --deg: 288deg; }
+.clock_face .dash50 { --deg: 294deg; }
+.clock_face .bigdash51 { --deg: 300deg; }
+.clock_face .dash52 { --deg: 306deg; }
+.clock_face .dash53 { --deg: 312deg; }
+.clock_face .dash54 { --deg: 318deg; }
+.clock_face .dash55 { --deg: 324deg; }
+.clock_face .bigdash56 { --deg: 330deg; }
+.clock_face .dash57 { --deg: 336deg; }
+.clock_face .dash58 { --deg: 342deg; }
+.clock_face .dash59 { --deg: 348deg; }
+.clock_face .dash60 { --deg: 354deg; }
+
+
+.clock_face .hand {
+  --deg: 0;
+  position: absolute;
+  bottom: 50%;
+  left: 50%;
+  background-color: black;
+  border: 1px solid white;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+  transform-origin: bottom;
+  z-index: 10;
+  transform: translateX(-50%) rotate(calc(var(--deg) *1deg));
+}
+
+.clock_face::after {
+  content: '';
+  position: absolute;
+  background-color: black;
+  z-index: 11;
+  width: 15px;
+  height: 15px;
+  top: 50%;
+  left: 50%;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.clock_face .hand.second {
+  width: 3px;
+  height: 45%;
+  background-color: red;
+}
+
+.clock_face .hand.minute {
+  width: 7px;
+  height: 40%;
+  background-color: black;
+}
+
+.clock_face .hand.hour {
+  width: 10px;
+  height: 25%;
+  background-color: black;
+}
+
+.clock_dig {
+  width: 650px;
+  height: 300px;
+  background-color: #252525;
+  border-radius: 30%;
+  border: 10px solid black;
+  position: absolute;
+  transform: translate(0%, 105%);
+}
+
+.clock_dig #display {
+  width: 80%;
+  height: 40%;
+  border-radius: 20%;
+  text-align: center;
+  background-color: rgba(103, 0, 13, 1.0);
+  position: absolute;
+  transform: translate(12.5%, 20%);
+  font-size: 4.5rem;
+  color: red;
+  font-family: Orbitron;
+  letter-spacing: 7px;
+  z-index: 15;
+}
+
+.clock_dig .alarm_marker {
+  width: 10px;
+  height: 10px;
+  background-color: rgba(103, 0, 13, 1.0);
+  transform: translate(440px, 114px);
+  border-radius: 50%;
+  position: absolute;
+  z-index: 16;
+}
+
+.clock_dig .alarm_word {
+  position: absolute;
+  width: 100%;
+  height: 85%;
+  text-align: center;
+  transform: translate(180px, 105px);
+  color: red;
+  font-size: 1.5rem;
+  font-family: Orbitron;
+  z-index: 17;
+}
+
+.button {
+  background-color: #bdbdbd;
+  position: relative;
+  border: 1px solid black;
+  border-radius: 5px;
+  width: 112px;
+  color: black;
+  padding: 10px 20px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  cursor: pointer;
+  transform: translate(27.5px, 150px);
+  z-index: 20;
+
+}
+
+.button:hover {
+  background-color: #ddd;
+  -webkit-box-shadow: 0px 1px 4px 0px rgba(0, 0, 0, 0.2);
+  box-shadow: 0px 1px 4px 0px rgba(0, 0, 0, 0.2);
+  border-color: #aaa;
+}
