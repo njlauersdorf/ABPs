@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="assets/css/styles.css">
+
+        <!-- =====BOX ICONS===== -->
+        <link href='https://cdn.jsdelivr.net/npm/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+        <script src="https://code.iconify.design/iconify-icon/1.0.2/iconify-icon.min.js"></script>
+        <script src="https://code.iconify.design/iconify-icon/1.0.3/iconify-icon.min.js"></script>
+
+        <title>Portfolio website complete</title>
+    </head>
+    <body>
+
+        <!--===== HEADER =====-->
+        <header class="l-header">
+            <nav class="nav bd-grid">
+                <div>
+                    <a style="color: hsl(0, 0%, 0%);" href="index.html" class="nav__logo">Nicholas Lauersdorf</a>
+                </div>
+
+                <div style="color: hsl(0, 0%, 0%);" class="nav__menu" id="nav-menu">
+                    <ul class="nav__list">
+                        <li class="nav__item"><a style="color: hsl(0, 0%, 0%);" href="index.html" class="nav__link active">Home</a></li>
+                        <li class="nav__item"><a style="color: hsl(0, 0%, 0%);" href="about.html" class="nav__link">About</a></li>
+                        <li class="nav__item"><a style="color: hsl(0, 0%, 0%);" href="roles.html" class="nav__link">Experience</a></li>
+                        <li class="nav__item"><a style="color: hsl(0, 0%, 0%);" href="publications.html" class="nav__link">Publications</a></li>
+                        <li class="nav__item"><a style="color: hsl(0, 0%, 0%);" href="contact.html" class="nav__link">Contact</a></li>
+                    </ul>
+                </div>
+
+                <div class="nav__toggle" id="nav-toggle">
+                    <i class='bx bx-menu'></i>
+                </div>
+            </nav>
+        </header>
+
+        <!--===== PUBLICATIONS =====-->
+        <main class="l-main">
+            <section class="about section " id="about">
+                <img src="assets/img/publications_banner.jpeg" class="home__banner" alt "">
+                <h2 class="section-title">About</h2>
+
+                <div style="padding-bottom:2rem;" class="about__container bd-grid">
+
+                    <div style="margin-right: 1rem;" class="container large">
+                        <video width="100%" controls>
+                            <source src="assets/img/mono_trimmed.mp4" type="video/mp4">
+                        </video>
+                    </div>
+                    
+                    <div style="background-color:rgb(244, 244, 244);" class="aboutleft__txt">
+                        <h2 class="about__subtitle">My background is a bit like bread </h2>
+
+                        <p style="line-height:1.55;" class="about__text"> Much like flour, Physics is the structure of everything I do and feeds my Computer Science, the yeast. Math, which translates the science to my code,  binds these two together, like fat. Finally, Communication makes the whole thing sweet and palatable to others, like sugar. Right now, at UNC-Chapel Hill, I combine all these ingredients to bake my bread: non-equilibrium statistical mechanics. Mmmmm, delicious!</p>
+                        <br>
+                        <p style="line-height:1.55;" class="about__text"> Specifically, I aim to understand the role of self-propulsion on collective behavior. To give you an example, typically, we think of physics as occuring in a distant galaxy or locked away in a lab. However, what I study is a system you see everyday: it's you. How does an individual's ability to move and interact with others influence the group's collective behavior? Using fundamental physics and computational modeling, I develop mathematical theories to not only explain the collective behavior but also predict it.</p>
+                        <br> 
+                        <p style="line-height:1.55;" class="about__text"> Using C++, I simulate hundreds of thousands of self-propelling particles.  As you can see from the adjacent video, this system is inherently messy: everything constantly moves and never reaches a final resting point (equilibrium), making analysis particularly challenging. Using algorithms I develop in Python and statistical mechanics, I boil down big data to simple relationships that explain how the individual's properties determine the group's behavior.</p>
+                        <br>
+                        <p style="line-height:1.55;"  class="about__text"> So, my background in Computational Physics certainly comes in handy for research, but, at the same time, it has lent itself to every aspect of my graduate career. I've utilized my Software Development skills to design this website, my Data Science skills to create a user database and analytics system for my university's makerspace, and my Communication to not only teach science to high schoolers but also for presenting bills as a senator in student government. My computational physics background has shaped me to be well-rounded, much like a good, well-risen loaf of bread.</p>
+                        
+                        <div style="width:350px" class="container small">
+                            <video width="100%" controls>
+                                <source src="assets/img/mono_trimmed.mp4" type="video/mp4">
+                            </video>
+                        </div>
+
+                    </div>                                   
+                </div>
+
+                <div class="about2__container bd-grid">
+                    <div style="background-color:rgb(244, 244, 244);" class="aboutright__txt">
+                        <h2 class="about__subtitle">Teaching and Mentoring</h2>
+
+                        <p style="font-size: 1.0rem; line-height:1.55;" class="about__text"> My B.S. is in <a href="https://www.physics.wisc.edu/">Physics</a> and <a href="https://math.wisc.edu/">Mathematics</a> (University of Wisconsin-Madison 2018). In 3 years of undergraduate and post-graduate research, I developed computational models in Python and IDL to simulate and predict the energy emissions of fusion-plasma generators, which I applied to design, fabricate, and experimentally verify a x-ray detector for my senior thesis. I developed both my passion for Computational Physics and my desire to become a mentor for developing scientists and students as my advisor, Dr. Lisa Reusch, had been to me.  </p>
+                        <br>
+
+                        <p style="font-size: 1.0rem; line-height:1.55;" class="about__text"> With this passion, I pursued my PhD in <a href="https://aps.unc.edu/">Materials Science</a> (University of North Carolina at Chapel Hill 2024) supervised by <a href="https://aps.unc.edu/faculty-member/klotsa-daphne/">Daphne Klotsa</a>. For my PhD thesis, I am utilizing C++ to computationally model large systems of self-propelled particles and Python to measure their dynamic properties, statistically analyze data for trends, and create intuitive visualizations to explain the significance. Furthermore, I derive mathematical theories based upon fundamental physics that explain and predict the complex collective behavior observed in active particles. </p>
+                        <br>
+            
+                        <p style="font-size: 1.0rem; line-height:1.55;"  class="about__text">   </p>
+                        
+                        <div style="border-radius:0.5; width:350px" class="container small">
+                            <img style="border-radius:0.5rem;" src="assets/img/presenting.png" alt="">
+                        </div>
+
+                    </div>    
+                    
+                    <div style="margin-left: 1rem;" class="container large">
+                        <img style="border-radius:0.5rem;" src="assets/img/presenting.png" alt="">
+                    </div>
+
+                </div>
+            </section>
+
+            <section class="skills section" id="skills">
+
+                <div style="background-color:rgb(244, 244, 244); padding-top:2rem; padding-right:2rem; padding-left:2rem; padding-bottom:0rem;border-radius:0.5rem;" class="skills3__container bd-grid">          
+
+                    <h2 style="padding: 0rem; margin: 0rem;" class="about__subtitle">Programming Skills</h2>
+
+                    <p style="padding-top: 0rem; margin-top: 0rem; font-size: 1.0rem; line-height:1.55;" class="skills3__text"> Before starting computational research as an undergraduate, I had never seen a line of computer code. Within a couple years, I taught myself how to read and write complex code in both Python and IDL and applied this knowledge to design a physics-based model that predicts the energy emissions of fusion plasmas. Since this position, I have greatly honed my knowledge of utilizing various programming languages to develop computational tools for modeling real-life systems, measuring their properties, statistically analyzing big data to find significant trends, and creating visualizations to intuitively share my findings. </p>
+                </div>
+
+                <div style="padding-top:2rem;" class="skills__container bd-grid">          
+                    <div>
+                        <div class="skills__data">
+                            <div class="skills__names">
+                                <i class='bx bxl-python skills__icon' ></i>
+                                <span class="skills__name">Python</span>
+                            </div>
+                            <div class="skills__bar skills__ten">
+
+                            </div>
+                            <div>
+                                <span class="skills__percentage">10 years</span>
+                            </div>
+                        </div>
+
+                        <div class="skills__data">
+                            <div class="skills__names">
+                                <iconify-icon icon="codicon:terminal-bash" class="skills__icon"></iconify-icon>
+                                <span class="skills__name">BASH</span>
+                            </div>
+                            <div class="skills__bar skills__ten">
+
+                            </div>
+                            <div>
+                                <span class="skills__percentage">10 years</span>
+                            </div>
+                        </div>
+
+                        <div class="skills__data">
+                            <div class="skills__names">
+                                <i class='bx bxl-c-plus-plus skills__icon' ></i>
+                                <span class="skills__name">C++</span>
+                            </div>
+                            <div class="skills__bar skills__four">
+                                
+                            </div>
+                            <div>
+                                <span class="skills__percentage">4 years</span>
+                            </div>
+                        </div>
+
+                        <div class="skills__data">
+                            <div class="skills__names">
+                                <iconify-icon icon="file-icons:idl" class="skills__icon"></iconify-icon>
+                                <span class="skills__name">IDL</span>
+                            </div>
+                            <div class="skills__bar skills__four">
+                                
+                            </div>
+                            <div>
+                                <span class="skills__percentage">4 years</span>
+                            </div>
+                        </div>
+                        <div class="skills__data">
+                            <div class="skills__names">
+                                <iconify-icon icon="ion:logo-tableau" class="skills__icon"></iconify-icon>
+
+                                <span class="skills__name">Tableau</span>
+                            </div>
+                            <div class="skills__bar skills__two">
+                                
+                            </div>
+                            <div>
+                                <span class="skills__percentage">2 years</span>
+                            </div>
+                        </div>
+
+                        
+                    </div>
+                    
+                    <div class="skills__column">     
+                        <div class="skills__data">
+                            <div class="skills__names">
+                                <iconify-icon icon="material-symbols:html" class="skills__icon"></iconify-icon>
+                                <span class="skills__name">HTML</span>
+                            </div>
+                            <div class="skills__bar skills__two">
+                                
+                            </div>
+                            <div>
+                                <span class="skills__percentage">2 years</span>
+                            </div>
+                        </div>
+                        <div class="skills__data">
+                            <div class="skills__names">
+                                <iconify-icon icon="material-symbols:css" class="skills__icon"></iconify-icon>
+                                <span class="skills__name">CSS</span>
+                            </div>
+                            <div class="skills__bar skills__two">
+                                
+                            </div>
+                            <div>
+                                <span class="skills__percentage">2 years</span>
+                            </div>
+                        </div>
+
+                        <div class="skills__data">
+                            <div class="skills__names">
+                                <i class='bx bxl-javascript skills__icon' ></i>
+                                <span class="skills__name">JAVASCRIPT</span>
+                            </div>
+                            <div class="skills__bar skills__two">
+                                
+                            </div>
+                            <div>
+                                <span class="skills__percentage">2 years</span>
+                            </div>
+                        </div>
+                        
+                        <div class="skills__data">
+                            <div class="skills__names">
+                                <iconify-icon icon="file-icons:matlab" class="skills__icon"></iconify-icon>
+
+                                <span class="skills__name">MatLab</span>
+                            </div>
+                            <div class="skills__bar skills__two">
+                                
+                            </div>
+                            <div>
+                                <span class="skills__percentage">2 years</span>
+                            </div>
+                        </div>
+                        <div class="skills__data">
+                            <div class="skills__names">
+                                <iconify-icon icon="carbon:sql" class="skills__icon"></iconify-icon>
+                                <span class="skills__name">SQL</span>
+                            </div>
+                            <div class="skills__bar skills__one">
+                                
+                            </div>
+                            <div>
+                                <span class="skills__percentage">1 year</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+
+            <div style="padding-bottom:2rem;" class="about3__container bd-grid">
+                <!-- Slideshow container -->
+
+
+                <div style="margin-right:1rem; background-color:rgb(244, 244, 244); padding:2rem; border-radius:0.5rem">
+                    <h2 class="about__subtitle"> Scientist in training, businessman at heart </h2>
+
+                    <p style="font-size: 1.0rem; line-height:1.55;" class="about__text"> For generations, my family have been collectors, each with our own eclectic tastes. Me, I loved the business aspect of collectibles. As a sophomore in high school, I created an online collectibles store that I operate to this day. I went on to help found and, for six years, manage a <a href="https://www.facebook.com/groups/569956373159800">social media group</a> and <a href="https://comicbookinvest.com/">news outlet</a> for investing in comic books. Through in-person and online advertising in addition to organizing a regular content creation schedule, I helped this community grow from a few dozen to over 5,000 members, igniting my desire to lead.  I loved the challenge of applying my science and analytics skills to a new area: business. In graduate school, I made it a priority to formally develop my business skills by pursuing a Graduate Certificate in Innovation, Leadership, & Management.<br>
+                </div>                         
+
+                <div class="slideshow-container">
+                    <div class="mySlides fade">
+                        <img src="https://www.w3schools.com/css/img_5terre.jpg" class="pics"/>
+                    </div>
+                    <div class="mySlides fade">
+                        <img src="https://www.w3schools.com/css/img_forest.jpg" class="pics"/>
+                    </div>
+                    <div class="mySlides fade">
+                        <img src="https://www.w3schools.com/css/img_lights.jpg" class="pics"/>
+                    </div>
+                    <div class="mySlides fade">
+                        <img src="https://www.w3schools.com/css/img_mountains.jpg" class="pics"/>
+                    </div>
+                    <a class="prev" onclick="plusSlides(-1)">&#10094;</a>
+                    <a class="next" onclick="plusSlides(1)">&#10095;</a>
+
+                    <div style="text-align:center; width: 100px; position: absolute; bottom: 0; left: 50%; margin-left: -50px;">
+                        <span class="dot" onclick="currentSlide(1)"></span>
+                        <span class="dot" onclick="currentSlide(2)"></span>
+                        <span class="dot" onclick="currentSlide(3)"></span>
+                        <span class="dot" onclick="currentSlide(4)"></span>
+                    </div>
+
+                </div>
+
+                  
+            </div>
+            <!--    Putting in the click dots   -->
+                
+            
+        </main>
+
+        <!--===== FOOTER =====-->
+        <footer class="footer">
+            <p class="footer__title">Nicholas Lauersdorf</p>
+            <p class="footer__copy">Email: njlauersdorf@gmail.com</p>
+            <div skills="color:rgb(255, 255, 255)" class="footer__social">
+                <a skills="color:rgb(255, 255, 255)" href="https://www.linkedin.com/in/nicholaslauersdorf" class="footer__icon"><i class='bx bxl-linkedin' ></i></a>
+                <a skills="color:rgb(255, 255, 255)" href="https://github.com/njlauersdorf/klotsa.git" class="footer__icon"><i class='bx bxl-github' ></i></a>
+            </div>
+            
+        </footer>
+
+
+        <!--===== SCROLL REVEAL =====-->
+        <script src="https://unpkg.com/scrollreveal"></script>
+
+        <!--===== MAIN JS =====-->
+        <script src="assets/js/main.js"></script>
+    </body>
+</html>
