@@ -589,6 +589,86 @@ class stress_and_pressure:
 
         act_press_dict = {'all': act_press, 'A': act_pressA, 'B': act_pressB}
         return act_press_dict
+
+    def total_active_pressure_bubble(self, com_radial_dict, sep_surface_dict, int_comp_dict):
+        
+        exterior_surface_arr = np.array([])
+        interior_surface_arr = np.array([])
+
+        int_id = int(int_comp_dict['ids'][np.where(int_comp_dict['comp']['all']==np.max(int_comp_dict['comp']['all']))[0][0]])
+
+        print(sep_surface_dict)
+
+        for m in range(0, len(sep_surface_dict)):
+            if int(int_comp_dict['ids'][m]) != int_id:
+
+                key = 'surface id ' + str(int(int_comp_dict['ids'][m]))
+                try:
+                    exterior_surface_arr = np.append(exterior_surface_arr, sep_surface_dict[key]['exterior']['mean radius'])
+                except:
+                    exterior_surface_arr = np.append(exterior_surface_arr, 0)
+                try:
+                    interior_surface_arr = np.append(interior_surface_arr, sep_surface_dict[key]['interior']['mean radius'])
+                except:
+                    interior_surface_arr = np.append(interior_surface_arr, 0)
+
+        print(exterior_surface_arr)
+        print(interior_surface_arr)
+        stop
+        #Initiate empty values for integral of pressures across interfaces
+        act_press = 0
+        act_pressA = 0
+        act_pressB = 0
+
+        #Integrate force across interface using trapezoidal rule
+        for i in range(1, len(com_radial_dict['r'])-1):
+            act_press += ((com_radial_dict['r'][i]-com_radial_dict['r'][i-1])/2)*(com_radial_dict['fa_press']['all'][i]+com_radial_dict['fa_press']['all'][i-1])
+            act_pressA += ((com_radial_dict['r'][i]-com_radial_dict['r'][i-1])/2)*(com_radial_dict['fa_press']['A'][i]+com_radial_dict['fa_press']['A'][i-1])
+            act_pressB += ((com_radial_dict['r'][i]-com_radial_dict['r'][i-1])/2)*(com_radial_dict['fa_press']['B'][i]+com_radial_dict['fa_press']['B'][i-1])
+
+        act_press_dict = {'all': act_press, 'A': act_pressA, 'B': act_pressB}
+        return act_press_dict
+
+    def total_active_pressure_interface(self, com_radial_dict, sep_surface_dict, int_comp_dict):
+
+        exterior_surface_arr = np.array([])
+        interior_surface_arr = np.array([])
+
+        int_id = int(int_comp_dict['ids'][np.where(int_comp_dict['comp']['all']==np.max(int_comp_dict['comp']['all']))[0][0]])
+
+        for m in range(0, len(sep_surface_dict)):
+            if int(int_comp_dict['ids'][m]) == int_id:
+
+                key = 'surface id ' + str(int(int_comp_dict['ids'][m]))
+                try:
+                    exterior_surface_arr = np.append(exterior_surface_arr, sep_surface_dict[key]['exterior']['mean radius'])
+                except:
+                    exterior_surface_arr = np.append(exterior_surface_arr, 0)
+                try:
+                    interior_surface_arr = np.append(interior_surface_arr, sep_surface_dict[key]['interior']['mean radius'])
+                except:
+                    interior_surface_arr = np.append(interior_surface_arr, 0)
+
+        print(exterior_surface_arr)
+        print(interior_surface_arr)
+        stop
+
+        #Initiate empty values for integral of pressures across interfaces
+        act_press = 0
+        act_pressA = 0
+        act_pressB = 0
+
+        #Integrate force across interface using trapezoidal rule
+        for i in range(1, len(com_radial_dict['r'])-1):
+            act_press += ((com_radial_dict['r'][i]-com_radial_dict['r'][i-1])/2)*(com_radial_dict['fa_press']['all'][i]+com_radial_dict['fa_press']['all'][i-1])
+            act_pressA += ((com_radial_dict['r'][i]-com_radial_dict['r'][i-1])/2)*(com_radial_dict['fa_press']['A'][i]+com_radial_dict['fa_press']['A'][i-1])
+            act_pressB += ((com_radial_dict['r'][i]-com_radial_dict['r'][i-1])/2)*(com_radial_dict['fa_press']['B'][i]+com_radial_dict['fa_press']['B'][i-1])
+
+        act_press_dict = {'all': act_press, 'A': act_pressA, 'B': act_pressB}
+        return act_press_dict
+
+    
+
     def interparticle_stress_nlist(self, phasePart):
 
         phase_part_dict = self.particle_prop_functs.particle_phase_ids(phasePart)

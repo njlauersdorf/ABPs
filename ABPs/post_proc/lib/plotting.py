@@ -229,13 +229,17 @@ class plotting:
             for j in range(0, len(self.pos_y)):
                 if phase_dict['bin'][i][j]==1:
                     plt.quiver(self.pos_x[i][j], self.pos_y[i][j], self.orient_x[i][j], self.orient_y[i][j], scale=15.0, width=0.002)
-
+        print(len(sep_surface_dict))
+        plt.show()
         for m in range(0, len(sep_surface_dict)):
             key = 'surface id ' + str(int(int_comp_dict['ids'][m]))
+            print(key)
             try:
                 pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
                 pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
                 plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
+                print('test1')
+                plt.show()
             except:
                 pass
 
@@ -243,6 +247,8 @@ class plotting:
                 pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
                 pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
                 plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
+                print('test2')
+                plt.show()
             except:
                 pass
 
@@ -4169,6 +4175,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
             mono=1
             mono_activity=self.peA
             mono_type = 2
+            mono=0
         else:
             mono=0
 
@@ -4176,21 +4183,9 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
         #fig = plt.figure(figsize=(x_dim,y_dim*2))
         #ax = fig.add_subplot(121, gridspec_kw={'height_ratios': [2, 1]})
-        fig, (ax0, ax1) = plt.subplots(2, 1, figsize=(6,8), gridspec_kw={'height_ratios': [1.6, 1]})
+        fig, (ax0, ax1) = plt.subplots(2, 1, figsize=(6,8), gridspec_kw={'height_ratios': [2, 1]})
 
         sz = 0.75
-        
-        pos0_x_arr = np.append(pos[typ0ind,0]+self.hx_box, pos[typ0ind,0]+self.hx_box)
-        pos0_x_arr = np.append(pos0_x_arr, pos[typ0ind,0]+self.hx_box)
-
-        pos0_y_arr = np.append(pos[typ0ind,1]+self.hy_box, pos[typ0ind,1]+self.hy_box+self.ly_box)
-        pos0_y_arr = np.append(pos0_y_arr, pos[typ0ind,1]+self.hy_box-self.ly_box)
-
-        pos1_x_arr = np.append(pos[typ1ind,0]+self.hx_box, pos[typ1ind,0]+self.hx_box)
-        pos1_x_arr = np.append(pos1_x_arr, pos[typ1ind,0]+self.hx_box)
-
-        pos1_y_arr = np.append(pos[typ1ind,1]+self.hy_box, pos[typ1ind,1]+self.hy_box+self.ly_box)
-        pos1_y_arr = np.append(pos1_y_arr, pos[typ1ind,1]+self.hy_box-self.ly_box)
 
 
         if mono==0:
@@ -4210,14 +4205,14 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
             for i in range(0,len(typ1ind))]
             """
 
-            ells0 = [Ellipse(xy=np.array([pos0_x_arr[i], pos0_y_arr[i]]),
+            ells0 = [Ellipse(xy=np.array([pos0[i,0]+self.hx_box, pos0[i,1]+self.hy_box]),
                     width=sz, height=sz, label='PeA: '+str(self.peA))
-            for i in range(0,len(pos0_x_arr))]
+            for i in range(0,len(pos0))]
 
             #Assign type 1 particles to plot
-            ells1 = [Ellipse(xy=np.array([pos1_x_arr[i], pos1_y_arr[i]]),
+            ells1 = [Ellipse(xy=np.array([pos1[i,0]+self.hx_box, pos1[i,1]+self.hy_box]),
                     width=sz, height=sz, label='PeB: '+str(self.peB))
-            for i in range(0,len(pos1_x_arr))]
+            for i in range(0,len(pos1))]
 
             # Plot position colored by neighbor number
             if self.peA <= self.peB:
@@ -4228,7 +4223,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                 fastGroup = mc.PatchCollection(ells0,facecolors=fastCol)
             ax0.add_collection(slowGroup)
             ax0.add_collection(fastGroup)
-
+            """
             #Create legend for binary system
             if (len(typ0ind)!=0) & (len(typ1ind)!=0):
                 leg = ax0.legend(handles=[ells0[0], ells1[0]], labels=[r'$\mathrm{Pe}_\mathrm{A} = $'+str(int(self.peA)), r'$\mathrm{Pe}_\mathrm{B} = $'+str(int(self.peB))], loc='upper right', prop={'size': 15}, markerscale=8.0)
@@ -4242,7 +4237,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
             else:
                 leg = ax0.legend(handles=[ells0[0]], labels=[r'$\mathrm{Pe}_\mathrm{A} = $'+str(int(self.peA)), r'$\mathrm{Pe}_\mathrm{A} = $'+str(int(self.peA))], loc='upper right', prop={'size': 15}, markerscale=8.0)
                 leg.legendHandles[0].set_color(slowCol)
-
+            """
             #px = np.sin(ang[typ1ind])
             #py = -np.cos(ang[typ1ind])
 
@@ -4272,8 +4267,8 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                 slowGroup = mc.PatchCollection(ells0, facecolors=slowCol)
                 ax0.add_collection(slowGroup)
 
-                leg = ax0.legend(handles=[ells0[0]], labels=[r'$\mathrm{Pe} = $'+str(int(self.peA))], loc='upper right', prop={'size': 15}, markerscale=8.0)
-                leg.legendHandles[0].set_color(slowCol)
+                #leg = ax0.legend(handles=[ells0[0]], labels=[r'$\mathrm{Pe} = $'+str(int(self.peA))], loc='upper right', prop={'size': 15}, markerscale=8.0)
+                #leg.legendHandles[0].set_color(slowCol)
 
             elif mono_type == 1:
 
@@ -4289,8 +4284,8 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                 slowGroup = mc.PatchCollection(ells1, facecolors=slowCol)
                 ax0.add_collection(slowGroup)
 
-                leg = ax0.legend(handles=[ells1[0]], labels=[r'$\mathrm{Pe} = $'+str(int(self.peB))], loc='upper right', prop={'size': 15}, markerscale=8.0)
-                leg.legendHandles[0].set_color(slowCol)
+                #leg = ax0.legend(handles=[ells1[0]], labels=[r'$\mathrm{Pe} = $'+str(int(self.peB))], loc='upper right', prop={'size': 15}, markerscale=8.0)
+                #leg.legendHandles[0].set_color(slowCol)
 
             elif mono_type == 2:
                 #Local each particle's positions
@@ -4363,12 +4358,12 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
         # Label simulation time
         if self.lx_box == self.ly_box:
-            ax0.text(0.65, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
-                fontsize=18, transform = ax0.transAxes,
+            ax0.text(0.55, 0.04, s=r'$\tau$' + ' = ' + '{:.1f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+                fontsize=24, transform = ax0.transAxes,
                 bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
         elif self.lx_box > self.ly_box:
-            ax0.text(0.65, 0.1, s=r'$\tau$' + ' = ' + '{:.2f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
-                fontsize=18, transform = ax0.transAxes,
+            ax0.text(0.65, 0.1, s=r'$\tau$' + ' = ' + '{:.1f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+                fontsize=24, transform = ax0.transAxes,
                 bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
 
         ax0.axes.set_xticks([])
@@ -4380,49 +4375,31 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         # Create frame pad for images
         #pad = str(j).zfill(4)
         print(outfile_name)
-        txtFile1 = 'com_interface_pressure_' + outfile_name + '.txt'
-        file1 = open('/Volumes/EXTERNAL2/temp_files_new/com_interface_pressure/' + txtFile1, 'r')
-        Lines = file1.readlines()
-        count = 0
 
-        time_arr = np.array([])
-        clust_size_arr = np.array([])
-        press_all_arr = np.array([])
-        press_A_arr = np.array([])
-        press_B_arr = np.array([])
+        import pandas as pd
+
+        
+
+        txtFile1 = 'surface_interface_pressure_' + outfile_name + '.txt'
+        df1 = pd.read_csv('/Volumes/EXTERNAL2/temp_files_new/surface_interface_pressure/' + txtFile1, sep='\s+', header=0)
+
+        time_arr = df1['tauB']
+        clust_size_arr = df1['clust_size']
+        press_all_arr = df1['all']
+        press_A_arr = df1['A']
+        press_B_arr = df1['B']
         # Strips the newline character
-        for line in Lines:
-            data = line.split()
-            if count>0:
-                print(data[0])
-                time_arr = np.append(time_arr, float(data[0]))
-                clust_size_arr = np.append(clust_size_arr, float(data[3]))
-                press_all_arr = np.append(press_all_arr, float(data[4]))
-                press_A_arr = np.append(press_A_arr, float(data[5]))
-                press_B_arr = np.append(press_B_arr, float(data[6]))
-            count += 1
 
         txtFile2 = 'interparticle_press_' + outfile_name + '.txt'
-        file2 = open('/Volumes/EXTERNAL2/temp_files_new/interparticle_press/' + txtFile2, 'r')
-        Lines = file2.readlines()
-        count = 0
+        df2 = pd.read_csv('/Volumes/EXTERNAL2/temp_files_new/interparticle_press/' + txtFile2, sep='\s+', header=0)
 
-        time_arr2 = np.array([])
-        clust_size_arr2 = np.array([])
-        press_all_arr2 = np.array([])
-        press_A_arr2 = np.array([])
-        press_B_arr2 = np.array([])
+        time_arr2 = df2['tauB']
+        clust_size_arr2 = df2['clust_size']
+        press_all_arr2 = df2['all-all_bulk_press']
+        press_A_arr2 = df2['all-A_bulk_press']
+        press_B_arr2 = df2['all-B_bulk_press']
 
         # Strips the newline character
-        for line in Lines:
-            data = line.split()
-            if count>0:
-                time_arr2 = np.append(time_arr2, float(data[0]))
-                clust_size_arr2 = np.append(clust_size_arr2, float(data[3]))
-                press_all_arr2 = np.append(press_all_arr2, float(data[15]))
-                press_A_arr2 = np.append(press_A_arr2, float(data[23]))
-                press_B_arr2 = np.append(press_B_arr2, float(data[31]))
-            count += 1
 
         rstop = 10.
         if np.max(press_all_arr) >= np.max(press_all_arr2):
@@ -4442,37 +4419,58 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
         #plt.plot(x_arr, y_arr, c='black', lw=1.0, ls='--')
 
-        plt.plot(time_arr, press_all_arr,
-                    c='purple', lw=3.0, ls='-', alpha=1, label='Interface Pressure')
-        plt.plot(time_arr2, press_all_arr2,
-                    c='green', lw=3.0, ls='-', alpha=1, label='Bulk Pressure')
+        #plt.plot(time_arr, press_all_arr,
+        #            c='purple', lw=3.0, ls='-', alpha=1, label='Interface Pressure')
+        #plt.plot(time_arr2, press_all_arr2,
+        #            c='green', lw=3.0, ls='-', alpha=1, label='Bulk Pressure')
+        
+        
+        """
+        plt.plot(time_arr2, 100*clust_size_arr2,
+                    c='#2ca25f', lw=3.0, ls='-', alpha=1, label='Cluster Size')
+
+        plt.plot(time_arr2, 100*clust_size_A_arr3,
+                    c='blue', lw=3.0, ls='-', alpha=1, label='Cluster Size')
+        plt.plot(time_arr2, 100*clust_size_B_arr3,
+                    c='red', lw=3.0, ls='-', alpha=1, label='Cluster Size')
+        """
         fsize=5
 
 
         #ax1.set_ylim(np.mean(press_all_arr)-0.5*np.mean(press_all_arr), np.mean(press_all_arr)+0.5*np.mean(press_all_arr))
 
 
-        ax1.set_xlabel(r'Simulation Time ($\tau_\mathrm{B}$)', fontsize=fsize*2.8)
+        ax1.set_xlabel(r'Time ($\tau_\mathrm{B}$)', fontsize=24)
 
-        ax1.set_ylabel(r'Dense Pressure ($\Pi_\mathrm{d}$)', fontsize=fsize*2.8)
+        ax1.set_ylabel(r'% Change Cluster Size', fontsize=24)
 
         #lat_theory = np.mean(lat_theory_arr)
         # Set all the x ticks for radial plots
-        ax1.set_ylim(0.5 * min_n, 2.0*max_n)
-        ax1.set_xlim(0, np.max(time_arr))
-        ax1.legend(loc='upper right', fontsize=fsize*2.6)
+        ax1.set_ylim(-5, 5)
+        x_arr = np.array([self.tst, self.tst])
+        y_arr = np.array([-100, 50.0])
+
+        x_arr2 = np.array([0, 600])
+        y_arr2 = np.array([0.0, 0.0])
+        
+        plt.plot(time_arr2, 100*clust_size_arr2/np.mean(clust_size_arr2[300:])-100,
+                    c='#2ca25f', lw=2.0, ls='-', alpha=1, label='Cluster Size')
+        plt.plot(x_arr2, y_arr2, linestyle='dashed', color='black', linewidth=2.0)
+        plt.plot(x_arr, y_arr, linestyle='solid', color='black', linewidth=2.0, alpha=0.5)
+        
+        ax1.set_xlim(300, 600)
+        #ax1.legend(loc='upper right', fontsize=fsize*2.6)
         #step = 2.0
         # Set y ticks
 
         # Left middle plot
-        ax1.tick_params(axis='x', labelsize=fsize*2.5)
-        ax1.tick_params(axis='y', labelsize=fsize*2.5)
+        ax1.tick_params(axis='x', labelsize=20)
+        ax1.tick_params(axis='y', labelsize=20)
 
 
         plt.tight_layout()
-        #plt.savefig(self.outPath + 'clust_fluctuations_' + self.outFile + ".png", dpi=75, transparent=False)
-        #plt.close()     
-        plt.show()
+        plt.savefig(self.outPath + 'clust_fluctuations_' + self.outFile + ".png", dpi=150, transparent=False)
+        plt.close()   
 
     def plot_part_activity(self, pos, ang, sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None):
 
@@ -4555,7 +4553,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         ax = fig.add_subplot(111)
 
         sz = 0.75
-        
+        """
         pos0_x_arr = np.append(pos[typ0ind,0]+self.hx_box, pos[typ0ind,0]+self.hx_box)
         pos0_x_arr = np.append(pos0_x_arr, pos[typ0ind,0]+self.hx_box)
 
@@ -4567,7 +4565,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
         pos1_y_arr = np.append(pos[typ1ind,1]+self.hy_box, pos[typ1ind,1]+self.hy_box+self.ly_box)
         pos1_y_arr = np.append(pos1_y_arr, pos[typ1ind,1]+self.hy_box-self.ly_box)
-
+        """
 
         if mono==0:
             #Local each particle's positions
@@ -4586,14 +4584,14 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
             for i in range(0,len(typ1ind))]
             """
 
-            ells0 = [Ellipse(xy=np.array([pos0_x_arr[i], pos0_y_arr[i]]),
+            ells0 = [Ellipse(xy=np.array([pos0[i,0]+self.hx_box, pos0[i,1]+self.hy_box]),
                     width=sz, height=sz, label='PeA: '+str(self.peA))
-            for i in range(0,len(pos0_x_arr))]
+            for i in range(0,len(pos0))]
 
             #Assign type 1 particles to plot
-            ells1 = [Ellipse(xy=np.array([pos1_x_arr[i], pos1_y_arr[i]]),
+            ells1 = [Ellipse(xy=np.array([pos1[i,0]+self.hx_box, pos1[i,1]+self.hy_box]),
                     width=sz, height=sz, label='PeB: '+str(self.peB))
-            for i in range(0,len(pos1_x_arr))]
+            for i in range(0,len(pos1))]
 
             # Plot position colored by neighbor number
             if self.peA <= self.peB:
@@ -4606,6 +4604,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
             ax.add_collection(fastGroup)
 
             #Create legend for binary system
+            """
             if (len(typ0ind)!=0) & (len(typ1ind)!=0):
                 leg = ax.legend(handles=[ells0[0], ells1[0]], labels=[r'$\mathrm{Pe}_\mathrm{A} = $'+str(int(self.peA)), r'$\mathrm{Pe}_\mathrm{B} = $'+str(int(self.peB))], loc='upper right', prop={'size': 22}, markerscale=8.0)
                 if self.peA <= self.peB:
@@ -4618,7 +4617,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
             else:
                 leg = ax.legend(handles=[ells0[0]], labels=[r'$\mathrm{Pe}_\mathrm{A} = $'+str(int(self.peA)), r'$\mathrm{Pe}_\mathrm{A} = $'+str(int(self.peA))], loc='upper right', prop={'size': 22}, markerscale=8.0)
                 leg.legendHandles[0].set_color(slowCol)
-
+            """
             #px = np.sin(ang[typ1ind])
             #py = -np.cos(ang[typ1ind])
 
@@ -4629,10 +4628,10 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
         elif mono == 1:
 
-            if (self.peA==0):
-                slowCol = '#081d58'
-            else:
-                slowCol = '#e31a1c'
+            #if (self.peA==0):
+            #    slowCol = '#081d58'
+            #else:
+            #    slowCol = '#e31a1c'
 
             if mono_type == 0:
 
@@ -4697,8 +4696,8 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                 #one_leg = ax.legend(handles=fast_leg, loc='upper right', borderpad=0.3, labelspacing=0.2, handletextpad=0.0, bbox_transform=ax.transAxes, bbox_to_anchor=[1.0, 1.0], handlelength=1.5, columnspacing=0.0, fontsize=25, ncol=1, fancybox=True, framealpha=0.5, facecolor='white', edgecolor='black')
                 #ax.add_artist(one_leg)
 
-                leg = ax.legend(handles=[ells0[0]], labels=[r'$\mathrm{Pe} = $'+str(int(self.peA))], loc='upper right', prop={'size': 22}, markerscale=8.0)
-                leg.legendHandles[0].set_color(slowCol)
+                #leg = ax.legend(handles=[ells0[0]], labels=[r'$\mathrm{Pe} = $'+str(int(self.peA))], loc='upper right', prop={'size': 22}, markerscale=8.0)
+                #leg.legendHandles[0].set_color(slowCol)
         """
         try:
             if sep_surface_dict!=None:
@@ -4751,8 +4750,8 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
             #plt.text(0.69, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
             #    fontsize=24, transform = ax.transAxes,
             #    bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
-            plt.text(0.69, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
-                fontsize=22, transform = ax.transAxes,
+            plt.text(0.66, 0.04, s=r'$\tau$' + ' = ' + '{:.1f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+                fontsize=30, transform = ax.transAxes,
                 bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
         elif self.lx_box > self.ly_box:
             plt.text(0.85, 0.1, s=r'$\tau$' + ' = ' + '{:.4f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
@@ -4771,6 +4770,8 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         plt.tight_layout()
         plt.savefig(self.outPath + 'part_activity_' + self.outFile + ".png", dpi=150, transparent=False)
         plt.close()  
+        
+        
         
         
 

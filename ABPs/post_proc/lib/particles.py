@@ -1459,6 +1459,380 @@ class particle_props:
         
         return kinetics_dict
 
+    def radial_int_press_bubble(self, stress_plot_dict, sep_surface_dict, int_comp_dict, all_surface_measurements):
+        '''
+        Purpose: Takes the orientation, position, and active force of each particle
+        to calculate the active force magnitude toward, alignment toward, and separation
+        distance from largest cluster's CoM
+
+        Output:
+        radial_fa_dict: dictionary containing each particle's alignment and aligned active force toward
+        largest cluster's CoM as a function of separation distance from largest custer's CoM
+        '''
+
+        for m in range(0, len(sep_surface_dict)):
+            key = 'surface id ' + str(int(int_comp_dict['ids'][m]))
+            try:
+                print(all_surface_measurements[key]['exterior'])
+            except:
+                print(all_surface_measurements[key]['interior'])
+            stop
+            try:
+                print(sep_surface_dict[key]['exterior'])
+            except:
+                print(sep_surface_dict[key]['interior'])
+            stop
+            try:
+                
+                pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
+                pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
+
+                com_x = np.mean(pos_exterior_surface_x)
+                com_y = np.mean(pos_exterior_surface_y)
+            except:
+                pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
+                pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
+
+                com_x = np.mean(pos_interior_surface_x)
+                com_y = np.mean(pos_interior_surface_y)
+            plt.scatter((com_x-self.hx_box), (com_y-self.hy_box), color='black', s=5.0)
+
+        
+        stress_xx = np.append(stress_plot_dict['dense']['all-all']['XX'], stress_plot_dict['gas']['all-all']['XX'])
+        stress_yy = np.append(stress_plot_dict['dense']['all-all']['YY'], stress_plot_dict['gas']['all-all']['YY'])
+        stress_xy = np.append(stress_plot_dict['dense']['all-all']['XY'], stress_plot_dict['gas']['all-all']['XY'])
+        stress_yx = np.append(stress_plot_dict['dense']['all-all']['YX'], stress_plot_dict['gas']['all-all']['YX'])
+
+        pos_x = np.append(stress_plot_dict['dense']['pos']['all']['x'], stress_plot_dict['gas']['pos']['all']['x'])
+        pos_y = np.append(stress_plot_dict['dense']['pos']['all']['y'], stress_plot_dict['gas']['pos']['all']['y'])
+        
+        typ = np.append(stress_plot_dict['dense']['typ'], stress_plot_dict['gas']['typ'])
+
+        # Instantiate empty array (partNum) containing the average active force magnitude
+        # towards the largest cluster's CoM
+        stress_xx_arr = np.array([])
+        stress_yy_arr = np.array([])
+        stress_xy_arr = np.array([])
+        stress_yx_arr = np.array([])
+
+        stress_xx_A_arr = np.array([])
+        stress_yy_A_arr = np.array([])
+        stress_xy_A_arr = np.array([])
+        stress_yx_A_arr = np.array([])
+
+        stress_xx_B_arr = np.array([])
+        stress_yy_B_arr = np.array([])
+        stress_xy_B_arr = np.array([])
+        stress_yx_B_arr = np.array([])
+
+        # Instantiate empty array (partNum) containing the distance from largest cluster's CoM
+        r_dist_norm = np.array([])
+        rA_dist_norm = np.array([])
+        rB_dist_norm = np.array([])
+        
+        
+        plt.scatter(pos_x, pos_y, color='red', s=1.0)
+        plt.show()
+        
+        # Loop over all particles
+        for h in range(0, len(pos_x)):
+
+            # Separation distance from largest custer's CoM (middle of box)
+            difx = pos_x[h] - (com_x-self.hx_box)
+            dify = pos_y[h] - (com_y-self.hy_box)
+
+            difr= ( (difx )**2 + (dify)**2)**0.5
+
+            # Save active force magnitude toward largest cluster's CoM
+            if typ[h] == 0:
+                stress_xx_A_arr =np.append(stress_xx_A_arr, stress_xx[h])
+                stress_yy_A_arr =np.append(stress_yy_A_arr, stress_yy[h])
+                stress_xy_A_arr =np.append(stress_xy_A_arr, stress_xy[h])
+                stress_yx_A_arr =np.append(stress_yx_A_arr, stress_yx[h])
+                rA_dist_norm = np.append(rA_dist_norm, difr)
+            else:
+                stress_xx_B_arr =np.append(stress_xx_B_arr, stress_xx[h])
+                stress_yy_B_arr =np.append(stress_yy_B_arr, stress_yy[h])
+                stress_xy_B_arr =np.append(stress_xy_B_arr, stress_xy[h])
+                stress_yx_B_arr =np.append(stress_yx_B_arr, stress_yx[h])
+                rB_dist_norm = np.append(rB_dist_norm, difr)
+            
+            stress_xx_arr =np.append(stress_xx_arr, stress_xx[h])
+            stress_yy_arr =np.append(stress_yy_arr, stress_yy[h])
+            stress_xy_arr =np.append(stress_xy_arr, stress_xy[h])
+            stress_yx_arr =np.append(stress_yx_arr, stress_yx[h])
+
+            
+            # Save separation distance from largest cluster's CoM
+            r_dist_norm = np.append(r_dist_norm, difr)
+
+        # Dictionary containing each particle's alignment and aligned active force toward
+        # largest cluster's CoM as a function of separation distance from largest custer's CoM
+
+        radial_stress_dict = {'all': {'XX': stress_xx_arr, 'YY': stress_yy_arr, 'XY': stress_xy_arr, 'YX': stress_yx_arr, 'r': r_dist_norm}, 'A': {'XX': stress_xx_A_arr, 'YY': stress_yy_A_arr, 'XY': stress_xy_A_arr, 'YX': stress_yx_A_arr, 'r': rA_dist_norm}, 'B': {'XX': stress_xx_B_arr, 'YY': stress_yy_B_arr, 'XY': stress_xy_B_arr, 'YX': stress_yx_B_arr, 'r': rB_dist_norm}, 'typ': typ}
+
+        return radial_stress_dict
+
+    def radial_surface_normal_fa_bubble(self, method2_align_dict, sep_surface_dict, int_comp_dict):
+        '''
+        Purpose: Takes the orientation, position, and active force of each particle
+        to calculate the active force magnitude toward, alignment toward, and separation
+        distance from the nearest interface surface normal
+
+        Input:
+        method2_align_dict: dictionary containing the alignment
+        of each particle's active force with the nearest interface's surface normal,
+        per and averaged per bin
+        
+        Output:
+        radial_fa_dict: dictionary containing each particle's alignment and aligned active force with
+        the nearest interface surface normal as a function of separation distance from largest custer's CoM
+        '''
+
+        for m in range(0, len(sep_surface_dict)):
+            key = 'surface id ' + str(int(int_comp_dict['ids'][m]))
+            try:
+                pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
+                pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
+
+                com_x = np.mean(pos_exterior_surface_x)
+                com_y = np.mean(pos_exterior_surface_y)
+            except:
+                pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
+                pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
+
+                com_x = np.mean(pos_interior_surface_x)
+                com_y = np.mean(pos_interior_surface_y)
+
+        # Instantiate empty array (partNum) containing the average active force alignment
+        # with the nearest interface surface normal
+        part_align = method2_align_dict['part']['align']
+
+        # Instantiate empty array (partNum) containing the average active force magnitude
+        # toward the nearest interface surface normal
+        fa_norm = np.array([])
+        faA_norm = np.array([])
+        faB_norm = np.array([])
+
+        # Instantiate empty array (partNum) containing the distance from the nearest interface surface
+        r_dist_norm = np.array([])
+        rA_dist_norm = np.array([])
+        rB_dist_norm = np.array([])
+
+        align_norm = np.array([])
+        alignA_norm = np.array([])
+        alignB_norm = np.array([])
+
+        # Loop over all particles
+        for h in range(0, len(self.pos)):
+
+            # Separation distance from largest custer's CoM (middle of box)
+            difx = self.pos[h,0] - (com_x-self.hx_box)
+            dify = self.pos[h,1] - (com_y-self.hy_box)
+
+            difr= ( (difx )**2 + (dify)**2)**0.5
+
+            # Save active force magnitude toward the nearest interface surface normal
+            if self.typ[h] == 0:
+                fa_norm=np.append(fa_norm, part_align[h]*self.peA)
+                faA_norm=np.append(faA_norm, part_align[h]*self.peA)
+                rA_dist_norm = np.append(rA_dist_norm, difr)
+                alignA_norm=np.append(alignA_norm, part_align[h])
+            else:
+                fa_norm=np.append(fa_norm, part_align[h]*self.peB)
+                faB_norm=np.append(faB_norm, part_align[h]*self.peB)
+                alignB_norm=np.append(alignB_norm, part_align[h])
+                rB_dist_norm = np.append(rB_dist_norm, difr)
+
+            # Save separation distance from the nearest interface surface
+            r_dist_norm = np.append(r_dist_norm, difr)
+            align_norm=np.append(align_norm, part_align[h])
+
+        # Dictionary containing each particle's alignment and aligned active force toward
+        # the nearest interface surface normal as a function of separation distance from
+        # largest custer's CoM
+        radial_fa_dict = {'all': {'r': r_dist_norm, 'fa': fa_norm, 'align': align_norm}, 'A': {'r': rA_dist_norm, 'fa': faA_norm, 'align': alignA_norm}, 'B': {'r': rB_dist_norm, 'fa': faB_norm, 'align': alignB_norm}}
+
+        return radial_fa_dict
+
+    def radial_measurements(self, radial_stress_dict, radial_fa_dict):
+
+        #X locations across interface for integration
+        if self.hx_box<self.hy_box:
+            r = np.linspace(0, self.hx_box, num=int((np.ceil(self.hx_box)+1)/3))
+        elif self.hy_box<self.hx_box:
+            r = np.linspace(0, self.hy_box, num=int((np.ceil(self.hy_box)+1)/3))
+        else:
+            r = np.linspace(0, self.hx_box, num=int((np.ceil(self.hx_box)+1)/3))
+
+        #Pressure integrand components for each value of X
+        int_stress_XX_r = np.zeros((len(r)-1))
+        int_stress_YY_r = np.zeros((len(r)-1))
+        int_stress_XY_r = np.zeros((len(r)-1))
+        int_stress_YX_r = np.zeros((len(r)-1))
+        int_press_r = np.zeros((len(r)-1))
+        #act_fa_r = []
+        #lat_r = []
+        num_dens_r = np.zeros((len(r)-1))
+
+        int_stressA_XX_r = np.zeros((len(r)-1))
+        int_stressA_YY_r = np.zeros((len(r)-1))
+        int_stressA_XY_r = np.zeros((len(r)-1))
+        int_stressA_YX_r = np.zeros((len(r)-1))
+        int_pressA_r = np.zeros((len(r)-1))
+
+        #act_faA_r = []
+        #latA_r = []
+        num_densA_r = np.zeros((len(r)-1))
+
+        int_stressB_XX_r = np.zeros((len(r)-1))
+        int_stressB_YY_r = np.zeros((len(r)-1))
+        int_stressB_XY_r = np.zeros((len(r)-1))
+        int_stressB_YX_r = np.zeros((len(r)-1))
+        int_pressB_r = np.zeros((len(r)-1))
+        #act_faB_r = []
+        #latB_r = []
+        num_densB_r = np.zeros((len(r)-1))
+
+        #If exterior and interior surfaces defined, continue...
+
+        area_prev = 0
+
+        #Pressure integrand components for each value of X
+        act_press_r = np.zeros((len(r)-1))
+        act_fa_r = np.zeros((len(r)-1))
+        align_r = np.zeros((len(r)-1))
+        num_dens_r = np.zeros((len(r)-1))
+
+        act_pressA_r = np.zeros((len(r)-1))
+        act_faA_r = np.zeros((len(r)-1))
+        alignA_r = np.zeros((len(r)-1))
+        num_densA_r = np.zeros((len(r)-1))
+
+        act_pressB_r = np.zeros((len(r)-1))
+        act_faB_r = np.zeros((len(r)-1))
+        alignB_r = np.zeros((len(r)-1))
+        num_densB_r = np.zeros((len(r)-1))
+
+        rad_arr = np.zeros((len(r)-1))
+        #If exterior and interior surfaces defined, continue...
+        
+        #For each step across interface, calculate pressure in that step's area (averaged over angle from CoM)
+        for i in range(1, len(r)):
+
+            #Min and max location across interface of current step
+            min_r = r[i-1]
+            max_r = r[i]
+
+            #Calculate area of rectangle for current step
+            area = np.pi * (max_r ** 2) - area_prev
+
+            #Save total area of previous step sizes
+            area_prev = np.pi * (max_r ** 2)
+
+
+            #Find particles that are housed within current slice
+            parts_inrange = np.where((min_r<=radial_stress_dict['all']['r']) & (radial_stress_dict['all']['r']<=max_r))[0]
+            partsA_inrange = np.where((min_r<=radial_stress_dict['A']['r']) & (radial_stress_dict['A']['r']<=max_r))[0]
+            partsB_inrange = np.where((min_r<=radial_stress_dict['B']['r']) & (radial_stress_dict['B']['r']<=max_r))[0]
+
+            #Find particles that are housed within current slice
+            parts_inrange_fa = np.where((min_r<=radial_fa_dict['all']['r']) & (radial_fa_dict['all']['r']<=max_r))[0]
+            partsA_inrange_fa = np.where((min_r<=radial_fa_dict['A']['r']) & (radial_fa_dict['A']['r']<=max_r))[0]
+            partsB_inrange_fa = np.where((min_r<=radial_fa_dict['B']['r']) & (radial_fa_dict['B']['r']<=max_r))[0]
+
+
+            #If at least 1 particle in slice, continue...
+            if len(parts_inrange)>0:
+
+                #If the force is defined, continue...
+                parts_defined = np.logical_not(np.isnan(radial_stress_dict['all']['XX'][parts_inrange]))
+
+                if len(parts_defined)>0:
+                    #Calculate total active force normal to interface in slice
+                    int_stress_XX_r[i-1] = np.sum((radial_stress_dict['all']['XX'][parts_inrange][parts_defined]))
+                    int_stress_YY_r[i-1] = np.sum((radial_stress_dict['all']['YY'][parts_inrange][parts_defined]))
+                    int_stress_XY_r[i-1] = np.sum((radial_stress_dict['all']['XY'][parts_inrange][parts_defined]))
+                    int_stress_YX_r[i-1] = np.sum((radial_stress_dict['all']['YX'][parts_inrange][parts_defined]))
+                    int_press_r[i-1] = np.sum((radial_stress_dict['all']['XX'][parts_inrange][parts_defined] + radial_stress_dict['all']['YY'][parts_inrange][parts_defined])/2)
+                    #Calculate density
+                    num_dens_r[i-1] = len(parts_defined)
+                    #If area of slice is non-zero, calculate the pressure [F/A]
+                    if area > 0:
+                        int_press_r[i-1] = int_press_r[i-1]/area
+                        num_dens_r[i-1] = num_dens_r[i-1]/area
+
+                    partsA_defined = np.logical_not(np.isnan(radial_stress_dict['A']['XX'][partsA_inrange]))
+
+                    if len(partsA_defined)>0:
+                        int_stressA_XX_r[i-1] = np.sum((radial_stress_dict['A']['XX'][partsA_inrange][partsA_defined]))
+                        int_stressA_YY_r[i-1] = np.sum((radial_stress_dict['A']['YY'][partsA_inrange][partsA_defined]))
+                        int_stressA_XY_r[i-1] = np.sum((radial_stress_dict['A']['XY'][partsA_inrange][partsA_defined]))
+                        int_stressA_YX_r[i-1] = np.sum((radial_stress_dict['A']['YX'][partsA_inrange][partsA_defined]))
+                        int_pressA_r[i-1] = np.sum((radial_stress_dict['A']['XX'][partsA_inrange][partsA_defined] + radial_stress_dict['A']['YY'][partsA_inrange][partsA_defined])/2)
+                        #Calculate density
+                        num_densA_r[i-1] = len([partsA_defined])
+                        #If area of slice is non-zero, calculate the pressure [F/A]
+                        if area > 0:
+                            int_pressA_r[i-1] = int_pressA_r[i-1]/area
+                            num_densA_r[i-1] = num_densA_r[i-1]/area
+
+                    partsB_defined = np.logical_not(np.isnan(radial_stress_dict['B']['XX'][partsB_inrange]))
+                    if len(partsB_defined)>0:
+                        int_stressB_XX_r[i-1] = np.sum((radial_stress_dict['B']['XX'][partsB_inrange][partsB_defined]))
+                        int_stressB_YY_r[i-1] = np.sum((radial_stress_dict['B']['YY'][partsB_inrange][partsB_defined]))
+                        int_stressB_XY_r[i-1] = np.sum((radial_stress_dict['B']['XY'][partsB_inrange][partsB_defined]))
+                        int_stressB_YX_r[i-1] = np.sum((radial_stress_dict['B']['YX'][partsB_inrange][partsB_defined]))
+                        int_pressB_r[i-1] = np.sum((radial_stress_dict['B']['XX'][partsB_inrange][partsB_defined] + radial_stress_dict['B']['YY'][partsB_inrange][partsB_defined])/2)
+                        #Calculate density
+                        num_densB_r[i-1] = len([partsB_defined])
+                        #If area of slice is non-zero, calculate the pressure [F/A]
+                        if area > 0:
+                            int_pressB_r[i-1] = int_pressB_r[i-1]/area
+                            num_densB_r[i-1] = num_densB_r[i-1]/area
+                #If the force is defined, continue...
+                parts_defined = np.logical_not(np.isnan(radial_fa_dict['all']['fa'][parts_inrange]))
+
+                if len(parts_defined)>0:
+                    #Calculate total active force normal to interface in slice
+                    act_press_r[i-1] = np.sum(radial_fa_dict['all']['fa'][parts_inrange_fa][parts_defined])
+                    act_fa_r[i-1] = np.mean(radial_fa_dict['all']['fa'][parts_inrange_fa][parts_defined])
+                    align_r[i-1] = np.mean(radial_fa_dict['all']['align'][parts_inrange_fa][parts_defined])
+                    num_dens_r[i-1] = len(parts_defined)
+                    #If area of slice is non-zero, calculate the pressure [F/A]
+                    if area > 0:
+                        act_press_r[i-1] = act_press_r[i-1]/area
+                        num_dens_r[i-1] = num_dens_r[i-1]/area
+
+                    partsA_defined = np.logical_not(np.isnan(radial_fa_dict['A']['fa'][partsA_inrange_fa]))
+                    if len(partsA_defined)>0:
+                        act_pressA_r[i-1] = np.sum(radial_fa_dict['A']['fa'][partsA_inrange_fa][partsA_defined])
+                        act_faA_r[i-1] = np.mean(radial_fa_dict['A']['fa'][partsA_inrange_fa][partsA_defined])
+                        alignA_r[i-1] = np.mean(radial_fa_dict['A']['align'][partsA_inrange_fa][partsA_defined])
+                        num_densA_r[i-1] = len(partsA_defined)
+                        #If area of slice is non-zero, calculate the pressure [F/A]
+                        if area > 0:
+                            act_pressA_r[i-1] = act_pressA_r[i-1]/area
+                            num_densA_r[i-1] = num_densA_r[i-1]/area
+
+                    partsB_defined = np.logical_not(np.isnan(radial_fa_dict['B']['fa'][partsB_inrange_fa]))
+                    if len(partsB_defined)>0:
+                        act_pressB_r[i-1] = np.sum(radial_fa_dict['B']['fa'][partsB_inrange_fa][partsB_defined])
+                        act_faB_r[i-1] = np.mean(radial_fa_dict['B']['fa'][partsB_inrange_fa][partsB_defined])
+                        alignB_r[i-1] = np.mean(radial_fa_dict['B']['align'][partsB_inrange_fa][partsB_defined])
+                        #Calculate density
+                        num_densB_r[i-1] = len(partsB_defined)
+                        #If area of slice is non-zero, calculate the pressure [F/A]
+                        if area > 0:
+                            act_pressB_r[i-1] = act_pressB_r[i-1]/area
+                            num_densB_r[i-1] = num_densB_r[i-1]/area
+
+
+
+        com_radial_dict_fa = {'r': r[1:].tolist(), 'fa_press': {'all': act_press_r.tolist(), 'A': act_pressA_r.tolist(), 'B': act_pressB_r.tolist()}, 'fa': {'all': act_fa_r.tolist(), 'A': act_faA_r.tolist(), 'B': act_faB_r.tolist()}, 'align': {'all': align_r.tolist(), 'A': alignA_r.tolist(), 'B': alignB_r.tolist()}, 'num_dens': {'all': num_dens_r.tolist(), 'A': num_densA_r.tolist(), 'B': num_densB_r.tolist()}}
+        com_radial_dict = {'r': r[1:].tolist(), 'all': {'XX': int_stress_XX_r.tolist(), 'YY': int_stress_YY_r.tolist(), 'XY': int_stress_XY_r.tolist(), 'YX': int_stress_YX_r.tolist(), 'press': int_press_r.tolist(), 'num_dens': num_dens_r.tolist()}, 'A': {'XX': int_stressA_XX_r.tolist(), 'YY': int_stressA_YY_r.tolist(), 'XY': int_stressA_XY_r.tolist(), 'YX': int_stressA_YX_r.tolist(), 'press': int_pressA_r.tolist(), 'num_dens': num_densA_r.tolist()}, 'B': {'XX': int_stressB_XX_r.tolist(), 'YY': int_stressB_YY_r.tolist(), 'XY': int_stressB_XY_r.tolist(), 'YX': int_stressB_YX_r.tolist(), 'press': int_pressB_r.tolist(), 'num_dens': num_densB_r.tolist()}}
+        return com_radial_dict, com_radial_dict_fa
+
     def single_msd(self, pos_prev, displace_dict):
 
         displace_x_typ0 = displace_dict['A']['x']

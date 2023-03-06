@@ -51,7 +51,7 @@
   }
 }
 
-@media screen and (min-width: 680px) {
+@media screen and (min-width: 500px) {
   :root {
     --vbig-font-size: 1.5rem;
     --big-font-size: 3.5rem;
@@ -63,7 +63,31 @@
   }
 }
 
-@media screen and (min-width: 890px) {
+@media screen and (min-width: 620px) {
+  :root {
+    --vbig-font-size: 2.0rem;
+    --big-font-size: 3.5rem;
+    --h2-font-size: 3rem;
+    --h1-font-size: 2rem;
+    --larger-font-size: 1.0rem;
+    --normal-font-size: 0.9rem;
+    --smaller-font-size: .8rem;
+  }
+}
+
+@media screen and (min-width: 780px) {
+  :root {
+    --vbig-font-size: 2.5rem;
+    --big-font-size: 3.5rem;
+    --h2-font-size: 3rem;
+    --h1-font-size: 2rem;
+    --larger-font-size: 1.0rem;
+    --normal-font-size: 0.9rem;
+    --smaller-font-size: .8rem;
+  }
+}
+
+@media screen and (min-width: 930px) {
   :root {
     --vbig-font-size: 3.0rem;
     --big-font-size: 3.5rem;
@@ -75,11 +99,9 @@
   }
 }
 
-
-
-@media screen and (min-width: 950px) {
+@media screen and (min-width: 1090px) {
   :root {
-    --vbig-font-size: 3.0rem;
+    --vbig-font-size: 3.5rem;
     --big-font-size: 3.5rem;
     --h2-font-size: 3rem;
     --h1-font-size: 2rem;
@@ -89,7 +111,7 @@
   }
 }
 
-@media screen and (min-width: 1250px) {
+@media screen and (min-width: 1290px) {
   :root {
     --vbig-font-size: 4.0rem;
     --big-font-size: 3.5rem;
@@ -702,11 +724,13 @@ img {
   box-shadow: 0px 4px 25px rgba(14, 36, 49, 0.15);
   border-radius: .5rem;
   overflow: hidden;
-  width: 240px;
+  width: 220px;
   height: 50px;
   display: flex;
   justify-content: center; /* Align horizontal */
   align-items: center; /* Align vertical */
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .external__button:hover {
@@ -727,8 +751,8 @@ img {
   box-shadow: 0px 4px 25px rgba(14, 36, 49, 0.15);
   border-radius: .5rem;
   overflow: hidden;
-  width: 320px;
-  height: 215px;
+  width: 95%;
+  height: 200px;
   display: flex;
   justify-content: center; /* Align horizontal */
   align-items: center; /* Align vertical */
@@ -751,8 +775,8 @@ img {
   box-shadow: 0px 4px 25px rgba(14, 36, 49, 0.15);
   border-radius: .5rem;
   overflow: hidden;
-  width: 320px;
-  height: 215px;
+  width: 95%;
+  height: 200px;
   display: flex;
   justify-content: center; /* Align horizontal */
   align-items: center; /* Align vertical */
@@ -772,8 +796,8 @@ img {
   box-shadow: 0px 4px 25px rgba(14, 36, 49, 0.15);
   border-radius: .5rem;
   overflow: hidden;
-  width: 320px;
-  height: 215px;
+  width: 95%;
+  height: 200px;
   display: flex;
   justify-content: center; /* Align horizontal */
   align-items: center; /* Align vertical */
@@ -898,6 +922,10 @@ img {
 
 .about__img {
   justify-self: center;
+}
+
+.about__text {
+  font-size: var(--normal-font-size);
 }
 
 .aboutleft__txt {
@@ -1107,7 +1135,12 @@ img {
 }
 
 .wrapper { 
+  margin: 0 auto; /* this will make .wrapper centered */
+  display: grid;
   width: 100%;
+  grid-column-gap: 5%; /* like 40px, but the snippet is very small */
+  margin-left: auto;
+  margin-right: auto;
   margin-top: 5rem;
   margin-bottom: 5rem;
 }
@@ -1115,6 +1148,13 @@ img {
 .wrapper2 { 
   margin-top: 25px;
   margin-bottom: 50px;
+}
+
+.wrapper3 {
+  margin: 0 auto; /* this will make .wrapper centered */
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-column-gap: 2rem; /* like 40px, but the snippet is very small */
 }
 
 .work__img {
@@ -1194,7 +1234,7 @@ img {
   margin-bottom: 0.5rem;
 }
 
-@media screen and (max-width: 890px) {
+@media screen and (max-width: 850px) {
   .home {
     padding: 4rem 0 2rem;
   }
@@ -1440,11 +1480,15 @@ img {
     column-gap: 2rem;
     margin: auto;
   }
+  
   .external__container {
     grid-template-columns: repeat(2, 50%);
-    column-gap: 2rem;
+    margin: auto;
+    width: 200%;
     align-items: center;
     text-align: initial;
+    border: 1.5px solid var(--second-color);
+
   }
 
   .external2__container {
@@ -1481,6 +1525,7 @@ img {
     color: var(--second-color);
   }
 }
+
 @media screen and (min-width: 890px) {
   body {
     margin: 0;
@@ -1514,8 +1559,8 @@ img {
   }
   
   .home__img {
-    width: 370px;
-    bottom: 10%;
+    width: 420px;
+    bottom: 5%;
   }
   .about__container {
     padding-top: 1rem;
@@ -1611,13 +1656,6 @@ img {
   }
 }
 
-@media screen and (min-width: 950px) {
-  .home__img {
-    width: 420px;
-    bottom: 10%;
-  }
-  
-}
 
 
   /*
@@ -1708,12 +1746,29 @@ table h4 {
   color: #a9b2b9;
 }
 
-@media screen and (min-width: 1250px) {
+
+@media screen and (min-width: 950px) {
   .home__img {
-    width: 480px;
-    bottom: 10%;
+    width: 420px;
+    bottom: 5%;
+  }
+  
+}
+@media screen and (min-width: 1090px) {
+  .home__img {
+    width: 470px;
+    bottom: 5%;
   }
 }
+
+@media screen and (min-width: 1290px) {
+  .home__img {
+    width: 520px;
+    bottom: 5%;
+  }
+}
+
+
 
 @media screen and (max-width: 600px) {
 
@@ -1748,16 +1803,19 @@ table h4 {
     box-shadow: 0px 4px 25px rgba(14, 36, 49, 0.15);
     border-radius: .5rem;
     overflow: hidden;
-    width: 140px;
+    width: 150px;
     height: 50px;
     transition: 0.7s;
     display: flex;
     justify-content: center; /* Align horizontal */
     align-items: center; /* Align vertical */
+    margin-left: auto;
+    margin-right: auto;
+    
   }
 
 }
-@media screen and (max-width: 1100px) {
+@media screen and (max-width: 1150px) {
 
   .active_matter_button {
     background: url(../img/seal_hunting_fish.gif);
@@ -1769,12 +1827,13 @@ table h4 {
     box-shadow: 0px 4px 25px rgba(14, 36, 49, 0.15);
     border-radius: .5rem;
     overflow: hidden;
-    width: 220px;
+    width: 95%;
     height: 150px;
     display: flex;
     justify-content: center; /* Align horizontal */
     align-items: center; /* Align vertical */
     align-self: center;
+    
   }
 
   .light_detector_button {
@@ -1789,7 +1848,7 @@ table h4 {
     box-shadow: 0px 4px 25px rgba(14, 36, 49, 0.15);
     border-radius: .5rem;
     overflow: hidden;
-    width: 220px;
+    width: 95%;
     height: 150px;
     display: flex;
     justify-content: center; /* Align horizontal */
@@ -1806,7 +1865,7 @@ table h4 {
     box-shadow: 0px 4px 25px rgba(14, 36, 49, 0.15);
     border-radius: .5rem;
     overflow: hidden;
-    width: 220px;
+    width: 95%;
     height: 150px;
     display: flex;
     justify-content: center; /* Align horizontal */
@@ -1815,21 +1874,118 @@ table h4 {
 
 }
 
-@media screen and (max-width: 900px) {
+@media screen and (max-width: 860px) {
 
-  .external__button {
+  .active_matter_button {
+    background: url(../img/seal_hunting_fish.gif);
+    background-size: 130%;
     color: #FFFFFF;
-    background-color: hsl(201.9, 45.3%,58.4%);
     font-weight: var(--font-semi);
-    font-size: 0.8rem;
+    font-size: 1.0rem;
+    transition: 0.7s;
     box-shadow: 0px 4px 25px rgba(14, 36, 49, 0.15);
     border-radius: .5rem;
     overflow: hidden;
-    width: 140px;
-    height: 50px;
+    width: 95%;
+    height: 125px;
+    display: flex;
+    justify-content: center; /* Align horizontal */
+    align-items: center; /* Align vertical */
+    align-self: center;
+  }
+
+  .light_detector_button {
+  
+    background: url(../img/solar_cell.jpeg);
+    background-size: 130%;
+    background-position: center;
+    color: #FFFFFF;
+    font-weight: var(--font-semi);
+    font-size: 1.0rem;
     transition: 0.7s;
+    box-shadow: 0px 4px 25px rgba(14, 36, 49, 0.15);
+    border-radius: .5rem;
+    overflow: hidden;
+    width: 95%;
+    height: 125px;
     display: flex;
     justify-content: center; /* Align horizontal */
     align-items: center; /* Align vertical */
   }
+  
+  .fusion_energy_button {
+    background: url(../img/fusion_plasma.gif);
+    background-size: 120%;
+    color: #FFFFFF;
+    font-weight: var(--font-semi);
+    font-size: 1.0rem;
+    transition: 0.7s;
+    box-shadow: 0px 4px 25px rgba(14, 36, 49, 0.15);
+    border-radius: .5rem;
+    overflow: hidden;
+    width: 95%;
+    height: 125px;
+    display: flex;
+    justify-content: center; /* Align horizontal */
+    align-items: center; /* Align vertical */
+  }
+
+}
+
+@media screen and (max-width: 750px) {
+
+  .active_matter_button {
+    background: url(../img/seal_hunting_fish.gif);
+    background-size: 130%;
+    color: #FFFFFF;
+    font-weight: var(--font-semi);
+    font-size: 0.8rem;
+    transition: 0.7s;
+    box-shadow: 0px 4px 25px rgba(14, 36, 49, 0.15);
+    border-radius: .5rem;
+    overflow: hidden;
+    width: 95%;
+    height: 100px;
+    display: flex;
+    justify-content: center; /* Align horizontal */
+    align-items: center; /* Align vertical */
+    align-self: center;
+  }
+
+  .light_detector_button {
+  
+    background: url(../img/solar_cell.jpeg);
+    background-size: 130%;
+    background-position: center;
+    color: #FFFFFF;
+    font-weight: var(--font-semi);
+    font-size: 0.8rem;
+    transition: 0.7s;
+    box-shadow: 0px 4px 25px rgba(14, 36, 49, 0.15);
+    border-radius: .5rem;
+    overflow: hidden;
+    width: 95%;
+    height: 100px;
+    display: flex;
+    justify-content: center; /* Align horizontal */
+    align-items: center; /* Align vertical */
+  }
+  
+  .fusion_energy_button {
+    background: url(../img/fusion_plasma.gif);
+    background-size: 120%;
+    color: #FFFFFF;
+    font-weight: var(--font-semi);
+    font-size: 0.8rem;
+    transition: 0.7s;
+    box-shadow: 0px 4px 25px rgba(14, 36, 49, 0.15);
+    border-radius: .5rem;
+    overflow: hidden;
+    width: 95%;
+    height: 100px;
+    display: flex;
+    justify-content: center; /* Align horizontal */
+    align-items: center; /* Align vertical */
+  }
+
 }

@@ -1,0 +1,89 @@
+<?php
+
+
+if($_POST["message"]) {
+
+
+mail("your@email.address", "Here is the subject line",
+
+
+$_POST["insert your message here"]. "From: an@email.address");
+
+
+}
+
+
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="assets/css/styles.css">
+
+        <!-- =====BOX ICONS===== -->
+        <link href='https://cdn.jsdelivr.net/npm/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+        <script src="https://code.iconify.design/iconify-icon/1.0.2/iconify-icon.min.js"></script>
+        <title>Portfolio website complete</title>
+    </head>
+    <body>
+
+        <!--===== HEADER =====-->
+        <header class="l-header">
+            <nav class="nav bd-grid">
+                <div>
+                    <a style="color: hsl(0, 0%, 0%);" href="index.html" class="nav__logo">Nicholas Lauersdorf</a>
+                </div>
+
+                <div style="color: hsl(0, 0%, 0%);" class="nav__menu" id="nav-menu">
+                    <ul class="nav__list">
+                        <li class="nav__item"><a style="color: hsl(0, 0%, 0%);" href="index.html" class="nav__link active">Home</a></li>
+                        <li class="nav__item"><a style="color: hsl(0, 0%, 0%);" href="about.html" class="nav__link">About</a></li>
+                        <li class="nav__item"><a style="color: hsl(0, 0%, 0%);" href="roles.html" class="nav__link">Experience</a></li>
+                        <li class="nav__item"><a style="color: hsl(0, 0%, 0%);" href="publications.html" class="nav__link">Publications</a></li>
+                        <li class="nav__item"><a style="color: hsl(0, 0%, 0%);" href="contact.html" class="nav__link">Contact</a></li>
+                    </ul>
+                </div>
+
+                <div class="nav__toggle" id="nav-toggle">
+                    <i class='bx bx-menu'></i>
+                </div>
+            </nav>
+        </header>
+        <main class="l-main">
+            <!--===== CONTACT =====-->
+            <section class="contact section" id="contact">
+                <img src="assets/img/publications_banner.jpeg" class="home__banner" alt "">
+                <h2 class="section-title">Contact</h2>
+
+                <div class="contact__container bd-grid">
+                    <form action="action_email.php" class="contact__form">
+                        <input type="text" placeholder="Name" class="contact__input">
+                        <input type="mail" placeholder="Email" class="contact__input">
+                        <input type="text" placeholder="Subject" class="contact__input">
+                        <textarea name="" id="" cols="0" rows="10" class="contact__input"></textarea>
+                        <input type="button" value="Send" class="contact__button button">
+                    </form>
+                </div>
+            </section>
+        </main>
+        <!--===== FOOTER =====-->
+        <footer class="footer">
+            <p class="footer__title">Nicholas Lauersdorf</p>
+            <p class="footer__copy">Email: njlauersdorf@gmail.com</p>
+            <div skills="color:rgb(255, 255, 255)" class="footer__social">
+                <a skills="color:rgb(255, 255, 255)" href="https://www.linkedin.com/in/nicholaslauersdorf" class="footer__icon"><i class='bx bxl-linkedin' ></i></a>
+                <a skills="color:rgb(255, 255, 255)" href="https://github.com/njlauersdorf/klotsa.git" class="footer__icon"><i class='bx bxl-github' ></i></a>
+            </div>
+            
+        </footer>
+
+        <!--===== SCROLL REVEAL =====-->
+        <script src="https://unpkg.com/scrollreveal"></script>
+
+        <!--===== MAIN JS =====-->
+        <script src="assets/js/main.js"></script>
+
+    </body>
+</html>

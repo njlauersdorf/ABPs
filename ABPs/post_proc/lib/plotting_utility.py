@@ -167,6 +167,12 @@ class plotting_utility:
             com_tmp_posX_temp = 0
             com_tmp_posY_temp = 0
 
+        #com_tmp_posX_temp = 0
+        #com_tmp_posY_temp = 0
+
+        #com_tmp_posX = 0
+        #com_tmp_posY = 0
+        
         #shift reference frame positions such that CoM of largest cluster is at mid-point of simulation box
         pos[:,0]= pos[:,0]-com_tmp_posX_temp
         pos[:,1]= pos[:,1]-com_tmp_posY_temp
@@ -186,6 +192,7 @@ class plotting_utility:
         # Dictionary containing the shifted position of every particle such that
         # the largest cluster's CoM is at the middle of the box (hx_box, hy_box) in addition to the
         # unshifted largest cluster's CoM position
+
         com_dict = {'pos': pos, 'com': {'x': com_tmp_posX, 'y': com_tmp_posY}}
 
         return com_dict

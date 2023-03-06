@@ -623,6 +623,66 @@ class measurement:
         # Create output dictionary for plotting of RDF vs separation distance
         rad_df_dict = {'r': r_arr, 'all-all': g_r_allall_bulk, 'all-A': g_r_allA_bulk, 'all-B': g_r_allB_bulk, 'A-A': g_r_AA_bulk, 'A-B': g_r_AB_bulk, 'B-B': g_r_BB_bulk}
         return rad_df_dict
+
+    def structure_factor(self, rad_df_dict):
+
+        num_dens_mean_dict = self.num_dens_mean(self.area_frac_dict)
+        
+
+        r_arr = rad_df_dict['r']
+        g_r_allall_bulk = rad_df_dict['all-all']
+        g_r_AA_bulk = rad_df_dict['A-A']
+        g_r_AB_bulk = rad_df_dict['A-B']
+        g_r_BB_bulk = rad_df_dict['B-B']
+
+        partial_ssf_AA = (num_dens_mean_dict['A']/num_dens_mean_dict['all'])+num_dens_mean_dict['all']*(num_dens_mean_dict['A']/num_dens_mean_dict['all'])*(num_dens_mean_dict['A']/num_dens_mean_dict['all'])*np.fft.fft(np.array(g_r_AA_bulk) - 1.0)
+        partial_ssf_AB = num_dens_mean_dict['all']*(num_dens_mean_dict['B']/num_dens_mean_dict['all'])*(num_dens_mean_dict['A']/num_dens_mean_dict['all'])*np.fft.fft(np.array(g_r_AB_bulk) - 1.0)
+        partial_ssf_BB = (num_dens_mean_dict['B']/num_dens_mean_dict['all'])+num_dens_mean_dict['all']*(num_dens_mean_dict['B']/num_dens_mean_dict['all'])*(num_dens_mean_dict['B']/num_dens_mean_dict['all'])*np.fft.fft(np.array(g_r_BB_bulk) - 1.0)
+        
+        partial_ssf_allall_arr = np.array([])
+        #np.where(r_arr>=1)
+        k_arr = np.linspace(0, 40, num=1000)
+
+        g_r_example = np.ones(len(r_arr))
+        test_id = np.where(np.array(r_arr)<1)[0]
+        g_r_example[test_id]=0.0
+
+        for i in range(1, len(k_arr)):
+
+            partial_ssf_allall = np.trapz(np.array(r_arr) * (np.array(g_r_allall_bulk)-1) * np.sin(k_arr[i] * np.array(r_arr))/(k_arr[i]), x=r_arr)
+            #for j in range(1, len(r_arr)):
+            #    dr = r_arr[j]-r_arr[j-1]
+            #    increment += 1
+            #    partial_ssf_allall += r_arr[j] * ((g_r_allall_bulk[increment]) - 1) * np.sin(r_arr[i] * r_arr[j])/r_arr[i]
+            #partial_ssf_allall_arr=np.append( partial_ssf_allall_arr, 1 + 4 * np.pi * num_dens_mean_dict['all'] * partial_ssf_allall * dr / r_arr[i])
+            partial_ssf_allall_arr=np.append( partial_ssf_allall_arr, 1 + 4 * np.pi * num_dens_mean_dict['all'] * partial_ssf_allall)
+        plt.plot(k_arr[1:], partial_ssf_allall_arr)
+        y_arr = np.ones(len(k_arr))
+        plt.plot(k_arr, y_arr, color='black', linewidth=2.0, linestyle='dashed')
+        #plt.ylim(-10, 10)
+        plt.show()
+
+        plt.plot(r_arr, np.array(g_r_example))
+        plt.show()
+
+        stop
+        ssf_all = 1.0+num_dens_mean_dict['all']*np.fft.fft(np.array(g_r_allall_bulk))
+
+        print(len(ssf_all))
+        x_arr = np.linspace(0, len(ssf_all), num=len(ssf_all))
+        plt.plot(x_arr, partial_ssf_AA)
+        plt.plot(x_arr, partial_ssf_AB)
+        plt.plot(x_arr, partial_ssf_BB)
+        plt.show()
+        stop
+        #ideal_swim_press = 
+
+        allall_compressibility = ((1/num_dens_mean_dict['all'])*(1 + num_dens_mean_dict['all'] * np.trapz(np.array(g_r_allall_bulk) - 1, x=np.array(r_arr))))
+        allA_compressibility = ((1/num_dens_mean_dict['all'])*(1 + num_dens_mean_dict['all'] * np.trapz(np.array(g_r_allA_bulk) - 1, x=np.array(r_arr))))
+        allB_compressibility = ((1/num_dens_mean_dict['all'])*(1 + num_dens_mean_dict['all'] * np.trapz(np.array(g_r_allB_bulk) - 1, x=np.array(r_arr))))
+
+        return {'compress': {'all': allall_compressibility, 'A': allA_compressibility, 'B': allB_compressibility}}
+
     def compressibility(self, rad_df_dict):
 
         num_dens_mean_dict = self.num_dens_mean(self.area_frac_dict)
@@ -638,32 +698,6 @@ class measurement:
 
         return {'compress': {'all': allall_compressibility, 'A': allA_compressibility, 'B': allB_compressibility}}
 
-    def structure_factor(self, rad_df_dict):
-        '''
-        Purpose: Takes the composition of each phase and uses neighbor lists to compute the
-        interparticle separation distance between each pair of reference particle
-        and one of their nearest, interacting neighbor and averages over the system to
-        provide the probability of finding a neighbor of a given species at each
-        separation distance from a reference particle of a given species (i.e. radial
-        distribution function, RDF)
-
-        Outputs:
-        rad_df_dict: dictionary containing arrays of the probability distribution
-        function of finding a particle of a given species ('all', 'A', or 'B') at
-        a given radial distance ('r') from a reference particle of a given species
-        ('all', 'A', or 'B') for a given reference-neighbor pair within the bulk phase (i.e. all-A means
-        all reference particles with A neighbors).
-        '''
-
-        
-        r_arr = rad_df_dict['r']
-        g_r_allall_bulk = rad_df_dict['all-all']
-
-
-        # Create output dictionary for plotting of RDF vs separation distance
-        rad_df_dict = {'r': r_arr, 'all-all': g_r_allall_bulk, 'all-A': g_r_allA_bulk, 'all-B': g_r_allB_bulk, 'A-A': g_r_AA_bulk, 'A-B': g_r_AB_bulk, 'B-B': g_r_BB_bulk}
-        return rad_df_dict
-    
     def angular_df(self):
         '''
         Purpose: Takes the composition of each phase and uses neighbor lists to compute the
