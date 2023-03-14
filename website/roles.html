@@ -40,19 +40,19 @@
             <section class="publications section" id="publications">
 
                 <img src="assets/img/publications_banner.jpeg" class="home__banner" alt "">
-                <h2 class="section-title">Experience</h2>
+                <h2 style="margin-bottom: 1rem;" class="section-title">Experience</h2>
                 
                 <div style="margin-top: 0rem" class="wrapper">
                     <div class="external__container bd-grid">
-                        <a style="color:rgb(244, 244, 244);" class="external__button" download="NJLauersdorf_Resume.pdf" href="assets/img/PhysRevE.106.034605.pdf" title="BeaM Logo"> DOWNLOAD RESUME </a>
-                        <a style="color:rgb(244, 244, 244);" class="external__button" download="NJLauersdorf_CV.pdf" href="assets/img/PhysRevE.106.034605.pdf" title="BeaM Logo"> DOWNLOAD CV </a>
+                        <a style="color:rgb(244, 244, 244);" class="external__button" download="NJLauersdorf_Resume.pdf" href="assets/img/PhysRevE.106.034605.pdf" title="BeaM Logo"> RESUME </a>
+                        <a style="color:rgb(244, 244, 244);" class="external__button" download="NJLauersdorf_CV.pdf" href="assets/img/PhysRevE.106.034605.pdf" title="BeaM Logo"> CURRICULUM VITAE </a>
                     </div>
                 </div>
                 
                 <div class="wrapper3 bd-grid">
-                    <a href="#research" style="color:rgb(244, 244, 244);" class="active_matter_button">Research & Programming</a>
-                    <a href="#teaching" style="color:rgb(244, 244, 244);" class="light_detector_button">Teaching & Mentoring</a>
-                    <a href="#awards" style="color:rgb(244, 244, 244);" class="fusion_energy_button">Awards</a>
+                    <a href="#research" style="color:rgb(244, 244, 244);" class="research_button">Research & Programming</a>
+                    <a href="#teaching" style="color:rgb(244, 244, 244);" class="teaching_button">Teaching & Mentoring</a>
+                    <a href="#awards" style="color:rgb(244, 244, 244);" class="awards_button">Awards</a>
                 </div>
 
                 <section2 class="publications section" id="research">
@@ -73,11 +73,13 @@
                             <a href="https://klotsagroup.wixsite.com/home">
                                 <p style="font-size: 18px; text-align:center;" class="pubright2__subtitle">UNC-Chapel Hill: Klotsa Group</p>
                             </a>
-                            <p style="font-size: 1.0rem" class="about__text"> Using C++ and molecular dynamics, I simulate <a href="publications.html#active_matter">active matter</a> systems of self-propelled particles that <a href="publications.html#active_matter">phase separate</a>. Using <a href="https://github.com/njlauersdorf/klotsa.git">algorithms I write in Python</a>, I analyze big data to understand how properties of the individual agents contribute to the dynamic, collective behavior of the whole. Finally, I derive novel mathematical theories predicated on fundamental physics that explain and predict the observed collective behavior.</p>
+                            <p style="font-size: 1.0rem" class="about__text"> Using C++ and <a href="https://glotzerlab.engin.umich.edu/hoomd-blue/">molecular dynamics models</a>, I simulate <a href="publications.html#active_matter">active matter</a> systems of self-propelled particles that <a href="publications.html#active_matter">phase separate into a dense cluster and a dilute gas phase</a>. Using <a href="https://github.com/njlauersdorf/klotsa.git">algorithms I write in Python</a>, I analyze big data to understand how properties of the individual agents contribute to the dynamic, collective behavior of the whole. Finally, I derive novel mathematical theories predicated on fundamental physics and non-equilibrium statistical mechanics that explain and predict the observed collective behavior.</p>
                             <br>
-                            <p style="font-size: 1.0rem" class="about__text"> One challenge was navigating the interdisciplinary nature of expectations of capabilities to perform this research. I designed, built, and verified novel measurement systems to enable this research, such as a tool that measures the minimum intensity of detectible light. This was particularly challenging due to the measurement's incredible sensitivity to noise, so I had to be creative and precise with extreme noise mitigation techniques to make an accurate and user-friendly tool. </p>
+                            <p style="font-size: 1.0rem" class="about__text"> Aiming to be well-rounded, my graduate school career was a juggling act of interdisciplinary roles: researcher, teacher, mentor, advocate, leader, and the list goes on. As more and more responsibilities got thrown into my hands, it was only natural to drop a ball here and there but picking it back up was key while I adjust and improve. From both my successes and failures, I've become confident in my ability to not only face a challenge but also develop and execute a plan to overcome unforseen problems: I know how to analyze and mitigate risk, adapt plans while meeting rigid deadlines, and collaborate with others of diverse expertise to solve problems.</p> 
                             <br>
-                            <p style="font-size: 1.0rem" class="about__text"> Successes include proving how self-propulsion modifies the steady-state force balance in our phase-separated system, deriving an analytical theory that can predict the structural properties (density, pressure, size, and lattice spacing) of the steady state solely from our simulation inputs (experimentally measurable properties), and mentoring new graduate and undergraduate students with multiple research projects. A grant proposal I wrote for this project was awarded the prestigious <a href="#ndseg">Department of Defense (DoD) National Defense Science and Engineering Graduate (NDSEG) Fellowship</a> to fully fund three years of my graduate career. </p>
+                            <p style="font-size: 1.0rem" class="about__text"> For example, we hit a roadblock in my second paper where my findings changed the hypothesis to something we were less familiar with: microphase separation. At a national conference, I shared my progress and troubles, networked, and recruited collaborators with relevant expertise, such that, by combining my expertise in non-equilibrium systems and our collaborator's expertises in equilibrium mixtures, we were able to explain the emergent behavior and publish our work in ______. </p> 
+                            <br>
+                            <p style="font-size: 1.0rem" class="about__text"> Successes include enabling the design of experimental systems by deriving a theory that accurately predicts the final state of a system solely from our simulation inputs (experimentally measurable properties), mathematically proving how self-propulsion modifies the steady-state force balance that enables the cluster to form and be maintained, and mentoring new graduate and undergraduate students with multiple research projects. A grant proposal I wrote for this project was awarded the prestigious <a href="#ndseg">Department of Defense (DoD) National Defense Science and Engineering Graduate (NDSEG) Fellowship</a> to fully fund three years of my graduate career.</p>
                         </div>  
                         
                         
@@ -100,11 +102,11 @@
                                 <p style="font-size: 18px; text-align:center;" class="pubright2__subtitle">UNC Makerspaces: Be A Maker</p>
                             </a>
                             
-                            <p style="font-size: 1.0rem" class="about__text"> Using Tableau, I designed a workbooks for real-time analysis of user demographic data from the university makerspaces to enable more efficient staff scheduling, improve marketing, and apply for grants. </p>
+                            <p style="font-size: 1.0rem" class="about__text"> Through front-end and back-end development, I designed various computational tools to increase makerspace users and facilitate a better user experience. </p>
                             <br>
-                            <p style="font-size: 1.0rem" class="about__text"> One challenge was translating the dreams of business people into reality. Not of capabilities to perform this research. I designed, built, and verified novel measurement systems to enable this research, such as a tool that measures the minimum intensity of detectible light. This was particularly challenging due to the measurement's incredible sensitivity to noise, so I had to be creative and precise with extreme noise mitigation techniques to make an accurate and user-friendly tool. </p>
+                            <p style="font-size: 1.0rem" class="about__text"> One challenge was leading teams of student employees with typically high turn-over on long-term projects. Most students fell in love with the makerspaces because of making something cool with their hands but that love can quickly fade when stocking hundreds of boxes of 3D printer resin or waiting in boredom for a customer to enter an empty makerspace. It was common for student employees to simply do menial tasks as they were told, neither realizing their importance nor feeling pride for their contributions. I made it a priority to continuously remind my team about the project's goals, their role in its success, and its importance and impact on others. I was proud that not only did all my team members continue working with me until our project's completion, but also many continued working with me on future projects. </p>
                             <br>
-                            <p style="font-size: 1.0rem" class="about__text"> Successes include designing an intuitive Tableau user demographics analytics system whose front-end visualizations are still in-use for scheduling staff, marketing, and grant proposals, creating databases and data collection routines for 3D printer and laser cutter user demographics, working with Salesforce and SQL to create an extensive inventory database and QR system accounting for product movement between four makerspaces, and training makerspace staff on inventory system usage. </p>
+                            <p style="font-size: 1.0rem" class="about__text"> Successes include designing an intuitive Tableau workbook that displays real-time user demographics analytics that enabled significantly more efficient staff scheduling and new marketing materials for advertising and funding purposes, creating databases and data collection routines for 3D printer and laser cutter user demographics, working with Salesforce to create an extensive inventory database and QR system accounting for product movement between four makerspaces, and developing and facilitating trainings for makerspace staff on inventory system usage. </p>
                         </div>                                   
                     </div>
 
@@ -120,15 +122,15 @@
                                 <img src="assets/img/unc_logo.png" alt="">
                             </div>
 
-                            <h2 style="text-align: center;" class="pubright__subtitle">Graduate Researcher: Experimental Physics (Perovskite Photodetectors) DONE</h2>
+                            <h2 style="text-align: center;" class="pubright__subtitle">Graduate Researcher: Experimental Physics (Perovskite Photodetectors)</h2>
                             <a href="https://huangjinsong.wixsite.com/group">
                                 <p style="font-size: 18px; text-align:center;" class="pubright2__subtitle">UNC-Chapel Hill: Huang Group</p>
                             </a>
                             <p style="font-size: 1.0rem" class="about__text"> I was responsible for performing self-directed research to experimentally design <a href="publications.html#light_detectors">solution-processed, perovskite photodetectors</a>. </p>
                             <br>
-                            <p style="font-size: 1.0rem" class="about__text"> Being the first student to research photodetectors in my lab, I was challenged to build-up the lab’s capabilities to perform this research. I designed, built, and verified novel measurement systems to enable this research, such as a tool that measures the minimum intensity of detectible light. This was particularly challenging due to the measurement's incredible sensitivity to noise, so I had to be creative and precise with extreme noise mitigation techniques to make an accurate and user-friendly tool. </p>
+                            <p style="font-size: 1.0rem" class="about__text"> Being the first student to research photodetectors in my lab, I built-up the lab’s capabilities to perform this research. I designed, built, and verified novel measurement systems to enable this research, such as a tool that measures the minimum intensity of detectible light. This was particularly challenging due to the measurement's incredible sensitivity to noise, so I had to be creative and precise with extreme noise mitigation techniques to make an accurate, cost-efficient, and user-friendly tool. </p>
                             <br>
-                            <p style="font-size: 1.0rem" class="about__text"> Successes included developing the <a href="publications.html#photolum">first narrow-band perovskite photodetector for photoluminescence measurements</a>, forming and managing a collaboration network between our lab and Brookhaven, Lawrence Livermore, and Savannah River National Laboratories, and writing a <a href="">textbook chapter</a> that summarizes past research and future directions and makes perovskite photodetectors more accessible to scientists and students new to the field. </p>
+                            <p style="font-size: 1.0rem" class="about__text"> Successes included developing the <a href="publications.html#photolum">first narrow-band perovskite photodetector for photoluminescence measurements</a>, forming and managing a collaboration network between our lab and Brookhaven, Lawrence Livermore, and Savannah River National Laboratories, and writing a <a href="">textbook chapter</a> that summarizes past research and future directions to make perovskite photodetectors more accessible to scientists and students. </p>
                         </div>                                   
                     </div>
                 
@@ -144,15 +146,15 @@
                                 <img src="assets/img/uw_madison_logo.png" alt="">
                             </div>
 
-                            <h2 style="text-align: center;" class="pubright__subtitle">Research Intern: Computational Physics (Fusion Plasmas) DONE</h2>
+                            <h2 style="text-align: center;" class="pubright__subtitle">Research Intern: Computational Physics (Fusion Plasmas)</h2>
                             <a href="https://wippl.wisc.edu/">
                                 <p style="font-size: 18px; text-align:center;" class="pubright2__subtitle">Wisconsin Plasma Physics Laboratory (WiPPL)</p>
                             </a>
-                            <p style="font-size: 1.0rem" class="about__text"> Based upon an older IDL model, I developed a computational model in Python that accurately predicts the energy emissions from fusion plasma generators. By applying my computational model to determine the theoretically optimal design, I fabricated an x-ray detector that removes undesirable noise from other measurements, effectively increasing the measurement capabilities of scientists. </p>
+                            <p style="font-size: 1.0rem" class="about__text"> I developed a computational model in Python that accurately predicts the properties of fusion plasmas and the resulting energy emissions based on Bayesian statistics. By applying my computational model to determine the theoretically optimal design, I fabricated an x-ray detector that removes undesirable noise from other measurements, effectively increasing the measurement capabilities of scientists. </p>
                             <br>
-                            <p style="font-size: 1.0rem" class="about__text"> Before this position, I had never seen a line of computer code. Within this short period of time, I taught myself how to read and write complex code in both Python and IDL and applied this knowledge to design a physics-based, deterministic model, whose accuracy was successfully verified experimentally. One challenge I experienced was verifying my physical detector, with noisier, experimental data, agreed with a highly precise, deterministic computational model. I utilized statistics to conclude that our detector was behaving as we predicted. </p>
+                            <p style="font-size: 1.0rem" class="about__text"> Before this position, I had never seen a line of computer code. Within this short period of time, I taught myself how to read and write complex code in both Python and IDL and applied this knowledge to design a physics-based model, whose accuracy was successfully verified experimentally. </p>
                             <br>
-                            <p style="font-size: 1.0rem" class="about__text"> Successes included increasing the Python model’s efficiency by 60% through by replacing 1D lists and iterations over a loop with up to 6-dimensional tensor mathematics via NumPy, adding the capability to calculate the elemental impurity concentrations in plasmas and predict the measured signal of x-ray detectors, and developing multi-variable optimization routines to maximize the capabilities of x-ray detectors being designed with the computational model. </p>
+                            <p style="font-size: 1.0rem" class="about__text"> Successes included increasing the Python model’s efficiency by 60% through replacing 1D lists and iterations over a loop with up to 6-dimensional tensor mathematics via NumPy, adding the capability to calculate the elemental impurity concentration profiles and measured signal of a simulated x-ray detector, and developing multi-variable Bayesian optimization routines to maximize the measurement capabilities of simulated x-ray detectors. </p>
                         </div>                                   
                     </div>
 
@@ -174,15 +176,15 @@
                                 <img src="assets/img/jshs_logo.png" alt="">
                             </div>
 
-                            <h2 style="text-align: center;" class="pubright__subtitle">STEM Mentor for High School Students (DONE)</h2>
+                            <h2 style="text-align: center;" class="pubright__subtitle">STEM Mentor for High School Students</h2>
                             <a href="https://jshs.org/">
                                 <p style="font-size: 18px; text-align:center;" class="pubright2__subtitle">Junior Science and Humanities Symposium</p>
                             </a>
-                            <p style="font-size: 1.0rem" class="about__text">  I mentored highschool students across the world (based in the continental U.S., Puerto Rico, and Japan) on computational physics research projects for the annual Junior Science and Humanities Symposium and continue to provide long-term career mentorship for these students pursuing STEM.  </p>
+                            <p style="font-size: 1.0rem" class="about__text">  I mentored highschool students across the world (based in the continental U.S., Puerto Rico, and Japan) on computational physics research projects for the annual Junior Science and Humanities Symposium and continue to provide long-term career mentorship for these STEM students.  </p>
                             <br>
                             <p style="font-size: 1.0rem" class="about__text"> Having students from diverse cultures and academic backgrounds, one particularly challenging yet incredibly rewarding aspect of this role was finding the best mentoring style to connect with each student and meet their individual needs and goals. </p>
                             <br>
-                            <p style="font-size: 1.0rem" class="about__text"> Successes include completing research projects that 1) apply machine learning to predict the elastic properties of materials, 2) use computer vision to track the motion of flies in petri dishes, and 3) developing an analytical program for determining optimal exoplanets for habitation. One of these three projects won the regional competition and was selected to compete at a National level. </p>
+                            <p style="font-size: 1.0rem" class="about__text"> Successes include completing research projects that 1) apply machine learning to predict the elastic properties of materials, 2) use computer vision to track the motion of flies in petri dishes, and 3) developing an analytical program for determining optimal exoplanets for future habitation. One of my students placed third in the regional <a href="https://jshs.org/">JSHS competition</a> and first at the Puerto Rico State Science Fair, going on to compete at a national level at JSHS and the <a href="https://www.societyforscience.org/isef/">International Science and Engineering Fair (ISEF)</a>, which is the world's largest pre-college STEM competition. </p>
                         </div>                                   
                     </div>
 
@@ -198,13 +200,13 @@
                                 <img src="assets/img/aps_logo.png" alt="">
                             </div>
 
-                            <h2 style="text-align: center;" class="pubright__subtitle">Student Organization Founder (DONE)</h2>
+                            <h2 style="text-align: center;" class="pubright__subtitle">Student Organization Founder</h2>
                             <a href="https://aps.unc.edu/gsa/">
                                 <p style="font-size: 18px; text-align:center;" class="pubright2__subtitle">Graduate Student Association</p>
                             </a>
-                            <p style="font-size: 1.0rem" class="about__text"> During the COVID pandemic, I founded the <a href="https://aps.unc.edu/gsa-in-the-department-of-applied-physical-sciences-helps-build-graduate-student-community/">Graduate Student Association</a> to keep students connected and advocate for graduate student interests in key departmental decisions.</p>
+                            <p style="font-size: 1.0rem" class="about__text"> During the COVID pandemic, I founded and helped organize events for the <a href="https://aps.unc.edu/gsa-in-the-department-of-applied-physical-sciences-helps-build-graduate-student-community/">Graduate Student Association</a> to keep students connected, advocate for graduate student interests in key departmental decisions, and provide career development opportunities.</p>
                             <br>
-                            <p style="font-size: 1.0rem" class="about__text"> Since its founding in 2020, GSA planned and hosted countless intra- and inter-departmental social events, professional development seminars, and outreach opportunities. Successes include volunteering at the North Carolina Science Festival to share the science being done within our department, becoming officially recognized as a student organization by UNC in 2022, and adjusting the Materials Science PhD curriculum and requirements to best suit our students goals. </p>
+                            <p style="font-size: 1.0rem" class="about__text"> Since its founding in 2020, GSA planned and hosted countless intra- and inter-departmental social events, professional development seminars, and outreach opportunities. Successes include volunteering at the North Carolina Science Festival to share the science being done within our department, becoming officially recognized as a student organization by UNC in 2022, and tailoring the Materials Science PhD curriculum to best serve our students goals. </p>
                         </div>                                   
                     </div>
 
@@ -220,13 +222,13 @@
                                 <img src="assets/img/GPSG_logo.png" alt="">
                             </div>
 
-                            <h2 style="text-align: center;" class="pubright__subtitle">Graduate Student Senator: Finance Committee (DONE)</h2>
+                            <h2 style="text-align: center;" class="pubright__subtitle">Graduate Student Senator: Finance Committee</h2>
                             <a href="https://gpsg.unc.edu/">
                                 <p style="font-size: 18px; text-align:center;" class="pubright2__subtitle">Graduate and Professional Student Government (GPSG)</p>
                             </a>
                             <p style="font-size: 1.0rem" class="about__text">  I was elected by my graduate student peers to advocate for graduate student rights and serve on the GPSG finance committee. </p>
                             <br>
-                            <p style="font-size: 1.0rem" class="about__text"> Successes include passing bills to improve graduate student laboratory and transportation safety during COVID-19 and starting annual town hall meetings to hear and address the concerns of graduate students within my department. As a member of the finance committee, I have helped balance the GPSG's budget and write successful proposals to provide financial support to minority-serving outreach organizations and international students requiring assistance with work-from-home costs. </p>
+                            <p style="font-size: 1.0rem" class="about__text"> Successes include passing bills to improve graduate student laboratory and transportation safety during COVID-19 and organizing bi-annual town hall meetings to hear and address the concerns of graduate students within my department. As a member of the finance committee, I have helped balance the GPSG's annual budget and write successful proposals to provide financial support to minority-serving outreach organizations and international students requiring assistance with work-from-home costs during the COVID-19 pandemic. </p>
                         </div>                                   
                     </div>
 
@@ -242,7 +244,7 @@
                                 <img src="assets/img/unc_logo.png" alt="">
                             </div>
 
-                            <h2 style="text-align: center;" class="pubright__subtitle">Graduate Teaching Assistant (DONE)</h2>
+                            <h2 style="text-align: center;" class="pubright__subtitle">Graduate Teaching Assistant</h2>
                             <a href="https://aps.unc.edu/">
                                 <p style="font-size: 18px; text-align:center;" class="pubright2__subtitle">University of North Carolina at Chapel Hill</p>
                             </a>
@@ -270,7 +272,7 @@
                                 <img src="assets/img/STI-NDSEG-logo.png" alt="">
                             </div>
 
-                            <h2 style="text-align: center;" class="pubright__subtitle">National Defense Science and Engineering Graduate (NDSEG) Research Fellowship Recipient (DONE)</h2>
+                            <h2 style="text-align: center;" class="pubright__subtitle">National Defense Science and Engineering Graduate (NDSEG) Research Fellowship Recipient</h2>
                             <a href="https://klotsagroup.wixsite.com/home">
                                 <p style="font-size: 18px; text-align:center;" class="pubright2__subtitle">UNC-Chapel Hill: Klotsa Group</p>
                             </a>
@@ -292,7 +294,7 @@
                                 <img src="assets/img/presentation_award.jpeg" alt="">
                             </div>
 
-                            <h2 style="text-align: center;" class="pubright__subtitle">First Place Poster Presentation in Modeling, Computation, and Theoretical Simulations (DONE)</h2>
+                            <h2 style="text-align: center;" class="pubright__subtitle">First Place Poster Presentation in Modeling, Computation, and Theoretical Simulations</h2>
                             <a href="https://klotsagroup.wixsite.com/home">
                                 <p style="font-size: 18px; text-align:center;" class="pubright2__subtitle">Triangle Student Research Competition 2021</p>
                             </a>
@@ -314,9 +316,9 @@
                                 <img src="assets/img/uw_madison_logo.png" alt="">
                             </div>
 
-                            <h2 style="text-align: center;" class="pubright__subtitle">Theodore Herfurth Scholarship Recipient (DONE)</h2>
+                            <h2 style="text-align: center;" class="pubright__subtitle">Theodore Herfurth Scholarship Recipient</h2>
                             <a href="https://klotsagroup.wixsite.com/home">
-                                <p style="font-size: 18px; text-align:center;" class="pubright2__subtitle">UW-Madison</p>
+                                <p style="font-size: 18px; text-align:center;" class="pubright2__subtitle">University of Wisconsin-Madison</p>
                             </a>
                             <p style="font-size: 1.0rem" class="about__text"> The <a href="https://wisc.academicworks.com/opportunities/66641">Theodore Herfurth scholarship</a> provides a 4 year award [$8,000/yr] to high achieving students with financial need pursuing a degree from the College of Letters & Science at UW-Madison.</p>
                         </div>  

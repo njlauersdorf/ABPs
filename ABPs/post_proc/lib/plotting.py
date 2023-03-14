@@ -1670,7 +1670,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
             # Find min/max number of neighbors
             min_neigh = 0
             max_neigh = np.amax(neigh_plot_dict['all-all']['neigh'])
-            max_neigh = 8
+            max_neigh = 7
             ells = [Ellipse(xy=np.array([pos_x_arr[i],pos_y_arr[i]]),
                     width=sz, height=sz)
             for i in range(0,len(pos_x_arr))]
@@ -1915,7 +1915,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         ax.axis('off')
         plt.tight_layout()
         #plt.show()
-        plt.savefig(self.outPath + 'all_all_neigh_' + self.outFile + ".png", dpi=75, transparent=False)
+        plt.savefig(self.outPath + 'all_all_neigh_' + self.outFile + ".png", dpi=150, transparent=False)
         plt.close()        
     def plot_neighbors_ori(self, neigh_plot_dict, ang, pos, sep_surface_dict=None, int_comp_dict=None, pair='all'):
         """
@@ -4548,6 +4548,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         else:
             mono=0
 
+        y_dim = y_dim * (3/5)
         # Generate figure of dimensions proportional to simulation box size (with added x-length for color bar)
         fig = plt.figure(figsize=(x_dim,y_dim))
         ax = fig.add_subplot(111)
@@ -4602,6 +4603,11 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                 fastGroup = mc.PatchCollection(ells0,facecolors=fastCol)
             ax.add_collection(slowGroup)
             ax.add_collection(fastGroup)
+
+            fast_leg = [Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=slowCol, label='Slow', markersize=20), Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=fastCol, label='Fast', markersize=20)]
+
+            one_leg = ax.legend(handles=fast_leg, loc='upper right', borderpad=0.3, labelspacing=0.4, handletextpad=0.2, bbox_transform=ax.transAxes, bbox_to_anchor=[1.0, 1.0], handlelength=1.5, columnspacing=0.0, fontsize=20, ncol=1, fancybox=True, framealpha=0.5, facecolor='white', edgecolor='black')
+            ax.add_artist(one_leg)
 
             #Create legend for binary system
             """
@@ -4745,7 +4751,10 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
             plt.ylim(0, self.ly_box)
             plt.xlim(0, self.lx_box)
 
+        plt.ylim(1.5*self.ly_box/5, 3.5*self.ly_box/5)
+
         # Label simulation time
+        """
         if self.lx_box == self.ly_box:
             #plt.text(0.69, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
             #    fontsize=24, transform = ax.transAxes,
@@ -4757,7 +4766,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
             plt.text(0.85, 0.1, s=r'$\tau$' + ' = ' + '{:.4f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
                 fontsize=18, transform = ax.transAxes,
                 bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
-
+        """
         ax.axes.set_xticks([])
         ax.axes.set_yticks([])
         ax.axes.set_xticklabels([])
@@ -4768,7 +4777,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         #pad = str(j).zfill(4)
 
         plt.tight_layout()
-        plt.savefig(self.outPath + 'part_activity_' + self.outFile + ".png", dpi=150, transparent=False)
+        plt.savefig(self.outPath + 'part_activity_' + self.outFile + ".png", dpi=300, transparent=False)
         plt.close()  
         
         
