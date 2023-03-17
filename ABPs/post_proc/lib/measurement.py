@@ -624,7 +624,7 @@ class measurement:
         rad_df_dict = {'r': r_arr, 'all-all': g_r_allall_bulk, 'all-A': g_r_allA_bulk, 'all-B': g_r_allB_bulk, 'A-A': g_r_AA_bulk, 'A-B': g_r_AB_bulk, 'B-B': g_r_BB_bulk}
         return rad_df_dict
 
-    def structure_factor(self, rad_df_dict):
+    def structure_factor(self, rad_df_dict, part_count_dict):
 
         num_dens_mean_dict = self.num_dens_mean(self.area_frac_dict)
         
@@ -633,6 +633,7 @@ class measurement:
         g_r_allall_bulk = rad_df_dict['all-all']
         g_r_AA_bulk = rad_df_dict['A-A']
         g_r_AB_bulk = rad_df_dict['A-B']
+        #g_r_BA_bulk = rad_df_dict['B-A']
         g_r_BB_bulk = rad_df_dict['B-B']
 
         partial_ssf_AA = (num_dens_mean_dict['A']/num_dens_mean_dict['all'])+num_dens_mean_dict['all']*(num_dens_mean_dict['A']/num_dens_mean_dict['all'])*(num_dens_mean_dict['A']/num_dens_mean_dict['all'])*np.fft.fft(np.array(g_r_AA_bulk) - 1.0)
@@ -640,25 +641,80 @@ class measurement:
         partial_ssf_BB = (num_dens_mean_dict['B']/num_dens_mean_dict['all'])+num_dens_mean_dict['all']*(num_dens_mean_dict['B']/num_dens_mean_dict['all'])*(num_dens_mean_dict['B']/num_dens_mean_dict['all'])*np.fft.fft(np.array(g_r_BB_bulk) - 1.0)
         
         partial_ssf_allall_arr = np.array([])
+        partial_ssf_AA_arr = np.array([])
+        partial_ssf_AB_arr = np.array([])
+        partial_ssf_BA_arr = np.array([])
+        partial_ssf_BB_arr = np.array([])
+
         #np.where(r_arr>=1)
-        k_arr = np.linspace(0, 40, num=1000)
+        k_arr = np.linspace(0, 40, num=100000)
+        
 
         g_r_example = np.ones(len(r_arr))
         test_id = np.where(np.array(r_arr)<1)[0]
         g_r_example[test_id]=0.0
-
+        difr = r_arr[1]-r_arr[0]
+        partial_ssf_allall_arr2 = np.array([])
+        #print(part_count_dict)
+        #stop
         for i in range(1, len(k_arr)):
+            partial_ssf_allall2 = 1
+            for j in range(0, len(r_arr)):
+                partial_ssf_allall2 += 4 * np.pi * num_dens_mean_dict['all'] * r_arr[j]**2 * (np.array(g_r_allall_bulk[j]) - 1) * ( np.sin(k_arr[i] * r_arr[j])/(k_arr[i] * r_arr[j]) ) * difr
 
             partial_ssf_allall = np.trapz(np.array(r_arr) * (np.array(g_r_allall_bulk)-1) * np.sin(k_arr[i] * np.array(r_arr))/(k_arr[i]), x=r_arr)
+            partial_ssf_AA = np.trapz(np.array(r_arr) * (np.array(g_r_AA_bulk)-1) * np.sin(k_arr[i] * np.array(r_arr))/(k_arr[i]), x=r_arr)
+            partial_ssf_AB = np.trapz(np.array(r_arr) * (np.array(g_r_AB_bulk)-1) * np.sin(k_arr[i] * np.array(r_arr))/(k_arr[i]), x=r_arr)
+            #partial_ssf_BA = np.trapz(np.array(r_arr) * (np.array(g_r_BA_bulk)-1) * np.sin(k_arr[i] * np.array(r_arr))/(k_arr[i]), x=r_arr)
+            partial_ssf_BB = np.trapz(np.array(r_arr) * (np.array(g_r_BB_bulk)-1) * np.sin(k_arr[i] * np.array(r_arr))/(k_arr[i]), x=r_arr)
+
             #for j in range(1, len(r_arr)):
             #    dr = r_arr[j]-r_arr[j-1]
             #    increment += 1
             #    partial_ssf_allall += r_arr[j] * ((g_r_allall_bulk[increment]) - 1) * np.sin(r_arr[i] * r_arr[j])/r_arr[i]
             #partial_ssf_allall_arr=np.append( partial_ssf_allall_arr, 1 + 4 * np.pi * num_dens_mean_dict['all'] * partial_ssf_allall * dr / r_arr[i])
             partial_ssf_allall_arr=np.append( partial_ssf_allall_arr, 1 + 4 * np.pi * num_dens_mean_dict['all'] * partial_ssf_allall)
-        plt.plot(k_arr[1:], partial_ssf_allall_arr)
+            partial_ssf_AA_arr=np.append( partial_ssf_AA_arr, 1 + 4 * np.pi * num_dens_mean_dict['A'] * partial_ssf_AA)
+            partial_ssf_AB_arr=np.append( partial_ssf_AB_arr, 1 + 4 * np.pi * num_dens_mean_dict['A'] * partial_ssf_AB)
+            partial_ssf_BA_arr=np.append( partial_ssf_BA_arr, 1 + 4 * np.pi * num_dens_mean_dict['B'] * partial_ssf_AB)
+            partial_ssf_BB_arr=np.append( partial_ssf_BB_arr, 1 + 4 * np.pi * num_dens_mean_dict['B'] * partial_ssf_BB)
+
+            partial_ssf_allall_arr2 = np.append(partial_ssf_allall_arr2, partial_ssf_allall2)
+        
+        compressibility_allall = (1 + num_dens_mean_dict['all'] * np.trapz((np.array(g_r_allall_bulk)-1), x=r_arr)) / (num_dens_mean_dict['all'] * (self.peA*(1/3)/2))
+        compressibility_AA = (1 + num_dens_mean_dict['A'] * np.trapz((np.array(g_r_AA_bulk)-1), x=r_arr)) / (num_dens_mean_dict['A'] * (self.peA*(1/3)/2))
+        compressibility_AB = (1 + num_dens_mean_dict['A'] * np.trapz((np.array(g_r_AB_bulk)-1), x=r_arr)) / (num_dens_mean_dict['A'] * (self.peA*(1/3)/2))
+        compressibility_BA = (1 + num_dens_mean_dict['B'] * np.trapz((np.array(g_r_AB_bulk)-1), x=r_arr)) / (num_dens_mean_dict['B'] * (self.peB*(1/3)/2))
+        compressibility_BB = (1 + num_dens_mean_dict['B'] * np.trapz((np.array(g_r_BB_bulk)-1), x=r_arr)) / (num_dens_mean_dict['B'] * (self.peB*(1/3)/2))
+
+        #partial_ssf_allall_arr / (num_dens_mean_dict['all'] * (self.peA*(1/3)/2))
+        partial_ssf_allall_num = partial_ssf_AA_arr * num_dens_mean_dict['A']**2 + partial_ssf_AB_arr * num_dens_mean_dict['A']* num_dens_mean_dict['B'] + partial_ssf_BA_arr * num_dens_mean_dict['A']* num_dens_mean_dict['B'] + partial_ssf_BB_arr * num_dens_mean_dict['B']* num_dens_mean_dict['B']
+        partial_ssf_allall_denom = num_dens_mean_dict['A']**2 + num_dens_mean_dict['A']* num_dens_mean_dict['B'] + num_dens_mean_dict['A']* num_dens_mean_dict['B'] + num_dens_mean_dict['B']* num_dens_mean_dict['B']
+        partial_ssf_allall_arr3 = partial_ssf_allall_num / partial_ssf_allall_denom
+        plt.plot(k_arr[1:], partial_ssf_allall_arr, label='old')
+        plt.plot(k_arr[1:], partial_ssf_allall_arr3, label='new')
+        plt.legend()
+        plt.show()
+
+        plt.plot(k_arr[1:], partial_ssf_AA_arr,label='A-A')
+        plt.plot(k_arr[1:], partial_ssf_AB_arr, label='A-B')
+        plt.plot(k_arr[1:], partial_ssf_BA_arr, label='B-A')
+        plt.plot(k_arr[1:], partial_ssf_BB_arr, label='B-B')
+        plt.legend()
+        plt.show()
+
+        print(compressibility_allall)
+        print(compressibility_AA)
+        print(compressibility_AB)
+        print(compressibility_BA)
+        print(compressibility_BB)
+        print(compressibility_AA+compressibility_AB+compressibility_BA+compressibility_BB)
+        stop
+
+        plt.plot(k_arr[1:], partial_ssf_allall_arr2)
+        
         y_arr = np.ones(len(k_arr))
-        plt.plot(k_arr, y_arr, color='black', linewidth=2.0, linestyle='dashed')
+        #plt.plot(k_arr, y_arr, color='black', linewidth=2.0, linestyle='dashed')
         #plt.ylim(-10, 10)
         plt.show()
 

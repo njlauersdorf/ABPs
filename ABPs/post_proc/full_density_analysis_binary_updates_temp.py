@@ -245,11 +245,11 @@ import time
 with hoomd.open(name=inFile, mode='rb') as t:
 
     dumps = int(t.__len__())
-    start = int(0/time_step)#205                                             # first frame to process
+    start = int(465/time_step)#205                                             # first frame to process
     
                                 # get number of timesteps dumped
     
-    end = int(dumps/time_step)-1                                             # final frame to process
+    end = 563 #int(dumps/time_step)-1                                             # final frame to process
     snap = t[0]                                             # Take first snap for box
     first_tstep = snap.configuration.step                   # First time step
 
@@ -729,7 +729,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
             g.close()
             '''
             data_output_functs = data_output.data_output(lx_box, ly_box, sizeBin_x, sizeBin_y, tst, clust_large, dt_step)
-
+            
             #Bin system to calculate orientation and alignment that will be used in vector plots
             all_surface_curves = {}
             sep_surface_dict = interface_functs.separate_surfaces(surface_dict, int_dict, int_comp_dict)
@@ -741,10 +741,10 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 averaged_data_arr = {}
 
                 key = 'surface id ' + str(int(int_comp_dict['ids'][m]))
+                print(key)
                 all_surface_curves[key] = {}
                 all_surface_measurements[key] = {}
-
-
+                
                 if (int_comp_dict['ids'][m]!=999):
                     #print(np.max(int_comp_dict['comp']['all']))
                     #print(np.where(int_comp_dict['comp']['all']==np.max(int_comp_dict['comp']['all']))[0])
@@ -757,7 +757,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 if sep_surface_dict[key]['interior']['num']>0:
 
 
-
+                    
                     sort_interior_ids = interface_functs.sort_surface_points(sep_surface_dict[key]['interior'])
 
                     all_surface_curves[key]['interior'] = interface_functs.surface_curve_interp(sort_interior_ids)
@@ -766,11 +766,13 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                     all_surface_measurements[key]['interior'] = interface_functs.surface_radius(com_pov_interior_pos['pos'])
                     all_surface_measurements[key]['interior']['surface area'] = interface_functs.surface_area(com_pov_interior_pos['pos'])
+                    all_surface_measurements[key]['interior']['com'] = com_pov_interior_pos['com']
                     #all_surface_measurements[key]['interior']['fourier'] = interface_functs.fourier_analysis(all_surface_measurements[key]['interior'])
 
                     averaged_data_arr['int_mean_rad'] = all_surface_measurements[key]['interior']['mean radius']
                     averaged_data_arr['int_std_rad'] = all_surface_measurements[key]['interior']['std radius']
                     averaged_data_arr['int_sa'] = all_surface_measurements[key]['interior']['surface area']
+                    
                 else:
                     averaged_data_arr['int_mean_rad'] = 0
                     averaged_data_arr['int_std_rad'] = 0
@@ -784,10 +786,12 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     com_pov_exterior_pos = interface_functs.surface_com_pov(all_surface_curves[key]['exterior']['pos'])
                     all_surface_measurements[key]['exterior'] = interface_functs.surface_radius(com_pov_exterior_pos['pos'])
                     all_surface_measurements[key]['exterior']['surface area'] = interface_functs.surface_area(com_pov_exterior_pos['pos'])
+                    all_surface_measurements[key]['exterior']['com'] = com_pov_exterior_pos['com']
                     #all_surface_measurements[key]['exterior']['fourier'] = interface_functs.fourier_analysis(all_surface_measurements[key]['exterior'])
                     averaged_data_arr['ext_mean_rad'] = all_surface_measurements[key]['exterior']['mean radius']
                     averaged_data_arr['ext_std_rad'] = all_surface_measurements[key]['exterior']['std radius']
                     averaged_data_arr['ext_sa'] = all_surface_measurements[key]['exterior']['surface area']
+                    
                 else:
                     averaged_data_arr['ext_mean_rad'] = 0
                     averaged_data_arr['ext_std_rad'] = 0
@@ -801,6 +805,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     averaged_data_arr['width'] = 0
                 if measurement_method == 'interface_props':
                     data_output_functs.write_to_txt(averaged_data_arr, dataPath + 'BubComp_' + outfile + '.txt')
+            
             if steady_state_once == 'False':
                 in_clust_arr = np.zeros(partNum)
                 clust_id_time = np.where(ids==lcID)[0]
@@ -909,13 +914,13 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                 particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, eps, typ, pos, ang)
 
-                radial_fa_dict = particle_prop_functs.radial_surface_normal_fa_bubble(method2_align_dict, all_surface_curves, int_comp_dict)
+                radial_fa_dict = particle_prop_functs.radial_surface_normal_fa_bubble2(method2_align_dict, all_surface_curves, int_comp_dict, all_surface_measurements)
 
                 stress_stat_dict, press_stat_dict, press_plot_dict, stress_plot_dict = lattice_structure_functs.interparticle_pressure_nlist()
 
-                radial_int_press_dict = particle_prop_functs.radial_int_press_bubble(stress_plot_dict, all_surface_curves, int_comp_dict, all_surface_measurements)
+                radial_int_press_dict = particle_prop_functs.radial_int_press_bubble2(stress_plot_dict, all_surface_curves, int_comp_dict, all_surface_measurements)
 
-                com_radial_dict_bubble, com_radial_dict_fa_bubble = particle_prop_functs.radial_measurements(radial_int_press_dict, radial_fa_dict)
+                com_radial_dict_bubble, com_radial_dict_fa_bubble = particle_prop_functs.radial_measurements2(radial_int_press_dict, radial_fa_dict, surface_dict, all_surface_curves, int_comp_dict, all_surface_measurements)
 
                 data_output_functs.write_to_txt(com_radial_dict_bubble, dataPath + 'bubble_com_bubble_interparticle_pressure_radial_' + outfile + '.txt')
                 data_output_functs.write_to_txt(com_radial_dict_fa_bubble, dataPath + 'bubble_com_bubble_active_pressure_radial_' + outfile + '.txt')
@@ -1024,7 +1029,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                 radial_df_dict = lattice_structure_functs.radial_df()
 
-                structure_factor_dict = lattice_structure_functs.structure_factor(radial_df_dict)
+                structure_factor_dict = lattice_structure_functs.structure_factor(radial_df_dict, part_count_dict)
 
                 stop
             elif measurement_method == 'int_press':
@@ -1209,7 +1214,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 stress_and_pressure_functs = stress_and_pressure.stress_and_pressure(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
 
                 particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, eps, typ, pos, ang)
-
+                
                 radial_fa_dict = particle_prop_functs.radial_surface_normal_fa(method2_align_dict)
 
                 surface_radial_dict = stress_and_pressure_functs.radial_com_active_force_pressure(radial_fa_dict)
@@ -1219,7 +1224,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 act_press_dict = stress_and_pressure_functs.total_active_pressure(surface_radial_dict)
 
                 data_output_functs.write_to_txt(act_press_dict, dataPath + 'surface_interface_pressure_' + outfile + '.txt')
-
+                
             elif measurement_method == 'hexatic_order':
                 #DONE
 

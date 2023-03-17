@@ -24,6 +24,7 @@ navLink.forEach(n => n.addEventListener('click', linkAction))
 /*==================== SCROLL SECTIONS ACTIVE LINK ====================*/
 const sections = document.querySelectorAll('section[id]')
 
+
 function scrollActive(){
     const scrollY = window.pageYOffset
 
@@ -31,7 +32,6 @@ function scrollActive(){
         const sectionHeight = current.offsetHeight
         const sectionTop = current.offsetTop - 50;
         sectionId = current.getAttribute('id')
-
         if(scrollY > sectionTop && scrollY <= sectionTop + sectionHeight){
             document.querySelector('.nav__menu a[href*=' + sectionId + ']').classList.add('active')
         }else{
@@ -109,8 +109,9 @@ function currentSlide(index) {
     for (i = 0; i < dots.length; i++) {
         dots[i].className = dots[i].className.replace(" active", "");
     }
-    slides[index-1].style.display = "block";  
+    slides[index-1].style.display = "block"; 
     dots[index-1].className += " active";
     //create a new timer
     timer = setTimeout(showSlides, 4000);
 }
+

@@ -658,36 +658,39 @@ class interface:
         # ID (int) of largest interface per number of particles
         int_large_ids = int_comp_dict['ids']
 
-        # Instantiate empty array that contains x- and y- indices for interior surface
-        int_surface_x = np.array([], dtype=int)
-        int_surface_y = np.array([], dtype=int)
-
-        # Instantiate empty array that contains x- and y- indices for exterior surface
-        ext_surface_x = np.array([], dtype=int)
-        ext_surface_y = np.array([], dtype=int)
-
-        # Instantiate empty array that contains x- and y- indices for either (1st or 2nd) interface surface
-        surface1_x_id = np.array([], dtype=int)
-        surface1_y_id = np.array([], dtype=int)
-
-        surface2_x_id = np.array([], dtype=int)
-        surface2_y_id = np.array([], dtype=int)
-
-        # Instantiate empty array (NBins_x, NBins_y) that labels whether bin is interior surface bin (1) or not (0)
-        int_surface_id=np.zeros((self.NBins_x, self.NBins_y), dtype=int)
-
-        # Instantiate empty array (NBins_x, NBins_y) that labels whether bin is exterior surface bin (1) or not (0)
-        ext_surface_id=np.zeros((self.NBins_x, self.NBins_y), dtype=int)
+        
 
         # Dictionary that stores interior and exterior surface information for each respective interface of sufficient size
-        sep_surface_dict = {}
-
-        # Start count of number of bins belonging to either interface surface (1 or 2)
-        surface1_num = 0
-        surface2_num = 0
+        sep_surface_dict = {}        
 
         # Loop over all interfaces
         for m in range(0, len(int_large_ids)):
+
+            # Instantiate empty array that contains x- and y- indices for interior surface
+            int_surface_x = np.array([], dtype=int)
+            int_surface_y = np.array([], dtype=int)
+
+            # Instantiate empty array that contains x- and y- indices for exterior surface
+            ext_surface_x = np.array([], dtype=int)
+            ext_surface_y = np.array([], dtype=int)
+
+            # Instantiate empty array that contains x- and y- indices for either (1st or 2nd) interface surface
+            surface1_x_id = np.array([], dtype=int)
+            surface1_y_id = np.array([], dtype=int)
+
+            surface2_x_id = np.array([], dtype=int)
+            surface2_y_id = np.array([], dtype=int)
+
+            # Start count of number of bins belonging to either interface surface (1 or 2)
+            surface1_num = 0
+            surface2_num = 0
+
+            # Instantiate empty array (NBins_x, NBins_y) that labels whether bin is interior surface bin (1) or not (0)
+            int_surface_id=np.zeros((self.NBins_x, self.NBins_y), dtype=int)
+
+            # Instantiate empty array (NBins_x, NBins_y) that labels whether bin is exterior surface bin (1) or not (0)
+            ext_surface_id=np.zeros((self.NBins_x, self.NBins_y), dtype=int)
+        
 
             # If interface sufficiently large...
             if int_large_ids[m]!=999:
@@ -762,16 +765,15 @@ class interface:
 
                 ext_surface_pos_x = ext_surface_x * self.sizeBin_x
                 ext_surface_pos_y = ext_surface_y * self.sizeBin_y
-
+                
                 # Dictionary containing information on exterior and interior surfaces for reference interface
                 indiv_surface_dict = {'interior': {'x bin': int_surface_x, 'y bin': int_surface_y, 'ids': int_surface_id, 'num': int_surface_num}, 'exterior': {'x bin': ext_surface_x, 'y bin': ext_surface_y, 'ids': ext_surface_id, 'num': ext_surface_num}}
 
                 # Dictionary key labeling reference interface
                 key_temp = 'surface id ' + str(int(int_large_ids[m]))
-
+                
                 # Reference interface surface dictionary saved to dictionary that contains exterior and interior surface information for all interfaces
                 sep_surface_dict[key_temp] = indiv_surface_dict
-
         return sep_surface_dict
 
     def sort_surface_points(self, surface_dict):
@@ -1481,6 +1483,7 @@ class interface:
                     yn_pos[m]-=self.ly_box
 
         surface_curve_dict = {'id': {'x': xn, 'y': yn}, 'pos': {'x': xn_pos, 'y': yn_pos}}
+
         return surface_curve_dict
 
 

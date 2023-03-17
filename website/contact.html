@@ -36,11 +36,11 @@ $_POST["insert your message here"]. "From: an@email.address");
                     <a style="color: hsl(0, 0%, 0%);" href="index.html" class="nav__logo">Nicholas Lauersdorf</a>
                 </div>
 
-                <div style="color: hsl(0, 0%, 0%);" class="nav__menu" id="nav-menu">
+                <div style="color: hsl(0, 0%, 0%);" onclick="myFunction(event)" class="nav__menu" id="nav-menu">
                     <ul class="nav__list">
-                        <li class="nav__item"><a style="color: hsl(0, 0%, 0%);" href="index.html" class="nav__link active">Home</a></li>
+                        <li class="nav__item"><a style="color: hsl(0, 0%, 0%);" href="index.html" class="nav__link">Home</a></li>
                         <li class="nav__item"><a style="color: hsl(0, 0%, 0%);" href="about.html" class="nav__link">About</a></li>
-                        <li class="nav__item"><a style="color: hsl(0, 0%, 0%);" href="roles.html" class="nav__link">Experience</a></li>
+                        <li class="nav__item"><a style="color: hsl(0, 0%, 0%);" href="experience.html" class="nav__link">Experience</a></li>
                         <li class="nav__item"><a style="color: hsl(0, 0%, 0%);" href="publications.html" class="nav__link">Publications</a></li>
                         <li class="nav__item"><a style="color: hsl(0, 0%, 0%);" href="contact.html" class="nav__link">Contact</a></li>
                     </ul>
@@ -54,7 +54,11 @@ $_POST["insert your message here"]. "From: an@email.address");
         <main class="l-main">
             <!--===== CONTACT =====-->
             <section class="contact section" id="contact">
-                <img src="assets/img/publications_banner.jpeg" class="home__banner" alt "">
+                <div class="home__banner">
+                    <video style="width: 100%" class="home__banner" alt "" autoplay loop muted>
+                        <source src="assets/img/wallpaper.mp4" type="video/mp4">
+                    </video>
+                </div>
                 <h2 class="section-title">Contact</h2>
 
                 <div class="contact__container bd-grid">
