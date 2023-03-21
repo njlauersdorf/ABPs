@@ -346,7 +346,7 @@ img {
 
 /* On hover, add a black background color with a little bit see-through */
 .prev:hover, .next:hover {
-  color: hsl(351.9,45.3%,58.4%);
+  color: var(--first-color);
 }
 
 /* Caption text */
@@ -381,14 +381,12 @@ img {
   background-color: #494B55;
 }
 
-
-
-.dot:hover {
-	background-color: hsl(351.9,45.3%,58.4%);
+.dot.active{
+  background-color: var(--first-color);
 }
 
-.active{
-  background-color: hsl(351.9,45.3%,58.4%);
+.dot:hover {
+	background-color: var(--first-color);
 }
 
 /* Fading animation */
@@ -556,20 +554,9 @@ img {
   text-decoration: underline;
 }
 
-.nav__link:active {
+.nav__link.active {
   text-decoration: underline;
-}
-
-.nav__link:active::after {
-  text-decoration: underline;
-}
-
-.activee {
-  text-decoration: underline;
-}
-
-.activee::after {
-  text-decoration: underline;
+  text-decoration-thickness: 3px;
 }
 
 /*=== Show menu ===*/
@@ -1489,7 +1476,7 @@ img {
 
   .home__img {
     width: 250px;
-    bottom: 15%;
+    bottom: 10%;
   }
   .aboutright__txt {
     margin-left:0.0rem; 
@@ -1578,7 +1565,7 @@ img {
 
   .home__img {
     width: 320px;
-    bottom: 15%;
+    bottom: 10%;
   }
 }
 @media screen and (min-width: 820px) {
@@ -1794,7 +1781,7 @@ img {
   
   .home__img {
     width: 420px;
-    bottom: 5%;
+    bottom: 10%;
   }
 
   .about3__container {
@@ -1908,21 +1895,21 @@ img {
 @media screen and (min-width: 950px) {
   .home__img {
     width: 420px;
-    bottom: 5%;
+    bottom: 10%;
   }
   
 }
 @media screen and (min-width: 1090px) {
   .home__img {
     width: 470px;
-    bottom: 5%;
+    bottom: 10%;
   }
 }
 
 @media screen and (min-width: 1290px) {
   .home__img {
     width: 520px;
-    bottom: 5%;
+    bottom: 10%;
   }
 }
 
@@ -1969,7 +1956,7 @@ img {
 
   .active_matter_button {
     background: url(../img/seal_hunting_fish.gif);
-    background-size: 130%;
+    background-size: 100%;
     color: #FFFFFF;
     font-weight: var(--font-semi);
     font-size: 1.2rem;
@@ -1989,7 +1976,7 @@ img {
   .light_detector_button {
     
     background: url(../img/solar_cell.jpeg);
-    background-size: 130%;
+    background-size: 100%;
     background-position: center;
     color: #FFFFFF;
     font-weight: var(--font-semi);
@@ -2008,7 +1995,7 @@ img {
   
   .fusion_energy_button {
     background: url(../img/fusion_plasma.gif);
-    background-size: 120%;
+    background-size: 100%;
     color: #FFFFFF;
     font-weight: var(--font-semi);
     font-size: 1.2rem;
@@ -2045,7 +2032,7 @@ img {
 
   .teaching_button {
     background: url(../img/teaching.jpeg);
-    background-size: 120%;
+    background-size: 100%;
     color: #FFFFFF;
     font-weight: var(--font-semi);
     font-size: 1.2rem;
@@ -2063,7 +2050,7 @@ img {
 
   .research_button {
     background: url(../img/work3.jpg);
-    background-size: 120%;
+    background-size: 100%;
     color: #FFFFFF;
     font-weight: var(--font-semi);
     font-size: 1.2rem;
@@ -2085,7 +2072,7 @@ img {
 
   .active_matter_button {
     background: url(../img/seal_hunting_fish.gif);
-    background-size: 130%;
+    background-size: 140%;
     color: #FFFFFF;
     font-weight: var(--font-semi);
     font-size: 1.2rem;
@@ -2124,7 +2111,7 @@ img {
   
   .fusion_energy_button {
     background: url(../img/fusion_plasma.gif);
-    background-size: 120%;
+    background-size: 140%;
     color: #FFFFFF;
     font-weight: var(--font-semi);
     font-size: 1.2rem;
@@ -2142,7 +2129,7 @@ img {
 
   .awards_button {
     background: url(../img/awards_button.png);
-    background-size: 100%;
+    background-size: 110%;
     color: #FFFFFF;
     font-weight: var(--font-semi);
     font-size: 1.2rem;
@@ -2278,7 +2265,7 @@ img {
 
   .teaching_button {
     background: url(../img/teaching.jpeg);
-    background-size: 120%;
+    background-size: 110%;
     color: #FFFFFF;
     font-weight: var(--font-semi);
     font-size: 1.35rem;
@@ -2296,7 +2283,7 @@ img {
 
   .research_button {
     background: url(../img/work3.jpg);
-    background-size: 120%;
+    background-size: 110%;
     color: #FFFFFF;
     font-weight: var(--font-semi);
     font-size: 1.35rem;
@@ -2391,7 +2378,7 @@ img {
 
   .teaching_button {
     background: url(../img/teaching.jpeg);
-    background-size: 100%;
+    background-size: 110%;
     color: #FFFFFF;
     font-weight: var(--font-semi);
     font-size: 1.5rem;
@@ -2409,7 +2396,7 @@ img {
 
   .research_button {
     background: url(../img/work3.jpg);
-    background-size: 100%;
+    background-size: 110%;
     color: #FFFFFF;
     font-weight: var(--font-semi);
     font-size: 1.5rem;

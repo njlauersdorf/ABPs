@@ -245,11 +245,11 @@ import time
 with hoomd.open(name=inFile, mode='rb') as t:
 
     dumps = int(t.__len__())
-    start = int(465/time_step)#205                                             # first frame to process
+    start = int(0/time_step)#205                                             # first frame to process
     
                                 # get number of timesteps dumped
     
-    end = 563 #int(dumps/time_step)-1                                             # final frame to process
+    end = int(dumps/time_step)-1                                             # final frame to process
     snap = t[0]                                             # Take first snap for box
     first_tstep = snap.configuration.step                   # First time step
 
@@ -472,7 +472,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
             int_comp_dict = phase_ident_functs.phase_sort(int_comp_dict)
 
             interface_functs = interface.interface(area_frac_dict, align_dict, part_dict, press_dict, lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, parFrac, eps, typ, ang)
-
+            
             surface_dict = interface_functs.det_surface_points(phase_dict, int_dict, int_comp_dict)
 
             #planar_surface_dict = interface_functs.det_planar_surface_points(phase_dict, int_dict, int_comp_dict)
@@ -732,6 +732,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
             
             #Bin system to calculate orientation and alignment that will be used in vector plots
             all_surface_curves = {}
+            
             sep_surface_dict = interface_functs.separate_surfaces(surface_dict, int_dict, int_comp_dict)
             all_surface_measurements = {}
 
@@ -763,7 +764,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     all_surface_curves[key]['interior'] = interface_functs.surface_curve_interp(sort_interior_ids)
 
                     com_pov_interior_pos = interface_functs.surface_com_pov(all_surface_curves[key]['interior']['pos'])
-
+                    
                     all_surface_measurements[key]['interior'] = interface_functs.surface_radius(com_pov_interior_pos['pos'])
                     all_surface_measurements[key]['interior']['surface area'] = interface_functs.surface_area(com_pov_interior_pos['pos'])
                     all_surface_measurements[key]['interior']['com'] = com_pov_interior_pos['com']
@@ -897,7 +898,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     
                    # plotting_functs = plotting.plotting(orient_dict, pos_dict, l_box, NBins, sizeBin, peA, peB, parFrac, eps, typ, tst)
                     plotting_functs.plot_part_activity(pos, all_surface_curves, int_comp_dict)
-                    
+                stop
             elif measurement_method == 'phases':
                 #DONE
                 data_output_functs.write_to_txt(part_count_dict, dataPath + 'PhaseComp_' + outfile + '.txt')
@@ -908,23 +909,36 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 
                 stop
             
-            elif measurement_method== 'com_bubble':
+            elif measurement_method== 'bubble_interface_pressure':
 
                 lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
 
                 particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, eps, typ, pos, ang)
 
-                radial_fa_dict = particle_prop_functs.radial_surface_normal_fa_bubble2(method2_align_dict, all_surface_curves, int_comp_dict, all_surface_measurements)
+                radial_fa_dict = particle_prop_functs.radial_surface_normal_fa_bubble2(method2_align_dict, all_surface_curves, int_comp_dict, all_surface_measurements, int_dict)
 
-                stress_stat_dict, press_stat_dict, press_plot_dict, stress_plot_dict = lattice_structure_functs.interparticle_pressure_nlist()
+                #stress_stat_dict, press_stat_dict, press_plot_dict, stress_plot_dict = lattice_structure_functs.interparticle_pressure_nlist()
 
-                radial_int_press_dict = particle_prop_functs.radial_int_press_bubble2(stress_plot_dict, all_surface_curves, int_comp_dict, all_surface_measurements)
+                #radial_int_press_dict = particle_prop_functs.radial_int_press_bubble2(stress_plot_dict, all_surface_curves, int_comp_dict, all_surface_measurements)
 
-                com_radial_dict_bubble, com_radial_dict_fa_bubble = particle_prop_functs.radial_measurements2(radial_int_press_dict, radial_fa_dict, surface_dict, all_surface_curves, int_comp_dict, all_surface_measurements)
+                #com_radial_dict_bubble, com_radial_dict_fa_bubble = particle_prop_functs.radial_measurements2(radial_int_press_dict, radial_fa_dict, surface_dict, all_surface_curves, int_comp_dict, all_surface_measurements, averaged_data_arr, int_dict)
+                com_radial_dict_fa_bubble = particle_prop_functs.radial_measurements3(radial_fa_dict, surface_dict, all_surface_curves, int_comp_dict, all_surface_measurements, averaged_data_arr, int_dict)
 
-                data_output_functs.write_to_txt(com_radial_dict_bubble, dataPath + 'bubble_com_bubble_interparticle_pressure_radial_' + outfile + '.txt')
-                data_output_functs.write_to_txt(com_radial_dict_fa_bubble, dataPath + 'bubble_com_bubble_active_pressure_radial_' + outfile + '.txt')
+                #for m in range(0, len(com_radial_dict_fa_bubble)):
 
+                key = 'surface id ' + str(averaged_data_arr['int_id'])
+                data_output_functs.write_to_txt(com_radial_dict_fa_bubble[key], dataPath + 'bubble_com_active_pressure_radial_' + outfile + '.txt')
+                
+                stress_and_pressure_functs = stress_and_pressure.stress_and_pressure(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
+                act_press_dict_bubble = stress_and_pressure_functs.total_active_pressure_bubble(com_radial_dict_fa_bubble, all_surface_measurements, int_comp_dict, all_surface_measurements)
+                
+                for m in range(0, len(sep_surface_dict)):
+
+                    key = 'surface id ' + str(int(int_comp_dict['ids'][m]))
+                    data_output_functs.write_to_txt(act_press_dict_bubble[key], dataPath + 'bubble_com_active_pressure_' + outfile + '.txt')
+
+
+                """
                 radial_fa_dict = particle_prop_functs.radial_surface_normal_fa(method2_align_dict)
 
                 stress_stat_dict, press_stat_dict, press_plot_dict, stress_plot_dict = lattice_structure_functs.interparticle_pressure_nlist()
@@ -937,8 +951,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 data_output_functs.write_to_txt(com_radial_dict_fa, dataPath + 'cluster_com_bubble_active_pressure_radial_' + outfile + '.txt')
                 stress_and_pressure_functs = stress_and_pressure.stress_and_pressure(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
                 act_press_dict = stress_and_pressure_functs.total_active_pressure_interface(com_radial_dict_fa, all_surface_measurements, int_comp_dict)
-                act_press_dict_bubble = stress_and_pressure_functs.total_active_pressure_bubble(com_radial_dict_fa_bubble, all_surface_measurements, int_comp_dict)
-
+                act_press_dict_bubble = stress_and_pressure_functs.total_active_pressure_bubble(com_radial_dict_fa, all_surface_measurements, int_comp_dict)
+                """
                 """
                 plt.plot(com_radial_dict_fa['r'], com_radial_dict_fa['num_dens']['A'], color='blue')
                 plt.plot(com_radial_dict_fa['r'], com_radial_dict_fa['num_dens']['B'], color='red')

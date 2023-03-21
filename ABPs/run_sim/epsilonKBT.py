@@ -126,9 +126,6 @@ print("Total number of timesteps:"+str(totTsteps))
 print("Total number of output frames:"+str(numDumps))
 print("File dump frequency:"+str(dumpFreq))
 
-print(sys.path)
-stop
-
 # Initialize system
 hoomd.context.initialize()
 

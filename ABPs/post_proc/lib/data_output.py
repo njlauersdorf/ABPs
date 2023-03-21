@@ -290,8 +290,9 @@ class data_output:
             with open(outPath, 'a') as f:
                 while arr_ind < arr_len:
                     for i in range(0, len(data)):
+                        
                         if i == len(data)-1:
-
+                            
                             if type(data[i])==list:
                                 f.write('{0:.6f}'.format(data[i][arr_ind]).center(20) + '\n')
                                 arr_ind += 1

@@ -590,43 +590,86 @@ class stress_and_pressure:
         act_press_dict = {'all': act_press, 'A': act_pressA, 'B': act_pressB}
         return act_press_dict
 
-    def total_active_pressure_bubble(self, com_radial_dict, sep_surface_dict, int_comp_dict):
-        
-        exterior_surface_arr = np.array([])
-        interior_surface_arr = np.array([])
+    def total_active_pressure_bubble(self, com_radial_dict, sep_surface_dict, int_comp_dict, all_surface_measurements):
 
         int_id = int(int_comp_dict['ids'][np.where(int_comp_dict['comp']['all']==np.max(int_comp_dict['comp']['all']))[0][0]])
 
-        print(sep_surface_dict)
-
+        act_press_dict = {}
         for m in range(0, len(sep_surface_dict)):
-            if int(int_comp_dict['ids'][m]) != int_id:
 
-                key = 'surface id ' + str(int(int_comp_dict['ids'][m]))
-                try:
-                    exterior_surface_arr = np.append(exterior_surface_arr, sep_surface_dict[key]['exterior']['mean radius'])
-                except:
-                    exterior_surface_arr = np.append(exterior_surface_arr, 0)
-                try:
-                    interior_surface_arr = np.append(interior_surface_arr, sep_surface_dict[key]['interior']['mean radius'])
-                except:
-                    interior_surface_arr = np.append(interior_surface_arr, 0)
+            key = 'surface id ' + str(int(int_comp_dict['ids'][m]))
 
-        print(exterior_surface_arr)
-        print(interior_surface_arr)
-        stop
-        #Initiate empty values for integral of pressures across interfaces
-        act_press = 0
-        act_pressA = 0
-        act_pressB = 0
+            try: 
+                com_x = all_surface_measurements[key]['exterior']['com']['x']
+                com_y = all_surface_measurements[key]['exterior']['com']['y']
+            except:
+                com_x = all_surface_measurements[key]['interior']['com']['x']
+                com_y = all_surface_measurements[key]['interior']['com']['y']
 
-        #Integrate force across interface using trapezoidal rule
-        for i in range(1, len(com_radial_dict['r'])-1):
-            act_press += ((com_radial_dict['r'][i]-com_radial_dict['r'][i-1])/2)*(com_radial_dict['fa_press']['all'][i]+com_radial_dict['fa_press']['all'][i-1])
-            act_pressA += ((com_radial_dict['r'][i]-com_radial_dict['r'][i-1])/2)*(com_radial_dict['fa_press']['A'][i]+com_radial_dict['fa_press']['A'][i-1])
-            act_pressB += ((com_radial_dict['r'][i]-com_radial_dict['r'][i-1])/2)*(com_radial_dict['fa_press']['B'][i]+com_radial_dict['fa_press']['B'][i-1])
+            #Initiate empty values for integral of pressures across interfaces
+            act_press = 0
+            act_pressA = 0
+            act_pressB = 0
 
-        act_press_dict = {'all': act_press, 'A': act_pressA, 'B': act_pressB}
+            num_dens = 0
+            num_densA = 0
+            num_densB = 0
+
+            align = 0
+            alignA = 0
+            alignB = 0
+
+            act_force = 0
+            act_forceA = 0
+            act_forceB = 0
+
+            sum_tot = 0
+
+            area = 0
+
+            num = 0
+            numA = 0
+            numB = 0
+
+            #Integrate force across interface using trapezoidal rule
+            for i in range(1, len(com_radial_dict[key]['r'])-1):
+                act_press += ((com_radial_dict[key]['r'][i]-com_radial_dict[key]['r'][i-1])/2)*(com_radial_dict[key]['fa_press']['all'][i]+com_radial_dict[key]['fa_press']['all'][i-1])
+                act_pressA += ((com_radial_dict[key]['r'][i]-com_radial_dict[key]['r'][i-1])/2)*(com_radial_dict[key]['fa_press']['A'][i]+com_radial_dict[key]['fa_press']['A'][i-1])
+                act_pressB += ((com_radial_dict[key]['r'][i]-com_radial_dict[key]['r'][i-1])/2)*(com_radial_dict[key]['fa_press']['B'][i]+com_radial_dict[key]['fa_press']['B'][i-1])
+
+                area += com_radial_dict[key]['area'][i]
+
+                num += com_radial_dict[key]['num']['all'][i]
+                numA += com_radial_dict[key]['num']['A'][i]
+                numB += com_radial_dict[key]['num']['B'][i]
+
+                sum_tot += 1
+
+                num_dens += com_radial_dict[key]['num_dens']['all'][i]
+                num_densA += com_radial_dict[key]['num_dens']['A'][i]
+                num_densB += com_radial_dict[key]['num_dens']['B'][i]
+
+                align += com_radial_dict[key]['align']['all'][i]
+                alignA += com_radial_dict[key]['align']['A'][i]
+                alignB += com_radial_dict[key]['align']['B'][i]
+
+                act_force += com_radial_dict[key]['fa']['all'][i]
+                act_forceA += com_radial_dict[key]['fa']['A'][i]
+                act_forceB += com_radial_dict[key]['fa']['B'][i]
+
+            avg_fa = act_force / sum_tot
+            avg_faA = act_forceA / sum_tot
+            avg_faB = act_forceB / sum_tot
+
+            avg_align = align / sum_tot
+            avg_alignA = alignA / sum_tot
+            avg_alignB = alignB / sum_tot
+
+            avg_num_dens = num_dens / sum_tot
+            avg_num_densA = num_densA / sum_tot
+            avg_num_densB = num_densB / sum_tot
+
+            act_press_dict[key] = {'int_id': int_id, 'current_id': int(int_comp_dict['ids'][m]), 'com_x': com_x, 'com_y': com_y, 'tot_fa': act_press, 'tot_faA': act_pressA, 'tot_faB': act_pressB, 'avg_fa': avg_fa, 'avg_faA': avg_faA, 'avg_faB': avg_faB, 'avg_align': avg_align, 'avg_alignA': avg_alignA, 'avg_alignB': avg_alignB, 'avg_num_dens': avg_num_dens, 'avg_num_densA': avg_num_densA, 'avg_num_densB': avg_num_densB, 'area': area, 'num': int(num), 'numA': int(numA), 'numB': int(numB)}
         return act_press_dict
 
     def total_active_pressure_interface(self, com_radial_dict, sep_surface_dict, int_comp_dict):
