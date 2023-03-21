@@ -2187,7 +2187,7 @@ class particle_props:
                                 act_pressB_r[i-1] = act_pressB_r[i-1]/area
                                 num_densB_r[i-1] = num_densB_r[i-1]/area
             
-            com_radial_dict_fa[key] = {'int_id': int_id, 'current_id': int(int_comp_dict['ids'][m]), 'r': r[1:].tolist(), 'area': area_r.tolist(), 'com_x': com_x, 'com_y': com_y, 'fa_press': {'all': act_press_r.tolist(), 'A': act_pressA_r.tolist(), 'B': act_pressB_r.tolist()}, 'fa': {'all': act_fa_r.tolist(), 'A': act_faA_r.tolist(), 'B': act_faB_r.tolist()}, 'align': {'all': align_r.tolist(), 'A': alignA_r.tolist(), 'B': alignB_r.tolist()}, 'num_dens': {'all': num_dens_r.tolist(), 'A': num_densA_r.tolist(), 'B': num_densB_r.tolist()}, 'num': {'all': num_r.tolist(), 'A': numA_r.tolist(), 'B': numB_r.tolist()}}
+            com_radial_dict_fa[key] = {'int_id': int_id, 'current_id': int(int_comp_dict['ids'][m]), 'ext_rad': exterior_radius, 'int_rad': interior_radius, 'r': r[1:].tolist(), 'area': area_r.tolist(), 'com_x': com_x, 'com_y': com_y, 'fa_press': {'all': act_press_r.tolist(), 'A': act_pressA_r.tolist(), 'B': act_pressB_r.tolist()}, 'fa': {'all': act_fa_r.tolist(), 'A': act_faA_r.tolist(), 'B': act_faB_r.tolist()}, 'align': {'all': align_r.tolist(), 'A': alignA_r.tolist(), 'B': alignB_r.tolist()}, 'num_dens': {'all': num_dens_r.tolist(), 'A': num_densA_r.tolist(), 'B': num_densB_r.tolist()}, 'num': {'all': num_r.tolist(), 'A': numA_r.tolist(), 'B': numB_r.tolist()}}
         return com_radial_dict_fa
 
     def radial_measurements(self, radial_stress_dict, radial_fa_dict):
