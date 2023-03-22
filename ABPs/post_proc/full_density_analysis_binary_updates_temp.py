@@ -245,7 +245,7 @@ import time
 with hoomd.open(name=inFile, mode='rb') as t:
 
     dumps = int(t.__len__())
-    start = int(0/time_step)#205                                             # first frame to process
+    start = int(150/time_step)#205                                             # first frame to process
     
                                 # get number of timesteps dumped
     
@@ -1065,7 +1065,24 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                     #plotting_functs.plot_interpart_press_binned(vp_bin_arr, all_surface_curves, int_comp_dict)
                     plotting_functs.interpart_press_map_final(stress_plot_dict, all_surface_curves, int_comp_dict)                               
-                
+            elif measurement_method == 'cluster_velocity': 
+                if j>(start * time_step):
+
+                    particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, typ, pos, ang)
+
+                    part_vel_dict = particle_prop_functs.cluster_velocity(prev_pos, pos)
+
+
+
+            elif measurement_method == 'centrosymmetry':
+
+                lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
+
+                csp_stat_dict, csp_plot_dict = lattice_structure_functs.centrosymmetry()
+
+                print(csp_stat_dict)
+                plotting_functs.plot_csp(csp_plot_dict, all_surface_curves, int_comp_dict, ang, pos, pair='all')
+
             elif measurement_method == 'lattice_spacing':
                 #DONE
                 lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)

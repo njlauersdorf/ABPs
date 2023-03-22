@@ -954,7 +954,254 @@ class measurement:
         # Create output dictionary for plotting of ADF vs theta
         ang_df_dict = {'theta': np.ndarray.tolist(theta_arr), 'all-all': np.ndarray.tolist(g_theta_allall_bulk), 'A-all': np.ndarray.tolist(g_theta_Aall_bulk), 'B-all': np.ndarray.tolist(g_theta_Ball_bulk), 'A-A': np.ndarray.tolist(g_theta_AA_bulk), 'A-B': np.ndarray.tolist(g_theta_AB_bulk), 'B-B': np.ndarray.tolist(g_theta_BB_bulk)}
         return ang_df_dict
+    def centrosymmetry(self):
+        '''
+        Purpose: Takes the composition of each phase and uses neighbor lists to find the
+        nearest, interacting neighbors and calculates the number of neighbors of each
+        type for each particle and averaged over all particles of each phase.
 
+        Outputs:
+        neigh_stat_dict: dictionary containing the mean and standard deviation of the
+        number of neighbors of each type ('all', 'A', or 'B') for a reference particle of
+        a given type ('all', 'A', or 'B'), averaged over all particles in each phase.
+
+        ori_stat_dict: dictionary containing the mean and standard deviation of the
+        orientational correlation between a reference particle of
+        a given type ('all', 'A', or 'B') and neighbors of each type ('all', 'A', or 'B'),
+        averaged over all particles in each phase.
+
+        neigh_plot_dict: dictionary containing information on the number of nearest
+        neighbors of each bulk and interface reference particle of each type ('all', 'A', or 'B').
+        '''
+        # Count total number of bins in each phase
+        phase_count_dict = self.phase_ident_functs.phase_count(self.phase_dict)
+
+        # Get array of ids that give which particles of each type belong to each phase
+        phase_part_dict = self.particle_prop_functs.particle_phase_ids(self.phasePart)
+
+        # Calculate area of bulk
+        bulk_area = phase_count_dict['bulk'] * (self.sizeBin_x * self.sizeBin_y)
+
+        # Position and orientation arrays of type A particles in respective phase
+        typ0ind = np.where(self.typ==0)[0]
+        pos_A=self.pos[typ0ind]                               # Find positions of type 0 particles
+        ang_A=self.ang[typ0ind]
+        pos_A_bulk = self.pos[phase_part_dict['bulk']['A']]
+        ang_A_bulk = self.ang[phase_part_dict['bulk']['A']]
+        pos_A_int = self.pos[phase_part_dict['int']['A']]
+        ang_A_int = self.ang[phase_part_dict['int']['A']]
+        pos_A_gas = self.pos[phase_part_dict['gas']['A']]
+        pos_A_dense = self.pos[phase_part_dict['dense']['A']]
+        ang_A_dense = self.ang[phase_part_dict['dense']['A']]
+
+        # Position and orientation arrays of type B particles in respective phase
+        typ1ind = np.where(self.typ==1)[0]
+        pos_B=self.pos[typ1ind]
+        ang_B=self.ang[typ1ind]
+        pos_B_bulk = self.pos[phase_part_dict['bulk']['B']]
+        ang_B_bulk = self.ang[phase_part_dict['bulk']['B']]
+        pos_B_int = self.pos[phase_part_dict['int']['B']]
+        ang_B_int = self.ang[phase_part_dict['int']['B']]
+        pos_B_gas = self.pos[phase_part_dict['gas']['B']]
+        pos_B_dense = self.pos[phase_part_dict['dense']['B']]
+        ang_B_dense = self.ang[phase_part_dict['dense']['B']]
+
+        # Position and orientation arrays of all particles in respective phase
+        pos_bulk = self.pos[phase_part_dict['bulk']['all']]
+        pos_int = self.pos[phase_part_dict['int']['all']]
+        pos_gas = self.pos[phase_part_dict['gas']['all']]
+        pos_dense = self.pos[phase_part_dict['dense']['all']]
+        
+        # Neighbor list query arguments to find interacting particles
+        query_args = dict(mode='ball', r_min = 0.1, r_max = self.r_cut)#r_max=self.theory_functs.conForRClust(peNet_int-45., self.eps) * 1.0)
+
+        # Locate potential neighbor particles by type in the dense phase
+        system_all_bulk = freud.AABBQuery(self.f_box, self.f_box.wrap(pos_dense))
+        
+        # Generate neighbor list of dense phase particles (per query args) of respective type (A or B) neighboring bulk phase reference particles of respective type (A or B)
+        allA_bulk_nlist = system_all_bulk.query(self.f_box.wrap(pos_A_bulk), query_args).toNeighborList()
+        allB_bulk_nlist = system_all_bulk.query(self.f_box.wrap(pos_B_bulk), query_args).toNeighborList()
+
+        # Calculate interparticle separation distances between A reference particles and all neighbors within bulk
+        allA_difx, allA_dify, allA_difr = self.utility_functs.sep_dist_arr(pos_dense[allA_bulk_nlist.point_indices], pos_A_bulk[allA_bulk_nlist.query_point_indices], difxy=True)
+
+        # Calculate interparticle separation distances between B reference particles and all neighbors within bulk
+        allB_difx, allB_dify, allB_difr = self.utility_functs.sep_dist_arr(pos_dense[allB_bulk_nlist.point_indices], pos_B_bulk[allB_bulk_nlist.query_point_indices], difxy=True)
+
+        #Initiate empty arrays for finding nearest A neighboring dense particles surrounding type A bulk particles
+        A_bulk_neigh_ind = np.array([], dtype=int)
+        csp_A_bulk = np.array([])
+        #Loop over neighbor pairings of A-A neighbor pairs to calculate number of nearest neighbors
+        for i in range(0, len(pos_A_bulk)):
+            if i in allA_bulk_nlist.query_point_indices:
+                if i not in A_bulk_neigh_ind:
+                    # Find neighbors list IDs where i is reference particle
+                    loc = np.where(allA_bulk_nlist.query_point_indices==i)[0]
+
+                    allA_difx_mat_1 = allA_difx[loc] * np.ones((len(loc), len(loc)))
+                    allA_dify_mat_1 = allA_dify[loc] * np.ones((len(loc), len(loc)))
+
+                    allA_difx_mat_2 = np.reshape(allA_difx[loc], (len(loc), 1)) * np.ones((len(loc), len(loc)))
+                    allA_dify_mat_2 = np.reshape(allA_dify[loc], (len(loc), 1)) * np.ones((len(loc), len(loc)))
+
+                    allA_difx_comb = allA_difx_mat_1 + allA_difx_mat_2
+                    allA_dify_comb = allA_dify_mat_1 + allA_dify_mat_2
+
+                    allA_difr = (allA_difx_comb ** 2 + allA_dify_comb ** 2 ) ** 0.5
+
+                    #central symmetry parameter
+                    csp_A_bulk = np.append(csp_A_bulk, np.sum(np.sort(allA_difr)[:,0]))
+
+                    A_bulk_neigh_ind = np.append(A_bulk_neigh_ind, int(i))
+
+            else:
+                #Save nearest neighbor information to array
+                csp_A_bulk = np.append(csp_A_bulk, 0)
+                A_bulk_neigh_ind = np.append(A_bulk_neigh_ind, int(i))
+
+        #Initiate empty arrays for finding nearest B neighboring dense particles surrounding type A bulk particles
+        B_bulk_neigh_ind = np.array([], dtype=int)
+        csp_B_bulk = np.array([])
+
+        #Loop over neighbor pairings of B-A neighbor pairs to calculate number of nearest neighbors
+        for i in range(0, len(pos_B_bulk)):
+            if i in allB_bulk_nlist.query_point_indices:
+                if i not in B_bulk_neigh_ind:
+                    # Find neighbors list IDs where i is reference particle
+                    loc = np.where(allB_bulk_nlist.query_point_indices==i)[0]
+
+                    allB_difx_mat_1 = allB_difx[loc] * np.ones((len(loc), len(loc)))
+                    allB_dify_mat_1 = allB_dify[loc] * np.ones((len(loc), len(loc)))
+
+                    allB_difx_mat_2 = np.reshape(allB_difx[loc], (len(loc), 1)) * np.ones((len(loc), len(loc)))
+                    allB_dify_mat_2 = np.reshape(allB_dify[loc], (len(loc), 1)) * np.ones((len(loc), len(loc)))
+                    
+                    allB_difx_comb = allB_difx_mat_1 + allB_difx_mat_2
+                    allB_dify_comb = allB_dify_mat_1 + allB_dify_mat_2
+
+                    allB_difr = (allB_difx_comb ** 2 + allB_dify_comb ** 2 ) ** 0.5
+
+                    #central symmetry parameter
+                    csp_B_bulk = np.append(csp_B_bulk, np.sum(np.sort(allB_difr)[:,0]))
+
+                    B_bulk_neigh_ind = np.append(B_bulk_neigh_ind, int(i))
+
+            else:
+                #Save nearest neighbor information to array
+                csp_B_bulk = np.append(csp_B_bulk, 0)
+
+                B_bulk_neigh_ind = np.append(B_bulk_neigh_ind, int(i))
+
+        # Locate potential neighbor particles by type in the entire system
+        system_all_int = freud.AABBQuery(self.f_box, self.f_box.wrap(self.pos))
+
+        # Generate neighbor list of dense phase particles (per query args) of respective type (A or B) neighboring bulk phase reference particles of respective type (A or B)
+        allA_int_nlist = system_all_int.query(self.f_box.wrap(pos_A_int), query_args).toNeighborList()
+        allB_int_nlist = system_all_int.query(self.f_box.wrap(pos_B_int), query_args).toNeighborList()
+
+        # Calculate interparticle separation distances between A reference particles and all neighbors within bulk
+        allA_difx, allA_dify, allA_difr = self.utility_functs.sep_dist_arr(self.pos[allA_int_nlist.point_indices], pos_A_int[allA_int_nlist.query_point_indices], difxy=True)
+
+        # Calculate interparticle separation distances between B reference particles and all neighbors within bulk
+        allB_difx, allB_dify, allB_difr = self.utility_functs.sep_dist_arr(self.pos[allB_int_nlist.point_indices], pos_B_int[allB_int_nlist.query_point_indices], difxy=True)
+
+        #Initiate empty arrays for finding nearest A neighboring particles surrounding type A interface particles
+        A_int_neigh_ind = np.array([], dtype=int)
+        csp_A_int = np.array([])
+
+        #Loop over neighbor pairings of A-A neighbor pairs to calculate number of nearest neighbors
+        for i in range(0, len(pos_A_int)):
+            if i in allA_int_nlist.query_point_indices:
+                if i not in A_int_neigh_ind:
+                    # Find neighbors list IDs where i is reference particle
+                    loc = np.where(allA_int_nlist.query_point_indices==i)[0]
+
+                    allA_difx_mat_1 = allA_difx[loc] * np.ones((len(loc), len(loc)))
+                    allA_dify_mat_1 = allA_dify[loc] * np.ones((len(loc), len(loc)))
+
+                    allA_difx_mat_2 = np.reshape(allA_difx[loc], (len(loc), 1)) * np.ones((len(loc), len(loc)))
+                    allA_dify_mat_2 = np.reshape(allA_dify[loc], (len(loc), 1)) * np.ones((len(loc), len(loc)))
+
+                    allA_difx_comb = allA_difx_mat_1 + allA_difx_mat_2
+                    allA_dify_comb = allA_dify_mat_1 + allA_dify_mat_2
+
+                    allA_difr = (allA_difx_comb ** 2 + allA_dify_comb ** 2 ) ** 0.5
+
+                    #central symmetry parameter
+                    csp_A_int = np.append(csp_A_int, np.sum(np.sort(allA_difr)[:,0]))
+
+                    A_int_neigh_ind = np.append(A_int_neigh_ind, int(i))
+            else:
+                #Save nearest neighbor information to array
+                csp_A_int = np.append(csp_A_int, 0)
+
+                A_int_neigh_ind = np.append(A_int_neigh_ind, int(i))
+
+        #Initiate empty arrays for finding nearest B neighboring particles surrounding type A interface particles
+        B_int_neigh_ind = np.array([], dtype=int)
+        csp_B_int = np.array([])
+
+        #Loop over neighbor pairings of A-B neighbor pairs to calculate number of nearest neighbors
+        for i in range(0, len(pos_B_int)):
+            if i in allB_int_nlist.query_point_indices:
+                if i not in B_int_neigh_ind:
+                    # Find neighbors list IDs where i is reference particle
+                    loc = np.where(allB_int_nlist.query_point_indices==i)[0]
+
+                    allB_difx_mat_1 = allB_difx[loc] * np.ones((len(loc), len(loc)))
+                    allB_dify_mat_1 = allB_dify[loc] * np.ones((len(loc), len(loc)))
+
+                    allB_difx_mat_2 = np.reshape(allB_difx[loc], (len(loc), 1)) * np.ones((len(loc), len(loc)))
+                    allB_dify_mat_2 = np.reshape(allB_dify[loc], (len(loc), 1)) * np.ones((len(loc), len(loc)))
+                    
+                    allB_difx_comb = allB_difx_mat_1 + allB_difx_mat_2
+                    allB_dify_comb = allB_dify_mat_1 + allB_dify_mat_2
+
+                    allB_difr = (allB_difx_comb ** 2 + allB_dify_comb ** 2 ) ** 0.5
+
+                    #central symmetry parameter
+                    csp_B_int = np.append(csp_B_int, np.sum(np.sort(allB_difr)[:,0]))
+
+                    B_int_neigh_ind = np.append(B_int_neigh_ind, int(i))
+            else:
+                #Save nearest neighbor information to array
+                csp_B_int = np.append(csp_B_int, 0)
+
+                B_int_neigh_ind = np.append(B_int_neigh_ind, int(i))
+
+        # Save neighbor, local orientational order, and position to arrays for all bulk reference particles with all nearest neighbors
+        csp_all_bulk = np.append(csp_A_bulk, csp_B_bulk)
+        all_bulk_pos_x = np.append(pos_A_bulk[:,0], pos_B_bulk[:,0])
+        all_bulk_pos_y = np.append(pos_A_bulk[:,1], pos_B_bulk[:,1])
+
+        # Save neighbor, local orientational order, and position to arrays for all interface reference particles with all nearest neighbors
+        csp_all_int = np.append(csp_A_int, csp_B_int)
+        all_int_pos_x = np.append(pos_A_int[:,0], pos_B_int[:,0])
+        all_int_pos_y = np.append(pos_A_int[:,1], pos_B_int[:,1])
+
+        # Save local orientational order for the respective activity dense phase reference particles with the respective activity nearest neighbors
+        csp_A_dense = np.append(csp_A_bulk, csp_A_int)
+        csp_B_dense = np.append(csp_B_bulk, csp_B_int)
+        csp_all_dense = np.append(csp_all_bulk, csp_all_int)
+
+        # Save neighbor, local orientational order, and position to arrays for A dense phase reference particles with all nearest neighbors
+        all_dense_pos_x = np.append(pos_bulk[:,0], pos_int[:,0])
+        all_dense_pos_y = np.append(pos_bulk[:,1], pos_int[:,1])
+
+        A_dense_pos_x = np.append(pos_A_bulk[:,0], pos_A_int[:,0])
+        A_dense_pos_y = np.append(pos_A_bulk[:,1], pos_A_int[:,1])
+
+        B_dense_pos_x = np.append(pos_B_bulk[:,0], pos_B_int[:,0])
+        B_dense_pos_y = np.append(pos_B_bulk[:,1], pos_B_int[:,1])
+
+        # Create output dictionary for statistical averages of total nearest neighbor numbers on each particle per phase/activity pairing
+        csp_stat_dict = {'bulk': {'all': {'mean': np.mean(csp_all_bulk), 'std': np.std(csp_all_bulk)}, 'A': {'mean': np.mean(csp_A_bulk), 'std': np.std(csp_A_bulk)}, 'B': {'mean': np.mean(csp_B_bulk), 'std': np.std(csp_B_bulk)}}, 'int': {'all': {'mean': np.mean(csp_all_int), 'std': np.std(csp_all_int)}, 'A': {'mean': np.mean(csp_A_int), 'std': np.std(csp_A_int)}, 'B': {'mean': np.mean(csp_B_int), 'std': np.std(csp_B_int)}}, 'dense': {'all': {'mean': np.mean(csp_all_dense), 'std': np.std(csp_all_dense)}, 'all-A': {'mean': np.mean(csp_A_dense), 'std': np.std(csp_A_dense)}, 'all-B': {'mean': np.mean(csp_B_dense), 'std': np.std(csp_B_dense)}}}
+
+        # Create output dictionary for plotting of nearest neighbor information of each particle per phase/activity pairing and their respective x-y locations
+        csp_plot_dict = {'all': {'csp': csp_all_dense, 'x': all_dense_pos_x, 'y': all_dense_pos_y}, 'A': {'csp': csp_A_dense, 'x': A_dense_pos_x, 'y': A_dense_pos_y}, 'B': {'csp': csp_B_dense, 'x': B_dense_pos_x, 'y': B_dense_pos_y}}
+
+        return csp_stat_dict, csp_plot_dict
+        
     def nearest_neighbors(self):
         '''
         Purpose: Takes the composition of each phase and uses neighbor lists to find the

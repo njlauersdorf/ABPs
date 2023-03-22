@@ -167,27 +167,36 @@ class plotting_utility:
             com_tmp_posX_temp = 0
             com_tmp_posY_temp = 0
         
+        # Middle of box of x=[0, lx_box] and y=[0, ly_box]
+        com_tmp_posX = 0
+        com_tmp_posY = 0
+
+        # Middle of box of x=[-hx_box, hx_box] and y=[-hy_box, hy_box]
+        com_tmp_posX_temp = 0
+        com_tmp_posY_temp = 0
+
+        new_pos = pos
         #shift reference frame positions such that CoM of largest cluster is at mid-point of simulation box
-        pos[:,0]= pos[:,0]-com_tmp_posX_temp
-        pos[:,1]= pos[:,1]-com_tmp_posY_temp
+        new_pos[:,0]= pos[:,0]-com_tmp_posX_temp
+        new_pos[:,1]= pos[:,1]-com_tmp_posY_temp
 
         #Loop over all particles to ensure particles are within simulation box (periodic boundary conditions)
         for i in range(0, self.partNum):
-            if pos[i,0]>self.hx_box:
-                pos[i,0]=pos[i,0]-self.lx_box
-            elif pos[i,0]<-self.hx_box:
-                pos[i,0]=pos[i,0]+self.lx_box
+            if new_pos[i,0]>self.hx_box:
+                new_pos[i,0]=new_pos[i,0]-self.lx_box
+            elif new_pos[i,0]<-self.hx_box:
+                new_pos[i,0]=new_pos[i,0]+self.lx_box
 
-            if pos[i,1]>self.hy_box:
-                pos[i,1]=pos[i,1]-self.ly_box
-            elif pos[i,1]<-self.hy_box:
-                pos[i,1]=pos[i,1]+self.ly_box
+            if new_pos[i,1]>self.hy_box:
+                new_pos[i,1]=new_pos[i,1]-self.ly_box
+            elif new_pos[i,1]<-self.hy_box:
+                new_pos[i,1]=new_pos[i,1]+self.ly_box
 
         # Dictionary containing the shifted position of every particle such that
         # the largest cluster's CoM is at the middle of the box (hx_box, hy_box) in addition to the
         # unshifted largest cluster's CoM position
 
-        com_dict = {'pos': pos, 'com': {'x': com_tmp_posX, 'y': com_tmp_posY}}
+        com_dict = {'pos': new_pos, 'com': {'x': com_tmp_posX, 'y': com_tmp_posY}}
 
         return com_dict
 

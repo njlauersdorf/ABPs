@@ -2190,6 +2190,45 @@ class particle_props:
             com_radial_dict_fa[key] = {'int_id': int_id, 'current_id': int(int_comp_dict['ids'][m]), 'ext_rad': exterior_radius, 'int_rad': interior_radius, 'r': r[1:].tolist(), 'area': area_r.tolist(), 'com_x': com_x, 'com_y': com_y, 'fa_press': {'all': act_press_r.tolist(), 'A': act_pressA_r.tolist(), 'B': act_pressB_r.tolist()}, 'fa': {'all': act_fa_r.tolist(), 'A': act_faA_r.tolist(), 'B': act_faB_r.tolist()}, 'align': {'all': align_r.tolist(), 'A': alignA_r.tolist(), 'B': alignB_r.tolist()}, 'num_dens': {'all': num_dens_r.tolist(), 'A': num_densA_r.tolist(), 'B': num_densB_r.tolist()}, 'num': {'all': num_r.tolist(), 'A': numA_r.tolist(), 'B': numB_r.tolist()}}
         return com_radial_dict_fa
 
+    def cluster_velocity(self, prev_pos):
+
+        #Compute cluster parameters using system_all neighbor list
+        system_all = freud.AABBQuery(self.f_box, self.f_box.wrap(self.pos))
+        cl_all=freud.cluster.Cluster()                              #Define cluster
+        cl_all.compute(system_all, neighbors={'r_max': 1.0})        # Calculate clusters given neighbor list, positions,
+                                                                    # and maximal radial interaction distance
+        clp_all = freud.cluster.ClusterProperties()                 #Define cluster properties
+        ids = cl_all.cluster_idx                                    # get id of each cluster
+        clp_all.compute(system_all, ids)                            # Calculate cluster properties given cluster IDs
+        clust_size = clp_all.sizes                                  # find cluster sizes
+
+        min_size=int(self.partNum/8)                                     #Minimum cluster size for measurements to happen
+        lcID = np.where(clust_size == np.amax(clust_size))[0][0]    #Identify largest cluster
+        large_clust_ind_all=np.where(clust_size>min_size)           #Identify all clusters larger than minimum size
+        clust_large = np.amax(clust_size)
+
+        current_com_dict = self.utility_functs.com_view(self.pos, clp_all)
+
+        system_all = freud.AABBQuery(self.f_box, self.f_box.wrap(self.pos))
+        cl_all=freud.cluster.Cluster()                              #Define cluster
+        cl_all.compute(system_all, neighbors={'r_max': 1.0})        # Calculate clusters given neighbor list, positions,
+                                                                    # and maximal radial interaction distance
+        clp_all = freud.cluster.ClusterProperties()                 #Define cluster properties
+        ids = cl_all.cluster_idx                                    # get id of each cluster
+        clp_all.compute(system_all, ids)                            # Calculate cluster properties given cluster IDs
+        clust_size = clp_all.sizes                                  # find cluster sizes
+
+        min_size=int(self.partNum/8)                                     #Minimum cluster size for measurements to happen
+        lcID = np.where(clust_size == np.amax(clust_size))[0][0]    #Identify largest cluster
+        large_clust_ind_all=np.where(clust_size>min_size)           #Identify all clusters larger than minimum size
+        clust_large = np.amax(clust_size)
+
+        prev_com_dict = self.utility_functs.com_view(prev_pos, clp_all)
+
+        print(current_com_dict)
+        print(prev_com_dict)
+        stop
+
     def radial_measurements(self, radial_stress_dict, radial_fa_dict):
 
         stop
