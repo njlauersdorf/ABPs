@@ -1248,6 +1248,33 @@ class interface:
                     past_size = current_size
         sort_surface_ids = {'x': surface_x_sort, 'y': surface_y_sort}
         return sort_surface_ids
+    def surface_curve_prep(self, sort_surface_ids, int_type='None'):
+        shift_sort_surface_ids={'x': sort_surface_ids['x'], 'y': sort_surface_ids['y']}
+        surface_curve_pos_dict_temp={'x': sort_surface_ids['x'] * self.sizeBin_x, 'y': sort_surface_ids['y'] * self.sizeBin_y}
+
+        com_pov_int_surface = self.surface_com_pov(surface_curve_pos_dict_temp)
+
+        if int_type == 'interior':
+            for m in range(0, len(sort_surface_ids['x'])):
+
+                if sort_surface_ids['x'][m] * self.sizeBin_x < com_pov_int_surface['com']['x']:
+
+                    shift_sort_surface_ids['x'][m] = sort_surface_ids['x'][m] + 1.
+                if sort_surface_ids['y'][m] * self.sizeBin_y < com_pov_int_surface['com']['y']:
+                        
+                    shift_sort_surface_ids['y'][m] =  sort_surface_ids['y'][m] + 1.
+        elif int_type == 'exterior':
+            for m in range(0, len(sort_surface_ids['x'])):
+
+                if sort_surface_ids['x'][m] * self.sizeBin_x > com_pov_int_surface['com']['x']:
+
+                    shift_sort_surface_ids['x'][m] = sort_surface_ids['x'][m] + 1.
+                
+                if sort_surface_ids['y'][m] * self.sizeBin_y > com_pov_int_surface['com']['y']:
+                        
+                    shift_sort_surface_ids['y'][m] =  sort_surface_ids['y'][m] + 1.
+
+        return shift_sort_surface_ids
 
     def surface_curve_interp(self, sort_surface_ids):
 
@@ -1257,6 +1284,39 @@ class interface:
         surface_x_sort_pos = surface_x_sort * self.sizeBin_x
         surface_y_sort_pos = surface_y_sort * self.sizeBin_y
 
+        pos_arr = {'x': surface_x_sort_pos, 'y': surface_y_sort_pos}
+        com_pov_int_surface = self.surface_com_pov(pos_arr)
+        shift_x_pos = self.hx_box - com_pov_int_surface['com']['x']
+        shift_y_pos = self.hy_box - com_pov_int_surface['com']['y']
+
+
+        surface_x_sort_pos = surface_x_sort_pos + shift_x_pos
+        surface_y_sort_pos = surface_y_sort_pos + shift_y_pos
+
+        periodic = np.where(surface_x_sort_pos > self.lx_box)[0]
+        surface_x_sort_pos[periodic] = surface_x_sort_pos[periodic] - self.lx_box
+        periodic = np.where(surface_x_sort_pos < 0)[0]
+        surface_x_sort_pos[periodic] = surface_x_sort_pos[periodic] + self.lx_box
+
+        periodic = np.where(surface_y_sort_pos > self.ly_box)[0]
+        surface_y_sort_pos[periodic] = surface_y_sort_pos[periodic] - self.ly_box
+        periodic = np.where(surface_y_sort_pos < 0)[0]
+        surface_y_sort_pos[periodic] = surface_y_sort_pos[periodic] + self.ly_box
+
+        shift_x_id = round( (self.hx_box - com_pov_int_surface['com']['x']) / self.sizeBin_x)
+        shift_y_id = round( (self.hy_box - com_pov_int_surface['com']['y']) / self.sizeBin_y)
+        surface_x_sort = surface_x_sort + shift_x_id
+        surface_y_sort = surface_y_sort + shift_y_id
+
+        periodic = np.where(surface_x_sort > self.NBins_x)[0]
+        surface_x_sort[periodic] = surface_x_sort[periodic] - self.NBins_x
+        periodic = np.where(surface_x_sort < 0)[0]
+        surface_x_sort[periodic] = surface_x_sort[periodic] + self.NBins_x
+
+        periodic = np.where(surface_y_sort > self.NBins_y)[0]
+        surface_y_sort[periodic] = surface_y_sort[periodic] - self.NBins_y
+        periodic = np.where(surface_y_sort < 0)[0]
+        surface_y_sort[periodic] = surface_y_sort[periodic] + self.NBins_y
 
         adjacent_x = np.array([surface_x_sort[0]])
         adjacent_x_pos = np.array([surface_x_sort_pos[0]])
@@ -1328,7 +1388,15 @@ class interface:
                             adjacent_x_pos = np.array([])
                             adjacent_y = np.array([])
                             adjacent_y_pos = np.array([])
-
+            
+            
+            #pos_arr = {'x': sort_surface_ids['x'] * self.sizeBin_x, 'y': sort_surface_ids['y'] * self.sizeBin_y}
+            #print(pos_arr)
+            #print(adjacent_x_discont)
+            #stop
+            #com_pov_int_surface = self.surface_com_pov(pos_arr)
+            #plt.scatter(sort_surface_ids['x']*self.sizeBin_x, sort_surface_ids['y']*self.sizeBin_y, c='black')
+            
             adjacent_x_discont_pos_smooth = np.array([])
             adjacent_y_discont_pos_smooth = np.array([])
             adjacent_x_discont_smooth = np.array([])
@@ -1339,6 +1407,7 @@ class interface:
                 adjacent_y_discont_pos_smooth = np.append(adjacent_y_discont_pos_smooth, adjacent_y_discont_pos[m])
                 adjacent_x_discont_smooth = np.append(adjacent_x_discont_smooth, adjacent_x_discont[m])
                 adjacent_y_discont_smooth = np.append(adjacent_y_discont_smooth, adjacent_y_discont[m])
+
 
             adjacent_x_discont_smooth_copy = np.copy(adjacent_x_discont_smooth)
             adjacent_y_discont_smooth_copy = np.copy(adjacent_y_discont_smooth)
@@ -1360,6 +1429,9 @@ class interface:
 
                     adjacent_x_discont_smooth[m] = np.mean(adjacent_x_discont_smooth_copy)
                     adjacent_y_discont_smooth[m] = np.mean(adjacent_y_discont_smooth_copy)
+
+            
+
             okay = np.where(np.abs(np.diff(adjacent_x_discont_smooth)) + np.abs(np.diff(adjacent_y_discont_smooth)) > 0)
             surface_x_interp = np.r_[adjacent_x_discont_smooth[okay], adjacent_x_discont_smooth[-1], adjacent_x_discont_smooth[0]]
             surface_y_interp = np.r_[adjacent_y_discont_smooth[okay], adjacent_y_discont_smooth[-1], adjacent_y_discont_smooth[0]]
@@ -1481,9 +1553,38 @@ class interface:
                     yn_pos[m]+=self.ly_box
                 if yn_pos[m]>=self.ly_box:
                     yn_pos[m]-=self.ly_box
+        
+        xn = xn + shift_x_id
+        yn = yn + shift_y_id
+
+        xn_pos = xn_pos - shift_x_pos
+        yn_pos = yn_pos - shift_y_pos
+
+        periodic = np.where(xn_pos > self.lx_box)[0]
+        xn_pos[periodic] = xn_pos[periodic] - self.lx_box
+        periodic = np.where(xn_pos < 0)[0]
+        xn_pos[periodic] = xn_pos[periodic] + self.lx_box
+
+        periodic = np.where(yn_pos > self.ly_box)[0]
+        yn_pos[periodic] = yn_pos[periodic] - self.ly_box
+        periodic = np.where(yn_pos < 0)[0]
+        yn_pos[periodic] = yn_pos[periodic] + self.ly_box
+
+        xn = xn - shift_x_id
+        yn = yn - shift_y_id
+
+        periodic = np.where(xn > self.NBins_x)[0]
+        xn[periodic] = xn[periodic] - self.NBins_x
+        periodic = np.where(xn < 0)[0]
+        xn[periodic] = xn[periodic] + self.NBins_x
+
+        periodic = np.where(yn > self.NBins_y)[0]
+        yn[periodic] = yn[periodic] - self.NBins_y
+        periodic = np.where(yn < 0)[0]
+        yn[periodic] = yn[periodic] + self.NBins_y
 
         surface_curve_dict = {'id': {'x': xn, 'y': yn}, 'pos': {'x': xn_pos, 'y': yn_pos}}
-
+        
         return surface_curve_dict
 
 

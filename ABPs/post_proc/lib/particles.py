@@ -24,7 +24,7 @@ from scipy.optimize import curve_fit
 
 # Append '~/klotsa/ABPs/post_proc/lib' to path to get other module's functions
 sys.path.append(os.path.join(os.path.dirname(__file__), 'lib'))
-import theory, utility
+import theory, utility, plotting_utility
 
 # Class of individual particle property measurements
 class particle_props:
@@ -92,6 +92,8 @@ class particle_props:
 
         # Initialize theory functions for call back later
         self.theory_functs = theory.theory()
+
+        self.plotting_utility_functs = plotting_utility.plotting_utility(self.lx_box, self.ly_box, self.partNum, self.typ)
 
     def particle_phase_ids(self, phasePart):
         '''
@@ -2190,7 +2192,7 @@ class particle_props:
             com_radial_dict_fa[key] = {'int_id': int_id, 'current_id': int(int_comp_dict['ids'][m]), 'ext_rad': exterior_radius, 'int_rad': interior_radius, 'r': r[1:].tolist(), 'area': area_r.tolist(), 'com_x': com_x, 'com_y': com_y, 'fa_press': {'all': act_press_r.tolist(), 'A': act_pressA_r.tolist(), 'B': act_pressB_r.tolist()}, 'fa': {'all': act_fa_r.tolist(), 'A': act_faA_r.tolist(), 'B': act_faB_r.tolist()}, 'align': {'all': align_r.tolist(), 'A': alignA_r.tolist(), 'B': alignB_r.tolist()}, 'num_dens': {'all': num_dens_r.tolist(), 'A': num_densA_r.tolist(), 'B': num_densB_r.tolist()}, 'num': {'all': num_r.tolist(), 'A': numA_r.tolist(), 'B': numB_r.tolist()}}
         return com_radial_dict_fa
 
-    def cluster_velocity(self, prev_pos):
+    def cluster_velocity(self, prev_pos, dt_step):
 
         #Compute cluster parameters using system_all neighbor list
         system_all = freud.AABBQuery(self.f_box, self.f_box.wrap(self.pos))
@@ -2201,15 +2203,16 @@ class particle_props:
         ids = cl_all.cluster_idx                                    # get id of each cluster
         clp_all.compute(system_all, ids)                            # Calculate cluster properties given cluster IDs
         clust_size = clp_all.sizes                                  # find cluster sizes
-
+        
         min_size=int(self.partNum/8)                                     #Minimum cluster size for measurements to happen
         lcID = np.where(clust_size == np.amax(clust_size))[0][0]    #Identify largest cluster
         large_clust_ind_all=np.where(clust_size>min_size)           #Identify all clusters larger than minimum size
         clust_large = np.amax(clust_size)
 
-        current_com_dict = self.utility_functs.com_view(self.pos, clp_all)
 
-        system_all = freud.AABBQuery(self.f_box, self.f_box.wrap(self.pos))
+        current_com_dict = self.plotting_utility_functs.com_view(self.pos, clp_all)
+
+        system_all = freud.AABBQuery(self.f_box, self.f_box.wrap(prev_pos))
         cl_all=freud.cluster.Cluster()                              #Define cluster
         cl_all.compute(system_all, neighbors={'r_max': 1.0})        # Calculate clusters given neighbor list, positions,
                                                                     # and maximal radial interaction distance
@@ -2223,12 +2226,36 @@ class particle_props:
         large_clust_ind_all=np.where(clust_size>min_size)           #Identify all clusters larger than minimum size
         clust_large = np.amax(clust_size)
 
-        prev_com_dict = self.utility_functs.com_view(prev_pos, clp_all)
-
-        print(current_com_dict)
+        prev_com_dict = self.plotting_utility_functs.com_view(prev_pos, clp_all)
         print(prev_com_dict)
+        print(current_com_dict)
         stop
+        difx_cluster = current_com_dict['com']['x'] - prev_com_dict['com']['x']
 
+        difx_cluster_abs = np.abs(difx_cluster)
+        if difx_cluster_abs>=self.hx_box:
+            if difx_cluster < -self.hx_box:
+                difx_cluster += self.lx_box
+            else:
+                difx_cluster -= self.lx_box
+                
+        dify_cluster = current_com_dict['com']['y'] - prev_com_dict['com']['y']
+
+        dify_cluster_abs = np.abs(dify_cluster)
+        if dify_cluster_abs>=self.hy_box:
+            if dify_cluster < -self.hy_box:
+                dify_cluster += self.ly_box
+            else:
+                dify_cluster -= self.ly_box
+
+        difr_cluster = ( difx_cluster ** 2 + dify_cluster ** 2 ) ** 0.5
+
+        vx_cluster = difx_cluster / dt_step
+        vy_cluster = dify_cluster / dt_step
+        vr_cluster = difr_cluster / dt_step
+        
+        cluster_velocity_dict = {'displace': {'x': difx_cluster, 'y': dify_cluster, 'r': difr_cluster}, 'velocity': {'x': vx_cluster, 'y': vy_cluster, 'r': vr_cluster} }
+        return cluster_velocity_dict
     def radial_measurements(self, radial_stress_dict, radial_fa_dict):
 
         stop

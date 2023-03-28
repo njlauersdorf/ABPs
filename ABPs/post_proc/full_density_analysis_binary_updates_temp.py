@@ -245,7 +245,7 @@ import time
 with hoomd.open(name=inFile, mode='rb') as t:
 
     dumps = int(t.__len__())
-    start = int(150/time_step)#205                                             # first frame to process
+    start = int(0/time_step)#205                                             # first frame to process
     
                                 # get number of timesteps dumped
     
@@ -761,6 +761,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     
                     sort_interior_ids = interface_functs.sort_surface_points(sep_surface_dict[key]['interior'])
 
+                    sort_interior_ids = interface_functs.surface_curve_prep(sort_interior_ids, int_type = 'interior')
+
                     all_surface_curves[key]['interior'] = interface_functs.surface_curve_interp(sort_interior_ids)
 
                     com_pov_interior_pos = interface_functs.surface_com_pov(all_surface_curves[key]['interior']['pos'])
@@ -781,6 +783,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                 if sep_surface_dict[key]['exterior']['num']>0:
                     sort_exterior_ids = interface_functs.sort_surface_points(sep_surface_dict[key]['exterior'])
+
+                    sort_exterior_ids = interface_functs.surface_curve_prep(sort_exterior_ids, int_type = 'exterior')
+                    
 
                     all_surface_curves[key]['exterior'] = interface_functs.surface_curve_interp(sort_exterior_ids)
 
@@ -806,7 +811,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     averaged_data_arr['width'] = 0
                 if measurement_method == 'interface_props':
                     data_output_functs.write_to_txt(averaged_data_arr, dataPath + 'BubComp_' + outfile + '.txt')
-            
+
             if steady_state_once == 'False':
                 in_clust_arr = np.zeros(partNum)
                 clust_id_time = np.where(ids==lcID)[0]
@@ -879,24 +884,21 @@ with hoomd.open(name=inFile, mode='rb') as t:
             elif measurement_method == 'normal_fa':
 
                 if plot == 'y':
-                    plotting_functs = plotting.plotting(orient_dict, pos_dict, l_box, NBins, sizeBin, peA, peB, parFrac, eps, typ, tst)
                     plotting_functs.plot_normal_fa_map(normal_fa_dict, all_surface_curves, int_comp_dict)
-                    plotting_functs.plot_normal_fa_part(normal_fa_dict, all_surface_curves, int_comp_dict)
-            elif measurement_method == 'voronoi':
-                if plot == 'y':
-                    plotting_functs = plotting.plotting(orient_dict, pos_dict, lx_box, ly_box, NBins_x, NBins_y, sizeBin_x, sizeBin_y, peA, peB, parFrac, eps, typ, tst)
-                    plotting_functs.plot_voronoi(pos)
+                    #plotting_functs.plot_normal_fa_part(normal_fa_dict, all_surface_curves, int_comp_dict)
+            #elif measurement_method == 'voronoi':
+            #    if plot == 'y':
+            #        plotting_functs = plotting.plotting(orient_dict, pos_dict, lx_box, ly_box, NBins_x, NBins_y, sizeBin_x, sizeBin_y, peA, peB, parFrac, eps, typ, tst)
+            #        plotting_functs.plot_voronoi(pos)
 
             elif measurement_method == 'active_fa':
                 #DONE
                 if plot == 'y':
-                    plotting_functs = plotting.plotting(orient_dict, pos_dict, l_box, NBins, sizeBin, peA, peB, parFrac, eps, typ, tst)
                     plotting_functs.plot_part_activity(pos, all_surface_curves, int_comp_dict, active_fa_dict)
             elif measurement_method == 'activity':
 
                 if plot == 'y':
                     
-                   # plotting_functs = plotting.plotting(orient_dict, pos_dict, l_box, NBins, sizeBin, peA, peB, parFrac, eps, typ, tst)
                     plotting_functs.plot_part_activity(pos, all_surface_curves, int_comp_dict)
                 stop
             elif measurement_method == 'phases':
@@ -906,9 +908,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                 if plot == 'y':
                     plotting_functs.plot_phases(pos, part_id_dict, all_surface_curves, int_comp_dict, phase_dict)
-                
-                stop
-            
+                            
             elif measurement_method== 'bubble_interface_pressure':
 
                 lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
@@ -1068,9 +1068,12 @@ with hoomd.open(name=inFile, mode='rb') as t:
             elif measurement_method == 'cluster_velocity': 
                 if j>(start * time_step):
 
-                    particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, typ, pos, ang)
+                    particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, eps, typ, pos, ang)
+                    
+                    cluster_velocity_dict = particle_prop_functs.cluster_velocity(prev_pos, dt_step)
+                    print(cluster_velocity_dict)
 
-                    part_vel_dict = particle_prop_functs.cluster_velocity(prev_pos, pos)
+                    stop
 
 
 
@@ -1081,7 +1084,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 csp_stat_dict, csp_plot_dict = lattice_structure_functs.centrosymmetry()
 
                 print(csp_stat_dict)
-                plotting_functs.plot_csp(csp_plot_dict, all_surface_curves, int_comp_dict, ang, pos, pair='all')
+                if plot == 'y':
+                    plotting_functs.plot_csp(csp_plot_dict, all_surface_curves, int_comp_dict, ang, pos, pair='all')
+                
 
             elif measurement_method == 'lattice_spacing':
                 #DONE
@@ -1159,10 +1164,11 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
                 
                 if lx_box == ly_box:
-                    local_dens_stat_dict = lattice_structure_functs.local_density()
+                    local_dens_stat_dict, local_dens_plot_dict = lattice_structure_functs.local_density()
 
                 data_output_functs.write_to_txt(local_dens_stat_dict, dataPath + 'local_density_' + outfile + '.txt')
-
+                if plot == 'y':
+                    plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict)
             elif measurement_method == 'neighbors':
                 #DONE
                 lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
@@ -1176,11 +1182,12 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 data_output_functs.write_to_txt(neigh_stat_dict, dataPath + 'nearest_neighbors_' + outfile + '.txt')
                 data_output_functs.write_to_txt(ori_stat_dict, dataPath + 'nearest_ori_' + outfile + '.txt')
                 if plot == 'y':
-                    #plotting_functs.plot_neighbors(neigh_plot_dict, all_surface_curves, int_comp_dict, ang, pos, pair='all-all')
-                    plotting_functs.plot_neighbors_ori(neigh_plot_dict, all_surface_curves, int_comp_dict, ang, pos, pair='all-all')
-                    plotting_functs.plot_neighbors_ori(neigh_plot_dict, all_surface_curves, int_comp_dict, ang, pos, pair='all-A')
-                    plotting_functs.plot_neighbors_ori(neigh_plot_dict, all_surface_curves, int_comp_dict, ang, pos, pair='all-B')
-                    stop
+
+                    plotting_functs.plot_neighbors(neigh_plot_dict, all_surface_curves, int_comp_dict, ang, pos, pair='all-all')
+                    plotting_functs.plot_neighbors_ori(neigh_plot_dict, ang, pos, all_surface_curves, int_comp_dict, pair='all-all')
+
+                    #.plot_neighbors_ori(neigh_plot_dict, all_surface_curves, int_comp_dict, ang, pos, pair='all-A')
+                    #plotting_functs.plot_neighbors_ori(neigh_plot_dict, all_surface_curves, int_comp_dict, ang, pos, pair='all-B')
                     #plotting_functs.plot_particle_orientations(neigh_plot_dict, all_surface_curves, int_comp_dict, pair='all-all')
                     #stop
                     #plotting_functs.local_orientational_order_map(neigh_plot_dict, all_surface_curves, int_comp_dict, type='all-all')
@@ -1198,6 +1205,12 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     #plotting_functs.plot_all_ori_of_B_parts(neigh_plot_dict, all_surface_curves, int_comp_dict)
                     #plotting_functs.plot_A_ori_of_all_parts(neigh_plot_dict, all_surface_curves, int_comp_dict)
                     #plotting_functs.plot_B_ori_of_all_parts(neigh_plot_dict, all_surface_curves, int_comp_dict)
+            elif measurement_method == 'orientation':
+                #DONE
+
+                if plot == 'y':
+
+                    plotting_functs.plot_ang(ang, pos, all_surface_curves, int_comp_dict)
 
             elif measurement_method == 'interparticle_pressure':
                 stress_and_pressure_functs = stress_and_pressure.stress_and_pressure(l_box, NBins, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
@@ -1271,7 +1284,22 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     plotting_functs.plot_hexatic_order(pos, hexatic_order_dict['order'], all_surface_curves, int_comp_dict)
 
                     plotting_functs.plot_domain_angle(pos, hexatic_order_dict['theta'], all_surface_curves, int_comp_dict)
-                    stop
+            
+            elif measurement_method == 'voronoi':
+                #DONE
+
+                lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
+
+                voronoi_dict= lattice_structure_functs.voronoi()
+                #data_output_functs = data_output.data_output(l_box, sizeBin, tst, clust_large, dt_step)
+                #data_output_functs.write_to_txt(hexatic_order_dict, dataPath + 'hexatic_order_' + outfile + '.txt')
+
+                if plot == 'y':
+
+                    plotting_functs.plot_hexatic_order(pos, hexatic_order_dict['order'], all_surface_curves, int_comp_dict)
+
+                    plotting_functs.plot_domain_angle(pos, hexatic_order_dict['theta'], all_surface_curves, int_comp_dict)
+
             elif measurement_method == 'translational_order':
                 #DONE
                 lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
