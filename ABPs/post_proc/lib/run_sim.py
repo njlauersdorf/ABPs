@@ -89,7 +89,7 @@ class run_sim:
         self.beta_B = 2.3
 
 
-
+    
     def random_init(self):
 
         #sys.path.insert(0,self.hoomdPath)    # insert specified path to hoomdPath as first place to check for hoomd

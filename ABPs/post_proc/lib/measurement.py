@@ -693,6 +693,7 @@ class measurement:
         partial_ssf_allall_arr3 = partial_ssf_allall_num / partial_ssf_allall_denom
         plt.plot(k_arr[1:], partial_ssf_allall_arr, label='old')
         plt.plot(k_arr[1:], partial_ssf_allall_arr3, label='new')
+        plt.plot(k_arr[1:], np.ones(len(k_arr[1:])), color='black', linestyle='dashed')
         plt.legend()
         plt.show()
 
@@ -700,6 +701,7 @@ class measurement:
         plt.plot(k_arr[1:], partial_ssf_AB_arr, label='A-B')
         plt.plot(k_arr[1:], partial_ssf_BA_arr, label='B-A')
         plt.plot(k_arr[1:], partial_ssf_BB_arr, label='B-B')
+        plt.plot(k_arr[1:], np.ones(len(k_arr[1:])), color='black', linestyle='dashed')
         plt.legend()
         plt.show()
 
@@ -1587,7 +1589,7 @@ class measurement:
         ori_stat_dict = {'bulk': {'all-all': {'mean': np.mean(allall_bulk_dot), 'std': np.std(allall_bulk_dot)}, 'all-A': {'mean': np.mean(allA_bulk_dot), 'std': np.std(allA_bulk_dot)}, 'all-B': {'mean': np.mean(allB_bulk_dot), 'std': np.std(allB_bulk_dot)}, 'A-A': {'mean': np.mean(AA_bulk_dot), 'std': np.std(AA_bulk_dot)}, 'A-B': {'mean': np.mean(AB_bulk_dot), 'std': np.std(AB_bulk_dot)}, 'B-B': {'mean': np.mean(BB_bulk_dot), 'std': np.std(BB_bulk_dot)}}, 'int': {'all-all': {'mean': np.mean(allall_int_dot), 'std': np.std(allall_int_dot)}, 'all-A': {'mean': np.mean(allA_int_dot), 'std': np.std(allA_int_dot)}, 'all-B': {'mean': np.mean(allB_int_dot), 'std': np.std(allB_int_dot)}, 'A-A': {'mean': np.mean(AA_int_dot), 'std': np.std(AA_int_dot)}, 'A-B': {'mean': np.mean(AB_int_dot), 'std': np.std(AB_int_dot)}, 'B-B': {'mean': np.mean(BB_int_dot), 'std': np.std(BB_int_dot)}}, 'dense': {'all-all': {'mean': np.mean(allall_dense_dot), 'std': np.std(allall_dense_dot)}, 'all-A': {'mean': np.mean(allA_dense_dot), 'std': np.std(allA_dense_dot)}, 'all-B': {'mean': np.mean(allB_dense_dot), 'std': np.std(allB_dense_dot)}, 'A-A': {'mean': np.mean(AA_dense_dot), 'std': np.std(AA_dense_dot)}, 'A-B': {'mean': np.mean(AB_dense_dot), 'std': np.std(AB_dense_dot)}, 'B-B': {'mean': np.mean(BB_dense_dot), 'std': np.std(BB_dense_dot)}}}
 
         # Create output dictionary for plotting of nearest neighbor information of each particle per phase/activity pairing and their respective x-y locations
-        neigh_plot_dict = {'all-all': {'neigh': allall_dense_num_neigh, 'ori': allall_dense_dot, 'x': allall_dense_pos_x, 'y': allall_dense_pos_y}, 'all-A': {'neigh': allA_dense_num_neigh, 'ori': allA_dense_dot, 'x': allA_dense_pos_x, 'y': allA_dense_pos_y}, 'all-B': {'neigh': allB_dense_num_neigh, 'ori': allB_dense_dot, 'x': allB_dense_pos_x, 'y': allB_dense_pos_y}, 'A-all': {'neigh': Aall_dense_num_neigh, 'ori': Aall_dense_dot, 'x': Aall_dense_pos_x, 'y': Aall_dense_pos_y}, 'B-all': {'neigh': Ball_dense_num_neigh, 'ori': Ball_dense_dot, 'x': Ball_dense_pos_x, 'y': Ball_dense_pos_y}}
+        neigh_plot_dict = {'all-all': {'neigh': allall_dense_num_neigh, 'ori': allall_dense_dot, 'x': allall_dense_pos_x, 'y': allall_dense_pos_y}, 'all-A': {'neigh': allA_dense_num_neigh, 'ori': allA_dense_dot, 'x': allA_dense_pos_x, 'y': allA_dense_pos_y}, 'all-B': {'neigh': allB_dense_num_neigh, 'ori': allB_dense_dot, 'x': allB_dense_pos_x, 'y': allB_dense_pos_y}, 'A-all': {'neigh': Aall_dense_num_neigh, 'ori': Aall_dense_dot, 'x': Aall_dense_pos_x, 'y': Aall_dense_pos_y}, 'B-all': {'neigh': Ball_dense_num_neigh, 'ori': Ball_dense_dot, 'x': Ball_dense_pos_x, 'y': Ball_dense_pos_y}, 'A-A': {'neigh': AA_dense_num_neigh, 'ori': AA_dense_dot, 'x': pos_A_dense[:,0], 'y': pos_A_dense[:,1]}, 'A-B': {'neigh': AB_dense_num_neigh, 'ori': AB_dense_dot, 'x': pos_B_dense[:,0], 'y': pos_B_dense[:,1]}, 'B-A': {'neigh': BA_dense_num_neigh, 'ori': BA_dense_dot, 'x': pos_A_dense[:,0], 'y': pos_A_dense[:,1]}, 'B-B': {'neigh': BB_dense_num_neigh, 'ori': BB_dense_dot, 'x': pos_B_dense[:,0], 'y': pos_B_dense[:,1]}}
 
         
         return neigh_stat_dict, ori_stat_dict, neigh_plot_dict
@@ -1857,6 +1859,14 @@ class measurement:
             BA_int_local_dens = BA_bulk_num_neigh * (np.pi/4) / (np.pi*rad_dist[j]**2)
             BB_int_local_dens = BB_bulk_num_neigh * (np.pi/4) / (np.pi*rad_dist[j]**2)
             
+            # Save neighbor and local orientational order to arrays for all B reference particles of the respective phase with all nearest neighbors
+            Ball_bulk_local_dens= np.append(BA_bulk_local_dens, BB_bulk_local_dens)
+            Ball_int_local_dens = np.append(BA_int_local_dens, BB_int_local_dens)
+
+            # Save neighbor and local orientational order to arrays for all A reference particles of the respective phase with all nearest neighbors
+            Aall_bulk_local_dens = np.append(AB_bulk_local_dens, AA_bulk_local_dens)
+            Aall_int_local_dens = np.append(AB_int_local_dens, AA_int_local_dens)
+
             # Save neighbor and local orientational order to arrays for all reference particles of the respective phase with B nearest neighbors
             allB_bulk_num_neigh = AB_bulk_num_neigh + BB_bulk_num_neigh
             allB_bulk_local_dens = allB_bulk_num_neigh * (np.pi/4) / (np.pi*rad_dist[j]**2)
@@ -1878,6 +1888,7 @@ class measurement:
             allall_dense_local_dens = np.append(allall_bulk_local_dens, allall_int_local_dens)
             allA_dense_local_dens = np.append(allA_bulk_local_dens, allA_int_local_dens)
             allB_dense_local_dens = np.append(allB_bulk_local_dens, allB_int_local_dens)
+
             AA_dense_local_dens = np.append(AA_bulk_local_dens, AA_int_local_dens)
             AB_dense_local_dens = np.append(AB_bulk_local_dens, AB_int_local_dens)
             BA_dense_local_dens = np.append(BA_bulk_local_dens, BA_int_local_dens)
@@ -1900,6 +1911,12 @@ class measurement:
 
             allB_local_dens_mean_arr.append(np.mean(allB_bulk_local_dens))
             allB_local_dens_std_arr.append(np.std(allB_bulk_local_dens))
+
+            # Save neighbor and local orientational order to arrays for all B reference particles of the respective phase with all nearest neighbors
+            Ball_dense_local_dens= np.append(Ball_bulk_local_dens, Ball_int_local_dens)
+
+            # Save neighbor and local orientational order to arrays for all A reference particles of the respective phase with all nearest neighbors
+            Aall_dense_local_dens = np.append(Aall_bulk_local_dens, Aall_int_local_dens)
 
             allall_local_dens_mean_arr.append(np.mean(allall_bulk_local_dens))
             allall_local_dens_std_arr.append(np.std(allall_bulk_local_dens))
@@ -1936,7 +1953,7 @@ class measurement:
                 allall_dense_pos_x = np.append(allall_bulk_pos_x, allall_int_pos_x)
                 allall_dense_pos_y = np.append(allall_bulk_pos_y, allall_int_pos_y)
 
-                local_dens_plot_dict = {'all-all': {'dens': allall_dense_local_dens, 'pos_x': allall_dense_pos_x, 'pos_y': allall_dense_pos_y}, 'all-A': {'dens': allA_dense_local_dens, 'pos_x': allA_dense_pos_x, 'pos_y': allA_dense_pos_y}, 'all-B': {'dens': allB_dense_local_dens, 'pos_x': allB_dense_pos_x, 'pos_y': allB_dense_pos_y}, 'A-A': {'dens': AA_dense_local_dens, 'pos_x': allB_dense_pos_x, 'pos_y': allB_dense_pos_y}, 'A-B': {'dens': AB_dense_local_dens, 'pos_x': allB_dense_pos_x, 'pos_y': allB_dense_pos_y}, 'B-A': {'dens': BA_dense_local_dens, 'pos_x': allA_dense_pos_x, 'pos_y': allA_dense_pos_y}, 'B-B': {'dens': BB_dense_local_dens, 'pos_x': allB_dense_pos_x, 'pos_y': allB_dense_pos_y}}
+                local_dens_plot_dict = {'all-all': {'dens': allall_dense_local_dens, 'pos_x': allall_dense_pos_x, 'pos_y': allall_dense_pos_y}, 'all-A': {'dens': allA_dense_local_dens, 'pos_x': allA_dense_pos_x, 'pos_y': allA_dense_pos_y}, 'all-B': {'dens': allB_dense_local_dens, 'pos_x': allB_dense_pos_x, 'pos_y': allB_dense_pos_y}, 'A-all': {'dens': Aall_dense_local_dens, 'pos_x': Aall_dense_pos_x, 'pos_y': Aall_dense_pos_y}, 'B-all': {'dens': Ball_dense_local_dens, 'pos_x': Ball_dense_pos_x, 'pos_y': Ball_dense_pos_y}, 'A-A': {'dens': AA_dense_local_dens, 'pos_x': allB_dense_pos_x, 'pos_y': allB_dense_pos_y}, 'A-B': {'dens': AB_dense_local_dens, 'pos_x': allB_dense_pos_x, 'pos_y': allB_dense_pos_y}, 'B-A': {'dens': BA_dense_local_dens, 'pos_x': allA_dense_pos_x, 'pos_y': allA_dense_pos_y}, 'B-B': {'dens': BB_dense_local_dens, 'pos_x': allB_dense_pos_x, 'pos_y': allB_dense_pos_y}}
 
         local_dens_stat_dict = {'radius': rad_dist[1:], 'allA_mean': allA_local_dens_mean_arr, 'allA_std': allA_local_dens_std_arr, 'allB_mean': allB_local_dens_mean_arr, 'allB_std': allB_local_dens_std_arr, 'AA_mean': AA_local_dens_mean_arr, 'AA_std': AA_local_dens_std_arr, 'AB_mean': AB_local_dens_mean_arr, 'AB_std': AB_local_dens_std_arr, 'BA_mean': BA_local_dens_mean_arr, 'BA_std': BA_local_dens_std_arr, 'BB_mean': BB_local_dens_mean_arr, 'BB_std': BB_local_dens_std_arr}
  

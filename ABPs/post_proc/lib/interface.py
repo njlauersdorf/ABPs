@@ -1936,6 +1936,7 @@ class interface:
             key = 'surface id ' + str(int(int_comp_dict['ids'][m]))
 
             try:
+                
                 interior_radius = surface_measurements[key]['interior']['mean radius']
                 interior_surface_com_pos_dict = self.surface_com_pov(surface_curve[key]['interior']['pos'])
                 interior_surface_com_xpos = interior_surface_com_pos_dict['pos']['x']
@@ -1970,9 +1971,6 @@ class interface:
                 exterior_int_com_x = None
                 exterior_int_com_y = None
                 ext_surface_id = None
-
-
-
 
             if (interior_exist == 1) | (exterior_exist == 1):
 
@@ -2050,9 +2048,14 @@ class interface:
                                                 y_dot_p = (y_norm_unitv * py)
                                                 r_dot_p = x_dot_p + y_dot_p
                                         else:
-                                            x_dot_p = (x_norm_unitv * px)
-                                            y_dot_p = (y_norm_unitv * py)
-                                            r_dot_p = x_dot_p + y_dot_p
+                                            if (difr_short == difr_bub):
+                                                x_dot_p = (-x_norm_unitv * px)
+                                                y_dot_p = (-y_norm_unitv * py)
+                                                r_dot_p = x_dot_p + y_dot_p
+                                            else:  
+                                                x_dot_p = (x_norm_unitv * px)
+                                                y_dot_p = (y_norm_unitv * py)
+                                                r_dot_p = x_dot_p + y_dot_p
 
                                         x_dot_p_trad = (-x_norm_unitv_trad * px)
                                         y_dot_p_trad = (-y_norm_unitv_trad * py)
@@ -2079,7 +2082,7 @@ class interface:
                             #if ext_edge_id[ix][iy]==0:
 
 
-                            if ext_surface_id[ix][iy]==1:
+                            elif ext_surface_id[ix][iy]==1:
 
 
                                 #Calculate position of exterior edge bin
@@ -2131,9 +2134,9 @@ class interface:
                                 else:
                                     #Calculate position of interior edge bin
 
-                                    difx_width = self.utility_functs.sep_dist_x(xpos_ref, self.hx_box)
+                                    difx_width = self.utility_functs.sep_dist_x(xpos_ref, exterior_int_com_x)
 
-                                    dify_width = self.utility_functs.sep_dist_y(ypos_ref, self.hy_box)
+                                    dify_width = self.utility_functs.sep_dist_y(ypos_ref, exterior_int_com_x)
 
                                     #Calculate distance from interior edge bin to exterior edge bin
                                     difr = ( (difx_width)**2 + (dify_width)**2)**0.5

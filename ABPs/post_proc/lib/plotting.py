@@ -852,7 +852,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
             min_align = -np.amax(align_dif)
             max_align = np.amax(align_dif)
         else:
-            min_align = 0.0
+            min_align = -1.0
             max_align = 1.0
 
         levels_text=40
@@ -2316,7 +2316,137 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                 bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
             
             plt.title('B Reference Particles', fontsize=20)
+        
+        elif pair == 'A-all':
 
+            # Find min/max number of neighbors
+            min_neigh = 0
+            max_neigh = np.amax(neigh_plot_dict['A-all']['ori'])
+
+            # Generate list of ellipses for all particles to plot containing position (x,y) and point size that automatically scales with figure size
+            ells = [Ellipse(xy=np.array([neigh_plot_dict['A-all']['x'][i]+self.hx_box,neigh_plot_dict['A-all']['y'][i]+self.hy_box]),
+                    width=sz, height=sz)
+            for i in range(0,len(neigh_plot_dict['A-all']['x']))]
+
+            # Plot position colored by number of A neighbors
+            neighborGroup = mc.PatchCollection(ells, cmap=plt.cm.get_cmap('tab10', 10))#facecolors=slowCol)
+            coll = ax.add_collection(neighborGroup)
+            coll.set_array(np.ravel(neigh_plot_dict['A-all']['ori']))
+
+            plt.text(0.75, 0.94, s=r'$\mu_\mathrm{A}$' + ' = ' + '{:.4f}'.format(np.mean(neigh_plot_dict['A-all']['ori'])),
+                fontsize=18, transform = ax.transAxes,
+                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+            
+            plt.title('all Reference Particles', fontsize=20)
+
+        elif pair == 'B-all':
+
+            # Find min/max number of neighbors
+            min_neigh = 0
+            max_neigh = np.amax(neigh_plot_dict['B-all']['ori'])
+
+            # Generate list of ellipses for all particles to plot containing position (x,y) and point size that automatically scales with figure size
+            ells = [Ellipse(xy=np.array([neigh_plot_dict['B-all']['x'][i]+self.hx_box,neigh_plot_dict['B-all']['y'][i]+self.hy_box]),
+                    width=sz, height=sz)
+            for i in range(0,len(neigh_plot_dict['B-all']['x']))]
+
+            # Plot position colored by number of A neighbors
+            neighborGroup = mc.PatchCollection(ells, cmap=plt.cm.get_cmap('tab10', 10))#facecolors=slowCol)
+            coll = ax.add_collection(neighborGroup)
+            coll.set_array(np.ravel(neigh_plot_dict['B-all']['ori']))
+
+            plt.text(0.75, 0.94, s=r'$\mu_\mathrm{B}$' + ' = ' + '{:.4f}'.format(np.mean(neigh_plot_dict['all-B']['ori'])),
+                fontsize=18, transform = ax.transAxes,
+                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+            
+            plt.title('all Reference Particles', fontsize=20)
+
+        elif pair == 'A-A':
+
+            # Find min/max number of neighbors
+            min_neigh = 0
+            max_neigh = np.amax(neigh_plot_dict['A-A']['ori'])
+
+            # Generate list of ellipses for all particles to plot containing position (x,y) and point size that automatically scales with figure size
+            ells = [Ellipse(xy=np.array([neigh_plot_dict['A-A']['x'][i]+self.hx_box,neigh_plot_dict['A-A']['y'][i]+self.hy_box]),
+                    width=sz, height=sz)
+            for i in range(0,len(neigh_plot_dict['A-A']['x']))]
+
+            # Plot position colored by number of A neighbors
+            neighborGroup = mc.PatchCollection(ells, cmap=plt.cm.get_cmap('tab10', 10))#facecolors=slowCol)
+            coll = ax.add_collection(neighborGroup)
+            coll.set_array(np.ravel(neigh_plot_dict['A-A']['ori']))
+
+            plt.text(0.75, 0.94, s=r'$\mu_\mathrm{A}$' + ' = ' + '{:.4f}'.format(np.mean(neigh_plot_dict['A-A']['ori'])),
+                fontsize=18, transform = ax.transAxes,
+                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+            
+            plt.title('A Reference Particles', fontsize=20)
+
+        elif pair == 'B-A':
+
+            # Find min/max number of neighbors
+            min_neigh = 0
+            max_neigh = np.amax(neigh_plot_dict['B-A']['ori'])
+
+            # Generate list of ellipses for all particles to plot containing position (x,y) and point size that automatically scales with figure size
+            ells = [Ellipse(xy=np.array([neigh_plot_dict['B-A']['x'][i]+self.hx_box,neigh_plot_dict['B-A']['y'][i]+self.hy_box]),
+                    width=sz, height=sz)
+            for i in range(0,len(neigh_plot_dict['B-A']['x']))]
+
+            # Plot position colored by number of A neighbors
+            neighborGroup = mc.PatchCollection(ells, cmap=plt.cm.get_cmap('tab10', 10))#facecolors=slowCol)
+            coll = ax.add_collection(neighborGroup)
+            coll.set_array(np.ravel(neigh_plot_dict['B-A']['ori']))
+
+            plt.text(0.75, 0.94, s=r'$\mu_\mathrm{B}$' + ' = ' + '{:.4f}'.format(np.mean(neigh_plot_dict['B-A']['ori'])),
+                fontsize=18, transform = ax.transAxes,
+                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+            
+            plt.title('A Reference Particles', fontsize=20)
+        elif pair == 'A-B':
+
+            # Find min/max number of neighbors
+            min_neigh = 0
+            max_neigh = np.amax(neigh_plot_dict['A-B']['ori'])
+
+            # Generate list of ellipses for all particles to plot containing position (x,y) and point size that automatically scales with figure size
+            ells = [Ellipse(xy=np.array([neigh_plot_dict['A-B']['x'][i]+self.hx_box,neigh_plot_dict['A-B']['y'][i]+self.hy_box]),
+                    width=sz, height=sz)
+            for i in range(0,len(neigh_plot_dict['A-B']['x']))]
+
+            # Plot position colored by number of A neighbors
+            neighborGroup = mc.PatchCollection(ells, cmap=plt.cm.get_cmap('tab10', 10))#facecolors=slowCol)
+            coll = ax.add_collection(neighborGroup)
+            coll.set_array(np.ravel(neigh_plot_dict['A-B']['ori']))
+
+            plt.text(0.75, 0.94, s=r'$\mu_\mathrm{A}$' + ' = ' + '{:.4f}'.format(np.mean(neigh_plot_dict['A-B']['ori'])),
+                fontsize=18, transform = ax.transAxes,
+                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+            
+            plt.title('B Reference Particles', fontsize=20)
+
+        elif pair == 'B-B':
+
+            # Find min/max number of neighbors
+            min_neigh = 0
+            max_neigh = np.amax(neigh_plot_dict['B-B']['ori'])
+
+            # Generate list of ellipses for all particles to plot containing position (x,y) and point size that automatically scales with figure size
+            ells = [Ellipse(xy=np.array([neigh_plot_dict['B-B']['x'][i]+self.hx_box,neigh_plot_dict['B-B']['y'][i]+self.hy_box]),
+                    width=sz, height=sz)
+            for i in range(0,len(neigh_plot_dict['B-B']['x']))]
+
+            # Plot position colored by number of A neighbors
+            neighborGroup = mc.PatchCollection(ells, cmap=plt.cm.get_cmap('tab10', 10))#facecolors=slowCol)
+            coll = ax.add_collection(neighborGroup)
+            coll.set_array(np.ravel(neigh_plot_dict['B-B']['ori']))
+
+            plt.text(0.75, 0.94, s=r'$\mu_\mathrm{B}$' + ' = ' + '{:.4f}'.format(np.mean(neigh_plot_dict['B-B']['ori'])),
+                fontsize=18, transform = ax.transAxes,
+                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+            
+            plt.title('B Reference Particles', fontsize=20)
         #plt.scatter(neigh_plot_dict['all-all']['x'][typ1ind]+self.hx_box, neigh_plot_dict['all-all']['y'][typ1ind]+self.hy_box, c='black', s=sz)
         #plt.quiver(pos[typ1ind,0]+self.hx_box, pos[typ1ind,1]+self.hy_box-mean_dify, px, py, color='black', width=0.003)
         #plt.quiver(pos[typ1ind,0]+self.hx_box, pos[typ1ind,1]+self.hy_box+self.ly_box-mean_dify, px, py, color='black', width=0.003)
@@ -2548,7 +2678,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         plt.savefig(self.outPath + '_ang_' + self.outFile + ".png", dpi=250, transparent=False)
         plt.close()
 
-    def plot_local_density(self, local_dens_plot_dict, sep_surface_dict=None, int_comp_dict=None):
+    def plot_local_density(self, local_dens_plot_dict, sep_surface_dict=None, int_comp_dict=None, pair='None'):
         """
         This function plots the number of neighbors of all dense phase particles
         at each location in space.
@@ -2637,41 +2767,359 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         # Set plotted particle size
         sz = 0.75
 
-        # Find min/max number of neighbors
-        min_neigh = np.min(local_dens_plot_dict['all-all']['dens'])
-        max_neigh = np.max(local_dens_plot_dict['all-all']['dens'])
-
-        # Generate list of ellipses for all particles to plot containing position (x,y) and point size that automatically scales with figure size
-        ells = [Ellipse(xy=np.array([local_dens_plot_dict['all-all']['pos_x'][i]+self.hx_box,local_dens_plot_dict['all-all']['pos_y'][i]+self.hy_box]),
-                width=sz, height=sz)
-        for i in range(0,len(local_dens_plot_dict['all-all']['pos_x']))]
-
-        # Plot position colored by number of A neighbors
-        neighborGroup = mc.PatchCollection(ells, cmap=plt.cm.get_cmap('cool', 1000))#facecolors=slowCol)
-        coll = ax.add_collection(neighborGroup)
-        coll.set_array(np.ravel(local_dens_plot_dict['all-all']['dens']))
-
-        plt.title('All Reference Particles', fontsize=20)
-
-        # Define color bar min and max
-        minClb = np.min(local_dens_plot_dict['all-all']['dens'])
-        maxClb = np.max(local_dens_plot_dict['all-all']['dens'])
-        # Set color bar range
-        coll.set_clim([minClb, maxClb])
-
-        # Set tick levels
-        tick_lev = np.linspace(minClb, maxClb, 10)
-
-        # Define boundaries of colors (such that ticks at midpoints)
-        level_boundaries = np.linspace(minClb, maxClb, 1000)
         
-        # Define colorbar
-        clb = plt.colorbar(coll, ticks=tick_lev, orientation="vertical", format=tick.FormatStrFormatter('%.2f'), boundaries=level_boundaries)
-        clb.ax.tick_params(labelsize=16)
 
-        # Label respective reference and neighbor particle types
+        
 
-        clb.set_label(r'$\phi_\mathrm{local}$', labelpad=25, y=0.5, rotation=270, fontsize=20)
+        if pair == 'all-all':
+
+            # Find min/max number of neighbors
+            min_neigh = np.min(local_dens_plot_dict['all-all']['dens'])
+            max_neigh = np.max(local_dens_plot_dict['all-all']['dens'])
+
+            # Generate list of ellipses for all particles to plot containing position (x,y) and point size that automatically scales with figure size
+            ells = [Ellipse(xy=np.array([local_dens_plot_dict['all-all']['pos_x'][i]+self.hx_box,local_dens_plot_dict['all-all']['pos_y'][i]+self.hy_box]),
+                    width=sz, height=sz)
+            for i in range(0,len(local_dens_plot_dict['all-all']['pos_x']))]
+
+            # Plot position colored by number of A neighbors
+            neighborGroup = mc.PatchCollection(ells, cmap=plt.cm.get_cmap('cool', 1000))#facecolors=slowCol)
+            coll = ax.add_collection(neighborGroup)
+
+            coll.set_array(np.ravel(local_dens_plot_dict['all-all']['dens']))
+
+            plt.title('All Reference Particles', fontsize=20)
+
+            # Define color bar min and max
+            minClb = np.min(local_dens_plot_dict['all-all']['dens'])
+            maxClb = np.max(local_dens_plot_dict['all-all']['dens'])
+
+            # Set color bar range
+            coll.set_clim([minClb, maxClb])
+
+            # Set tick levels
+            tick_lev = np.linspace(minClb, maxClb, 10)
+
+            # Define boundaries of colors (such that ticks at midpoints)
+            level_boundaries = np.linspace(minClb, maxClb, 1000)
+            
+            # Define colorbar
+            clb = plt.colorbar(coll, ticks=tick_lev, orientation="vertical", format=tick.FormatStrFormatter('%.2f'), boundaries=level_boundaries)
+            clb.ax.tick_params(labelsize=16)
+
+            # Label respective reference and neighbor particle types
+            clb.set_label(r'$\phi_\mathrm{local}$', labelpad=25, y=0.5, rotation=270, fontsize=20)
+
+        elif pair == 'all-A':
+
+            # Find min/max number of neighbors
+            min_neigh = np.min(local_dens_plot_dict['all-A']['dens'])
+            max_neigh = np.max(local_dens_plot_dict['all-A']['dens'])
+
+            # Generate list of ellipses for all particles to plot containing position (x,y) and point size that automatically scales with figure size
+            ells = [Ellipse(xy=np.array([local_dens_plot_dict['all-A']['pos_x'][i]+self.hx_box,local_dens_plot_dict['all-A']['pos_y'][i]+self.hy_box]),
+                    width=sz, height=sz)
+            for i in range(0,len(local_dens_plot_dict['all-A']['pos_x']))]
+
+            # Plot position colored by number of A neighbors
+            neighborGroup = mc.PatchCollection(ells, cmap=plt.cm.get_cmap('cool', 1000))#facecolors=slowCol)
+            coll = ax.add_collection(neighborGroup)
+
+            coll.set_array(np.ravel(local_dens_plot_dict['all-A']['dens']))
+
+            plt.title('A Reference Particles', fontsize=20)
+
+            # Define color bar min and max
+            minClb = np.min(local_dens_plot_dict['all-A']['dens'])
+            maxClb = np.max(local_dens_plot_dict['all-A']['dens'])
+
+            # Set color bar range
+            coll.set_clim([minClb, maxClb])
+
+            # Set tick levels
+            tick_lev = np.linspace(minClb, maxClb, 10)
+
+            # Define boundaries of colors (such that ticks at midpoints)
+            level_boundaries = np.linspace(minClb, maxClb, 1000)
+            
+            # Define colorbar
+            clb = plt.colorbar(coll, ticks=tick_lev, orientation="vertical", format=tick.FormatStrFormatter('%.2f'), boundaries=level_boundaries)
+            clb.ax.tick_params(labelsize=16)
+
+            # Label respective reference and neighbor particle types
+            clb.set_label(r'$\phi_\mathrm{local}$', labelpad=25, y=0.5, rotation=270, fontsize=20)
+        
+        elif pair == 'all-B':
+
+            # Find min/max number of neighbors
+            min_neigh = np.min(local_dens_plot_dict['all-B']['dens'])
+            max_neigh = np.max(local_dens_plot_dict['all-B']['dens'])
+
+            # Generate list of ellipses for all particles to plot containing position (x,y) and point size that automatically scales with figure size
+            ells = [Ellipse(xy=np.array([local_dens_plot_dict['all-B']['pos_x'][i]+self.hx_box,local_dens_plot_dict['all-B']['pos_y'][i]+self.hy_box]),
+                    width=sz, height=sz)
+            for i in range(0,len(local_dens_plot_dict['all-B']['pos_x']))]
+
+            # Plot position colored by number of A neighbors
+            neighborGroup = mc.PatchCollection(ells, cmap=plt.cm.get_cmap('cool', 1000))#facecolors=slowCol)
+            coll = ax.add_collection(neighborGroup)
+
+            coll.set_array(np.ravel(local_dens_plot_dict['all-B']['dens']))
+
+            plt.title('B Reference Particles', fontsize=20)
+
+            # Define color bar min and max
+            minClb = np.min(local_dens_plot_dict['all-B']['dens'])
+            maxClb = np.max(local_dens_plot_dict['all-B']['dens'])
+
+            # Set color bar range
+            coll.set_clim([minClb, maxClb])
+
+            # Set tick levels
+            tick_lev = np.linspace(minClb, maxClb, 10)
+
+            # Define boundaries of colors (such that ticks at midpoints)
+            level_boundaries = np.linspace(minClb, maxClb, 1000)
+            
+            # Define colorbar
+            clb = plt.colorbar(coll, ticks=tick_lev, orientation="vertical", format=tick.FormatStrFormatter('%.2f'), boundaries=level_boundaries)
+            clb.ax.tick_params(labelsize=16)
+
+            # Label respective reference and neighbor particle types
+            clb.set_label(r'$\phi_\mathrm{local}$', labelpad=25, y=0.5, rotation=270, fontsize=20)
+        elif pair == 'A-all':
+
+            # Find min/max number of neighbors
+            min_neigh = np.min(local_dens_plot_dict['A-all']['dens'])
+            max_neigh = np.max(local_dens_plot_dict['A-all']['dens'])
+
+            # Generate list of ellipses for all particles to plot containing position (x,y) and point size that automatically scales with figure size
+            ells = [Ellipse(xy=np.array([local_dens_plot_dict['A-all']['pos_x'][i]+self.hx_box,local_dens_plot_dict['A-all']['pos_y'][i]+self.hy_box]),
+                    width=sz, height=sz)
+            for i in range(0,len(local_dens_plot_dict['A-all']['pos_x']))]
+
+            # Plot position colored by number of A neighbors
+            neighborGroup = mc.PatchCollection(ells, cmap=plt.cm.get_cmap('cool', 1000))#facecolors=slowCol)
+            coll = ax.add_collection(neighborGroup)
+
+            coll.set_array(np.ravel(local_dens_plot_dict['A-all']['dens']))
+
+            plt.title('all Reference Particles', fontsize=20)
+
+            # Define color bar min and max
+            minClb = np.min(local_dens_plot_dict['A-all']['dens'])
+            maxClb = np.max(local_dens_plot_dict['A-all']['dens'])
+
+            # Set color bar range
+            coll.set_clim([minClb, maxClb])
+
+            # Set tick levels
+            tick_lev = np.linspace(minClb, maxClb, 10)
+
+            # Define boundaries of colors (such that ticks at midpoints)
+            level_boundaries = np.linspace(minClb, maxClb, 1000)
+            
+            # Define colorbar
+            clb = plt.colorbar(coll, ticks=tick_lev, orientation="vertical", format=tick.FormatStrFormatter('%.2f'), boundaries=level_boundaries)
+            clb.ax.tick_params(labelsize=16)
+
+            # Label respective reference and neighbor particle types
+            clb.set_label(r'$\phi^\mathrm{S}_\mathrm{local}$', labelpad=25, y=0.5, rotation=270, fontsize=20)
+        elif pair == 'B-all':
+
+            # Find min/max number of neighbors
+            min_neigh = np.min(local_dens_plot_dict['B-all']['dens'])
+            max_neigh = np.max(local_dens_plot_dict['B-all']['dens'])
+
+            # Generate list of ellipses for all particles to plot containing position (x,y) and point size that automatically scales with figure size
+            ells = [Ellipse(xy=np.array([local_dens_plot_dict['B-all']['pos_x'][i]+self.hx_box,local_dens_plot_dict['B-all']['pos_y'][i]+self.hy_box]),
+                    width=sz, height=sz)
+            for i in range(0,len(local_dens_plot_dict['B-all']['pos_x']))]
+
+            # Plot position colored by number of A neighbors
+            neighborGroup = mc.PatchCollection(ells, cmap=plt.cm.get_cmap('cool', 1000))#facecolors=slowCol)
+            coll = ax.add_collection(neighborGroup)
+
+            coll.set_array(np.ravel(local_dens_plot_dict['B-all']['dens']))
+
+            plt.title('all Reference Particles', fontsize=20)
+
+            # Define color bar min and max
+            minClb = np.min(local_dens_plot_dict['B-all']['dens'])
+            maxClb = np.max(local_dens_plot_dict['B-all']['dens'])
+
+            # Set color bar range
+            coll.set_clim([minClb, maxClb])
+
+            # Set tick levels
+            tick_lev = np.linspace(minClb, maxClb, 10)
+
+            # Define boundaries of colors (such that ticks at midpoints)
+            level_boundaries = np.linspace(minClb, maxClb, 1000)
+            
+            # Define colorbar
+            clb = plt.colorbar(coll, ticks=tick_lev, orientation="vertical", format=tick.FormatStrFormatter('%.2f'), boundaries=level_boundaries)
+            clb.ax.tick_params(labelsize=16)
+
+            # Label respective reference and neighbor particle types
+            clb.set_label(r'$\phi^\mathrm{F}_\mathrm{local}$', labelpad=25, y=0.5, rotation=270, fontsize=20)
+        elif pair == 'A-A':
+
+            # Find min/max number of neighbors
+            min_neigh = np.min(local_dens_plot_dict['A-A']['dens'])
+            max_neigh = np.max(local_dens_plot_dict['A-A']['dens'])
+
+            # Generate list of ellipses for all particles to plot containing position (x,y) and point size that automatically scales with figure size
+            ells = [Ellipse(xy=np.array([local_dens_plot_dict['A-A']['pos_x'][i]+self.hx_box,local_dens_plot_dict['A-A']['pos_y'][i]+self.hy_box]),
+                    width=sz, height=sz)
+            for i in range(0,len(local_dens_plot_dict['A-A']['pos_x']))]
+
+            # Plot position colored by number of A neighbors
+            neighborGroup = mc.PatchCollection(ells, cmap=plt.cm.get_cmap('cool', 1000))#facecolors=slowCol)
+            coll = ax.add_collection(neighborGroup)
+
+            coll.set_array(np.ravel(local_dens_plot_dict['A-A']['dens']))
+
+            plt.title('A Reference Particles', fontsize=20)
+
+            # Define color bar min and max
+            minClb = np.min(local_dens_plot_dict['A-A']['dens'])
+            maxClb = np.max(local_dens_plot_dict['A-A']['dens'])
+
+            # Set color bar range
+            coll.set_clim([minClb, maxClb])
+
+            # Set tick levels
+            tick_lev = np.linspace(minClb, maxClb, 10)
+
+            # Define boundaries of colors (such that ticks at midpoints)
+            level_boundaries = np.linspace(minClb, maxClb, 1000)
+            
+            # Define colorbar
+            clb = plt.colorbar(coll, ticks=tick_lev, orientation="vertical", format=tick.FormatStrFormatter('%.2f'), boundaries=level_boundaries)
+            clb.ax.tick_params(labelsize=16)
+
+            # Label respective reference and neighbor particle types
+            clb.set_label(r'$\phi^\mathrm{S}_\mathrm{local}$', labelpad=25, y=0.5, rotation=270, fontsize=20)
+        elif pair == 'A-B':
+
+            # Find min/max number of neighbors
+            min_neigh = np.min(local_dens_plot_dict['A-B']['dens'])
+            max_neigh = np.max(local_dens_plot_dict['A-B']['dens'])
+
+            # Generate list of ellipses for all particles to plot containing position (x,y) and point size that automatically scales with figure size
+            ells = [Ellipse(xy=np.array([local_dens_plot_dict['A-B']['pos_x'][i]+self.hx_box,local_dens_plot_dict['A-B']['pos_y'][i]+self.hy_box]),
+                    width=sz, height=sz)
+            for i in range(0,len(local_dens_plot_dict['A-B']['pos_x']))]
+
+            # Plot position colored by number of A neighbors
+            neighborGroup = mc.PatchCollection(ells, cmap=plt.cm.get_cmap('cool', 1000))#facecolors=slowCol)
+            coll = ax.add_collection(neighborGroup)
+
+            coll.set_array(np.ravel(local_dens_plot_dict['A-B']['dens']))
+
+            plt.title('B Reference Particles', fontsize=20)
+
+            # Define color bar min and max
+            minClb = np.min(local_dens_plot_dict['A-B']['dens'])
+            maxClb = np.max(local_dens_plot_dict['A-B']['dens'])
+
+            # Set color bar range
+            coll.set_clim([minClb, maxClb])
+
+            # Set tick levels
+            tick_lev = np.linspace(minClb, maxClb, 10)
+
+            # Define boundaries of colors (such that ticks at midpoints)
+            level_boundaries = np.linspace(minClb, maxClb, 1000)
+            
+            # Define colorbar
+            clb = plt.colorbar(coll, ticks=tick_lev, orientation="vertical", format=tick.FormatStrFormatter('%.2f'), boundaries=level_boundaries)
+            clb.ax.tick_params(labelsize=16)
+
+            # Label respective reference and neighbor particle types
+            clb.set_label(r'$\phi^\mathrm{S}_\mathrm{local}$', labelpad=25, y=0.5, rotation=270, fontsize=20)
+        elif pair == 'B-A':
+
+            # Find min/max number of neighbors
+            min_neigh = np.min(local_dens_plot_dict['B-A']['dens'])
+            max_neigh = np.max(local_dens_plot_dict['B-A']['dens'])
+
+            # Generate list of ellipses for all particles to plot containing position (x,y) and point size that automatically scales with figure size
+            ells = [Ellipse(xy=np.array([local_dens_plot_dict['B-A']['pos_x'][i]+self.hx_box,local_dens_plot_dict['B-A']['pos_y'][i]+self.hy_box]),
+                    width=sz, height=sz)
+            for i in range(0,len(local_dens_plot_dict['B-A']['pos_x']))]
+
+            # Plot position colored by number of A neighbors
+            neighborGroup = mc.PatchCollection(ells, cmap=plt.cm.get_cmap('cool', 1000))#facecolors=slowCol)
+            coll = ax.add_collection(neighborGroup)
+
+            coll.set_array(np.ravel(local_dens_plot_dict['B-A']['dens']))
+
+            plt.title('A Reference Particles', fontsize=20)
+
+            # Define color bar min and max
+            minClb = np.min(local_dens_plot_dict['B-A']['dens'])
+            maxClb = np.max(local_dens_plot_dict['B-A']['dens'])
+
+            # Set color bar range
+            coll.set_clim([minClb, maxClb])
+
+            # Set tick levels
+            tick_lev = np.linspace(minClb, maxClb, 10)
+
+            # Define boundaries of colors (such that ticks at midpoints)
+            level_boundaries = np.linspace(minClb, maxClb, 1000)
+            
+            # Define colorbar
+            clb = plt.colorbar(coll, ticks=tick_lev, orientation="vertical", format=tick.FormatStrFormatter('%.2f'), boundaries=level_boundaries)
+            clb.ax.tick_params(labelsize=16)
+
+            # Label respective reference and neighbor particle types
+            clb.set_label(r'$\phi^\mathrm{F}_\mathrm{local}$', labelpad=25, y=0.5, rotation=270, fontsize=20)
+        elif pair == 'B-B':
+
+            # Find min/max number of neighbors
+            min_neigh = np.min(local_dens_plot_dict['B-B']['dens'])
+            max_neigh = np.max(local_dens_plot_dict['B-B']['dens'])
+
+            # Generate list of ellipses for all particles to plot containing position (x,y) and point size that automatically scales with figure size
+            ells = [Ellipse(xy=np.array([local_dens_plot_dict['B-B']['pos_x'][i]+self.hx_box,local_dens_plot_dict['B-B']['pos_y'][i]+self.hy_box]),
+                    width=sz, height=sz)
+            for i in range(0,len(local_dens_plot_dict['B-B']['pos_x']))]
+
+            # Plot position colored by number of A neighbors
+            neighborGroup = mc.PatchCollection(ells, cmap=plt.cm.get_cmap('cool', 1000))#facecolors=slowCol)
+            coll = ax.add_collection(neighborGroup)
+
+            coll.set_array(np.ravel(local_dens_plot_dict['B-B']['dens']))
+
+            plt.title('B Reference Particles', fontsize=20)
+
+            # Define color bar min and max
+            minClb = np.min(local_dens_plot_dict['B-B']['dens'])
+            maxClb = np.max(local_dens_plot_dict['B-B']['dens'])
+
+            # Set color bar range
+            coll.set_clim([minClb, maxClb])
+
+            # Set tick levels
+            tick_lev = np.linspace(minClb, maxClb, 10)
+
+            # Define boundaries of colors (such that ticks at midpoints)
+            level_boundaries = np.linspace(minClb, maxClb, 1000)
+            
+            # Define colorbar
+            clb = plt.colorbar(coll, ticks=tick_lev, orientation="vertical", format=tick.FormatStrFormatter('%.2f'), boundaries=level_boundaries)
+            clb.ax.tick_params(labelsize=16)
+
+            # Label respective reference and neighbor particle types
+            
+            clb.set_label(r'$\phi^\mathrm{F}_\mathrm{local}$', labelpad=25, y=0.5, rotation=270, fontsize=20)
+
+        
+
+        
         
 
         # Label simulation time
@@ -2708,7 +3156,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         ax.axis('off')
         plt.tight_layout()
         #plt.show()
-        plt.savefig(self.outPath + 'local_density2_' + self.outFile + ".png", dpi=250, transparent=False)
+        plt.savefig(self.outPath + 'local_density2_' + str(pair) + '_' + self.outFile + ".png", dpi=250, transparent=False)
         plt.close()    
 
     def plot_clustering(self, neigh_plot_dict, ang, pos, sep_surface_dict=None, int_comp_dict=None, pair='all-all'):

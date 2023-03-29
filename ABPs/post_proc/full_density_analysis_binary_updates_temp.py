@@ -249,7 +249,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
     
                                 # get number of timesteps dumped
     
-    end = 550#int(dumps/time_step)-1                                             # final frame to process
+    end = 551#int(dumps/time_step)-1                                             # final frame to process
     snap = t[0]                                             # Take first snap for box
     first_tstep = snap.configuration.step                   # First time step
 
@@ -828,6 +828,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 partPhase_time = np.vstack((partPhase_time, partPhase))
 
             method1_align_dict, method2_align_dict = interface_functs.surface_alignment(all_surface_measurements, all_surface_curves, sep_surface_dict, int_dict, int_comp_dict)
+            
+            
             method1_align_dict, method2_align_dict = interface_functs.bulk_alignment(method1_align_dict, method2_align_dict, all_surface_measurements, all_surface_curves, sep_surface_dict, bulk_dict, bulk_comp_dict, int_comp_dict)
 
             method1_align_dict, method2_align_dict = interface_functs.gas_alignment(method1_align_dict, method2_align_dict, all_surface_measurements, all_surface_curves, sep_surface_dict, int_comp_dict)
@@ -908,7 +910,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                 if plot == 'y':
                     plotting_functs.plot_phases(pos, part_id_dict, all_surface_curves, int_comp_dict, phase_dict)
-                            
+                stop   
             elif measurement_method== 'bubble_interface_pressure':
 
                 lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
@@ -1168,7 +1170,15 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                 data_output_functs.write_to_txt(local_dens_stat_dict, dataPath + 'local_density_' + outfile + '.txt')
                 if plot == 'y':
-                    plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict)
+                    plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, pair='all-all')
+                    plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, pair='A-all')
+                    plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, pair='B-all')
+                    plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, pair='all-A')
+                    plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, pair='all-B')
+                    plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, pair='A-A')
+                    plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, pair='B-A')
+                    plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, pair='A-B')
+                    plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, pair='B-B')
             elif measurement_method == 'neighbors':
                 #DONE
                 lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
@@ -1184,7 +1194,25 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 if plot == 'y':
 
                     plotting_functs.plot_neighbors(neigh_plot_dict, all_surface_curves, int_comp_dict, ang, pos, pair='all-all')
+                    plotting_functs.plot_neighbors(neigh_plot_dict, all_surface_curves, int_comp_dict, ang, pos, pair='all-A')
+                    plotting_functs.plot_neighbors(neigh_plot_dict, all_surface_curves, int_comp_dict, ang, pos, pair='all-B')
+                    plotting_functs.plot_neighbors(neigh_plot_dict, all_surface_curves, int_comp_dict, ang, pos, pair='A-all')
+                    plotting_functs.plot_neighbors(neigh_plot_dict, all_surface_curves, int_comp_dict, ang, pos, pair='B-all')
+                    plotting_functs.plot_neighbors(neigh_plot_dict, all_surface_curves, int_comp_dict, ang, pos, pair='A-A')
+                    plotting_functs.plot_neighbors(neigh_plot_dict, all_surface_curves, int_comp_dict, ang, pos, pair='A-B')
+                    plotting_functs.plot_neighbors(neigh_plot_dict, all_surface_curves, int_comp_dict, ang, pos, pair='B-A')
+                    plotting_functs.plot_neighbors(neigh_plot_dict, all_surface_curves, int_comp_dict, ang, pos, pair='B-B')
+                    
+
                     plotting_functs.plot_neighbors_ori(neigh_plot_dict, ang, pos, all_surface_curves, int_comp_dict, pair='all-all')
+                    plotting_functs.plot_neighbors_ori(neigh_plot_dict, ang, pos, all_surface_curves, int_comp_dict, pair='all-A')
+                    plotting_functs.plot_neighbors_ori(neigh_plot_dict, ang, pos, all_surface_curves, int_comp_dict, pair='all-B')
+                    plotting_functs.plot_neighbors_ori(neigh_plot_dict, ang, pos, all_surface_curves, int_comp_dict, pair='A-all')
+                    plotting_functs.plot_neighbors_ori(neigh_plot_dict, ang, pos, all_surface_curves, int_comp_dict, pair='B-all')
+                    plotting_functs.plot_neighbors_ori(neigh_plot_dict, ang, pos, all_surface_curves, int_comp_dict, pair='A-A')
+                    plotting_functs.plot_neighbors_ori(neigh_plot_dict, ang, pos, all_surface_curves, int_comp_dict, pair='A-B')
+                    plotting_functs.plot_neighbors_ori(neigh_plot_dict, ang, pos, all_surface_curves, int_comp_dict, pair='B-A')
+                    plotting_functs.plot_neighbors_ori(neigh_plot_dict, ang, pos, all_surface_curves, int_comp_dict, pair='B-B')
 
                     #.plot_neighbors_ori(neigh_plot_dict, all_surface_curves, int_comp_dict, ang, pos, pair='all-A')
                     #plotting_functs.plot_neighbors_ori(neigh_plot_dict, all_surface_curves, int_comp_dict, ang, pos, pair='all-B')
