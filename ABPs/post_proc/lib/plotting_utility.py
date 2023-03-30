@@ -166,16 +166,8 @@ class plotting_utility:
             # Middle of box of x=[-hx_box, hx_box] and y=[-hy_box, hy_box]
             com_tmp_posX_temp = 0
             com_tmp_posY_temp = 0
-        
-        # Middle of box of x=[0, lx_box] and y=[0, ly_box]
-        com_tmp_posX = 0
-        com_tmp_posY = 0
 
-        # Middle of box of x=[-hx_box, hx_box] and y=[-hy_box, hy_box]
-        com_tmp_posX_temp = 0
-        com_tmp_posY_temp = 0
-
-        new_pos = pos
+        new_pos = pos.copy()
         #shift reference frame positions such that CoM of largest cluster is at mid-point of simulation box
         new_pos[:,0]= pos[:,0]-com_tmp_posX_temp
         new_pos[:,1]= pos[:,1]-com_tmp_posY_temp

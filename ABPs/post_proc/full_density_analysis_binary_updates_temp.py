@@ -245,11 +245,11 @@ import time
 with hoomd.open(name=inFile, mode='rb') as t:
 
     dumps = int(t.__len__())
-    start = int(350/time_step)#205                                             # first frame to process
+    start = int(0/time_step)#205                                             # first frame to process
     
                                 # get number of timesteps dumped
     
-    end = 551#int(dumps/time_step)-1                                             # final frame to process
+    end = int(dumps/time_step)-1                                             # final frame to process
     snap = t[0]                                             # Take first snap for box
     first_tstep = snap.configuration.step                   # First time step
 
@@ -348,8 +348,10 @@ with hoomd.open(name=inFile, mode='rb') as t:
             partPhase=np.zeros(partNum)
             edgePhase=np.zeros(partNum)
             bulkPhase=np.zeros(partNum)
-            
             com_dict = plotting_utility_functs.com_view(pos, clp_all)
+
+            com_dict['com']['x']=0
+            com_dict['com']['y']=0
             
 
             #Bin system to calculate orientation and alignment that will be used in vector plots
@@ -1004,7 +1006,6 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     plotting_functs.plot_area_fraction(area_frac_dict, all_surface_curves, int_comp_dict, pos, type='B')
                     plotting_functs.plot_area_fraction(area_frac_dict, all_surface_curves, int_comp_dict, pos, type='dif')
                     plotting_functs.plot_particle_fraction(area_frac_dict, all_surface_curves, int_comp_dict, pos, type='B')
-                    stop
                     plotting_functs.plot_all_density(area_frac_dict, all_surface_curves, int_comp_dict)
                     plotting_functs.plot_type_A_density(area_frac_dict, all_surface_curves, int_comp_dict)
                     plotting_functs.plot_type_B_density(area_frac_dict, all_surface_curves, int_comp_dict)
@@ -1072,11 +1073,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, eps, typ, pos, ang)
                     
                     cluster_velocity_dict = particle_prop_functs.cluster_velocity(prev_pos, dt_step)
-                    print(cluster_velocity_dict)
 
-                    stop
-
-
+                    data_output_functs.write_to_txt(cluster_velocity_dict, dataPath + 'cluster_velocity_' + outfile + '.txt')
 
             elif measurement_method == 'centrosymmetry':
 
