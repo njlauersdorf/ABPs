@@ -245,11 +245,11 @@ import time
 with hoomd.open(name=inFile, mode='rb') as t:
 
     dumps = int(t.__len__())
-    start = int(0/time_step)#205                                             # first frame to process
+    start = int(800/time_step)#205                                             # first frame to process
     
                                 # get number of timesteps dumped
     
-    end = int(dumps/time_step)-1                                             # final frame to process
+    end = 801#int(dumps/time_step)-1                                             # final frame to process
     snap = t[0]                                             # Take first snap for box
     first_tstep = snap.configuration.step                   # First time step
 
@@ -912,6 +912,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                 if plot == 'y':
                     plotting_functs.plot_phases(pos, part_id_dict, all_surface_curves, int_comp_dict, phase_dict)
+                    stop
             elif measurement_method== 'bubble_interface_pressure':
 
                 lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
