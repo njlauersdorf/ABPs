@@ -380,7 +380,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
             com_dict = plotting_utility_functs.com_view(pos, clp_all)
 
-            #pos = com_dict['pos']
+            pos = com_dict['pos']
 
             #Bin system to calculate orientation and alignment that will be used in vector plots
             NBins_x = utility_functs.getNBins(lx_box, bin_width)
