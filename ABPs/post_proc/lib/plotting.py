@@ -5574,7 +5574,8 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
             mono_activity=self.peA
             mono_type = 2
             mono=0
-            fastCol = '#081d58'
+            #fastCol = '#081d58'
+            slowCol = '#e31a1c'
         else:
             mono=0
 
