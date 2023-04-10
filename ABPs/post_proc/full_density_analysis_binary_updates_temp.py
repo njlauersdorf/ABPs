@@ -245,11 +245,11 @@ import time
 with hoomd.open(name=inFile, mode='rb') as t:
 
     dumps = int(t.__len__())
-    start = int(800/time_step)#205                                             # first frame to process
+    start = int(0/time_step)#205                                             # first frame to process
     
                                 # get number of timesteps dumped
     
-    end = 801#int(dumps/time_step)-1                                             # final frame to process
+    end = int(dumps/time_step)-1                                             # final frame to process
     snap = t[0]                                             # Take first snap for box
     first_tstep = snap.configuration.step                   # First time step
 
@@ -1046,9 +1046,10 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                 radial_df_dict = lattice_structure_functs.radial_df()
 
-                structure_factor_dict = lattice_structure_functs.structure_factor(radial_df_dict, part_count_dict)
+                compress_dict, structure_factor_dict = lattice_structure_functs.structure_factor(radial_df_dict, part_count_dict)
 
-                stop
+                data_output_functs.write_to_txt(compress_dict, dataPath + 'compressibility2_' + outfile + '.txt')
+
             elif measurement_method == 'int_press':
                 stress_and_pressure_functs = stress_and_pressure.stress_and_pressure(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
                 lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)

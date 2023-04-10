@@ -167,12 +167,12 @@ class data_output:
                         if type(data[i])==int:
                             f.write('{0:.0f}'.format(data[i]).center(20) + '\n')
                         else:
-                            f.write('{0:.6f}'.format(data[i]).center(20) + '\n')
+                            f.write('{0:.9f}'.format(data[i]).center(20) + '\n')
                     else:
                         if type(data[i])==int:
                             f.write('{0:.0f}'.format(data[i]).center(20) + ' ')
                         else:
-                            f.write('{0:.6f}'.format(data[i]).center(20) + ' ')
+                            f.write('{0:.9f}'.format(data[i]).center(20) + ' ')
 
 
         else:
@@ -190,12 +190,12 @@ class data_output:
                             if type(data[i])==int:
                                 f.write('{0:.0f}'.format(data[i]).center(20) + '\n')
                             else:
-                                f.write('{0:.6f}'.format(data[i]).center(20) + '\n')
+                                f.write('{0:.9f}'.format(data[i]).center(20) + '\n')
                         else:
                             if type(data[i])==int:
                                 f.write('{0:.0f}'.format(data[i]).center(20) + ' ')
                             else:
-                                f.write('{0:.6f}'.format(data[i]).center(20) + ' ')
+                                f.write('{0:.9f}'.format(data[i]).center(20) + ' ')
             else:
                 raise ValueError('System has already been run. Delete previous save file if you wish to proceed.')
     def write_to_txt(self, input_dict, outPath):
@@ -248,28 +248,28 @@ class data_output:
                     for i in range(0, len(data)):
                         if i == len(data)-1:
                             if type(data[i])==list:
-                                f.write('{0:.6f}'.format(data[i][arr_ind]).center(20) + '\n')
+                                f.write('{0:.9f}'.format(data[i][arr_ind]).center(20) + '\n')
                                 arr_ind += 1
                             elif (type(data[i])==int) | (type(data[i])==np.uint32):
                                 f.write('{0:.0f}'.format(data[i]).center(20) + '\n')
                                 arr_ind += 1
                             elif (type(data[i])==float) | (type(data[i])==np.float64) | (type(data[i])==np.float32):
-                                f.write('{0:.6f}'.format(data[i]).center(20) + '\n')
+                                f.write('{0:.9f}'.format(data[i]).center(20) + '\n')
                                 arr_ind += 1
                             elif type(data[i])==str:
                                 f.write('{}'.format(data[i]).center(20) + '\n')
                                 arr_ind += 1
                             else:
-                                f.write('{0:.6f}'.format(data[i][arr_ind]).center(20) + '\n')
+                                f.write('{0:.9f}'.format(data[i][arr_ind]).center(20) + '\n')
                                 arr_ind += 1
 
                         else:
                             if type(data[i])==list:
-                                f.write('{0:.6f}'.format(data[i][arr_ind]).center(20) + ' ')
+                                f.write('{0:.9f}'.format(data[i][arr_ind]).center(20) + ' ')
                             elif (type(data[i])==int) | (type(data[i])==np.uint32):
                                 f.write('{0:.0f}'.format(data[i]).center(20) + ' ')
                             elif (type(data[i])==float) | (type(data[i])==np.float64) | (type(data[i])==np.float32):
-                                f.write('{0:.6f}'.format(data[i]).center(20) + ' ')
+                                f.write('{0:.9f}'.format(data[i]).center(20) + ' ')
                             elif type(data[i])==str:
                                 f.write('{}'.format(data[i]).center(20) + ' ')
                             else:
@@ -294,32 +294,32 @@ class data_output:
                         if i == len(data)-1:
                             
                             if type(data[i])==list:
-                                f.write('{0:.6f}'.format(data[i][arr_ind]).center(20) + '\n')
+                                f.write('{0:.9f}'.format(data[i][arr_ind]).center(20) + '\n')
                                 arr_ind += 1
                             elif (type(data[i])==int) | (type(data[i])==np.uint32):
                                 f.write('{0:.0f}'.format(data[i]).center(20) + '\n')
                                 arr_ind += 1
                             elif (type(data[i])==float) | (type(data[i])==np.float64) | (type(data[i])==np.float32):
-                                f.write('{0:.6f}'.format(data[i]).center(20) + '\n')
+                                f.write('{0:.9f}'.format(data[i]).center(20) + '\n')
                                 arr_ind += 1
                             elif type(data[i])==str:
                                 f.write('{}'.format(data[i]).center(20) + '\n')
                                 arr_ind += 1
                             else:
-                                f.write('{0:.6f}'.format(data[i][arr_ind]).center(20) + '\n')
+                                f.write('{0:.9f}'.format(data[i][arr_ind]).center(20) + '\n')
                                 arr_ind += 1
 
                         else:
                             if type(data[i])==list:
-                                f.write('{0:.6f}'.format(data[i][arr_ind]).center(20) + ' ')
+                                f.write('{0:.9f}'.format(data[i][arr_ind]).center(20) + ' ')
                             elif (type(data[i])==int) | (type(data[i])==np.uint32):
                                 f.write('{0:.0f}'.format(data[i]).center(20) + ' ')
                             elif (type(data[i])==float) | (type(data[i])==np.float64) | (type(data[i])==np.float32):
-                                f.write('{0:.6f}'.format(data[i]).center(20) + ' ')
+                                f.write('{0:.9f}'.format(data[i]).center(20) + ' ')
                             elif type(data[i])==str:
                                 f.write('{}'.format(data[i]).center(20) + ' ')
                             else:
-                                f.write('{0:.6f}'.format(data[i][arr_ind]).center(20) + ' ')
+                                f.write('{0:.9f}'.format(data[i][arr_ind]).center(20) + ' ')
 
     def write_to_txt2(self, input_dict, outPath):
 

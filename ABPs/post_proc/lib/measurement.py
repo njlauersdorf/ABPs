@@ -635,6 +635,8 @@ class measurement:
         g_r_AB_bulk = rad_df_dict['A-B']
         #g_r_BA_bulk = rad_df_dict['B-A']
         g_r_BB_bulk = rad_df_dict['B-B']
+        g_r_allA_bulk = rad_df_dict['all-A']
+        g_r_allB_bulk = rad_df_dict['all-B']
 
         partial_ssf_AA = (num_dens_mean_dict['A']/num_dens_mean_dict['all'])+num_dens_mean_dict['all']*(num_dens_mean_dict['A']/num_dens_mean_dict['all'])*(num_dens_mean_dict['A']/num_dens_mean_dict['all'])*np.fft.fft(np.array(g_r_AA_bulk) - 1.0)
         partial_ssf_AB = num_dens_mean_dict['all']*(num_dens_mean_dict['B']/num_dens_mean_dict['all'])*(num_dens_mean_dict['A']/num_dens_mean_dict['all'])*np.fft.fft(np.array(g_r_AB_bulk) - 1.0)
@@ -681,66 +683,23 @@ class measurement:
 
             partial_ssf_allall_arr2 = np.append(partial_ssf_allall_arr2, partial_ssf_allall2)
         
-        compressibility_allall = (1 + num_dens_mean_dict['all'] * np.trapz((np.array(g_r_allall_bulk)-1), x=r_arr)) / (num_dens_mean_dict['all'] * (self.peA*(1/3)/2))
-        compressibility_AA = (1 + num_dens_mean_dict['A'] * np.trapz((np.array(g_r_AA_bulk)-1), x=r_arr)) / (num_dens_mean_dict['A'] * (self.peA*(1/3)/2))
-        compressibility_AB = (1 + num_dens_mean_dict['A'] * np.trapz((np.array(g_r_AB_bulk)-1), x=r_arr)) / (num_dens_mean_dict['A'] * (self.peA*(1/3)/2))
-        compressibility_BA = (1 + num_dens_mean_dict['B'] * np.trapz((np.array(g_r_AB_bulk)-1), x=r_arr)) / (num_dens_mean_dict['B'] * (self.peB*(1/3)/2))
-        compressibility_BB = (1 + num_dens_mean_dict['B'] * np.trapz((np.array(g_r_BB_bulk)-1), x=r_arr)) / (num_dens_mean_dict['B'] * (self.peB*(1/3)/2))
+        compressibility_allall = (1 + num_dens_mean_dict['all'] * np.trapz((np.array(g_r_allall_bulk)-1), x=r_arr)) / (num_dens_mean_dict['all'] * ((self.peA**2)/6))
+        #compressibility_AA = (1 + num_dens_mean_dict['A'] * np.trapz((np.array(g_r_AA_bulk)-1), x=r_arr)) / (num_dens_mean_dict['A'] * ((self.peA**2)/6))
+        #compressibility_AB = (1 + num_dens_mean_dict['A'] * np.trapz((np.array(g_r_AB_bulk)-1), x=r_arr)) / (num_dens_mean_dict['B'] * ((self.peB**2)/6))
+        #compressibility_BA = (1 + num_dens_mean_dict['B'] * np.trapz((np.array(g_r_AB_bulk)-1), x=r_arr)) / (num_dens_mean_dict['A'] * ((self.peA**2)/6))
+        #compressibility_BB = (1 + num_dens_mean_dict['B'] * np.trapz((np.array(g_r_BB_bulk)-1), x=r_arr)) / (num_dens_mean_dict['B'] * ((self.peB**2)/6))
+        compressibility_allA = (1 + num_dens_mean_dict['all'] * np.trapz((np.array(g_r_allA_bulk)-1), x=r_arr)) / (num_dens_mean_dict['A'] * ((self.peA**2)/6))
+        compressibility_allB = (1 + num_dens_mean_dict['all'] * np.trapz((np.array(g_r_allB_bulk)-1), x=r_arr)) / (num_dens_mean_dict['B'] * ((self.peB**2)/6))
 
         #partial_ssf_allall_arr / (num_dens_mean_dict['all'] * (self.peA*(1/3)/2))
         partial_ssf_allall_num = partial_ssf_AA_arr * num_dens_mean_dict['A']**2 + partial_ssf_AB_arr * num_dens_mean_dict['A']* num_dens_mean_dict['B'] + partial_ssf_BA_arr * num_dens_mean_dict['A']* num_dens_mean_dict['B'] + partial_ssf_BB_arr * num_dens_mean_dict['B']* num_dens_mean_dict['B']
         partial_ssf_allall_denom = num_dens_mean_dict['A']**2 + num_dens_mean_dict['A']* num_dens_mean_dict['B'] + num_dens_mean_dict['A']* num_dens_mean_dict['B'] + num_dens_mean_dict['B']* num_dens_mean_dict['B']
         partial_ssf_allall_arr3 = partial_ssf_allall_num / partial_ssf_allall_denom
-        plt.plot(k_arr[1:], partial_ssf_allall_arr, label='old')
-        plt.plot(k_arr[1:], partial_ssf_allall_arr3, label='new')
-        plt.plot(k_arr[1:], np.ones(len(k_arr[1:])), color='black', linestyle='dashed')
-        plt.legend()
-        plt.show()
 
-        plt.plot(k_arr[1:], partial_ssf_AA_arr,label='A-A')
-        plt.plot(k_arr[1:], partial_ssf_AB_arr, label='A-B')
-        plt.plot(k_arr[1:], partial_ssf_BA_arr, label='B-A')
-        plt.plot(k_arr[1:], partial_ssf_BB_arr, label='B-B')
-        plt.plot(k_arr[1:], np.ones(len(k_arr[1:])), color='black', linestyle='dashed')
-        plt.legend()
-        plt.show()
-
-        print(compressibility_allall)
-        print(compressibility_AA)
-        print(compressibility_AB)
-        print(compressibility_BA)
-        print(compressibility_BB)
-        print(compressibility_AA+compressibility_AB+compressibility_BA+compressibility_BB)
-        stop
-
-        plt.plot(k_arr[1:], partial_ssf_allall_arr2)
+        compress_dict = {'all': allall_compressibility, 'A': allA_compressibility, 'B': allB_compressibility}
+        structure_factor_dict = {'all-all': partial_ssf_allall_arr, 'A-A': partial_ssf_AA_arr, 'A-B': partial_ssf_AB_arr, 'B-A': partial_ssf_BA_arr, 'B-B': partial_ssf_BB_arr}
         
-        y_arr = np.ones(len(k_arr))
-        #plt.plot(k_arr, y_arr, color='black', linewidth=2.0, linestyle='dashed')
-        #plt.ylim(-10, 10)
-        plt.show()
-
-        plt.plot(r_arr, np.array(g_r_example))
-        plt.show()
-
-        stop
-        ssf_all = 1.0+num_dens_mean_dict['all']*np.fft.fft(np.array(g_r_allall_bulk))
-
-        print(len(ssf_all))
-        x_arr = np.linspace(0, len(ssf_all), num=len(ssf_all))
-        plt.plot(x_arr, partial_ssf_AA)
-        plt.plot(x_arr, partial_ssf_AB)
-        plt.plot(x_arr, partial_ssf_BB)
-        plt.show()
-        stop
-        #ideal_swim_press = 
-
-        allall_compressibility = ((1/num_dens_mean_dict['all'])*(1 + num_dens_mean_dict['all'] * np.trapz(np.array(g_r_allall_bulk) - 1, x=np.array(r_arr))))
-        allA_compressibility = ((1/num_dens_mean_dict['all'])*(1 + num_dens_mean_dict['all'] * np.trapz(np.array(g_r_allA_bulk) - 1, x=np.array(r_arr))))
-        allB_compressibility = ((1/num_dens_mean_dict['all'])*(1 + num_dens_mean_dict['all'] * np.trapz(np.array(g_r_allB_bulk) - 1, x=np.array(r_arr))))
-
-        return {'compress': {'all': allall_compressibility, 'A': allA_compressibility, 'B': allB_compressibility}}
-
+        return compress_dict, structure_factor_dict
     def compressibility(self, rad_df_dict):
 
         num_dens_mean_dict = self.num_dens_mean(self.area_frac_dict)
@@ -748,13 +707,14 @@ class measurement:
 
         r_arr = rad_df_dict['r']
         g_r_allall_bulk = rad_df_dict['all-all']
-        #ideal_swim_press = 
+        g_r_allA_bulk = rad_df_dict['all-A']
+        g_r_allB_bulk = rad_df_dict['all-B']
 
-        allall_compressibility = ((1/num_dens_mean_dict['all'])*(1 + num_dens_mean_dict['all'] * np.trapz(np.array(g_r_allall_bulk) - 1, x=np.array(r_arr))))
-        allA_compressibility = ((1/num_dens_mean_dict['all'])*(1 + num_dens_mean_dict['all'] * np.trapz(np.array(g_r_allA_bulk) - 1, x=np.array(r_arr))))
-        allB_compressibility = ((1/num_dens_mean_dict['all'])*(1 + num_dens_mean_dict['all'] * np.trapz(np.array(g_r_allB_bulk) - 1, x=np.array(r_arr))))
+        compressibility_allall = (1 + num_dens_mean_dict['all'] * np.trapz((np.array(g_r_allall_bulk)-1), x=r_arr)) / (num_dens_mean_dict['all'] * ((self.peA**2)/6))
+        compressibility_allA = (1 + num_dens_mean_dict['all'] * np.trapz((np.array(g_r_allA_bulk)-1), x=r_arr)) / (num_dens_mean_dict['A'] * ((self.peA**2)/6))
+        compressibility_allB = (1 + num_dens_mean_dict['all'] * np.trapz((np.array(g_r_allB_bulk)-1), x=r_arr)) / (num_dens_mean_dict['B'] * ((self.peB**2)/6))
 
-        return {'compress': {'all': allall_compressibility, 'A': allA_compressibility, 'B': allB_compressibility}}
+        return {'compress': {'all-all': compressibility_allall, 'all-A': compressibility_allA, 'all-B': compressibility_allB}}
 
     def angular_df(self):
         '''
