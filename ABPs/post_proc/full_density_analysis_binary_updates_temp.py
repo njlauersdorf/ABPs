@@ -240,6 +240,8 @@ partPhase_time_arr = np.array([])
 clust_size_arr = np.array([])
 
 vertical_shift = 0
+avg_radial_df_dict = {}
+sum_num = 0
 dify_long = 0
 import time
 with hoomd.open(name=inFile, mode='rb') as t:
@@ -1118,14 +1120,28 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
 
                 radial_df_dict = lattice_structure_functs.radial_df()
-
+               
+                for key, value in radial_df_dict.items():
+                    try:
+                        if key != 'r':
+                            avg_radial_df_dict[key] = np.array(avg_radial_df_dict[key]) + np.array(value)
+                        else:
+                            avg_radial_df_dict[key] = value
+                    except:
+                        avg_radial_df_dict[key] = value
+                    
+                sum_num += 1
+                
+                
+                #    radial_df_dict_avg 
+                #except: radial_df_dict_avg = radial_df_dict
                 data_output_functs.write_to_txt(radial_df_dict, dataPath + 'radial_df_' + outfile + '.txt')
 
                 if plot == 'y':
 
                     plotting_functs.plot_general_rdf(radial_df_dict)
                     plotting_functs.plot_all_rdfs(radial_df_dict)
-                stop
+
             elif measurement_method == 'angular_df':
                 # Done but inaccurate in planar system
                 lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
@@ -1531,4 +1547,24 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                 prev_pos = pos.copy()
                 prev_ang = ang.copy()
-    
+    elif measurement_method == 'radial_df':
+        # Done but inaccurate in planar system
+        
+        for key, value in radial_df_dict.items():
+            if key != 'r':
+                avg_radial_df_dict[key] = (np.array(avg_radial_df_dict[key])/sum_num).tolist()
+                    
+        plt.plot(avg_radial_df_dict['r'], avg_radial_df_dict['all-all'])
+        plt.show()
+
+        lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
+
+        avg_compress_dict = lattice_structure_functs.compressibility(avg_radial_df_dict)
+
+        data_output_functs.write_to_txt(avg_compress_dict, dataPath + 'avg_compressibility_' + outfile + '.txt')
+
+        
+        
+        #    radial_df_dict_avg 
+        #except: radial_df_dict_avg = radial_df_dict
+        data_output_functs.write_to_txt(avg_radial_df_dict, dataPath + 'avg_radial_df_' + outfile + '.txt')

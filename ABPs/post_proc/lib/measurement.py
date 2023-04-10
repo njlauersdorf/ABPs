@@ -700,9 +700,13 @@ class measurement:
         structure_factor_dict = {'all-all': partial_ssf_allall_arr, 'A-A': partial_ssf_AA_arr, 'A-B': partial_ssf_AB_arr, 'B-A': partial_ssf_BA_arr, 'B-B': partial_ssf_BB_arr}
         
         return compress_dict, structure_factor_dict
-    def compressibility(self, rad_df_dict):
-
-        num_dens_mean_dict = self.num_dens_mean(self.area_frac_dict)
+    def compressibility(self, rad_df_dict, avg_num_dens_dict = {}):
+        print(len(avg_num_dens_dict))
+        stop
+        if avg_num_dens==999:
+            num_dens_mean_dict = self.num_dens_mean(self.area_frac_dict)
+        else:
+            num_dens_mean_dict = avg_num_dens_dict
         
 
         r_arr = rad_df_dict['r']
