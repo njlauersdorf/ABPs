@@ -1563,8 +1563,4 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
         data_output_functs.write_to_txt(avg_compress_dict, dataPath + 'avg_compressibility_' + outfile + '.txt')
 
-        
-        
-        #    radial_df_dict_avg 
-        #except: radial_df_dict_avg = radial_df_dict
         data_output_functs.write_to_txt(avg_radial_df_dict, dataPath + 'avg_radial_df_' + outfile + '.txt')
