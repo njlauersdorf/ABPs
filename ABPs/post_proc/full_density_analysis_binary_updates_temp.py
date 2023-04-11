@@ -1050,7 +1050,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                 radial_df_dict = lattice_structure_functs.radial_df()
 
-                compress_dict, structure_factor_dict = lattice_structure_functs.structure_factor(radial_df_dict, part_count_dict)
+                compress_dict, structure_factor_dict, k0_dict = lattice_structure_functs.structure_factor(radial_df_dict, part_count_dict)
+
+                data_output_functs.write_to_txt(k0_dict, dataPath + 'structure_factor_' + outfile + '.txt')
 
                 data_output_functs.write_to_txt(compress_dict, dataPath + 'compressibility2_' + outfile + '.txt')
 

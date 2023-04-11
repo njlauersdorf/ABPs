@@ -511,6 +511,9 @@ class measurement:
         #Checks for 'A' type neighbors around type 'B' particles within bulk
         AB_bulk_nlist = system_A_bulk.query(self.f_box.wrap(pos_B_bulk), query_args).toNeighborList()
 
+        #Checks for 'B' type neighbors around type 'A' particles within bulk
+        BA_bulk_nlist = system_B_bulk.query(self.f_box.wrap(pos_A_bulk), query_args).toNeighborList()
+
         #Checks for 'B' type neighbors around type 'B' particles within bulk
         BB_bulk_nlist = system_B_bulk.query(self.f_box.wrap(pos_B_bulk), query_args).toNeighborList()
 
@@ -519,6 +522,9 @@ class measurement:
 
         # Calculate interparticle distance between type B reference particle and type A neighbor
         difr_AB_bulk = self.utility_functs.sep_dist_arr(pos_A_dense[AB_bulk_nlist.point_indices], pos_B_bulk[AB_bulk_nlist.query_point_indices])
+
+        # Calculate interparticle distance between type B reference particle and type A neighbor
+        difr_BA_bulk = self.utility_functs.sep_dist_arr(pos_B_dense[BA_bulk_nlist.point_indices], pos_A_bulk[BA_bulk_nlist.query_point_indices])
 
         # Calculate interparticle distance between type B reference particle and type B neighbor
         difr_BB_bulk = self.utility_functs.sep_dist_arr(pos_B_dense[BB_bulk_nlist.point_indices], pos_B_bulk[BB_bulk_nlist.query_point_indices])
@@ -538,6 +544,7 @@ class measurement:
         g_r_allB_bulk = []
         g_r_AA_bulk = []
         g_r_AB_bulk = []
+        g_r_BA_bulk = []
         g_r_BB_bulk = []
         r_arr = []
 
@@ -608,6 +615,19 @@ class measurement:
             # Save A-B RDF at respective distance range
             g_r_AB_bulk.append(rho_ab / rho_tot_ab)
 
+            # Locate A neighboring particles within given distance range from B reference particle
+            inds = np.where((difr_BA_bulk>=r[m]) & (difr_BA_bulk<r[m+1]))[0]
+
+            # Total number of B-A particle pairs divided by volume of radial slice
+            rho_ba = (len(inds) / (2*math.pi * r[m] * difr) )
+
+            # Total number of maximum possible B-A pairs divided by volume of the bulk phase
+            rho_tot_ba = len(pos_A_bulk) * (num_dens_mean_dict['B'])
+
+            # Save B-A RDF at respective distance range
+            g_r_BA_bulk.append(rho_ba / rho_tot_ba)
+
+
             # Locate B neighboring particles within given distance range from B reference particle
             inds = np.where((difr_BB_bulk>=r[m]) & (difr_BB_bulk<r[m+1]))[0]
 
@@ -623,7 +643,7 @@ class measurement:
 
 
         # Create output dictionary for plotting of RDF vs separation distance
-        rad_df_dict = {'r': r_arr, 'all-all': g_r_allall_bulk, 'all-A': g_r_allA_bulk, 'all-B': g_r_allB_bulk, 'A-A': g_r_AA_bulk, 'A-B': g_r_AB_bulk, 'B-B': g_r_BB_bulk}
+        rad_df_dict = {'r': r_arr, 'all-all': g_r_allall_bulk, 'all-A': g_r_allA_bulk, 'all-B': g_r_allB_bulk, 'A-A': g_r_AA_bulk, 'A-B': g_r_AB_bulk, 'B-A': g_r_BA_bulk, 'B-B': g_r_BB_bulk}
         return rad_df_dict
     def wasserstein_distance(self, rad_df_dict):
 
@@ -652,7 +672,7 @@ class measurement:
         g_r_allall_bulk = rad_df_dict['all-all']
         g_r_AA_bulk = rad_df_dict['A-A']
         g_r_AB_bulk = rad_df_dict['A-B']
-        #g_r_BA_bulk = rad_df_dict['B-A']
+        g_r_BA_bulk = rad_df_dict['B-A']
         g_r_BB_bulk = rad_df_dict['B-B']
         g_r_allA_bulk = rad_df_dict['all-A']
         g_r_allB_bulk = rad_df_dict['all-B']
@@ -668,25 +688,20 @@ class measurement:
         partial_ssf_BB_arr = np.array([])
 
         #np.where(r_arr>=1)
-        k_arr = np.linspace(0, 40, num=100000)
+        k_arr = np.linspace(0, 10, num=1000)
         
 
         g_r_example = np.ones(len(r_arr))
         test_id = np.where(np.array(r_arr)<1)[0]
         g_r_example[test_id]=0.0
         difr = r_arr[1]-r_arr[0]
-        partial_ssf_allall_arr2 = np.array([])
         #print(part_count_dict)
         #stop
         for i in range(1, len(k_arr)):
-            partial_ssf_allall2 = 1
-            for j in range(0, len(r_arr)):
-                partial_ssf_allall2 += 4 * np.pi * num_dens_mean_dict['all'] * r_arr[j]**2 * (np.array(g_r_allall_bulk[j]) - 1) * ( np.sin(k_arr[i] * r_arr[j])/(k_arr[i] * r_arr[j]) ) * difr
-
             partial_ssf_allall = np.trapz(np.array(r_arr) * (np.array(g_r_allall_bulk)-1) * np.sin(k_arr[i] * np.array(r_arr))/(k_arr[i]), x=r_arr)
             partial_ssf_AA = np.trapz(np.array(r_arr) * (np.array(g_r_AA_bulk)-1) * np.sin(k_arr[i] * np.array(r_arr))/(k_arr[i]), x=r_arr)
             partial_ssf_AB = np.trapz(np.array(r_arr) * (np.array(g_r_AB_bulk)-1) * np.sin(k_arr[i] * np.array(r_arr))/(k_arr[i]), x=r_arr)
-            #partial_ssf_BA = np.trapz(np.array(r_arr) * (np.array(g_r_BA_bulk)-1) * np.sin(k_arr[i] * np.array(r_arr))/(k_arr[i]), x=r_arr)
+            partial_ssf_BA = np.trapz(np.array(r_arr) * (np.array(g_r_BA_bulk)-1) * np.sin(k_arr[i] * np.array(r_arr))/(k_arr[i]), x=r_arr)
             partial_ssf_BB = np.trapz(np.array(r_arr) * (np.array(g_r_BB_bulk)-1) * np.sin(k_arr[i] * np.array(r_arr))/(k_arr[i]), x=r_arr)
 
             #for j in range(1, len(r_arr)):
@@ -695,12 +710,10 @@ class measurement:
             #    partial_ssf_allall += r_arr[j] * ((g_r_allall_bulk[increment]) - 1) * np.sin(r_arr[i] * r_arr[j])/r_arr[i]
             #partial_ssf_allall_arr=np.append( partial_ssf_allall_arr, 1 + 4 * np.pi * num_dens_mean_dict['all'] * partial_ssf_allall * dr / r_arr[i])
             partial_ssf_allall_arr=np.append( partial_ssf_allall_arr, 1 + 4 * np.pi * num_dens_mean_dict['all'] * partial_ssf_allall)
-            partial_ssf_AA_arr=np.append( partial_ssf_AA_arr, 1 + 4 * np.pi * num_dens_mean_dict['A'] * partial_ssf_AA)
-            partial_ssf_AB_arr=np.append( partial_ssf_AB_arr, 1 + 4 * np.pi * num_dens_mean_dict['A'] * partial_ssf_AB)
-            partial_ssf_BA_arr=np.append( partial_ssf_BA_arr, 1 + 4 * np.pi * num_dens_mean_dict['B'] * partial_ssf_AB)
-            partial_ssf_BB_arr=np.append( partial_ssf_BB_arr, 1 + 4 * np.pi * num_dens_mean_dict['B'] * partial_ssf_BB)
-
-            partial_ssf_allall_arr2 = np.append(partial_ssf_allall_arr2, partial_ssf_allall2)
+            partial_ssf_AA_arr=np.append( partial_ssf_AA_arr, 1 + 4 * np.pi * num_dens_mean_dict['all'] * partial_ssf_AA)
+            partial_ssf_AB_arr=np.append( partial_ssf_AB_arr, 1 + 4 * np.pi * num_dens_mean_dict['all'] * partial_ssf_AB)
+            partial_ssf_BA_arr=np.append( partial_ssf_BA_arr, 1 + 4 * np.pi * num_dens_mean_dict['all'] * partial_ssf_AB)
+            partial_ssf_BB_arr=np.append( partial_ssf_BB_arr, 1 + 4 * np.pi * num_dens_mean_dict['all'] * partial_ssf_BB)
         
         compressibility_allall = (1 + num_dens_mean_dict['all'] * np.trapz((np.array(g_r_allall_bulk)-1), x=r_arr)) / (num_dens_mean_dict['all'] * ((self.peA**2)/6))
         #compressibility_AA = (1 + num_dens_mean_dict['A'] * np.trapz((np.array(g_r_AA_bulk)-1), x=r_arr)) / (num_dens_mean_dict['A'] * ((self.peA**2)/6))
@@ -710,15 +723,14 @@ class measurement:
         compressibility_allA = (1 + num_dens_mean_dict['all'] * np.trapz((np.array(g_r_allA_bulk)-1), x=r_arr)) / (num_dens_mean_dict['A'] * ((self.peA**2)/6))
         compressibility_allB = (1 + num_dens_mean_dict['all'] * np.trapz((np.array(g_r_allB_bulk)-1), x=r_arr)) / (num_dens_mean_dict['B'] * ((self.peB**2)/6))
 
+         
         #partial_ssf_allall_arr / (num_dens_mean_dict['all'] * (self.peA*(1/3)/2))
-        partial_ssf_allall_num = partial_ssf_AA_arr * num_dens_mean_dict['A']**2 + partial_ssf_AB_arr * num_dens_mean_dict['A']* num_dens_mean_dict['B'] + partial_ssf_BA_arr * num_dens_mean_dict['A']* num_dens_mean_dict['B'] + partial_ssf_BB_arr * num_dens_mean_dict['B']* num_dens_mean_dict['B']
-        partial_ssf_allall_denom = num_dens_mean_dict['A']**2 + num_dens_mean_dict['A']* num_dens_mean_dict['B'] + num_dens_mean_dict['A']* num_dens_mean_dict['B'] + num_dens_mean_dict['B']* num_dens_mean_dict['B']
-        partial_ssf_allall_arr3 = partial_ssf_allall_num / partial_ssf_allall_denom
+        partial_ssf_allall_num = (partial_ssf_AA_arr) * (num_dens_mean_dict['A']/num_dens_mean_dict['all'])**2 + (partial_ssf_AB_arr) * (num_dens_mean_dict['A']/num_dens_mean_dict['all'])* (num_dens_mean_dict['B']/num_dens_mean_dict['all']) + (partial_ssf_BA_arr) * (num_dens_mean_dict['A']/num_dens_mean_dict['all'])* (num_dens_mean_dict['B']/num_dens_mean_dict['all']) + (partial_ssf_BB_arr) * (num_dens_mean_dict['B']/num_dens_mean_dict['all'])**2
 
-        compress_dict = {'all': allall_compressibility, 'A': allA_compressibility, 'B': allB_compressibility}
-        structure_factor_dict = {'all-all': partial_ssf_allall_arr, 'A-A': partial_ssf_AA_arr, 'A-B': partial_ssf_AB_arr, 'B-A': partial_ssf_BA_arr, 'B-B': partial_ssf_BB_arr}
-        
-        return compress_dict, structure_factor_dict
+        compress_dict = {'all': compressibility_allall, 'A': compressibility_allA, 'B': compressibility_allB}
+        structure_factor_dict = {'k': k_arr[1:], 'all-all': partial_ssf_allall_arr, 'all-all2': partial_ssf_allall_num,'A-A': partial_ssf_AA_arr, 'A-B': partial_ssf_AB_arr, 'B-A': partial_ssf_BA_arr, 'B-B': partial_ssf_BB_arr}
+        k0_dict = {'all-all': partial_ssf_allall_arr[0], 'all-all2': partial_ssf_allall_num[0],'A-A': partial_ssf_AA_arr[0], 'A-B': partial_ssf_AB_arr[0], 'B-A': partial_ssf_BA_arr[0], 'B-B': partial_ssf_BB_arr[0]}
+        return compress_dict, structure_factor_dict, k0_dict
     def compressibility(self, rad_df_dict, avg_num_dens = 999):
 
         if avg_num_dens==999:
