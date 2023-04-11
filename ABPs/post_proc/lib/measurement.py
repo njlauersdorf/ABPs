@@ -7,9 +7,11 @@ from freud import box
 import freud
 import numpy as np
 import math
+import scipy
 from scipy.interpolate import interp1d
 from scipy import interpolate
 from scipy import ndimage
+
 
 import matplotlib
 
@@ -623,6 +625,23 @@ class measurement:
         # Create output dictionary for plotting of RDF vs separation distance
         rad_df_dict = {'r': r_arr, 'all-all': g_r_allall_bulk, 'all-A': g_r_allA_bulk, 'all-B': g_r_allB_bulk, 'A-A': g_r_AA_bulk, 'A-B': g_r_AB_bulk, 'B-B': g_r_BB_bulk}
         return rad_df_dict
+    def wasserstein_distance(self, rad_df_dict):
+
+        r_arr = rad_df_dict['r']
+        g_r_allall_bulk = rad_df_dict['all-all']
+        g_r_AA_bulk = rad_df_dict['A-A']
+        g_r_AB_bulk = rad_df_dict['A-B']
+        g_r_BB_bulk = rad_df_dict['B-B']
+        g_r_allA_bulk = rad_df_dict['all-A']
+        g_r_allB_bulk = rad_df_dict['all-B']
+
+        AA_BB_wasserstein = scipy.stats.wasserstein_distance(g_r_AA_bulk, g_r_BB_bulk)
+        AB_BB_wasserstein = scipy.stats.wasserstein_distance(g_r_AB_bulk, g_r_BB_bulk)
+        allA_allB_wasserstein = scipy.stats.wasserstein_distance(g_r_allA_bulk, g_r_allB_bulk)
+
+        wasserstein_dict = {'AA-BB': AA_BB_wasserstein, 'AB-BB': AB_BB_wasserstein, 'allA-allB': allA_allB_wasserstein}
+
+        return wasserstein_dict
 
     def structure_factor(self, rad_df_dict, part_count_dict):
 
@@ -700,13 +719,15 @@ class measurement:
         structure_factor_dict = {'all-all': partial_ssf_allall_arr, 'A-A': partial_ssf_AA_arr, 'A-B': partial_ssf_AB_arr, 'B-A': partial_ssf_BA_arr, 'B-B': partial_ssf_BB_arr}
         
         return compress_dict, structure_factor_dict
-    def compressibility(self, rad_df_dict, avg_num_dens_dict = {}):
-        print(len(avg_num_dens_dict))
-        stop
+    def compressibility(self, rad_df_dict, avg_num_dens = 999):
+
         if avg_num_dens==999:
             num_dens_mean_dict = self.num_dens_mean(self.area_frac_dict)
         else:
-            num_dens_mean_dict = avg_num_dens_dict
+            num_dens_mean_dict = {}
+            num_dens_mean_dict['all'] = avg_num_dens['all']/avg_num_dens['count']
+            num_dens_mean_dict['A'] = avg_num_dens['A']/avg_num_dens['count']
+            num_dens_mean_dict['B'] = avg_num_dens['B']/avg_num_dens['count']
         
 
         r_arr = rad_df_dict['r']
@@ -737,6 +758,7 @@ class measurement:
         all reference particles with A neighbors).
         '''
         # Calculate bulk average number density
+        
         num_dens_mean_dict = self.num_dens_mean(self.area_frac_dict)
 
         # Count total number of bins in each phase

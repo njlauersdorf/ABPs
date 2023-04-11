@@ -69,6 +69,7 @@ import matplotlib.patches as patches
 import matplotlib.ticker as tick
 
 from scipy.optimize import curve_fit
+import scipy
 
 sys.path.append(os.path.join(os.path.dirname(__file__), 'lib'))
 #from symfit import parameters, variables, sin, cos, Fit
@@ -238,6 +239,7 @@ picPath = outPath + '_pic_files/'
 partPhase_time = np.array([])
 partPhase_time_arr = np.array([])
 clust_size_arr = np.array([])
+avg_num_dens_dict = {}
 
 vertical_shift = 0
 avg_radial_df_dict = {}
@@ -1117,9 +1119,22 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
             elif measurement_method == 'radial_df':
                 # Done but inaccurate in planar system
+                if len(avg_num_dens_dict)==0:
+                    avg_num_dens_dict['all'] = (part_count_dict['bulk']['all']/(bin_count_dict['bin']['bulk'] * (sizeBin_x * sizeBin_y)))
+                    avg_num_dens_dict['A'] = (part_count_dict['bulk']['A']/(bin_count_dict['bin']['bulk'] * (sizeBin_x * sizeBin_y)))
+                    avg_num_dens_dict['B'] = (part_count_dict['bulk']['B']/(bin_count_dict['bin']['bulk'] * (sizeBin_x * sizeBin_y)))
+                    avg_num_dens_dict['count'] = 1
+                else:
+                    avg_num_dens_dict['all'] = (avg_num_dens_dict['all'] + part_count_dict['bulk']['all']/(bin_count_dict['bin']['bulk'] * (sizeBin_x * sizeBin_y)))
+                    avg_num_dens_dict['A'] = (avg_num_dens_dict['A'] + part_count_dict['bulk']['A']/(bin_count_dict['bin']['bulk'] * (sizeBin_x * sizeBin_y)))
+                    avg_num_dens_dict['B'] = (avg_num_dens_dict['B'] + part_count_dict['bulk']['B']/(bin_count_dict['bin']['bulk'] * (sizeBin_x * sizeBin_y)))
+                    avg_num_dens_dict['count'] = avg_num_dens_dict['count'] + 1
+
                 lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
 
                 radial_df_dict = lattice_structure_functs.radial_df()
+
+
                
                 for key, value in radial_df_dict.items():
                     try:
@@ -1136,6 +1151,10 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 #    radial_df_dict_avg 
                 #except: radial_df_dict_avg = radial_df_dict
                 data_output_functs.write_to_txt(radial_df_dict, dataPath + 'radial_df_' + outfile + '.txt')
+
+                wasserstein_dict = lattice_structure_functs.wasserstein_distance(radial_df_dict)
+
+                data_output_functs.write_to_txt(wasserstein_dict, dataPath + 'wasserstein_' + outfile + '.txt')
 
                 if plot == 'y':
 
@@ -1553,14 +1572,15 @@ with hoomd.open(name=inFile, mode='rb') as t:
         for key, value in radial_df_dict.items():
             if key != 'r':
                 avg_radial_df_dict[key] = (np.array(avg_radial_df_dict[key])/sum_num).tolist()
-                    
-        plt.plot(avg_radial_df_dict['r'], avg_radial_df_dict['all-all'])
-        plt.show()
 
         lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
 
-        avg_compress_dict = lattice_structure_functs.compressibility(avg_radial_df_dict)
+        avg_compress_dict = lattice_structure_functs.compressibility(avg_radial_df_dict, avg_num_dens = avg_num_dens_dict)
+
+        avg_wasserstein_dict = lattice_structure_functs.wasserstein_distance(avg_radial_df_dict)
 
         data_output_functs.write_to_txt(avg_compress_dict, dataPath + 'avg_compressibility_' + outfile + '.txt')
+
+        data_output_functs.write_to_txt(avg_wasserstein_dict, dataPath + 'avg_wasserstein_' + outfile + '.txt')
 
         data_output_functs.write_to_txt(avg_radial_df_dict, dataPath + 'avg_radial_df_' + outfile + '.txt')
