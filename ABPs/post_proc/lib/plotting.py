@@ -5816,6 +5816,327 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         plt.tight_layout()
         plt.savefig(self.outPath + 'part_activity_' + self.outFile + ".png", dpi=300, transparent=False)
         plt.close()  
+    
+    def plot_part_activity_large_text(self, pos, ang, sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None):
+
+        typ0ind = np.where(self.typ == 0)[0]
+        typ1ind = np.where(self.typ == 1)[0]
+
+        # If box is rectangular with long dimension of x-axis
+        if self.lx_box > self.ly_box:
+
+            # Estimated area of dense phase
+            area_dense = (1.0 * self.partNum * (np.pi/4) / self.phiCP)
+
+            # Mid point of dense phase across longest box dimension (x)
+            dense_x_mid = self.hx_box
+
+            # estimated shortest dimension length of dense phase (y)
+            dense_x_width = dense_x_width = np.amax(pos[typ0ind,0]) * 1.5 #(area_dense / self.ly_box)
+            dense_x_width = 42.23 * 1.5
+            # Set maximum dimension length (x) of simulation box to be 12 inches (plus 1 inch color bar)
+            scaling = 13.0
+
+            # X and Y-dimension lengths (in inches)
+            x_dim = int(scaling)
+            y_dim = int(scaling/ (2*dense_x_width / self.ly_box))
+            y_dim = y_dim * 3
+
+        # If box is rectangular with long dimension of y-axis
+        elif self.lx_box < self.ly_box:
+
+            # Estimated area of dense phase
+            area_dense = (0.8 * self.partNum * (np.pi/4) / self.phiCP)
+
+            # Mid point of dense phase across longest box dimension (y)
+            mid_point = np.mean(pos[:,1]+self.hy_box)
+
+            # estimated shorted dimension length of dense phase (x)
+            dense_x_width = (area_dense / self.lx_box)
+
+            # Set maximum dimension length (y) of simulation box to be 13 inches
+            scaling = 13.0
+
+            # X and Y-dimension lengths (in inches)
+            x_dim = int((scaling/(dense_x_width / self.lx_box)) + 1.0)
+            y_dim = int(scaling)
+
+        # If box is square
+        else:
+
+            # Minimum dimension length (in inches)
+            scaling =7.0
+
+            # X and Y-dimension lengths (in inches)
+            x_dim = int(scaling + 1.0)
+            y_dim = int(scaling)
+
+        #Set plot colors
+        fastCol = '#e31a1c'
+        slowCol = '#081d58'
+
+        
+
+        if (len(typ1ind)==0):
+            mono=1
+            mono_activity=self.peA
+            mono_type = 0
+        elif (len(typ0ind)==0):
+            mono = 1
+            mono_activity=self.peB
+            mono_type = 1
+        elif self.peA==self.peB:
+            mono=1
+            mono_activity=self.peA
+            mono_type = 2
+            mono=0
+            #fastCol = '#081d58'
+            #slowCol = '#e31a1c'
+        else:
+            mono=0
+
+        # Generate figure of dimensions proportional to simulation box size (with added x-length for color bar)
+        fig = plt.figure(figsize=(x_dim,y_dim))
+        ax = fig.add_subplot(111)
+        #all but mono
+        sz = 0.8
+        """
+        pos0_x_arr = np.append(pos[typ0ind,0]+self.hx_box, pos[typ0ind,0]+self.hx_box)
+        pos0_x_arr = np.append(pos0_x_arr, pos[typ0ind,0]+self.hx_box)
+
+        pos0_y_arr = np.append(pos[typ0ind,1]+self.hy_box, pos[typ0ind,1]+self.hy_box+self.ly_box)
+        pos0_y_arr = np.append(pos0_y_arr, pos[typ0ind,1]+self.hy_box-self.ly_box)
+
+        pos1_x_arr = np.append(pos[typ1ind,0]+self.hx_box, pos[typ1ind,0]+self.hx_box)
+        pos1_x_arr = np.append(pos1_x_arr, pos[typ1ind,0]+self.hx_box)
+
+        pos1_y_arr = np.append(pos[typ1ind,1]+self.hy_box, pos[typ1ind,1]+self.hy_box+self.ly_box)
+        pos1_y_arr = np.append(pos1_y_arr, pos[typ1ind,1]+self.hy_box-self.ly_box)
+        """
+
+        if mono==0:
+
+            #Local each particle's positions
+            pos0=pos[typ0ind]                               # Find positions of type 0 particles
+            pos1=pos[typ1ind]
+
+            #Assign type 0 particles to plot
+            """
+            ells0 = [Ellipse(xy=np.array([pos0[i,0]+self.hx_box, pos0[i,1]+self.hy_box]),
+                    width=sz, height=sz, label='PeA: '+str(self.peA))
+            for i in range(0,len(typ0ind))]
+
+            #Assign type 1 particles to plot
+            ells1 = [Ellipse(xy=np.array([pos1[i,0]+self.hx_box, pos1[i,1]+self.hy_box]),
+                    width=sz, height=sz, label='PeB: '+str(self.peB))
+            for i in range(0,len(typ1ind))]
+            """
+
+            ells0 = [Ellipse(xy=np.array([pos0[i,0]+self.hx_box, pos0[i,1]+self.hy_box]),
+                    width=sz, height=sz, label='PeA: '+str(self.peA))
+            for i in range(0,len(pos0))]
+
+            #Assign type 1 particles to plot
+            ells1 = [Ellipse(xy=np.array([pos1[i,0]+self.hx_box, pos1[i,1]+self.hy_box]),
+                    width=sz, height=sz, label='PeB: '+str(self.peB))
+            for i in range(0,len(pos1))]
+
+            # Plot position colored by neighbor number
+            if self.peA <= self.peB:
+                slowGroup = mc.PatchCollection(ells0, facecolors=slowCol)
+                fastGroup = mc.PatchCollection(ells1,facecolors=fastCol)
+            else:
+                slowGroup = mc.PatchCollection(ells1, facecolors=slowCol)
+                fastGroup = mc.PatchCollection(ells0,facecolors=fastCol)
+            ax.add_collection(slowGroup)
+            ax.add_collection(fastGroup)
+
+            if self.peA != self.peB:
+                fast_leg = [Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=slowCol, label='Slow', markersize=34), Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=fastCol, label='Fast', markersize=34)]
+
+                #one_leg = ax.legend(handles=fast_leg, loc='upper right', borderpad=0.3, labelspacing=0.4, handletextpad=0.2, bbox_transform=ax.transAxes, bbox_to_anchor=[1.0, 1.0], handlelength=1.5, columnspacing=0.0, fontsize=34, ncol=1, fancybox=True, framealpha=0.5, facecolor='white', edgecolor='black')
+                #ax.add_artist(one_leg)
+            else:
+                fast_leg = [Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=slowCol, label='Active', markersize=38)]
+
+                #one_leg = ax.legend(handles=fast_leg, loc='upper right', borderpad=0.3, handletextpad=0.2, bbox_transform=ax.transAxes, bbox_to_anchor=[1.0, 1.0], handlelength=1.5, columnspacing=0.0, fontsize=34, ncol=1, fancybox=True, framealpha=0.5, facecolor='white', edgecolor='black')
+                #ax.add_artist(one_leg)
+
+
+            #Create legend for binary system
+            """
+            if (len(typ0ind)!=0) & (len(typ1ind)!=0):
+                leg = ax.legend(handles=[ells0[0], ells1[0]], labels=[r'$\mathrm{Pe}_\mathrm{A} = $'+str(int(self.peA)), r'$\mathrm{Pe}_\mathrm{B} = $'+str(int(self.peB))], loc='upper right', prop={'size': 22}, markerscale=8.0)
+                if self.peA <= self.peB:
+                    leg.legendHandles[0].set_color(slowCol)
+                    leg.legendHandles[1].set_color(fastCol)
+                else:
+                    leg.legendHandles[0].set_color(fastCol)
+                    leg.legendHandles[1].set_color(slowCol)
+            #Create legend for monodisperse system
+            else:
+                leg = ax.legend(handles=[ells0[0]], labels=[r'$\mathrm{Pe}_\mathrm{A} = $'+str(int(self.peA)), r'$\mathrm{Pe}_\mathrm{A} = $'+str(int(self.peA))], loc='upper right', prop={'size': 22}, markerscale=8.0)
+                leg.legendHandles[0].set_color(slowCol)
+            """
+            #px = np.sin(ang[typ1ind])
+            #py = -np.cos(ang[typ1ind])
+
+            #plt.scatter(neigh_plot_dict['all-all']['x'][typ1ind]+self.hx_box, neigh_plot_dict['all-all']['y'][typ1ind]+self.hy_box, c='black', s=sz)
+            #plt.quiver(pos[typ1ind,0]+self.hx_box, pos[typ1ind,1]+self.hy_box, px, py, color='black', width=0.003)
+            #plt.quiver(pos[typ1ind,0]+self.hx_box, pos[typ1ind,1]+self.hy_box+self.ly_box, px, py, color='black', width=0.003)
+            #plt.quiver(pos[typ1ind,0]+self.hx_box, pos[typ1ind,1]+self.hy_box-self.ly_box, px, py, color='black', width=0.003)
+
+        elif mono == 1:
+
+            #if (self.peA==0):
+            #    slowCol = '#081d58'
+            #else:
+            #    slowCol = '#e31a1c'
+
+            if mono_type == 0:
+
+                #Local each particle's positions
+                pos0=pos[typ0ind]                               # Find positions of type 0 particles
+
+                #Assign type 0 particles to plot
+                ells0 = [Ellipse(xy=np.array([pos0[i,0]+self.hx_box, pos0[i,1]+self.hy_box]),
+                        width=sz, height=sz, label='Pe: '+str(self.peA))
+                for i in range(0,len(typ0ind))]
+
+                # Plot position colored by neighbor number
+                slowGroup = mc.PatchCollection(ells0, facecolors=slowCol)
+                ax.add_collection(slowGroup)
+
+                leg = ax.legend(handles=[ells0[0]], labels=[r'$\mathrm{Pe} = $'+str(int(self.peA))], loc='upper right', prop={'size': 15}, markerscale=8.0)
+                leg.legendHandles[0].set_color(slowCol)
+
+            elif mono_type == 1:
+
+                #Local each particle's positions
+                pos1=pos[typ1ind]                               # Find positions of type 0 particles
+
+                #Assign type 0 particles to plot
+                ells1 = [Ellipse(xy=np.array([pos1[i,0]+self.hx_box, pos1[i,1]+self.hy_box]),
+                        width=sz, height=sz, label='Pe: '+str(self.peB))
+                for i in range(0,len(typ1ind))]
+
+                # Plot position colored by neighbor number
+                slowGroup = mc.PatchCollection(ells1, facecolors=slowCol)
+                ax.add_collection(slowGroup)
+
+                leg = ax.legend(handles=[ells1[0]], labels=[r'$\mathrm{Pe} = $'+str(int(self.peB))], loc='upper right', prop={'size': 15}, markerscale=8.0)
+                leg.legendHandles[0].set_color(slowCol)
+
+            elif mono_type == 2:
+                #Local each particle's positions
+                pos0=pos[typ0ind]                               # Find positions of type 0 particles
+                pos1=pos[typ1ind]
+
+                #Assign type 0 particles to plot
+                ells0 = [Ellipse(xy=np.array([pos0[i,0]+self.hx_box, pos0[i,1]+self.hy_box]),
+                        width=sz, height=sz, label='Pe: '+str(self.peA))
+                for i in range(0,len(typ0ind))]
+                ells1 = [Ellipse(xy=np.array([pos1[i,0]+self.hx_box, pos1[i,1]+self.hy_box]),
+                        width=sz, height=sz, label='Pe: '+str(self.peB))
+                for i in range(0,len(typ1ind))]
+
+                # Plot position colored by neighbor number
+                slowGroup = mc.PatchCollection(ells0, facecolors=slowCol)
+                ax.add_collection(slowGroup)
+                fastGroup = mc.PatchCollection(ells1, facecolors=slowCol)
+                ax.add_collection(fastGroup)
+
+                fast_leg = []
+
+                #fast_leg.append(Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=slowCol, label=r'$\mathrm{Pe} = $'+str(int(self.peB)), markersize=25))
+
+                #leg = ax.legend(handles=[ells0[0]], labels=[r'$\mathrm{Pe} = $'+str(int(self.peB))], loc='upper right', prop={'size': 24}, markerscale=8.0, edgecolor='black')
+                #leg = ax.legend(handles=[ells0[0]], labels=[r'$F^\mathrm{a} = $'+str(int(self.peB))], loc='upper right', prop={'size': 28}, markerscale=8.0)
+                #leg.legendHandles[0].set_color(slowCol)
+                #one_leg = ax.legend(handles=fast_leg, loc='upper right', borderpad=0.3, labelspacing=0.2, handletextpad=0.0, bbox_transform=ax.transAxes, bbox_to_anchor=[1.0, 1.0], handlelength=1.5, columnspacing=0.0, fontsize=25, ncol=1, fancybox=True, framealpha=0.5, facecolor='white', edgecolor='black')
+                #ax.add_artist(one_leg)
+
+                #leg = ax.legend(handles=[ells0[0]], labels=[r'$\mathrm{Pe} = $'+str(int(self.peA))], loc='upper right', prop={'size': 22}, markerscale=8.0)
+                #leg.legendHandles[0].set_color(slowCol)
+        """
+        try:
+            if sep_surface_dict!=None:
+                for m in range(0, len(sep_surface_dict)):
+                    key = 'surface id ' + str(int(int_comp_dict['ids']['int id'][m]))
+
+                    try:
+                        pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
+                        pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
+                        plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
+                    except:
+                        pass
+
+                    try:
+                        pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
+                        pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
+                        plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
+                    except:
+                        pass
+        except:
+            pass
+        """
+        try:
+            if active_fa_dict!=None:
+                plt.quiver(self.pos_x, self.pos_y, active_fa_dict['bin']['x'], active_fa_dict['bin']['y'], scale=20.0, color='black', alpha=0.8)
+        except:
+            pass
+        #Label time step
+        #ax.text(0.95, 0.025, s=r'$\tau$' + ' = ' + '{:.2f}'.format(3*self.tst) + ' ' + r'$\tau_\mathrm{r}$',
+        #        horizontalalignment='right', verticalalignment='bottom',
+        #        transform=ax.transAxes,
+        #        fontsize=18,
+        #        bbox=dict(facecolor=(1,1,1,0.5), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+
+        #Set axes parameters
+        # If rectangular box, reduce system size plotted
+        if self.lx_box > self.ly_box:
+            plt.xlim(-(0.5*dense_x_width)+self.hx_box, (0.5*dense_x_width)+self.hx_box)
+            plt.ylim(0.0, self.ly_box)
+        elif self.lx_box < self.ly_box:
+            plt.ylim(dense_y_mid-(dense_y_width), dense_y_mid+(dense_y_width))
+            plt.xlim(0.0, self.lx_box)
+        # Plot entire system
+        else:
+            #weak and binary and mono
+            #plt.ylim(2.75*self.ly_box/8, 4.75*self.ly_box/8)
+            #plt.xlim(3.25*self.lx_box/8, 5.25*self.lx_box/8)
+            #passive
+            plt.ylim(3.0*self.ly_box/8, 5.0*self.ly_box/8)
+            plt.xlim(3.*self.lx_box/8, 5.*self.lx_box/8)
+            #monodisperse
+
+
+        # Label simulation time
+        """
+        if self.lx_box == self.ly_box:
+            #plt.text(0.69, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+            #    fontsize=24, transform = ax.transAxes,
+            #    bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+            plt.text(0.66, 0.04, s=r'$\tau$' + ' = ' + '{:.1f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+                fontsize=30, transform = ax.transAxes,
+                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+        elif self.lx_box > self.ly_box:
+            plt.text(0.85, 0.1, s=r'$\tau$' + ' = ' + '{:.4f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+                fontsize=18, transform = ax.transAxes,
+                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+        """
+        ax.axes.set_xticks([])
+        ax.axes.set_yticks([])
+        ax.axes.set_xticklabels([])
+        ax.axes.set_yticks([])
+        ax.set_aspect('equal')
+
+        # Create frame pad for images
+        #pad = str(j).zfill(4)
+        ax.set_facecolor('#F4F4F4')
+        plt.tight_layout()
+        plt.savefig(self.outPath + 'part_activity_' + self.outFile + ".png", dpi=300, transparent=True)
+        plt.close()  
         
         
         

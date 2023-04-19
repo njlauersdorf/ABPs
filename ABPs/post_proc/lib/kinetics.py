@@ -99,9 +99,10 @@ class kinetic_props:
 
         # Initialize theory functions for call back later
         self.theory_functs = theory.theory()
-    def particle_flux(self, partPhase_time, in_clust_arr, partPhase_time_arr, clust_size_arr):
 
-        start_part_phase = partPhase_time[:,0]
+        self.plotting_utility_functs = plotting_utility.plotting_utility(self.lx_box, self.ly_box, self.partNum, self.typ)
+    def particle_flux(self, partPhase_time, in_clust_arr, partPhase_time_arr, clust_size_arr, pos_x_arr_time, pos_y_arr_time, com_x_arr_time, com_y_arr_time, com_x_parts_arr_time, com_y_parts_arr_time):
+        start_part_phase = partPhase_time[0:,]
         start_bulk_id = np.where(partPhase_time[0,:]==0)[0]
         start_gas_id = np.where(partPhase_time[0,:]==2)[0]
         start_int_id = np.where(partPhase_time[0,:]==1)[0]
@@ -160,6 +161,10 @@ class kinetic_props:
         num_gas_to_bulk_no_int = np.array([])
         num_slow_gas_to_bulk_no_int = np.array([])
         num_fast_gas_to_bulk_no_int = np.array([])
+
+        align_vect = np.array([])
+        percent_change_vect = np.array([])
+        
 
         for j in range(1, np.shape(partPhase_time)[0]):
 
@@ -239,6 +244,45 @@ class kinetic_props:
                 num_gas2_to_clust = np.append(num_gas2_to_clust, 0)
                 num_slow_gas2_to_clust = np.append(num_slow_gas2_to_clust, 0)
                 num_fast_gas2_to_clust = np.append(num_fast_gas2_to_clust, 0)
+            
+            
+            com_x_desorb = np.mean(pos_x_arr_time[j,gas2_now_in_clust[0]])
+            com_y_desorb = np.mean(pos_y_arr_time[j,gas2_now_in_clust[0]])
+            com_x_adsorb = np.mean(pos_x_arr_time[j-1,clust_now_in_gas2[0]])
+            com_y_adsorb = np.mean(pos_y_arr_time[j-1,clust_now_in_gas2[0]])
+
+            pos_x_arr_desorb_adsorb = np.append(pos_x_arr_time[j,gas2_now_in_clust[0]], pos_x_arr_time[j-1,clust_now_in_gas2[0]])
+            pos_y_arr_desorb_adsorb = np.append(pos_y_arr_time[j,gas2_now_in_clust[0]], pos_y_arr_time[j-1,clust_now_in_gas2[0]])
+
+
+            com_adsorb_desorb_dict = self.plotting_utility_functs.com_part_view(pos_x_arr_time[j, clust_id], pos_y_arr_time[j, clust_id], pos_x_arr_desorb_adsorb, pos_y_arr_desorb_adsorb, com_x_parts_arr_time[j]-self.hx_box, com_y_parts_arr_time[j]-self.hy_box)
+            com_adsorb_dict = self.plotting_utility_functs.com_part_view(pos_x_arr_time[j, clust_id], pos_y_arr_time[j, clust_id], pos_x_arr_time[j,gas2_now_in_clust[0]], pos_y_arr_time[j,gas2_now_in_clust[0]], com_x_parts_arr_time[j]-self.hx_box, com_y_parts_arr_time[j]-self.hy_box)
+            com_desorb_dict = self.plotting_utility_functs.com_part_view(pos_x_arr_time[j, clust_id], pos_y_arr_time[j, clust_id], pos_x_arr_time[j-1,clust_now_in_gas2[0]], pos_y_arr_time[j-1,clust_now_in_gas2[0]], com_x_parts_arr_time[j]-self.hx_box, com_y_parts_arr_time[j]-self.hy_box)
+
+            #difx_adsorb_desorb = com_adsorb_dict['com']['x']-com_desorb_dict['com']['x']
+            #dify_adsorb_desorb = com_adsorb_dict['com']['y']-com_desorb_dict['com']['y']
+
+            difx_adsorb_desorb = self.utility_functs.sep_dist_x(com_adsorb_dict['com']['x'], com_desorb_dict['com']['x'])
+            dify_adsorb_desorb = self.utility_functs.sep_dist_y(com_adsorb_dict['com']['y'], com_desorb_dict['com']['y'])
+
+            difr_adsorb_desorb = ( difx_adsorb_desorb ** 2 + dify_adsorb_desorb ** 2 ) ** 0.5
+
+            difx_clust = self.utility_functs.sep_dist_x(com_x_parts_arr_time[j], com_x_parts_arr_time[j-1])
+            dify_clust = self.utility_functs.sep_dist_y(com_y_parts_arr_time[j], com_y_parts_arr_time[j-1])
+                        
+
+            #difx_clust = com_x_parts_arr_time[j]-com_x_parts_arr_time[j-1]
+            #dify_clust = com_y_parts_arr_time[j]-com_y_parts_arr_time[j-1]
+            difr_clust = ( difx_clust ** 2 + dify_clust ** 2 ) ** 0.5
+
+            difx_clust_norm = difx_clust / difr_clust
+            dify_clust_norm = dify_clust / difr_clust
+
+            difx_adsorb_desorb_norm = difx_adsorb_desorb / difr_adsorb_desorb
+            dify_adsorb_desorb_norm = dify_adsorb_desorb / difr_adsorb_desorb
+
+            align_vect = np.append(align_vect, (difx_clust_norm * difx_adsorb_desorb_norm) + (dify_clust_norm * dify_adsorb_desorb_norm))
+            percent_change_vect = np.append(percent_change_vect, (difr_adsorb_desorb - difr_clust) / difr_clust)
 
             if len(bulk_now_in_gas)>0:
                 num_bulk_to_gas_no_int = np.append(num_bulk_to_gas_no_int, len(bulk_now_in_gas_no_int[0]))
@@ -382,6 +426,16 @@ class kinetic_props:
             start_int_id_with_int = np.append(start_int_id_with_int, now_in_int_comb)
             start_gas_id_with_int = np.append(start_gas_id_with_int, now_in_gas_comb)
             start_bulk_id_with_int = np.append(start_bulk_id_with_int, now_in_bulk_comb)
+
         
-        adsorption_dict = {'tauB': partPhase_time_arr[1:], 'clust_size': clust_size_arr, 'gas_to_clust': {'all': num_gas2_to_clust, 'A': num_slow_gas2_to_clust,'B': num_fast_gas2_to_clust}, 'clust_to_gas': {'all': num_clust_to_gas2, 'A': num_slow_clust_to_gas2,'B': num_fast_clust_to_gas2}, 'gas_to_dense': {'all': num_gas_to_bulk + num_gas_to_int, 'A': num_slow_gas_to_bulk + num_slow_gas_to_int,'B': num_fast_gas_to_bulk + num_fast_gas_to_int}, 'dense_to_gas': {'all': num_bulk_to_gas + num_int_to_gas, 'A': num_slow_bulk_to_gas + num_slow_int_to_gas,'B': num_fast_bulk_to_gas + num_fast_int_to_gas}, 'gas_to_bulk': {'all': num_gas_to_bulk, 'A': num_slow_gas_to_bulk,'B': num_fast_gas_to_bulk}, 'bulk_to_gas': {'all': num_bulk_to_gas, 'A': num_slow_bulk_to_gas,'B': num_fast_bulk_to_gas}, 'int_to_bulk': {'all': num_int_to_bulk, 'A': num_slow_int_to_bulk,'B': num_fast_int_to_bulk}, 'bulk_to_int': {'all': num_bulk_to_int, 'A': num_slow_bulk_to_int,'B': num_fast_bulk_to_int}, 'gas_to_int': {'all': num_gas_to_int, 'A': num_slow_gas_to_int,'B': num_fast_gas_to_int}, 'int_to_gas': {'all': num_int_to_gas, 'A': num_slow_int_to_gas,'B': num_fast_int_to_gas}, 'gas_to_bulk_no_int': {'all': num_gas_to_bulk_no_int, 'A': num_slow_gas_to_bulk_no_int,'B': num_fast_gas_to_bulk_no_int}, 'bulk_to_gas_no_int': {'all': num_bulk_to_gas_no_int, 'A': num_slow_bulk_to_gas_no_int,'B': num_fast_bulk_to_gas_no_int}}
-        return adsorption_dict
+        num_gas_to_dense = (num_gas_to_bulk + num_gas_to_int)
+        num_slow_gas_to_dense = (num_slow_gas_to_bulk + num_slow_gas_to_int)
+        num_fast_gas_to_dense = (num_fast_gas_to_bulk + num_fast_gas_to_int)
+
+        num_dense_to_gas = (num_bulk_to_gas + num_int_to_gas)
+        num_slow_dense_to_gas = (num_slow_bulk_to_gas + num_slow_int_to_gas)
+        num_fast_dense_to_gas = (num_fast_bulk_to_gas + num_fast_int_to_gas)
+
+        adsorption_dict = {'tauB': partPhase_time_arr[1:].tolist(), 'gas_to_clust': {'all': num_gas2_to_clust.tolist(), 'A': num_slow_gas2_to_clust.tolist(),'B': num_fast_gas2_to_clust.tolist()}, 'clust_to_gas': {'all': num_clust_to_gas2.tolist(), 'A': num_slow_clust_to_gas2.tolist(),'B': num_fast_clust_to_gas2.tolist()}, 'gas_to_dense': {'all': num_gas_to_dense.tolist(), 'A': num_slow_gas_to_dense.tolist(),'B': num_fast_gas_to_dense.tolist()}, 'dense_to_gas': {'all': num_dense_to_gas.tolist(), 'A': num_slow_dense_to_gas.tolist(),'B': num_fast_dense_to_gas.tolist()}, 'gas_to_bulk': {'all': num_gas_to_bulk.tolist(), 'A': num_slow_gas_to_bulk.tolist(),'B': num_fast_gas_to_bulk.tolist()}, 'bulk_to_gas': {'all': num_bulk_to_gas.tolist(), 'A': num_slow_bulk_to_gas.tolist(),'B': num_fast_bulk_to_gas.tolist()}, 'int_to_bulk': {'all': num_int_to_bulk.tolist(), 'A': num_slow_int_to_bulk.tolist(),'B': num_fast_int_to_bulk.tolist()}, 'bulk_to_int': {'all': num_bulk_to_int.tolist(), 'A': num_slow_bulk_to_int.tolist(),'B': num_fast_bulk_to_int.tolist()}, 'gas_to_int': {'all': num_gas_to_int.tolist(), 'A': num_slow_gas_to_int.tolist(),'B': num_fast_gas_to_int.tolist()}, 'int_to_gas': {'all': num_int_to_gas.tolist(), 'A': num_slow_int_to_gas.tolist(),'B': num_fast_int_to_gas.tolist()}, 'gas_to_bulk_no_int': {'all': num_gas_to_bulk_no_int.tolist(), 'A': num_slow_gas_to_bulk_no_int.tolist(),'B': num_fast_gas_to_bulk_no_int.tolist()}, 'bulk_to_gas_no_int': {'all': num_bulk_to_gas_no_int.tolist(), 'A': num_slow_bulk_to_gas_no_int.tolist(),'B': num_fast_bulk_to_gas_no_int.tolist()}}
+        clust_motion_dict = {'align': align_vect.tolist(), 'magnitude': percent_change_vect.tolist()}
+        return adsorption_dict, clust_motion_dict

@@ -192,6 +192,66 @@ class plotting_utility:
 
         return com_dict
 
+    def com_part_view(self, pos_x_all, pos_y_all, pos_x, pos_y, com_x_parts_arr_time, com_y_parts_arr_time):
+        '''
+        Purpose: Takes the position of particles and the largest cluster's CoM and
+        shifts the position of all particles so the largest cluster's CoM is at the
+        center of the system
+
+        Input:
+        pos: array (partNum) of positions (x,y,z) of each particle
+
+        clp_all: cluster properties defined from Freud neighbor list and cluster calculation
+
+        Output:
+        com_dict: dictionary containing the shifted position of every particle such that
+        the largest cluster's CoM is at the middle of the box (hx_box, hy_box) in addition to the
+        unshifted largest cluster's CoM position
+        '''
+
+        # Largest cluster's CoM shifted to box size of x=[0, lx_box] and y=[0, ly_box]
+        com_tmp_posX = 0 - com_x_parts_arr_time
+        com_tmp_posY = 0 - com_y_parts_arr_time
+
+        #shift reference frame positions such that CoM of largest cluster is at mid-point of simulation box
+        new_pos_x= pos_x+com_tmp_posX
+        new_pos_y= pos_y+com_tmp_posY
+        
+
+        #Loop over all particles to ensure particles are within simulation box (periodic boundary conditions)
+        for i in range(0, len(new_pos_x)):
+            if new_pos_x[i]>self.hx_box:
+                new_pos_x[i]=new_pos_x[i]-self.lx_box
+            elif new_pos_x[i]<-self.hx_box:
+                new_pos_x[i]=new_pos_x[i]+self.lx_box
+
+            if new_pos_y[i]>self.hy_box:
+                new_pos_y[i]=new_pos_y[i]-self.ly_box
+            elif new_pos_y[i]<-self.hy_box:
+                new_pos_y[i]=new_pos_y[i]+self.ly_box
+        
+        if com_tmp_posX>self.hx_box:
+            com_tmp_posX -= self.lx_box
+        elif com_tmp_posX<-self.hx_box:
+            com_tmp_posX += self.lx_box
+
+        if com_tmp_posY>self.hy_box:
+            com_tmp_posY -= self.ly_box
+        elif com_tmp_posY<-self.hy_box:
+            com_tmp_posY += self.ly_box                
+
+        com_tmp_posX_new = np.mean(new_pos_x) - com_tmp_posX
+        com_tmp_posY_new = np.mean(new_pos_y) - com_tmp_posY
+
+
+        # Dictionary containing the shifted position of every particle such that
+        # the largest cluster's CoM is at the middle of the box (hx_box, hy_box) in addition to the
+        # unshifted largest cluster's CoM position
+
+        com_dict = {'pos': {'x': new_pos_x, 'y': new_pos_y}, 'com': {'x': com_tmp_posX_new, 'y': com_tmp_posY_new}}
+
+        return com_dict
+
     def grayscale_cmap(cmap):
         '''
         Purpose: Takes a colormap and returns the grayscale version of it

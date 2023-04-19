@@ -354,8 +354,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
             bulkPhase=np.zeros(partNum)
             com_dict = plotting_utility_functs.com_view(pos, clp_all)
 
-            com_dict['com']['x']=0
-            com_dict['com']['y']=0
+            #com_dict['com']['x']=0
+            #com_dict['com']['y']=0
             
 
             #Bin system to calculate orientation and alignment that will be used in vector plots
@@ -384,7 +384,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
             com_dict = plotting_utility_functs.com_view(pos, clp_all)
 
-            pos = com_dict['pos']
+            #pos = com_dict['pos']
 
             #Bin system to calculate orientation and alignment that will be used in vector plots
             NBins_x = utility_functs.getNBins(lx_box, bin_width)
@@ -743,7 +743,6 @@ with hoomd.open(name=inFile, mode='rb') as t:
             all_surface_measurements = {}
 
 
-
             for m in range(0, len(sep_surface_dict)):
                 averaged_data_arr = {}
 
@@ -781,12 +780,13 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     averaged_data_arr['int_mean_rad'] = all_surface_measurements[key]['interior']['mean radius']
                     averaged_data_arr['int_std_rad'] = all_surface_measurements[key]['interior']['std radius']
                     averaged_data_arr['int_sa'] = all_surface_measurements[key]['interior']['surface area']
-                    
+
                 else:
                     averaged_data_arr['int_mean_rad'] = 0
                     averaged_data_arr['int_std_rad'] = 0
                     averaged_data_arr['int_sa'] = 0
 
+                
                 if sep_surface_dict[key]['exterior']['num']>0:
                     sort_exterior_ids = interface_functs.sort_surface_points(sep_surface_dict[key]['exterior'])
 
@@ -803,12 +803,12 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     averaged_data_arr['ext_mean_rad'] = all_surface_measurements[key]['exterior']['mean radius']
                     averaged_data_arr['ext_std_rad'] = all_surface_measurements[key]['exterior']['std radius']
                     averaged_data_arr['ext_sa'] = all_surface_measurements[key]['exterior']['surface area']
-                    
                 else:
                     averaged_data_arr['ext_mean_rad'] = 0
                     averaged_data_arr['ext_std_rad'] = 0
                     averaged_data_arr['ext_sa'] = 0
 
+                
                 if (sep_surface_dict[key]['exterior']['num']>0) & sep_surface_dict[key]['interior']['num']>0:
                     all_surface_measurements[key]['exterior']['surface width'] = interface_functs.surface_width(all_surface_measurements[key]['interior']['mean radius'], all_surface_measurements[key]['exterior']['mean radius'])
                     all_surface_measurements[key]['interior']['surface width'] = interface_functs.surface_width(all_surface_measurements[key]['interior']['mean radius'], all_surface_measurements[key]['exterior']['mean radius'])
@@ -817,12 +817,23 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     averaged_data_arr['width'] = 0
                 if measurement_method == 'interface_props':
                     data_output_functs.write_to_txt(averaged_data_arr, dataPath + 'BubComp_' + outfile + '.txt')
-
+            
             if steady_state_once == 'False':
-                in_clust_arr = np.zeros(partNum)
                 clust_id_time = np.where(ids==lcID)[0]
+                in_clust_arr = np.zeros(partNum)
                 in_clust_arr[clust_id_time]=1
-                partPhase_time = partPhase
+                #in_clust_arr = np.zeros(partNum)
+                pos_x_arr_time = pos[:,0]
+                pos_y_arr_time = pos[:,1]
+                try:
+                    com_x_arr_time = np.array([all_surface_measurements['surface id ' + str(int(int_comp_dict['ids'][0]))]['interior']['com']['x']-hx_box])
+                    com_y_arr_time = np.array([all_surface_measurements['surface id ' + str(int(int_comp_dict['ids'][0]))]['interior']['com']['y']-hy_box])
+                except:
+                    com_x_arr_time = np.array([all_surface_measurements['surface id ' + str(int(int_comp_dict['ids'][0]))]['exterior']['com']['x']-hx_box])
+                    com_y_arr_time = np.array([all_surface_measurements['surface id ' + str(int(int_comp_dict['ids'][0]))]['exterior']['com']['y']-hy_box])
+                com_x_parts_arr_time = np.array([com_dict['com']['x']])
+                com_y_parts_arr_time = np.array([com_dict['com']['y']])
+                partPhase_time = phase_dict['part']
                 partPhase_time_arr = np.append(partPhase_time_arr, tst)
                 steady_state_once = 'True'
             else:
@@ -830,8 +841,19 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 in_clust_temp = np.zeros(partNum)
                 in_clust_temp[clust_id_time]=1
                 in_clust_arr = np.vstack((in_clust_arr, in_clust_temp))
+                pos_x_arr_time = np.vstack((pos_x_arr_time, pos[:,0]))
+                pos_y_arr_time = np.vstack((pos_y_arr_time, pos[:,1]))
                 partPhase_time_arr = np.append(partPhase_time_arr, tst)
-                partPhase_time = np.vstack((partPhase_time, partPhase))
+                partPhase_time = np.vstack((partPhase_time, phase_dict['part']))
+                try:
+                    com_x_arr_time = np.append(com_x_arr_time, all_surface_measurements['surface id ' + str(int(int_comp_dict['ids'][0]))]['exterior']['com']['x']-hx_box)
+                    com_y_arr_time = np.append(com_y_arr_time, all_surface_measurements['surface id ' + str(int(int_comp_dict['ids'][0]))]['exterior']['com']['y']-hy_box)
+                except:
+                    com_x_arr_time = np.append(com_x_arr_time, all_surface_measurements['surface id ' + str(int(int_comp_dict['ids'][0]))]['interior']['com']['x']-hx_box)
+                    com_y_arr_time = np.append(com_y_arr_time, all_surface_measurements['surface id ' + str(int(int_comp_dict['ids'][0]))]['interior']['com']['y']-hy_box)
+
+                com_x_parts_arr_time = np.append(com_x_parts_arr_time, com_dict['com']['x'])
+                com_y_parts_arr_time = np.append(com_y_parts_arr_time, com_dict['com']['y'])
 
             method1_align_dict, method2_align_dict = interface_functs.surface_alignment(all_surface_measurements, all_surface_curves, sep_surface_dict, int_dict, int_comp_dict)
             
@@ -861,12 +883,13 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     part_vel_dict = particle_prop_functs.single_velocity(vel_dict['part'], prev_pos, prev_ang, ori)
                     stop
             elif measurement_method == 'adsorption':
-                particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, typ, pos, ang)
+                
+                particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, eps, typ, pos, ang)
                 
                 
                 kinetics_dict = particle_prop_functs.adsorption_nlist()
                 collision_dict = particle_prop_functs.collision_rate()
-
+                
                 
                 data_output_functs.write_to_txt(kinetics_dict, dataPath + 'kinetics_' + outfile + '.txt')
                 data_output_functs.write_to_txt(collision_dict, dataPath + 'collision_' + outfile + '.txt')
@@ -908,6 +931,12 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 if plot == 'y':
                     
                     plotting_functs.plot_part_activity(pos, all_surface_curves, int_comp_dict)
+                stop
+            elif measurement_method == 'activity_large':
+
+                if plot == 'y':
+                    
+                    plotting_functs.plot_part_activity_large_text(pos, all_surface_curves, int_comp_dict)
                 stop
             elif measurement_method == 'phases':
                 #DONE
@@ -1475,9 +1504,10 @@ with hoomd.open(name=inFile, mode='rb') as t:
         if steady_state_once == 'True':
             kinetic_functs = kinetics.kinetic_props(lx_box, ly_box, NBins_x, NBins_y, partNum, typ, eps, peA, peB, parFrac)
 
-            adsorption_dict = kinetic_functs.particle_flux(partPhase_time, in_clust_arr, partPhase_time_arr, clust_size_arr)
+            adsorption_dict, clust_motion_dict = kinetic_functs.particle_flux(partPhase_time, in_clust_arr, partPhase_time_arr, clust_size_arr, pos_x_arr_time, pos_y_arr_time, com_x_arr_time, com_y_arr_time, com_x_parts_arr_time, com_y_parts_arr_time)
 
             data_output_functs.write_all_time_to_txt(adsorption_dict, dataPath + 'adsorption_final_' + outfile + '.txt')
+            data_output_functs.write_all_time_to_txt(clust_motion_dict, dataPath + 'clust_motion_final_' + outfile + '.txt')
     elif measurement_method == 'penetration':
         
         x = 1

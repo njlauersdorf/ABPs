@@ -1991,6 +1991,7 @@ class measurement:
         int_area = phase_count_dict['int'] * (self.sizeBin_x * self.sizeBin_y)
         gas_area = phase_count_dict['gas'] * (self.sizeBin_x * self.sizeBin_y)
         dense_area = bulk_area + int_area
+        system_area = bulk_area + int_area + gas_area
 
         # Position and orientation arrays of type A particles in respective phase
         typ0ind = np.where(self.typ==0)[0]
@@ -3328,6 +3329,97 @@ class measurement:
         SigYY_BB_dense_part = np.append(SigYY_BB_bulk_part, SigYY_BB_int_part)
         SigYY_BB_dense_part_num = np.append(SigYY_BB_bulk_part_num, SigYY_BB_int_part_num)
 
+        # Calculate total stress and number of neighbor pairs summed over for B dense reference particles and all neighbors
+        allB_system_SigXX_part = np.append(allB_dense_SigXX_part, allB_gas_SigXX_part)
+        allB_system_SigXX_part_num = np.append(allB_dense_SigXX_part_num, allB_gas_SigXX_part_num)
+        allB_system_SigYX_part = np.append(allB_dense_SigYX_part, allB_gas_SigYX_part)
+        allB_system_SigYX_part_num = np.append(allB_dense_SigYX_part_num, allB_gas_SigYX_part_num)
+        allB_system_SigXY_part = np.append(allB_dense_SigXY_part, allB_gas_SigXY_part)
+        allB_system_SigXY_part_num = np.append(allB_dense_SigXY_part_num, allB_gas_SigXY_part_num)
+        allB_system_SigYY_part = np.append(allB_dense_SigYY_part, allB_gas_SigYY_part)
+        allB_system_SigYY_part_num = np.append(allB_dense_SigYY_part_num, allB_gas_SigYY_part_num)
+
+        # Calculate total stress and number of neighbor pairs summed over for all dense reference particles and B neighbors
+        Ball_system_SigXX_part = np.append(Ball_dense_SigXX_part, Ball_gas_SigXX_part)
+        Ball_system_SigXX_part_num = np.append(Ball_dense_SigXX_part_num, Ball_gas_SigXX_part_num)
+        Ball_system_SigYX_part = np.append(Ball_dense_SigYX_part, Ball_gas_SigYX_part)
+        Ball_system_SigYX_part_num = np.append(Ball_dense_SigYX_part_num, Ball_gas_SigYX_part_num)
+        Ball_system_SigXY_part = np.append(Ball_dense_SigXY_part, Ball_gas_SigXY_part)
+        Ball_system_SigXY_part_num = np.append(Ball_dense_SigXY_part_num, Ball_gas_SigXY_part_num)
+        Ball_system_SigYY_part = np.append(Ball_dense_SigYY_part, Ball_gas_SigYY_part)
+        Ball_system_SigYY_part_num = np.append(Ball_dense_SigYY_part_num, Ball_gas_SigYY_part_num)
+
+        # Calculate total stress and number of neighbor pairs summed over for A dense reference particles and all neighbors
+        allA_system_SigXX_part = np.append(allA_dense_SigXX_part, allA_gas_SigXX_part)
+        allA_system_SigXX_part_num = np.append(allA_dense_SigXX_part_num, allA_gas_SigXX_part_num)
+        allA_system_SigYX_part = np.append(allA_dense_SigYX_part, allA_gas_SigYX_part)
+        allA_system_SigYX_part_num = np.append(allA_dense_SigYX_part_num, allA_gas_SigYX_part_num)
+        allA_system_SigXY_part = np.append(allA_dense_SigXY_part, allA_gas_SigXY_part)
+        allA_system_SigXY_part_num = np.append(allA_dense_SigXY_part_num, allA_gas_SigXY_part_num)
+        allA_system_SigYY_part = np.append(allA_dense_SigYY_part, allA_gas_SigYY_part)
+        allA_system_SigYY_part_num = np.append(allA_dense_SigYY_part_num, allA_gas_SigYY_part_num)
+
+        # Calculate total stress and number of neighbor pairs summed over for all dense reference particles and A neighbors
+        Aall_system_SigXX_part = np.append(Aall_dense_SigXX_part, Aall_gas_SigXX_part)
+        Aall_system_SigXX_part_num = np.append(Aall_dense_SigXX_part_num, Aall_gas_SigXX_part_num)
+        Aall_system_SigYX_part = np.append(Aall_dense_SigYX_part, Aall_gas_SigYX_part)
+        Aall_system_SigYX_part_num = np.append(Aall_dense_SigYX_part_num, Aall_gas_SigYX_part_num)
+        Aall_system_SigXY_part = np.append(Aall_dense_SigXY_part, Aall_gas_SigXY_part)
+        Aall_system_SigXY_part_num = np.append(Aall_dense_SigXY_part_num, Aall_gas_SigXY_part_num)
+        Aall_system_SigYY_part = np.append(Aall_dense_SigYY_part, Aall_gas_SigYY_part)
+        Aall_system_SigYY_part_num = np.append(Aall_dense_SigYY_part_num, Aall_gas_SigYY_part_num)
+
+        # Calculate total stress and number of neighbor pairs summed over for all dense reference particles and all neighbors
+        allall_system_SigXX_part = np.append(allall_dense_SigXX_part, allall_gas_SigXX_part)
+        allall_system_SigXX_part_num = np.append(allall_dense_SigXX_part_num, allall_gas_SigXX_part_num)
+        allall_system_SigYX_part = np.append(allall_dense_SigYX_part, allall_gas_SigYX_part)
+        allall_system_SigYX_part_num = np.append(allall_dense_SigYX_part_num, allall_gas_SigYX_part_num)
+        allall_system_SigXY_part = np.append(allall_dense_SigXY_part, allall_gas_SigXY_part)
+        allall_system_SigXY_part_num = np.append(allall_dense_SigXY_part_num, allall_gas_SigXY_part_num)
+        allall_system_SigYY_part = np.append(allall_dense_SigYY_part, allall_gas_SigYY_part)
+        allall_system_SigYY_part_num = np.append(allall_dense_SigYY_part_num, allall_gas_SigYY_part_num)
+
+
+        # Calculate total stress and number of neighbor pairs summed over for A dense reference particles and A neighbors
+        SigXX_AA_system_part = np.append(SigXX_AA_dense_part, SigXX_AA_gas_part)
+        SigXX_AA_system_part_num = np.append(SigXX_AA_dense_part_num, SigXX_AA_gas_part_num)
+        SigYX_AA_system_part = np.append(SigYX_AA_dense_part, SigYX_AA_gas_part)
+        SigYX_AA_system_part_num = np.append(SigYX_AA_dense_part_num, SigYX_AA_gas_part_num)
+        SigXY_AA_system_part = np.append(SigXY_AA_dense_part, SigXY_AA_gas_part)
+        SigXY_AA_system_part_num = np.append(SigXY_AA_dense_part_num, SigXY_AA_gas_part_num)
+        SigYY_AA_system_part = np.append(SigYY_AA_dense_part, SigYY_AA_gas_part)
+        SigYY_AA_system_part_num = np.append(SigYY_AA_dense_part_num, SigYY_AA_gas_part_num)
+
+        # Calculate total stress and number of neighbor pairs summed over for B dense reference particles and A neighbors
+        SigXX_AB_system_part = np.append(SigXX_AB_dense_part, SigXX_AB_gas_part)
+        SigXX_AB_system_part_num = np.append(SigXX_AB_dense_part_num, SigXX_AB_gas_part_num)
+        SigYX_AB_system_part = np.append(SigYX_AB_dense_part, SigYX_AB_gas_part)
+        SigYX_AB_system_part_num = np.append(SigYX_AB_dense_part_num, SigYX_AB_gas_part_num)
+        SigXY_AB_system_part = np.append(SigXY_AB_dense_part, SigXY_AB_gas_part)
+        SigXY_AB_system_part_num = np.append(SigXY_AB_dense_part_num, SigXY_AB_gas_part_num)
+        SigYY_AB_system_part = np.append(SigYY_AB_dense_part, SigYY_AB_gas_part)
+        SigYY_AB_system_part_num = np.append(SigYY_AB_dense_part_num, SigYY_AB_gas_part_num)
+
+        # Calculate total stress and number of neighbor pairs summed over for A dense reference particles and B neighbors
+        SigXX_BA_system_part = np.append(SigXX_BA_dense_part, SigXX_BA_gas_part)
+        SigXX_BA_system_part_num = np.append(SigXX_BA_dense_part_num, SigXX_BA_gas_part_num)
+        SigYX_BA_system_part = np.append(SigYX_BA_dense_part, SigYX_BA_gas_part)
+        SigYX_BA_system_part_num = np.append(SigYX_BA_dense_part_num, SigYX_BA_gas_part_num)
+        SigXY_BA_system_part = np.append(SigXY_BA_dense_part, SigXY_BA_gas_part)
+        SigXY_BA_system_part_num = np.append(SigXY_BA_dense_part_num, SigXY_BA_gas_part_num)
+        SigYY_BA_system_part = np.append(SigYY_BA_dense_part, SigYY_BA_gas_part)
+        SigYY_BA_system_part_num = np.append(SigYY_BA_dense_part_num, SigYY_BA_gas_part_num)
+
+        # Calculate total stress and number of neighbor pairs summed over for B dense reference particles and B neighbors
+        SigXX_BB_system_part = np.append(SigXX_BB_dense_part, SigXX_BB_gas_part)
+        SigXX_BB_system_part_num = np.append(SigXX_BB_dense_part_num, SigXX_BB_gas_part_num)
+        SigYX_BB_system_part = np.append(SigYX_BB_dense_part, SigYX_BB_gas_part)
+        SigYX_BB_system_part_num = np.append(SigYX_BB_dense_part_num, SigYX_BB_gas_part_num)
+        SigXY_BB_system_part = np.append(SigXY_BB_dense_part, SigXY_BB_gas_part)
+        SigXY_BB_system_part_num = np.append(SigXY_BB_dense_part_num, SigXY_BB_gas_part_num)
+        SigYY_BB_system_part = np.append(SigYY_BB_dense_part, SigYY_BB_gas_part)
+        SigYY_BB_system_part_num = np.append(SigYY_BB_dense_part_num, SigYY_BB_gas_part_num)
+
         ###Interparticle pressure
 
         # Calculate total interparticle pressure experienced by all particles in each phase
@@ -3335,6 +3427,7 @@ class measurement:
         allall_gas_int_press = np.sum(allall_gas_SigXX_part + allall_gas_SigYY_part)/(2*gas_area)
         allall_int_int_press = np.sum(allall_int_SigXX_part + allall_int_SigYY_part)/(2*int_area)
         allall_dense_int_press = np.sum(allall_dense_SigXX_part + allall_dense_SigYY_part)/(2*dense_area)
+        allall_system_int_press = np.sum(allall_system_SigXX_part + allall_system_SigYY_part)/(2*system_area)
         allall_int_press = np.append(allall_bulk_int_press, allall_int_int_press)
         allall_int_press = np.append(allall_int_press, allall_gas_int_press)
 
@@ -3343,54 +3436,63 @@ class measurement:
         allA_gas_int_press = np.sum(allA_gas_SigXX_part + allA_gas_SigYY_part)/(2*gas_area)
         allA_int_int_press = np.sum(allA_int_SigXX_part + allA_int_SigYY_part)/(2*int_area)
         allA_dense_int_press = np.sum(allA_dense_SigXX_part + allA_dense_SigYY_part)/(2*dense_area)
+        allA_system_int_press = np.sum(allA_system_SigXX_part + allA_system_SigYY_part)/(2*system_area)
 
         # Calculate total interparticle pressure experienced by all A particles in each phase
         Aall_bulk_int_press = np.sum(Aall_bulk_SigXX_part + Aall_bulk_SigYY_part)/(2*bulk_area)
         Aall_gas_int_press = np.sum(Aall_gas_SigXX_part + Aall_gas_SigYY_part)/(2*gas_area)
         Aall_int_int_press = np.sum(Aall_int_SigXX_part + Aall_int_SigYY_part)/(2*int_area)
         Aall_dense_int_press = np.sum(Aall_dense_SigXX_part + Aall_dense_SigYY_part)/(2*dense_area)
+        Aall_system_int_press = np.sum(Aall_system_SigXX_part + Aall_system_SigYY_part)/(2*system_area)
 
         # Calculate total interparticle pressure experienced by all particles in each phase from all B particles
         allB_bulk_int_press = np.sum(allB_bulk_SigXX_part + allB_bulk_SigYY_part)/(2*bulk_area)
         allB_gas_int_press = np.sum(allB_gas_SigXX_part + allB_gas_SigYY_part)/(2*gas_area)
         allB_int_int_press = np.sum(allB_int_SigXX_part + allB_int_SigYY_part)/(2*int_area)
         allB_dense_int_press = np.sum(allB_dense_SigXX_part + allB_dense_SigYY_part)/(2*dense_area)
+        allB_system_int_press = np.sum(allB_system_SigXX_part + allB_system_SigYY_part)/(2*system_area)
 
         # Calculate total interparticle pressure experienced by all B particles in each phase
         Ball_bulk_int_press = np.sum(Ball_bulk_SigXX_part + Ball_bulk_SigYY_part)/(2*bulk_area)
         Ball_gas_int_press = np.sum(Ball_gas_SigXX_part + Ball_gas_SigYY_part)/(2*gas_area)
         Ball_int_int_press = np.sum(Ball_int_SigXX_part + Ball_int_SigYY_part)/(2*int_area)
         Ball_dense_int_press = np.sum(Ball_dense_SigXX_part + Ball_dense_SigYY_part)/(2*dense_area)
+        Ball_system_int_press = np.sum(Ball_system_SigXX_part + Ball_system_SigYY_part)/(2*system_area)
 
         # Calculate total interparticle pressure experienced by all A particles in each phase from all A particles
         AA_bulk_int_press = np.sum(SigXX_AA_bulk_part + SigYY_AA_bulk_part)/(2*bulk_area)
         AA_gas_int_press = np.sum(SigXX_AA_gas_part + SigYY_AA_gas_part)/(2*gas_area)
         AA_int_int_press = np.sum(SigXX_AA_int_part + SigYY_AA_int_part)/(2*int_area)
         AA_dense_int_press = np.sum(SigXX_AA_dense_part + SigYY_AA_dense_part)/(2*dense_area)
+        AA_system_int_press = np.sum(SigXX_AA_system_part + SigYY_AA_system_part)/(2*system_area)
 
         # Calculate total interparticle pressure experienced by all A particles in each phase from all B particles
         AB_bulk_int_press = np.sum(SigXX_AB_bulk_part + SigYY_AB_bulk_part)/(2*bulk_area)
         AB_gas_int_press = np.sum(SigXX_AB_gas_part + SigYY_AB_gas_part)/(2*gas_area)
         AB_int_int_press = np.sum(SigXX_AB_int_part + SigYY_AB_int_part)/(2*int_area)
         AB_dense_int_press = np.sum(SigXX_AB_dense_part + SigYY_AB_dense_part)/(2*dense_area)
+        AB_system_int_press = np.sum(SigXX_AB_system_part + SigYY_AB_system_part)/(2*system_area)
 
         # Calculate total interparticle pressure experienced by all B particles in each phase from all A particles
         BA_bulk_int_press = np.sum(SigXX_BA_bulk_part + SigYY_BA_bulk_part)/(2*bulk_area)
         BA_gas_int_press = np.sum(SigXX_BA_gas_part + SigYY_BA_gas_part)/(2*gas_area)
         BA_int_int_press = np.sum(SigXX_BA_int_part + SigYY_BA_int_part)/(2*int_area)
         BA_dense_int_press = np.sum(SigXX_BA_dense_part + SigYY_BA_dense_part)/(2*dense_area)
+        BA_system_int_press = np.sum(SigXX_BA_system_part + SigYY_BA_system_part)/(2*system_area)
 
         # Calculate total interparticle pressure experienced by all B particles in each phase from all B particles
         BB_bulk_int_press = np.sum(SigXX_BB_bulk_part + SigYY_BB_bulk_part)/(2*bulk_area)
         BB_gas_int_press = np.sum(SigXX_BB_gas_part + SigYY_BB_gas_part)/(2*gas_area)
         BB_int_int_press = np.sum(SigXX_BB_int_part + SigYY_BB_int_part)/(2*int_area)
         BB_dense_int_press = np.sum(SigXX_BB_dense_part + SigYY_BB_dense_part)/(2*dense_area)
+        BB_system_int_press = np.sum(SigXX_BB_system_part + SigYY_BB_system_part)/(2*system_area)
 
         # Calculate total shear stress experienced by all particles in each phase from all particles
         allall_bulk_shear_stress = np.sum(allall_bulk_SigXY_part)/(bulk_area)
         allall_gas_shear_stress = np.sum(allall_gas_SigXY_part)/(gas_area)
         allall_int_shear_stress = np.sum(allall_int_SigXY_part)/(int_area)
         allall_dense_shear_stress = np.sum(allall_dense_SigXY_part)/(dense_area)
+        allall_system_shear_stress = np.sum(allall_system_SigXY_part)/(system_area)
         allall_shear_stress = np.append(allall_bulk_shear_stress, allall_int_shear_stress)
         allall_shear_stress = np.append(allall_shear_stress, allall_gas_shear_stress)
 
@@ -3399,48 +3501,56 @@ class measurement:
         allA_gas_shear_stress = np.sum(allA_gas_SigXY_part)/(gas_area)
         allA_int_shear_stress = np.sum(allA_int_SigXY_part)/(int_area)
         allA_dense_shear_stress = np.sum(allA_dense_SigXY_part)/(dense_area)
+        allA_system_shear_stress = np.sum(allA_system_SigXY_part)/(system_area)
 
         # Calculate total shear stress experienced by all A particles in each phase from all particles
         Aall_bulk_shear_stress = np.sum(Aall_bulk_SigXY_part)/(bulk_area)
         Aall_gas_shear_stress = np.sum(Aall_gas_SigXY_part)/(gas_area)
         Aall_int_shear_stress = np.sum(Aall_int_SigXY_part)/(int_area)
         Aall_dense_shear_stress = np.sum(Aall_dense_SigXY_part)/(dense_area)
+        Aall_system_shear_stress = np.sum(Aall_system_SigXY_part)/(system_area)
 
         # Calculate total shear stress experienced by all particles in each phase from B particles
         allB_bulk_shear_stress = np.sum(allB_bulk_SigXY_part)/(bulk_area)
         allB_gas_shear_stress = np.sum(allB_gas_SigXY_part)/(gas_area)
         allB_int_shear_stress = np.sum(allB_int_SigXY_part)/(int_area)
         allB_dense_shear_stress = np.sum(allB_dense_SigXY_part)/(dense_area)
+        allB_system_shear_stress = np.sum(allB_system_SigXY_part)/(system_area)
 
         # Calculate total shear stress experienced by all B particles in each phase from all particles
         Ball_bulk_shear_stress = np.sum(Ball_bulk_SigXY_part)/(bulk_area)
         Ball_gas_shear_stress = np.sum(Ball_gas_SigXY_part)/(gas_area)
         Ball_int_shear_stress = np.sum(Ball_int_SigXY_part)/(int_area)
         Ball_dense_shear_stress = np.sum(Ball_dense_SigXY_part)/(dense_area)
+        Ball_system_shear_stress = np.sum(Ball_system_SigXY_part)/(system_area)
 
         # Calculate total shear stress experienced by all A particles in each phase from all A particles
         AA_bulk_shear_stress = np.sum(SigXY_AA_bulk_part)/(bulk_area)
         AA_gas_shear_stress = np.sum(SigXY_AA_gas_part)/(gas_area)
         AA_int_shear_stress = np.sum(SigXY_AA_int_part)/(int_area)
         AA_dense_shear_stress = np.sum(SigXY_AA_dense_part)/(dense_area)
+        AA_system_shear_stress = np.sum(SigXY_AA_system_part)/(system_area)
 
         # Calculate total shear stress experienced by all A particles in each phase from all B particles
         AB_bulk_shear_stress = np.sum(SigXY_AB_bulk_part)/(bulk_area)
         AB_gas_shear_stress = np.sum(SigXY_AB_gas_part)/(gas_area)
         AB_int_shear_stress = np.sum(SigXY_AB_int_part)/(int_area)
         AB_dense_shear_stress = np.sum(SigXY_AB_dense_part)/(dense_area)
+        AB_system_shear_stress = np.sum(SigXY_AB_system_part)/(system_area)
 
         # Calculate total shear stress experienced by all B particles in each phase from all A particles
         BA_bulk_shear_stress = np.sum(SigXY_BA_bulk_part)/(bulk_area)
         BA_gas_shear_stress = np.sum(SigXY_BA_gas_part)/(gas_area)
         BA_int_shear_stress = np.sum(SigXY_BA_int_part)/(int_area)
         BA_dense_shear_stress = np.sum(SigXY_BA_dense_part)/(dense_area)
+        BA_system_shear_stress = np.sum(SigXY_BA_system_part)/(system_area)
 
         # Calculate total shear stress experienced by all B particles in each phase from all B particles
         BB_bulk_shear_stress = np.sum(SigXY_BB_bulk_part)/(bulk_area)
         BB_gas_shear_stress = np.sum(SigXY_BB_gas_part)/(gas_area)
         BB_int_shear_stress = np.sum(SigXY_BB_int_part)/(int_area)
         BB_dense_shear_stress = np.sum(SigXY_BB_dense_part)/(dense_area)
+        BB_system_shear_stress = np.sum(SigXY_BB_system_part)/(system_area)
 
 
         # Make position arrays for plotting total stress on each particle for various activity pairings and phases
@@ -3474,7 +3584,7 @@ class measurement:
         stress_stat_dict = {'bulk': {'all-all': {'XX': np.sum(allall_bulk_SigXX_part), 'XY': np.sum(allall_bulk_SigXY_part), 'YX': np.sum(allall_bulk_SigYX_part), 'YY': np.sum(allall_bulk_SigYY_part)}, 'all-A': {'XX': np.sum(allA_bulk_SigXX_part), 'XY': np.sum(allA_bulk_SigXY_part), 'YX': np.sum(allA_bulk_SigYX_part), 'YY': np.sum(allA_bulk_SigYY_part)}, 'all-B': {'XX': np.sum(allB_bulk_SigXX_part), 'XY': np.sum(allB_bulk_SigXY_part), 'YX': np.sum(allB_bulk_SigYX_part), 'YY': np.sum(allB_bulk_SigYY_part)}, 'A-A': {'XX': np.sum(SigXX_AA_bulk_part), 'XY': np.sum(SigXY_AA_bulk_part), 'YX': np.sum(SigYX_AA_bulk_part), 'YY': np.sum(SigYY_AA_bulk_part)}, 'A-B': {'XX': np.sum(SigXX_AB_bulk_part), 'XY': np.sum(SigXY_AB_bulk_part), 'YX': np.sum(SigYX_AB_bulk_part), 'YY': np.sum(SigYY_AB_bulk_part)}, 'B-B': {'XX': np.sum(SigXX_BB_bulk_part), 'XY': np.sum(SigXY_BB_bulk_part), 'YX': np.sum(SigYX_BB_bulk_part), 'YY': np.sum(SigYY_BB_bulk_part)}}, 'gas': {'all-all': {'XX': np.sum(allall_gas_SigXX_part), 'XY': np.sum(allall_gas_SigXY_part), 'YX': np.sum(allall_gas_SigYX_part), 'YY': np.sum(allall_gas_SigYY_part)}, 'all-A': {'XX': np.sum(allA_gas_SigXX_part), 'XY': np.sum(allA_gas_SigXY_part), 'YX': np.sum(allA_gas_SigYX_part), 'YY': np.sum(allA_gas_SigYY_part)}, 'all-B': {'XX': np.sum(allB_gas_SigXX_part), 'XY': np.sum(allB_gas_SigXY_part), 'YX': np.sum(allB_gas_SigYX_part), 'YY': np.sum(allB_gas_SigYY_part)}, 'A-A': {'XX': np.sum(SigXX_AA_gas_part), 'XY': np.sum(SigXY_AA_gas_part), 'YX': np.sum(SigYX_AA_gas_part), 'YY': np.sum(SigYY_AA_gas_part)}, 'A-B': {'XX': np.sum(SigXX_AB_gas_part), 'XY': np.sum(SigXY_AB_gas_part), 'YX': np.sum(SigYX_AB_gas_part), 'YY': np.sum(SigYY_AB_gas_part)}, 'B-B': {'XX': np.sum(SigXX_BB_gas_part), 'XY': np.sum(SigXY_BB_gas_part), 'YX': np.sum(SigYX_BB_gas_part), 'YY': np.sum(SigYY_BB_gas_part)}}, 'dense': {'all-all': {'XX': np.sum(allall_dense_SigXX_part), 'XY': np.sum(allall_dense_SigXY_part), 'YX': np.sum(allall_dense_SigYX_part), 'YY': np.sum(allall_dense_SigYY_part)}, 'all-A': {'XX': np.sum(allA_dense_SigXX_part), 'XY': np.sum(allA_dense_SigXY_part), 'YX': np.sum(allA_dense_SigYX_part), 'YY': np.sum(allA_dense_SigYY_part)}, 'all-B': {'XX': np.sum(allB_dense_SigXX_part), 'XY': np.sum(allB_dense_SigXY_part), 'YX': np.sum(allB_dense_SigYX_part), 'YY': np.sum(allB_dense_SigYY_part)}, 'A-A': {'XX': np.sum(SigXX_AA_dense_part), 'XY': np.sum(SigXY_AA_dense_part), 'YX': np.sum(SigYX_AA_dense_part), 'YY': np.sum(SigYY_AA_dense_part)}, 'A-B': {'XX': np.sum(SigXX_AB_dense_part), 'XY': np.sum(SigXY_AB_dense_part), 'YX': np.sum(SigYX_AB_dense_part), 'YY': np.sum(SigYY_AB_dense_part)}, 'B-B': {'XX': np.sum(SigXX_BB_dense_part), 'XY': np.sum(SigXY_BB_dense_part), 'YX': np.sum(SigYX_BB_dense_part), 'YY': np.sum(SigYY_BB_dense_part)}}}
 
         # Create output dictionary for statistical averages of total pressure and shear stress on each particle per phase/activity pairing
-        press_stat_dict = {'all-all': {'bulk': {'press': allall_bulk_int_press, 'shear': allall_bulk_shear_stress}, 'int': {'press': allall_int_int_press, 'shear': allall_int_shear_stress}, 'gas': {'press': allall_gas_int_press, 'shear': allall_gas_shear_stress}, 'dense': {'press': allall_dense_int_press, 'shear': allall_dense_shear_stress}}, 'all-A': {'bulk': {'press': allA_bulk_int_press, 'shear': allA_bulk_shear_stress}, 'int': {'press': allA_int_int_press, 'shear': allA_int_shear_stress}, 'gas': {'press': allA_gas_int_press, 'shear': allA_gas_shear_stress}, 'dense': {'press': allA_dense_int_press, 'shear': allA_dense_shear_stress}}, 'all-B': {'bulk': {'press': allB_bulk_int_press, 'shear': allB_bulk_shear_stress}, 'int': {'press': allB_int_int_press, 'shear': allB_int_shear_stress}, 'gas': {'press': allB_gas_int_press, 'shear': allB_gas_shear_stress}, 'dense': {'press': allB_dense_int_press, 'shear': allB_dense_shear_stress}}, 'A-A': {'bulk': {'press': AA_bulk_int_press, 'shear': AA_bulk_shear_stress}, 'int': {'press': AA_int_int_press, 'shear': AA_int_shear_stress}, 'gas': {'press': AA_gas_int_press, 'shear': AA_gas_shear_stress}, 'dense': {'press': AA_dense_int_press, 'shear': AA_dense_shear_stress}}, 'A-B': {'bulk': {'press': AB_bulk_int_press, 'shear': AB_bulk_shear_stress}, 'int': {'press': AB_int_int_press, 'shear': AB_int_shear_stress}, 'gas': {'press': AB_gas_int_press, 'shear': AB_gas_shear_stress}, 'dense': {'press': AB_dense_int_press, 'shear': AB_dense_shear_stress}}, 'B-B': {'bulk': {'press': BB_bulk_int_press, 'shear': BB_bulk_shear_stress}, 'int': {'press': BB_int_int_press, 'shear': BB_int_shear_stress}, 'gas': {'press': BB_gas_int_press, 'shear': BB_gas_shear_stress}, 'dense': {'press': BB_dense_int_press, 'shear': BB_dense_shear_stress}}}
+        press_stat_dict = {'all-all': {'bulk': {'press': allall_bulk_int_press, 'shear': allall_bulk_shear_stress}, 'int': {'press': allall_int_int_press, 'shear': allall_int_shear_stress}, 'gas': {'press': allall_gas_int_press, 'shear': allall_gas_shear_stress}, 'dense': {'press': allall_dense_int_press, 'shear': allall_dense_shear_stress}, 'system': {'press': allall_system_int_press, 'shear': allall_system_shear_stress}}, 'all-A': {'bulk': {'press': allA_bulk_int_press, 'shear': allA_bulk_shear_stress}, 'int': {'press': allA_int_int_press, 'shear': allA_int_shear_stress}, 'gas': {'press': allA_gas_int_press, 'shear': allA_gas_shear_stress}, 'dense': {'press': allA_dense_int_press, 'shear': allA_dense_shear_stress}, 'system': {'press': allA_system_int_press, 'shear': allA_system_shear_stress}}, 'all-B': {'bulk': {'press': allB_bulk_int_press, 'shear': allB_bulk_shear_stress}, 'int': {'press': allB_int_int_press, 'shear': allB_int_shear_stress}, 'gas': {'press': allB_gas_int_press, 'shear': allB_gas_shear_stress}, 'dense': {'press': allB_dense_int_press, 'shear': allB_dense_shear_stress}, 'system': {'press': allB_system_int_press, 'shear': allB_system_shear_stress}}, 'A-A': {'bulk': {'press': AA_bulk_int_press, 'shear': AA_bulk_shear_stress}, 'int': {'press': AA_int_int_press, 'shear': AA_int_shear_stress}, 'gas': {'press': AA_gas_int_press, 'shear': AA_gas_shear_stress}, 'dense': {'press': AA_dense_int_press, 'shear': AA_dense_shear_stress}, 'system': {'press': AA_system_int_press, 'shear': AA_system_shear_stress}}, 'A-B': {'bulk': {'press': AB_bulk_int_press, 'shear': AB_bulk_shear_stress}, 'int': {'press': AB_int_int_press, 'shear': AB_int_shear_stress}, 'gas': {'press': AB_gas_int_press, 'shear': AB_gas_shear_stress}, 'dense': {'press': AB_dense_int_press, 'shear': AB_dense_shear_stress}, 'system': {'press': AB_system_int_press, 'shear': AB_system_shear_stress}}, 'B-B': {'bulk': {'press': BB_bulk_int_press, 'shear': BB_bulk_shear_stress}, 'int': {'press': BB_int_int_press, 'shear': BB_int_shear_stress}, 'gas': {'press': BB_gas_int_press, 'shear': BB_gas_shear_stress}, 'dense': {'press': BB_dense_int_press, 'shear': BB_dense_shear_stress}, 'system': {'press': BB_system_int_press, 'shear': BB_system_shear_stress}}}
 
         # Create output dictionary for statistical averages of total stress on each particle per phase/activity pairing
         stress_plot_dict = {'bulk': {'all-all': {'XX': allall_bulk_SigXX_part, 'XY': allall_bulk_SigXY_part, 'YX': allall_bulk_SigYX_part, 'YY': allall_bulk_SigYY_part}, 'all-A': {'XX': allA_bulk_SigXX_part, 'XY': allA_bulk_SigXY_part, 'YX': allA_bulk_SigYX_part, 'YY': allA_bulk_SigYY_part}, 'all-B': {'XX': allB_bulk_SigXX_part, 'XY': allB_bulk_SigXY_part, 'YX': allB_bulk_SigYX_part, 'YY': allB_bulk_SigYY_part}, 'A-A': {'XX': SigXX_AA_bulk_part, 'XY': SigXY_AA_bulk_part, 'YX': SigYX_AA_bulk_part, 'YY': SigYY_AA_bulk_part}, 'A-B': {'XX': SigXX_AB_bulk_part, 'XY': SigXY_AB_bulk_part, 'YX': SigYX_AB_bulk_part, 'YY': SigYY_AB_bulk_part}, 'B-B': {'XX': SigXX_BB_bulk_part, 'XY': SigXY_BB_bulk_part, 'YX': SigYX_BB_bulk_part, 'YY': SigYY_BB_bulk_part}, 'pos': {'all': {'x': pos_bulk[:,0], 'y': pos_bulk[:,1]}, 'A': {'x': pos_A_bulk[:,0], 'y': pos_A_bulk[:,1]}, 'B': {'x': pos_B_bulk[:,0], 'y': pos_B_bulk[:,1]}}, 'typ': typ_bulk}, 'gas': {'all-all': {'XX': allall_gas_SigXX_part, 'XY': allall_gas_SigXY_part, 'YX': allall_gas_SigYX_part, 'YY': allall_gas_SigYY_part}, 'all-A': {'XX': allA_gas_SigXX_part, 'XY': allA_gas_SigXY_part, 'YX': allA_gas_SigYX_part, 'YY': allA_gas_SigYY_part}, 'all-B': {'XX': allB_gas_SigXX_part, 'XY': allB_gas_SigXY_part, 'YX': allB_gas_SigYX_part, 'YY': allB_gas_SigYY_part}, 'A-A': {'XX': SigXX_AA_gas_part, 'XY': SigXY_AA_gas_part, 'YX': SigYX_AA_gas_part, 'YY': SigYY_AA_gas_part}, 'A-B': {'XX': SigXX_AB_gas_part, 'XY': SigXY_AB_gas_part, 'YX': SigYX_AB_gas_part, 'YY': SigYY_AB_gas_part}, 'B-B': {'XX': SigXX_BB_gas_part, 'XY': SigXY_BB_gas_part, 'YX': SigYX_BB_gas_part, 'YY': SigYY_BB_gas_part}, 'pos': {'all': {'x': pos_gas[:,0], 'y': pos_gas[:,1]}, 'A': {'x': pos_A_gas[:,0], 'y': pos_A_gas[:,1]}, 'B': {'x': pos_B_gas[:,0], 'y': pos_B_gas[:,1]}}, 'typ': typ_gas}, 'dense': {'all-all': {'XX': allall_dense_SigXX_part, 'XY': allall_dense_SigXY_part, 'YX': allall_dense_SigYX_part, 'YY': allall_dense_SigYY_part}, 'all-A': {'XX': allA_dense_SigXX_part, 'XY': allA_dense_SigXY_part, 'YX': allA_dense_SigYX_part, 'YY': allA_dense_SigYY_part}, 'all-B': {'XX': allB_dense_SigXX_part, 'XY': allB_dense_SigXY_part, 'YX': allB_dense_SigYX_part, 'YY': allB_dense_SigYY_part}, 'A-A': {'XX': SigXX_AA_dense_part, 'XY': SigXY_AA_dense_part, 'YX': SigYX_AA_dense_part, 'YY': SigYY_AA_dense_part}, 'A-B': {'XX': SigXX_AB_dense_part, 'XY': SigXY_AB_dense_part, 'YX': SigYX_AB_dense_part, 'YY': SigYY_AB_dense_part}, 'B-B': {'XX': SigXX_BB_dense_part, 'XY': SigXY_BB_dense_part, 'YX': SigYX_BB_dense_part, 'YY': SigYY_BB_dense_part}, 'pos': {'all': {'x': pos_dense_x, 'y': pos_dense_y}, 'A': {'x': pos_A_dense_x, 'y': pos_A_dense_y}, 'B': {'x': pos_B_dense_x, 'y': pos_B_dense_y}}, 'typ': typ_dense}}

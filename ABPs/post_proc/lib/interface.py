@@ -1717,7 +1717,7 @@ class interface:
             surface_curve_ypos += self.ly_box
 
         com_pos_dict = {'pos': {'x': surface_curve_xpos, 'y': surface_curve_ypos}, 'com': {'x': x_com, 'y': y_com}}
-
+        
         return com_pos_dict
 
     def surface_com3(self, surface_curve_pos_dict):
