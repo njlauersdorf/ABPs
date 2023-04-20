@@ -164,6 +164,18 @@ class kinetic_props:
 
         align_vect = np.array([])
         percent_change_vect = np.array([])
+
+        difx_clust_arr = np.array([])
+        dify_clust_arr = np.array([])
+        difr_clust_arr = np.array([])
+
+        difx_adsorb_desorb_arr = np.array([])
+        dify_adsorb_desorb_arr = np.array([])
+        difr_adsorb_desorb_arr = np.array([])
+
+        difx_adsorb_arr = np.array([])
+        dify_adsorb_arr = np.array([])
+        difr_adsorb_arr = np.array([])
         
 
         for j in range(1, np.shape(partPhase_time)[0]):
@@ -174,6 +186,7 @@ class kinetic_props:
 
             clust_id = np.where(in_clust_arr[j,:]==1)[0]
             gas2_id = np.where(in_clust_arr[j,:]==0)[0]
+            gas2_id_prev = np.where(in_clust_arr[j-1,:]==0)[0]
 
             still_in_clust = np.intersect1d(start_clust_id, clust_id, return_indices=True)
             not_in_clust = np.delete(start_clust_id, still_in_clust[1])
@@ -251,6 +264,8 @@ class kinetic_props:
             com_x_adsorb = np.mean(pos_x_arr_time[j-1,clust_now_in_gas2[0]])
             com_y_adsorb = np.mean(pos_y_arr_time[j-1,clust_now_in_gas2[0]])
 
+
+
             pos_x_arr_desorb_adsorb = np.append(pos_x_arr_time[j,gas2_now_in_clust[0]], pos_x_arr_time[j-1,clust_now_in_gas2[0]])
             pos_y_arr_desorb_adsorb = np.append(pos_y_arr_time[j,gas2_now_in_clust[0]], pos_y_arr_time[j-1,clust_now_in_gas2[0]])
 
@@ -269,10 +284,28 @@ class kinetic_props:
 
             difx_clust = self.utility_functs.sep_dist_x(com_x_parts_arr_time[j], com_x_parts_arr_time[j-1])
             dify_clust = self.utility_functs.sep_dist_y(com_y_parts_arr_time[j], com_y_parts_arr_time[j-1])
-                        
 
-            #difx_clust = com_x_parts_arr_time[j]-com_x_parts_arr_time[j-1]
-            #dify_clust = com_y_parts_arr_time[j]-com_y_parts_arr_time[j-1]
+            clust_id_prev = np.where(in_clust_arr[j-1,:]==1)[0]
+            clust_now_in_gas_prev = np.intersect1d(clust_id_prev, gas2_id, return_indices=True)
+            clust_desorb = np.intersect1d(clust_id_prev, clust_now_in_gas_prev[0], return_indices=True)
+            clust_without_desorb = np.delete(clust_id_prev, clust_desorb[1])
+
+            gas_now_in_clust_prev = np.intersect1d(gas2_id_prev, clust_id, return_indices=True)
+            clust_with_adsorb = np.append(clust_without_desorb, gas_now_in_clust_prev[0])
+            pos_x_with_adsorb = np.append(pos_x_arr_time[j-1, clust_without_desorb], pos_x_arr_time[j, clust_with_adsorb])
+            pos_y_with_adsorb = np.append(pos_y_arr_time[j-1, clust_without_desorb], pos_y_arr_time[j, clust_with_adsorb])
+
+            com_adsorb_desorb_dict2 = self.plotting_utility_functs.com_part_view(pos_x_with_adsorb, pos_y_with_adsorb, pos_x_with_adsorb, pos_y_with_adsorb, com_x_parts_arr_time[j-1]-self.hx_box, com_y_parts_arr_time[j-1]-self.hy_box)
+
+            difx_adsorb = self.utility_functs.sep_dist_x(com_adsorb_desorb_dict2['com']['x'], com_x_parts_arr_time[j-1]-self.hx_box)
+            dify_adsorb = self.utility_functs.sep_dist_y(com_adsorb_desorb_dict2['com']['y'], com_y_parts_arr_time[j-1]-self.hy_box)
+            difr_adsorb = ( difx_adsorb ** 2 + dify_adsorb ** 2 ) ** 0.5
+
+            #plt.scatter(pos_x_with_adsorb, pos_y_with_adsorb, s=0.7, color='black')
+            #plt.scatter(com_adsorb_desorb_dict2['com']['x'], com_adsorb_desorb_dict2['com']['y'], s=25, color='red')
+            #plt.scatter(com_x_parts_arr_time[j]-self.hx_box, com_y_parts_arr_time[j]-self.hy_box, s=25, color='blue')
+            #plt.scatter(com_x_parts_arr_time[j-1]-self.hx_box, com_y_parts_arr_time[j-1]-self.hy_box, s=25, color='purple')
+            #plt.show()
             difr_clust = ( difx_clust ** 2 + dify_clust ** 2 ) ** 0.5
 
             difx_clust_norm = difx_clust / difr_clust
@@ -283,6 +316,18 @@ class kinetic_props:
 
             align_vect = np.append(align_vect, (difx_clust_norm * difx_adsorb_desorb_norm) + (dify_clust_norm * dify_adsorb_desorb_norm))
             percent_change_vect = np.append(percent_change_vect, (difr_adsorb_desorb - difr_clust) / difr_clust)
+
+            difx_clust_arr = np.append(difx_clust_arr, difx_clust)
+            dify_clust_arr = np.append(dify_clust_arr, dify_clust)
+            difr_clust_arr = np.append(difr_clust_arr, difr_clust)
+
+            difx_adsorb_desorb_arr = np.append(difx_adsorb_desorb_arr, difx_adsorb_desorb)
+            dify_adsorb_desorb_arr = np.append(dify_adsorb_desorb_arr, dify_adsorb_desorb)
+            difr_adsorb_desorb_arr = np.append(difr_adsorb_desorb_arr, difr_adsorb_desorb)
+
+            difx_adsorb_arr = np.append(difx_adsorb_arr, difx_adsorb)
+            dify_adsorb_arr = np.append(dify_adsorb_arr, dify_adsorb)
+            difr_adsorb_arr = np.append(difr_adsorb_arr, difr_adsorb)
 
             if len(bulk_now_in_gas)>0:
                 num_bulk_to_gas_no_int = np.append(num_bulk_to_gas_no_int, len(bulk_now_in_gas_no_int[0]))
@@ -437,5 +482,5 @@ class kinetic_props:
         num_fast_dense_to_gas = (num_fast_bulk_to_gas + num_fast_int_to_gas)
 
         adsorption_dict = {'tauB': partPhase_time_arr[1:].tolist(), 'gas_to_clust': {'all': num_gas2_to_clust.tolist(), 'A': num_slow_gas2_to_clust.tolist(),'B': num_fast_gas2_to_clust.tolist()}, 'clust_to_gas': {'all': num_clust_to_gas2.tolist(), 'A': num_slow_clust_to_gas2.tolist(),'B': num_fast_clust_to_gas2.tolist()}, 'gas_to_dense': {'all': num_gas_to_dense.tolist(), 'A': num_slow_gas_to_dense.tolist(),'B': num_fast_gas_to_dense.tolist()}, 'dense_to_gas': {'all': num_dense_to_gas.tolist(), 'A': num_slow_dense_to_gas.tolist(),'B': num_fast_dense_to_gas.tolist()}, 'gas_to_bulk': {'all': num_gas_to_bulk.tolist(), 'A': num_slow_gas_to_bulk.tolist(),'B': num_fast_gas_to_bulk.tolist()}, 'bulk_to_gas': {'all': num_bulk_to_gas.tolist(), 'A': num_slow_bulk_to_gas.tolist(),'B': num_fast_bulk_to_gas.tolist()}, 'int_to_bulk': {'all': num_int_to_bulk.tolist(), 'A': num_slow_int_to_bulk.tolist(),'B': num_fast_int_to_bulk.tolist()}, 'bulk_to_int': {'all': num_bulk_to_int.tolist(), 'A': num_slow_bulk_to_int.tolist(),'B': num_fast_bulk_to_int.tolist()}, 'gas_to_int': {'all': num_gas_to_int.tolist(), 'A': num_slow_gas_to_int.tolist(),'B': num_fast_gas_to_int.tolist()}, 'int_to_gas': {'all': num_int_to_gas.tolist(), 'A': num_slow_int_to_gas.tolist(),'B': num_fast_int_to_gas.tolist()}, 'gas_to_bulk_no_int': {'all': num_gas_to_bulk_no_int.tolist(), 'A': num_slow_gas_to_bulk_no_int.tolist(),'B': num_fast_gas_to_bulk_no_int.tolist()}, 'bulk_to_gas_no_int': {'all': num_bulk_to_gas_no_int.tolist(), 'A': num_slow_bulk_to_gas_no_int.tolist(),'B': num_fast_bulk_to_gas_no_int.tolist()}}
-        clust_motion_dict = {'align': align_vect.tolist(), 'magnitude': percent_change_vect.tolist()}
+        clust_motion_dict = {'tauB': partPhase_time_arr[1:].tolist(), 'align': align_vect.tolist(), 'magnitude': percent_change_vect.tolist(), 'net_flux': {'x': difx_adsorb_arr.tolist(), 'y': dify_adsorb_arr.tolist(), 'r': difr_adsorb_arr.tolist()}, 'total': {'x': difx_clust_arr.tolist(), 'y': dify_clust_arr.tolist(), 'r': difr_clust_arr.tolist()}, 'com_flux': {'x': difx_adsorb_desorb_arr.tolist(), 'y': dify_adsorb_desorb_arr.tolist(), 'r': difr_adsorb_desorb_arr.tolist()}}
         return adsorption_dict, clust_motion_dict
