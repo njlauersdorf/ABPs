@@ -1528,14 +1528,14 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
     
     if measurement_method == 'adsorption_final':
-        
-        if steady_state_once == 'True':
-            kinetic_functs = kinetics.kinetic_props(lx_box, ly_box, NBins_x, NBins_y, partNum, typ, eps, peA, peB, parFrac)
+        if len(partPhase_time_arr)>1:
+            if steady_state_once == 'True':
+                kinetic_functs = kinetics.kinetic_props(lx_box, ly_box, NBins_x, NBins_y, partNum, typ, eps, peA, peB, parFrac)
 
-            adsorption_dict, clust_motion_dict = kinetic_functs.particle_flux_final(partPhase_time, in_clust_arr, partPhase_time_arr, clust_size_arr, pos_x_arr_time, pos_y_arr_time, com_x_arr_time, com_y_arr_time, com_x_parts_arr_time, com_y_parts_arr_time)
+                adsorption_dict, clust_motion_dict = kinetic_functs.particle_flux_final(partPhase_time, in_clust_arr, partPhase_time_arr, clust_size_arr, pos_x_arr_time, pos_y_arr_time, com_x_arr_time, com_y_arr_time, com_x_parts_arr_time, com_y_parts_arr_time)
 
-            data_output_functs.write_all_time_to_txt(adsorption_dict, dataPath + 'adsorption_final_' + outfile + '.txt')
-            data_output_functs.write_all_time_to_txt(clust_motion_dict, dataPath + 'clust_motion_final_' + outfile + '.txt')
+                data_output_functs.write_all_time_to_txt(adsorption_dict, dataPath + 'adsorption_final_' + outfile + '.txt')
+                data_output_functs.write_all_time_to_txt(clust_motion_dict, dataPath + 'clust_motion_final_' + outfile + '.txt')
     elif measurement_method == 'penetration':
         
         x = 1

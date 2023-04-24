@@ -102,65 +102,6 @@ class kinetic_props:
 
         self.plotting_utility_functs = plotting_utility.plotting_utility(self.lx_box, self.ly_box, self.partNum, self.typ)
     def particle_flux(self, partPhase_time, in_clust_arr, partPhase_time_arr, clust_size_arr, pos_x_arr_time, pos_y_arr_time, com_x_arr_time, com_y_arr_time, com_x_parts_arr_time, com_y_parts_arr_time):
-        start_part_phase = partPhase_time[0:,]
-        start_bulk_id = np.where(partPhase_time[0,:]==0)[0]
-        start_gas_id = np.where(partPhase_time[0,:]==2)[0]
-        start_int_id = np.where(partPhase_time[0,:]==1)[0]
-
-        start_clust_id = np.where(in_clust_arr[0,:]==1)[0]
-        start_gas2_id = np.where(in_clust_arr[0,:]==0)[0]
-
-        start_bulk_id_with_int = np.where(partPhase_time[0,:]==0)[0]
-        start_gas_id_with_int = np.where(partPhase_time[0,:]==2)[0]
-        start_int_id_with_int = np.where(partPhase_time[0,:]==1)[0]
-
-        num_clust_to_gas2 = np.array([])
-        num_slow_clust_to_gas2 = np.array([])
-        num_fast_clust_to_gas2 = np.array([])
-
-        num_gas2_to_clust = np.array([])
-        num_slow_gas2_to_clust = np.array([])
-        num_fast_gas2_to_clust = np.array([])
-
-        num_bulk_to_gas = np.array([])
-        num_slow_bulk_to_gas = np.array([])
-        num_fast_bulk_to_gas = np.array([])
-
-        num_gas_to_bulk = np.array([])
-        num_slow_gas_to_bulk = np.array([])
-        num_fast_gas_to_bulk = np.array([])
-
-        num_gas_to_int = np.array([])
-        num_slow_gas_to_int = np.array([])
-        num_fast_gas_to_int = np.array([])
-
-        num_int_to_gas = np.array([])
-        num_slow_int_to_gas = np.array([])
-        num_fast_int_to_gas = np.array([])
-
-        num_bulk_to_int = np.array([])
-        num_slow_bulk_to_int = np.array([])
-        num_fast_bulk_to_int = np.array([])
-
-        num_int_to_bulk = np.array([])
-        num_slow_int_to_bulk = np.array([])
-        num_fast_int_to_bulk = np.array([])
-
-        num_bulk_to_gas = np.array([])
-        num_slow_bulk_to_gas = np.array([])
-        num_fast_bulk_to_gas = np.array([])
-
-        num_gas_to_bulk = np.array([])
-        num_slow_gas_to_bulk = np.array([])
-        num_fast_gas_to_bulk = np.array([])
-
-        num_bulk_to_gas_no_int = np.array([])
-        num_slow_bulk_to_gas_no_int = np.array([])
-        num_fast_bulk_to_gas_no_int = np.array([])
-
-        num_gas_to_bulk_no_int = np.array([])
-        num_slow_gas_to_bulk_no_int = np.array([])
-        num_fast_gas_to_bulk_no_int = np.array([])
 
         align_vect = np.array([])
         percent_change_vect = np.array([])
@@ -180,7 +121,6 @@ class kinetic_props:
         difx_adsorb_arr = np.array([])
         dify_adsorb_arr = np.array([])
         difr_adsorb_arr = np.array([])
-        
 
         bulk_id = np.where(partPhase_time[-1,:]==0)[0]
         gas_id = np.where(partPhase_time[-1,:]==2)[0]
@@ -281,11 +221,15 @@ class kinetic_props:
         dify_adsorb = self.utility_functs.sep_dist_y(com_adsorb_desorb_dict2['com']['y'], com_y_parts_arr_time[-2]-self.hy_box)
         difr_adsorb = ( difx_adsorb ** 2 + dify_adsorb ** 2 ) ** 0.5
 
-        #plt.scatter(pos_x_with_adsorb, pos_y_with_adsorb, s=0.7, color='black')
-        #plt.scatter(com_adsorb_desorb_dict2['com']['x'], com_adsorb_desorb_dict2['com']['y'], s=25, color='red')
-        #plt.scatter(com_x_parts_arr_time[j]-self.hx_box, com_y_parts_arr_time[j]-self.hy_box, s=25, color='blue')
-        #plt.scatter(com_x_parts_arr_time[j-1]-self.hx_box, com_y_parts_arr_time[j-1]-self.hy_box, s=25, color='purple')
+        #plt.scatter(pos_x_arr_time[-1,bulk_id], pos_y_arr_time[-1,bulk_id], s=0.7, color='black')
+        #plt.scatter(pos_x_arr_time[-1,int_id], pos_y_arr_time[-1,int_id], s=0.7, color='black')
+        #plt.scatter(com_x_parts_arr_time[-1]-self.hx_box, com_y_parts_arr_time[-1]-self.hy_box, s=25, edgecolor='blue', facecolor='None')
+        #plt.scatter(com_x_parts_arr_time[-2]-self.hx_box, com_y_parts_arr_time[-2]-self.hy_box, s=25, edgecolor='purple', facecolor='None')
+        #plt.scatter(com_adsorb_desorb_dict2['com']['x'], com_adsorb_desorb_dict2['com']['y'], s=25, edgecolor='red', facecolor='None') This is the good one
+        #plt.scatter(com_without_desorb_current_dict['com']['x'], com_without_desorb_current_dict['com']['y'], s=25, edgecolor='orange', facecolor='None')
         #plt.show()
+        
+        
 
 
         
