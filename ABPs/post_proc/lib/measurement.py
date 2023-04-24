@@ -5,6 +5,7 @@ import os
 from gsd import hoomd
 from freud import box
 import freud
+from freud import diffraction
 import numpy as np
 import math
 import scipy
@@ -140,6 +141,8 @@ class measurement:
 
         # Initialize theory functions for call back later
         self.theory_functs = theory.theory()
+
+        self.sf_box = freud.box.Box(Lx=lx_box, Ly=ly_box, Lz=lx_box * 3, is2D=False)
 
 
     def average_activity(self, part_ids = None):
@@ -662,6 +665,193 @@ class measurement:
         wasserstein_dict = {'AA-BB': AA_BB_wasserstein, 'AB-BB': AB_BB_wasserstein, 'allA-allB': allA_allB_wasserstein}
 
         return wasserstein_dict
+    def structure_factor2(self):
+        '''
+        Purpose: Takes the composition of each phase and uses neighbor lists to compute the average
+        interparticle separation distance (lattice spacing) between each particle and their nearest,
+        interacting neighbors for plotting and simplified, statistical outputs
+
+        Outputs:
+        lat_stat_dict: dictionary containing the mean and standard deviation of the lattice spacing, averaged
+        over all neighbors within the potential cut-off radius, for each phase.
+
+        lat_plot_dict: dictionary containing information on the lattice spacing, averaged
+        over all neighbors within the potential cut-off radius, of each bulk and
+        interface reference particle type ('all', 'A', or 'B').
+        '''
+        phase_part_dict = self.particle_prop_functs.particle_phase_ids(self.phasePart)
+
+        # Position and orientation arrays of type A particles in respective phase
+        typ0ind = np.where(self.typ==0)[0]
+        pos_A=self.pos[typ0ind]                               # Find positions of type 0 particles
+        pos_A_bulk = self.pos[phase_part_dict['bulk']['A']]
+        pos_A_int = self.pos[phase_part_dict['int']['A']]
+        pos_A_gas = self.pos[phase_part_dict['gas']['A']]
+        pos_A_dense = self.pos[phase_part_dict['dense']['A']]
+
+        # Position and orientation arrays of type B particles in respective phase
+        typ1ind = np.where(self.typ==1)[0]
+        pos_B=self.pos[typ1ind]                               # Find positions of type 0 particles
+        pos_B_bulk = self.pos[phase_part_dict['bulk']['B']]
+        pos_B_int = self.pos[phase_part_dict['int']['B']]
+        pos_B_gas = self.pos[phase_part_dict['gas']['B']]
+        pos_B_dense = self.pos[phase_part_dict['dense']['B']]
+
+        # Position and orientation arrays of all particles in respective phase
+        pos_bulk = self.pos[phase_part_dict['bulk']['all']]
+        pos_int = self.pos[phase_part_dict['int']['all']]
+        pos_gas = self.pos[phase_part_dict['gas']['all']]
+        pos_dense = self.pos[phase_part_dict['dense']['all']]
+
+        # Neighbor list query arguments to find interacting particles
+        #query_args = dict(mode='ball', r_min = 0.1, r_max=45)
+        query_args = dict(mode='nearest', r_min = 0.1, num_neighbors=len(pos_bulk)-1)
+
+        # Locate potential neighbor particles of all types in the dense phase
+        system_all_bulk = freud.AABBQuery(self.f_box, self.f_box.wrap(pos_bulk))
+        import time
+
+        t = time.time()
+        #Checks for all neighbors around type 'A' particles within bulk
+        allall_bulk_nlist = system_all_bulk.query(self.f_box.wrap(pos_bulk), query_args).toNeighborList()
+        elapsed = time.time() - t
+
+        print(elapsed)
+        # Calculate interparticle separation distances between A reference particles and all neighbors within bulk
+        bulk_lats = self.utility_functs.sep_dist_arr(pos_bulk[allall_bulk_nlist.point_indices], pos_bulk[allall_bulk_nlist.query_point_indices])
+        elapsed = time.time() - t
+        
+
+        print(elapsed)
+        k_arr = np.linspace(0, 1, num=10)
+        print(len(bulk_lats))
+        print(type(len(bulk_lats)))
+        ssf_all = np.zeros(len(k_arr))
+        
+        #Initiate empty arrays for finding nearest B neighboring dense particles surrounding type A bulk particles
+        allall_bulk_neigh_ind = np.array([], dtype=int)
+        allall_bulk_num_neigh = np.array([])
+        allall_bulk_dot = np.array([])
+
+        ssf_all_sum = np.zeros(len(k_arr))
+        #bulk_lats = np.reshape(bulk_lats, (1, len(bulk_lats)))
+        #k_arr = np.reshape(k_arr, (len(k_arr), 1))
+        #coeff = np.matmul(k_arr, bulk_lats)
+
+        #ssf_all_sum_final = (np.sum(np.cos(coeff))**2 + np.sum(np.sin(-k_arr[k] * bulk_lats))**2)**0.5
+
+        #Loop over neighbor pairings of B-A neighbor pairs to calculate number of nearest neighbors
+        """
+        #Initiate empty arrays for finding nearest A neighboring dense particles surrounding type B bulk particles
+        allall_bulk_neigh_ind = np.array([], dtype=int)
+        allall_bulk_num_neigh = np.array([])
+        
+        ssf_all_sum2 = np.zeros((len(k_arr), len(pos_bulk)))
+        ssf_all2 = np.zeros((len(k_arr), len(pos_bulk)))
+
+        #Loop over neighbor pairings of A-B neighbor pairs to calculate number of nearest neighbors
+        for i in range(0, len(pos_bulk)):
+            if i in allall_bulk_nlist.query_point_indices:
+                if i not in allall_bulk_neigh_ind:
+                    # Find neighbors list IDs where i is reference particle
+                    loc = np.where(allall_bulk_nlist.query_point_indices==i)[0]
+                    for k in range(0, len(k_arr)):
+                        ssf_all_sum2[k,i] = (np.sum(np.cos(-k_arr[k] * bulk_lats[loc]))**2 + np.sum(np.sin(-k_arr[k] * bulk_lats[loc]))**2)**0.5
+                        ssf_all2[k,i] = np.sum(np.exp(k_arr[k] * bulk_lats[loc] * 1j))
+                    #Save nearest neighbor information to array
+                    allall_bulk_num_neigh = np.append(allall_bulk_num_neigh, len(loc))
+                    allall_bulk_neigh_ind = np.append(allall_bulk_neigh_ind, int(i))
+            else:
+                #Save nearest neighbor information to array
+                allall_bulk_num_neigh = np.append(allall_bulk_num_neigh, 0)
+                allall_bulk_neigh_ind = np.append(allall_bulk_neigh_ind, int(i))
+        stop
+        """
+        for k in range(0, len(k_arr)):
+            ssf_all_sum[k] = (np.sum(np.cos(-k_arr[k] * bulk_lats))**2 + np.sum(np.sin(-k_arr[k] * bulk_lats))**2)**0.5
+            ssf_all[k] = np.sum(np.exp(k_arr[k] * bulk_lats * 1j))
+
+        print(ssf_all_sum / len(pos_bulk))
+        print(ssf_all / len(pos_bulk))
+        print(len(pos_bulk))
+        stop
+        for k in range(0, len(k_arr)):
+
+            ssf_all[k] = np.sum(np.cos(k_arr[k] * bulk_lats))**2 + np.sum(np.sin(k_arr[k] * bulk_lats))**2
+            ssf_all[k] = np.abs(np.sum(np.exp(k_arr[k] * bulk_lats * 1j)))**2
+
+
+        print( (1/len(pos_bulk)) * ssf_all)
+
+        np.einsum('i,k->k', k_arr, bulk_lats)
+        stop
+        
+        # Calculate interparticle separation distances between all reference particles and all neighbors within bulk
+        
+
+    def structure_factor_freud(self):
+
+        # Count total number of bins in each phase
+        phase_count_dict = self.phase_ident_functs.phase_count(self.phase_dict)
+
+        # Get array of ids that give which particles of each type belong to each phase
+        phase_part_dict = self.particle_prop_functs.particle_phase_ids(self.phasePart)
+
+        # Calculate area of bulk
+        bulk_area = phase_count_dict['bulk'] * (self.sizeBin_x * self.sizeBin_y)
+
+        # Position and orientation arrays of type A particles in respective phase
+        typ0ind = np.where(self.typ==0)[0]
+        pos_A=self.pos[typ0ind]                               # Find positions of type 0 particles
+        ang_A=self.ang[typ0ind]
+        pos_A_bulk = self.pos[phase_part_dict['bulk']['A']]
+        ang_A_bulk = self.ang[phase_part_dict['bulk']['A']]
+        pos_A_int = self.pos[phase_part_dict['int']['A']]
+        ang_A_int = self.ang[phase_part_dict['int']['A']]
+        pos_A_gas = self.pos[phase_part_dict['gas']['A']]
+        pos_A_dense = self.pos[phase_part_dict['dense']['A']]
+        ang_A_dense = self.ang[phase_part_dict['dense']['A']]
+
+        # Position and orientation arrays of type B particles in respective phase
+        typ1ind = np.where(self.typ==1)[0]
+        pos_B=self.pos[typ1ind]
+        ang_B=self.ang[typ1ind]
+        pos_B_bulk = self.pos[phase_part_dict['bulk']['B']]
+        ang_B_bulk = self.ang[phase_part_dict['bulk']['B']]
+        pos_B_int = self.pos[phase_part_dict['int']['B']]
+        ang_B_int = self.ang[phase_part_dict['int']['B']]
+        pos_B_gas = self.pos[phase_part_dict['gas']['B']]
+        pos_B_dense = self.pos[phase_part_dict['dense']['B']]
+        ang_B_dense = self.ang[phase_part_dict['dense']['B']]
+
+        # Position and orientation arrays of all particles in respective phase
+        pos_bulk = self.pos[phase_part_dict['bulk']['all']]
+        pos_int = self.pos[phase_part_dict['int']['all']]
+        pos_gas = self.pos[phase_part_dict['gas']['all']]
+        pos_dense = self.pos[phase_part_dict['dense']['all']]
+
+        import time
+
+        t = time.time()
+        sf = freud.diffraction.StaticStructureFactorDirect(
+            bins=100, k_max=10, k_min=0
+        )
+
+        
+
+        sf.compute(
+            (self.sf_box, self.sf_box.wrap(pos_bulk[0:500])),
+            query_points=pos_bulk[0:500],
+            N_total=len(pos_bulk[0:500])
+        )
+
+        elapsed = time.time() - t
+
+        print(elapsed)
+
+        print(sf.S_k)
+        print(sf.k_points)
+        stop
 
     def structure_factor(self, rad_df_dict, part_count_dict):
 
@@ -714,7 +904,10 @@ class measurement:
             partial_ssf_AB_arr=np.append( partial_ssf_AB_arr, 1 + 4 * np.pi * num_dens_mean_dict['all'] * partial_ssf_AB)
             partial_ssf_BA_arr=np.append( partial_ssf_BA_arr, 1 + 4 * np.pi * num_dens_mean_dict['all'] * partial_ssf_AB)
             partial_ssf_BB_arr=np.append( partial_ssf_BB_arr, 1 + 4 * np.pi * num_dens_mean_dict['all'] * partial_ssf_BB)
-        
+        print(partial_ssf_allall_arr)
+        plt.plot(k_arr[1:], partial_ssf_allall_arr)
+        plt.show()
+        stop
         compressibility_allall = (1 + num_dens_mean_dict['all'] * np.trapz((np.array(g_r_allall_bulk)-1), x=r_arr)) / (num_dens_mean_dict['all'] * ((self.peA**2)/6))
         #compressibility_AA = (1 + num_dens_mean_dict['A'] * np.trapz((np.array(g_r_AA_bulk)-1), x=r_arr)) / (num_dens_mean_dict['A'] * ((self.peA**2)/6))
         #compressibility_AB = (1 + num_dens_mean_dict['A'] * np.trapz((np.array(g_r_AB_bulk)-1), x=r_arr)) / (num_dens_mean_dict['B'] * ((self.peB**2)/6))
@@ -722,10 +915,6 @@ class measurement:
         #compressibility_BB = (1 + num_dens_mean_dict['B'] * np.trapz((np.array(g_r_BB_bulk)-1), x=r_arr)) / (num_dens_mean_dict['B'] * ((self.peB**2)/6))
         compressibility_allA = (1 + num_dens_mean_dict['all'] * np.trapz((np.array(g_r_allA_bulk)-1), x=r_arr)) / (num_dens_mean_dict['A'] * ((self.peA**2)/6))
         compressibility_allB = (1 + num_dens_mean_dict['all'] * np.trapz((np.array(g_r_allB_bulk)-1), x=r_arr)) / (num_dens_mean_dict['B'] * ((self.peB**2)/6))
-
-         
-        #partial_ssf_allall_arr / (num_dens_mean_dict['all'] * (self.peA*(1/3)/2))
-        partial_ssf_allall_num = (partial_ssf_AA_arr) * (num_dens_mean_dict['A']/num_dens_mean_dict['all'])**2 + (partial_ssf_AB_arr) * (num_dens_mean_dict['A']/num_dens_mean_dict['all'])* (num_dens_mean_dict['B']/num_dens_mean_dict['all']) + (partial_ssf_BA_arr) * (num_dens_mean_dict['A']/num_dens_mean_dict['all'])* (num_dens_mean_dict['B']/num_dens_mean_dict['all']) + (partial_ssf_BB_arr) * (num_dens_mean_dict['B']/num_dens_mean_dict['all'])**2
 
         compress_dict = {'all': compressibility_allall, 'A': compressibility_allA, 'B': compressibility_allB}
         structure_factor_dict = {'k': k_arr[1:], 'all-all': partial_ssf_allall_arr, 'all-all2': partial_ssf_allall_num,'A-A': partial_ssf_AA_arr, 'A-B': partial_ssf_AB_arr, 'B-A': partial_ssf_BA_arr, 'B-B': partial_ssf_BB_arr}

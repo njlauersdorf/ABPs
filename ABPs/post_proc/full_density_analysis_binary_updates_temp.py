@@ -945,7 +945,6 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                 if plot == 'y':
                     plotting_functs.plot_phases(pos, part_id_dict, all_surface_curves, int_comp_dict, phase_dict)
-                    stop
             elif measurement_method== 'bubble_interface_pressure':
 
                 lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
@@ -1074,6 +1073,25 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 compress_dict = lattice_structure_functs.compressibility(radial_df_dict)
 
                 data_output_functs.write_to_txt(compress_dict, dataPath + 'compressibility_' + outfile + '.txt')
+            elif measurement_method == 'structure_factor2':
+                lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
+
+                compress_dict, structure_factor_dict, k0_dict = lattice_structure_functs.structure_factor2()
+
+                #data_output_functs.write_to_txt(k0_dict, dataPath + 'structure_factor_' + outfile + '.txt')
+
+                #data_output_functs.write_to_txt(compress_dict, dataPath + 'compressibility2_' + outfile + '.txt')
+
+            
+            elif measurement_method == 'structure_factor_freud':
+                lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
+
+                compress_dict, structure_factor_dict, k0_dict = lattice_structure_functs.structure_factor_freud()
+
+                #data_output_functs.write_to_txt(k0_dict, dataPath + 'structure_factor_' + outfile + '.txt')
+
+                #data_output_functs.write_to_txt(compress_dict, dataPath + 'compressibility2_' + outfile + '.txt')
+
             elif measurement_method == 'structure_factor':
                 lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
 
@@ -1432,6 +1450,16 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     plotting_functs = plotting.plotting(orient_dict, pos_dict, l_box, NBins, sizeBin, peA, peB, parFrac, eps, typ, tst)
 
                     plotting_functs.plot_stein_order(pos, nematic_order_param, all_surface_curves, int_comp_dict)
+            elif measurement_method == 'adsorption_final':
+
+                if len(partPhase_time_arr)>1:
+                
+                    if steady_state_once == 'True':
+                        kinetic_functs = kinetics.kinetic_props(lx_box, ly_box, NBins_x, NBins_y, partNum, typ, eps, peA, peB, parFrac)
+
+                        clust_motion_dict = kinetic_functs.particle_flux(partPhase_time, in_clust_arr, partPhase_time_arr, clust_size_arr, pos_x_arr_time, pos_y_arr_time, com_x_arr_time, com_y_arr_time, com_x_parts_arr_time, com_y_parts_arr_time)
+
+                        data_output_functs.write_to_txt(clust_motion_dict, dataPath + 'not_clust_motion_final_' + outfile + '.txt')
         else:
             if measurement_method == 'activity':
 
@@ -1504,7 +1532,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
         if steady_state_once == 'True':
             kinetic_functs = kinetics.kinetic_props(lx_box, ly_box, NBins_x, NBins_y, partNum, typ, eps, peA, peB, parFrac)
 
-            adsorption_dict, clust_motion_dict = kinetic_functs.particle_flux(partPhase_time, in_clust_arr, partPhase_time_arr, clust_size_arr, pos_x_arr_time, pos_y_arr_time, com_x_arr_time, com_y_arr_time, com_x_parts_arr_time, com_y_parts_arr_time)
+            adsorption_dict, clust_motion_dict = kinetic_functs.particle_flux_final(partPhase_time, in_clust_arr, partPhase_time_arr, clust_size_arr, pos_x_arr_time, pos_y_arr_time, com_x_arr_time, com_y_arr_time, com_x_parts_arr_time, com_y_parts_arr_time)
 
             data_output_functs.write_all_time_to_txt(adsorption_dict, dataPath + 'adsorption_final_' + outfile + '.txt')
             data_output_functs.write_all_time_to_txt(clust_motion_dict, dataPath + 'clust_motion_final_' + outfile + '.txt')
