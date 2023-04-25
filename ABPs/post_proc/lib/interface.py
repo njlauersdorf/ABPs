@@ -2708,8 +2708,8 @@ class interface:
                                 for id in range(0, len(interior_surface_com_xpos)):
 
                                     # Calculate separation distance of reference bin from interior surface point
-                                    difx_width = self.utility_functs.sep_dist_x(xpos_ref, exterior_surface_com_xpos[id])
-                                    dify_width = self.utility_functs.sep_dist_y(ypos_ref, exterior_surface_com_ypos[id])
+                                    difx_width = self.utility_functs.sep_dist_x(xpos_ref, interior_surface_com_xpos[id])
+                                    dify_width = self.utility_functs.sep_dist_y(ypos_ref, interior_surface_com_ypos[id])
                                     difr = ( (difx_width)**2 + (dify_width)**2)**0.5
 
                                     #If this distance is the shortest separation distance thus far, save it as nearest surface point

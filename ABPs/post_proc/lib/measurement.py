@@ -648,9 +648,9 @@ class measurement:
         # Create output dictionary for plotting of RDF vs separation distance
         rad_df_dict = {'r': r_arr, 'all-all': g_r_allall_bulk, 'all-A': g_r_allA_bulk, 'all-B': g_r_allB_bulk, 'A-A': g_r_AA_bulk, 'A-B': g_r_AB_bulk, 'B-A': g_r_BA_bulk, 'B-B': g_r_BB_bulk}
         return rad_df_dict
-    def wasserstein_distance(self, rad_df_dict):
+    def wasserstein_distance(self, rad_df_dict, lattice_spacing):
 
-        r_arr = rad_df_dict['r']
+        r_arr = rad_df_dict['r']/lattice_spacing
         g_r_allall_bulk = rad_df_dict['all-all']
         g_r_AA_bulk = rad_df_dict['A-A']
         g_r_AB_bulk = rad_df_dict['A-B']
@@ -661,8 +661,10 @@ class measurement:
         AA_BB_wasserstein = scipy.stats.wasserstein_distance(g_r_AA_bulk, g_r_BB_bulk)
         AB_BB_wasserstein = scipy.stats.wasserstein_distance(g_r_AB_bulk, g_r_BB_bulk)
         allA_allB_wasserstein = scipy.stats.wasserstein_distance(g_r_allA_bulk, g_r_allB_bulk)
+        allB_BB_wasserstein = scipy.stats.wasserstein_distance(g_r_allB_bulk, g_r_BB_bulk)
+        allA_AA_wasserstein = scipy.stats.wasserstein_distance(g_r_allA_bulk, g_r_AA_bulk)
 
-        wasserstein_dict = {'AA-BB': AA_BB_wasserstein, 'AB-BB': AB_BB_wasserstein, 'allA-allB': allA_allB_wasserstein}
+        wasserstein_dict = {'AA-BB': AA_BB_wasserstein, 'AB-BB': AB_BB_wasserstein, 'allA-allB': allA_allB_wasserstein, 'allA-AA': allA_AA_wasserstein, 'allB-BB': allB_BB_wasserstein}
 
         return wasserstein_dict
     def structure_factor2(self):

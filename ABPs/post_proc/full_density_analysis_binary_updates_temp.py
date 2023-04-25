@@ -1181,6 +1181,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                 lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
 
+                lat_stat_dict, lat_plot_dict = lattice_structure_functs.lattice_spacing()
+
                 radial_df_dict = lattice_structure_functs.radial_df()
 
 
@@ -1201,7 +1203,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 #except: radial_df_dict_avg = radial_df_dict
                 data_output_functs.write_to_txt(radial_df_dict, dataPath + 'radial_df_' + outfile + '.txt')
 
-                wasserstein_dict = lattice_structure_functs.wasserstein_distance(radial_df_dict)
+                wasserstein_dict = lattice_structure_functs.wasserstein_distance(radial_df_dict, lat_stat_dict['bulk']['all']['mean'])
 
                 data_output_functs.write_to_txt(wasserstein_dict, dataPath + 'wasserstein_' + outfile + '.txt')
 
