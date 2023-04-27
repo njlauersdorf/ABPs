@@ -134,6 +134,32 @@ class kinetic_props:
         gas2_id = np.where(in_clust_arr[-1,:]==0)[0]
         gas2_id_prev = np.where(in_clust_arr[-2,:]==0)[0]
 
+        clust_now_in_gas2 = np.intersect1d(gas2_id, clust_id_prev, return_indices=True)
+
+        gas2_now_in_clust = np.intersect1d(clust_id, gas2_id_prev, return_indices=True)
+        
+        
+        adsorb_rate = len(gas2_now_in_clust[0])
+
+        if len(clust_now_in_gas2)>0:
+                num_clust_to_gas2 = len(clust_now_in_gas2[0])
+                num_slow_clust_to_gas2 = len(np.where(self.typ[clust_now_in_gas2[0].astype('int')]==0)[0])
+                num_fast_clust_to_gas2 = len(np.where(self.typ[clust_now_in_gas2[0].astype('int')]==1)[0])
+        else:
+            num_clust_to_gas2 = 0
+            num_slow_clust_to_gas2 = 0
+            num_fast_clust_to_gas2 = 0
+
+        if len(gas2_now_in_clust)>0:
+            num_gas2_to_clust = len(gas2_now_in_clust[0])
+            num_slow_gas2_to_clust = len(np.where(self.typ[gas2_now_in_clust[0].astype('int')]==0)[0])
+            num_fast_gas2_to_clust = len(np.where(self.typ[gas2_now_in_clust[0].astype('int')]==1)[0])
+        else:
+            num_gas2_to_clust = 0
+            num_slow_gas2_to_clust = 0
+            num_fast_gas2_to_clust = 0
+
+
         # Find all particles in previous time step that adsorbed to and desorbed from cluster
         gas_now_in_clust_prev = np.intersect1d(gas2_id_prev, clust_id, return_indices=True)
 
@@ -251,7 +277,10 @@ class kinetic_props:
         difr_adsorb_arr = np.append(difr_adsorb_arr, difr_adsorb)
 
         clust_motion_dict = {'align': align_vect.tolist(), 'magnitude': percent_change_vect.tolist(), 'no_desorb': {'x': difx_without_desorb_arr.tolist(), 'y': dify_without_desorb_arr.tolist(), 'r': difr_without_desorb_arr.tolist()}, 'net_flux': {'x': difx_adsorb_arr.tolist(), 'y': dify_adsorb_arr.tolist(), 'r': difr_adsorb_arr.tolist()}, 'total': {'x': difx_clust_arr.tolist(), 'y': dify_clust_arr.tolist(), 'r': difr_clust_arr.tolist()}, 'com_flux': {'x': difx_adsorb_desorb_arr.tolist(), 'y': dify_adsorb_desorb_arr.tolist(), 'r': difr_adsorb_desorb_arr.tolist()}}
-        return clust_motion_dict
+        adsorption_dict = {'gas_to_clust': {'all': num_gas2_to_clust, 'A': num_slow_gas2_to_clust,'B': num_fast_gas2_to_clust}, 'clust_to_gas': {'all': num_clust_to_gas2, 'A': num_slow_clust_to_gas2,'B': num_fast_clust_to_gas2}}
+
+        return clust_motion_dict, adsorption_dict
+
     def particle_flux_final(self, partPhase_time, in_clust_arr, partPhase_time_arr, clust_size_arr, pos_x_arr_time, pos_y_arr_time, com_x_arr_time, com_y_arr_time, com_x_parts_arr_time, com_y_parts_arr_time):
         start_part_phase = partPhase_time[0:,]
         start_bulk_id = np.where(partPhase_time[0,:]==0)[0]
