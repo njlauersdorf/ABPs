@@ -135,6 +135,7 @@ class kinetic_props:
         gas2_id_prev = np.where(in_clust_arr[-2,:]==0)[0]
 
         clust_now_in_gas2 = np.intersect1d(gas2_id, clust_id_prev, return_indices=True)
+        
 
         gas2_now_in_clust = np.intersect1d(clust_id, gas2_id_prev, return_indices=True)
         
@@ -247,13 +248,15 @@ class kinetic_props:
         dify_adsorb = self.utility_functs.sep_dist_y(com_adsorb_desorb_dict2['com']['y'], com_y_parts_arr_time[-2]-self.hy_box)
         difr_adsorb = ( difx_adsorb ** 2 + dify_adsorb ** 2 ) ** 0.5
 
-        #plt.scatter(pos_x_arr_time[-1,bulk_id], pos_y_arr_time[-1,bulk_id], s=0.7, color='black')
-        #plt.scatter(pos_x_arr_time[-1,int_id], pos_y_arr_time[-1,int_id], s=0.7, color='black')
+        plt.scatter(pos_x_arr_time[-1,bulk_id], pos_y_arr_time[-1,bulk_id], s=0.7, color='black')
+        plt.scatter(pos_x_arr_time[-1,int_id], pos_y_arr_time[-1,int_id], s=0.7, color='black')
+        plt.scatter(pos_x_arr_time[-2,clust_now_in_gas2[0]], pos_y_arr_time[-2,clust_now_in_gas2[0]], s=0.7, color='red')
+        plt.scatter(pos_x_arr_time[-1,gas2_now_in_clust[0]], pos_y_arr_time[-1,gas2_now_in_clust[0]], s=0.7, color='blue')
         #plt.scatter(com_x_parts_arr_time[-1]-self.hx_box, com_y_parts_arr_time[-1]-self.hy_box, s=25, edgecolor='blue', facecolor='None')
         #plt.scatter(com_x_parts_arr_time[-2]-self.hx_box, com_y_parts_arr_time[-2]-self.hy_box, s=25, edgecolor='purple', facecolor='None')
-        #plt.scatter(com_adsorb_desorb_dict2['com']['x'], com_adsorb_desorb_dict2['com']['y'], s=25, edgecolor='red', facecolor='None') This is the good one
+        #plt.scatter(com_adsorb_desorb_dict2['com']['x'], com_adsorb_desorb_dict2['com']['y'], s=25, edgecolor='red', facecolor='None')# This is the good one
         #plt.scatter(com_without_desorb_current_dict['com']['x'], com_without_desorb_current_dict['com']['y'], s=25, edgecolor='orange', facecolor='None')
-        #plt.show()
+        plt.show()
         
         
 

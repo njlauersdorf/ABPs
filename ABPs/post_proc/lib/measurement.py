@@ -648,8 +648,28 @@ class measurement:
         # Create output dictionary for plotting of RDF vs separation distance
         rad_df_dict = {'r': r_arr, 'all-all': g_r_allall_bulk, 'all-A': g_r_allA_bulk, 'all-B': g_r_allB_bulk, 'A-A': g_r_AA_bulk, 'A-B': g_r_AB_bulk, 'B-A': g_r_BA_bulk, 'B-B': g_r_BB_bulk}
         return rad_df_dict
+        
     def wasserstein_distance(self, rad_df_dict, lattice_spacing):
+        '''
+        Purpose: Takes the composition of each phase and uses already calculated radial
+        distribution functions to compute the Wasserstein or earth-mover's distance (a distance
+        metric to calculate the 'work' needed to convert one probability distribution into another)
+        as a means of quantifying segregation via g(r)
 
+        Inputs:
+        rad_df_dict: dictionary containing arrays of the probability distribution function of finding
+        a neighbor particle of a given species ('all', 'A', or 'B') at a given distance ('r') from
+        the reference particle of a given species ('all', 'A', or 'B') for a given reference-neighbor 
+        pair (i.e. all-A means all reference particles with A neighbors).
+
+        lattice_spacing: mean bulk lattice spacing for normalizing distances to compare between systems
+
+        Outputs:
+        wasserstein_dict: dictionary containing the average work required to convert each g(r) of a
+        reference particle type to another within the bulk
+        '''
+
+        # Define input radial density function
         r_arr = rad_df_dict['r']/lattice_spacing
         g_r_allall_bulk = rad_df_dict['all-all']
         g_r_AA_bulk = rad_df_dict['A-A']
@@ -658,15 +678,26 @@ class measurement:
         g_r_allA_bulk = rad_df_dict['all-A']
         g_r_allB_bulk = rad_df_dict['all-B']
 
+        # Calculate wasserstein distance for A-A g(r) to B-B g(r)
         AA_BB_wasserstein = scipy.stats.wasserstein_distance(g_r_AA_bulk, g_r_BB_bulk)
+
+        # Calculate wasserstein distance for A-B g(r) to B-B g(r)
         AB_BB_wasserstein = scipy.stats.wasserstein_distance(g_r_AB_bulk, g_r_BB_bulk)
+
+        # Calculate wasserstein distance for all-A g(r) to all-B g(r)
         allA_allB_wasserstein = scipy.stats.wasserstein_distance(g_r_allA_bulk, g_r_allB_bulk)
+
+        # Calculate wasserstein distance for all-B g(r) to B-B g(r)
         allB_BB_wasserstein = scipy.stats.wasserstein_distance(g_r_allB_bulk, g_r_BB_bulk)
+
+        # Calculate wasserstein distance for all-A g(r) to A-A g(r)
         allA_AA_wasserstein = scipy.stats.wasserstein_distance(g_r_allA_bulk, g_r_AA_bulk)
 
+        # Create output dictionary for wasserstein distance for each reference-neighbor activity pairing in bulk
         wasserstein_dict = {'AA-BB': AA_BB_wasserstein, 'AB-BB': AB_BB_wasserstein, 'allA-allB': allA_allB_wasserstein, 'allA-AA': allA_AA_wasserstein, 'allB-BB': allB_BB_wasserstein}
 
         return wasserstein_dict
+
     def structure_factor2(self):
         '''
         Purpose: Takes the composition of each phase and uses neighbor lists to compute the average
@@ -792,6 +823,22 @@ class measurement:
         
 
     def structure_factor_freud(self):
+        '''
+        Note: Deprecated! This methodology is far too slow to use for large system sizes.
+
+        Purpose: Takes the composition of each phase to compute the structure factor and average compressibility 
+        of the bulk phase given the structural definition of compressibility with Freud-analysis method.
+
+        Outputs:
+        compress_dict: dictionary containing the average compressibility of each reference particle type
+        ('all', 'A', or 'B') of bulk particles
+
+        structure_factor_dict: dictionary containing the structure factor of each reference particle type
+        ('all', 'A', or 'B') of bulk particles for each wavenumber
+
+        k0_dict: dictionary containing the structure factor of each reference particle type
+        ('all', 'A', or 'B') of bulk particles for k=0 wavenumber. Useful for calculating domain sizes.
+        '''
 
         # Count total number of bins in each phase
         phase_count_dict = self.phase_ident_functs.phase_count(self.phase_dict)
@@ -802,7 +849,7 @@ class measurement:
         # Calculate area of bulk
         bulk_area = phase_count_dict['bulk'] * (self.sizeBin_x * self.sizeBin_y)
 
-        # Position and orientation arrays of type A particles in respective phase
+        # Position arrays of type A particles in respective phase
         typ0ind = np.where(self.typ==0)[0]
         pos_A=self.pos[typ0ind]                               # Find positions of type 0 particles
         ang_A=self.ang[typ0ind]
@@ -812,9 +859,8 @@ class measurement:
         ang_A_int = self.ang[phase_part_dict['int']['A']]
         pos_A_gas = self.pos[phase_part_dict['gas']['A']]
         pos_A_dense = self.pos[phase_part_dict['dense']['A']]
-        ang_A_dense = self.ang[phase_part_dict['dense']['A']]
 
-        # Position and orientation arrays of type B particles in respective phase
+        # Position arrays of type B particles in respective phase
         typ1ind = np.where(self.typ==1)[0]
         pos_B=self.pos[typ1ind]
         ang_B=self.ang[typ1ind]
@@ -824,42 +870,54 @@ class measurement:
         ang_B_int = self.ang[phase_part_dict['int']['B']]
         pos_B_gas = self.pos[phase_part_dict['gas']['B']]
         pos_B_dense = self.pos[phase_part_dict['dense']['B']]
-        ang_B_dense = self.ang[phase_part_dict['dense']['B']]
 
-        # Position and orientation arrays of all particles in respective phase
+        # Position arrays of all particles in respective phase
         pos_bulk = self.pos[phase_part_dict['bulk']['all']]
         pos_int = self.pos[phase_part_dict['int']['all']]
         pos_gas = self.pos[phase_part_dict['gas']['all']]
         pos_dense = self.pos[phase_part_dict['dense']['all']]
 
-        import time
-
-        t = time.time()
+        # Define structure factor function
         sf = freud.diffraction.StaticStructureFactorDirect(
             bins=100, k_max=10, k_min=0
         )
 
         
-
+        # Calculates structure factor with Freud-analysis method
         sf.compute(
             (self.sf_box, self.sf_box.wrap(pos_bulk[0:500])),
             query_points=pos_bulk[0:500],
             N_total=len(pos_bulk[0:500])
         )
 
-        elapsed = time.time() - t
+    def structure_factor(self, rad_df_dict):
+        '''
+        Purpose: Takes the composition of each phase and uses already calculated radial
+        distribution functions to compute the structure factor and average compressibility 
+        of the bulk phase given the structural definition of compressibility.
 
-        print(elapsed)
+        Inputs:
+        rad_df_dict: dictionary containing arrays of the probability distribution function of finding
+        a neighbor particle of a given species ('all', 'A', or 'B') at a given distance ('r') from
+        the reference particle of a given species ('all', 'A', or 'B') for a given reference-neighbor 
+        pair (i.e. all-A means all reference particles with A neighbors).
 
-        print(sf.S_k)
-        print(sf.k_points)
-        stop
+        Outputs:
+        compress_dict: dictionary containing the average compressibility of each reference particle type
+        ('all', 'A', or 'B') of bulk particles
 
-    def structure_factor(self, rad_df_dict, part_count_dict):
+        structure_factor_dict: dictionary containing the structure factor of each reference particle type
+        ('all', 'A', or 'B') of bulk particles for each wavenumber
 
+        k0_dict: dictionary containing the structure factor of each reference particle type
+        ('all', 'A', or 'B') of bulk particles for k=0 wavenumber. Useful for calculating domain sizes.
+        '''
+
+        # Average number density of each species in bulk
         num_dens_mean_dict = self.num_dens_mean(self.area_frac_dict)
         
 
+        # Define input radial density function
         r_arr = rad_df_dict['r']
         g_r_allall_bulk = rad_df_dict['all-all']
         g_r_AA_bulk = rad_df_dict['A-A']
@@ -869,47 +927,55 @@ class measurement:
         g_r_allA_bulk = rad_df_dict['all-A']
         g_r_allB_bulk = rad_df_dict['all-B']
 
+        # Calculate partial structure factor of A neighbor particles with A reference particles in bulk using fourier transforms of g(r)
         partial_ssf_AA = (num_dens_mean_dict['A']/num_dens_mean_dict['all'])+num_dens_mean_dict['all']*(num_dens_mean_dict['A']/num_dens_mean_dict['all'])*(num_dens_mean_dict['A']/num_dens_mean_dict['all'])*np.fft.fft(np.array(g_r_AA_bulk) - 1.0)
+        
+        # Calculate partial structure factor of A neighbor particles with B reference particles in bulk using fourier transforms of g(r)
         partial_ssf_AB = num_dens_mean_dict['all']*(num_dens_mean_dict['B']/num_dens_mean_dict['all'])*(num_dens_mean_dict['A']/num_dens_mean_dict['all'])*np.fft.fft(np.array(g_r_AB_bulk) - 1.0)
+        
+        # Calculate partial structure factor of B neighbor particles with B reference particles in bulk using fourier transforms of g(r)
         partial_ssf_BB = (num_dens_mean_dict['B']/num_dens_mean_dict['all'])+num_dens_mean_dict['all']*(num_dens_mean_dict['B']/num_dens_mean_dict['all'])*(num_dens_mean_dict['B']/num_dens_mean_dict['all'])*np.fft.fft(np.array(g_r_BB_bulk) - 1.0)
         
+
+        # Initiate empty arrays for calculating partial structure factor of each neighbor-reference activity pair in bulk
         partial_ssf_allall_arr = np.array([])
         partial_ssf_AA_arr = np.array([])
         partial_ssf_AB_arr = np.array([])
         partial_ssf_BA_arr = np.array([])
         partial_ssf_BB_arr = np.array([])
 
-        #np.where(r_arr>=1)
+        # define wave numbers for fourier transform
         k_arr = np.linspace(0, 10, num=1000)
         
-
-        g_r_example = np.ones(len(r_arr))
-        test_id = np.where(np.array(r_arr)<1)[0]
-        g_r_example[test_id]=0.0
+        # separation distance in distance units
         difr = r_arr[1]-r_arr[0]
-        #print(part_count_dict)
-        #stop
+        
+        # Loop over all wave numbers
         for i in range(1, len(k_arr)):
+
+            # Calculate partial structure factor of all neighbors with all reference particles in bulk
             partial_ssf_allall = np.trapz(np.array(r_arr) * (np.array(g_r_allall_bulk)-1) * np.sin(k_arr[i] * np.array(r_arr))/(k_arr[i]), x=r_arr)
+            
+            # Calculate partial structure factor of A neighbors with A reference particles in bulk
             partial_ssf_AA = np.trapz(np.array(r_arr) * (np.array(g_r_AA_bulk)-1) * np.sin(k_arr[i] * np.array(r_arr))/(k_arr[i]), x=r_arr)
+            
+            # Calculate partial structure factor of A neighbors with B reference particles in bulk
             partial_ssf_AB = np.trapz(np.array(r_arr) * (np.array(g_r_AB_bulk)-1) * np.sin(k_arr[i] * np.array(r_arr))/(k_arr[i]), x=r_arr)
+            
+            # Calculate partial structure factor of B neighbors with A reference particles in bulk
             partial_ssf_BA = np.trapz(np.array(r_arr) * (np.array(g_r_BA_bulk)-1) * np.sin(k_arr[i] * np.array(r_arr))/(k_arr[i]), x=r_arr)
+            
+            # Calculate partial structure factor of B neighbors with B reference particles in bulk
             partial_ssf_BB = np.trapz(np.array(r_arr) * (np.array(g_r_BB_bulk)-1) * np.sin(k_arr[i] * np.array(r_arr))/(k_arr[i]), x=r_arr)
 
-            #for j in range(1, len(r_arr)):
-            #    dr = r_arr[j]-r_arr[j-1]
-            #    increment += 1
-            #    partial_ssf_allall += r_arr[j] * ((g_r_allall_bulk[increment]) - 1) * np.sin(r_arr[i] * r_arr[j])/r_arr[i]
-            #partial_ssf_allall_arr=np.append( partial_ssf_allall_arr, 1 + 4 * np.pi * num_dens_mean_dict['all'] * partial_ssf_allall * dr / r_arr[i])
+            # Save and normalize partial structure factors
             partial_ssf_allall_arr=np.append( partial_ssf_allall_arr, 1 + 4 * np.pi * num_dens_mean_dict['all'] * partial_ssf_allall)
             partial_ssf_AA_arr=np.append( partial_ssf_AA_arr, 1 + 4 * np.pi * num_dens_mean_dict['all'] * partial_ssf_AA)
             partial_ssf_AB_arr=np.append( partial_ssf_AB_arr, 1 + 4 * np.pi * num_dens_mean_dict['all'] * partial_ssf_AB)
             partial_ssf_BA_arr=np.append( partial_ssf_BA_arr, 1 + 4 * np.pi * num_dens_mean_dict['all'] * partial_ssf_AB)
             partial_ssf_BB_arr=np.append( partial_ssf_BB_arr, 1 + 4 * np.pi * num_dens_mean_dict['all'] * partial_ssf_BB)
-        print(partial_ssf_allall_arr)
-        plt.plot(k_arr[1:], partial_ssf_allall_arr)
-        plt.show()
-        stop
+
+        # Calculate compressibilities of each particle type given radial density function
         compressibility_allall = (1 + num_dens_mean_dict['all'] * np.trapz((np.array(g_r_allall_bulk)-1), x=r_arr)) / (num_dens_mean_dict['all'] * ((self.peA**2)/6))
         #compressibility_AA = (1 + num_dens_mean_dict['A'] * np.trapz((np.array(g_r_AA_bulk)-1), x=r_arr)) / (num_dens_mean_dict['A'] * ((self.peA**2)/6))
         #compressibility_AB = (1 + num_dens_mean_dict['A'] * np.trapz((np.array(g_r_AB_bulk)-1), x=r_arr)) / (num_dens_mean_dict['B'] * ((self.peB**2)/6))
@@ -918,14 +984,42 @@ class measurement:
         compressibility_allA = (1 + num_dens_mean_dict['all'] * np.trapz((np.array(g_r_allA_bulk)-1), x=r_arr)) / (num_dens_mean_dict['A'] * ((self.peA**2)/6))
         compressibility_allB = (1 + num_dens_mean_dict['all'] * np.trapz((np.array(g_r_allB_bulk)-1), x=r_arr)) / (num_dens_mean_dict['B'] * ((self.peB**2)/6))
 
+        # Create output dictionary for average compressibility of each particle type in bulk
         compress_dict = {'all': compressibility_allall, 'A': compressibility_allA, 'B': compressibility_allB}
+        
+        # Create output dictionary for structure factor of each reference-neighbor activity pairing in bulk
         structure_factor_dict = {'k': k_arr[1:], 'all-all': partial_ssf_allall_arr, 'all-all2': partial_ssf_allall_num,'A-A': partial_ssf_AA_arr, 'A-B': partial_ssf_AB_arr, 'B-A': partial_ssf_BA_arr, 'B-B': partial_ssf_BB_arr}
+        
+        # Create output dictionary for structure factor at k=0 for each reference-neighbor activity pairing in bulk
         k0_dict = {'all-all': partial_ssf_allall_arr[0], 'all-all2': partial_ssf_allall_num[0],'A-A': partial_ssf_AA_arr[0], 'A-B': partial_ssf_AB_arr[0], 'B-A': partial_ssf_BA_arr[0], 'B-B': partial_ssf_BB_arr[0]}
+        
         return compress_dict, structure_factor_dict, k0_dict
-    def compressibility(self, rad_df_dict, avg_num_dens = 999):
 
+    def compressibility(self, rad_df_dict, avg_num_dens = 999):
+        '''
+        Purpose: Takes the composition of each phase and uses already calculated radial
+        distribution functions to compute the average compressibility of the bulk phase given
+        the structural definition of compressibility.
+
+        Inputs:
+        rad_df_dict: dictionary containing arrays of the probability distribution function of finding
+        a neighbor particle of a given species ('all', 'A', or 'B') at a given distance ('r') from
+        the reference particle of a given species ('all', 'A', or 'B') for a given reference-neighbor 
+        pair (i.e. all-A means all reference particles with A neighbors).
+
+        avg_num_dens (optional): optional dictionary input that provides the average number density of 
+        each species ('all', 'A', or 'B') within the bulk. If not provided, will calculate it
+
+        Outputs:
+        compress_dict: dictionary containing the average compressibility of each reference particle type
+        ('all', 'A', or 'B') of bulk particles
+        '''
+
+        # If no input dictionary, calculate average number density of each species in the bulk
         if avg_num_dens==999:
             num_dens_mean_dict = self.num_dens_mean(self.area_frac_dict)
+
+        # Otherwise, use input dictionary
         else:
             num_dens_mean_dict = {}
             num_dens_mean_dict['all'] = avg_num_dens['all']/avg_num_dens['count']
@@ -933,16 +1027,21 @@ class measurement:
             num_dens_mean_dict['B'] = avg_num_dens['B']/avg_num_dens['count']
         
 
+        # Define input radial density function
         r_arr = rad_df_dict['r']
         g_r_allall_bulk = rad_df_dict['all-all']
         g_r_allA_bulk = rad_df_dict['all-A']
         g_r_allB_bulk = rad_df_dict['all-B']
 
+        # Calculate compressibility of all, A, and B particles within the bulk given g(r)
         compressibility_allall = (1 + num_dens_mean_dict['all'] * np.trapz((np.array(g_r_allall_bulk)-1), x=r_arr)) / (num_dens_mean_dict['all'] * ((self.peA**2)/6))
         compressibility_allA = (1 + num_dens_mean_dict['all'] * np.trapz((np.array(g_r_allA_bulk)-1), x=r_arr)) / (num_dens_mean_dict['A'] * ((self.peA**2)/6))
         compressibility_allB = (1 + num_dens_mean_dict['all'] * np.trapz((np.array(g_r_allB_bulk)-1), x=r_arr)) / (num_dens_mean_dict['B'] * ((self.peB**2)/6))
 
-        return {'compress': {'all-all': compressibility_allall, 'all-A': compressibility_allA, 'all-B': compressibility_allB}}
+        # Create output dictionary for average compressibility of each particle type in bulk
+        compress_dict = {'compress': {'all-all': compressibility_allall, 'all-A': compressibility_allA, 'all-B': compressibility_allB}}
+        
+        return compress_dict
 
     def angular_df(self):
         '''
@@ -1148,21 +1247,17 @@ class measurement:
     def centrosymmetry(self):
         '''
         Purpose: Takes the composition of each phase and uses neighbor lists to find the
-        nearest, interacting neighbors and calculates the number of neighbors of each
-        type for each particle and averaged over all particles of each phase.
+        nearest, interacting neighbors and calculates the central symmetry parameter of each
+        type for each particle and averaged over all particles of each phase. Useful in
+        identifying defects.
 
         Outputs:
-        neigh_stat_dict: dictionary containing the mean and standard deviation of the
-        number of neighbors of each type ('all', 'A', or 'B') for a reference particle of
-        a given type ('all', 'A', or 'B'), averaged over all particles in each phase.
+        csp_stat_dict: dictionary containing the particle-based central symmetry parameter 
+        for a reference particle of a given type ('all', 'A', or 'B'), averaged over all 
+        particles in each phase.
 
-        ori_stat_dict: dictionary containing the mean and standard deviation of the
-        orientational correlation between a reference particle of
-        a given type ('all', 'A', or 'B') and neighbors of each type ('all', 'A', or 'B'),
-        averaged over all particles in each phase.
-
-        neigh_plot_dict: dictionary containing information on the number of nearest
-        neighbors of each bulk and interface reference particle of each type ('all', 'A', or 'B').
+        csp_plot_dict: dictionary containing information on the central symmetry parameter
+        of each bulk and interface reference particle of each type ('all', 'A', or 'B').
         '''
         # Count total number of bins in each phase
         phase_count_dict = self.phase_ident_functs.phase_count(self.phase_dict)
@@ -1219,66 +1314,86 @@ class measurement:
         # Calculate interparticle separation distances between B reference particles and all neighbors within bulk
         allB_difx, allB_dify, allB_difr = self.utility_functs.sep_dist_arr(pos_dense[allB_bulk_nlist.point_indices], pos_B_bulk[allB_bulk_nlist.query_point_indices], difxy=True)
 
-        #Initiate empty arrays for finding nearest A neighboring dense particles surrounding type A bulk particles
+        #Initiate empty arrays for finding central symmetry parameter of all neighboring dense particles surrounding type A bulk particles
         A_bulk_neigh_ind = np.array([], dtype=int)
         csp_A_bulk = np.array([])
+
         #Loop over neighbor pairings of A-A neighbor pairs to calculate number of nearest neighbors
         for i in range(0, len(pos_A_bulk)):
+
+            # If reference ID has neighbors...
             if i in allA_bulk_nlist.query_point_indices:
+
+                # If reference ID hasn't been considered yet...
                 if i not in A_bulk_neigh_ind:
+
                     # Find neighbors list IDs where i is reference particle
                     loc = np.where(allA_bulk_nlist.query_point_indices==i)[0]
 
+                    # Make array of x- and y- separation distances for nearest neighbor IDs
                     allA_difx_mat_1 = allA_difx[loc] * np.ones((len(loc), len(loc)))
                     allA_dify_mat_1 = allA_dify[loc] * np.ones((len(loc), len(loc)))
 
+                    # Make inverse array of x- and y- separation distances for nearest neighbor IDs
                     allA_difx_mat_2 = np.reshape(allA_difx[loc], (len(loc), 1)) * np.ones((len(loc), len(loc)))
                     allA_dify_mat_2 = np.reshape(allA_dify[loc], (len(loc), 1)) * np.ones((len(loc), len(loc)))
-
+                    
+                    # Sum normal and inverse arrays
                     allA_difx_comb = allA_difx_mat_1 + allA_difx_mat_2
                     allA_dify_comb = allA_dify_mat_1 + allA_dify_mat_2
 
+                    # Calculate r-separation distances for combined array
                     allA_difr = (allA_difx_comb ** 2 + allA_dify_comb ** 2 ) ** 0.5
 
-                    #central symmetry parameter
+                    # Calculate central symmetry parameter for reference particle
                     csp_A_bulk = np.append(csp_A_bulk, np.sum(np.sort(allA_difr)[:,0]))
 
+                    # Save reference particle ID 
                     A_bulk_neigh_ind = np.append(A_bulk_neigh_ind, int(i))
 
             else:
-                #Save nearest neighbor information to array
+                #Save central symmetry parameter information to array
                 csp_A_bulk = np.append(csp_A_bulk, 0)
                 A_bulk_neigh_ind = np.append(A_bulk_neigh_ind, int(i))
 
-        #Initiate empty arrays for finding nearest B neighboring dense particles surrounding type A bulk particles
+        #Initiate empty arrays for finding central symmetry parameter of all neighboring dense particles surrounding type B bulk particles
         B_bulk_neigh_ind = np.array([], dtype=int)
         csp_B_bulk = np.array([])
 
         #Loop over neighbor pairings of B-A neighbor pairs to calculate number of nearest neighbors
         for i in range(0, len(pos_B_bulk)):
+
+            # If reference ID has neighbors...
             if i in allB_bulk_nlist.query_point_indices:
+
+                # If reference ID hasn't been considered yet...
                 if i not in B_bulk_neigh_ind:
                     # Find neighbors list IDs where i is reference particle
                     loc = np.where(allB_bulk_nlist.query_point_indices==i)[0]
 
+                    # Make array of x- and y- separation distances for nearest neighbor IDs
                     allB_difx_mat_1 = allB_difx[loc] * np.ones((len(loc), len(loc)))
                     allB_dify_mat_1 = allB_dify[loc] * np.ones((len(loc), len(loc)))
 
+                    # Make inverse array of x- and y- separation distances for nearest neighbor IDs
                     allB_difx_mat_2 = np.reshape(allB_difx[loc], (len(loc), 1)) * np.ones((len(loc), len(loc)))
                     allB_dify_mat_2 = np.reshape(allB_dify[loc], (len(loc), 1)) * np.ones((len(loc), len(loc)))
                     
+                    # Sum normal and inverse arrays
                     allB_difx_comb = allB_difx_mat_1 + allB_difx_mat_2
                     allB_dify_comb = allB_dify_mat_1 + allB_dify_mat_2
 
+                    # Calculate r-separation distances for combined array
                     allB_difr = (allB_difx_comb ** 2 + allB_dify_comb ** 2 ) ** 0.5
 
-                    #central symmetry parameter
+                    # Calculate central symmetry parameter for reference particle
                     csp_B_bulk = np.append(csp_B_bulk, np.sum(np.sort(allB_difr)[:,0]))
 
+                    # Save reference particle ID 
                     B_bulk_neigh_ind = np.append(B_bulk_neigh_ind, int(i))
 
             else:
-                #Save nearest neighbor information to array
+                #Save central symmetry parameter information to array
                 csp_B_bulk = np.append(csp_B_bulk, 0)
 
                 B_bulk_neigh_ind = np.append(B_bulk_neigh_ind, int(i))
@@ -1296,66 +1411,85 @@ class measurement:
         # Calculate interparticle separation distances between B reference particles and all neighbors within bulk
         allB_difx, allB_dify, allB_difr = self.utility_functs.sep_dist_arr(self.pos[allB_int_nlist.point_indices], pos_B_int[allB_int_nlist.query_point_indices], difxy=True)
 
-        #Initiate empty arrays for finding nearest A neighboring particles surrounding type A interface particles
+        #Initiate empty arrays for finding central symmetry parameter of all neighboring dense particles surrounding type A interface particles
         A_int_neigh_ind = np.array([], dtype=int)
         csp_A_int = np.array([])
 
         #Loop over neighbor pairings of A-A neighbor pairs to calculate number of nearest neighbors
         for i in range(0, len(pos_A_int)):
+
+            # If reference ID has neighbors...
             if i in allA_int_nlist.query_point_indices:
+
+                # If reference ID hasn't been considered yet...
                 if i not in A_int_neigh_ind:
+                    
                     # Find neighbors list IDs where i is reference particle
                     loc = np.where(allA_int_nlist.query_point_indices==i)[0]
 
+                    # Make array of x- and y- separation distances for nearest neighbor IDs
                     allA_difx_mat_1 = allA_difx[loc] * np.ones((len(loc), len(loc)))
                     allA_dify_mat_1 = allA_dify[loc] * np.ones((len(loc), len(loc)))
 
+                    # Make inverse array of x- and y- separation distances for nearest neighbor IDs
                     allA_difx_mat_2 = np.reshape(allA_difx[loc], (len(loc), 1)) * np.ones((len(loc), len(loc)))
                     allA_dify_mat_2 = np.reshape(allA_dify[loc], (len(loc), 1)) * np.ones((len(loc), len(loc)))
 
+                    # Sum normal and inverse arrays
                     allA_difx_comb = allA_difx_mat_1 + allA_difx_mat_2
                     allA_dify_comb = allA_dify_mat_1 + allA_dify_mat_2
 
+                    # Calculate r-separation distances for combined array
                     allA_difr = (allA_difx_comb ** 2 + allA_dify_comb ** 2 ) ** 0.5
 
-                    #central symmetry parameter
+                    # Calculate central symmetry parameter for reference particle
                     csp_A_int = np.append(csp_A_int, np.sum(np.sort(allA_difr)[:,0]))
 
+                    # Save reference particle ID 
                     A_int_neigh_ind = np.append(A_int_neigh_ind, int(i))
             else:
-                #Save nearest neighbor information to array
+                #Save central symmetry parameter information to array
                 csp_A_int = np.append(csp_A_int, 0)
 
                 A_int_neigh_ind = np.append(A_int_neigh_ind, int(i))
 
-        #Initiate empty arrays for finding nearest B neighboring particles surrounding type A interface particles
+        #Initiate empty arrays for finding central symmetry parameter of all neighboring dense particles surrounding type B interface particles
         B_int_neigh_ind = np.array([], dtype=int)
         csp_B_int = np.array([])
 
         #Loop over neighbor pairings of A-B neighbor pairs to calculate number of nearest neighbors
         for i in range(0, len(pos_B_int)):
+
+            # If reference ID has neighbors...
             if i in allB_int_nlist.query_point_indices:
+
+                # If reference ID hasn't been considered yet...
                 if i not in B_int_neigh_ind:
                     # Find neighbors list IDs where i is reference particle
                     loc = np.where(allB_int_nlist.query_point_indices==i)[0]
 
+                    # Make array of x- and y- separation distances for nearest neighbor IDs
                     allB_difx_mat_1 = allB_difx[loc] * np.ones((len(loc), len(loc)))
                     allB_dify_mat_1 = allB_dify[loc] * np.ones((len(loc), len(loc)))
 
+                    # Make inverse array of x- and y- separation distances for nearest neighbor IDs
                     allB_difx_mat_2 = np.reshape(allB_difx[loc], (len(loc), 1)) * np.ones((len(loc), len(loc)))
                     allB_dify_mat_2 = np.reshape(allB_dify[loc], (len(loc), 1)) * np.ones((len(loc), len(loc)))
                     
+                    # Sum normal and inverse arrays
                     allB_difx_comb = allB_difx_mat_1 + allB_difx_mat_2
                     allB_dify_comb = allB_dify_mat_1 + allB_dify_mat_2
 
+                    # Calculate r-separation distances for combined array
                     allB_difr = (allB_difx_comb ** 2 + allB_dify_comb ** 2 ) ** 0.5
 
-                    #central symmetry parameter
+                    # Calculate central symmetry parameter for reference particle
                     csp_B_int = np.append(csp_B_int, np.sum(np.sort(allB_difr)[:,0]))
 
+                    # Save reference particle ID 
                     B_int_neigh_ind = np.append(B_int_neigh_ind, int(i))
             else:
-                #Save nearest neighbor information to array
+                #Save central symmetry parameter information to array
                 csp_B_int = np.append(csp_B_int, 0)
 
                 B_int_neigh_ind = np.append(B_int_neigh_ind, int(i))
@@ -1687,43 +1821,52 @@ class measurement:
         allall_int_pos_x = np.append(pos_A_int[:,0], pos_B_int[:,0])
         allall_int_pos_y = np.append(pos_A_int[:,1], pos_B_int[:,1])
 
-        # Average orientational order over all neighbors for each particle
+        # Average local orientational order over all neighbors for each B bulk reference particle
         for i in range(0, len(allB_bulk_dot)):
             if allB_bulk_num_neigh[i]>0:
                 allB_bulk_dot[i] = allB_bulk_dot[i]/allB_bulk_num_neigh[i]
 
+        # Average local orientational order over all neighbors for each A bulk reference particle
         for i in range(0, len(allA_bulk_dot)):
             if allA_bulk_num_neigh[i]>0:
                 allA_bulk_dot[i] = allA_bulk_dot[i]/allA_bulk_num_neigh[i]
 
+        # Average local orientational order over all neighbors for each all bulk reference particle
         for i in range(0, len(allall_bulk_dot)):
             if allall_bulk_num_neigh[i]>0:
                 allall_bulk_dot[i] = allall_bulk_dot[i]/allall_bulk_num_neigh[i]
 
+        # Average local orientational order over aAll neighbors for each all bulk reference particle
         for i in range(0, len(Aall_bulk_dot)):
             if Aall_bulk_num_neigh[i]>0:
                 Aall_bulk_dot[i] = Aall_bulk_dot[i]/Aall_bulk_num_neigh[i]
 
+        # Average local orientational order over B neighbors for each all bulk reference particle
         for i in range(0, len(Ball_bulk_dot)):
             if Ball_bulk_num_neigh[i]>0:
                 Ball_bulk_dot[i] = Ball_bulk_dot[i]/Ball_bulk_num_neigh[i]
 
+        # Average local orientational order over all neighbors for each B interface reference particle
         for i in range(0, len(allB_int_dot)):
             if allB_int_num_neigh[i]>0:
                 allB_int_dot[i] = allB_int_dot[i]/allB_int_num_neigh[i]
 
+        # Average local orientational order over all neighbors for each A interface reference particle
         for i in range(0, len(allA_int_dot)):
             if allA_int_num_neigh[i]>0:
                 allA_int_dot[i] = allA_int_dot[i]/allA_int_num_neigh[i]
 
+        # Average local orientational order over all neighbors for each all interface reference particle
         for i in range(0, len(allall_int_dot)):
             if allall_int_num_neigh[i]>0:
                 allall_int_dot[i] = allall_int_dot[i]/allall_int_num_neigh[i]
 
+        # Average local orientational order over A neighbors for each all interface reference particle
         for i in range(0, len(Aall_int_dot)):
             if Aall_int_num_neigh[i]>0:
                 Aall_int_dot[i] = Aall_int_dot[i]/Aall_int_num_neigh[i]
 
+        # Average local orientational order over B neighbors for each all interface reference particle
         for i in range(0, len(Ball_int_dot)):
             if Ball_int_num_neigh[i]>0:
                 Ball_int_dot[i] = Ball_int_dot[i]/Ball_int_num_neigh[i]
@@ -1786,21 +1929,13 @@ class measurement:
     def local_density(self):
         '''
         Purpose: Takes the composition of each phase and uses neighbor lists to find the
-        nearest, interacting neighbors and calculates the number of neighbors of each
-        type for each particle and averaged over all particles of each phase.
+        nearest, interacting neighbors and calculates the local density for various search
+        distances of each type for each particle and averaged over all particles of each phase.
 
         Outputs:
-        neigh_stat_dict: dictionary containing the mean and standard deviation of the
-        number of neighbors of each type ('all', 'A', or 'B') for a reference particle of
-        a given type ('all', 'A', or 'B'), averaged over all particles in each phase.
-
-        ori_stat_dict: dictionary containing the mean and standard deviation of the
-        orientational correlation between a reference particle of
-        a given type ('all', 'A', or 'B') and neighbors of each type ('all', 'A', or 'B'),
-        averaged over all particles in each phase.
-
-        neigh_plot_dict: dictionary containing information on the number of nearest
-        neighbors of each bulk and interface reference particle of each type ('all', 'A', or 'B').
+        local_dens_stat_dict: dictionary containing the local density for various search
+        distances of of each type ('all', 'A', or 'B') for a reference particle of a given 
+        type ('all', 'A', or 'B'), averaged over all particles in each phase.
         '''
         # Count total number of bins in each phase
         phase_count_dict = self.phase_ident_functs.phase_count(self.phase_dict)
@@ -1840,25 +1975,39 @@ class measurement:
         pos_int = self.pos[phase_part_dict['int']['all']]
         pos_gas = self.pos[phase_part_dict['gas']['all']]
         pos_dense = self.pos[phase_part_dict['dense']['all']]
-        
+
+        #Initiate empty arrays for calculating mean and standard deviation of local density
+        #of all neighbor particles around A reference particles
         allA_local_dens_mean_arr = []
         allA_local_dens_std_arr = []
-
+        
+        #Initiate empty arrays for calculating mean and standard deviation of local density
+        #of all neighbor particles around B reference particles
         allB_local_dens_mean_arr = []
         allB_local_dens_std_arr = []
 
+        #Initiate empty arrays for calculating mean and standard deviation of local density
+        #of all neighbor particles around all reference particles
         allall_local_dens_mean_arr = []
         allall_local_dens_std_arr = []
 
+        #Initiate empty arrays for calculating mean and standard deviation of local density
+        #of A neighbor particles around A reference particles
         AA_local_dens_mean_arr = []
         AA_local_dens_std_arr = []
 
+        #Initiate empty arrays for calculating mean and standard deviation of local density
+        #of A neighbor particles around B reference particles
         AB_local_dens_mean_arr = []
         AB_local_dens_std_arr = []
 
+        #Initiate empty arrays for calculating mean and standard deviation of local density
+        #of B neighbor particles around A reference particles
         BA_local_dens_mean_arr = []
         BA_local_dens_std_arr = []
 
+        #Initiate empty arrays for calculating mean and standard deviation of local density
+        #of B neighbor particles around B reference particles
         BB_local_dens_mean_arr = []
         BB_local_dens_std_arr = []
         
@@ -1878,8 +2027,6 @@ class measurement:
         BB_bulk_neigh_ind = np.zeros(len(pos_B_bulk))
         BB_bulk_num_neigh = np.zeros(len(pos_B_bulk))
 
-
-        
         #Initiate empty arrays for finding nearest A neighboring dense particles surrounding type A bulk particles
         AA_int_neigh_ind = np.zeros(len(pos_A_int))
         AA_int_num_neigh = np.zeros(len(pos_A_int))
@@ -1896,14 +2043,13 @@ class measurement:
         BB_int_neigh_ind = np.zeros(len(pos_B_int))
         BB_int_num_neigh = np.zeros(len(pos_B_int))
 
-        import time
-        # Neighbor list query arguments to find interacting particles
+        # Search distance for neighbors in local density calculation
         rad_dist = [0, 0.9]#, 3*self.r_cut, 4*self.r_cut, 5*self.r_cut]
-
+        
+        # Loop over search distances
         for j in range(1, len(rad_dist)):
 
-            t = time.time()
-
+            # List of query arguments for neighbor list caculation
             query_args = dict(mode='ball', r_min = rad_dist[j-1]+0.001, r_max = rad_dist[j])#r_max=self.theory_functs.conForRClust(peNet_int-45., self.eps) * 1.0)
 
             # Locate potential neighbor particles by type in the dense phase
@@ -2038,14 +2184,28 @@ class measurement:
                         #Save nearest neighbor information to array
                         BB_int_neigh_ind[i] = int(i)
 
+            # Local density of A neighbor particles around A reference particles in bulk
             AA_bulk_local_dens = AA_bulk_num_neigh * (np.pi/4) / (np.pi*rad_dist[j]**2)
+
+            # Local density of A neighbor particles around B reference particles in bulk
             AB_bulk_local_dens = AB_bulk_num_neigh * (np.pi/4) / (np.pi*rad_dist[j]**2)
+
+            # Local density of B neighbor particles around A reference particles in bulk
             BA_bulk_local_dens = BA_bulk_num_neigh * (np.pi/4) / (np.pi*rad_dist[j]**2)
+
+            # Local density of B neighbor particles around B reference particles in bulk
             BB_bulk_local_dens = BB_bulk_num_neigh * (np.pi/4) / (np.pi*rad_dist[j]**2)
 
+            # Local density of A neighbor particles around A reference particles in interface
             AA_int_local_dens = AA_bulk_num_neigh * (np.pi/4) / (np.pi*rad_dist[j]**2)
+
+            # Local density of A neighbor particles around B reference particles in interface
             AB_int_local_dens = AB_bulk_num_neigh * (np.pi/4) / (np.pi*rad_dist[j]**2)
+
+            # Local density of B neighbor particles around A reference particles in interface
             BA_int_local_dens = BA_bulk_num_neigh * (np.pi/4) / (np.pi*rad_dist[j]**2)
+
+            # Local density of B neighbor particles around B reference particles in interface
             BB_int_local_dens = BB_bulk_num_neigh * (np.pi/4) / (np.pi*rad_dist[j]**2)
             
             # Save neighbor and local orientational order to arrays for all B reference particles of the respective phase with all nearest neighbors
@@ -2074,30 +2234,54 @@ class measurement:
             allall_int_num_neigh = np.append(allA_int_num_neigh, allB_int_num_neigh)
             allall_int_local_dens = allall_int_num_neigh * (np.pi/4) / (np.pi*rad_dist[j]**2)
 
+            # Local density of all neighbor particles around all reference particles in dense phase
             allall_dense_local_dens = np.append(allall_bulk_local_dens, allall_int_local_dens)
+
+            # Local density of all neighbor particles around A reference particles in dense phase
             allA_dense_local_dens = np.append(allA_bulk_local_dens, allA_int_local_dens)
+
+            # Local density of all neighbor particles around B reference particles in dense phase
             allB_dense_local_dens = np.append(allB_bulk_local_dens, allB_int_local_dens)
 
+            # Local density of A neighbor particles around A reference particles in dense phase
             AA_dense_local_dens = np.append(AA_bulk_local_dens, AA_int_local_dens)
+
+            # Local density of A neighbor particles around B reference particles in dense phase
             AB_dense_local_dens = np.append(AB_bulk_local_dens, AB_int_local_dens)
+
+            # Local density of B neighbor particles around A reference particles in dense phase
             BA_dense_local_dens = np.append(BA_bulk_local_dens, BA_int_local_dens)
+
+            # Local density of B neighbor particles around B reference particles in dense phase
             BB_dense_local_dens = np.append(BB_bulk_local_dens, BB_int_local_dens)
 
+            # Calculate mean and standard deviation of local density of A neighbor particles 
+            # around A reference particles in dense phase
             AA_local_dens_mean_arr.append(np.mean(AA_bulk_local_dens))
             AA_local_dens_std_arr.append(np.std(AA_bulk_local_dens))
 
+            # Calculate mean and standard deviation of local density of A neighbor particles 
+            # around B reference particles in dense phase
             AB_local_dens_mean_arr.append(np.mean(AB_bulk_local_dens))
             AB_local_dens_std_arr.append(np.std(AB_bulk_local_dens))
 
+            # Calculate mean and standard deviation of local density of B neighbor particles 
+            # around A reference particles in dense phase
             BA_local_dens_mean_arr.append(np.mean(BA_bulk_local_dens))
             BA_local_dens_std_arr.append(np.std(BA_bulk_local_dens))
 
+            # Calculate mean and standard deviation of local density of B neighbor particles 
+            # around B reference particles in dense phase
             BB_local_dens_mean_arr.append(np.mean(BB_bulk_local_dens))
             BB_local_dens_std_arr.append(np.std(BB_bulk_local_dens))
 
+            # Calculate mean and standard deviation of local density of all neighbor particles 
+            # around A reference particles in dense phase
             allA_local_dens_mean_arr.append(np.mean(allA_bulk_local_dens))
             allA_local_dens_std_arr.append(np.std(allA_bulk_local_dens))
 
+            # Calculate mean and standard deviation of local density of all neighbor particles 
+            # around B reference particles in dense phase
             allB_local_dens_mean_arr.append(np.mean(allB_bulk_local_dens))
             allB_local_dens_std_arr.append(np.std(allB_bulk_local_dens))
 
@@ -2107,11 +2291,13 @@ class measurement:
             # Save neighbor and local orientational order to arrays for all A reference particles of the respective phase with all nearest neighbors
             Aall_dense_local_dens = np.append(Aall_bulk_local_dens, Aall_int_local_dens)
 
+            # Calculate mean and standard deviation of local density of all neighbor particles 
+            # around all reference particles in dense phase
             allall_local_dens_mean_arr.append(np.mean(allall_bulk_local_dens))
             allall_local_dens_std_arr.append(np.std(allall_bulk_local_dens))
 
             
-            
+            # If search distance given, then prepare data for plotting!
             if rad_dist[j]==0.9:
 
                 # Save neighbor, local orientational order, and position to arrays for all bulk reference particles with all nearest neighbors
@@ -2142,12 +2328,12 @@ class measurement:
                 allall_dense_pos_x = np.append(allall_bulk_pos_x, allall_int_pos_x)
                 allall_dense_pos_y = np.append(allall_bulk_pos_y, allall_int_pos_y)
 
+                # Create output dictionary for single particle values of local density per phase/activity pairing for plotting
                 local_dens_plot_dict = {'all-all': {'dens': allall_dense_local_dens, 'pos_x': allall_dense_pos_x, 'pos_y': allall_dense_pos_y}, 'all-A': {'dens': allA_dense_local_dens, 'pos_x': allA_dense_pos_x, 'pos_y': allA_dense_pos_y}, 'all-B': {'dens': allB_dense_local_dens, 'pos_x': allB_dense_pos_x, 'pos_y': allB_dense_pos_y}, 'A-all': {'dens': Aall_dense_local_dens, 'pos_x': Aall_dense_pos_x, 'pos_y': Aall_dense_pos_y}, 'B-all': {'dens': Ball_dense_local_dens, 'pos_x': Ball_dense_pos_x, 'pos_y': Ball_dense_pos_y}, 'A-A': {'dens': AA_dense_local_dens, 'pos_x': allB_dense_pos_x, 'pos_y': allB_dense_pos_y}, 'A-B': {'dens': AB_dense_local_dens, 'pos_x': allB_dense_pos_x, 'pos_y': allB_dense_pos_y}, 'B-A': {'dens': BA_dense_local_dens, 'pos_x': allA_dense_pos_x, 'pos_y': allA_dense_pos_y}, 'B-B': {'dens': BB_dense_local_dens, 'pos_x': allB_dense_pos_x, 'pos_y': allB_dense_pos_y}}
 
+        # Create output dictionary for statistical averages of local density per phase/activity pairing
         local_dens_stat_dict = {'radius': rad_dist[1:], 'allA_mean': allA_local_dens_mean_arr, 'allA_std': allA_local_dens_std_arr, 'allB_mean': allB_local_dens_mean_arr, 'allB_std': allB_local_dens_std_arr, 'AA_mean': AA_local_dens_mean_arr, 'AA_std': AA_local_dens_std_arr, 'AB_mean': AB_local_dens_mean_arr, 'AB_std': AB_local_dens_std_arr, 'BA_mean': BA_local_dens_mean_arr, 'BA_std': BA_local_dens_std_arr, 'BB_mean': BB_local_dens_mean_arr, 'BB_std': BB_local_dens_std_arr}
- 
-        # Create output dictionary for statistical averages of total nearest neighbor numbers on each particle per phase/activity pairing
-        
+    
         return local_dens_stat_dict, local_dens_plot_dict
 
     def interparticle_pressure_nlist(self):
@@ -2166,6 +2352,9 @@ class measurement:
         shear stress between a reference particle of a given type ('all', 'A', or 'B')
         and its nearest, interacting neighbors of each type ('all', 'A', or 'B'),
         averaged over all reference particles in each phase.
+
+        stress_plot_dict: dictionary containing information on the interparticle pressure
+        of each bulk and interface reference particle of each type ('all', 'A', or 'B').
 
         press_plot_dict: dictionary containing information on the interparticle stress
         and pressure of each bulk and interface reference particle of each type
@@ -3787,21 +3976,13 @@ class measurement:
     def clustering_coefficient(self):
         '''
         Purpose: Takes the composition of each phase and uses neighbor lists to find the
-        nearest, interacting neighbors and calculates the number of neighbors of each
-        type for each particle and averaged over all particles of each phase.
+        nearest, interacting neighbors and calculates the clustering coefficient of each
+        type for each particle and averaged over all particles of each phase. Useful for
+        visualizing segregated domains.
 
         Outputs:
-        neigh_stat_dict: dictionary containing the mean and standard deviation of the
-        number of neighbors of each type ('all', 'A', or 'B') for a reference particle of
-        a given type ('all', 'A', or 'B'), averaged over all particles in each phase.
-
-        ori_stat_dict: dictionary containing the mean and standard deviation of the
-        orientational correlation between a reference particle of
-        a given type ('all', 'A', or 'B') and neighbors of each type ('all', 'A', or 'B'),
-        averaged over all particles in each phase.
-
-        neigh_plot_dict: dictionary containing information on the number of nearest
-        neighbors of each bulk and interface reference particle of each type ('all', 'A', or 'B').
+        clust_plot_dict: dictionary containing information on the number of cluster coefficient
+         of each bulk and interface reference particle of each type ('all', 'A', or 'B').
         '''
         # Count total number of bins in each phase
         phase_count_dict = self.phase_ident_functs.phase_count(self.phase_dict)
@@ -3861,7 +4042,11 @@ class measurement:
         
         #Loop over neighbor pairings of A-A neighbor pairs to calculate number of nearest neighbors
         for i in range(0, len(pos_A_bulk)):
+
+            # If reference particle has neighbors...
             if i in AA_bulk_nlist.query_point_indices:
+
+                # If reference particle hasn't been considered already...
                 if i not in AA_bulk_neigh_ind:
                     # Find neighbors list IDs where i is reference particle
                     loc = np.where(AA_bulk_nlist.query_point_indices==i)[0]
@@ -3873,13 +4058,18 @@ class measurement:
                 #Save nearest neighbor information to array
                 AA_bulk_num_neigh = np.append(AA_bulk_num_neigh, 0)
                 AA_bulk_neigh_ind = np.append(AA_bulk_neigh_ind, int(i))
+        
         #Initiate empty arrays for finding nearest B neighboring dense particles surrounding type A bulk particles
         BA_bulk_neigh_ind = np.array([], dtype=int)
         BA_bulk_num_neigh = np.array([])
 
         #Loop over neighbor pairings of B-A neighbor pairs to calculate number of nearest neighbors
         for i in range(0, len(pos_A_bulk)):
+
+            # If reference particle has neighbors...
             if i in BA_bulk_nlist.query_point_indices:
+
+                # If reference particle hasn't been considered already...
                 if i not in BA_bulk_neigh_ind:
                     # Find neighbors list IDs where i is reference particle
                     loc = np.where(BA_bulk_nlist.query_point_indices==i)[0]
@@ -3898,7 +4088,11 @@ class measurement:
 
         #Loop over neighbor pairings of A-B neighbor pairs to calculate number of nearest neighbors
         for i in range(0, len(pos_B_bulk)):
+
+            # If reference particle has neighbors...
             if i in AB_bulk_nlist.query_point_indices:
+
+                # If reference particle hasn't been considered already...
                 if i not in AB_bulk_neigh_ind:
                     # Find neighbors list IDs where i is reference particle
                     loc = np.where(AB_bulk_nlist.query_point_indices==i)[0]
@@ -3917,7 +4111,11 @@ class measurement:
 
         #Loop over neighbor pairings of B-B neighbor pairs to calculate number of nearest neighbors
         for i in range(0, len(pos_B_bulk)):
+
+            # If reference particle has neighbors...
             if i in BB_bulk_nlist.query_point_indices:
+
+                # If reference particle hasn't been considered already...
                 if i not in BB_bulk_neigh_ind:
                     # Find neighbors list IDs where i is reference particle
                     loc = np.where(BB_bulk_nlist.query_point_indices==i)[0]
@@ -3946,7 +4144,11 @@ class measurement:
 
         #Loop over neighbor pairings of A-A neighbor pairs to calculate number of nearest neighbors
         for i in range(0, len(pos_A_int)):
+
+            # If reference particle has neighbors...
             if i in AA_int_nlist.query_point_indices:
+
+                # If reference particle hasn't been considered already...
                 if i not in AA_int_neigh_ind:
                     # Find neighbors list IDs where i is reference particle
                     loc = np.where(AA_int_nlist.query_point_indices==i)[0]
@@ -3965,7 +4167,11 @@ class measurement:
 
         #Loop over neighbor pairings of A-B neighbor pairs to calculate number of nearest neighbors
         for i in range(0, len(pos_B_int)):
+
+            # If reference particle has neighbors...
             if i in AB_int_nlist.query_point_indices:
+
+                # If reference particle hasn't been considered already...
                 if i not in AB_int_neigh_ind:
                     # Find neighbors list IDs where i is reference particle
                     loc = np.where(AB_int_nlist.query_point_indices==i)[0]
@@ -3984,7 +4190,11 @@ class measurement:
 
         #Loop over neighbor pairings of B-A neighbor pairs to calculate number of nearest neighbors
         for i in range(0, len(pos_A_int)):
+
+            # If reference particle has neighbors...
             if i in BA_int_nlist.query_point_indices:
+
+                # If reference particle hasn't been considered already...
                 if i not in BA_int_neigh_ind:
                     # Find neighbors list IDs where i is reference particle
                     loc = np.where(BA_int_nlist.query_point_indices==i)[0]
@@ -4003,7 +4213,11 @@ class measurement:
 
         # Loop over neighbor pairings of B-B neighbor pairs to calculate number of nearest neighbors
         for i in range(0, len(pos_B_int)):
+
+            # If reference particle has neighbors...
             if i in BB_int_nlist.query_point_indices:
+
+                # If reference particle hasn't been considered already...
                 if i not in BB_int_neigh_ind:
 
                     # Find neighbors list IDs where i is reference particle
@@ -4029,67 +4243,67 @@ class measurement:
         # Save neighbor and local orientational order to arrays for all reference particles of the respective phase with A nearest neighbors
         allA_int_num_neigh = AA_int_num_neigh + BA_int_num_neigh
 
-
+        # Initiate empty arrays for calculating cluster coefficients
         A_bulk_clust_coeff = np.zeros(len(allA_bulk_num_neigh))
         B_bulk_clust_coeff = np.zeros(len(allB_bulk_num_neigh))
 
         A_int_clust_coeff = np.zeros(len(allA_int_num_neigh))
         B_int_clust_coeff = np.zeros(len(allB_int_num_neigh))
 
-        # Average orientational order over all neighbors for each particle
+        # Cluster coefficient for each B reference particle in bulk
         for i in range(0, len(allB_bulk_num_neigh)):
             if allB_bulk_num_neigh[i]>0:
                 B_bulk_clust_coeff[i] = BB_bulk_num_neigh[i]/allB_bulk_num_neigh[i]
 
+        # Cluster coefficient for each A reference particle in bulk
         for i in range(0, len(allA_bulk_num_neigh)):
             if allA_bulk_num_neigh[i]>0:
                 A_bulk_clust_coeff[i] = AA_bulk_num_neigh[i]/allA_bulk_num_neigh[i]
 
-        # Average orientational order over all neighbors for each particle
+        # Cluster coefficient for each B reference particle in interface
         for i in range(0, len(allB_int_num_neigh)):
             if allB_int_num_neigh[i]>0:
                 B_int_clust_coeff[i] = BB_int_num_neigh[i]/allB_int_num_neigh[i]
 
+        # Cluster coefficient for each A reference particle in interface
         for i in range(0, len(allA_int_num_neigh)):
             if allA_int_num_neigh[i]>0:
                 A_int_clust_coeff[i] = AA_int_num_neigh[i]/allA_int_num_neigh[i]
 
-
-        # Save local orientational order for the respective activity dense phase reference particles with the respective activity nearest neighbors
+        # Save number of neighbors for the respective activity dense phase reference particles with the respective activity nearest neighbors
         AA_dense_num_neigh = np.append(AA_bulk_num_neigh, AA_int_num_neigh)
         AB_dense_num_neigh = np.append(AB_bulk_num_neigh, AB_int_num_neigh)
         BA_dense_num_neigh = np.append(BA_bulk_num_neigh, BA_int_num_neigh)
         BB_dense_num_neigh = np.append(BB_bulk_num_neigh, BB_int_num_neigh)
 
-        # Save number of nearest neighbors for the respective activity dense phase reference particles with the respective activity nearest neighbors
+        # Save cluster coefficient for the respective activity dense phase reference particles with the any activity nearest neighbors
         A_dense_clust_coeff = np.append(A_bulk_clust_coeff, A_int_clust_coeff)
         B_dense_clust_coeff = np.append(B_bulk_clust_coeff, B_int_clust_coeff)
         all_dense_clust_coeff = np.append(A_dense_clust_coeff, B_dense_clust_coeff)
 
+        # Save x- and y- positions of A, B, or all types of particles in bulk
         A_dense_pos_x = np.append(pos_A_bulk[:,0], pos_A_int[:,0])
         A_dense_pos_y = np.append(pos_A_bulk[:,1], pos_A_int[:,1])
         B_dense_pos_x = np.append(pos_B_bulk[:,0], pos_B_int[:,0])
         B_dense_pos_y = np.append(pos_B_bulk[:,1], pos_B_int[:,1])
-
         all_dense_pos_x = np.append(A_dense_pos_x, B_dense_pos_x)
         all_dense_pos_y = np.append(A_dense_pos_y, B_dense_pos_y)
 
-
-
-        # Create output dictionary for statistical averages of total nearest neighbor numbers on each particle per phase/activity pairing
-       # neigh_stat_dict = {'bulk': {'all-all': {'mean': np.mean(allall_bulk_num_neigh), 'std': np.std(allall_bulk_num_neigh)}, 'all-A': {'mean': np.mean(allA_bulk_num_neigh), 'std': np.std(allA_bulk_num_neigh)}, 'all-B': {'mean': np.mean(allB_bulk_num_neigh), 'std': np.std(allB_bulk_num_neigh)}, 'A-A': {'mean': np.mean(AA_bulk_num_neigh), 'std': np.std(AA_bulk_num_neigh)}, 'A-B': {'mean': np.mean(AB_bulk_num_neigh), 'std': np.std(AB_bulk_num_neigh)}, 'B-B': {'mean': np.mean(BB_bulk_num_neigh), 'std': np.std(BB_bulk_num_neigh)}}, 'int': {'all-all': {'mean': np.mean(allall_int_num_neigh), 'std': np.std(allall_int_num_neigh)}, 'all-A': {'mean': np.mean(allA_int_num_neigh), 'std': np.std(allA_int_num_neigh)}, 'all-B': {'mean': np.mean(allB_int_num_neigh), 'std': np.std(allB_int_num_neigh)}, 'A-A': {'mean': np.mean(AA_int_num_neigh), 'std': np.std(AA_int_num_neigh)}, 'A-B': {'mean': np.mean(AB_int_num_neigh), 'std': np.std(AB_int_num_neigh)}, 'B-B': {'mean': np.mean(BB_int_num_neigh), 'std': np.std(BB_int_num_neigh)}}, 'dense': {'all-all': {'mean': np.mean(allall_dense_num_neigh), 'std': np.std(allall_dense_num_neigh)}, 'all-A': {'mean': np.mean(allA_dense_num_neigh), 'std': np.std(allA_dense_num_neigh)}, 'all-B': {'mean': np.mean(allB_dense_num_neigh), 'std': np.std(allB_dense_num_neigh)}, 'A-A': {'mean': np.mean(AA_dense_num_neigh), 'std': np.std(AA_dense_num_neigh)}, 'A-B': {'mean': np.mean(AB_dense_num_neigh), 'std': np.std(AB_dense_num_neigh)}, 'B-B': {'mean': np.mean(BB_dense_num_neigh), 'std': np.std(BB_dense_num_neigh)}}}
-
-
-        # Create output dictionary for statistical averages of total nearest neighbor orientational correlation on each particle per phase/activity pairing
-        #ori_stat_dict = {'bulk': {'all-all': {'mean': np.mean(allall_bulk_dot), 'std': np.std(allall_bulk_dot)}, 'all-A': {'mean': np.mean(allA_bulk_dot), 'std': np.std(allA_bulk_dot)}, 'all-B': {'mean': np.mean(allB_bulk_dot), 'std': np.std(allB_bulk_dot)}, 'A-A': {'mean': np.mean(AA_bulk_dot), 'std': np.std(AA_bulk_dot)}, 'A-B': {'mean': np.mean(AB_bulk_dot), 'std': np.std(AB_bulk_dot)}, 'B-B': {'mean': np.mean(BB_bulk_dot), 'std': np.std(BB_bulk_dot)}}, 'int': {'all-all': {'mean': np.mean(allall_int_dot), 'std': np.std(allall_int_dot)}, 'all-A': {'mean': np.mean(allA_int_dot), 'std': np.std(allA_int_dot)}, 'all-B': {'mean': np.mean(allB_int_dot), 'std': np.std(allB_int_dot)}, 'A-A': {'mean': np.mean(AA_int_dot), 'std': np.std(AA_int_dot)}, 'A-B': {'mean': np.mean(AB_int_dot), 'std': np.std(AB_int_dot)}, 'B-B': {'mean': np.mean(BB_int_dot), 'std': np.std(BB_int_dot)}}, 'dense': {'all-all': {'mean': np.mean(allall_dense_dot), 'std': np.std(allall_dense_dot)}, 'all-A': {'mean': np.mean(allA_dense_dot), 'std': np.std(allA_dense_dot)}, 'all-B': {'mean': np.mean(allB_dense_dot), 'std': np.std(allB_dense_dot)}, 'A-A': {'mean': np.mean(AA_dense_dot), 'std': np.std(AA_dense_dot)}, 'A-B': {'mean': np.mean(AB_dense_dot), 'std': np.std(AB_dense_dot)}, 'B-B': {'mean': np.mean(BB_dense_dot), 'std': np.std(BB_dense_dot)}}}
-
-        # Create output dictionary for plotting of nearest neighbor information of each particle per phase/activity pairing and their respective x-y locations
-        neigh_plot_dict = {'A': {'pos': {'x': A_dense_pos_x, 'y': A_dense_pos_y}, 'clust': A_dense_clust_coeff}, 'B': {'pos': {'x': B_dense_pos_x, 'y': B_dense_pos_y}, 'clust': B_dense_clust_coeff}, 'all': {'pos': {'x': all_dense_pos_x, 'y': all_dense_pos_y}, 'clust': all_dense_clust_coeff}}
-        return neigh_plot_dict
+        # Create output dictionary for plotting of cluster coefficient information of each particle per phase/activity pairing and their respective x-y locations
+        clust_plot_dict = {'A': {'pos': {'x': A_dense_pos_x, 'y': A_dense_pos_y}, 'clust': A_dense_clust_coeff}, 'B': {'pos': {'x': B_dense_pos_x, 'y': B_dense_pos_y}, 'clust': B_dense_clust_coeff}, 'all': {'pos': {'x': all_dense_pos_x, 'y': all_dense_pos_y}, 'clust': all_dense_clust_coeff}}
+        return clust_plot_dict
 
     def domain_size(self):
+        '''
+        Purpose: Takes the composition of each phase and uses neighbor lists to find the
+        nearest, interacting neighbors and calculates the domain size of each cluster of like
+        species within the bulk phase. Useful for quantifying segregated domains.
 
-        #
+        Outputs:
+        clust_plot_dict: dictionary containing information on the number of cluster coefficient
+         of each bulk and interface reference particle of each type ('all', 'A', or 'B').
+        '''
+        # Count total number of bins in each phase
         phase_count_dict = self.phase_ident_functs.phase_count(self.phase_dict)
 
         # Count particles per phase
@@ -4132,77 +4346,135 @@ class measurement:
         system_A_dense = freud.AABBQuery(self.f_box, self.f_box.wrap(pos_A_dense))
         system_B_dense = freud.AABBQuery(self.f_box, self.f_box.wrap(pos_B_dense))
 
-        #Compute cluster parameters using system_all neighbor list
-        cl_A=freud.cluster.Cluster()                              #Define cluster
-        cl_B=freud.cluster.Cluster()                              #Define cluster
+        #Define A domains
+        cl_A=freud.cluster.Cluster()  
 
-        cl_A.compute(system_A_dense, neighbors={'r_max': self.r_cut, 'r_min': 0.1})        # Calculate clusters given neighbor list, positions,
-                                                                    # and maximal radial interaction distance
-        cl_B.compute(system_B_dense, neighbors={'r_max': self.r_cut, 'r_min': 0.1})        # Calculate clusters given neighbor list, positions,
-                                                                    # and maximal radial interaction distance
-        clp_A = freud.cluster.ClusterProperties()                 #Define cluster properties
-        clp_B = freud.cluster.ClusterProperties()                 #Define cluster properties
+        #Define A domains
+        cl_B=freud.cluster.Cluster()                             
 
-        ids_A = cl_A.cluster_idx                                    # get id of each cluster
-        ids_B = cl_B.cluster_idx                                    # get id of each cluster
+        # Calculate A domains given neighbor list, positions, and maximal radial interaction distance
+        cl_A.compute(system_A_dense, neighbors={'r_max': self.r_cut, 'r_min': 0.1})        
+        
+        # Calculate B domains given neighbor list, positions, and maximal radial interaction distance
+        cl_B.compute(system_B_dense, neighbors={'r_max': self.r_cut, 'r_min': 0.1})        
+        
+        #Define A domain properties
+        clp_A = freud.cluster.ClusterProperties()                 
+        
+        #Define B domain properties
+        clp_B = freud.cluster.ClusterProperties()                 
+        
+        # get id of each A domain
+        ids_A = cl_A.cluster_idx   
 
-        clp_A.compute(system_A_dense, ids_A)                            # Calculate cluster properties given cluster IDs
-        clp_B.compute(system_B_dense, ids_B)                            # Calculate cluster properties given cluster IDs
+        # get id of each B domain
+        ids_B = cl_B.cluster_idx                                    
 
-        clust_size_A = clp_A.sizes                                  # find cluster sizes
-        clust_size_B = clp_B.sizes                                  # find cluster sizes
+        # Calculate A domain properties given domain IDs
+        clp_A.compute(system_A_dense, ids_A)                            
 
-        lcID_A = np.where(clust_size_A >= 1)[0]    #Identify largest cluster
-        lcID_B = np.where(clust_size_B >= 1)[0]    #Identify largest cluster
+        # Calculate B domain properties given domain IDs
+        clp_B.compute(system_B_dense, ids_B)                            
 
-        lcID_A_smallest = len(np.where(clust_size_A == 1)[0])    #Identify largest cluster
-        lcID_B_smallest = len(np.where(clust_size_B == 1)[0])    #Identify largest cluster
+        # find A domain sizes
+        clust_size_A = clp_A.sizes                          
 
-        lcID_A_second_smallest = len(np.where(clust_size_A == 2)[0])    #Identify largest cluster
-        lcID_B_second_smallest = len(np.where(clust_size_B == 2)[0])    #Identify largest cluster
+        # find B domain sizes
+        clust_size_B = clp_B.sizes                                 
 
-        lcID_A_third_smallest = len(np.where(clust_size_A == 3)[0])    #Identify largest cluster
-        lcID_B_third_smallest = len(np.where(clust_size_B == 3)[0])    #Identify largest cluster
+        #Identify largest A or B domain
+        lcID_A = np.where(clust_size_A >= 1)[0]    
+        lcID_B = np.where(clust_size_B >= 1)[0]
+        
+        #Identify smallest A or B domain
+        lcID_A_smallest = len(np.where(clust_size_A == 1)[0])
+        lcID_B_smallest = len(np.where(clust_size_B == 1)[0])
 
-        lcID_A_fourth_smallest = len(np.where(clust_size_A == 4)[0])    #Identify largest cluster
-        lcID_B_fourth_smallest = len(np.where(clust_size_B == 4)[0])    #Identify largest cluster
+        #Identify second smallest A or B domain
+        lcID_A_second_smallest = len(np.where(clust_size_A == 2)[0])
+        lcID_B_second_smallest = len(np.where(clust_size_B == 2)[0])
 
+        #Identify third smallest A or B domain
+        lcID_A_third_smallest = len(np.where(clust_size_A == 3)[0])
+        lcID_B_third_smallest = len(np.where(clust_size_B == 3)[0])
+
+        #Identify fourth smallest A or B domain
+        lcID_A_fourth_smallest = len(np.where(clust_size_A == 4)[0])
+        lcID_B_fourth_smallest = len(np.where(clust_size_B == 4)[0])
+
+        # Calculate largest A or B domain size
         max_A = np.max(clust_size_A[lcID_A])
         max_B = np.max(clust_size_B[lcID_B])
+
+        # Find largest overall domain size
         if max_A >= max_B:
             max_val = max_A
         else:
             max_val = max_B
-
+        
+        # Find size of largest A domain
         first_max_clust_A = np.max(clust_size_A[lcID_A])
+
+        # Remove largest A domain
         first_max_id = np.where(clust_size_A[lcID_A]==first_max_clust_A)[0]
         clust_A_first_temp = np.delete(clust_size_A[lcID_A], first_max_id)
+
+        # Find size of second largest A domain
         second_max_clust_A = np.max(clust_A_first_temp)
+
+        # Remove second largest A domain
         second_max_id = np.where(clust_A_first_temp==second_max_clust_A)[0]
         clust_A_second_temp = np.delete(clust_A_first_temp, second_max_id)
+
+        # Find size of third largest A domain
         third_max_clust_A = np.max(clust_A_second_temp)
+
+        # Remove third largest A domain
         third_max_id = np.where(clust_A_second_temp==third_max_clust_A)[0]
         clust_A_third_temp = np.delete(clust_A_second_temp, third_max_id)
+
+        # Find size of fourth largest A domain
         fourth_max_clust_A = np.max(clust_A_third_temp)
+
+        # Remove fourth largest A domain
         fourth_max_id = np.where(clust_A_third_temp==fourth_max_clust_A)[0]
         clust_A_fourth_temp = np.delete(clust_A_third_temp, fourth_max_id)
+
+        # Find ID and size of fifth largest A domain
         fifth_max_clust_A = np.max(clust_A_fourth_temp)
 
+        # Find size of largest B domain
         first_max_clust_B = np.max(clust_size_B[lcID_B])
+
+        # Remove largest B domain
         first_max_id = np.where(clust_size_B[lcID_B]==first_max_clust_B)[0]
         clust_B_first_temp = np.delete(clust_size_B[lcID_B], first_max_id)
+
+        # Find size of second largest B domain
         second_max_clust_B = np.max(clust_B_first_temp)
+
+        # Remove second largest B domain
         second_max_id = np.where(clust_B_first_temp==second_max_clust_B)[0]
         clust_B_second_temp = np.delete(clust_B_first_temp, second_max_id)
+
+        # Find size of third largest B domain
         third_max_clust_B = np.max(clust_B_second_temp)
+
+        # Remove third largest B domain
         third_max_id = np.where(clust_B_second_temp==third_max_clust_B)[0]
         clust_B_third_temp = np.delete(clust_B_second_temp, third_max_id)
+
+        # Find size of fourth largest B domain
         fourth_max_clust_B = np.max(clust_B_third_temp)
+
+        # Remove fourth largest B domain
         fourth_max_id = np.where(clust_B_third_temp==fourth_max_clust_B)[0]
         clust_B_fourth_temp = np.delete(clust_B_third_temp, fourth_max_id)
+
+        # Find size of fifth largest B domain
         fifth_max_clust_B = np.max(clust_B_fourth_temp)
         
-
+        # Create output dictionary for statistical information on various domains sizes for type A and B particles in bulk
         domain_stat_dict = {'A': {'pop': len(pos_A_dense), 'avg_size': np.mean(clust_size_A[lcID_A]), 'std_size': np.std(clust_size_A[lcID_A]), 'num': len(clust_size_A[lcID_A]), 'first_size': first_max_clust_A, 'second_size': second_max_clust_A, 'third_size': third_max_clust_A, 'fourth_size': fourth_max_clust_A, 'fifth_size': fifth_max_clust_A, 'one_num': lcID_A_smallest, 'two_num': lcID_A_second_smallest, 'three_num': lcID_A_third_smallest, 'fourth_num': lcID_A_fourth_smallest}, 'B': {'pop': len(pos_B_dense), 'avg_size': np.mean(clust_size_B[lcID_B]), 'std_size': np.std(clust_size_B[lcID_B]), 'num': len(clust_size_B[lcID_B]), 'first': first_max_clust_B, 'second': second_max_clust_B, 'third': third_max_clust_B, 'fourth': fourth_max_clust_B, 'fifth': fifth_max_clust_B, 'one_num': lcID_B_smallest, 'two_num': lcID_B_second_smallest, 'three_num': lcID_B_third_smallest, 'fourth_num': lcID_B_fourth_smallest}}
         
         return domain_stat_dict
@@ -4259,6 +4531,7 @@ class measurement:
             elif (2*np.pi/3) < relative_angles[g]:
                 relative_angles[g]-=(2*np.pi/3)
 
+        # Create output dictionary for particle-based information on hexatic order of all particles
         hexatic_order_dict = {'order': order_param, 'theta': relative_angles}
         return hexatic_order_dict
     
@@ -4266,14 +4539,14 @@ class measurement:
         '''
         Purpose: Takes the position of all particles in the system and uses neighbor lists to find the
         nearest, interacting neighbors of each reference particle and calculates the
-        local hexatic order parameter of each reference particle.
+        voronoi tesselation of each reference particle.
 
         Outputs:
-        hexatic_order_dict: dictionary containing the hexatic order parameter, which
-        measures the degree of the local structure matching an ideal HCP lattice, and crystal
-        domain angle (relative to the x-axis) for each particle in the system
+        voronoi_dict: dictionary containing the voronoi tesselation, which
+        quantifies the number of nearest neighbors and their local geometry.
         '''
 
+        # Count particles per phase
         phase_part_dict = self.particle_prop_functs.particle_phase_ids(self.phasePart)
 
         # Position and orientation arrays of all particles in respective phase
@@ -4283,14 +4556,15 @@ class measurement:
         # Set ideal number of neighbors to 6 for 2D HCP lattice
         voronoi = freud.locality.Voronoi()
 
+        # Create temporary simulation box that only encompasses the dense phase
         dense_box = box.Box(Lx=np.abs(np.max(np.max(pos_dense[:,0]))-np.min(np.max(pos_dense[:,0])))+1.0, Ly=np.abs(np.max(np.max(pos_dense[:,1]))-np.min(np.max(pos_dense[:,1])))+1.0, is2D=True)
 
-        # Compute hexatic order for 6 nearest neighbors
+        # Compute voronoi tesselation for nearest neighbors
         voronoi.compute((self.f_box, pos_dense))
 
-        #hex_order.compute(system=(f_box, pos_A), neighbors=allA_bulk_nlist)
-
         #voronoi_polytopes = voronoi.particle_order
+
+        """
         plt.figure(figsize=(8,7))
         ax = plt.gca()
         ax.set_xlim(np.min(pos_dense[:,0]), np.max(pos_dense[:,0]))
@@ -4298,7 +4572,9 @@ class measurement:
         voronoi.plot(ax=ax)
         plt.show()
         stop
+        """
 
+        # Create output dictionary for particle-based information on voronoi tesselation of all particles
         voronoi_dict = {'order': voronoi_polytopes}
         return voronoi_dict
 
