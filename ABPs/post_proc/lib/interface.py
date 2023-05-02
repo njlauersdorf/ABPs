@@ -1435,9 +1435,14 @@ class interface:
             
 
             okay = np.where(np.abs(np.diff(adjacent_x_discont_smooth)) + np.abs(np.diff(adjacent_y_discont_smooth)) > 0)
-            surface_x_interp = np.r_[adjacent_x_discont_smooth[okay], adjacent_x_discont_smooth[-1], adjacent_x_discont_smooth[0]]
-            surface_y_interp = np.r_[adjacent_y_discont_smooth[okay], adjacent_y_discont_smooth[-1], adjacent_y_discont_smooth[0]]
 
+            if (adjacent_x_discont_smooth[-1] == adjacent_x_discont_smooth[0]) & (adjacent_y_discont_smooth[-1] == adjacent_y_discont_smooth[0]):
+                surface_x_interp = np.r_[adjacent_x_discont_smooth[okay], adjacent_x_discont_smooth[-1]]
+                surface_y_interp = np.r_[adjacent_y_discont_smooth[okay], adjacent_y_discont_smooth[-1]]
+            else:
+                surface_x_interp = np.r_[adjacent_x_discont_smooth[okay], adjacent_x_discont_smooth[-1], adjacent_x_discont_smooth[0]]
+                surface_y_interp = np.r_[adjacent_y_discont_smooth[okay], adjacent_y_discont_smooth[-1], adjacent_y_discont_smooth[0]]
+            
             if len(surface_x_interp)==3:
                 tck, u = interpolate.splprep([surface_x_interp, surface_y_interp], s=0, k=2, per=True)
             elif len(surface_x_interp)>3:
