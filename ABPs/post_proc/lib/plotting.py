@@ -5583,7 +5583,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         fig = plt.figure(figsize=(x_dim,y_dim), facecolor='#F4F4F4')
         ax = fig.add_subplot(111)
 
-        sz = 0.9
+        sz = 0.77#9
         """
         pos0_x_arr = np.append(pos[typ0ind,0]+self.hx_box, pos[typ0ind,0]+self.hx_box)
         pos0_x_arr = np.append(pos0_x_arr, pos[typ0ind,0]+self.hx_box)
@@ -5634,7 +5634,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                 fastGroup = mc.PatchCollection(ells0,facecolors=fastCol)
             ax.add_collection(slowGroup)
             ax.add_collection(fastGroup)
-
+            """
             if self.peA != self.peB:
                 fast_leg = [Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=slowCol, label='Slow', markersize=20), Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=fastCol, label='Fast', markersize=20)]
 
@@ -5645,7 +5645,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
                 one_leg = ax.legend(handles=fast_leg, loc='upper right', borderpad=0.3, handletextpad=0.2, bbox_transform=ax.transAxes, bbox_to_anchor=[1.0, 1.0], handlelength=1.5, columnspacing=0.0, fontsize=26, ncol=1, fancybox=True, framealpha=0.5, facecolor='white', edgecolor='black')
                 ax.add_artist(one_leg)
-
+            """
 
             #Create legend for binary system
             """
@@ -5788,6 +5788,8 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         else:
             plt.ylim(0, self.ly_box)
             plt.xlim(0, self.lx_box)
+            plt.ylim(self.hy_box-30-2, self.hy_box+30-2)
+            plt.xlim(self.hy_box-30-2, self.hy_box+30-2)
 
 
         # Label simulation time
@@ -5814,7 +5816,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         #pad = str(j).zfill(4)
         ax.set_facecolor('#F4F4F4')
         plt.tight_layout()
-        plt.savefig(self.outPath + 'part_activity_' + self.outFile + ".png", dpi=300, transparent=False)
+        plt.savefig(self.outPath + 'part_activity_' + self.outFile + ".png", dpi=300, transparent=True, bbox_inches='tight')
         plt.close()  
     
     def plot_part_activity_large_text(self, pos, ang, sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None):

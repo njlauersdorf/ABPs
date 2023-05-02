@@ -921,7 +921,7 @@ class interface:
                 loc_id = np.where((surface_x == left) & (surface_y == down))[0]
 
                 surface_x = np.delete(surface_x, loc_id)
-                surfacer_y = np.delete(surface_y, loc_id)
+                surface_y = np.delete(surface_y, loc_id)
 
             # Otherwise, if bin upper right of reference bin is part of the same surface, save it to sorted array
             elif surface_id[right][up]==1:
@@ -1219,6 +1219,7 @@ class interface:
 
                                 surface_x = np.delete(surface_x, loc_id)
                                 surface_y = np.delete(surface_y, loc_id)
+
                             else:
                                 ix_ref = shortest_idx[np.min(loc_min_inds)]
                                 iy_ref = shortest_idy[np.min(loc_min_inds)]
@@ -1242,6 +1243,7 @@ class interface:
 
                             surface_x = np.delete(surface_x, loc_id)
                             surface_y = np.delete(surface_y, loc_id)
+
                         else:
                             break
 

@@ -249,11 +249,11 @@ import time
 with hoomd.open(name=inFile, mode='rb') as t:
 
     dumps = int(t.__len__())
-    start = int(563/time_step)#205                                             # first frame to process
+    start = int(0/time_step)#205                                             # first frame to process
     
                                 # get number of timesteps dumped
     
-    end = 565#802#int(dumps/time_step)-1                                             # final frame to process
+    end = int(dumps/time_step)-1                                             # final frame to process
     snap = t[0]                                             # Take first snap for box
     first_tstep = snap.configuration.step                   # First time step
 
@@ -384,7 +384,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
             com_dict = plotting_utility_functs.com_view(pos, clp_all)
 
-            #pos = com_dict['pos']
+            pos = com_dict['pos']
 
             #Bin system to calculate orientation and alignment that will be used in vector plots
             NBins_x = utility_functs.getNBins(lx_box, bin_width)
