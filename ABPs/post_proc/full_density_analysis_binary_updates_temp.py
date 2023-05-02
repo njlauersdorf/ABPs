@@ -327,7 +327,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
         clp_all.compute(system_all, ids)                            # Calculate cluster properties given cluster IDs
         clust_size = clp_all.sizes                                  # find cluster sizes
 
-        min_size=int(partNum/8)                                     #Minimum cluster size for measurements to happen
+        min_size=int(partNum/10)                                     #Minimum cluster size for measurements to happen
         lcID = np.where(clust_size == np.amax(clust_size))[0][0]    #Identify largest cluster
         large_clust_ind_all=np.where(clust_size>min_size)           #Identify all clusters larger than minimum size
         clust_large = np.amax(clust_size)
