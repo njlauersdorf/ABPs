@@ -221,7 +221,7 @@ tauPerDT = theory_functs.computeTauPerTstep(epsilon=eps)  # brownian time per ti
 snap = f[0]
 typ = snap.particles.typeid
 partNum = len(typ)
-
+lat_sum = 0
 action_arr = np.array([])
 
 #Set output file names
@@ -247,8 +247,9 @@ sum_num = 0
 dify_long = 0
 import time
 with hoomd.open(name=inFile, mode='rb') as t:
-
+    
     dumps = int(t.__len__())
+
     start = int(0/time_step)#205                                             # first frame to process
     
                                 # get number of timesteps dumped
@@ -1195,7 +1196,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                             avg_radial_df_dict[key] = value
                     except:
                         avg_radial_df_dict[key] = value
-                    
+                
+                lat_sum += lat_stat_dict['bulk']['all']['mean']
                 sum_num += 1
                 
                 
@@ -1207,10 +1209,10 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                 data_output_functs.write_to_txt(wasserstein_dict, dataPath + 'wasserstein_' + outfile + '.txt')
 
-                if plot == 'y':
+                #if plot == 'y':
 
-                    plotting_functs.plot_general_rdf(radial_df_dict)
-                    plotting_functs.plot_all_rdfs(radial_df_dict)
+                #    plotting_functs.plot_general_rdf(radial_df_dict)
+                #    plotting_functs.plot_all_rdfs(radial_df_dict)
 
             elif measurement_method == 'angular_df':
                 # Done but inaccurate in planar system
@@ -1246,6 +1248,25 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 stop
                 #data_output_functs.write_to_txt(neigh_stat_dict, dataPath + 'nearest_neighbors_' + outfile + '.txt')
                 #data_output_functs.write_to_txt(ori_stat_dict, dataPath + 'nearest_ori_' + outfile + '.txt')
+            elif measurement_method == 'local_gas_density':
+                #DONE
+                lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
+                
+                if lx_box == ly_box:
+                    local_dens_stat_dict, local_dens_plot_dict = lattice_structure_functs.local_gas_density()
+
+                data_output_functs.write_to_txt(local_dens_stat_dict, dataPath + 'local_gas_density_' + outfile + '.txt')
+                if plot == 'y':
+                    plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, pair='all-all')
+                    plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, pair='A-all')
+                    plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, pair='B-all')
+                    plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, pair='all-A')
+                    plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, pair='all-B')
+                    plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, pair='A-A')
+                    plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, pair='B-A')
+                    plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, pair='A-B')
+                    plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, pair='B-B')
+            
             elif measurement_method == 'local_density':
                 #DONE
                 lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
@@ -1635,15 +1656,22 @@ with hoomd.open(name=inFile, mode='rb') as t:
         for key, value in radial_df_dict.items():
             if key != 'r':
                 avg_radial_df_dict[key] = (np.array(avg_radial_df_dict[key])/sum_num).tolist()
+        lat_avg = lat_sum / sum_num
 
+        print(sum_num)
         lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
 
         avg_compress_dict = lattice_structure_functs.compressibility(avg_radial_df_dict, avg_num_dens = avg_num_dens_dict)
 
-        avg_wasserstein_dict = lattice_structure_functs.wasserstein_distance(avg_radial_df_dict)
+        avg_wasserstein_dict = lattice_structure_functs.wasserstein_distance(avg_radial_df_dict, lat_avg)
 
         data_output_functs.write_to_txt(avg_compress_dict, dataPath + 'avg_compressibility_' + outfile + '.txt')
 
         data_output_functs.write_to_txt(avg_wasserstein_dict, dataPath + 'avg_wasserstein_' + outfile + '.txt')
 
         data_output_functs.write_to_txt(avg_radial_df_dict, dataPath + 'avg_radial_df_' + outfile + '.txt')
+
+        if plot == 'y':
+
+                    plotting_functs.plot_general_rdf(radial_df_dict)
+                    plotting_functs.plot_all_rdfs(radial_df_dict)

@@ -196,11 +196,11 @@ class plotting:
             y_dim = int(scaling)
 
         # Generate figure of dimensions proportional to simulation box size (with added x-length for color bar)
-        fig = plt.figure(figsize=(x_dim,y_dim))
+        fig = plt.figure(figsize=(x_dim,y_dim+1))
         ax = fig.add_subplot(111)
 
         # Set plotted particle size
-        sz = 0.75
+        sz = 0.77
 
         # Plot position colored by neighbor number
         
@@ -236,11 +236,11 @@ class plotting:
             try:
                 pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
                 pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
-                plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
-                plt.scatter(pos_interior_surface_x + self.lx_box, pos_interior_surface_y, c='black', s=3.0)
-                plt.scatter(pos_interior_surface_x - self.lx_box, pos_interior_surface_y, c='black', s=3.0)
-                plt.scatter(pos_interior_surface_x, pos_interior_surface_y + self.ly_box, c='black', s=3.0)
-                plt.scatter(pos_interior_surface_x, pos_interior_surface_y - self.ly_box, c='black', s=3.0)
+                #plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
+                #plt.scatter(pos_interior_surface_x + self.lx_box, pos_interior_surface_y, c='black', s=3.0)
+                #plt.scatter(pos_interior_surface_x - self.lx_box, pos_interior_surface_y, c='black', s=3.0)
+                #plt.scatter(pos_interior_surface_x, pos_interior_surface_y + self.ly_box, c='black', s=3.0)
+                #plt.scatter(pos_interior_surface_x, pos_interior_surface_y - self.ly_box, c='black', s=3.0)
             except:
                 pass
 
@@ -284,7 +284,7 @@ class plotting:
         plt.tick_params(axis='both', which='both',
                         bottom=False, top=False, left=False, right=False,
                         labelbottom=False, labeltop=False, labelleft=False, labelright=False)
-        
+        """
         # Label simulation time
         if self.lx_box == self.ly_box:
             plt.text(0.75, 0.04, s=r'$\tau$' + ' = ' + '{:.1f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
@@ -294,7 +294,7 @@ class plotting:
             plt.text(0.85, 0.1, s=r'$\tau$' + ' = ' + '{:.1f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
                 fontsize=9, transform = ax.transAxes,
                 bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
-
+        """
 
         eps_leg=[]
         mkSz = [0.1, 0.1, 0.15, 0.1, 0.1]
@@ -322,15 +322,22 @@ class plotting:
         #    plt.plot([0, self.lx_box], [pos_y[i], pos_y[i]], color='black', linestyle='-', linewidth=0.7, alpha=0.7)
 
 
-        red_patch = mpatches.Patch(color=red, label='Dilute')
-        green_patch = mpatches.Patch(color=green, label='Bulk')
-        yellow_patch = mpatches.Patch(color=yellow, label='Interface')
+        #red_patch = mpatches.Patch(color=red, label='Dilute')
+        #green_patch = mpatches.Patch(color=green, label='Bulk')
+        #yellow_patch = mpatches.Patch(color=yellow, label='Interface')
         #purple_patch = mpatches.Patch(color=purple, label='Bubble')
-        plt.legend(handles=[green_patch, yellow_patch, red_patch], fancybox=True, framealpha=0.75, ncol=1, fontsize=21, loc='upper left',labelspacing=0.1, handletextpad=0.1)
+        #plt.legend(handles=[green_patch, yellow_patch, red_patch], fancybox=True, framealpha=0.75, ncol=1, fontsize=21, loc='upper left',labelspacing=0.1, handletextpad=0.1)
+        
+        fast_leg = [Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=green, label='Bulk', markersize=42), Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=yellow, label='Interface', markersize=42), Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=red, label='Gas', markersize=42)]
+
+        #one_leg = ax.legend(handles=fast_leg, borderpad=0.3, labelspacing=0.4, handletextpad=-0.2, bbox_transform=ax.transAxes, bbox_to_anchor=[1.0, 1.15], handlelength=1.5, columnspacing=1.0, fontsize=36, ncol=2, facecolor='None', edgecolor='None')
+        one_leg = ax.legend(handles=fast_leg, borderpad=0.3, labelspacing=0.4, handletextpad=-0.2, bbox_transform=ax.transAxes, bbox_to_anchor=[1.04, 1.15], handlelength=1.5, columnspacing=0.5, fontsize=46, ncol=3, facecolor='None', edgecolor='None')
+        ax.add_artist(one_leg)
         plt.tight_layout()
+
         #plt.show()
 
-        plt.savefig(self.outPath + 'plot_phases_' + self.outFile + ".png", dpi=200, transparent=False)
+        plt.savefig(self.outPath + 'plot_phases_' + self.outFile + ".png", dpi=200, transparent=False, bbox_inches='tight')
         plt.close()  
     def plot_area_fraction(self, area_frac_dict, sep_surface_dict, int_comp_dict, pos, type='all'):#, int_comp_dict):#sep_surface_dict, int_comp_dict):
         """
@@ -1229,9 +1236,9 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         #plt.legend(loc='upper right')
 
         plt.tight_layout()
-        plt.show()
-        #plt.savefig(outPath + 'rdf_all_' + out + ".png", dpi=300)
-        #plt.close()
+        #plt.show()
+        plt.savefig(self.outPath + 'avg_rdf_all_' + self.outFile + ".png", dpi=300)
+        plt.close()
 
     def plot_all_rdfs(self, radial_df_dict):
 
@@ -1377,9 +1384,9 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
         legend = ax1.legend(handles=leg, loc='upper right', columnspacing=1., handletextpad=0.3, bbox_transform=ax1.transAxes, bbox_to_anchor=[0.98, 1.03], fontsize=fsize*2.8, frameon=False, ncol=1)
         plt.tight_layout()
-        plt.show()
-        #plt.savefig(outPath + 'rdf_' + out + ".png", dpi=300)
-        #plt.close()
+        #plt.show()
+        plt.savefig(self.outPath + 'avg_rdf_' + self.outFile+ ".png", dpi=300)
+        plt.close()
 
     def plot_general_adf(self, angular_df_dict):
 
@@ -5580,7 +5587,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
             mono=0
 
         # Generate figure of dimensions proportional to simulation box size (with added x-length for color bar)
-        fig = plt.figure(figsize=(x_dim,y_dim), facecolor='#F4F4F4')
+        fig = plt.figure(figsize=(x_dim,y_dim), facecolor='white')
         ax = fig.add_subplot(111)
 
         sz = 0.77#9
@@ -5636,21 +5643,27 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
             ax.add_collection(fastGroup)
             """
             if self.peA != self.peB:
-                fast_leg = [Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=slowCol, label='Slow', markersize=20), Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=fastCol, label='Fast', markersize=20)]
+                fast_leg = [Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=slowCol, label=r'$\mathrm{Pe}_\mathrm{S} = $'+str(int(self.peA)), markersize=32), Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=fastCol, label=r'$\mathrm{Pe}_\mathrm{F} = $'+str(int(self.peB)), markersize=32)]
 
-                one_leg = ax.legend(handles=fast_leg, loc='upper right', borderpad=0.3, labelspacing=0.4, handletextpad=0.2, bbox_transform=ax.transAxes, bbox_to_anchor=[1.0, 1.0], handlelength=1.5, columnspacing=0.0, fontsize=20, ncol=1, fancybox=True, framealpha=0.5, facecolor='white', edgecolor='black')
+                one_leg = ax.legend(handles=fast_leg, loc='upper right', borderpad=0.3, labelspacing=0.4, handletextpad=0.2, bbox_transform=ax.transAxes, bbox_to_anchor=[1.0, 1.0], handlelength=1.5, columnspacing=0.0, fontsize=36, ncol=1, fancybox=True, framealpha=0.5, facecolor='white', edgecolor='black')
                 ax.add_artist(one_leg)
             else:
                 fast_leg = [Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=slowCol, label='Active', markersize=28)]
 
-                one_leg = ax.legend(handles=fast_leg, loc='upper right', borderpad=0.3, handletextpad=0.2, bbox_transform=ax.transAxes, bbox_to_anchor=[1.0, 1.0], handlelength=1.5, columnspacing=0.0, fontsize=26, ncol=1, fancybox=True, framealpha=0.5, facecolor='white', edgecolor='black')
+                one_leg = ax.legend(handles=fast_leg, loc='upper right', borderpad=0.3, handletextpad=0.2, bbox_transform=ax.transAxes, bbox_to_anchor=[1.0, 1.0], handlelength=1.5, columnspacing=0.0, fontsize=32, ncol=1, fancybox=True, framealpha=0.5, facecolor='white', edgecolor='black')
                 ax.add_artist(one_leg)
             """
+
+            fast_leg = [Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=slowCol, label=r'$\mathrm{Pe}_\mathrm{S} = $'+str(int(self.peA)), markersize=36), Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=fastCol, label=r'$\mathrm{Pe}_\mathrm{F} = $'+str(int(self.peB)), markersize=36)]
+
+            #one_leg = ax.legend(handles=fast_leg, borderpad=0.3, labelspacing=0.4, handletextpad=-0.2, bbox_transform=ax.transAxes, bbox_to_anchor=[1.0, 1.15], handlelength=1.5, columnspacing=1.0, fontsize=36, ncol=2, facecolor='None', edgecolor='None')
+            one_leg = ax.legend(handles=fast_leg, borderpad=0.3, labelspacing=0.4, handletextpad=-0.2, bbox_transform=ax.transAxes, bbox_to_anchor=[0.97, 1.15], handlelength=1.5, columnspacing=1.0, fontsize=36, ncol=2, facecolor='None', edgecolor='None')
+            ax.add_artist(one_leg)
 
             #Create legend for binary system
             """
             if (len(typ0ind)!=0) & (len(typ1ind)!=0):
-                leg = ax.legend(handles=[ells0[0], ells1[0]], labels=[r'$\mathrm{Pe}_\mathrm{A} = $'+str(int(self.peA)), r'$\mathrm{Pe}_\mathrm{B} = $'+str(int(self.peB))], loc='upper right', prop={'size': 22}, markerscale=8.0)
+                leg = ax.legend(handles=[ells0[0], ells1[0]], labels=[r'$\mathrm{Pe}_\mathrm{S} = $'+str(int(self.peA)), r'$\mathrm{Pe}_\mathrm{F} = $'+str(int(self.peB))], loc='upper right', prop={'size': 22}, markerscale=8.0, edgecolor='black', linewidth=2.0)
                 if self.peA <= self.peB:
                     leg.legendHandles[0].set_color(slowCol)
                     leg.legendHandles[1].set_color(fastCol)
@@ -5659,7 +5672,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                     leg.legendHandles[1].set_color(slowCol)
             #Create legend for monodisperse system
             else:
-                leg = ax.legend(handles=[ells0[0]], labels=[r'$\mathrm{Pe}_\mathrm{A} = $'+str(int(self.peA)), r'$\mathrm{Pe}_\mathrm{A} = $'+str(int(self.peA))], loc='upper right', prop={'size': 22}, markerscale=8.0)
+                leg = ax.legend(handles=[ells0[0]], labels=[r'$\mathrm{Pe}_\mathrm{S} = $'+str(int(self.peA)), r'$\mathrm{Pe}_\mathrm{F} = $'+str(int(self.peA))], loc='upper right', prop={'size': 22}, markerscale=8.0, edgecolor='black', linewidth=2.0)
                 leg.legendHandles[0].set_color(slowCol)
             """
             #px = np.sin(ang[typ1ind])
@@ -5788,8 +5801,8 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         else:
             plt.ylim(0, self.ly_box)
             plt.xlim(0, self.lx_box)
-            plt.ylim(self.hy_box-30-2, self.hy_box+30-2)
-            plt.xlim(self.hy_box-30-2, self.hy_box+30-2)
+            #plt.ylim(self.hy_box-30-2, self.hy_box+30-2)
+            #plt.xlim(self.hy_box-30-2, self.hy_box+30-2)
 
 
         # Label simulation time
@@ -5814,9 +5827,11 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
         # Create frame pad for images
         #pad = str(j).zfill(4)
-        ax.set_facecolor('#F4F4F4')
+        ax.set_facecolor('white')
+        #ax.set_facecolor('#F4F4F4')
         plt.tight_layout()
-        plt.savefig(self.outPath + 'part_activity_' + self.outFile + ".png", dpi=300, transparent=True, bbox_inches='tight')
+        plt.savefig(self.outPath + 'part_activity_' + self.outFile + ".png", dpi=300, transparent=False, bbox_inches='tight')
+        #plt.savefig(self.outPath + 'part_activity_' + self.outFile + ".eps", format='eps', dpi=150, bbox_inches='tight')
         plt.close()  
     
     def plot_part_activity_large_text(self, pos, ang, sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None):
