@@ -250,7 +250,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
     
     dumps = int(t.__len__())
 
-    start = int(0/time_step)#205                                             # first frame to process
+    start =int(0/time_step)#205                                             # first frame to process
     
                                 # get number of timesteps dumped
     
@@ -385,7 +385,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
             com_dict = plotting_utility_functs.com_view(pos, clp_all)
 
-            pos = com_dict['pos']
+            #pos = com_dict['pos']
 
             #Bin system to calculate orientation and alignment that will be used in vector plots
             NBins_x = utility_functs.getNBins(lx_box, bin_width)
@@ -932,6 +932,11 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 if plot == 'y':
                     
                     plotting_functs.plot_part_activity(pos, all_surface_curves, int_comp_dict)
+            elif measurement_method == 'activity_article':
+
+                if plot == 'y':
+                    
+                    plotting_functs.plot_part_activity_empower_article(pos, ang, sep_surface_dict = all_surface_curves, int_comp_dict = int_comp_dict)
                 stop
             elif measurement_method == 'activity_large':
 
@@ -1675,3 +1680,10 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                     plotting_functs.plot_general_rdf(radial_df_dict)
                     plotting_functs.plot_all_rdfs(radial_df_dict)
+    elif measurement_method == 'collision':
+                
+        particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, eps, typ, pos, ang)
+        
+        collision_dict = particle_prop_functs.collision_rate()
+        
+        data_output_functs.write_to_txt(collision_dict, dataPath + 'collision_' + outfile + '.txt')

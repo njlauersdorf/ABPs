@@ -133,7 +133,7 @@ aspect_ratio=$answer
 if [ $dont_run == "no" ]; then
     # Default values for simulations
     declare -i part_num
-    part_num=( 50000 )
+    part_num=( 10000 )
     #100 500 1000 3000 5000)
 
     declare -i runfor
@@ -160,7 +160,7 @@ if [ $dont_run == "no" ]; then
     # List for phi
     declare -a phi
     #phi=(60)
-    phi=(500)
+    phi=(100)
     # 70 80 100 110)
     # List for epsilon
     #eps=(1.0 0.1 0.001) # LISTS CAN CONTAIN FLOATS!!!!
