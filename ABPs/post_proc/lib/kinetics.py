@@ -176,8 +176,10 @@ class kinetic_props:
         com_y_adsorb = np.mean(pos_y_arr_time[-2,gas_now_in_clust_prev[0]])
 
         # X- and Y- positions of particles that have been adsorbed to cluster (after joining) and desorbed from cluster (before leaving)
-        pos_x_arr_desorb_adsorb = np.append(pos_x_arr_time[-1,clust_now_in_gas_prev[0]], pos_x_arr_time[-2,gas_now_in_clust_prev[0]])
-        pos_y_arr_desorb_adsorb = np.append(pos_y_arr_time[-1,clust_now_in_gas_prev[0]], pos_y_arr_time[-2,gas_now_in_clust_prev[0]])
+        pos_x_arr_desorb_adsorb = np.append(pos_x_arr_time[-2,clust_now_in_gas_prev[0]], pos_x_arr_time[-1,gas_now_in_clust_prev[0]])
+        pos_y_arr_desorb_adsorb = np.append(pos_y_arr_time[-2,clust_now_in_gas_prev[0]], pos_y_arr_time[-1,gas_now_in_clust_prev[0]])
+        
+        
         
         #Calculate CoM of net adsorbed particles
         com_adsorb_desorb_dict = self.plotting_utility_functs.com_part_view(pos_x_arr_time[-1, clust_id], pos_y_arr_time[-1, clust_id], pos_x_arr_desorb_adsorb, pos_y_arr_desorb_adsorb, com_x_parts_arr_time[-1]-self.hx_box, com_y_parts_arr_time[-1]-self.hy_box)
@@ -237,8 +239,8 @@ class kinetic_props:
 
         # Previous positions of particles currently in cluster
         clust_with_adsorb = np.append(clust_without_desorb, gas_now_in_clust_prev[0])
-        pos_x_with_adsorb = np.append(pos_x_arr_time[-2, clust_without_desorb], pos_x_arr_time[-1, clust_with_adsorb])
-        pos_y_with_adsorb = np.append(pos_y_arr_time[-2, clust_without_desorb], pos_y_arr_time[-1, clust_with_adsorb])
+        pos_x_with_adsorb = np.append(pos_x_arr_time[-2, clust_without_desorb], pos_x_arr_time[-1, gas_now_in_clust_prev[0]])
+        pos_y_with_adsorb = np.append(pos_y_arr_time[-2, clust_without_desorb], pos_y_arr_time[-1, gas_now_in_clust_prev[0]])
 
         # Calculate CoM of previous positions of particles currently in cluster
         com_adsorb_desorb_dict2 = self.plotting_utility_functs.com_part_view(pos_x_with_adsorb, pos_y_with_adsorb, pos_x_with_adsorb, pos_y_with_adsorb, com_x_parts_arr_time[-2]-self.hx_box, com_y_parts_arr_time[-2]-self.hy_box)
@@ -247,23 +249,35 @@ class kinetic_props:
         difx_adsorb = self.utility_functs.sep_dist_x(com_adsorb_desorb_dict2['com']['x'], com_x_parts_arr_time[-2]-self.hx_box)
         dify_adsorb = self.utility_functs.sep_dist_y(com_adsorb_desorb_dict2['com']['y'], com_y_parts_arr_time[-2]-self.hy_box)
         difr_adsorb = ( difx_adsorb ** 2 + dify_adsorb ** 2 ) ** 0.5
-
-        #plt.scatter(pos_x_arr_time[-1,bulk_id], pos_y_arr_time[-1,bulk_id], s=0.7, color='black')
-        #plt.scatter(pos_x_arr_time[-1,int_id], pos_y_arr_time[-1,int_id], s=0.7, color='black')
-        #plt.scatter(pos_x_arr_time[-2,clust_now_in_gas2[0]], pos_y_arr_time[-2,clust_now_in_gas2[0]], s=0.7, color='red')
-        #plt.scatter(pos_x_arr_time[-1,gas2_now_in_clust[0]], pos_y_arr_time[-1,gas2_now_in_clust[0]], s=0.7, color='blue')
-        #plt.scatter(com_x_parts_arr_time[-1]-self.hx_box, com_y_parts_arr_time[-1]-self.hy_box, s=25, edgecolor='blue', facecolor='None')
-        #plt.scatter(com_x_parts_arr_time[-2]-self.hx_box, com_y_parts_arr_time[-2]-self.hy_box, s=25, edgecolor='purple', facecolor='None')
-        #plt.scatter(com_adsorb_desorb_dict2['com']['x'], com_adsorb_desorb_dict2['com']['y'], s=25, edgecolor='red', facecolor='None')# This is the good one
-        #plt.scatter(com_without_desorb_current_dict['com']['x'], com_without_desorb_current_dict['com']['y'], s=25, edgecolor='orange', facecolor='None')
-        #plt.show()
-
-        dot_prod = (difx_clust / difr_clust) * (difx_adsorb_desorb/difr_adsorb_desorb) + (dify_clust / difr_clust) * (dify_adsorb_desorb/difr_adsorb_desorb)
-        #print(dot_prod)
+        
+        """
+        plt.scatter(pos_x_arr_time[-1,bulk_id], pos_y_arr_time[-1,bulk_id], s=0.7, color='black')
+        plt.scatter(pos_x_arr_time[-1,int_id], pos_y_arr_time[-1,int_id], s=0.7, color='black')
+        plt.quiver(com_x_parts_arr_time[-2]-self.hx_box, com_y_parts_arr_time[-2]-self.hy_box, difx_clust, dify_clust, color='blue')
+        plt.quiver(com_x_parts_arr_time[-2]-self.hx_box, com_y_parts_arr_time[-2]-self.hy_box, difx_adsorb, dify_adsorb, color='red')
+        plt.scatter(com_adsorb_desorb_dict2['com']['x'], com_adsorb_desorb_dict2['com']['y'], s=10, color='yellow')
+        plt.scatter((com_x_parts_arr_time[-1]-self.hx_box), (com_y_parts_arr_time[-1]-self.hy_box), s=10, color='pink')
+        plt.xlim([com_x_parts_arr_time[-2]-self.hx_box-10, com_x_parts_arr_time[-2]-self.hx_box+10])
+        plt.ylim([com_y_parts_arr_time[-2]-self.hy_box-10, com_y_parts_arr_time[-2]-self.hy_box+10])
+        plt.show()
+        """
         
         
         
 
+        
+        dot_prod = (difx_clust / difr_clust) * (difx_adsorb/difr_adsorb) + (dify_clust / difr_clust) * (dify_adsorb/difr_adsorb)
+        dot_prod2 = (difx_clust / difr_clust) * (difx_adsorb_desorb/difr_adsorb_desorb) + (dify_clust / difr_clust) * (dify_adsorb_desorb/difr_adsorb_desorb)
+        dif_displace_x = com_adsorb_desorb_dict2['com']['x'] - (com_x_parts_arr_time[-1]-self.hx_box)
+        dif_displace_y = com_adsorb_desorb_dict2['com']['y'] - (com_y_parts_arr_time[-1]-self.hy_box)
+        dif_displace_r = (dif_displace_x ** 2 + dif_displace_y ** 2)**0.5
+        print(dot_prod)
+        print(dot_prod2)
+        print(dif_displace_x)
+        print(dif_displace_y)
+
+
+        
 
         
         # Save calculated displacements
@@ -283,7 +297,7 @@ class kinetic_props:
         dify_adsorb_arr = np.append(dify_adsorb_arr, dify_adsorb)
         difr_adsorb_arr = np.append(difr_adsorb_arr, difr_adsorb)
 
-        clust_motion_dict = {'align': align_vect.tolist(), 'magnitude': percent_change_vect.tolist(), 'no_desorb': {'x': difx_without_desorb_arr.tolist(), 'y': dify_without_desorb_arr.tolist(), 'r': difr_without_desorb_arr.tolist()}, 'net_flux': {'x': difx_adsorb_arr.tolist(), 'y': dify_adsorb_arr.tolist(), 'r': difr_adsorb_arr.tolist()}, 'total': {'x': difx_clust_arr.tolist(), 'y': dify_clust_arr.tolist(), 'r': difr_clust_arr.tolist()}, 'com_flux': {'x': difx_adsorb_desorb_arr.tolist(), 'y': dify_adsorb_desorb_arr.tolist(), 'r': difr_adsorb_desorb_arr.tolist()}}
+        clust_motion_dict = {'dif_com': {'x': dif_displace_x, 'y': dif_displace_y, 'r': dif_displace_r}, 'dot_prod': dot_prod.tolist(), 'dot_prod2': dot_prod2.tolist(), 'align': align_vect.tolist(), 'magnitude': percent_change_vect.tolist(), 'no_desorb': {'x': difx_without_desorb_arr.tolist(), 'y': dify_without_desorb_arr.tolist(), 'r': difr_without_desorb_arr.tolist()}, 'net_flux': {'x': difx_adsorb_arr.tolist(), 'y': dify_adsorb_arr.tolist(), 'r': difr_adsorb_arr.tolist()}, 'total': {'x': difx_clust_arr.tolist(), 'y': dify_clust_arr.tolist(), 'r': difr_clust_arr.tolist()}, 'com_flux': {'x': difx_adsorb_desorb_arr.tolist(), 'y': dify_adsorb_desorb_arr.tolist(), 'r': difr_adsorb_desorb_arr.tolist()}}
         adsorption_dict = {'gas_to_clust': {'all': num_gas2_to_clust, 'A': num_slow_gas2_to_clust,'B': num_fast_gas2_to_clust}, 'clust_to_gas': {'all': num_clust_to_gas2, 'A': num_slow_clust_to_gas2,'B': num_fast_clust_to_gas2}}
 
         return clust_motion_dict, adsorption_dict
@@ -540,12 +554,12 @@ class kinetic_props:
             dify_adsorb = self.utility_functs.sep_dist_y(com_adsorb_desorb_dict2['com']['y'], com_y_parts_arr_time[j-1]-self.hy_box)
             difr_adsorb = ( difx_adsorb ** 2 + dify_adsorb ** 2 ) ** 0.5
 
-            #plt.scatter(pos_x_with_adsorb, pos_y_with_adsorb, s=0.7, color='black')
-            #plt.scatter(com_adsorb_desorb_dict2['com']['x'], com_adsorb_desorb_dict2['com']['y'], s=25, color='red')
-            #plt.scatter(com_x_parts_arr_time[j]-self.hx_box, com_y_parts_arr_time[j]-self.hy_box, s=25, color='blue')
-            #plt.scatter(com_x_parts_arr_time[j-1]-self.hx_box, com_y_parts_arr_time[j-1]-self.hy_box, s=25, color='purple')
-            #plt.show()
-
+            plt.scatter(pos_x_with_adsorb, pos_y_with_adsorb, s=0.7, color='black')
+            plt.scatter(com_adsorb_desorb_dict2['com']['x'], com_adsorb_desorb_dict2['com']['y'], s=25, color='red')
+            plt.scatter(com_x_parts_arr_time[j]-self.hx_box, com_y_parts_arr_time[j]-self.hy_box, s=25, color='blue')
+            plt.scatter(com_x_parts_arr_time[j-1]-self.hx_box, com_y_parts_arr_time[j-1]-self.hy_box, s=25, color='purple')
+            plt.show()
+            stop
 
             
             # Save calculated displacements

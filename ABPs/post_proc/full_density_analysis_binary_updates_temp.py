@@ -250,11 +250,11 @@ with hoomd.open(name=inFile, mode='rb') as t:
     
     dumps = int(t.__len__())
 
-    start =int(0/time_step)#205                                             # first frame to process
+    start = 500#int(0/time_step)#205                                             # first frame to process
     
                                 # get number of timesteps dumped
     
-    end = int(dumps/time_step)-1                                             # final frame to process
+    end = 501#30#1739#int(dumps/time_step)-1                                             # final frame to process
     snap = t[0]                                             # Take first snap for box
     first_tstep = snap.configuration.step                   # First time step
 
@@ -384,8 +384,71 @@ with hoomd.open(name=inFile, mode='rb') as t:
             bulkPhase=np.zeros(partNum)
 
             com_dict = plotting_utility_functs.com_view(pos, clp_all)
+            
+            
 
-            #pos = com_dict['pos']
+            """
+            # Array of cluster sizes
+            clust_size = clp_all.sizes                                  # find cluster sizes
+
+            # Minimum cluster size to consider
+            min_size=int(partNum/8)                                     #Minimum cluster size for measurements to happen
+
+            # ID of largest cluster
+            lcID = np.where(clust_size == np.amax(clust_size))[0][0]    #Identify largest cluster
+
+            # IDs of all clusters of sufficiently large size
+            large_clust_ind_all=np.where(clust_size>min_size)           #Identify all clusters larger than minimum size
+
+            #If at least one cluster is sufficiently large, determine CoM of largest cluster
+            if len(large_clust_ind_all[0])>0:
+
+                # Largest cluster's CoM position
+                query_points=clp_all.centers[lcID]
+                
+                # Largest cluster's CoM in natural box size of x=[-hx_box, hx_box] and y=[-hy_box, hy_box]
+                com_tmp_posX_temp = 70
+                com_tmp_posY_temp = 50
+
+            new_pos = pos.copy()
+            #shift reference frame positions such that CoM of largest cluster is at mid-point of simulation box
+            pos[:,0]= pos[:,0]+com_tmp_posX_temp
+            pos[:,1]= pos[:,1]-com_tmp_posY_temp
+
+            #Loop over all particles to ensure particles are within simulation box (periodic boundary conditions)
+            for i in range(0, partNum):
+                if pos[i,0]>hx_box:
+                    pos[i,0]=pos[i,0]-lx_box
+                elif pos[i,0]<-hx_box:
+                    pos[i,0]=pos[i,0]+lx_box
+
+                if pos[i,1]>hy_box:
+                    pos[i,1]=pos[i,1]-ly_box
+                elif pos[i,1]<-hy_box:
+                    pos[i,1]=pos[i,1]+ly_box
+            
+            #Compute cluster parameters using system_all neighbor list
+            system_all_temp = freud.AABBQuery(f_box, f_box.wrap(pos))
+            cl_all_temp=freud.cluster.Cluster()                              #Define cluster
+            cl_all_temp.compute(system_all_temp, neighbors={'r_max': 1.0})        # Calculate clusters given neighbor list, positions,
+                                                                        # and maximal radial interaction distance
+            clp_all_temp = freud.cluster.ClusterProperties()                 #Define cluster properties
+            ids_temp = cl_all_temp.cluster_idx                                    # get id of each cluster
+            clp_all_temp.compute(system_all_temp, ids_temp)                            # Calculate cluster properties given cluster IDs
+
+            clust_size_temp = clp_all_temp.sizes  
+            lcID_temp = np.where(clust_size_temp == np.amax(clust_size_temp))[0][0]    #Identify largest cluster
+
+            # Largest cluster's CoM position
+            query_points_temp=clp_all_temp.centers[lcID]
+            
+            com_opt = {'x': [169.9191, 161.86292, 157.76503, 136.27533, 108.46028], 'y': [165.99588, 159.7088, 152.05992, 144.84607, 130.15036]}
+            #com_opt = {'x': [query_points_temp[0] + hx_box], 'y': [query_points_temp[1] + hy_box]}
+
+            """
+            pos = com_dict['pos']
+
+            
 
             #Bin system to calculate orientation and alignment that will be used in vector plots
             NBins_x = utility_functs.getNBins(lx_box, bin_width)
@@ -932,6 +995,17 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 if plot == 'y':
                     
                     plotting_functs.plot_part_activity(pos, all_surface_curves, int_comp_dict)
+            elif measurement_method == 'activity_zoom':
+
+                if plot == 'y':
+                    
+                    plotting_functs.plot_part_activity_zoomed(pos, all_surface_curves, int_comp_dict)
+            elif measurement_method == 'activity_com':
+
+                if plot == 'y':
+                    
+                    plotting_functs.plot_part_activity_com_plotted(pos, part_id_dict, all_surface_curves, int_comp_dict, com_opt)
+
             elif measurement_method == 'activity_article':
 
                 if plot == 'y':
