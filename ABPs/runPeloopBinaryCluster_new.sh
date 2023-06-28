@@ -133,11 +133,11 @@ aspect_ratio=$answer
 if [ $dont_run == "no" ]; then
     # Default values for simulations
     declare -i part_num
-    part_num=( 10000 )
+    part_num=( 20000 )
     #100 500 1000 3000 5000)
 
     declare -i runfor
-    runfor=$(( 60 ))
+    runfor=$(( 40 ))
 
     declare -a dump_freq
     dump_freq=( 0.0025 )
@@ -148,10 +148,11 @@ if [ $dont_run == "no" ]; then
 
     declare -a pa
     pa=(0)
+    # 25 50 75 100 125 150 175 200 225 250 300 400 500)
     # 50 100 150 250 450)
     #(0 50 100 150 200 250 350 450)
     declare -a pb
-    pb=(50)
+    pb=(500)
     #(0 50 100 150 200 250 350 450)
     #pb=(50 500)
     # List for particle fraction
@@ -160,7 +161,8 @@ if [ $dont_run == "no" ]; then
     # List for phi
     declare -a phi
     #phi=(60)
-    phi=(100)
+    phi=(30)
+    #5 10 15 20 25 30)
     # 70 80 100 110)
     # List for epsilon
     #eps=(1.0 0.1 0.001) # LISTS CAN CONTAIN FLOATS!!!!

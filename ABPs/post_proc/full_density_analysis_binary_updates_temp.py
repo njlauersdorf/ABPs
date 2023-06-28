@@ -245,16 +245,35 @@ vertical_shift = 0
 avg_radial_df_dict = {}
 sum_num = 0
 dify_long = 0
+
+com_option = False
+mono_option = False
+zoom_option = False
+orientation_option = False
+interface_option = False
+
+measurement_options = measurement_method.split('_')
+for i in range(0, len(measurement_options)):
+    if measurement_options[i] == 'com':
+        com_option = True
+    elif measurement_options[i] == 'mono':
+        mono_option = True
+    elif measurement_options[i] == 'zoom':
+        zoom_option = True
+    elif measurement_options[i] == 'orient':
+        orientation_option = True
+    elif measurement_options[i] == 'interface':
+        interface_option = True
 import time
 with hoomd.open(name=inFile, mode='rb') as t:
     
     dumps = int(t.__len__())
 
-    start = 500#int(0/time_step)#205                                             # first frame to process
+    start = 0#int(0/time_step)#205                                             # first frame to process
     
                                 # get number of timesteps dumped
     
-    end = 501#30#1739#int(dumps/time_step)-1                                             # final frame to process
+    end = int(dumps/time_step)-1                                             # final frame to process
     snap = t[0]                                             # Take first snap for box
     first_tstep = snap.configuration.step                   # First time step
 
@@ -355,6 +374,11 @@ with hoomd.open(name=inFile, mode='rb') as t:
             bulkPhase=np.zeros(partNum)
             com_dict = plotting_utility_functs.com_view(pos, clp_all)
 
+            
+            
+            if com_option == True:
+                pos = com_dict['pos']
+
             #com_dict['com']['x']=0
             #com_dict['com']['y']=0
             
@@ -446,9 +470,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
             #com_opt = {'x': [query_points_temp[0] + hx_box], 'y': [query_points_temp[1] + hy_box]}
 
             """
-            pos = com_dict['pos']
-
-            
+            if com_option == True:
+                pos = com_dict['pos']
 
             #Bin system to calculate orientation and alignment that will be used in vector plots
             NBins_x = utility_functs.getNBins(lx_box, bin_width)
@@ -778,69 +801,64 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
             #label previous positions for velocity calculation
 
-            '''
-            #Output general calculations/information for each phase
-            g = open(outPath2+outTxt_phase_info, 'a')
-            g.write('{0:.2f}'.format(tst).center(15) + ' ')
-            g.write('{0:.6f}'.format(sizeBin).center(15) + ' ')
-            g.write('{0:.0f}'.format(np.amax(clust_size)).center(15) + ' ')
-            g.write('{0:.0f}'.format(slow_bulk_num).center(15) + ' ')
-            g.write('{0:.0f}'.format(fast_bulk_num).center(15) + ' ')
-            g.write('{0:.0f}'.format(bulkBin).center(15) + ' ')
-            g.write('{0:.0f}'.format(slow_gas_num).center(15) + ' ')
-            g.write('{0:.0f}'.format(fast_gas_num).center(15) + ' ')
-            g.write('{0:.0f}'.format(gasBin).center(15) + ' ')
-            g.write('{0:.0f}'.format(slow_int_num).center(15) + ' ')
-            g.write('{0:.0f}'.format(fast_int_num).center(15) + ' ')
-            g.write('{0:.0f}'.format(intBin).center(15) + ' ')
-            g.write('{0:.0f}'.format(slow_bub_num).center(15) + ' ')
-            g.write('{0:.0f}'.format(fast_bub_num).center(15) + ' ')
-            g.write('{0:.0f}'.format(bubBin2-intBin).center(15) + '\n')
-            g.close()
-            '''
+            
             data_output_functs = data_output.data_output(lx_box, ly_box, sizeBin_x, sizeBin_y, tst, clust_large, dt_step)
             
-            #Bin system to calculate orientation and alignment that will be used in vector plots
+            #Instantiate dictionaries to save data to
             all_surface_curves = {}
-            
-            sep_surface_dict = interface_functs.separate_surfaces(surface_dict, int_dict, int_comp_dict)
-            all_surface_measurements = {}
 
+            all_surface_measurements = {}
+            
+            # Separate individual interfaces/surfaces
+            sep_surface_dict = interface_functs.separate_surfaces(surface_dict, int_dict, int_comp_dict)
 
             for m in range(0, len(sep_surface_dict)):
+
+                # Instantiate dictionaries to save data to
                 averaged_data_arr = {}
 
                 key = 'surface id ' + str(int(int_comp_dict['ids'][m]))
-                print(key)
+                
                 all_surface_curves[key] = {}
                 all_surface_measurements[key] = {}
                 
+                # Save composition data of interface
                 if (int_comp_dict['ids'][m]!=999):
-                    #print(np.max(int_comp_dict['comp']['all']))
-                    #print(np.where(int_comp_dict['comp']['all']==np.max(int_comp_dict['comp']['all']))[0])
                     averaged_data_arr['int_id'] = int(int_comp_dict['ids'][np.where(int_comp_dict['comp']['all']==np.max(int_comp_dict['comp']['all']))[0][0]])
                     averaged_data_arr['bub_id'] = int(int_comp_dict['ids'][m])
                     averaged_data_arr['Na'] = int(int_comp_dict['comp']['A'][m])
                     averaged_data_arr['Nb'] = int(int_comp_dict['comp']['B'][m])
                     averaged_data_arr['Nbin'] = int(bin_count_dict['ids']['int'][m])
 
+                # If sufficient interior interface points, take measurements
                 if sep_surface_dict[key]['interior']['num']>0:
 
 
-                    
+                    # Sort surface points to curve
                     sort_interior_ids = interface_functs.sort_surface_points(sep_surface_dict[key]['interior'])
 
+                    # Prepare surface curve for interpolation
                     sort_interior_ids = interface_functs.surface_curve_prep(sort_interior_ids, int_type = 'interior')
 
+                    # Interpolate surface curve
                     all_surface_curves[key]['interior'] = interface_functs.surface_curve_interp(sort_interior_ids)
 
+                    # Find surface curve CoM
                     com_pov_interior_pos = interface_functs.surface_com_pov(all_surface_curves[key]['interior']['pos'])
                     
+                    # Measure average surface curve radius
                     all_surface_measurements[key]['interior'] = interface_functs.surface_radius(com_pov_interior_pos['pos'])
+
+                    # Measure surface curve area
                     all_surface_measurements[key]['interior']['surface area'] = interface_functs.surface_area(com_pov_interior_pos['pos'])
+
+                    # Save surface curve CoM 
                     all_surface_measurements[key]['interior']['com'] = com_pov_interior_pos['com']
+
+                    # Perform Fourier analysis on surface curve
                     #all_surface_measurements[key]['interior']['fourier'] = interface_functs.fourier_analysis(all_surface_measurements[key]['interior'])
 
+                    # Save radial measurements
                     averaged_data_arr['int_mean_rad'] = all_surface_measurements[key]['interior']['mean radius']
                     averaged_data_arr['int_std_rad'] = all_surface_measurements[key]['interior']['std radius']
                     averaged_data_arr['int_sa'] = all_surface_measurements[key]['interior']['surface area']
@@ -850,20 +868,34 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     averaged_data_arr['int_std_rad'] = 0
                     averaged_data_arr['int_sa'] = 0
 
-                
+                # If sufficient exterior interface points, take measurements
                 if sep_surface_dict[key]['exterior']['num']>0:
+
+                    # Sort surface points to curve
                     sort_exterior_ids = interface_functs.sort_surface_points(sep_surface_dict[key]['exterior'])
 
+                    # Prepare surface curve for interpolation
                     sort_exterior_ids = interface_functs.surface_curve_prep(sort_exterior_ids, int_type = 'exterior')
                     
-
+                    # Interpolate surface curve
                     all_surface_curves[key]['exterior'] = interface_functs.surface_curve_interp(sort_exterior_ids)
 
+                    # Find surface curve CoM
                     com_pov_exterior_pos = interface_functs.surface_com_pov(all_surface_curves[key]['exterior']['pos'])
+                    
+                    # Measure average surface curve radius
                     all_surface_measurements[key]['exterior'] = interface_functs.surface_radius(com_pov_exterior_pos['pos'])
+                    
+                    # Measure surface curve area
                     all_surface_measurements[key]['exterior']['surface area'] = interface_functs.surface_area(com_pov_exterior_pos['pos'])
+                    
+                    # Save surface curve CoM 
                     all_surface_measurements[key]['exterior']['com'] = com_pov_exterior_pos['com']
+                    
+                    # Perform Fourier analysis on surface curve
                     #all_surface_measurements[key]['exterior']['fourier'] = interface_functs.fourier_analysis(all_surface_measurements[key]['exterior'])
+                    
+                    # Save radial measurements
                     averaged_data_arr['ext_mean_rad'] = all_surface_measurements[key]['exterior']['mean radius']
                     averaged_data_arr['ext_std_rad'] = all_surface_measurements[key]['exterior']['std radius']
                     averaged_data_arr['ext_sa'] = all_surface_measurements[key]['exterior']['surface area']
@@ -872,16 +904,19 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     averaged_data_arr['ext_std_rad'] = 0
                     averaged_data_arr['ext_sa'] = 0
 
-                
+                # If sufficient exterior and interior interface points, measure interface width
                 if (sep_surface_dict[key]['exterior']['num']>0) & sep_surface_dict[key]['interior']['num']>0:
                     all_surface_measurements[key]['exterior']['surface width'] = interface_functs.surface_width(all_surface_measurements[key]['interior']['mean radius'], all_surface_measurements[key]['exterior']['mean radius'])
                     all_surface_measurements[key]['interior']['surface width'] = interface_functs.surface_width(all_surface_measurements[key]['interior']['mean radius'], all_surface_measurements[key]['exterior']['mean radius'])
                     averaged_data_arr['width'] = all_surface_measurements[key]['exterior']['surface width']['width']
                 else:
                     averaged_data_arr['width'] = 0
+                
+                # If measurement method specified, save interface data
                 if measurement_method == 'interface_props':
                     data_output_functs.write_to_txt(averaged_data_arr, dataPath + 'BubComp_' + outfile + '.txt')
             
+            # If cluster has been formed, 
             if steady_state_once == 'False':
                 clust_id_time = np.where(ids==lcID)[0]
                 in_clust_arr = np.zeros(partNum)
@@ -943,9 +978,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                         displace_dict = {'A': {'x': np.array([]), 'y': np.array([]), 'mag': np.array([])}, 'B': {'x': np.array([]), 'y': np.array([]), 'mag': np.array([])} }
                         part_msd_dict = particle_prop_functs.single_msd(prev_pos, displace_dict)
 
-                    stop
-                    part_vel_dict = particle_prop_functs.single_velocity(vel_dict['part'], prev_pos, prev_ang, ori)
-                    stop
+                    vel_plot_dict, corr_dict, vel_stat_dict = particle_prop_functs.single_velocity(vel_dict['part'], prev_pos, prev_ang, ori)
+                    data_output_functs.write_to_txt(vel_stat_dict, dataPath + 'collision_' + outfile + '.txt')
             elif measurement_method == 'adsorption':
                 
                 particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, eps, typ, pos, ang)
@@ -985,21 +1019,23 @@ with hoomd.open(name=inFile, mode='rb') as t:
             #    if plot == 'y':
             #        plotting_functs = plotting.plotting(orient_dict, pos_dict, lx_box, ly_box, NBins_x, NBins_y, sizeBin_x, sizeBin_y, peA, peB, parFrac, eps, typ, tst)
             #        plotting_functs.plot_voronoi(pos)
-
+            
             elif measurement_method == 'active_fa':
                 #DONE
                 if plot == 'y':
                     plotting_functs.plot_part_activity(pos, all_surface_curves, int_comp_dict, active_fa_dict)
-            elif measurement_method == 'activity':
+            elif (measurement_options[0] == 'activity'):
 
                 if plot == 'y':
                     
-                    plotting_functs.plot_part_activity(pos, all_surface_curves, int_comp_dict)
-            elif measurement_method == 'activity_zoom':
-
-                if plot == 'y':
                     
-                    plotting_functs.plot_part_activity_zoomed(pos, all_surface_curves, int_comp_dict)
+                    plotting_functs.plot_part_activity(pos, all_surface_curves, int_comp_dict, active_fa_dict, mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option)
+
+            #elif measurement_method == 'activity_zoom':
+
+            #    if plot == 'y':
+                    
+            #        plotting_functs.plot_part_activity_zoomed(pos, all_surface_curves, int_comp_dict)
             elif measurement_method == 'activity_com':
 
                 if plot == 'y':
@@ -1018,13 +1054,13 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     
                     plotting_functs.plot_part_activity_large_text(pos, all_surface_curves, int_comp_dict)
                 stop
-            elif measurement_method == 'phases':
+            elif measurement_options[0] == 'phases':
                 #DONE
                 data_output_functs.write_to_txt(part_count_dict, dataPath + 'PhaseComp_' + outfile + '.txt')
                 data_output_functs.write_to_txt(bin_count_dict['bin'], dataPath + 'PhaseComp_bins_' + outfile + '.txt')
 
                 if plot == 'y':
-                    plotting_functs.plot_phases(pos, part_id_dict, all_surface_curves, int_comp_dict, phase_dict)
+                    plotting_functs.plot_phases(pos, part_id_dict, all_surface_curves, int_comp_dict, active_fa_dict, interface_id = interface_option, orientation_id = orientation_option)
             elif measurement_method== 'bubble_interface_pressure':
 
                 lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
@@ -1564,6 +1600,12 @@ with hoomd.open(name=inFile, mode='rb') as t:
                         data_output_functs.write_to_txt(adsorption_dict, dataPath + 'not_adsorption_final_' + outfile + '.txt')
                         data_output_functs.write_to_txt(clust_motion_dict, dataPath + 'not_clust_motion_final_' + outfile + '.txt')
         else:
+
+            if j>(start*time_step):
+                vel_dict = binning_functs.bin_vel(pos, prev_pos, part_dict, dt_step)
+                ang_vel_dict = binning_functs.bin_ang_vel(ang, prev_ang, part_dict, dt_step)
+                vel_grad = binning_functs.curl_and_div(vel_dict)
+
             if measurement_method == 'activity':
 
                 #DONE
@@ -1604,19 +1646,37 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     data_output_functs.write_to_txt(penetration_dict, dataPath + 'penetration_depth_' + outfile + '.txt')
 
                     action_arr = np.append(action_arr, penetration_dict['action'])
-            elif measurement_method == 'single_velocity':
+            elif measurement_method == 'part_velocity':
                 if j>(start * time_step):
                     particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, eps, typ, pos, ang)
-                    
+
                     #try:
                     #    part_msd_dict = particle_prop_functs.single_msd(prev_pos, displace_dict)
                     #except:
                         #displace_dict = {'A': {'x': np.array([]), 'y': np.array([]), 'mag': np.array([])}, 'B': {'x': np.array([]), 'y': np.array([]), 'mag': np.array([])} }
                         #part_msd_dict = particle_prop_functs.single_msd(prev_pos, displace_dict)
 
+                    data_output_functs = data_output.data_output(lx_box, ly_box, sizeBin_x, sizeBin_y, tst, clust_large, dt_step)
+
+                    vel_plot_dict, vel_stat_dict = particle_prop_functs.part_velocity(prev_pos, prev_ang, ori)
+                    data_output_functs.write_to_txt(vel_stat_dict, dataPath + 'velocity_' + outfile + '.txt')
+                    #data_output_functs.write_to_txt(neigh_dict, dataPath + 'collision_' + outfile + '.txt')
+
+            elif measurement_method == 'single_velocity':
+                if j>(start * time_step):
+                    particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, eps, typ, pos, ang)
+
+                    #try:
+                    #    part_msd_dict = particle_prop_functs.single_msd(prev_pos, displace_dict)
+                    #except:
+                        #displace_dict = {'A': {'x': np.array([]), 'y': np.array([]), 'mag': np.array([])}, 'B': {'x': np.array([]), 'y': np.array([]), 'mag': np.array([])} }
+                        #part_msd_dict = particle_prop_functs.single_msd(prev_pos, displace_dict)
+
+                    data_output_functs = data_output.data_output(lx_box, ly_box, sizeBin_x, sizeBin_y, tst, clust_large, dt_step)
+
+                    vel_plot_dict, corr_dict, vel_stat_dict = particle_prop_functs.single_velocity(vel_dict['part'], prev_pos, prev_ang, ori)
+                    data_output_functs.write_to_txt(vel_stat_dict, dataPath + 'collision_' + outfile + '.txt')
                     
-                    part_vel_dict = particle_prop_functs.single_velocity(prev_pos, prev_ang, ori)
-                    stop
         #if j == start:
         particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, eps, typ, pos, ang)
 
@@ -1629,7 +1689,6 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
         utility_functs = utility.utility(lx_box, ly_box)
 
-    
     if measurement_method == 'adsorption_final':
         if len(partPhase_time_arr)>1:
             if steady_state_once == 'True':

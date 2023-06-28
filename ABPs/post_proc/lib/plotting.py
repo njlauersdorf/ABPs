@@ -114,8 +114,7 @@ class plotting:
 
         # Initialize theory functions for call back later
         self.theory_functs = theory.theory()
-
-    def plot_phases(self, pos, phase_ids_dict, sep_surface_dict, int_comp_dict, phase_dict):
+    def plot_phases(self, pos, phase_ids_dict, sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None, interface_id = False, orientation_id = False):
         """
         This function plots each particle's position and color-codes each
         particle by the phase it is a part of, i.e. bulk=green,
@@ -200,7 +199,7 @@ class plotting:
         ax = fig.add_subplot(111)
 
         # Set plotted particle size
-        sz = 0.77
+        sz = 0.755
 
         # Plot position colored by neighbor number
         
@@ -225,33 +224,44 @@ class plotting:
 
             intGroup = mc.PatchCollection(ells_int, facecolor=yellow)
             ax.add_collection(intGroup)
-        for i in range(0, len(self.pos_x)):
-            for j in range(0, len(self.pos_y)):
-                if phase_dict['bin'][i][j]==1:
-                    plt.quiver(self.pos_x[i][j], self.pos_y[i][j], self.orient_x[i][j], self.orient_y[i][j], scale=15.0, width=0.002)
-        print(len(sep_surface_dict))
-        for m in range(0, len(sep_surface_dict)):
-            key = 'surface id ' + str(int(int_comp_dict['ids'][m]))
-            print(key)
+
+        if interface_id == True:
             try:
-                pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
-                pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
-                #plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
-                #plt.scatter(pos_interior_surface_x + self.lx_box, pos_interior_surface_y, c='black', s=3.0)
-                #plt.scatter(pos_interior_surface_x - self.lx_box, pos_interior_surface_y, c='black', s=3.0)
-                #plt.scatter(pos_interior_surface_x, pos_interior_surface_y + self.ly_box, c='black', s=3.0)
-                #plt.scatter(pos_interior_surface_x, pos_interior_surface_y - self.ly_box, c='black', s=3.0)
+
+                if sep_surface_dict!=None:
+                    
+                    for m in range(0, len(sep_surface_dict)):
+                        key = 'surface id ' + str(int(int_comp_dict['ids'][m]))
+                        print(key)
+
+                        try:
+                            pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
+                            pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
+                            plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_interior_surface_x + self.lx_box, pos_interior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_interior_surface_x - self.lx_box, pos_interior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_interior_surface_x, pos_interior_surface_y+self.ly_box, c='black', s=3.0)
+                            plt.scatter(pos_interior_surface_x, pos_interior_surface_y-self.ly_box, c='black', s=3.0)
+                        except:
+                            pass
+
+                        try:
+                            
+                            pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
+                            pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
+                            plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_exterior_surface_x + self.lx_box, pos_exterior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_exterior_surface_x - self.lx_box, pos_exterior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y+self.ly_box, c='black', s=3.0)
+                            plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y-self.ly_box, c='black', s=3.0) 
+                        except:
+                            pass
             except:
                 pass
-
+        if orientation_id == True:
             try:
-                pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
-                pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
-                plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
-                plt.scatter(pos_exterior_surface_x + self.lx_box, pos_exterior_surface_y, c='black', s=3.0)
-                plt.scatter(pos_exterior_surface_x - self.lx_box, pos_exterior_surface_y, c='black', s=3.0)
-                plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y + self.ly_box, c='black', s=3.0)
-                plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y - self.ly_box, c='black', s=3.0)
+                if active_fa_dict!=None:
+                    plt.quiver(self.pos_x, self.pos_y, active_fa_dict['bin']['x'], active_fa_dict['bin']['y'], scale=20.0, color='black', alpha=0.8)
             except:
                 pass
 
@@ -331,8 +341,8 @@ class plotting:
         fast_leg = [Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=green, label='Bulk', markersize=42), Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=yellow, label='Interface', markersize=42), Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=red, label='Gas', markersize=42)]
 
         #one_leg = ax.legend(handles=fast_leg, borderpad=0.3, labelspacing=0.4, handletextpad=-0.2, bbox_transform=ax.transAxes, bbox_to_anchor=[1.0, 1.15], handlelength=1.5, columnspacing=1.0, fontsize=36, ncol=2, facecolor='None', edgecolor='None')
-        #one_leg = ax.legend(handles=fast_leg, borderpad=0.3, labelspacing=0.4, handletextpad=-0.2, bbox_transform=ax.transAxes, bbox_to_anchor=[0.2, 1.15], handlelength=1.5, columnspacing=0.5, fontsize=46, ncol=3, facecolor='None', edgecolor='None')
-        #ax.add_artist(one_leg)
+        one_leg = ax.legend(handles=fast_leg, loc='upper right', borderpad=0.3, labelspacing=0.4, handletextpad=-0.2, bbox_transform=ax.transAxes, bbox_to_anchor=[1.06, 1.17], handlelength=1.5, columnspacing=0.5, fontsize=46, ncol=3, facecolor='None', edgecolor='None')
+        ax.add_artist(one_leg)
         plt.tight_layout()
 
         #plt.show()
@@ -5508,7 +5518,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         plt.savefig(self.outPath + 'clust_fluctuations_' + self.outFile + ".png", dpi=150, transparent=False)
         plt.close()   
 
-    def plot_part_activity(self, pos, ang, sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None):
+    def plot_part_activity(self, pos, sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None, mono_id=False, interface_id = False, orientation_id = False, zoom_id = False):
 
         typ0ind = np.where(self.typ == 0)[0]
         typ1ind = np.where(self.typ == 1)[0]
@@ -5578,10 +5588,14 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
             mono_activity=self.peB
             mono_type = 1
         elif self.peA==self.peB:
-            mono=1
+            
             mono_activity=self.peA
             mono_type = 2
-            mono=0
+
+            if mono_id == False:
+                mono=0
+            else:
+                mono=1
             #mono=1
             #fastCol = '#081d58'
             #slowCol = '#e31a1c'
@@ -5592,7 +5606,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         fig = plt.figure(figsize=(x_dim,y_dim), facecolor='white')
         ax = fig.add_subplot(111)
 
-        sz = 0.85#9
+        sz = 0.755#9#sz = 0.85#9
         """
         pos0_x_arr = np.append(pos[typ0ind,0]+self.hx_box, pos[typ0ind,0]+self.hx_box)
         pos0_x_arr = np.append(pos0_x_arr, pos[typ0ind,0]+self.hx_box)
@@ -5672,28 +5686,13 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                 one_leg = ax.legend(handles=fast_leg, loc='upper right', borderpad=0.3, handletextpad=0.2, bbox_transform=ax.transAxes, bbox_to_anchor=[1.0, 1.0], handlelength=1.5, columnspacing=0.0, fontsize=32, ncol=1, fancybox=True, framealpha=0.5, facecolor='white', edgecolor='black')
                 ax.add_artist(one_leg)
             """
-
-            #fast_leg = [Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=slowCol, label=r'$\mathrm{Pe}_\mathrm{S} = $'+str(int(self.peA)), markersize=36), Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=fastCol, label=r'$\mathrm{Pe}_\mathrm{F} = $'+str(int(self.peB)), markersize=36)]
-
-            #one_leg = ax.legend(handles=fast_leg, borderpad=0.3, labelspacing=0.4, handletextpad=-0.2, bbox_transform=ax.transAxes, bbox_to_anchor=[1.0, 1.15], handlelength=1.5, columnspacing=1.0, fontsize=36, ncol=2, facecolor='None', edgecolor='None')
-            #one_leg = ax.legend(handles=fast_leg, borderpad=0.3, labelspacing=0.4, handletextpad=-0.2, bbox_transform=ax.transAxes, bbox_to_anchor=[0.97, 1.15], handlelength=1.5, columnspacing=1.0, fontsize=36, ncol=2, facecolor='None', edgecolor='None')
-            #ax.add_artist(one_leg)
-
-            #Create legend for binary system
-            """
-            if (len(typ0ind)!=0) & (len(typ1ind)!=0):
-                leg = ax.legend(handles=[ells0[0], ells1[0]], labels=[r'$\mathrm{Pe}_\mathrm{S} = $'+str(int(self.peA)), r'$\mathrm{Pe}_\mathrm{F} = $'+str(int(self.peB))], loc='upper right', prop={'size': 22}, markerscale=8.0, edgecolor='black', linewidth=2.0)
-                if self.peA <= self.peB:
-                    leg.legendHandles[0].set_color(slowCol)
-                    leg.legendHandles[1].set_color(fastCol)
-                else:
-                    leg.legendHandles[0].set_color(fastCol)
-                    leg.legendHandles[1].set_color(slowCol)
-            #Create legend for monodisperse system
+            if self.peA <= self.peB:
+                fast_leg = [Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=slowCol, label=r'$\mathrm{Pe}_\mathrm{S} = $'+str(int(self.peA)), markersize=32), Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=fastCol, label=r'$\mathrm{Pe}_\mathrm{F} = $'+str(int(self.peB)), markersize=32)]
             else:
-                leg = ax.legend(handles=[ells0[0]], labels=[r'$\mathrm{Pe}_\mathrm{S} = $'+str(int(self.peA)), r'$\mathrm{Pe}_\mathrm{F} = $'+str(int(self.peA))], loc='upper right', prop={'size': 22}, markerscale=8.0, edgecolor='black', linewidth=2.0)
-                leg.legendHandles[0].set_color(slowCol)
-            """
+                fast_leg = [Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=slowCol, label=r'$\mathrm{Pe}_\mathrm{S} = $'+str(int(self.peB)), markersize=32), Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=fastCol, label=r'$\mathrm{Pe}_\mathrm{F} = $'+str(int(self.peA)), markersize=32)]
+            one_leg = ax.legend(handles=fast_leg, loc='upper right', borderpad=0.3, labelspacing=0.4, handletextpad=-0.2, bbox_transform=ax.transAxes, bbox_to_anchor=[0.95, 1.15], handlelength=1.5, columnspacing=0.4, fontsize=36, ncol=2, facecolor='none', edgecolor='none')
+            ax.add_artist(one_leg)
+                
             #px = np.sin(ang[typ1ind])
             #py = -np.cos(ang[typ1ind])
 
@@ -5774,39 +5773,50 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
                 #leg = ax.legend(handles=[ells0[0]], labels=[r'$\mathrm{Pe} = $'+str(int(self.peA))], loc='upper right', prop={'size': 22}, markerscale=8.0)
                 #leg.legendHandles[0].set_color(slowCol)
-        """
-        try:
-            if sep_surface_dict!=None:
-                for m in range(0, len(sep_surface_dict)):
-                    key = 'surface id ' + str(int(int_comp_dict['ids']['int id'][m]))
 
-                    try:
-                        pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
-                        pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
-                        plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
-                    except:
-                        pass
+                fast_leg = [Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=slowCol, label=r'$\mathrm{Pe} = $'+str(int(self.peA)), markersize=32)]
 
-                    try:
-                        pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
-                        pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
-                        plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
-                    except:
-                        pass
-        except:
-            pass
-        """
-        try:
-            if active_fa_dict!=None:
-                plt.quiver(self.pos_x, self.pos_y, active_fa_dict['bin']['x'], active_fa_dict['bin']['y'], scale=20.0, color='black', alpha=0.8)
-        except:
-            pass
-        #Label time step
-        #ax.text(0.95, 0.025, s=r'$\tau$' + ' = ' + '{:.2f}'.format(3*self.tst) + ' ' + r'$\tau_\mathrm{r}$',
-        #        horizontalalignment='right', verticalalignment='bottom',
-        #        transform=ax.transAxes,
-        #        fontsize=18,
-        #        bbox=dict(facecolor=(1,1,1,0.5), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+                one_leg = ax.legend(handles=fast_leg, loc='upper right', borderpad=0.3, handletextpad=-0.2, bbox_transform=ax.transAxes, bbox_to_anchor=[0.7, 1.13], handlelength=1.5, columnspacing=0.4, fontsize=32, ncol=2, facecolor='none', edgecolor='none')
+                ax.add_artist(one_leg)
+        if interface_id == True:
+            try:
+
+                if sep_surface_dict!=None:
+                    
+                    for m in range(0, len(sep_surface_dict)):
+                        key = 'surface id ' + str(int(int_comp_dict['ids'][m]))
+                        print(key)
+
+                        try:
+                            pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
+                            pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
+                            plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_interior_surface_x + self.lx_box, pos_interior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_interior_surface_x - self.lx_box, pos_interior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_interior_surface_x, pos_interior_surface_y+self.ly_box, c='black', s=3.0)
+                            plt.scatter(pos_interior_surface_x, pos_interior_surface_y-self.ly_box, c='black', s=3.0)
+                        except:
+                            pass
+
+                        try:
+                            
+                            pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
+                            pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
+                            plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_exterior_surface_x + self.lx_box, pos_exterior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_exterior_surface_x - self.lx_box, pos_exterior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y+self.ly_box, c='black', s=3.0)
+                            plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y-self.ly_box, c='black', s=3.0) 
+                        except:
+                            pass
+            except:
+                pass
+        if orientation_id == True:
+            try:
+                if active_fa_dict!=None:
+                    plt.quiver(self.pos_x, self.pos_y, active_fa_dict['bin']['x'], active_fa_dict['bin']['y'], scale=20.0, color='black', alpha=0.8)
+            except:
+                pass
 
         #Set axes parameters
         # If rectangular box, reduce system size plotted
@@ -5818,8 +5828,15 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
             plt.xlim(0.0, self.lx_box)
         # Plot entire system
         else:
-            plt.ylim(0, self.ly_box)
-            plt.xlim(0, self.lx_box)
+
+            if zoom_id == True:
+                plt.ylim(self.hy_box-25-2, self.hy_box+25+2)
+                plt.xlim(self.hy_box-25-2, self.hy_box+25+2)
+            else:
+                plt.ylim(0, self.ly_box)
+                plt.xlim(0, self.lx_box)
+
+        
             #plt.ylim(self.hy_box-30-2, self.hy_box+30-2)
             #plt.xlim(self.hy_box-30-2, self.hy_box+30-2)
 
@@ -5830,7 +5847,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
             #plt.text(0.69, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
             #    fontsize=24, transform = ax.transAxes,
             #    bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
-            plt.text(0.66, 0.04, s=r'$\tau$' + ' = ' + '{:.1f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+            plt.text(0.62, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
                 fontsize=30, transform = ax.transAxes,
                 bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
         elif self.lx_box > self.ly_box:
@@ -5844,10 +5861,9 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         ax.axes.set_yticks([])
         ax.set_aspect('equal')
 
-        # Create frame pad for images
-        #pad = str(j).zfill(4)
+        # Create frame images
         ax.set_facecolor('white')
-        #ax.set_facecolor('#F4F4F4')
+        #ax.set_facecolor('#F4F4F4') .  # For website
         plt.tight_layout()
         plt.savefig(self.outPath + 'part_activity_' + self.outFile + ".png", dpi=200, transparent=False, bbox_inches='tight')
         #plt.savefig(self.outPath + 'part_activity_' + self.outFile + ".eps", format='eps', dpi=150, bbox_inches='tight')

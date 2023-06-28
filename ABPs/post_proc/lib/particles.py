@@ -991,8 +991,206 @@ class particle_props:
         vel_phase_dict = {'bulk': {'all': {'avg': bulk_vel_avg, 'std': bulk_vel_std}, 'A': {'avg': bulk_A_vel_avg, 'std': bulk_A_vel_std}, 'B': {'avg': bulk_B_vel_avg, 'std': bulk_B_vel_std} }, 'int': {'all': {'avg': int_vel_avg, 'std': int_vel_std}, 'A': {'avg': int_A_vel_avg, 'std': int_A_vel_std}, 'B': {'avg': int_B_vel_avg, 'std': int_B_vel_std}}, 'gas': {'all': {'avg': gas_vel_avg, 'std': gas_vel_std}, 'A': {'avg': gas_A_vel_avg, 'std': gas_A_vel_std}, 'B': {'avg': gas_B_vel_avg, 'std': gas_B_vel_std}}}
 
         return vel_phase_dict
-    
-    def single_velocity(self, prev_pos, prev_ang, ori):
+    def part_velocity(self, prev_pos, prev_ang, ori):
+        '''
+        Purpose: Takes the velocity and phase of each particle
+        to calculate the mean and standard deviation of each phase for each
+        respective particle type
+
+        Inputs:
+        vel: array (partNum) of velocities of each particle
+
+        phasePart: array (partNum) labeling whether particle is a member of bulk (0),
+        interface (1), or gas (2) phase
+
+        Output:
+        vel_phase_dict: dictionary containing the average and standard deviation of velocity
+        of each phase and each respective type ('all', 'A', or 'B')
+        '''
+        
+        dx, dy, dr = self.utility_functs.sep_dist_arr(self.pos, prev_pos, difxy=True)
+
+        from scipy import stats
+
+
+        typ0ind = np.where(self.typ==0)[0]
+        typ1ind = np.where(self.typ==1)[0]
+
+
+        # Add to total bulk velocity
+        typ0_vel_x = dx[typ0ind]
+        typ0_vel_y = dy[typ0ind]
+        typ0_vel_mag = (typ0_vel_x**2 + typ0_vel_y**2) ** 0.5
+        pos0 = self.pos[typ0ind]
+
+        typ1_vel_x = dx[typ1ind]
+        typ1_vel_y = dy[typ1ind]
+        typ1_vel_mag = (typ1_vel_x**2 + typ1_vel_y**2) ** 0.5
+        pos1 = self.pos[typ1ind]
+
+        typ0_avg = np.mean(typ0_vel_mag)
+        typ1_avg = np.mean(typ1_vel_mag)
+
+        typ0_std = np.std(typ0_vel_mag)
+        typ1_std = np.std(typ1_vel_mag)
+
+        typ0_mode = stats.mode(typ0_vel_mag)[0][0]
+        typ1_mode = stats.mode(typ1_vel_mag)[0][0]
+
+        typ0_median = np.median(typ0_vel_mag)
+        typ1_median = np.median(typ1_vel_mag)
+        """
+        r = np.arange(self.r_cut, 2*self.r_cut, 3*self.r_cut)
+        neigh_dict = {}
+        for r_dist in r:
+
+            # Neighbor list query arguments to find interacting particles
+            if r_dist == self.r_cut:
+                r_start = 0.1
+            else:
+                r_start = self.r_cut+0.000001
+            
+            query_args = dict(mode='ball', r_min = r_start, r_max = r_dist)#r_max=self.theory_functs.conForRClust(peNet_int-45., self.eps) * 1.0)
+            
+            # Locate potential neighbor particles by type in the dense phase
+            system_A = freud.AABBQuery(self.f_box, self.f_box.wrap(prev_pos[typ0ind]))
+            system_B = freud.AABBQuery(self.f_box, self.f_box.wrap(prev_pos[typ1ind]))
+
+            # Generate neighbor list of dense phase particles (per query args) of respective type A neighboring bulk phase reference particles of type B
+            AA_nlist = system_A.query(self.f_box.wrap(prev_pos[typ0ind]), query_args).toNeighborList()       
+            AB_nlist = system_A.query(self.f_box.wrap(prev_pos[typ1ind]), query_args).toNeighborList() 
+            BB_nlist = system_B.query(self.f_box.wrap(prev_pos[typ1ind]), query_args).toNeighborList()                      
+
+            #Initiate empty arrays for finding nearest B neighboring dense particles surrounding type A bulk particles
+            AB_neigh_ind = np.array([], dtype=int)
+            AB_num_neigh = np.array([])
+
+            if len(AB_nlist.query_point_indices) > 0:
+                for i in range(0, len(typ1ind)):
+                    if i in AB_nlist.query_point_indices:
+                        if i not in AB_neigh_ind:
+
+                            # Find neighbors list IDs where 0 is reference particle
+                            loc = np.where(AB_nlist.query_point_indices==i)[0]
+
+                            #Save nearest neighbor information to array
+                            AB_num_neigh = np.append(AB_num_neigh, len(loc))
+                            AB_neigh_ind = np.append(AB_neigh_ind, int(i))
+
+                            slow_displace_dr = dr[typ0ind][AB_nlist.query_point_indices[loc]]
+                            slow_displace_dx = dy[typ0ind][AB_nlist.query_point_indices[loc]]
+                            slow_displace_dy = dy[typ0ind][AB_nlist.query_point_indices[loc]]
+
+                            fast_displace_dr = dr[typ1ind][AB_nlist.query_point_indices[loc]]
+                            fast_displace_dx = dy[typ1ind][AB_nlist.query_point_indices[loc]]
+                            fast_displace_dy = dy[typ1ind][AB_nlist.query_point_indices[loc]]
+                            
+                            sep_difx, sep_dify, sep_difr = self.utility_functs.sep_dist_arr(prev_pos[typ0ind][AB_nlist.point_indices[loc]], prev_pos[typ1ind][AB_nlist.query_point_indices[loc]], difxy=True)
+
+
+                            AB_vel_x_corr_loc = (slow_displace_dx/slow_displace_dr) * (fast_displace_dx/fast_displace_dr)
+                            AB_vel_y_corr_loc = (slow_displace_dy/slow_displace_dr) * (fast_displace_dy/fast_displace_dr)
+                            AB_vel_r_corr_loc = ( AB_vel_x_corr_loc ** 2 + AB_vel_y_corr_loc ** 2 ) ** 0.5         
+
+                            AB_theta = np.arctan(sep_dify, sep_difx)
+
+                            #fx = ori[typ1ind,1]
+                            #fy = ori[typ1ind,2]
+
+                            #f_x_corr_loc = (slow_displace_dx/slow_displace_dr) * (fx)
+                            #f_y_corr_loc = (slow_displace_dy/slow_displace_dr) * (fy)
+                            #f_r_corr_loc = (f_x_corr_loc ** 2 + f_y_corr_loc ** 2) ** 0.5
+                    else:
+                        #Save nearest neighbor information to array
+                        AB_num_neigh = np.append(AB_num_neigh, 0)
+                        AB_neigh_ind = np.append(AB_neigh_ind, int(i))
+
+            #Initiate empty arrays for finding nearest B neighboring dense particles surrounding type A bulk particles
+            BB_neigh_ind = np.array([], dtype=int)
+            BB_num_neigh = np.array([])
+
+            if len(BB_nlist.query_point_indices) > 0:
+                for i in range(0, len(typ1ind)):
+                    if i in BB_nlist.query_point_indices:
+                        if i not in BB_neigh_ind:
+
+                            # Find neighbors list IDs where 0 is reference particle
+                            loc = np.where(BB_nlist.query_point_indices==i)[0]
+
+                            #Save nearest neighbor information to array
+                            BB_num_neigh = np.append(BB_num_neigh, len(loc))
+                            BB_neigh_ind = np.append(BB_neigh_ind, int(i))
+
+                            slow_displace_dr = dr[typ1ind][BB_nlist.query_point_indices[loc]]
+                            slow_displace_dx = dy[typ1ind][BB_nlist.query_point_indices[loc]]
+                            slow_displace_dy = dy[typ1ind][BB_nlist.query_point_indices[loc]]
+
+                            fast_displace_dr = dr[typ1ind][BB_nlist.query_point_indices[loc]]
+                            fast_displace_dx = dy[typ1ind][BB_nlist.query_point_indices[loc]]
+                            fast_displace_dy = dy[typ1ind][BB_nlist.query_point_indices[loc]]
+                            
+                            sep_difx, sep_dify, sep_difr = self.utility_functs.sep_dist_arr(prev_pos[typ1ind][BB_nlist.point_indices[loc]], prev_pos[typ1ind][BB_nlist.query_point_indices[loc]], difxy=True)
+
+
+                            BB_vel_x_corr_loc = (slow_displace_dx/slow_displace_dr) * (fast_displace_dx/fast_displace_dr)
+                            BB_vel_y_corr_loc = (slow_displace_dy/slow_displace_dr) * (fast_displace_dy/fast_displace_dr)
+                            BB_vel_r_corr_loc = ( BB_vel_x_corr_loc ** 2 + BB_vel_y_corr_loc ** 2 ) ** 0.5         
+
+                            BB_theta = np.arctan(sep_dify, sep_difx)
+                    else:
+                        #Save nearest neighbor information to array
+                        BB_num_neigh = np.append(BB_num_neigh, 0)
+                        BB_neigh_ind = np.append(BB_neigh_ind, int(i))
+
+            #Initiate empty arrays for finding nearest B neighboring dense particles surrounding type A bulk particles
+            AA_neigh_ind = np.array([], dtype=int)
+            AA_num_neigh = np.array([])
+
+            if len(AA_nlist.query_point_indices) > 0:
+                for i in range(0, len(typ0ind)):
+                    if i in AA_nlist.query_point_indices:
+                        if i not in AA_neigh_ind:
+
+                            # Find neighbors list IDs where 0 is reference particle
+                            loc = np.where(AA_nlist.query_point_indices==i)[0]
+
+                            #Save nearest neighbor information to array
+                            AA_num_neigh = np.append(AA_num_neigh, len(loc))
+                            AA_neigh_ind = np.append(AA_neigh_ind, int(i))
+
+                            slow_displace_dr = dr[typ0ind][AA_nlist.query_point_indices[loc]]
+                            slow_displace_dx = dy[typ0ind][AA_nlist.query_point_indices[loc]]
+                            slow_displace_dy = dy[typ0ind][AA_nlist.query_point_indices[loc]]
+
+                            fast_displace_dr = dr[typ0ind][AA_nlist.query_point_indices[loc]]
+                            fast_displace_dx = dy[typ0ind][AA_nlist.query_point_indices[loc]]
+                            fast_displace_dy = dy[typ0ind][AA_nlist.query_point_indices[loc]]
+                            
+                            sep_difx, sep_dify, sep_difr = self.utility_functs.sep_dist_arr(prev_pos[typ0ind][AA_nlist.point_indices[loc]], prev_pos[typ0ind][AA_nlist.query_point_indices[loc]], difxy=True)
+
+
+                            AA_vel_x_corr_loc = (slow_displace_dx/slow_displace_dr) * (fast_displace_dx/fast_displace_dr)
+                            AA_vel_y_corr_loc = (slow_displace_dy/slow_displace_dr) * (fast_displace_dy/fast_displace_dr)
+                            AA_vel_r_corr_loc = ( AA_vel_x_corr_loc ** 2 + AA_vel_y_corr_loc ** 2 ) ** 0.5         
+
+                            AA_theta = np.arctan(sep_dify, sep_difx)
+                    else:
+                        #Save nearest neighbor information to array
+                        AA_num_neigh = np.append(AA_num_neigh, 0)
+                        AA_neigh_ind = np.append(AA_neigh_ind, int(i))
+            neigh_dict[str(round(r_dist,4))] = {'AA': AA_num_neigh, 'AB': AB_num_neigh, 'BB': BB_num_neigh}
+        """
+        # Dictionary containing the average and standard deviation of velocity
+        # of each phase and each respective type ('all', 'A', or 'B')
+        vel_plot_dict = {'A': {'x': typ0_vel_x, 'y': typ0_vel_y, 'mag': typ0_vel_mag, 'pos': pos0}, 'B': {'x': typ1_vel_x, 'y': typ1_vel_y, 'mag': typ1_vel_mag, 'pos': pos1} }
+        #corr_dict = {'AA': {'x': AA_vel_x_corr_loc, 'y': AA_vel_y_corr_loc, 'r': AA_vel_r_corr_loc}, 'AB': {'x': AB_vel_x_corr_loc, 'y': AB_vel_y_corr_loc, 'r': AB_vel_r_corr_loc}, 'BB': {'x': BB_vel_x_corr_loc, 'y': BB_vel_y_corr_loc, 'r': BB_vel_r_corr_loc}}
+        #corr_dict = {'f': {'x': f_x_corr_loc, 'y': f_y_corr_loc, 'r': f_r_corr_loc}, 'v': {'x': vel_x_corr_loc, 'y': vel_y_corr_loc, 'r': vel_r_corr_loc}}
+        
+        vel_stat_dict = {'A': {'mean': typ0_avg, 'std': typ0_std, 'mode': typ0_mode, 'median': typ0_median}, 'B': {'mean': typ1_avg, 'std': typ1_std, 'mode': typ1_mode, 'median': typ1_median} }
+        print(vel_stat_dict)
+        return vel_plot_dict, vel_stat_dict#corr_dict, vel_stat_dict#, neigh_dict
+
+    def single_velocity(self, part_vel, prev_pos, prev_ang, ori):
         '''
         Purpose: Takes the velocity and phase of each particle
         to calculate the mean and standard deviation of each phase for each
@@ -1083,6 +1281,101 @@ class particle_props:
             vel_stat_dict = {'A': {'mag': typ0_avg}, 'B': {'mag': typ1_avg} }
 
             return vel_plot_dict, corr_dict, vel_stat_dict
+
+    def single_velocity(self, part_vel, prev_pos, prev_ang, ori):
+        '''
+        Purpose: Takes the velocity and phase of each particle
+        to calculate the mean and standard deviation of each phase for each
+        respective particle type
+
+        Inputs:
+        vel: array (partNum) of velocities of each particle
+
+        phasePart: array (partNum) labeling whether particle is a member of bulk (0),
+        interface (1), or gas (2) phase
+
+        Output:
+        vel_phase_dict: dictionary containing the average and standard deviation of velocity
+        of each phase and each respective type ('all', 'A', or 'B')
+        '''
+        
+        dx, dy, dr = self.utility_functs.sep_dist_arr(self.pos, prev_pos, difxy=True)
+    
+        typ0ind = np.where(self.typ==0)[0]
+        typ1ind = np.where(self.typ==1)[0]
+
+
+        # Add to total bulk velocity
+        typ0_vel_x = dx[typ0ind]
+        typ0_vel_y = dy[typ0ind]
+        typ0_vel_mag = (typ0_vel_x**2 + typ0_vel_y**2) ** 0.5
+        pos0 = self.pos[typ0ind]
+
+        typ1_vel_x = dx[typ1ind]
+        typ1_vel_y = dy[typ1ind]
+        typ1_vel_mag = (typ1_vel_x**2 + typ1_vel_y**2) ** 0.5
+        pos1 = self.pos[typ1ind]
+
+        typ0_avg = np.mean(typ0_vel_mag)
+        typ1_avg = np.mean(typ1_vel_mag)
+
+        r = np.arange(self.r_cut, 7*self.r_cut, self.r_cut)
+        
+        for r_dist in r:
+
+            # Neighbor list query arguments to find interacting particles
+            if r_dist == self.r_cut:
+                r_start = 0.1
+            else:
+                r_start = self.r_cut+0.000001
+            
+            query_args = dict(mode='ball', r_min = r_start, r_max = r_dist)#r_max=self.theory_functs.conForRClust(peNet_int-45., self.eps) * 1.0)
+            
+            # Locate potential neighbor particles by type in the dense phase
+            system_A = freud.AABBQuery(self.f_box, self.f_box.wrap(prev_pos[typ0ind]))
+
+            # Generate neighbor list of dense phase particles (per query args) of respective type A neighboring bulk phase reference particles of type B
+            AB_nlist = system_A.query(self.f_box.wrap(prev_pos[typ1ind]), query_args).toNeighborList()                
+
+            if len(AB_nlist.query_point_indices) > 0:
+                
+                # Find neighbors list IDs where 0 is reference particle
+                loc = np.where(AB_nlist.query_point_indices==0)[0]
+
+                slow_displace_dr = dr[typ0ind][AB_nlist.query_point_indices[loc]]
+                slow_displace_dx = dy[typ0ind][AB_nlist.query_point_indices[loc]]
+                slow_displace_dy = dy[typ0ind][AB_nlist.query_point_indices[loc]]
+
+                fast_displace_dr = dr[typ1ind][AB_nlist.query_point_indices[loc]]
+                fast_displace_dx = dy[typ1ind][AB_nlist.query_point_indices[loc]]
+                fast_displace_dy = dy[typ1ind][AB_nlist.query_point_indices[loc]]
+                
+                sep_difx, sep_dify, sep_difr = self.utility_functs.sep_dist_arr(prev_pos[typ0ind][AB_nlist.point_indices[loc]], prev_pos[typ1ind][AB_nlist.query_point_indices[loc]], difxy=True)
+
+
+                vel_x_corr_loc = (slow_displace_dx/slow_displace_dr) * (fast_displace_dx/fast_displace_dr)
+                vel_y_corr_loc = (slow_displace_dy/slow_displace_dr) * (fast_displace_dy/fast_displace_dr)
+                vel_r_corr_loc = ( vel_x_corr_loc ** 2 + vel_y_corr_loc ** 2 ) ** 0.5         
+
+                theta = np.arctan(sep_dify, sep_difx)
+
+                fx = ori[typ1ind,1]
+                fy = ori[typ1ind,2]
+
+                f_x_corr_loc = (slow_displace_dx/slow_displace_dr) * (fx)
+                f_y_corr_loc = (slow_displace_dy/slow_displace_dr) * (fy)
+                f_r_corr_loc = (f_x_corr_loc ** 2 + f_y_corr_loc ** 2) ** 0.5
+
+
+
+            # Dictionary containing the average and standard deviation of velocity
+            # of each phase and each respective type ('all', 'A', or 'B')
+            vel_plot_dict = {'A': {'x': typ0_vel_x, 'y': typ0_vel_y, 'mag': typ0_vel_mag, 'pos': pos0}, 'B': {'x': typ1_vel_x, 'y': typ1_vel_y, 'mag': typ1_vel_mag, 'pos': pos1} }
+            corr_dict = {'f': {'x': f_x_corr_loc, 'y': f_y_corr_loc, 'r': f_r_corr_loc}, 'v': {'x': vel_x_corr_loc, 'y': vel_y_corr_loc, 'r': vel_r_corr_loc}}
+            vel_stat_dict = {'A': {'mag': typ0_avg}, 'B': {'mag': typ1_avg} }
+
+            return vel_plot_dict, corr_dict, vel_stat_dict
+            
     def adsorption(self):
 
         typ0ind = np.where(self.typ==0)[0]
