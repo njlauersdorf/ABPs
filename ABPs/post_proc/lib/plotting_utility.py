@@ -210,6 +210,12 @@ class plotting_utility:
         unshifted largest cluster's CoM position
         '''
 
+        #plt.scatter(pos_x, pos_y, s=0.7)
+        #plt.scatter(com_x_parts_arr_time, com_y_parts_arr_time)
+        #plt.xlim(-self.hx_box, self.hx_box)
+        #plt.ylim(-self.hy_box, self.hy_box)
+        #plt.show()
+
         # Largest cluster's CoM shifted to box size of x=[0, lx_box] and y=[0, ly_box]
         com_tmp_posX = 0 - com_x_parts_arr_time
         com_tmp_posY = 0 - com_y_parts_arr_time
@@ -217,7 +223,12 @@ class plotting_utility:
         #shift reference frame positions such that CoM of largest cluster is at mid-point of simulation box
         new_pos_x= pos_x+com_tmp_posX
         new_pos_y= pos_y+com_tmp_posY
-        
+
+        #plt.scatter(new_pos_x, new_pos_y, s=0.7)
+        #plt.xlim(-self.hx_box, self.hx_box)
+        #plt.ylim(-self.hy_box, self.hy_box)
+        #plt.show()
+        #stop
 
         #Loop over all particles to ensure particles are within simulation box (periodic boundary conditions)
         for i in range(0, len(new_pos_x)):
@@ -231,6 +242,8 @@ class plotting_utility:
             elif new_pos_y[i]<-self.hy_box:
                 new_pos_y[i]=new_pos_y[i]+self.ly_box
         
+        
+
         if com_tmp_posX>self.hx_box:
             com_tmp_posX -= self.lx_box
         elif com_tmp_posX<-self.hx_box:
@@ -239,11 +252,11 @@ class plotting_utility:
         if com_tmp_posY>self.hy_box:
             com_tmp_posY -= self.ly_box
         elif com_tmp_posY<-self.hy_box:
-            com_tmp_posY += self.ly_box                
+            com_tmp_posY += self.ly_box      
+
 
         com_tmp_posX_new = np.mean(new_pos_x) - com_tmp_posX
         com_tmp_posY_new = np.mean(new_pos_y) - com_tmp_posY
-
 
         # Dictionary containing the shifted position of every particle such that
         # the largest cluster's CoM is at the middle of the box (hx_box, hy_box) in addition to the
