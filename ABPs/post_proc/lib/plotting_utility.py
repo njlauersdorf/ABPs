@@ -189,7 +189,7 @@ class plotting_utility:
         # the largest cluster's CoM is at the middle of the box (hx_box, hy_box) in addition to the
         # unshifted largest cluster's CoM position
 
-        com_dict = {'pos': new_pos, 'com': {'x': com_tmp_posX, 'y': com_tmp_posY}}
+        com_dict = {'pos': new_pos, 'com': {'x': com_tmp_posX-self.hx_box, 'y': com_tmp_posY-self.hy_box}}
 
         return com_dict
 

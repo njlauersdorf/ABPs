@@ -2520,7 +2520,7 @@ class particle_props:
         clust_large = np.amax(clust_size)
 
         prev_com_dict = self.plotting_utility_functs.com_view(prev_pos, clp_all)
-        
+
         difx_cluster = current_com_dict['com']['x'] - prev_com_dict['com']['x']
 
         difx_cluster_abs = np.abs(difx_cluster)
@@ -2547,7 +2547,7 @@ class particle_props:
 
         orient = np.arctan2(dify_cluster, difx_cluster)
         
-        cluster_velocity_dict = {'displace': {'x': difx_cluster, 'y': dify_cluster, 'r': difr_cluster, 'theta': orient}, 'velocity': {'x': vx_cluster, 'y': vy_cluster, 'r': vr_cluster, 'theta': orient} }
+        cluster_velocity_dict = {'displace': {'x': difx_cluster, 'y': dify_cluster, 'r': difr_cluster, 'theta': orient}, 'velocity': {'x': vx_cluster, 'y': vy_cluster, 'r': vr_cluster, 'theta': orient / dt_step} }
         return cluster_velocity_dict
     def radial_measurements(self, radial_stress_dict, radial_fa_dict):
 
