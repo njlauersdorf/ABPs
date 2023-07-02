@@ -103,6 +103,7 @@ class kinetic_props:
         self.plotting_utility_functs = plotting_utility.plotting_utility(self.lx_box, self.ly_box, self.partNum, self.typ)
     def particle_flux(self, partPhase_time, in_clust_arr, partPhase_time_arr, clust_size_arr, pos_x_arr_time, pos_y_arr_time, com_x_arr_time, com_y_arr_time, com_x_parts_arr_time, com_y_parts_arr_time):
 
+        #Instantiate empty arrays
         align_vect = np.array([])
         percent_change_vect = np.array([])
 
@@ -124,6 +125,7 @@ class kinetic_props:
         dify_adsorb_arr = np.array([])
         difr_adsorb_arr = np.array([])
 
+        # Find particle ids for each phase
         bulk_id = np.where(partPhase_time[-1,:]==0)[0]
         gas_id = np.where(partPhase_time[-1,:]==2)[0]
         int_id = np.where(partPhase_time[-1,:]==1)[0]
@@ -136,14 +138,16 @@ class kinetic_props:
         gas2_id = np.where(in_clust_arr[-1,:]==0)[0]
         gas2_id_prev = np.where(in_clust_arr[-2,:]==0)[0]
 
+        # Cluster particles that desorbed to gas
         clust_now_in_gas2 = np.intersect1d(gas2_id, clust_id_prev, return_indices=True)
         
-
+        # Gas particles that adsorbed to cluster
         gas2_now_in_clust = np.intersect1d(clust_id, gas2_id_prev, return_indices=True)
         
-        
+        # Number of particles adsorbed
         adsorb_rate = len(gas2_now_in_clust[0])
 
+        # Number of all, slow, and fast particles desorbed from cluster to gas
         if len(clust_now_in_gas2)>0:
                 num_clust_to_gas2 = len(clust_now_in_gas2[0])
                 num_slow_clust_to_gas2 = len(np.where(self.typ[clust_now_in_gas2[0].astype('int')]==0)[0])
@@ -153,6 +157,7 @@ class kinetic_props:
             num_slow_clust_to_gas2 = 0
             num_fast_clust_to_gas2 = 0
 
+        # Number of all, slow, and fast particles adsorbed from gas to cluster
         if len(gas2_now_in_clust)>0:
             num_gas2_to_clust = len(gas2_now_in_clust[0])
             num_slow_gas2_to_clust = len(np.where(self.typ[gas2_now_in_clust[0].astype('int')]==0)[0])
@@ -161,8 +166,6 @@ class kinetic_props:
             num_gas2_to_clust = 0
             num_slow_gas2_to_clust = 0
             num_fast_gas2_to_clust = 0
-
-        
 
         # Find all particles in previous time step that adsorbed to and desorbed from cluster
         gas_now_in_clust_prev = np.intersect1d(gas2_id_prev, clust_id, return_indices=True)
@@ -174,18 +177,16 @@ class kinetic_props:
         pos_x_arr_desorb_adsorb = np.append(pos_x_arr_time[-2,clust_now_in_gas_prev[0]], pos_x_arr_time[-1,gas_now_in_clust_prev[0]])
         pos_y_arr_desorb_adsorb = np.append(pos_y_arr_time[-2,clust_now_in_gas_prev[0]], pos_y_arr_time[-1,gas_now_in_clust_prev[0]])
         
-        
-        
-        #Calculate CoM of net adsorbed particles (VERIFIED!)
+        #Calculate CoM of particles that adsorbed to (current time step positions) and desorbed from (previous time step positions) cluster
         com_adsorb_desorb_dict = self.plotting_utility_functs.com_part_view(pos_x_arr_time[-1, clust_id], pos_y_arr_time[-1, clust_id], pos_x_arr_desorb_adsorb, pos_y_arr_desorb_adsorb, com_x_parts_arr_time[-1], com_y_parts_arr_time[-1])
 
-        #Calculate CoM of only adsorbed particles
+        #Calculate CoM of only adsorbed particles (current time step positions)
         com_adsorb_dict = self.plotting_utility_functs.com_part_view(pos_x_arr_time[-1, clust_id], pos_y_arr_time[-1, clust_id], pos_x_arr_time[-1,gas_now_in_clust_prev[0]], pos_y_arr_time[-1,gas_now_in_clust_prev[0]], com_x_parts_arr_time[-1], com_y_parts_arr_time[-1])
         
-        #Calculate CoM of only desorbed particles
+        #Calculate CoM of only desorbed particles (previous time step positions)
         com_desorb_dict = self.plotting_utility_functs.com_part_view(pos_x_arr_time[-1, clust_id], pos_y_arr_time[-1, clust_id], pos_x_arr_time[-2,clust_now_in_gas_prev[0]], pos_y_arr_time[-2,clust_now_in_gas_prev[0]], com_x_parts_arr_time[-1], com_y_parts_arr_time[-1])
 
-        #Calculate separation distance of CoM of all adsorbed particles and all desorbed particles
+        #Calculate separation distance of CoMs of all adsorbed particles and of all desorbed particles
         difx_adsorb_desorb = self.utility_functs.sep_dist_x(com_adsorb_dict['com']['x'], com_desorb_dict['com']['x'])
         dify_adsorb_desorb = self.utility_functs.sep_dist_y(com_adsorb_dict['com']['y'], com_desorb_dict['com']['y'])
         difr_adsorb_desorb = ( difx_adsorb_desorb ** 2 + dify_adsorb_desorb ** 2 ) ** 0.5
@@ -245,28 +246,21 @@ class kinetic_props:
         dify_adsorb = self.utility_functs.sep_dist_y(com_adsorb_desorb_dict2['com']['y'], com_y_parts_arr_time[-2])
         difr_adsorb = ( difx_adsorb ** 2 + dify_adsorb ** 2 ) ** 0.5
         
-        """
-        plt.scatter(pos_x_arr_time[-1,bulk_id], pos_y_arr_time[-1,bulk_id], s=0.7, color='black')
-        plt.scatter(pos_x_arr_time[-1,int_id], pos_y_arr_time[-1,int_id], s=0.7, color='black')
-        plt.quiver(com_x_parts_arr_time[-2]-self.hx_box, com_y_parts_arr_time[-2]-self.hy_box, difx_clust, dify_clust, color='blue')
-        plt.quiver(com_x_parts_arr_time[-2]-self.hx_box, com_y_parts_arr_time[-2]-self.hy_box, difx_adsorb, dify_adsorb, color='red')
-        plt.scatter(com_adsorb_desorb_dict2['com']['x'], com_adsorb_desorb_dict2['com']['y'], s=10, color='yellow')
-        plt.scatter((com_x_parts_arr_time[-1]-self.hx_box), (com_y_parts_arr_time[-1]-self.hy_box), s=10, color='pink')
-        plt.xlim([com_x_parts_arr_time[-2]-self.hx_box-10, com_x_parts_arr_time[-2]-self.hx_box+10])
-        plt.ylim([com_y_parts_arr_time[-2]-self.hy_box-10, com_y_parts_arr_time[-2]-self.hy_box+10])
-        plt.show()
-        """
-
+        # Dot product of cluster CoM displacement from flux and actual cluster CoM displacement
         dot_prod = (difx_clust / difr_clust) * (difx_adsorb/difr_adsorb) + (dify_clust / difr_clust) * (dify_adsorb/difr_adsorb)
+        
+        # Dot product of net flux direction and actual cluster CoM displacement
         dot_prod2 = (difx_clust / difr_clust) * (difx_adsorb_desorb/difr_adsorb_desorb) + (dify_clust / difr_clust) * (dify_adsorb_desorb/difr_adsorb_desorb)
+        
+        # Difference in CoM from flux and actual cluster CoM
         dif_displace_x = com_adsorb_desorb_dict2['com']['x'] - (com_x_parts_arr_time[-1])
         dif_displace_y = com_adsorb_desorb_dict2['com']['y'] - (com_y_parts_arr_time[-1])
         dif_displace_r = (dif_displace_x ** 2 + dif_displace_y ** 2)**0.5
 
-        # Save calculated displacements
-
+        # Actual cluster velocity orientation
         orient = np.arctan2(dify_clust, difx_clust)
 
+        # Save calculated displacements
         orient_arr = np.append(orient_arr, orient)
 
         difx_clust_arr = np.append(difx_clust_arr, difx_clust)
@@ -286,8 +280,10 @@ class kinetic_props:
         difr_adsorb_arr = np.append(difr_adsorb_arr, difr_adsorb)
 
         
-
+        # Output dictionary for cluster motion
         clust_motion_dict = {'real_displace': {'x': difx_clust_arr.tolist(), 'y': dify_clust_arr.tolist(), 'r': difr_clust_arr.tolist()}, 'flux_displace': {'x': difx_adsorb_arr.tolist(), 'y': dify_adsorb_arr.tolist(), 'r': difr_adsorb_arr.tolist()}, 'sep_ad_vs_de': {'x': difx_adsorb_desorb_arr.tolist(), 'y': dify_adsorb_desorb_arr.tolist(), 'r': difr_adsorb_desorb_arr.tolist()}, 'sep_flux_vs_real': {'x': dif_displace_x, 'y': dif_displace_y, 'r': dif_displace_r}, 'dot_real_vs_flux': dot_prod.tolist(), 'dot_real_vs_sep': dot_prod2.tolist(), 'orient': orient_arr.tolist()}
+        
+        # Output dictionary for kinetics
         adsorption_dict = {'gas_to_clust': {'all': num_gas2_to_clust, 'A': num_slow_gas2_to_clust,'B': num_fast_gas2_to_clust}, 'clust_to_gas': {'all': num_clust_to_gas2, 'A': num_slow_clust_to_gas2,'B': num_fast_clust_to_gas2}}
         
         return clust_motion_dict, adsorption_dict

@@ -1846,6 +1846,26 @@ class measurement:
             if Ball_bulk_num_neigh[i]>0:
                 Ball_bulk_dot[i] = Ball_bulk_dot[i]/Ball_bulk_num_neigh[i]
 
+        # Average local orientational order over B neighbors for each B bulk reference particle
+        for i in range(0, len(BB_bulk_dot)):
+            if BB_bulk_num_neigh[i]>0:
+                BB_bulk_dot[i] = BB_bulk_dot[i]/BB_bulk_num_neigh[i]
+
+        # Average local orientational order over A neighbors for each A bulk reference particle
+        for i in range(0, len(AA_bulk_dot)):
+            if AA_bulk_num_neigh[i]>0:
+                AA_bulk_dot[i] = AA_bulk_dot[i]/AA_bulk_num_neigh[i]
+
+        # Average local orientational order over A neighbors for each B bulk reference particle
+        for i in range(0, len(AB_bulk_dot)):
+            if AB_bulk_num_neigh[i]>0:
+                AB_bulk_dot[i] = AB_bulk_dot[i]/AB_bulk_num_neigh[i]
+
+        # Average local orientational order over B neighbors for each A bulk reference particle
+        for i in range(0, len(BA_bulk_dot)):
+            if BA_bulk_num_neigh[i]>0:
+                BA_bulk_dot[i] = BA_bulk_dot[i]/BA_bulk_num_neigh[i]
+
         # Average local orientational order over all neighbors for each B interface reference particle
         for i in range(0, len(allB_int_dot)):
             if allB_int_num_neigh[i]>0:
@@ -1870,6 +1890,26 @@ class measurement:
         for i in range(0, len(Ball_int_dot)):
             if Ball_int_num_neigh[i]>0:
                 Ball_int_dot[i] = Ball_int_dot[i]/Ball_int_num_neigh[i]
+
+        # Average local orientational order over B neighbors for each B interface reference particle
+        for i in range(0, len(BB_int_dot)):
+            if BB_int_num_neigh[i]>0:
+                BB_int_dot[i] = BB_int_dot[i]/BB_int_num_neigh[i]
+
+        # Average local orientational order over A neighbors for each A interface reference particle
+        for i in range(0, len(AA_int_dot)):
+            if AA_int_num_neigh[i]>0:
+                AA_int_dot[i] = AA_int_dot[i]/AA_int_num_neigh[i]
+
+        # Average local orientational order over A neighbors for each B interface reference particle
+        for i in range(0, len(AB_int_dot)):
+            if AB_int_num_neigh[i]>0:
+                AB_int_dot[i] = AB_int_dot[i]/AB_int_num_neigh[i]
+
+        # Average local orientational order over B neighbors for each A interface reference particle
+        for i in range(0, len(BA_int_dot)):
+            if BA_int_num_neigh[i]>0:
+                BA_int_dot[i] = BA_int_dot[i]/BA_int_num_neigh[i]
 
         # Save local orientational order for the respective activity dense phase reference particles with the respective activity nearest neighbors
         AA_dense_num_neigh = np.append(AA_bulk_num_neigh, AA_int_num_neigh)
