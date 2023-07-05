@@ -252,6 +252,7 @@ zoom_option = False
 orientation_option = False
 interface_option = False
 banner_option = False
+presentation_option = False
 
 measurement_options = measurement_method.split('_')
 for i in range(0, len(measurement_options)):
@@ -269,6 +270,7 @@ for i in range(0, len(measurement_options)):
         banner_option = True
     elif measurement_options[i] == 'presentation':
         presentation_option = True
+
 import time
 with hoomd.open(name=inFile, mode='rb') as t:
     
@@ -278,7 +280,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
     
                                 # get number of timesteps dumped
     
-    end = int(dumps/time_step)-1                                             # final frame to process
+    end = 1#int(dumps/time_step)-1                                             # final frame to process
     snap = t[0]                                             # Take first snap for box
     first_tstep = snap.configuration.step                   # First time step
 
@@ -1412,7 +1414,6 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 # Save nearest neighbor orientation data
                 data_output_functs.write_to_txt(ori_stat_dict, dataPath + 'nearest_ori_' + outfile + '.txt')
                 
-                
                 if plot == 'y':
                     
                     plotting_functs.plot_neighbors(neigh_plot_dict, ang, pos, pair='all-all', sep_surface_dict=all_surface_curves, int_comp_dict=int_comp_dict, active_fa_dict=active_fa_dict, interface_id = interface_option, orientation_id = orientation_option)
@@ -1424,9 +1425,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     plotting_functs.plot_neighbors(neigh_plot_dict, ang, pos, pair='A-B', sep_surface_dict=all_surface_curves, int_comp_dict=int_comp_dict, active_fa_dict=active_fa_dict, interface_id = interface_option, orientation_id = orientation_option)
                     plotting_functs.plot_neighbors(neigh_plot_dict, ang, pos, pair='B-A', sep_surface_dict=all_surface_curves, int_comp_dict=int_comp_dict, active_fa_dict=active_fa_dict, interface_id = interface_option, orientation_id = orientation_option)
                     plotting_functs.plot_neighbors(neigh_plot_dict, ang, pos, pair='B-B', sep_surface_dict=all_surface_curves, int_comp_dict=int_comp_dict, active_fa_dict=active_fa_dict, interface_id = interface_option, orientation_id = orientation_option)
-                    
 
-                    
                     plotting_functs.plot_neighbors_ori(neigh_plot_dict, ang, pos, all_surface_curves, int_comp_dict, active_fa_dict, pair='all-all', mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option)
                     plotting_functs.plot_neighbors_ori(neigh_plot_dict, ang, pos, all_surface_curves, int_comp_dict, active_fa_dict, pair='all-A', mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option)
                     plotting_functs.plot_neighbors_ori(neigh_plot_dict, ang, pos, all_surface_curves, int_comp_dict, active_fa_dict, pair='all-B', mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option)
@@ -1434,7 +1433,6 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     plotting_functs.plot_neighbors_ori(neigh_plot_dict, ang, pos, all_surface_curves, int_comp_dict, active_fa_dict, pair='A-A', mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option)
                     plotting_functs.plot_neighbors_ori(neigh_plot_dict, ang, pos, all_surface_curves, int_comp_dict, active_fa_dict, pair='A-B', mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option)
                     plotting_functs.plot_neighbors_ori(neigh_plot_dict, ang, pos, all_surface_curves, int_comp_dict, active_fa_dict, pair='B-A', mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option)
-                    
                     
             elif measurement_options[0] == 'orientation':
                 #DONE!
@@ -1625,11 +1623,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 #DONE
                 if plot == 'y':
                     plotting_functs = plotting.plotting(orient_dict, pos_dict, lx_box, ly_box, NBins_x, NBins_y, sizeBin_x, sizeBin_y, peA, peB, parFrac, eps, typ, tst, partNum, picPath, outFile)
-                    plotting_functs.plot_part_activity(pos, ang)
-                    #if j>(start*time_step):
-                    #    plotting_functs.plot_part_activity2(pos, prev_pos, ang)
-                    #else:
-                    #    plotting_functs.plot_part_activity(pos, ang)
+                    plotting_functs.plot_part_activity(pos, mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option, banner_id = banner_option, presentation_id = presentation_option)
+
             elif measurement_method == 'neighbors':
                 #DONE
                 particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, eps, typ, pos, ang)
@@ -1649,7 +1644,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     plotting_functs.plot_neighbors(neigh_plot_dict, ang, pos, pair='all-all')
 
             elif measurement_method == 'penetration':
-                #DONE
+                #DONE~
                 
                 particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, eps, typ, pos, ang)
                 if j>(start*time_step):
@@ -1664,17 +1659,10 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 if j>(start * time_step):
                     particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, eps, typ, pos, ang)
 
-                    #try:
-                    #    part_msd_dict = particle_prop_functs.single_msd(prev_pos, displace_dict)
-                    #except:
-                        #displace_dict = {'A': {'x': np.array([]), 'y': np.array([]), 'mag': np.array([])}, 'B': {'x': np.array([]), 'y': np.array([]), 'mag': np.array([])} }
-                        #part_msd_dict = particle_prop_functs.single_msd(prev_pos, displace_dict)
-
                     data_output_functs = data_output.data_output(lx_box, ly_box, sizeBin_x, sizeBin_y, tst, clust_large, dt_step)
 
                     vel_plot_dict, vel_stat_dict = particle_prop_functs.part_velocity(prev_pos, prev_ang, ori)
                     data_output_functs.write_to_txt(vel_stat_dict, dataPath + 'velocity_' + outfile + '.txt')
-                    #data_output_functs.write_to_txt(neigh_dict, dataPath + 'collision_' + outfile + '.txt')
 
             elif measurement_method == 'single_velocity':
                 if j>(start * time_step):
@@ -1691,12 +1679,13 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     vel_plot_dict, corr_dict, vel_stat_dict = particle_prop_functs.single_velocity(vel_dict['part'], prev_pos, prev_ang, ori)
                     data_output_functs.write_to_txt(vel_stat_dict, dataPath + 'collision_' + outfile + '.txt')
             elif measurement_method == 'collision':
+                #DONE!
                 collision_dict = particle_prop_functs.collision_rate()
                 
                 data_output_functs = data_output.data_output(lx_box, ly_box, sizeBin_x, sizeBin_y, tst, clust_large, dt_step)
 
                 data_output_functs.write_to_txt(collision_dict, dataPath + 'collision_' + outfile + '.txt')       
-        #if j == start:
+
         particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, eps, typ, pos, ang)
 
         utility_functs = utility.utility(lx_box, ly_box)
@@ -1708,6 +1697,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
         utility_functs = utility.utility(lx_box, ly_box)
 
+    # Perform measurements after all time steps looped through
     if measurement_method == 'adsorption_final':
         if len(partPhase_time_arr)>1:
             if steady_state_once == 'True':
@@ -1815,7 +1805,6 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 avg_radial_df_dict[key] = (np.array(avg_radial_df_dict[key])/sum_num).tolist()
         lat_avg = lat_sum / sum_num
 
-        print(sum_num)
         lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
 
         avg_compress_dict = lattice_structure_functs.compressibility(avg_radial_df_dict, avg_num_dens = avg_num_dens_dict)
@@ -1832,11 +1821,3 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                     plotting_functs.plot_general_rdf(radial_df_dict)
                     plotting_functs.plot_all_rdfs(radial_df_dict)
-    elif measurement_method == 'collision':
-                
-        particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, eps, typ, pos, ang)
-        
-        collision_dict = particle_prop_functs.collision_rate()
-        
-        data_output_functs.write_to_txt(collision_dict, dataPath + 'collision_' + outfile + '.txt')
-    
