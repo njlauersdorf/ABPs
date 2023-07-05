@@ -203,9 +203,9 @@ class stress_and_pressure:
                                 # Loop through all neighboring particles in indx,indy bin
                                 for j in binParts[indx][indy]:
 
-                                    difx = self.utility_functs.sep_dist(self.pos[h][0], self.pos[j][0])
+                                    difx = self.utility_functs.sep_dist_x(self.pos[h][0], self.pos[j][0])
 
-                                    dify = self.utility_functs.sep_dist(self.pos[h][1], self.pos[j][1])
+                                    dify = self.utility_functs.sep_dist_y(self.pos[h][1], self.pos[j][1])
 
                                     difr = ( (difx)**2 + (dify)**2)**0.5
 
@@ -293,9 +293,9 @@ class stress_and_pressure:
 
         count_dict = self.phase_ident.phase_count(self.phase_dict)
 
-        bulk_area = count_dict['bulk'] * self.sizeBin
-        int_area = count_dict['int'] * self.sizeBin
-        gas_area = count_dict['gas'] * self.sizeBin
+        bulk_area = count_dict['bulk'] * self.sizeBin_x * self.sizeBin_y
+        int_area = count_dict['int'] * self.sizeBin_x * self.sizeBin_y
+        gas_area = count_dict['gas'] * self.sizeBin_x * self.sizeBin_y
 
         bulk_shear_stress =  (stress_stat_dict['bulk']['all']['XY']) / bulk_area
         bulkA_shear_stress =  (stress_stat_dict['bulk']['A']['XY']) / bulk_area
@@ -315,13 +315,13 @@ class stress_and_pressure:
 
     def virial_pressure_binned(self, stress_plot_dict):
 
-        press_arr = np.zeros((self.NBins, self.NBins))
+        press_arr = np.zeros((self.NBins_x, self.NBins_y))
 
-        for ix in range(0, self.NBins):
+        for ix in range(0, self.NBins_x):
 
-            for iy in range(0, self.NBins):
+            for iy in range(0, self.NBins_y):
 
-                press_arr[ix][iy] = (stress_plot_dict['bin']['XX'][ix][iy] + stress_plot_dict['bin']['YY'][ix][iy])/(2 * self.sizeBin**2)
+                press_arr[ix][iy] = (stress_plot_dict['bin']['XX'][ix][iy] + stress_plot_dict['bin']['YY'][ix][iy])/(2 * self.sizeBin_x * self.sizeBin_y)
 
         return press_arr
 
@@ -351,9 +351,9 @@ class stress_and_pressure:
 
         count_dict = self.phase_ident.phase_count(self.phase_dict)
 
-        bulk_area = count_dict['bulk'] * self.sizeBin**2
-        int_area = count_dict['int'] * self.sizeBin**2
-        gas_area = count_dict['gas'] * self.sizeBin**2
+        bulk_area = count_dict['bulk'] * self.sizeBin_x * self.sizeBin_y
+        int_area = count_dict['int'] * self.sizeBin_x * self.sizeBin_y
+        gas_area = count_dict['gas'] * self.sizeBin_x * self.sizeBin_y
 
         bulk_press = bulkTrace / bulk_area
         bulkA_press = bulkTrace_A / bulk_area

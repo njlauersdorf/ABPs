@@ -274,11 +274,11 @@ with hoomd.open(name=inFile, mode='rb') as t:
     
     dumps = int(t.__len__())
 
-    start = 500#0#int(0/time_step)#205                                             # first frame to process
+    start = 0#int(0/time_step)#205                                             # first frame to process
     
                                 # get number of timesteps dumped
     
-    end = 502#int(dumps/time_step)-1                                             # final frame to process
+    end = int(dumps/time_step)-1                                             # final frame to process
     snap = t[0]                                             # Take first snap for box
     first_tstep = snap.configuration.step                   # First time step
 
@@ -987,22 +987,16 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                     vel_plot_dict, corr_dict, vel_stat_dict = particle_prop_functs.single_velocity(vel_dict['part'], prev_pos, prev_ang, ori)
                     data_output_functs.write_to_txt(vel_stat_dict, dataPath + 'collision_' + outfile + '.txt')
-            elif measurement_method == 'adsorption':
-                
-                particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, eps, typ, pos, ang)
-                
+            elif measurement_method == 'adsorption':                
                 
                 kinetics_dict = particle_prop_functs.adsorption_nlist()
                 collision_dict = particle_prop_functs.collision_rate()
                 
-                
                 data_output_functs.write_to_txt(kinetics_dict, dataPath + 'kinetics_' + outfile + '.txt')
                 data_output_functs.write_to_txt(collision_dict, dataPath + 'collision_' + outfile + '.txt')
 
-
             elif measurement_method == 'velocity':
                 if j>(start*time_step):
-                    particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, typ, pos, ang)
 
                     part_ang_vel_dict = particle_prop_functs.angular_velocity(ang_vel_dict['part'], phase_dict['part'])
                     part_vel_dict = particle_prop_functs.velocity(vel_dict['part']['mag'], phase_dict['part'])
@@ -1011,19 +1005,15 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     data_output_functs.write_to_txt(part_vel_dict, dataPath + 'velocity_' + outfile + '.txt')
 
                     if plot == 'y':
-                        plotting_functs = plotting.plotting(orient_dict, pos_dict, l_box, NBins, sizeBin, peA, peB, parFrac, eps, typ, tst)
                         plotting_functs.ang_vel_histogram(ang_vel_dict['part'], phase_dict['part'])
                         plotting_functs.ang_vel_bulk_sf_histogram(ang_vel_dict['part'], phase_dict['part'])
                         plotting_functs.ang_vel_int_sf_histogram(ang_vel_dict['part'], phase_dict['part'])
-                        plotting_functs.ang_vel_int_sf_histogram(ang_vel_dict['part'], phase_dict['part'])
-                    stop
             #elif measurement_method == 'voronoi':
             #    if plot == 'y':
             #        plotting_functs = plotting.plotting(orient_dict, pos_dict, lx_box, ly_box, NBins_x, NBins_y, sizeBin_x, sizeBin_y, peA, peB, parFrac, eps, typ, tst)
             #        plotting_functs.plot_voronoi(pos)
 
             elif (measurement_options[0] == 'activity'):
-                
                 #DONE!
                 if plot == 'y':
                     
@@ -1031,7 +1021,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     plotting_functs.plot_part_activity(pos, all_surface_curves, int_comp_dict, active_fa_dict, mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option, banner_id = banner_option, presentation_id = presentation_option)
 
             elif measurement_method == 'activity_com':
-
+                
                 if plot == 'y':
                     
                     plotting_functs.plot_part_activity_com_plotted(pos, part_id_dict, all_surface_curves, int_comp_dict, com_opt)
@@ -1045,7 +1035,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 if plot == 'y':
                     plotting_functs.plot_phases(pos, part_id_dict, all_surface_curves, int_comp_dict, active_fa_dict, interface_id = interface_option, orientation_id = orientation_option)
             elif measurement_method== 'bubble_interface_pressure':
-
+                #DONE!
                 lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
 
                 particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, eps, typ, pos, ang)
@@ -1059,8 +1049,6 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 #com_radial_dict_bubble, com_radial_dict_fa_bubble = particle_prop_functs.radial_measurements2(radial_int_press_dict, radial_fa_dict, surface_dict, all_surface_curves, int_comp_dict, all_surface_measurements, averaged_data_arr, int_dict)
                 com_radial_dict_fa_bubble = particle_prop_functs.radial_measurements3(radial_fa_dict, surface_dict, all_surface_curves, int_comp_dict, all_surface_measurements, averaged_data_arr, int_dict)
 
-                #for m in range(0, len(com_radial_dict_fa_bubble)):
-
                 key = 'surface id ' + str(averaged_data_arr['int_id'])
                 data_output_functs.write_to_txt(com_radial_dict_fa_bubble[key], dataPath + 'bubble_com_active_pressure_radial_' + outfile + '.txt')
                 
@@ -1071,7 +1059,6 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                     key = 'surface id ' + str(int(int_comp_dict['ids'][m]))
                     data_output_functs.write_to_txt(act_press_dict_bubble[key], dataPath + 'bubble_com_active_pressure_' + outfile + '.txt')
-
 
                 """
                 radial_fa_dict = particle_prop_functs.radial_surface_normal_fa(method2_align_dict)
@@ -1088,50 +1075,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 act_press_dict = stress_and_pressure_functs.total_active_pressure_interface(com_radial_dict_fa, all_surface_measurements, int_comp_dict)
                 act_press_dict_bubble = stress_and_pressure_functs.total_active_pressure_bubble(com_radial_dict_fa, all_surface_measurements, int_comp_dict)
                 """
-                """
-                plt.plot(com_radial_dict_fa['r'], com_radial_dict_fa['num_dens']['A'], color='blue')
-                plt.plot(com_radial_dict_fa['r'], com_radial_dict_fa['num_dens']['B'], color='red')
-                plt.plot(com_radial_dict_fa['r'], com_radial_dict_fa['num_dens']['all'], color='black')
-                plt.plot(com_radial_dict_fa_bubble['r'], com_radial_dict_fa_bubble['num_dens']['A'], color='blue', linestyle='dashed')
-                plt.plot(com_radial_dict_fa_bubble['r'], com_radial_dict_fa_bubble['num_dens']['B'], color='red', linestyle='dashed')
-                plt.plot(com_radial_dict_fa_bubble['r'], com_radial_dict_fa_bubble['num_dens']['all'], color='black', linestyle='dashed')
-                plt.show()
-
-                plt.plot(com_radial_dict_fa['r'], com_radial_dict_fa['align']['A'], color='blue')
-                plt.plot(com_radial_dict_fa['r'], com_radial_dict_fa['align']['B'], color='red')
-                plt.plot(com_radial_dict_fa['r'], com_radial_dict_fa['align']['all'], color='black')
-                plt.plot(com_radial_dict_fa_bubble['r'], com_radial_dict_fa_bubble['align']['A'], color='blue', linestyle='dashed')
-                plt.plot(com_radial_dict_fa_bubble['r'], com_radial_dict_fa_bubble['align']['B'], color='red', linestyle='dashed')
-                plt.plot(com_radial_dict_fa_bubble['r'], com_radial_dict_fa_bubble['align']['all'], color='black', linestyle='dashed')
-                plt.show()
-
-                plt.plot(com_radial_dict['r'], com_radial_dict['A']['press'], color='blue')
-                plt.plot(com_radial_dict['r'], com_radial_dict['B']['press'], color='red')
-                plt.plot(com_radial_dict['r'], com_radial_dict['all']['press'], color='black')
-                plt.plot(com_radial_dict_bubble['r'], com_radial_dict_bubble['A']['press'], color='blue', linestyle='dashed')
-                plt.plot(com_radial_dict_bubble['r'], com_radial_dict_bubble['B']['press'], color='red', linestyle='dashed')
-                plt.plot(com_radial_dict_bubble['r'], com_radial_dict_bubble['all']['press'], color='black', linestyle='dashed')
-                plt.show()
-
-                plt.plot(com_radial_dict_fa['r'], com_radial_dict_fa['fa_press']['A'], color='blue')
-                plt.plot(com_radial_dict_fa['r'], com_radial_dict_fa['fa_press']['B'], color='red')
-                plt.plot(com_radial_dict_fa['r'], com_radial_dict_fa['fa_press']['all'], color='black')
-                plt.plot(com_radial_dict_fa_bubble['r'], com_radial_dict_fa_bubble['fa_press']['A'], color='blue', linestyle='dashed')
-                plt.plot(com_radial_dict_fa_bubble['r'], com_radial_dict_fa_bubble['fa_press']['B'], color='red', linestyle='dashed')
-                plt.plot(com_radial_dict_fa_bubble['r'], com_radial_dict_fa_bubble['fa_press']['all'], color='black', linestyle='dashed')
-                plt.show()
-
-                stop
-                """
-
-
-                
-
 
             elif measurement_options[0] == 'density':
-
                 #DONE!
-
                 num_dens_dict = binning_functs.phase_number_density(bin_count_dict, part_count_dict)
                 data_output_functs.write_to_txt(num_dens_dict, dataPath + 'Num_dens_' + outfile + '.txt')
 
@@ -1147,17 +1093,17 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     plotting_functs.plot_particle_fraction(area_frac_dict, pos, all_surface_curves, int_comp_dict, active_fa_dict, type='B', interface_id = interface_option, orientation_id = orientation_option)
 
             elif measurement_options[0] == 'com-align':
-
+                #DONE!
                 if plot == 'y':
 
                     # Plot contour map of degree of alignment of particle's active forces with direction toward cluster CoM
                     plotting_functs.plot_alignment(method1_align_dict, all_surface_curves, int_comp_dict, pos, interface_id = interface_option, type='all')
                     plotting_functs.plot_alignment(method1_align_dict, all_surface_curves, int_comp_dict, pos, interface_id = interface_option, type='A')
                     plotting_functs.plot_alignment(method1_align_dict, all_surface_curves, int_comp_dict, pos, interface_id = interface_option, type='B')
-                    plotting_functs.plot_normal_fa_map(normal_fa_dict, all_surface_curves, int_comp_dict)
+                    plotting_functs.plot_normal_fa_map(normal_fa_dict, all_surface_curves, int_comp_dict, active_fa_dict, type='all', interface_id = interface_option, orientation_id = orientation_option)
                     
             elif measurement_options[0] == 'surface-alignment':
-
+                #DONE!
                 if plot == 'y':
 
                     # Plot contour map of degree of alignment of particle's active forces with nearest normal to cluster surface
@@ -1165,9 +1111,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     plotting_functs.plot_alignment(method2_align_dict, all_surface_curves, int_comp_dict, pos, interface_id = interface_option, type='A')
                     plotting_functs.plot_alignment(method2_align_dict, all_surface_curves, int_comp_dict, pos, interface_id = interface_option, type='B')       
              
-                stop
             elif measurement_method == 'fluctuations':
-
+                
                 if plot == 'y':
 
                     # Plot particles color-coded by activity with sub-plot of change in cluster size over time
@@ -1189,32 +1134,34 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 data_output_functs.write_to_txt(compress_dict, dataPath + 'compressibility_' + outfile + '.txt')
             
             elif measurement_method == 'structure_factor2':
-                
+                #DONE!
+
                 # Initialize lattice structure functions
                 lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
 
                 # Calculate compressibility, structure factor, and 1st-wave vector structure factor using alternative hard-coded method
                 compress_dict, structure_factor_dict, k0_dict = lattice_structure_functs.structure_factor2()
 
-                #data_output_functs.write_to_txt(k0_dict, dataPath + 'structure_factor_' + outfile + '.txt')
+                data_output_functs.write_to_txt(k0_dict, dataPath + 'structure_factor2_' + outfile + '.txt')
 
-                #data_output_functs.write_to_txt(compress_dict, dataPath + 'compressibility2_' + outfile + '.txt')
+                data_output_functs.write_to_txt(compress_dict, dataPath + 'sf_compressibility2_' + outfile + '.txt')
 
             
             elif measurement_method == 'structure_factor_freud':
-                
+                #DONE!
+                #DEPRECATED DO TO SPEED, USE measurement_method='structure_factor'
                 # Initialize lattice structure functions
                 lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
 
                 # Calculate compressibility, structure factor, and 1st-wave vector structure factor using Freud
                 compress_dict, structure_factor_dict, k0_dict = lattice_structure_functs.structure_factor_freud()
 
-                #data_output_functs.write_to_txt(k0_dict, dataPath + 'structure_factor_' + outfile + '.txt')
+                data_output_functs.write_to_txt(k0_dict, dataPath + 'structure_factor_freud_' + outfile + '.txt')
 
-                #data_output_functs.write_to_txt(compress_dict, dataPath + 'compressibility2_' + outfile + '.txt')
+                data_output_functs.write_to_txt(compress_dict, dataPath + 'sf_compressibility_freud_' + outfile + '.txt')
 
             elif measurement_method == 'structure_factor':
-
+                #DONE!
                 # Initialize lattice structure functions
                 lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
 
@@ -1222,16 +1169,16 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 radial_df_dict = lattice_structure_functs.radial_df()
 
                 # Calculate compressibility, structure factor, and 1st-wave vector structure factor using hard-coded function
-                compress_dict, structure_factor_dict, k0_dict = lattice_structure_functs.structure_factor(radial_df_dict, part_count_dict)
+                compress_dict, structure_factor_dict, k0_dict = lattice_structure_functs.structure_factor(radial_df_dict)
 
                 # Save structure factor data
                 data_output_functs.write_to_txt(k0_dict, dataPath + 'structure_factor_' + outfile + '.txt')
 
                 # Save compressibility data
-                data_output_functs.write_to_txt(compress_dict, dataPath + 'compressibility2_' + outfile + '.txt')
+                data_output_functs.write_to_txt(compress_dict, dataPath + 'sf_compressibility_' + outfile + '.txt')
 
             elif measurement_method == 'int_press':
-
+                #DONE!
                 # Initialize stress and pressure functions
                 stress_and_pressure_functs = stress_and_pressure.stress_and_pressure(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
                 
@@ -1255,13 +1202,11 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 data_output_functs.write_to_txt(com_radial_int_press_dict, dataPath + 'com_interparticle_pressure_radial_' + outfile + '.txt')
                 
                 if plot == 'y':
-
-                    #plotting_functs.plot_interpart_press_binned(vp_bin_arr, all_surface_curves, int_comp_dict)
-                    plotting_functs.interpart_press_map_final(stress_plot_dict, all_surface_curves, int_comp_dict)                               
+                    plotting_functs.interpart_press_map(stress_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, type='all', interface_id = interface_option, orientation_id = orientation_option)                             
             
             elif measurement_method == 'cluster_velocity': 
+                #DONE!
                 if j>(start * time_step):
-                    
                     #Initialize particle-based location measurements
                     particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, eps, typ, pos, ang)
                     
@@ -1272,7 +1217,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     data_output_functs.write_to_txt(cluster_velocity_dict, dataPath + 'cluster_velocity_' + outfile + '.txt')
 
             elif measurement_method == 'centrosymmetry':
-
+                #DONE!
                 # Initialize lattice structure functions
                 lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
 
@@ -1287,7 +1232,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 
 
             elif measurement_method == 'lattice_spacing':
-
+                #DONE!
                 # Initialize lattice structure functions
                 lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
 
@@ -1301,12 +1246,10 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                     plotting_functs.lat_histogram(lat_plot_dict)
 
-                    if j>(start*time_step):
-                        plotting_functs.lat_map(lat_plot_dict, all_surface_curves, int_comp_dict, velocity_dict = vel_dict)
-                    else:
-                        plotting_functs.lat_map(lat_plot_dict, all_surface_curves, int_comp_dict)
+                    plotting_functs.lat_map(lat_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, type='all', interface_id = interface_option, orientation_id = orientation_option)
+                    
             elif measurement_method == 'penetration':
-                
+                #DONE!
                 # Initialize lattice structure functions
                 lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
                 
@@ -1319,7 +1262,6 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     data_output_functs.write_to_txt(penetration_dict, dataPath + 'penetration_depth_' + outfile + '.txt')
 
             elif measurement_method == 'radial_df':
-
                 #DONE
 
                 # Calculate average number densities
@@ -1368,8 +1310,6 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
             elif measurement_method == 'angular_df':
 
-                #DONE
-
                 # Initialize lattice structure functions
                 lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
 
@@ -1396,7 +1336,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 data_output_functs.write_to_txt(domain_stat_dict, dataPath + 'domain_' + outfile + '.txt')
 
             elif measurement_method == 'clustering':
-
+                #DONE!
                 # Initialize lattice structure functions
                 lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
                 
@@ -1404,13 +1344,10 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 neigh_plot_dict = lattice_structure_functs.clustering_coefficient()
                 
                 if plot == 'y':
-                    plotting_functs.plot_clustering(neigh_plot_dict, all_surface_curves, int_comp_dict, ang, pos, pair='all')
-                    plotting_functs.plot_clustering(neigh_plot_dict, all_surface_curves, int_comp_dict, ang, pos, pair='A')
-                    plotting_functs.plot_clustering(neigh_plot_dict, all_surface_curves, int_comp_dict, ang, pos, pair='B')
-                    
-                stop
-                #data_output_functs.write_to_txt(neigh_stat_dict, dataPath + 'nearest_neighbors_' + outfile + '.txt')
-                #data_output_functs.write_to_txt(ori_stat_dict, dataPath + 'nearest_ori_' + outfile + '.txt')
+                    plotting_functs.plot_clustering(neigh_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, type='all', interface_id = interface_option, orientation_id = orientation_option)
+                    plotting_functs.plot_clustering(neigh_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, type='A', interface_id = interface_option, orientation_id = orientation_option)
+                    plotting_functs.plot_clustering(neigh_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, type='B', interface_id = interface_option, orientation_id = orientation_option)
+
             elif measurement_method == 'local_gas_density':
 
                 # Initialize lattice structure functions
@@ -1425,18 +1362,18 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 
                 
                 if plot == 'y':
-                    plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, pair='all-all')
-                    plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, pair='A-all')
-                    plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, pair='B-all')
-                    plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, pair='all-A')
-                    plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, pair='all-B')
-                    plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, pair='A-A')
-                    plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, pair='B-A')
-                    plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, pair='A-B')
-                    plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, pair='B-B')
-            
-            elif measurement_method == 'local_density':
+                    plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='all-all', interface_id = interface_option, orientation_id = orientation_option)
+                    plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='all-A', interface_id = interface_option, orientation_id = orientation_option)
+                    plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='all-B', interface_id = interface_option, orientation_id = orientation_option)
+                    plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='A-all', interface_id = interface_option, orientation_id = orientation_option)
+                    plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='B-all', interface_id = interface_option, orientation_id = orientation_option)
+                    plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='A-A', interface_id = interface_option, orientation_id = orientation_option)
+                    plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='A-B', interface_id = interface_option, orientation_id = orientation_option)
+                    plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='B-A', interface_id = interface_option, orientation_id = orientation_option)
+                    plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='B-B', interface_id = interface_option, orientation_id = orientation_option)
 
+            elif measurement_method == 'local_density':
+                #DONE!
                 # Initialize lattice structure functions
                 lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
                 
@@ -1448,18 +1385,18 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 data_output_functs.write_to_txt(local_dens_stat_dict, dataPath + 'local_density_' + outfile + '.txt')
                 
                 if plot == 'y':
-                    plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, pair='all-all')
-                    plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, pair='A-all')
-                    plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, pair='B-all')
-                    plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, pair='all-A')
-                    plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, pair='all-B')
-                    plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, pair='A-A')
-                    plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, pair='B-A')
-                    plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, pair='A-B')
-                    plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, pair='B-B')
-            
-            elif measurement_options[0] == 'neighbors':
+                    plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='all-all', interface_id = interface_option, orientation_id = orientation_option)
+                    plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='all-A', interface_id = interface_option, orientation_id = orientation_option)
+                    plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='all-B', interface_id = interface_option, orientation_id = orientation_option)
+                    plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='A-all', interface_id = interface_option, orientation_id = orientation_option)
+                    plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='B-all', interface_id = interface_option, orientation_id = orientation_option)
+                    plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='A-A', interface_id = interface_option, orientation_id = orientation_option)
+                    plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='A-B', interface_id = interface_option, orientation_id = orientation_option)
+                    plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='B-A', interface_id = interface_option, orientation_id = orientation_option)
+                    plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='B-B', interface_id = interface_option, orientation_id = orientation_option)
 
+            elif measurement_options[0] == 'neighbors':
+                #DONE!
                 # Initialize lattice structure functions
                 lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
                 
@@ -1477,55 +1414,41 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 
                 
                 if plot == 'y':
-
-                    #plotting_functs.plot_neighbors(neigh_plot_dict, all_surface_curves, int_comp_dict, ang, pos, pair='all-all')
-                    #plotting_functs.plot_neighbors(neigh_plot_dict, all_surface_curves, int_comp_dict, ang, pos, pair='all-A')
-                    #plotting_functs.plot_neighbors(neigh_plot_dict, all_surface_curves, int_comp_dict, ang, pos, pair='all-B')
-                    #plotting_functs.plot_neighbors(neigh_plot_dict, all_surface_curves, int_comp_dict, ang, pos, pair='A-all')
-                    #plotting_functs.plot_neighbors(neigh_plot_dict, all_surface_curves, int_comp_dict, ang, pos, pair='B-all')
-                    #plotting_functs.plot_neighbors(neigh_plot_dict, all_surface_curves, int_comp_dict, ang, pos, pair='A-A')
-                    #plotting_functs.plot_neighbors(neigh_plot_dict, all_surface_curves, int_comp_dict, ang, pos, pair='A-B')
-                    #plotting_functs.plot_neighbors(neigh_plot_dict, all_surface_curves, int_comp_dict, ang, pos, pair='B-A')
-                    #plotting_functs.plot_neighbors(neigh_plot_dict, all_surface_curves, int_comp_dict, ang, pos, pair='B-B')
+                    
+                    plotting_functs.plot_neighbors(neigh_plot_dict, ang, pos, pair='all-all', sep_surface_dict=all_surface_curves, int_comp_dict=int_comp_dict, active_fa_dict=active_fa_dict, interface_id = interface_option, orientation_id = orientation_option)
+                    plotting_functs.plot_neighbors(neigh_plot_dict, ang, pos, pair='all-A', sep_surface_dict=all_surface_curves, int_comp_dict=int_comp_dict, active_fa_dict=active_fa_dict, interface_id = interface_option, orientation_id = orientation_option)
+                    plotting_functs.plot_neighbors(neigh_plot_dict, ang, pos, pair='all-B', sep_surface_dict=all_surface_curves, int_comp_dict=int_comp_dict, active_fa_dict=active_fa_dict, interface_id = interface_option, orientation_id = orientation_option)
+                    plotting_functs.plot_neighbors(neigh_plot_dict, ang, pos, pair='A-all', sep_surface_dict=all_surface_curves, int_comp_dict=int_comp_dict, active_fa_dict=active_fa_dict, interface_id = interface_option, orientation_id = orientation_option)
+                    plotting_functs.plot_neighbors(neigh_plot_dict, ang, pos, pair='B-all', sep_surface_dict=all_surface_curves, int_comp_dict=int_comp_dict, active_fa_dict=active_fa_dict, interface_id = interface_option, orientation_id = orientation_option)
+                    plotting_functs.plot_neighbors(neigh_plot_dict, ang, pos, pair='A-A', sep_surface_dict=all_surface_curves, int_comp_dict=int_comp_dict, active_fa_dict=active_fa_dict, interface_id = interface_option, orientation_id = orientation_option)
+                    plotting_functs.plot_neighbors(neigh_plot_dict, ang, pos, pair='A-B', sep_surface_dict=all_surface_curves, int_comp_dict=int_comp_dict, active_fa_dict=active_fa_dict, interface_id = interface_option, orientation_id = orientation_option)
+                    plotting_functs.plot_neighbors(neigh_plot_dict, ang, pos, pair='B-A', sep_surface_dict=all_surface_curves, int_comp_dict=int_comp_dict, active_fa_dict=active_fa_dict, interface_id = interface_option, orientation_id = orientation_option)
+                    plotting_functs.plot_neighbors(neigh_plot_dict, ang, pos, pair='B-B', sep_surface_dict=all_surface_curves, int_comp_dict=int_comp_dict, active_fa_dict=active_fa_dict, interface_id = interface_option, orientation_id = orientation_option)
                     
 
+                    
                     plotting_functs.plot_neighbors_ori(neigh_plot_dict, ang, pos, all_surface_curves, int_comp_dict, active_fa_dict, pair='all-all', mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option)
                     plotting_functs.plot_neighbors_ori(neigh_plot_dict, ang, pos, all_surface_curves, int_comp_dict, active_fa_dict, pair='all-A', mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option)
                     plotting_functs.plot_neighbors_ori(neigh_plot_dict, ang, pos, all_surface_curves, int_comp_dict, active_fa_dict, pair='all-B', mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option)
                     plotting_functs.plot_neighbors_ori(neigh_plot_dict, ang, pos, all_surface_curves, int_comp_dict, active_fa_dict, pair='B-B', mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option)
-                    plotting_functs.plot_neighbors_ori(neigh_plot_dict, ang, pos, all_surface_curves, int_comp_dict, active_fa_dict, pair='A_A', mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option)
+                    plotting_functs.plot_neighbors_ori(neigh_plot_dict, ang, pos, all_surface_curves, int_comp_dict, active_fa_dict, pair='A-A', mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option)
                     plotting_functs.plot_neighbors_ori(neigh_plot_dict, ang, pos, all_surface_curves, int_comp_dict, active_fa_dict, pair='A-B', mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option)
                     plotting_functs.plot_neighbors_ori(neigh_plot_dict, ang, pos, all_surface_curves, int_comp_dict, active_fa_dict, pair='B-A', mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option)
-
-                    #.plot_neighbors_ori(neigh_plot_dict, all_surface_curves, int_comp_dict, ang, pos, pair='all-A')
-                    #plotting_functs.plot_neighbors_ori(neigh_plot_dict, all_surface_curves, int_comp_dict, ang, pos, pair='all-B')
-                    #plotting_functs.plot_particle_orientations(neigh_plot_dict, all_surface_curves, int_comp_dict, pair='all-all')
-                    #stop
-                    #plotting_functs.local_orientational_order_map(neigh_plot_dict, all_surface_curves, int_comp_dict, type='all-all')
-                    #stop
-                    #plotting_functs.plot_neighbors(neigh_plot_dict, all_surface_curves, int_comp_dict, pair='all-all')
-                    #stop
-                    #plotting_functs.plot_neighbors(neigh_plot_dict, all_surface_curves, int_comp_dict, pair='all-A')
-                    #plotting_functs.plot_neighbors(neigh_plot_dict, all_surface_curves, int_comp_dict, pair='all-B')
-
-                    #plotting_functs.plot_A_neighbors_of_all_parts(neigh_plot_dict, all_surface_curves, int_comp_dict)
-                    #plotting_functs.plot_B_neighbors_of_all_parts(neigh_plot_dict, all_surface_curves, int_comp_dict)
-
-                    #plotting_functs.plot_all_ori_of_all_parts(neigh_plot_dict, all_surface_curves, int_comp_dict)
-                    #plotting_functs.plot_all_ori_of_A_parts(neigh_plot_dict, all_surface_curves, int_comp_dict)
-                    #plotting_functs.plot_all_ori_of_B_parts(neigh_plot_dict, all_surface_curves, int_comp_dict)
-                    #plotting_functs.plot_A_ori_of_all_parts(neigh_plot_dict, all_surface_curves, int_comp_dict)
-                    #plotting_functs.plot_B_ori_of_all_parts(neigh_plot_dict, all_surface_curves, int_comp_dict)
+                    
+                    
             elif measurement_options[0] == 'orientation':
-                #DONE
+                #DONE!
                 if plot == 'y':
 
+                    plotting_functs.plot_ang(ang, pos, all_surface_curves, int_comp_dict, active_fa_dict, type='all', mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option)
+                    plotting_functs.plot_ang(ang, pos, all_surface_curves, int_comp_dict, active_fa_dict, type='A', mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option)
                     plotting_functs.plot_ang(ang, pos, all_surface_curves, int_comp_dict, active_fa_dict, type='B', mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option)
-
+    
             elif measurement_method == 'interparticle_pressure':
-
+                #DONE!
+                #DEPRECATED! Use measurement_method = 'int_press'
                 # Initialize stress and pressure functions
-                stress_and_pressure_functs = stress_and_pressure.stress_and_pressure(l_box, NBins, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
+                stress_and_pressure_functs = stress_and_pressure.stress_and_pressure(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
 
                 # Calculate interparticle stress
                 stress_plot_dict, stress_stat_dict = stress_and_pressure_functs.interparticle_stress()
@@ -1549,10 +1472,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     vp_bin_arr = stress_and_pressure_functs.virial_pressure_binned(stress_plot_dict)
                     vp_part_arr = stress_and_pressure_functs.virial_pressure_part(stress_plot_dict)
 
-                    plotting_functs = plotting.plotting(orient_dict, pos_dict, l_box, NBins, sizeBin, peA, peB, parFrac, eps, typ, tst)
+                    plotting_functs.plot_interpart_press_binned(vp_bin_arr, all_surface_curves, int_comp_dict, active_fa_dict, type='all', interface_id = interface_option, orientation_id = orientation_option)
 
-                    plotting_functs.plot_interpart_press_binned(vp_bin_arr, all_surface_curves, int_comp_dict)
-                    plotting_functs.interpart_press_map(pos, vp_part_arr, all_surface_curves, int_comp_dict)
             elif measurement_method == 'interparticle_pressure_nlist':
                 
                 # Initialize stress and pressure functions
@@ -1560,7 +1481,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 stress_plot_dict, stress_stat_dict = stress_and_pressure_functs.interparticle_stress_nlist(phase_dict['part'])
 
             elif measurement_method == 'com_interface_pressure':
-                
+                #DONE!
                 # Initialize stress and pressure functions
                 stress_and_pressure_functs = stress_and_pressure.stress_and_pressure(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
 
@@ -1583,7 +1504,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 data_output_functs.write_to_txt(act_press_dict, dataPath + 'com_interface_pressure_' + outfile + '.txt')
             
             elif measurement_method == 'surface_interface_pressure':
-                
+                #DONE!
                 # Initialize stress and pressure functions
                 stress_and_pressure_functs = stress_and_pressure.stress_and_pressure(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
 
@@ -1606,7 +1527,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 data_output_functs.write_to_txt(act_press_dict, dataPath + 'surface_interface_pressure_' + outfile + '.txt')
                 
             elif measurement_method == 'hexatic_order':
-
+                # DONE!
                 # Initialize lattice structure functions
                 lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
 
@@ -1618,9 +1539,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                 if plot == 'y':
 
-                    plotting_functs.plot_hexatic_order(pos, hexatic_order_dict['order'], all_surface_curves, int_comp_dict)
+                    plotting_functs.plot_hexatic_order(pos, hexatic_order_dict['order'], all_surface_curves, int_comp_dict, active_fa_dict, interface_id = interface_option, orientation_id = orientation_option)
 
-                    plotting_functs.plot_domain_angle(pos, hexatic_order_dict['theta'], all_surface_curves, int_comp_dict)
+                    plotting_functs.plot_domain_angle(pos, hexatic_order_dict['theta'], all_surface_curves, int_comp_dict, active_fa_dict, interface_id = interface_option, orientation_id = orientation_option)
             
             elif measurement_method == 'voronoi':
 
@@ -1640,7 +1561,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     plotting_functs.plot_domain_angle(pos, hexatic_order_dict['theta'], all_surface_curves, int_comp_dict)
 
             elif measurement_method == 'translational_order':
-
+                #DONE!
                 # Initialize lattice structure functions
                 lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
 
@@ -1652,10 +1573,10 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                 if plot == 'y':
 
-                    plotting_functs.plot_trans_order(pos, trans_order_param, all_surface_curves, int_comp_dict)
+                    plotting_functs.plot_trans_order(pos, trans_order_param, all_surface_curves, int_comp_dict, active_fa_dict, interface_id = interface_option, orientation_id = orientation_option)
 
             elif measurement_method == 'steinhardt_order':
-
+                #DONE!
                 # Initialize lattice structure functions
                 lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
 
@@ -1667,12 +1588,11 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                 if plot == 'y':
 
-                    plotting_functs.plot_stein_order(pos, stein_order_param, all_surface_curves, int_comp_dict)
-                stop
+                    plotting_functs.plot_stein_order(pos, stein_order_param, all_surface_curves, int_comp_dict, active_fa_dict, interface_id = interface_option, orientation_id = orientation_option)
             elif measurement_method == 'nematic_order':
 
                 # Initialize lattice structure functions
-                lattice_structure_functs = measurement.measurement(l_box, NBins, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
+                lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
 
                 # Calculate nematic order parameter
                 nematic_order_param= lattice_structure_functs.nematic_order()
@@ -1681,11 +1601,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 #data_output_functs.write_to_txt(hexatic_order_dict, dataPath + 'hexatic_order_' + outfile + '.txt')
 
                 if plot == 'y':
-                    plotting_functs = plotting.plotting(orient_dict, pos_dict, l_box, NBins, sizeBin, peA, peB, parFrac, eps, typ, tst)
-
                     plotting_functs.plot_stein_order(pos, nematic_order_param, all_surface_curves, int_comp_dict)
             elif measurement_method == 'adsorption_final':
-
+                #DONE!
                 if len(partPhase_time_arr)>1:
                 
                     if steady_state_once == 'True':
@@ -1772,7 +1690,12 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                     vel_plot_dict, corr_dict, vel_stat_dict = particle_prop_functs.single_velocity(vel_dict['part'], prev_pos, prev_ang, ori)
                     data_output_functs.write_to_txt(vel_stat_dict, dataPath + 'collision_' + outfile + '.txt')
-                    
+            elif measurement_method == 'collision':
+                collision_dict = particle_prop_functs.collision_rate()
+                
+                data_output_functs = data_output.data_output(lx_box, ly_box, sizeBin_x, sizeBin_y, tst, clust_large, dt_step)
+
+                data_output_functs.write_to_txt(collision_dict, dataPath + 'collision_' + outfile + '.txt')       
         #if j == start:
         particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, eps, typ, pos, ang)
 
@@ -1885,7 +1808,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 prev_pos = pos.copy()
                 prev_ang = ang.copy()
     elif measurement_method == 'radial_df':
-        # Done but inaccurate in planar system
+        # Done!
         
         for key, value in radial_df_dict.items():
             if key != 'r':
@@ -1916,3 +1839,4 @@ with hoomd.open(name=inFile, mode='rb') as t:
         collision_dict = particle_prop_functs.collision_rate()
         
         data_output_functs.write_to_txt(collision_dict, dataPath + 'collision_' + outfile + '.txt')
+    

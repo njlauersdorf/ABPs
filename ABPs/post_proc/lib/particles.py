@@ -1672,48 +1672,34 @@ class particle_props:
             start_bulk_id_with_int = np.append(start_bulk_id_with_int, now_in_bulk_comb)
     def collision_rate(self):
         
-        
         system_all = freud.AABBQuery(self.f_box, self.f_box.wrap(self.pos))
         cl_all=freud.cluster.Cluster()                              #Define cluster
         cl_all.compute(system_all, neighbors={'r_max': self.r_cut})        # Calculate clusters given neighbor list, positions,
                                                                     # and maximal radial interaction distance
-        clp_all = freud.cluster.ClusterProperties()                 #Define cluster properties
-        ids = cl_all.cluster_idx                                    # get id of each cluster
 
-        clp_all.compute(system_all, ids)                            # Calculate cluster properties given cluster IDs
-        clust_size = clp_all.sizes                                  # find cluster sizes
-
-        in_clust = np.where(clust_size == np.amax(clust_size) )[0][0]
-        not_in_clust = np.where(clust_size != np.amax(clust_size) )[0][0]
-
-        slow_clust_ids = np.where( (ids==in_clust) & (self.typ==0) )[0]
-        fast_clust_ids = np.where( (ids==in_clust) & (self.typ==1) )[0]
-        slow_not_clust_ids = np.where( (ids!=in_clust) & (self.typ==0) )[0]
-        fast_not_clust_ids = np.where( (ids!=in_clust) & (self.typ==1) )[0]
+        slow_ids = np.where( (self.typ==0) )[0]
+        fast_ids = np.where( (self.typ==1) )[0]
 
         # Neighbor list query arguments to find interacting particles
         query_args = dict(mode='ball', r_min = 0.1, r_max=self.r_cut)
 
         #Compute cluster parameters using system_all neighbor list
-        system_B = freud.AABBQuery(self.f_box, self.f_box.wrap(self.pos[fast_not_clust_ids]))
+        system_B = freud.AABBQuery(self.f_box, self.f_box.wrap(self.pos[fast_ids]))
+        system_A = freud.AABBQuery(self.f_box, self.f_box.wrap(self.pos[slow_ids]))
 
-        BB_nlist = system_B.query(self.f_box.wrap(self.pos[fast_not_clust_ids]), query_args).toNeighborList()
+        BB_nlist = system_B.query(self.f_box.wrap(self.pos[fast_ids]), query_args).toNeighborList()
         BB_collision_num = len(BB_nlist) / 2.0
-        """
-        #Compute cluster parameters using system_all neighbor list
-        system_A = freud.AABBQuery(self.f_box, self.f_box.wrap(self.pos[slow_not_clust_ids]))
-
-        AB_nlist = system_A.query(self.f_box.wrap(self.pos[fast_not_clust_ids]), query_args).toNeighborList()
+        
+        AB_nlist = system_A.query(self.f_box.wrap(self.pos[fast_ids]), query_args).toNeighborList()
         AB_collision_num = len(AB_nlist) / 2.0
 
-        AA_nlist = system_A.query(self.f_box.wrap(self.pos[slow_not_clust_ids]), query_args).toNeighborList()
+        BA_nlist = system_B.query(self.f_box.wrap(self.pos[slow_ids]), query_args).toNeighborList()
+        BA_collision_num = len(BA_nlist) / 2.0
+
+        AA_nlist = system_A.query(self.f_box.wrap(self.pos[slow_ids]), query_args).toNeighborList()
         AA_collision_num = len(AA_nlist) / 2.0
-        """
 
-        AA_collision_num = 0
-        AB_collision_num = 0
-
-        return {'AA': AA_collision_num, 'AB': AB_collision_num, 'BB': BB_collision_num}
+        return {'AA': AA_collision_num, 'AB': AB_collision_num, 'BA': BA_collision_num, 'BB': BB_collision_num}
 
     def adsorption_nlist(self):
 

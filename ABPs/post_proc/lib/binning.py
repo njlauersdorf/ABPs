@@ -1078,6 +1078,8 @@ class binning:
         grad_dict: dictionary containing arrays (NBins_x, NBins_y) of the divergence of curl of the input dictionary
         for each particle type ('all', 'A', and 'B').
         '''
+        
+        import math
 
         # New bin width after size decrease
         end_size_x = self.sizeBin_x / factor
@@ -1094,9 +1096,9 @@ class binning:
         NBins_y = self.NBins_y * factor
 
         # Instantiate empty arrays (NBins_x, NBins_y) for saving new binned particle information at reduced bin size
-        phaseBin_new = [[0 for b in range(NBins)] for a in range(NBins)]
-        binParts_new = [[[] for b in range(NBins)] for a in range(NBins)]
-        typParts_new = [[[] for b in range(NBins)] for a in range(NBins)]
+        phaseBin_new = [[0 for b in range(NBins_y)] for a in range(NBins_x)]
+        binParts_new = [[[] for b in range(NBins_y)] for a in range(NBins_x)]
+        typParts_new = [[[] for b in range(NBins_y)] for a in range(NBins_x)]
 
         pos_box_x_mid = np.array([])
         pos_box_y_mid = np.array([])
@@ -1105,28 +1107,28 @@ class binning:
         id_box_y = np.array([], dtype=int)
 
         # Loop over new bins
-        for ix in range(0, NBins):
-            for iy in range(0, NBins):
+        for ix in range(0, NBins_x):
+            for iy in range(0, NBins_y):
 
                 # Calculate and save new bin mid point
-                pos_box_x_mid = np.append(pos_box_x_mid, (ix + 0.5)* end_size)
-                pos_box_y_mid = np.append(pos_box_y_mid, (iy * 0.5) * end_size)
+                pos_box_x_mid = np.append(pos_box_x_mid, (ix + 0.5)* end_size_x)
+                pos_box_y_mid = np.append(pos_box_y_mid, (iy * 0.5) * end_size_y)
 
                 # Save new bin id
                 id_box_x = np.append(id_box_x, ix)
                 id_box_y = np.append(id_box_y, iy)
 
         # Loop over old bins
-        for ix in range(0, self.NBins):
-            for iy in range(0, self.NBins):
+        for ix in range(0, self.NBins_x):
+            for iy in range(0, self.NBins_y):
 
                 # Calculate x-range of old bin
-                pos_box_x_min = (ix) * self.sizeBin
-                pos_box_x_max = (ix + 1) * self.sizeBin
+                pos_box_x_min = (ix) * self.sizeBin_x
+                pos_box_x_max = (ix + 1) * self.sizeBin_x
 
                 # Calculate y-range of old bin
-                pos_box_y_min = (iy) * self.sizeBin
-                pos_box_y_max = (iy + 1) * self.sizeBin
+                pos_box_y_min = (iy) * self.sizeBin_y
+                pos_box_y_max = (iy + 1) * self.sizeBin_y
 
                 # Find new bins within x- and y-range of old bin
                 bin_loc = np.where(((pos_box_x_mid>=pos_box_x_min) & (pos_box_x_mid<=pos_box_x_max)) & ((pos_box_y_mid>=pos_box_y_min) & (pos_box_y_mid<=pos_box_y_max)))[0]
@@ -1145,8 +1147,8 @@ class binning:
                     tmp_posY = pos[h][1] + self.hy_box
 
                     # Find new bin id of particle
-                    x_ind = int(tmp_posX / end_size_x)
-                    y_ind = int(tmp_posY / end_size_y)
+                    x_ind = math.floor(tmp_posX / end_size_x)
+                    y_ind = math.floor(tmp_posY / end_size_y)
 
                     # Save new bins information
                     binParts_new[x_ind][y_ind].append(h)
