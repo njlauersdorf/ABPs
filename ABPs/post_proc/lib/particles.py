@@ -1701,6 +1701,39 @@ class particle_props:
 
         return {'AA': AA_collision_num, 'AB': AB_collision_num, 'BA': BA_collision_num, 'BB': BB_collision_num}
 
+    def cluster_msd(self, com_x_msd, com_y_msd, com_r_msd, com_x_parts_arr_time, com_y_parts_arr_time):
+        
+        difx = com_x_parts_arr_time[-1] - com_x_parts_arr_time[-2]
+
+        difx_abs = np.abs(difx)
+        if difx_abs>=self.hx_box:
+            if difx < -self.hx_box:
+                difx += self.lx_box
+            else:
+                difx -= self.lx_box
+
+        com_x_msd = np.append(com_x_msd, com_x_msd[-1] + difx)
+
+        dify = com_y_parts_arr_time[-1] - com_y_parts_arr_time[-2]
+
+        #Enforce periodic boundary conditions
+        dify_abs = np.abs(dify)
+        if dify_abs>=self.hy_box:
+            if dify < -self.hy_box:
+                dify += self.ly_box
+            else:
+                dify -= self.ly_box
+        
+        com_y_msd = np.append(com_y_msd, com_y_msd[-1] + dify)
+
+        difr = (difx**2 + dify**2)**0.5
+
+        com_r_msd = np.append(com_r_msd, (com_x_msd[-1] ** 2 + com_y_msd[-1] ** 2) ** 0.5 )
+
+        cluster_msd_dict = {'x': com_x_msd, 'y': com_y_msd, 'r': com_r_msd}
+
+        return cluster_msd_dict
+
     def adsorption_nlist(self):
 
         #Compute cluster parameters using system_all neighbor list

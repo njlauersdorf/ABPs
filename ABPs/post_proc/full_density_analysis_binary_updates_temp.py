@@ -246,6 +246,10 @@ avg_radial_df_dict = {}
 sum_num = 0
 dify_long = 0
 
+com_x_msd = np.array([0])
+com_y_msd = np.array([0])
+com_r_msd = np.array([0])
+
 com_option = False
 mono_option = False
 zoom_option = False
@@ -276,11 +280,11 @@ with hoomd.open(name=inFile, mode='rb') as t:
     
     dumps = int(t.__len__())
 
-    start = 0#int(0/time_step)#205                                             # first frame to process
+    start = 700#int(0/time_step)#205                                             # first frame to process
     
                                 # get number of timesteps dumped
     
-    end = 1#int(dumps/time_step)-1                                             # final frame to process
+    end = 710#int(dumps/time_step)-1                                             # final frame to process
     snap = t[0]                                             # Take first snap for box
     first_tstep = snap.configuration.step                   # First time step
 
@@ -989,7 +993,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                     vel_plot_dict, corr_dict, vel_stat_dict = particle_prop_functs.single_velocity(vel_dict['part'], prev_pos, prev_ang, ori)
                     data_output_functs.write_to_txt(vel_stat_dict, dataPath + 'collision_' + outfile + '.txt')
-            elif measurement_method == 'adsorption':                
+            elif measurement_options[0] == 'adsorption':                
                 
                 kinetics_dict = particle_prop_functs.adsorption_nlist()
                 collision_dict = particle_prop_functs.collision_rate()
@@ -997,7 +1001,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 data_output_functs.write_to_txt(kinetics_dict, dataPath + 'kinetics_' + outfile + '.txt')
                 data_output_functs.write_to_txt(collision_dict, dataPath + 'collision_' + outfile + '.txt')
 
-            elif measurement_method == 'velocity':
+            elif measurement_options[0] == 'velocity':
                 if j>(start*time_step):
 
                     part_ang_vel_dict = particle_prop_functs.angular_velocity(ang_vel_dict['part'], phase_dict['part'])
@@ -1036,7 +1040,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 # Plot particles color-coded by phase
                 if plot == 'y':
                     plotting_functs.plot_phases(pos, part_id_dict, all_surface_curves, int_comp_dict, active_fa_dict, interface_id = interface_option, orientation_id = orientation_option)
-            elif measurement_method== 'bubble_interface_pressure':
+            elif measurement_options[0]== 'bubble-interface-pressure':
                 #DONE!
                 lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
 
@@ -1113,14 +1117,29 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     plotting_functs.plot_alignment(method2_align_dict, all_surface_curves, int_comp_dict, pos, interface_id = interface_option, type='A')
                     plotting_functs.plot_alignment(method2_align_dict, all_surface_curves, int_comp_dict, pos, interface_id = interface_option, type='B')       
              
-            elif measurement_method == 'fluctuations':
+            elif measurement_options[0] == 'fluctuations':
                 
                 if plot == 'y':
 
                     # Plot particles color-coded by activity with sub-plot of change in cluster size over time
                     plotting_functs.plot_clust_fluctuations(pos, outfile, all_surface_curves, int_comp_dict)
+            elif measurement_options[0] == 'cluster-msd':
+                if j>(start * time_step):
 
-            elif measurement_method == 'compressibility':
+                    if round(partPhase_time_arr[-1] - partPhase_time_arr[-2],1) == round(dt_step,1):
+                        particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, eps, typ, pos, ang)
+
+                        cluster_msd_dict = particle_prop_functs.cluster_msd(com_x_msd, com_y_msd, com_r_msd, com_x_parts_arr_time, com_y_parts_arr_time)
+
+                        com_x_msd = cluster_msd_dict['x']
+                        com_y_msd = cluster_msd_dict['y']
+                        com_r_msd = cluster_msd_dict['r']
+
+                        cluster_msd_dict = {'x': com_x_msd[-1], 'y': com_y_msd[-1], 'r': com_r_msd[-1]}
+
+                        data_output_functs.write_to_txt(cluster_msd_dict, dataPath + 'cluster_msd_' + outfile + '.txt')
+
+            elif measurement_options[0] == 'compressibility':
                 #DONE!
 
                 # Initialize lattice structure functions
@@ -1135,7 +1154,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 # Save compressibility data
                 data_output_functs.write_to_txt(compress_dict, dataPath + 'compressibility_' + outfile + '.txt')
             
-            elif measurement_method == 'structure_factor2':
+            elif measurement_options[0] == 'structure-factor2':
                 #DONE!
 
                 # Initialize lattice structure functions
@@ -1149,7 +1168,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 data_output_functs.write_to_txt(compress_dict, dataPath + 'sf_compressibility2_' + outfile + '.txt')
 
             
-            elif measurement_method == 'structure_factor_freud':
+            elif measurement_options[0] == 'structure-factor-freud':
                 #DONE!
                 #DEPRECATED DO TO SPEED, USE measurement_method='structure_factor'
                 # Initialize lattice structure functions
@@ -1162,7 +1181,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                 data_output_functs.write_to_txt(compress_dict, dataPath + 'sf_compressibility_freud_' + outfile + '.txt')
 
-            elif measurement_method == 'structure_factor':
+            elif measurement_options[0] == 'structure-factor':
                 #DONE!
                 # Initialize lattice structure functions
                 lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
@@ -1179,7 +1198,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 # Save compressibility data
                 data_output_functs.write_to_txt(compress_dict, dataPath + 'sf_compressibility_' + outfile + '.txt')
 
-            elif measurement_method == 'int_press':
+            elif measurement_options[0] == 'int-press':
                 #DONE!
                 # Initialize stress and pressure functions
                 stress_and_pressure_functs = stress_and_pressure.stress_and_pressure(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
@@ -1218,7 +1237,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     # Save cluster displacement data
                     data_output_functs.write_to_txt(cluster_velocity_dict, dataPath + 'cluster_velocity_' + outfile + '.txt')
 
-            elif measurement_method == 'centrosymmetry':
+            elif measurement_options[0] == 'centrosymmetry':
                 #DONE!
                 # Initialize lattice structure functions
                 lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
@@ -1233,7 +1252,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     plotting_functs.plot_csp(csp_plot_dict, all_surface_curves, int_comp_dict, ang, pos, pair='all')
                 
 
-            elif measurement_method == 'lattice_spacing':
+            elif measurement_options[0] == 'lattice-spacing':
                 #DONE!
                 # Initialize lattice structure functions
                 lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
@@ -1250,7 +1269,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                     plotting_functs.lat_map(lat_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, type='all', interface_id = interface_option, orientation_id = orientation_option)
                     
-            elif measurement_method == 'penetration':
+            elif measurement_options[0] == 'penetration':
                 #DONE!
                 # Initialize lattice structure functions
                 lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
@@ -1263,7 +1282,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     # Save degree of penetration data
                     data_output_functs.write_to_txt(penetration_dict, dataPath + 'penetration_depth_' + outfile + '.txt')
 
-            elif measurement_method == 'radial_df':
+            elif measurement_options[0] == 'radial-df':
                 #DONE
 
                 # Calculate average number densities
@@ -1310,7 +1329,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 # Save Wasserstein metric data
                 data_output_functs.write_to_txt(wasserstein_dict, dataPath + 'wasserstein_' + outfile + '.txt')
 
-            elif measurement_method == 'angular_df':
+            elif measurement_options[0] == 'angular-df':
 
                 # Initialize lattice structure functions
                 lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
@@ -1326,7 +1345,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     plotting_functs.plot_general_adf(angular_df_dict)
                     plotting_functs.plot_all_adfs(angular_df_dict)
                 stop
-            elif measurement_method == 'domain_size':
+            elif measurement_options[0] == 'domain-size':
 
                 # Initialize lattice structure functions
                 lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
@@ -1337,7 +1356,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 # Save domain size data
                 data_output_functs.write_to_txt(domain_stat_dict, dataPath + 'domain_' + outfile + '.txt')
 
-            elif measurement_method == 'clustering':
+            elif measurement_options[0] == 'clustering':
                 #DONE!
                 # Initialize lattice structure functions
                 lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
@@ -1350,7 +1369,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     plotting_functs.plot_clustering(neigh_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, type='A', interface_id = interface_option, orientation_id = orientation_option)
                     plotting_functs.plot_clustering(neigh_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, type='B', interface_id = interface_option, orientation_id = orientation_option)
 
-            elif measurement_method == 'local_gas_density':
+            elif measurement_options[0] == 'local-gas-density':
 
                 # Initialize lattice structure functions
                 lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
@@ -1374,7 +1393,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='B-A', interface_id = interface_option, orientation_id = orientation_option)
                     plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='B-B', interface_id = interface_option, orientation_id = orientation_option)
 
-            elif measurement_method == 'local_density':
+            elif measurement_options[0] == 'local-density':
                 #DONE!
                 # Initialize lattice structure functions
                 lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
@@ -1442,7 +1461,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     plotting_functs.plot_ang(ang, pos, all_surface_curves, int_comp_dict, active_fa_dict, type='A', mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option)
                     plotting_functs.plot_ang(ang, pos, all_surface_curves, int_comp_dict, active_fa_dict, type='B', mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option)
     
-            elif measurement_method == 'interparticle_pressure':
+            elif measurement_options[0] == 'interparticle-pressure':
                 #DONE!
                 #DEPRECATED! Use measurement_method = 'int_press'
                 # Initialize stress and pressure functions
@@ -1472,13 +1491,13 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                     plotting_functs.plot_interpart_press_binned(vp_bin_arr, all_surface_curves, int_comp_dict, active_fa_dict, type='all', interface_id = interface_option, orientation_id = orientation_option)
 
-            elif measurement_method == 'interparticle_pressure_nlist':
+            elif measurement_options[0] == 'interparticle-pressure-nlist':
                 
                 # Initialize stress and pressure functions
                 stress_and_pressure_functs = stress_and_pressure.stress_and_pressure(l_box, NBins, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
                 stress_plot_dict, stress_stat_dict = stress_and_pressure_functs.interparticle_stress_nlist(phase_dict['part'])
 
-            elif measurement_method == 'com_interface_pressure':
+            elif measurement_options[0] == 'com-interface-pressure':
                 #DONE!
                 # Initialize stress and pressure functions
                 stress_and_pressure_functs = stress_and_pressure.stress_and_pressure(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
@@ -1501,7 +1520,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 # Save total active force pressure toward cluster CoM
                 data_output_functs.write_to_txt(act_press_dict, dataPath + 'com_interface_pressure_' + outfile + '.txt')
             
-            elif measurement_method == 'surface_interface_pressure':
+            elif measurement_options[0] == 'surface-interface-pressure':
                 #DONE!
                 # Initialize stress and pressure functions
                 stress_and_pressure_functs = stress_and_pressure.stress_and_pressure(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
@@ -1524,7 +1543,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 # Save total active force pressure normal to cluster surface
                 data_output_functs.write_to_txt(act_press_dict, dataPath + 'surface_interface_pressure_' + outfile + '.txt')
                 
-            elif measurement_method == 'hexatic_order':
+            elif measurement_options[0] == 'hexatic-order':
                 # DONE!
                 # Initialize lattice structure functions
                 lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
@@ -1541,7 +1560,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                     plotting_functs.plot_domain_angle(pos, hexatic_order_dict['theta'], all_surface_curves, int_comp_dict, active_fa_dict, interface_id = interface_option, orientation_id = orientation_option)
             
-            elif measurement_method == 'voronoi':
+            elif measurement_options[0] == 'voronoi':
 
                 # Initialize lattice structure functions
                 lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
@@ -1558,7 +1577,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                     plotting_functs.plot_domain_angle(pos, hexatic_order_dict['theta'], all_surface_curves, int_comp_dict)
 
-            elif measurement_method == 'translational_order':
+            elif measurement_options[0] == 'translational-order':
                 #DONE!
                 # Initialize lattice structure functions
                 lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
@@ -1573,7 +1592,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                     plotting_functs.plot_trans_order(pos, trans_order_param, all_surface_curves, int_comp_dict, active_fa_dict, interface_id = interface_option, orientation_id = orientation_option)
 
-            elif measurement_method == 'steinhardt_order':
+            elif measurement_options[0] == 'steinhardt-order':
                 #DONE!
                 # Initialize lattice structure functions
                 lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
@@ -1587,7 +1606,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 if plot == 'y':
 
                     plotting_functs.plot_stein_order(pos, stein_order_param, all_surface_curves, int_comp_dict, active_fa_dict, interface_id = interface_option, orientation_id = orientation_option)
-            elif measurement_method == 'nematic_order':
+            elif measurement_options[0] == 'nematic-order':
 
                 # Initialize lattice structure functions
                 lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
@@ -1600,7 +1619,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                 if plot == 'y':
                     plotting_functs.plot_stein_order(pos, nematic_order_param, all_surface_curves, int_comp_dict)
-            elif measurement_method == 'adsorption_final':
+            elif measurement_options[0] == 'adsorption-final':
                 #DONE!
                 if len(partPhase_time_arr)>1:
                 
