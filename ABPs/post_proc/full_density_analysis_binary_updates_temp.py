@@ -924,7 +924,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     averaged_data_arr['width'] = 0
                 
                 # If measurement method specified, save interface data
-                if measurement_method == 'interface_props':
+                if measurement_method == 'interface-props':
                     data_output_functs.write_to_txt(averaged_data_arr, dataPath + 'BubComp_' + outfile + '.txt')
             
             # If cluster has been formed, 
