@@ -1,10 +1,10 @@
 #!/bin/bash                    
-#SBATCH --partition=volta-gpu
+#SBATCH --partition=beta-gpu              # or partition=volta-gpu if clogged
 #SBATCH --qos gpu_access                    # quality of service
 #SBATCH --gres=gpu:1                        # I want one gpus
 #SBATCH --ntasks=1                     # partition to run on
-#SBATCH --cpus-per-task=8
-#SBATCH --time=11-00:00                     # time (D-HH:MM)
+#SBATCH --cpus-per-task=4
+#SBATCH --time=6-00:00                     # time (D-HH:MM)
 source ~/.bashrc
 
 # Don't run this for now SBATCH --exclude=g0605

@@ -1,5 +1,32 @@
 #!/bin/bash
 
+function exists_in_list() {
+    LIST=$1
+    DELIMITER=$2
+    VALUE=$3
+    LIST_WHITESPACES=`echo $LIST | tr "$DELIMITER" " "`
+    for x in $LIST_WHITESPACES; do
+        if [ "$x" = "$VALUE" ]; then
+            return 0
+        fi
+    done
+    return 1
+}
+
+echo "|----------------------------------------------------------------------|"
+echo "|          Nicholas Lauersdorf's HOOMD-Blue simulation module          |"
+echo "|          **************************************************          |"
+echo "|                                                                      |"
+echo "| This is module intended for running simulations of Brownian and      |"
+echo "| active Brownian particles subject to various initial and simulation  |"
+echo "| conditions that the user prescribes through input in the command     |"
+echo "| prompt and hard-coding via bash scripts. Of note, this module is     |"
+echo "| intended for its primary use of binary active mixtures of two        |"
+echo "| species with varying properties, namely different activities.        |"
+echo "|                                                                      |"
+echo "| Any problems or questions should be sent to njlauersdorf@gmail.com.  |"
+echo "|----------------------------------------------------------------------|"
+
 current=$( date "+%m_%d_%y" )
 this_path=$( pwd )
 
@@ -23,156 +50,91 @@ else
     tempOne="$HOME/klotsa/ABPs/post_proc/lib/run_sim_sample.py"
 fi
 
-echo "Do you want random initial conditions (y/n)?"
+echo "|----------------------------------------------------------------------|"
+echo "|      Possible simulation options and corresponding user inputs       |"
+echo "|          **************************************************          |"
+echo "|          -------------Random initial conditions-------------         |"
+echo "| Random gas: random_init                                              |"
+echo "|          ----------Near steady-state MIPS clusters----------         |"
+echo "| Homogeneous cluster: homogeneous_cluster                             |"
+echo "| 100% slow bulk, 100% fast interface cluster: slow_bulk_cluster       |"
+echo "| 100% fast bulk, 100% slow interface cluster: fast_bulk_cluster       |"
+echo "| Half-slow, half-fast cluster: half_cluster                           |"
+echo "|             ----------Bulk only of MIPS cluster----------            |"
+echo "| Constant pressure (changing volume): constant_pressure_bulk          |"
+echo "|          -----------Elongated planar membranes--------------         |"
+echo "| Slow planar membrane: slow_membrane                                  |"
+echo "| Immobile planar membrane: immobile_membrane                          |"
+echo "| Immobile oriented planar membrane: immobile_orient_membrane          |"
+echo "| Slow constrained planar membrane: slow_constrained_membrane          |"
+echo "| Slow adsorb constrained membrane: slow_adsorb_constrained_membrane   |"
+echo "| Slow interior constrained membrane: slow_int_constrained_membrane    |"
+echo "| Diffusive mixture membrane: slow_int_constrained_membrane_dif_temp   |"
+echo "|----------------------------------------------------------------------|"
+
+
+echo "What initial conditions do you want (see above for options)?"
 read answer
 
-if [ $answer == "y" ]; then
-    init_cond="random_init"
+init_cond=$answer
+
+list_of_sims="random_init constant_pressure_bulk homogeneous_cluster slow_bulk_cluster fast_bulk_cluster half_cluster slow_membrane immobile_membrane immobile_orient_membrane slow_constrained_membrane slow_adsorb_constrained_membrane slow_int_constrained_membrane slow_int_constrained_membrane_dif_temp"
+
+if exists_in_list "$list_of_sims" " " $init_cond; then
     dont_run='no'
 else
-
-    echo "Do you want homogeneous cluster (y/n)?"
-    read answer
-
-    if [ $answer == "y" ]; then
-        init_cond="homogeneous_cluster"
-        dont_run='no'
-    else
-
-        echo "Do you want slow bulk, fast interface (y/n)?"
-        read answer
-
-        if [ $answer == "y" ]; then
-            init_cond="slow_bulk_cluster"
-            dont_run='no'
-        else
-
-            echo "Do you want fast bulk, slow interface (y/n)?"
-            read answer
-
-            if [ $answer == "y" ]; then
-                init_cond="fast_bulk_cluster"
-                dont_run='no'
-            else
-
-                echo "Do you want half slow, half fast cluster (y/n)?"
-                read answer
-
-                if [ $answer == "y" ]; then
-                    init_cond="half_cluster"
-                    dont_run='no'
-                else
-                  echo "Do you want slow membrane (y/n)?"
-                  read answer
-
-                  if [ $answer == "y" ]; then
-                      init_cond="slow_membrane"
-                      dont_run='no'
-                  else
-                      echo "Do you want immobile membrane (y/n)?"
-                      read answer
-
-                      if [ $answer == "y" ]; then
-                          init_cond="immobile_membrane"
-                          dont_run='no'
-                      else
-                        echo "Do you want immobile oriented membrane (y/n)?"
-                        read answer
-
-                        if [ $answer == "y" ]; then
-                            init_cond="immobile_orient_membrane"
-                            dont_run='no'
-                        else
-                          echo "Do you want slow constrained membrane (y/n)?"
-                          read answer
-
-                          if [ $answer == "y" ]; then
-                              init_cond="slow_constrained_membrane"
-                              dont_run='no'
-                          else
-                              echo "Do you want slow adsorb constrained membrane (y/n)?"
-                              read answer
-
-                              if [ $answer == "y" ]; then
-                                  init_cond="slow_adsorb_constrained_membrane"
-                                  dont_run='no'
-                              else
-                                echo "Do you want slow interior constrained membrane (y/n)?"
-                                read answer
-
-                                if [ $answer == "y" ]; then
-                                    init_cond="slow_int_constrained_membrane"
-                                    dont_run='no'
-                                else
-                                    echo "Do you want diffusive mixture (y/n)?"
-                                    read answer
-
-                                    if [ $answer == "y" ]; then
-                                        init_cond="slow_int_constrained_membrane_dif_temp"
-                                        dont_run='no'
-                                    else
-                                        dont_run='yes'
-                                    fi
-                                fi
-                              fi
-                          fi
-                        fi
-                      fi
-                  fi
-                fi
-            fi
-        fi
-    fi
+    dont_run='yes'
 fi
 
-echo "What simulation box aspect ratio, i.e. length:width (#:#)?"
-read answer
+list_of_elongated_sims="random_init constant_pressure_bulk slow_membrane immobile_membrane immobile_orient_membrane slow_constrained_membrane slow_adsorb_constrained_membrane slow_int_constrained_membrane slow_int_constrained_membrane_dif_temp"
 
-aspect_ratio=$answer
+if exists_in_list "$list_of_elongated_sims" " " $init_cond; then
+
+    echo "What simulation box aspect ratio, i.e. length:width (#:#)?"
+    read answer
+
+    aspect_ratio=$answer
+else
+    aspect_ratio='1:1'
+fi
+
 
 if [ $dont_run == "no" ]; then
     # Default values for simulations
     declare -i part_num
     part_num=( 20000 )
-    #100 500 1000 3000 5000)
 
+    # Length of simulation in Brownian time steps
     declare -i runfor
     runfor=$(( 40 ))
 
+    # Frequency for dumping simulation data
     declare -a dump_freq
     dump_freq=( 0.0025 )
-    # (0.0025) for segregation
-    # Lists for activity of A and B species
-    #pa=(0 5 10 15 20 25 30 35 40 45 50)
-    #pa=()
 
+    # Lists for activity of A and B species
     declare -a pa
     pa=(0)
-    # 25 50 75 100 125 150 175 200 225 250 300 400 500)
-    # 50 100 150 250 450)
-    #(0 50 100 150 200 250 350 450)
+
     declare -a pb
     pb=(500)
-    #(0 50 100 150 200 250 350 450)
-    #pb=(50 500)
+
     # List for particle fraction
     declare -a xa
     xa=(50)
+
     # List for phi
     declare -a phi
-    #phi=(60)
     phi=(30)
-    #5 10 15 20 25 30)
-    # 70 80 100 110)
+   
     # List for epsilon
-    #eps=(1.0 0.1 0.001) # LISTS CAN CONTAIN FLOATS!!!!
     declare -a eps
     eps=(1.0)
 
     declare -a kT
     kT=(1.0, 50.0)
-    #(0.1 1.0)
 
+    # Random seeds for initializing simulation
     seed1=$$
     echo $seed1
     seed2=$$
@@ -184,19 +146,11 @@ if [ $dont_run == "no" ]; then
     seed5=$$
     echo $seed5
 
+    # Parent directory to contain simulations
     mkdir ${current}_parent
     cd ${current}_parent
 
-    # Set up an index counter for each list (instantiate to 0th index)
-    paCount=$(( 0 ))
-    pbCount=$(( 0 ))
-    xaCount=$(( 0 ))
-    phiCount=$(( 0 ))
-    epsCount=$(( 0 ))
-    # Instantiating the above counters is REDUNDANT! I did this to make it clear how lists work
-
     # Set my phi index counter
-
     partCount=$(( 0 ))
     # Loop through part_num list values
     for i in ${part_num[@]}
@@ -246,30 +200,26 @@ if [ $dont_run == "no" ]; then
                                 # The below "echo" is great for checking if your loops are working!
                                 echo "Simulation of PeA=${in_pa}, PeB=${in_pb}"
 
-                                # Submit our simulation
-                                sim=pa${in_pa}_pb${in_pb}_xa${in_xa}_eps${in_eps}_phi${in_phi}_N${part_num}.py
+                                # Declare simulation file name
+                                sim=${init_cond}_pa${in_pa}_pb${in_pb}_xa${in_xa}_eps${in_eps}_phi${in_phi}_N${part_num}.py
                                 #'s/\${replace_in_text_File}/'"${variable_to_replace_with}"'/g'
-                                $sedtype -e 's@\${hoomd_path}@'"${hoomd_path}"'@g' $tempOne > $sim
-                                $sedtype -i 's@\${init_cond}@'"${init_cond}"'@g' $sim
-                                $sedtype -i 's/\${part_num}/'"${part_num}"'/g' $sim
-                                # write particle number
-
+                                $sedtype -e 's@\${hoomd_path}@'"${hoomd_path}"'@g' $tempOne > $sim              # write path to HOOMD-blue to infile
+                                $sedtype -i 's@\${init_cond}@'"${init_cond}"'@g' $sim                           # write initial condition to infile
+                                $sedtype -i 's/\${part_num}/'"${part_num}"'/g' $sim                             # write particle number
                                 $sedtype -i 's/\${phi}/'"${in_phi}"'/g' $sim                                    # write area fraction
                                 $sedtype -i 's/\${runfor}/'"${runfor}"'/g' $sim                                 # write time in tau to infile
                                 $sedtype -i 's/\${dump_freq}/'"${dump_freq}"'/g' $sim                           # write dump frequency to infile
-                                $sedtype -i 's/\${part_frac_a}/'"${in_xa}"'/g' $sim
-                                $sedtype -i 's/\${pe_a}/'"${in_pa}"'/g' $sim                                      # write a activity to infile
-                                $sedtype -i 's/\${pe_b}/'"${in_pb}"'/g' $sim                                      # write b activity to infile
-                                #$sedtype -i 's/\${alpha}/'"${a_count}"'/g' $sim                                     # write a fraction to infile
-                                #$sedtype -i 's@\${gsd_path}@'"${gsd_path}"'@g' $sim
-                                $sedtype -i 's/\${ep}/'"${in_eps}"'/g' $sim                                    # write epsilon to infile
-                                $sedtype -i 's/\${aspect_ratio}/'"${aspect_ratio}"'/g' $sim
+                                $sedtype -i 's/\${part_frac_a}/'"${in_xa}"'/g' $sim                             # write slow particle fraction to infile
+                                $sedtype -i 's/\${pe_a}/'"${in_pa}"'/g' $sim                                    # write slow activity to infile
+                                $sedtype -i 's/\${pe_b}/'"${in_pb}"'/g' $sim                                    # write fast activity to infile
+                                $sedtype -i 's/\${ep}/'"${in_eps}"'/g' $sim                                     # write particle softness to infile
+                                $sedtype -i 's/\${aspect_ratio}/'"${aspect_ratio}"'/g' $sim                     # write simulation box aspect ratio to infile
                                 $sedtype -i 's/\${seed1}/'"${seed1}"'/g' $sim                                   # set your seeds
                                 $sedtype -i 's/\${seed2}/'"${seed2}"'/g' $sim
                                 $sedtype -i 's/\${seed3}/'"${seed3}"'/g' $sim
                                 $sedtype -i 's/\${seed4}/'"${seed4}"'/g' $sim
                                 $sedtype -i 's/\${seed5}/'"${seed5}"'/g' $sim
-                                $submit $script_path $sim
+                                $submit $script_path $sim                                                       # submit corresponding run bash file for each simulation given parameters
                             fi
 
                             # Increment paCount

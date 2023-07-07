@@ -2392,7 +2392,7 @@ class measurement:
         BB_int_num_neigh = np.zeros(len(pos_B_int))
 
         # Search distance for neighbors in local density calculation
-        rad_dist = [0, 0.9]#, 3*self.r_cut, 4*self.r_cut, 5*self.r_cut]
+        rad_dist = [0, self.r_cut, 2* self.r_cut, 3*self.r_cut, 4*self.r_cut, 5*self.r_cut]
         
         # Loop over search distances
         for j in range(1, len(rad_dist)):
@@ -2533,28 +2533,28 @@ class measurement:
                         BB_int_neigh_ind[i] = int(i)
 
             # Local density of A neighbor particles around A reference particles in bulk
-            AA_bulk_local_dens = AA_bulk_num_neigh * (np.pi/4) / (np.pi*rad_dist[j]**2)
+            AA_bulk_local_dens = AA_bulk_num_neigh / (np.pi*rad_dist[j]**2)
 
             # Local density of A neighbor particles around B reference particles in bulk
-            AB_bulk_local_dens = AB_bulk_num_neigh * (np.pi/4) / (np.pi*rad_dist[j]**2)
+            AB_bulk_local_dens = AB_bulk_num_neigh / (np.pi*rad_dist[j]**2)
 
             # Local density of B neighbor particles around A reference particles in bulk
-            BA_bulk_local_dens = BA_bulk_num_neigh * (np.pi/4) / (np.pi*rad_dist[j]**2)
+            BA_bulk_local_dens = BA_bulk_num_neigh / (np.pi*rad_dist[j]**2)
 
             # Local density of B neighbor particles around B reference particles in bulk
-            BB_bulk_local_dens = BB_bulk_num_neigh * (np.pi/4) / (np.pi*rad_dist[j]**2)
+            BB_bulk_local_dens = BB_bulk_num_neigh / (np.pi*rad_dist[j]**2)
 
             # Local density of A neighbor particles around A reference particles in interface
-            AA_int_local_dens = AA_bulk_num_neigh * (np.pi/4) / (np.pi*rad_dist[j]**2)
+            AA_int_local_dens = AA_bulk_num_neigh / (np.pi*rad_dist[j]**2)
 
             # Local density of A neighbor particles around B reference particles in interface
-            AB_int_local_dens = AB_bulk_num_neigh * (np.pi/4) / (np.pi*rad_dist[j]**2)
+            AB_int_local_dens = AB_bulk_num_neigh / (np.pi*rad_dist[j]**2)
 
             # Local density of B neighbor particles around A reference particles in interface
-            BA_int_local_dens = BA_bulk_num_neigh * (np.pi/4) / (np.pi*rad_dist[j]**2)
+            BA_int_local_dens = BA_bulk_num_neigh / (np.pi*rad_dist[j]**2)
 
             # Local density of B neighbor particles around B reference particles in interface
-            BB_int_local_dens = BB_bulk_num_neigh * (np.pi/4) / (np.pi*rad_dist[j]**2)
+            BB_int_local_dens = BB_bulk_num_neigh / (np.pi*rad_dist[j]**2)
             
             # Save neighbor and local orientational order to arrays for all B reference particles of the respective phase with all nearest neighbors
             Ball_bulk_local_dens= np.append(BA_bulk_local_dens, BB_bulk_local_dens)
@@ -2566,21 +2566,21 @@ class measurement:
 
             # Save neighbor and local orientational order to arrays for all reference particles of the respective phase with B nearest neighbors
             allB_bulk_num_neigh = AB_bulk_num_neigh + BB_bulk_num_neigh
-            allB_bulk_local_dens = allB_bulk_num_neigh * (np.pi/4) / (np.pi*rad_dist[j]**2)
+            allB_bulk_local_dens = allB_bulk_num_neigh / (np.pi*rad_dist[j]**2)
             allB_int_num_neigh = AB_int_num_neigh + BB_int_num_neigh
-            allB_int_local_dens = allB_int_num_neigh * (np.pi/4) / (np.pi*rad_dist[j]**2)
+            allB_int_local_dens = allB_int_num_neigh / (np.pi*rad_dist[j]**2)
 
             # Save neighbor and local orientational order to arrays for all reference particles of the respective phase with A nearest neighbors
             allA_bulk_num_neigh = AA_bulk_num_neigh + BA_bulk_num_neigh
-            allA_bulk_local_dens = allA_bulk_num_neigh * (np.pi/4) / (np.pi*rad_dist[j]**2)
+            allA_bulk_local_dens = allA_bulk_num_neigh / (np.pi*rad_dist[j]**2)
             allA_int_num_neigh = AA_int_num_neigh + BA_int_num_neigh
-            allA_int_local_dens = allA_int_num_neigh * (np.pi/4) / (np.pi*rad_dist[j]**2)
+            allA_int_local_dens = allA_int_num_neigh / (np.pi*rad_dist[j]**2)
 
             # Save neighbor, local orientational order, and position to arrays for all bulk reference particles with all nearest neighbors
             allall_bulk_num_neigh = np.append(allA_bulk_num_neigh, allB_bulk_num_neigh)
-            allall_bulk_local_dens = allall_bulk_num_neigh * (np.pi/4) / (np.pi*rad_dist[j]**2)
+            allall_bulk_local_dens = allall_bulk_num_neigh / (np.pi*rad_dist[j]**2)
             allall_int_num_neigh = np.append(allA_int_num_neigh, allB_int_num_neigh)
-            allall_int_local_dens = allall_int_num_neigh * (np.pi/4) / (np.pi*rad_dist[j]**2)
+            allall_int_local_dens = allall_int_num_neigh / (np.pi*rad_dist[j]**2)
 
             # Local density of all neighbor particles around all reference particles in dense phase
             allall_dense_local_dens = np.append(allall_bulk_local_dens, allall_int_local_dens)
