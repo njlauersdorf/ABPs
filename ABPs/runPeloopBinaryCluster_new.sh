@@ -78,7 +78,7 @@ read answer
 
 init_cond=$answer
 
-list_of_sims="random_init homogeneous_cluster slow_bulk_cluster fast_bulk_cluster half_cluster constant_pressure slow_membrane immobile_membrane immobile_orient_membrane slow_constrained_membrane slow_adsorb_constrained_membrane slow_int_constrained_membrane slow_int_constrained_membrane_dif_temp"
+list_of_sims="random_init chemical_equilibrium homogeneous_cluster slow_bulk_cluster fast_bulk_cluster half_cluster constant_pressure slow_membrane immobile_membrane immobile_orient_membrane slow_constrained_membrane slow_adsorb_constrained_membrane slow_int_constrained_membrane slow_int_constrained_membrane_dif_temp"
 
 if exists_in_list "$list_of_sims" " " $init_cond; then
     dont_run='no'
@@ -86,7 +86,7 @@ else
     dont_run='yes'
 fi
 
-list_of_elongated_sims="random_init constant_pressure slow_membrane immobile_membrane immobile_orient_membrane slow_constrained_membrane slow_adsorb_constrained_membrane slow_int_constrained_membrane slow_int_constrained_membrane_dif_temp"
+list_of_elongated_sims="random_init slow_membrane immobile_membrane immobile_orient_membrane slow_constrained_membrane slow_adsorb_constrained_membrane slow_int_constrained_membrane slow_int_constrained_membrane_dif_temp"
 
 if exists_in_list "$list_of_elongated_sims" " " $init_cond; then
 

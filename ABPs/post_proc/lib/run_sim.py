@@ -89,6 +89,364 @@ class run_sim:
         self.beta_B = 2.3
 
     def constant_pressure(self):
+        '''
+            Purpose: Run simulation of specified properties using NPT method where the volume of the
+            simulation box is changed to maintain constant pressure and system size
+        '''
+
+        def sep_dist_arr(pos1, pos2, lx, ly, difxy=False):
+            '''
+            Purpose: Calculates separation distance (accounting for periodic boundary conditions)
+            of each dimension between pairs of points
+
+            Inputs:
+            pos1: array of locations of points (x,y,z)
+
+            pos2: array of locations of points (x,y,z)
+
+            lx: x-length of simulation box
+
+            ly: y-length of simulation box
+
+            difxy (optional): if True, returns separation distance in x- and y- directions
+
+            Output:
+            difr_mag: array of separation distance magnitudes
+
+            difx (optional): array of separation distances in x direction
+
+            dify (optional): array of separation distances in y direction
+            '''
+            
+            # Separation distance vector
+            difr = (pos1 - pos2)
+
+            # x-dimension adjusted for periodic boundaries
+            difx_out = np.where(difr[:,0]>(lx/2))[0]
+            difr[difx_out,0] = difr[difx_out,0]-lx
+
+            difx_out = np.where(difr[:,0]<-(lx/2))[0]
+            difr[difx_out,0] = difr[difx_out,0]+lx
+
+            # y-dimension adjusted for periodic boundaries
+            dify_out = np.where(difr[:,1]>(ly/2))[0]
+            difr[dify_out,1] = difr[dify_out,1]-ly
+
+            dify_out = np.where(difr[:,1]<-(ly/2))[0]
+            difr[dify_out,1] = difr[dify_out,1]+ly
+
+            # Total separation distance
+            difr_mag = (difr[:,0]**2 + difr[:,1]**2)**0.5
+
+            # Return separation distances for specified dimensions
+            if difxy == True:
+                return difr[:,0], difr[:,1], difr_mag
+            else:
+                return difr_mag
+
+        def interparticle_press(pos, eps, lx, ly):
+            '''
+            Purpose: Calculates total interparticle stress of given particles
+
+            Inputs:
+            pos: array (partNum,3) of particle positions
+
+            eps: particle softness
+
+            lx: x-length of simulation box
+
+            ly: y-length of simulation box
+
+            Output:
+            interparticle stress: xx- and yy- total interparticle stress
+            '''
+
+            # Import modules
+            import freud
+            from freud import box
+
+            # Potential cut-off distance
+            r_cut = 2**(1/6)
+
+            # Simulation box
+            f_box = box.Box(Lx=lx, Ly=ly, is2D=True)
+
+            # Neighbor list query arguments
+            query_args = dict(mode='ball', r_min = 0.1, r_max=r_cut)
+
+            # Find neighbor list for all particles
+            system_all = freud.AABBQuery(f_box, f_box.wrap(pos))
+            all_nlist = system_all.query(f_box.wrap(pos), query_args).toNeighborList()
+
+            # Nearest neighbor separation distances
+            difx, dify, difr = sep_dist_arr(pos[all_nlist.point_indices], pos[all_nlist.query_point_indices], lx, ly, difxy=True)
+
+            #Instantiate empty arrays
+            fx = np.array([])
+            fy = np.array([])
+
+            all_ind = np.array([], dtype=int)
+            SigXX_all = np.array([])
+            SigYY_all = np.array([])
+            SigXY_all = np.array([])
+            SigYX_all = np.array([])
+
+            # Calculate interparticle stress in each dimension
+            for i in all_nlist.point_indices:
+                if i not in all_ind:
+                    loc = np.where(all_nlist.point_indices==i)[0]
+                    fx_arr, fy_arr = self.theory_functs.computeFLJ_arr(difr[loc], difx[loc], dify[loc], eps)
+                    SigXX_all = np.append(SigXX_all, np.sum(fx_arr * difx[loc]))
+                    SigYY_all = np.append(SigYY_all, np.sum(fy_arr * dify[loc]))
+                    SigXY_all = np.append(SigXY_all, np.sum(fx_arr * dify[loc]))
+                    SigYX_all = np.append(SigYX_all, np.sum(fy_arr * difx[loc]))
+                    all_ind = np.append(all_ind, int(i))
+
+            # Total XX- and YY- interparticle stress
+            interparticle_stress = np.sum(SigXX_all)/2 + np.sum(SigYY_all)/2
+            
+            return interparticle_stress
+        
+        import random
+
+        # Use path to HOOMD-Blue
+        if self.hoomdPath == '/Users/nicklauersdorf/hoomd-blue/build/':
+            sys.path.insert(0,self.hoomdPath)
+
+        import hoomd                    # import hoomd functions based on path
+        from hoomd import md
+        from hoomd import deprecated
+
+        # Initialize system
+        hoomd.context.initialize()
+
+        # Proportionate area given box aspect ratio
+        area_ratio = self.length * self.width
+        
+        # Actual box area given density and aspect ratio
+        box_area = (self.partNum*(np.pi/4))/(self.phi)
+
+        # X- and Y- lengths of simulation box
+        box_length = (box_area/area_ratio)**0.5
+        lx = self.length*box_length
+        hx = lx/2
+        ly = self.width * box_length
+        hy = ly/2
+
+        # Net activity
+        peNet = self.theory_functs.compPeNet(self.partFracA, self.peA, self.peB)
+        
+        # Area fraction of HCP lattice
+        phiCP = np.pi / (2. * np.sqrt(3))
+
+        # Compute lattice spacing based on each activity
+        latNet = (phiCP / self.phi)**0.5
+
+        # Use latNet to space your particles
+        def computeDistance(x, y):
+            return np.sqrt((x**2) + (y**2))
+
+        def interDist(x1, y1, x2, y2):
+            return np.sqrt((x2 - x1)**2 + (y2 - y1)**2)
+
+        # List of activities
+        peList = [ self.peA]
+
+        # List of ring radii
+        rList = [ 0, hx-0.5 ]
+        
+        # List to store particle positions and types
+        pos = []
+        typ = []
+        rOrient = []
+
+        # z-value for simulation initialization
+        z = 0.5
+
+        rMin = rList[0]             # starting distance for particle placement
+        rMax = rList[1]         # maximum distance for particle placement
+
+        ver = np.sin(60*np.pi/180)*latNet # vertical shift between lattice rows
+        hor = latNet / 2.0             # horizontal shift between lattice rows
+        x = 0
+        y = 0
+        shift = 0
+
+        while (y <= rMax) & (len(pos)<self.partNum):
+
+            # Check if x-position is large enough
+            if x <rMin:
+                x += latNet
+                continue
+
+            # Check if x-position is too large
+            if x >(rMax):
+                y += ver
+                shift += 1
+                if shift % 2:
+                    x = hor
+                else:
+                    x = 0
+                continue
+
+            # If the loop makes it this far, append
+            pos.append((x, y, z))
+            typ.append(i)
+
+            if x != 0 and y != 0:
+                # Mirror positions, alignment and type
+                if (len(pos)<self.partNum):
+                    pos.append((-x, y, z))
+                    typ.append(i)
+                if (len(pos)<self.partNum):
+                    pos.append((-x, -y, z))
+                    typ.append(i)
+                if (len(pos)<self.partNum):
+                    pos.append((x, -y, z))
+                    typ.append(i)
+
+            # y must be zero
+            elif (x != 0) & (len(pos)<self.partNum):
+                pos.append((-x, y, z))
+                typ.append(i)
+
+                #typ.append(i)
+            # x must be zero
+            elif (y != 0) & (len(pos)<self.partNum):
+                pos.append((x, -y, z))
+                typ.append(i)
+
+                #typ.append(i)
+
+            # Increment counter
+            x += latNet
+        pos = np.array(pos)
+        NLiq = len(pos)
+
+        typ_A=0
+        typ_B=0
+        
+        # Randomly assign particle species
+        for i in range(0,len(typ)):
+            rand_val=random.random()
+            if rand_val<=self.partFracA:
+                typ[i]=0
+                typ_A+=1
+            else:
+                typ[i]=1
+                typ_B+=1
+
+        # List of activities in system
+        peList = [ self.peA, self.peB]
+
+        # Unique species IDs
+        uniqueTyp = []
+        for i in typ:
+            if i not in uniqueTyp:
+                uniqueTyp.append(i)
+
+        # Get the number of each type
+        particles = [ 0 for x in range(0, len(uniqueTyp)) ]
+        for i in range(0, len(uniqueTyp)):
+            for j in typ:
+                if uniqueTyp[i] == j:
+                    particles[i] += 1
+
+        # Convert types to letter values
+        unique_char_types = []
+        for i in uniqueTyp:
+            unique_char_types.append( chr(ord('@') + i+1) )
+        char_types = []
+        for i in typ:
+            char_types.append( chr(ord('@') + i+1) )
+
+        # Get a list of activities for all particles
+        pe = []
+        for i in typ:
+            pe.append(peList[i])
+
+        # A small shift to help with the periodic box
+        snap = hoomd.data.make_snapshot(N = NLiq,
+                                        box = hoomd.data.boxdim(Lx=lx,
+                                                                Ly=ly,
+                                                                dimensions=2),
+                                        particle_types = unique_char_types)
+
+        # Set positions/types for all particles 
+        snap.particles.position[:] = pos[:]
+        snap.particles.typeid[:] = typ[:]
+        snap.particles.types[:] = char_types[:]
+
+        # Initialize the system
+        system = hoomd.init.read_snapshot(snap)
+
+        # Define neighbor list of all particles
+        all = hoomd.group.all()
+        groups = []
+        for i in unique_char_types:
+            groups.append(hoomd.group.type(type=i))
+
+        # Set particle potentials
+        nl = hoomd.md.nlist.cell()
+        lj = hoomd.md.pair.lj(r_cut=self.r_cut, nlist=nl)
+        lj.set_params(mode='shift')
+        for i in range(0, len(unique_char_types)):
+            for j in range(i, len(unique_char_types)):
+                lj.pair_coeff.set(unique_char_types[i],
+                                    unique_char_types[j],
+                                    epsilon=self.eps, sigma=self.sigma)
+
+        # Brownian integration
+        hoomd.md.integrate.mode_standard(dt=self.dt)
+        
+        # Constant pressure for NPT (constant pressure) method
+        interparticle_pressure = interparticle_press(pos, self.eps, lx, ly) / (lx * ly)
+
+        # Set activity of each group
+        np.random.seed(self.seed2)                           # seed for random orientations
+        angle = np.random.rand(NLiq) * 2 * np.pi     # random particle orientation
+        activity = []
+        for i in range(0, NLiq):
+            x = (np.cos(angle[i])) * pe[i]
+            y = (np.sin(angle[i])) * pe[i]
+            
+            z = 0.
+            tuple = (x, y, z)
+            activity.append(tuple)
+
+        # Implement the activities in hoomd
+        hoomd.md.force.active(group=all,
+                                seed=self.seed3,
+                                f_lst=activity,
+                                rotation_diff=self.D_r,
+                                orientation_link=False,
+                                orientation_reverse_link=True)
+
+        # Define output file name
+        out = "constant_pressure_pa" + str(int(self.peA))
+        out += "_pb" + str(int(self.peB))
+        out += "_phi" + str(self.intPhi)
+        out += "_eps" + str(self.eps)
+        out += "_xa" + str(self.partFracA)
+        out += "_pNum" + str(NLiq)
+        out += "_dtau" + "{:.1e}".format(self.dt)
+        out += ".gsd"
+        
+        # Write dump
+        hoomd.dump.gsd(out,
+                        period=self.dumpFreq,
+                        group=all,
+                        overwrite=True,
+                        phase=-1,
+                        dynamic=['attribute', 'property', 'momentum'])
+        
+        # NPT (constant pressure) integration method
+        hoomd.md.integrate.npt(group=all, kT=self.kT, tau=100 * self.dt, P=(interparticle_pressure/2), tauP = 1000 * self.dt, couple="xy")
+
+        # Run simulation
+        hoomd.run(self.totTsteps)
+    
+    def chemical_equilibrium(self):
 
         def sep_dist_arr(pos1, pos2, lx, ly, difxy=False):
             '''
@@ -407,10 +765,14 @@ class run_sim:
         hoomd.run(self.totTsteps)
     
     def random_init(self):
-
-        #sys.path.insert(0,self.hoomdPath)    # insert specified path to hoomdPath as first place to check for hoomd
+        '''
+        Purpose: Run simulation of specified properties using random initialization and Brownian
+        integration method
+        '''
 
         import random
+
+        # Use path to HOOMD-Blue
         if self.hoomdPath == '/Users/nicklauersdorf/hoomd-blue/build/':
             sys.path.insert(0,self.hoomdPath)
 
@@ -421,7 +783,10 @@ class run_sim:
         # Initialize system
         hoomd.context.initialize()
 
+
         if self.length != self.width:
+
+            # If non-square box, define new simulation box given input density and system size
             area_ratio = self.length * self.width
 
             box_area = self.partNum/self.phi
@@ -430,13 +795,15 @@ class run_sim:
             ly = self.width * box_length
             set_box = hoomd.data.boxdim(Lx=lx, Ly=ly, Lz=0, dimensions=2)
 
+            #Randomly distrubte N particles within given simulation box
+
             system = hoomd.deprecated.init.create_random(N = self.partNum,
                                                          name = 'A',
                                                          min_dist = 0.70,
                                                          seed = self.seed1,
                                                          box = set_box)
         else:
-            #Randomly distrubte N particles with specified density phi_p (dictates simulation box size)
+            #Randomly distrubte N particles with specified system density phi (dictates simulation box size)
             #of particle type name with minimum separation distance min_dist with random seed in 2 dimensions
             system = hoomd.deprecated.init.create_random(N = self.partNum,
                                                          phi_p = self.phi,
@@ -601,9 +968,17 @@ class run_sim:
 
         #Number of time steps to run simulation for.
         hoomd.run(self.totTsteps)
+
     def homogeneous_cluster(self):
+        '''
+        Purpose: Run simulation of specified properties using near steady-state initialization of
+        a MIPS cluster with a dilute phase and a random (homogeneous) distribution of activities
+        throughout the system and Brownian integration method
+        '''
 
         import random
+
+        # Use path to HOOMD-Blue
         if self.hoomdPath == '/Users/nicklauersdorf/hoomd-blue/build/':
             sys.path.insert(0,self.hoomdPath)
 
@@ -617,32 +992,34 @@ class run_sim:
         # Net activity of system
         peNet = self.theory_functs.compPeNet(self.partFracA, self.peA, self.peB)
 
-
         # Compute lattice spacing based on each activity
         latNet = self.theory_functs.conForRClust2(self.peA, self.peB, self.beta_A, self.beta_B, self.eps)
-        #latNet = self.theory_functs.conForRClust2(500, 500, self.beta_A, self.beta_B, self.eps)
         
         # Compute gas phase density, phiG
         phiG = self.theory_functs.compPhiG(peNet, latNet)
 
+        # Compute dense phase density, phi_theory
         phi_theory = self.theory_functs.latToPhi(latNet)
 
+        # Calculate dense phase size
         Nl = int(round(self.partNum * ((phi_theory * (phiG - self.phi)) / (self.phi * (phiG - phi_theory)))))
 
-        # Now you need to convert this to a cluster radius
+        # HCP area fraction
         phiCP = np.pi / (2. * np.sqrt(3))
 
-        # The area is the sum of the particle areas (normalized by close packing density of spheres)
+        # Dense phase area
         Al = (Nl * np.pi * (latNet)**2) / (4*phiCP)
 
+        # Dense phase density
         curPLJ = self.theory_functs.ljPress(latNet, 500, self.eps)
 
         # The area for seed
         Al_real=Al
 
-        # The cluster radius is the square root of liquid area divided by pi
+        # Cluster radius
         Rl = np.sqrt(Al_real / np.pi)
 
+        # Theoretical interface width
         alpha_max = 0.5
         I_arr = 3.0
         int_width = (np.sqrt(3)/(2*alpha_max)) * (curPLJ/500) * (latNet **2) * I_arr
@@ -653,7 +1030,6 @@ class run_sim:
         # MAKE SURE that the composition of the seed has the same composition of the system
         # e.g. for xF = 0.3 the initial seed should be 30% fast 70% slow
 
-        # Use latNet to space your particles
         def computeDistance(x, y):
             return np.sqrt((x**2) + (y**2))
 
@@ -745,12 +1121,12 @@ class run_sim:
                 x += latNet
 
         # Update number of particles in gas and dense phase
-
         NLiq = len(pos)
         NGas = self.partNum - NLiq
         typ_A=0
         typ_B=0
 
+        # Randomly assign species to dense phase
         for i in range(0,len(typ)):
             rand_val=random.random()
             if rand_val<=self.partFracA:
@@ -760,6 +1136,7 @@ class run_sim:
                 typ[i]=1
                 typ_B+=1
 
+        # Number of particles of each type to place in gas phase
         partNumB_gas=self.partNumB-typ_B
         partNumA_gas=self.partNumA-typ_A
 
@@ -773,6 +1150,7 @@ class run_sim:
         ly_box = lbox
         hx_box = lx_box / 2
         hy_box = ly_box / 2
+
         import utility
 
         # Instantiate utility functions module
@@ -807,6 +1185,7 @@ class run_sim:
             tmpy = gasy + hy_box
             indx = int(tmpx / sizeBin_x)
             indy = int(tmpy / sizeBin_y)
+
             # Get index of surrounding bins
             lbin = indx - 1  # index of left bins
             rbin = indx + 1  # index of right bins
@@ -1004,6 +1383,11 @@ class run_sim:
         hoomd.run(self.totTsteps)
 
     def slow_bulk_cluster(self):
+        '''
+        Purpose: Run simulation of specified properties using near steady-state initialization of
+        a MIPS cluster with a dilute phase and a 100% slow bulk and 100% fast interface and gas
+        throughout the system and Brownian integration method
+        '''
 
         import random
 
@@ -1238,22 +1622,8 @@ class run_sim:
                 typ.append(1)           # final particle type, same as outer ring
                 count += 1              # increment count
 
-
-        ## Get each coordinate in a list
-        #print("N_liq: {}").format(len(pos))
-        #print("Intended N_liq: {}").format(NLiq)
-        #print("N_gas: {}").format(len(gaspos))
-        #print("Intended N_gas: {}").format(NGas)
-        #print("N_liq + N_gas: {}").format(len(pos) + len(gaspos))
-        #print("Intended N: {}").format(partNum)
         pos = pos + gaspos
-        x, y, z = zip(*pos)
-        ## Plot as scatter
-        #cs = np.divide(typ, float(len(peList)))
-        #cs = rOrient
-        #plt.scatter(x, y, s=1., c=cs, cmap='jet', edgecolors='none')
-        #ax = plt.gca()
-        #ax.set_aspect('equal')
+
         partNum = len(pos)
 
         # Get the number of types
@@ -1347,15 +1717,6 @@ class run_sim:
                               orientation_reverse_link=True)
 
         # Name the file from parameters
-        #out = "cluster_pe"
-        #for i in peList:
-        #    out += str(int(i))
-        #    out += "_"
-        #out += "r"
-        #for i in range(1, len(rList)):
-        #    out += str(int(rList[i]))
-        #    out += "_"
-        #out += "rAlign_" + str(rAlign) + ".gsd"
         out = "slow_bulk_cluster_pa" + str(int(self.peA))
         out += "_pb" + str(int(self.peB))
         out += "_phi" + str(self.intPhi)
@@ -1374,13 +1735,15 @@ class run_sim:
                        phase=-1,
                        dynamic=['attribute', 'property', 'momentum'])
 
-        # Run
-        print('test')
-        print(self.totTsteps)
-        print(type(self.totTsteps))
+        # Run simulation
         hoomd.run(self.totTsteps)
 
     def fast_bulk_cluster(self):
+        '''
+        Purpose: Run simulation of specified properties using near steady-state initialization of
+        a MIPS cluster with a dilute phase and a 100% fast bulk and 100% slow interface and gas
+        throughout the system and Brownian integration method
+        '''
 
         import random
 

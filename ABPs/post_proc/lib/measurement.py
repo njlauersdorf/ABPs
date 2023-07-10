@@ -2606,31 +2606,37 @@ class measurement:
             # Calculate mean and standard deviation of local density of A neighbor particles 
             # around A reference particles in dense phase
             AA_local_dens_mean_arr.append(np.mean(AA_bulk_local_dens))
+            AA_local_dens_inhomog = (AA_bulk_local_dens - AA_local_dens_mean_arr[-1])**2
             AA_local_dens_std_arr.append(np.std(AA_bulk_local_dens))
 
             # Calculate mean and standard deviation of local density of A neighbor particles 
             # around B reference particles in dense phase
             AB_local_dens_mean_arr.append(np.mean(AB_bulk_local_dens))
+            AB_local_dens_inhomog = (AB_bulk_local_dens - AB_local_dens_mean_arr[-1])**2
             AB_local_dens_std_arr.append(np.std(AB_bulk_local_dens))
 
             # Calculate mean and standard deviation of local density of B neighbor particles 
             # around A reference particles in dense phase
             BA_local_dens_mean_arr.append(np.mean(BA_bulk_local_dens))
+            BA_local_dens_inhomog = (BA_bulk_local_dens - BA_local_dens_mean_arr[-1])**2
             BA_local_dens_std_arr.append(np.std(BA_bulk_local_dens))
 
             # Calculate mean and standard deviation of local density of B neighbor particles 
             # around B reference particles in dense phase
             BB_local_dens_mean_arr.append(np.mean(BB_bulk_local_dens))
+            BB_local_dens_inhomog = (BB_bulk_local_dens - BB_local_dens_mean_arr[-1])**2
             BB_local_dens_std_arr.append(np.std(BB_bulk_local_dens))
 
             # Calculate mean and standard deviation of local density of all neighbor particles 
             # around A reference particles in dense phase
             allA_local_dens_mean_arr.append(np.mean(allA_bulk_local_dens))
+            allA_local_dens_inhomog = (allA_bulk_local_dens - allA_local_dens_mean_arr[-1])**2
             allA_local_dens_std_arr.append(np.std(allA_bulk_local_dens))
 
             # Calculate mean and standard deviation of local density of all neighbor particles 
             # around B reference particles in dense phase
             allB_local_dens_mean_arr.append(np.mean(allB_bulk_local_dens))
+            allB_local_dens_inhomog = (allB_bulk_local_dens - allB_local_dens_mean_arr[-1])**2
             allB_local_dens_std_arr.append(np.std(allB_bulk_local_dens))
 
             # Save neighbor and local orientational order to arrays for all B reference particles of the respective phase with all nearest neighbors
@@ -2643,10 +2649,22 @@ class measurement:
             # around all reference particles in dense phase
             allall_local_dens_mean_arr.append(np.mean(allall_bulk_local_dens))
             allall_local_dens_std_arr.append(np.std(allall_bulk_local_dens))
+            plt.figure(figsize=(11,9))
+            plt.scatter(pos_A_bulk[:,0], pos_A_bulk[:,1], c=allA_local_dens_inhomog, s=0.7)
+            plt.colorbar()
+            plt.title('A')
+            plt.tight_layout()
+            plt.show()
 
-            
+            plt.figure(figsize=(11,9))
+            plt.scatter(pos_B_bulk[:,0], pos_B_bulk[:,1], c=allB_local_dens_inhomog, s=0.7)
+            plt.colorbar()
+            plt.title('B')
+            plt.tight_layout()
+            plt.show()
+
             # If search distance given, then prepare data for plotting!
-            if rad_dist[j]==0.9:
+            if rad_dist[j]==5*self.r_cut:
 
                 # Save neighbor, local orientational order, and position to arrays for all bulk reference particles with all nearest neighbors
                 allall_bulk_pos_x = np.append(pos_A_bulk[:,0], pos_B_bulk[:,0])

@@ -129,6 +129,7 @@ class utility:
             return difr[:,0], difr[:,1], difr_mag
         else:
             return difr_mag
+            
     def shift_quadrants(self, difx, dify):
         '''
         Purpose: Calculates angle between X-axis and a given location (neighbor particle)
