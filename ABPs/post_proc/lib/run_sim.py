@@ -402,7 +402,7 @@ class run_sim:
         # Run
         hoomd.md.integrate.npt(group=all, kT=self.kT, tau=100 * self.dt, P=(interparticle_pressure/2), tauP = 1000 * self.dt, couple="xy")
 
-        hoomd.analyze.log(filename = 'mylog.log', quantities = ['pressure'], period=1)
+        #hoomd.analyze.log(filename = 'mylog.log', quantities = ['pressure'], period=1)
 
         hoomd.run(self.totTsteps)
     
