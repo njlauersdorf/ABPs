@@ -61,7 +61,7 @@ echo "| 100% slow bulk, 100% fast interface cluster: slow_bulk_cluster       |"
 echo "| 100% fast bulk, 100% slow interface cluster: fast_bulk_cluster       |"
 echo "| Half-slow, half-fast cluster: half_cluster                           |"
 echo "|             ----------Bulk only of MIPS cluster----------            |"
-echo "| Constant pressure (changing volume): constant_pressure_bulk          |"
+echo "| Constant pressure (changing volume): constant_pressure          |"
 echo "|          -----------Elongated planar membranes--------------         |"
 echo "| Slow planar membrane: slow_membrane                                  |"
 echo "| Immobile planar membrane: immobile_membrane                          |"
@@ -78,7 +78,7 @@ read answer
 
 init_cond=$answer
 
-list_of_sims="random_init constant_pressure_bulk homogeneous_cluster slow_bulk_cluster fast_bulk_cluster half_cluster slow_membrane immobile_membrane immobile_orient_membrane slow_constrained_membrane slow_adsorb_constrained_membrane slow_int_constrained_membrane slow_int_constrained_membrane_dif_temp"
+list_of_sims="random_init homogeneous_cluster slow_bulk_cluster fast_bulk_cluster half_cluster constant_pressure slow_membrane immobile_membrane immobile_orient_membrane slow_constrained_membrane slow_adsorb_constrained_membrane slow_int_constrained_membrane slow_int_constrained_membrane_dif_temp"
 
 if exists_in_list "$list_of_sims" " " $init_cond; then
     dont_run='no'
@@ -86,7 +86,7 @@ else
     dont_run='yes'
 fi
 
-list_of_elongated_sims="random_init constant_pressure_bulk slow_membrane immobile_membrane immobile_orient_membrane slow_constrained_membrane slow_adsorb_constrained_membrane slow_int_constrained_membrane slow_int_constrained_membrane_dif_temp"
+list_of_elongated_sims="random_init constant_pressure slow_membrane immobile_membrane immobile_orient_membrane slow_constrained_membrane slow_adsorb_constrained_membrane slow_int_constrained_membrane slow_int_constrained_membrane_dif_temp"
 
 if exists_in_list "$list_of_elongated_sims" " " $init_cond; then
 
@@ -106,15 +106,17 @@ if [ $dont_run == "no" ]; then
 
     # Length of simulation in Brownian time steps
     declare -i runfor
-    runfor=$(( 40 ))
+    runfor=$(( 600 ))
 
     # Frequency for dumping simulation data
     declare -a dump_freq
-    dump_freq=( 0.0025 )
+    dump_freq=( 0.3 )
+    #( 0.0025 )
 
     # Lists for activity of A and B species
     declare -a pa
-    pa=(0)
+    pa=(0 50 100 150 200 350 500)
+    # 25 50 75)
 
     declare -a pb
     pb=(500)
@@ -125,14 +127,14 @@ if [ $dont_run == "no" ]; then
 
     # List for phi
     declare -a phi
-    phi=(30)
+    phi=(150 155)
    
     # List for epsilon
     declare -a eps
     eps=(1.0)
 
     declare -a kT
-    kT=(1.0, 50.0)
+    kT=(1.0)
 
     # Random seeds for initializing simulation
     seed1=$$

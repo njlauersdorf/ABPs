@@ -608,21 +608,6 @@ pos1y=np.array(y)[typ1ind.astype(int)]
 fig = plt.figure(figsize=(6.5,6)) 
 ax = fig.add_subplot(111)  
 
-plt.scatter(pos0x, pos0y, color=slowCol, s=0.7)
-plt.scatter(pos1x, pos1y, color=fastCol, s=0.7)
-
-#Set axes parameters
-ax.set_xlim(-hbox, hbox)
-ax.set_ylim(-hbox, hbox)
-ax.axes.set_xticks([])
-ax.axes.set_yticks([])
-ax.axes.set_xticklabels([])
-ax.axes.set_yticks([])
-ax.set_aspect('equal')
-
-plt.tight_layout()
-plt.show()
-stop
 # Now we make the system in hoomd
 hoomd.context.initialize()
 # A small shift to help with the periodic box

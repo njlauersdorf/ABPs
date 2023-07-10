@@ -78,6 +78,8 @@ elif init_cond == 'slow_bulk_cluster':
     sim_functs.slow_bulk_cluster()
 elif init_cond == 'half_cluster':
     sim_functs.half_cluster()
+elif init_cond == 'constant_pressure':
+    sim_functs.constant_pressure()
 elif init_cond == 'slow_membrane':
     sim_functs.fast_penetrate_slow_membrane()
 elif init_cond == 'stationary_membrane':

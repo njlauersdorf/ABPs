@@ -88,7 +88,323 @@ class run_sim:
         self.beta_A = 1.0
         self.beta_B = 2.3
 
+    def constant_pressure(self):
 
+        def sep_dist_arr(pos1, pos2, lx, ly, difxy=False):
+            '''
+            Purpose: Calculates separation distance (accounting for periodic boundary conditions)
+            of each dimension between pairs of points
+
+            Inputs:
+            pos1: array of locations of points (x,y,z)
+
+            pos2: array of locations of points (x,y,z)
+
+            difxy (optional): if True, returns separation distance in x- and y- directions
+
+            Output:
+            difr_mag: array of separation distance magnitudes
+
+            difx (optional): array of separation distances in x direction
+
+            dify (optional): array of separation distances in y direction
+            '''
+
+            difr = (pos1 - pos2)
+
+            difx_out = np.where(difr[:,0]>(lx/2))[0]
+            difr[difx_out,0] = difr[difx_out,0]-lx
+
+            difx_out = np.where(difr[:,0]<-(lx/2))[0]
+            difr[difx_out,0] = difr[difx_out,0]+lx
+
+            dify_out = np.where(difr[:,1]>(ly/2))[0]
+            difr[dify_out,1] = difr[dify_out,1]-ly
+
+            dify_out = np.where(difr[:,1]<-(ly/2))[0]
+            difr[dify_out,1] = difr[dify_out,1]+ly
+
+            difr_mag = (difr[:,0]**2 + difr[:,1]**2)**0.5
+
+            if difxy == True:
+                return difr[:,0], difr[:,1], difr_mag
+            else:
+                return difr_mag
+
+        def interparticle_press(pos, eps, lx, ly):
+            import freud
+            from freud import box
+
+            r_cut = 2**(1/6)
+
+            f_box = box.Box(Lx=lx, Ly=ly, is2D=True)
+
+            query_args = dict(mode='ball', r_min = 0.1, r_max=r_cut)
+
+            system_all = freud.AABBQuery(f_box, f_box.wrap(pos))
+
+            all_nlist = system_all.query(f_box.wrap(pos), query_args).toNeighborList()
+
+            difx, dify, difr = sep_dist_arr(pos[all_nlist.point_indices], pos[all_nlist.query_point_indices], lx, ly, difxy=True)
+
+            fx = np.array([])
+            fy = np.array([])
+
+            all_ind = np.array([], dtype=int)
+            SigXX_all = np.array([])
+            SigYY_all = np.array([])
+            SigXY_all = np.array([])
+            SigYX_all = np.array([])
+
+            for i in all_nlist.point_indices:
+                if i not in all_ind:
+                    loc = np.where(all_nlist.point_indices==i)[0]
+                    fx_arr, fy_arr = self.theory_functs.computeFLJ_arr(difr[loc], difx[loc], dify[loc], eps)
+                    SigXX_all = np.append(SigXX_all, np.sum(fx_arr * difx[loc]))
+                    SigYY_all = np.append(SigYY_all, np.sum(fy_arr * dify[loc]))
+                    SigXY_all = np.append(SigXY_all, np.sum(fx_arr * dify[loc]))
+                    SigYX_all = np.append(SigYX_all, np.sum(fy_arr * difx[loc]))
+                    all_ind = np.append(all_ind, int(i))
+
+            
+            return np.sum(SigXX_all)/2 + np.sum(SigYY_all)/2
+
+        import random
+        if self.hoomdPath == '/Users/nicklauersdorf/hoomd-blue/build/':
+            sys.path.insert(0,self.hoomdPath)
+
+        import hoomd                    # import hoomd functions based on path
+        from hoomd import md
+        from hoomd import deprecated
+
+        # Initialize system
+        hoomd.context.initialize()
+        
+        import matplotlib.pyplot as plt
+        area_ratio = self.length * self.width
+
+        box_area = (self.partNum*(np.pi/4))/(self.phi)
+        box_length = (box_area/area_ratio)**0.5
+        lx = self.length*box_length
+        hx = lx/2
+        ly = self.width * box_length
+        hy = ly/2
+
+        
+        peNet = self.theory_functs.compPeNet(self.partFracA, self.peA, self.peB)
+        
+        # Now you need to convert this to a cluster radius
+        phiCP = np.pi / (2. * np.sqrt(3))
+
+        # Compute lattice spacing based on each activity
+        latNet = (phiCP / self.phi)**0.5
+
+        Nl = self.partNum
+
+        # Use latNet to space your particles
+        def computeDistance(x, y):
+            return np.sqrt((x**2) + (y**2))
+
+        def interDist(x1, y1, x2, y2):
+            return np.sqrt((x2 - x1)**2 + (y2 - y1)**2)
+
+        # List of activities
+        peList = [ self.peA]
+        # List of ring radii
+        rList = [ 0, hx-0.5 ]
+        
+        # List to store particle positions and types
+        pos = []
+        typ = []
+        rOrient = []
+        # z-value for simulation initialization
+        z = 0.5
+
+        for i in range(0,len(peList)):
+
+            rMin = rList[i]             # starting distance for particle placement
+            rMax = rList[i + 1]         # maximum distance for particle placement
+
+            ver = np.sin(60*np.pi/180)*latNet#np.sqrt(0.75) * latNet   # vertical shift between lattice rows
+            hor = latNet / 2.0             # horizontal shift between lattice rows
+            x = 0
+            y = 0
+            shift = 0
+
+            
+            rMax2 = hy-0.5
+
+            while (y <= rMax2) & (len(pos)<self.partNum):
+
+                #r = computeDistance(x, y)
+                # Check if x-position is large enough
+                if x <rMin: # <(rMin + (latNet / 2.)):
+                    x += latNet
+                    continue
+
+                # Check if x-position is too large
+                if x >(rMax):#>= (rMax - (latNet/2.)):
+                    y += ver
+                    shift += 1
+                    if shift % 2:
+                        x = hor
+                    else:
+                        x = 0
+                    continue
+
+                # If the loop makes it this far, append
+                pos.append((x, y, z))
+                typ.append(i)
+
+                if x != 0 and y != 0:
+                    # Mirror positions, alignment and type
+                    if (len(pos)<self.partNum):
+                        pos.append((-x, y, z))
+                        typ.append(i)
+                    if (len(pos)<self.partNum):
+                        pos.append((-x, -y, z))
+                        typ.append(i)
+                    if (len(pos)<self.partNum):
+                        pos.append((x, -y, z))
+                        typ.append(i)
+
+                # y must be zero
+                elif (x != 0) & (len(pos)<self.partNum):
+                    pos.append((-x, y, z))
+                    typ.append(i)
+
+                    #typ.append(i)
+                # x must be zero
+                elif (y != 0) & (len(pos)<self.partNum):
+                    pos.append((x, -y, z))
+                    typ.append(i)
+
+                    #typ.append(i)
+
+                # Increment counter
+                x += latNet
+        pos = np.array(pos)
+        NLiq = len(pos)
+
+        typ_A=0
+        typ_B=0
+        
+        for i in range(0,len(typ)):
+            rand_val=random.random()
+            if rand_val<=self.partFracA:
+                typ[i]=0
+                typ_A+=1
+            else:
+                typ[i]=1
+                typ_B+=1
+
+        partNum = len(pos)
+        peList = [ self.peA, self.peB]
+        # Get the number of types
+        uniqueTyp = []
+        for i in typ:
+            if i not in uniqueTyp:
+                uniqueTyp.append(i)
+        # Get the number of each type
+        particles = [ 0 for x in range(0, len(uniqueTyp)) ]
+        for i in range(0, len(uniqueTyp)):
+            for j in typ:
+                if uniqueTyp[i] == j:
+                    particles[i] += 1
+        # Convert types to letter values
+        unique_char_types = []
+        for i in uniqueTyp:
+            unique_char_types.append( chr(ord('@') + i+1) )
+        char_types = []
+        for i in typ:
+            char_types.append( chr(ord('@') + i+1) )
+
+        # Get a list of activities for all particles
+        pe = []
+        for i in typ:
+            pe.append(peList[i])
+
+        # A small shift to help with the periodic box
+        snap = hoomd.data.make_snapshot(N = NLiq,
+                                        box = hoomd.data.boxdim(Lx=lx,
+                                                                Ly=ly,
+                                                                dimensions=2),
+                                        particle_types = unique_char_types)
+
+        # Set positions/types for all particles 
+
+        snap.particles.position[:] = pos[:]
+        snap.particles.typeid[:] = typ[:]
+        snap.particles.types[:] = char_types[:]
+
+        # Initialize the system
+        system = hoomd.init.read_snapshot(snap)
+        all = hoomd.group.all()
+        groups = []
+        for i in unique_char_types:
+            groups.append(hoomd.group.type(type=i))
+
+        # Set particle potentials
+        nl = hoomd.md.nlist.cell()
+        lj = hoomd.md.pair.lj(r_cut=self.r_cut, nlist=nl)
+        lj.set_params(mode='shift')
+        for i in range(0, len(unique_char_types)):
+            for j in range(i, len(unique_char_types)):
+                lj.pair_coeff.set(unique_char_types[i],
+                                    unique_char_types[j],
+                                    epsilon=self.eps, sigma=self.sigma)
+
+        # Brownian integration
+        brownEquil = 10000
+
+        hoomd.md.integrate.mode_standard(dt=self.dt)
+        
+        interparticle_pressure = interparticle_press(pos, self.eps, lx, ly) / (lx * ly)
+
+        # Set activity of each group
+        np.random.seed(self.seed2)                           # seed for random orientations
+        angle = np.random.rand(NLiq) * 2 * np.pi     # random particle orientation
+        activity = []
+        for i in range(0, NLiq):
+            x = (np.cos(angle[i])) * pe[i]
+            y = (np.sin(angle[i])) * pe[i]
+            
+            z = 0.
+            tuple = (x, y, z)
+            activity.append(tuple)
+
+        # Implement the activities in hoomd
+        hoomd.md.force.active(group=all,
+                                seed=self.seed3,
+                                f_lst=activity,
+                                rotation_diff=self.D_r,
+                                orientation_link=False,
+                                orientation_reverse_link=True)
+
+        out = "constant_pressure_pa" + str(int(self.peA))
+        out += "_pb" + str(int(self.peB))
+        out += "_phi" + str(self.intPhi)
+        out += "_eps" + str(self.eps)
+        out += "_xa" + str(self.partFracA)
+        out += "_pNum" + str(NLiq)
+        out += "_dtau" + "{:.1e}".format(self.dt)
+        out += ".gsd"
+        
+        # Write dump
+
+        hoomd.dump.gsd(out,
+                        period=self.dumpFreq,
+                        group=all,
+                        overwrite=True,
+                        phase=-1,
+                        dynamic=['attribute', 'property', 'momentum'])
+        
+        # Run
+        hoomd.md.integrate.npt(group=all, kT=self.kT, tau=100 * self.dt, P=(interparticle_pressure/2), tauP = 1000 * self.dt, couple="xy")
+
+        hoomd.analyze.log(filename = 'mylog.log', quantities = ['pressure'], period=1)
+
+        hoomd.run(self.totTsteps)
     
     def random_init(self):
 
@@ -297,13 +613,15 @@ class run_sim:
 
         # Initialize system
         hoomd.context.initialize()
-
+        
+        # Net activity of system
         peNet = self.theory_functs.compPeNet(self.partFracA, self.peA, self.peB)
 
 
         # Compute lattice spacing based on each activity
         latNet = self.theory_functs.conForRClust2(self.peA, self.peB, self.beta_A, self.beta_B, self.eps)
         #latNet = self.theory_functs.conForRClust2(500, 500, self.beta_A, self.beta_B, self.eps)
+        
         # Compute gas phase density, phiG
         phiG = self.theory_functs.compPhiG(peNet, latNet)
 
@@ -335,10 +653,6 @@ class run_sim:
         # MAKE SURE that the composition of the seed has the same composition of the system
         # e.g. for xF = 0.3 the initial seed should be 30% fast 70% slow
 
-
-        #print(int_width)
-        #stop
-
         # Use latNet to space your particles
         def computeDistance(x, y):
             return np.sqrt((x**2) + (y**2))
@@ -357,19 +671,22 @@ class run_sim:
 
         # List of activities
         peList = [ self.peA ]
+
         # List of ring radii
         rList = [ 0., Rl ]
-        # Depth of alignment
-        #rAlign = 3.
 
-        rAlign = int_width#*(2/3)#3.#int_width
-        # List to store particle positions and types
+        # Depth of alignment
+        rAlign = int_width
+
+        # Empty lists to store particle positions and types
         pos = []
         typ = []
         rOrient = []
+
         # z-value for simulation initialization
         z = 0.5
 
+        # Loop over activities
         for i in range(0, len(peList)):
             rMin = rList[0]             # starting distance for particle placement
             rMax = rList[1]         # maximum distance for particle placement
@@ -446,7 +763,7 @@ class run_sim:
         partNumB_gas=self.partNumB-typ_B
         partNumA_gas=self.partNumA-typ_A
 
-        # Set this according to phiTotal
+        # Set simulation box according to phiTotal
         areaParts = self.partNum * np.pi * (0.25)
         abox = (areaParts / self.phi)
         lbox = np.sqrt(abox)
@@ -458,12 +775,13 @@ class run_sim:
         hy_box = ly_box / 2
         import utility
 
+        # Instantiate utility functions module
         utility_functs = utility.utility(lx_box, ly_box)
 
+        # If particles overlap, find new position
         tooClose = 0.9
 
         # Compute mesh
-
         nBins_x = (utility_functs.getNBins(lx_box, self.r_cut))
         nBins_y = (utility_functs.getNBins(ly_box, self.r_cut))
         sizeBin_x = utility_functs.roundUp((lx_box / nBins_x), 6)
@@ -543,19 +861,10 @@ class run_sim:
                 count += 1              # increment count
 
 
-        ## Get each coordinate in a list
-        #print("N_liq: {}").format(len(pos))
-        #print("Intended N_liq: {}").format(NLiq)
-        #print("N_gas: {}").format(len(gaspos))
-        #print("Intended N_gas: {}").format(NGas)
-        #print("N_liq + N_gas: {}").format(len(pos) + len(gaspos))
-        #print("Intended N: {}").format(partNum)
+        # All particle positions
         pos = pos + gaspos
-        print(type(pos[:]))
-        print(len(pos[:]))
-        print(np.shape(pos[:]))
 
-
+        # Identify species of gas
         NGas_shift=NGas
         for i in range(0,NGas):
             j=NLiq+i
@@ -571,17 +880,14 @@ class run_sim:
                 typ_B+=1
                 partNumB_gas-=1
                 NGas_shift-=1
+        
+        # Find particle types
         typ_arr=np.array(typ)
         id0=np.where(typ_arr==0)
         id1=np.where(typ_arr==1)
 
+        # Define positions
         x, y, z = zip(*pos)
-        ## Plot as scatter
-        #cs = np.divide(typ, float(len(peList)))
-        #cs = rOrient
-        #plt.scatter(x, y, s=1., c=cs, cmap='jet', edgecolors='none')
-        #ax = plt.gca()
-        #ax.set_aspect('equal')
         partNum = len(pos)
 
         # Get the number of types
@@ -589,12 +895,14 @@ class run_sim:
         for i in typ:
             if i not in uniqueTyp:
                 uniqueTyp.append(i)
+
         # Get the number of each type
         particles = [ 0 for x in range(0, len(uniqueTyp)) ]
         for i in range(0, len(uniqueTyp)):
             for j in typ:
                 if uniqueTyp[i] == j:
                     particles[i] += 1
+
         # Convert types to letter values
         unique_char_types = []
         for i in uniqueTyp:
@@ -608,8 +916,6 @@ class run_sim:
         peList = [self.peA, self.peB]
         for i in typ:
             pe.append(peList[i])
-
-        #sys.path.insert(0,self.hoomdPath)    # insert specified path to hoomdPath as first place to check for hoomd
 
         import hoomd                    # import hoomd functions based on path
         from hoomd import md
@@ -626,19 +932,10 @@ class run_sim:
                                         particle_types = unique_char_types)
 
         # Set positions/types for all particles
-        print(self.partNum)
-        print(unique_char_types)
-        print(len(pos[:]))
-        print(type(pos[:]))
-        print(np.shape(pos[:]))
-        print(type(snap.particles.position[:]))
-        print(np.shape(snap.particles.position[:]))
-
-
         snap.particles.position[:] = pos[:]
         snap.particles.typeid[:] = typ[:]
         snap.particles.types[:] = char_types[:]
-        stop
+
         # Initialize the system
         system = hoomd.init.read_snapshot(snap)
         all = hoomd.group.all()
@@ -656,7 +953,7 @@ class run_sim:
                                   unique_char_types[j],
                                   epsilon=self.eps, sigma=self.sigma)
 
-        # Brownian integration
+        # Brownian equilibration
         brownEquil = 10000
 
         hoomd.md.integrate.mode_standard(dt=self.dt)
@@ -676,6 +973,7 @@ class run_sim:
             z = 0.
             tuple = (x, y, z)
             activity.append(tuple)
+
         # Implement the activities in hoomd
         hoomd.md.force.active(group=all,
                               seed=self.seed3,
@@ -685,15 +983,6 @@ class run_sim:
                               orientation_reverse_link=True)
 
         # Name the file from parameters
-        #out = "cluster_pe"
-        #for i in peList:
-        #    out += str(int(i))
-        #    out += "_"
-        #out += "r"
-        #for i in range(1, len(rList)):
-        #    out += str(int(rList[i]))
-        #    out += "_"
-        #out += "rAlign_" + str(rAlign) + ".gsd"
         out = "homogeneous_cluster_pa" + str(int(self.peA))
         out += "_pb" + str(int(self.peB))
         out += "_phi" + str(self.intPhi)
@@ -704,7 +993,6 @@ class run_sim:
         out += ".gsd"
 
         # Write dump
-
         hoomd.dump.gsd(out,
                        period=self.dumpFreq,
                        group=all,
@@ -713,9 +1001,6 @@ class run_sim:
                        dynamic=['attribute', 'property', 'momentum'])
 
         # Run
-        print('test')
-        print(self.totTsteps)
-        print(type(self.totTsteps))
         hoomd.run(self.totTsteps)
 
     def slow_bulk_cluster(self):

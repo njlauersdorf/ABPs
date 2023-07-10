@@ -715,7 +715,7 @@ class stress_and_pressure:
     def interparticle_stress_nlist(self, phasePart):
 
         phase_part_dict = self.particle_prop_functs.particle_phase_ids(phasePart)
-
+        
         typ0ind = np.where(self.typ==0)[0]
         pos_A=self.pos[typ0ind]                               # Find positions of type 0 particles
         pos_A_bulk = self.pos[phase_part_dict['bulk']['A']]

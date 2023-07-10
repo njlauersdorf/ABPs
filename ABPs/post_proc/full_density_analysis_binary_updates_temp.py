@@ -865,32 +865,55 @@ with hoomd.open(name=inFile, mode='rb') as t:
             
             # If cluster has been initially formed, 
             if steady_state_once == 'False':
+
+                # Instantiate array for saving largest cluster ID over time
                 clust_id_time = np.where(ids==lcID)[0]
                 in_clust_arr = np.zeros(partNum)
                 in_clust_arr[clust_id_time]=1
+
+                # Instantiate array for saving particle positions over time
                 pos_x_arr_time = pos[:,0]
                 pos_y_arr_time = pos[:,1]
+
+                # Instantiate array for saving surface CoM over time
                 try:
                     com_x_arr_time = np.array([all_surface_measurements['surface id ' + str(int(int_comp_dict['ids'][0]))]['interior']['com']['x']-hx_box])
                     com_y_arr_time = np.array([all_surface_measurements['surface id ' + str(int(int_comp_dict['ids'][0]))]['interior']['com']['y']-hy_box])
                 except:
                     com_x_arr_time = np.array([all_surface_measurements['surface id ' + str(int(int_comp_dict['ids'][0]))]['exterior']['com']['x']-hx_box])
                     com_y_arr_time = np.array([all_surface_measurements['surface id ' + str(int(int_comp_dict['ids'][0]))]['exterior']['com']['y']-hy_box])
+                
+                # Instantiate array for saving cluster CoM over time
                 com_x_parts_arr_time = np.array([com_dict['com']['x']])
                 com_y_parts_arr_time = np.array([com_dict['com']['y']])
+
+                # Instantiate array for saving phase information over time
                 partPhase_time = phase_dict['part']
+
+                # Instantiate array for saving time step
                 partPhase_time_arr = np.append(partPhase_time_arr, tst)
+
+                # Change to True since steady state has been reached
                 steady_state_once = 'True'
+
             # If cluster has been formed previously
             else:
+
+                # Save largest cluster ID over time
                 clust_id_time = np.where(ids==lcID)[0]
                 in_clust_temp = np.zeros(partNum)
                 in_clust_temp[clust_id_time]=1
                 in_clust_arr = np.vstack((in_clust_arr, in_clust_temp))
+
+                # Save particle positions over time
                 pos_x_arr_time = np.vstack((pos_x_arr_time, pos[:,0]))
                 pos_y_arr_time = np.vstack((pos_y_arr_time, pos[:,1]))
                 partPhase_time_arr = np.append(partPhase_time_arr, tst)
+
+                # Save phase information over time
                 partPhase_time = np.vstack((partPhase_time, phase_dict['part']))
+
+                # Save surface CoM over time
                 try:
                     com_x_arr_time = np.append(com_x_arr_time, all_surface_measurements['surface id ' + str(int(int_comp_dict['ids'][0]))]['exterior']['com']['x']-hx_box)
                     com_y_arr_time = np.append(com_y_arr_time, all_surface_measurements['surface id ' + str(int(int_comp_dict['ids'][0]))]['exterior']['com']['y']-hy_box)
@@ -898,16 +921,18 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     com_x_arr_time = np.append(com_x_arr_time, all_surface_measurements['surface id ' + str(int(int_comp_dict['ids'][0]))]['interior']['com']['x']-hx_box)
                     com_y_arr_time = np.append(com_y_arr_time, all_surface_measurements['surface id ' + str(int(int_comp_dict['ids'][0]))]['interior']['com']['y']-hy_box)
 
+                # Save cluster CoM over time
                 com_x_parts_arr_time = np.append(com_x_parts_arr_time, com_dict['com']['x'])
                 com_y_parts_arr_time = np.append(com_y_parts_arr_time, com_dict['com']['y'])
 
+            # Calculate alignment of interface with nearest surface normal
             method1_align_dict, method2_align_dict = interface_functs.surface_alignment(all_surface_measurements, all_surface_curves, sep_surface_dict, int_dict, int_comp_dict)
             
-            
+            # Calculate alignment of bulk with nearest surface normal
             method1_align_dict, method2_align_dict = interface_functs.bulk_alignment(method1_align_dict, method2_align_dict, all_surface_measurements, all_surface_curves, sep_surface_dict, bulk_dict, bulk_comp_dict, int_comp_dict)
 
+            # Calculate alignment of gas with nearest surface normal
             method1_align_dict, method2_align_dict = interface_functs.gas_alignment(method1_align_dict, method2_align_dict, all_surface_measurements, all_surface_curves, sep_surface_dict, int_comp_dict)
-
 
             if measurement_options[0] == 'vorticity':
 
@@ -917,7 +942,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     if plot == 'y':
 
                         plotting_functs.plot_vorticity(vel_dict['bin'], vel_grad['curl'], phase_dict, all_surface_curves, int_comp_dict, active_fa_dict, species='all', interface_id = interface_option)
-            elif measurement_options[0] == 'single-velocity':
+            elif measurement_options[0] == 'velocity-corr':
                 if j>(start * time_step):
                     particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, typ, pos, ang)
                     
@@ -927,23 +952,28 @@ with hoomd.open(name=inFile, mode='rb') as t:
                         displace_dict = {'A': {'x': np.array([]), 'y': np.array([]), 'mag': np.array([])}, 'B': {'x': np.array([]), 'y': np.array([]), 'mag': np.array([])} }
                         part_msd_dict = particle_prop_functs.single_msd(prev_pos, displace_dict)
 
-                    vel_plot_dict, corr_dict, vel_stat_dict = particle_prop_functs.single_velocity(vel_dict['part'], prev_pos, prev_ang, ori)
-                    data_output_functs.write_to_txt(vel_stat_dict, dataPath + 'collision_' + outfile + '.txt')
+                    vel_plot_dict, corr_dict, vel_stat_dict = particle_prop_functs.velocity_corr(vel_dict['part'], prev_pos, prev_ang, ori)
+                    data_output_functs.write_to_txt(vel_stat_dict, dataPath + 'velocity_corr_' + outfile + '.txt')
+            
             elif measurement_options[0] == 'adsorption':                
-                
+                #DONE!
+
+                # Calculate the rate of adsorption to and desorption from cluster
                 kinetics_dict = particle_prop_functs.adsorption_nlist()
                 
+                # Save kinetics data between gas and cluster
                 data_output_functs.write_to_txt(kinetics_dict, dataPath + 'kinetics_' + outfile + '.txt')
+            
             elif measurement_options[0] == 'collision':
                 #DONE!
+
+                # Calculate the rate of collisions between particles
                 collision_dict = particle_prop_functs.collision_rate()
                 
-                data_output_functs = data_output.data_output(lx_box, ly_box, sizeBin_x, sizeBin_y, tst, clust_large, dt_step)
-
+                # Save collision data
                 data_output_functs.write_to_txt(collision_dict, dataPath + 'collision_' + outfile + '.txt')       
 
-
-            elif measurement_options[0] == 'velocity':
+            elif measurement_options[0] == 'phase-velocity':
                 if j>(start*time_step):
 
                     part_ang_vel_dict = particle_prop_functs.angular_velocity(ang_vel_dict['part'], phase_dict['part'])
@@ -953,9 +983,12 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     data_output_functs.write_to_txt(part_vel_dict, dataPath + 'velocity_' + outfile + '.txt')
 
                     if plot == 'y':
+
+                        # Plot histograms of angular velocities in each phase
                         plotting_functs.ang_vel_histogram(ang_vel_dict['part'], phase_dict['part'])
                         plotting_functs.ang_vel_bulk_sf_histogram(ang_vel_dict['part'], phase_dict['part'])
                         plotting_functs.ang_vel_int_sf_histogram(ang_vel_dict['part'], phase_dict['part'])
+           
             #elif measurement_method == 'voronoi':
             #    if plot == 'y':
             #        plotting_functs = plotting.plotting(orient_dict, pos_dict, lx_box, ly_box, NBins_x, NBins_y, sizeBin_x, sizeBin_y, peA, peB, parFrac, eps, typ, tst)
@@ -965,7 +998,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 #DONE!
                 if plot == 'y':
                     
-                    
+                    # Plot particles color-coded by activity
                     plotting_functs.plot_part_activity(pos, all_surface_curves, int_comp_dict, active_fa_dict, mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option, banner_id = banner_option, presentation_id = presentation_option)
 
             elif measurement_options[0] == 'activity-com':
@@ -976,12 +1009,17 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
             elif measurement_options[0] == 'phases':
                 #DONE!
+                # Save number of particles per phase data
                 data_output_functs.write_to_txt(part_count_dict, dataPath + 'PhaseComp_' + outfile + '.txt')
+                
+                # Save number of bins per phase data
                 data_output_functs.write_to_txt(bin_count_dict['bin'], dataPath + 'PhaseComp_bins_' + outfile + '.txt')
 
-                # Plot particles color-coded by phase
                 if plot == 'y':
+
+                    # Plot particles color-coded by phase
                     plotting_functs.plot_phases(pos, part_id_dict, all_surface_curves, int_comp_dict, active_fa_dict, interface_id = interface_option, orientation_id = orientation_option)
+            
             elif measurement_options[0]== 'bubble-interface-pressure':
                 #DONE!
                 lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
@@ -1065,6 +1103,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                     # Plot particles color-coded by activity with sub-plot of change in cluster size over time
                     plotting_functs.plot_clust_fluctuations(pos, outfile, all_surface_curves, int_comp_dict)
+            
             elif measurement_options[0] == 'cluster-msd':
                 if j>(start * time_step):
 
@@ -1119,8 +1158,10 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 # Calculate compressibility, structure factor, and 1st-wave vector structure factor using Freud
                 compress_dict, structure_factor_dict, k0_dict = lattice_structure_functs.structure_factor_freud()
 
+                #Save structure factor data
                 data_output_functs.write_to_txt(k0_dict, dataPath + 'structure_factor_freud_' + outfile + '.txt')
 
+                # Save compressibility data
                 data_output_functs.write_to_txt(compress_dict, dataPath + 'sf_compressibility_freud_' + outfile + '.txt')
 
             elif measurement_options[0] == 'structure-factor':
@@ -1191,9 +1232,10 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 data_output_functs.write_to_txt(csp_stat_dict, dataPath + 'centrosymmetry_' + outfile + '.txt')
 
                 if plot == 'y':
+
+                    # Plot particles color-coded by centrosymmetry parameter
                     plotting_functs.plot_csp(csp_plot_dict, all_surface_curves, int_comp_dict, ang, pos, pair='all')
                 
-
             elif measurement_options[0] == 'lattice-spacing':
                 #DONE!
                 # Initialize lattice structure functions
@@ -1207,8 +1249,10 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                 if plot == 'y':
 
+                    # Plot histogram of lattice spacings within cluster
                     plotting_functs.lat_histogram(lat_plot_dict)
 
+                    # Plot particles color-coded by average lattice spacing
                     plotting_functs.lat_map(lat_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, type='all', interface_id = interface_option, orientation_id = orientation_option)
                     
             elif measurement_options[0] == 'penetration':
@@ -1271,6 +1315,12 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 # Save Wasserstein metric data
                 data_output_functs.write_to_txt(wasserstein_dict, dataPath + 'wasserstein_' + outfile + '.txt')
 
+                if plot == 'y':
+
+                    # Plot general and all partial radial distribution functions for current time step
+                    plotting_functs.plot_general_rdf(angular_df_dict)
+                    plotting_functs.plot_all_rdfs(angular_df_dict)
+
             elif measurement_options[0] == 'angular-df':
 
                 # Initialize lattice structure functions
@@ -1284,9 +1334,10 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                 if plot == 'y':
 
+                    # Plot general and all partial angular distribution functions for current time step
                     plotting_functs.plot_general_adf(angular_df_dict)
                     plotting_functs.plot_all_adfs(angular_df_dict)
-                stop
+
             elif measurement_options[0] == 'domain-size':
 
                 # Initialize lattice structure functions
@@ -1307,6 +1358,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 neigh_plot_dict = lattice_structure_functs.clustering_coefficient()
                 
                 if plot == 'y':
+
+                    # Plot all, A, and B particles and color-code by clustering coefficient
                     plotting_functs.plot_clustering(neigh_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, type='all', interface_id = interface_option, orientation_id = orientation_option)
                     plotting_functs.plot_clustering(neigh_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, type='A', interface_id = interface_option, orientation_id = orientation_option)
                     plotting_functs.plot_clustering(neigh_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, type='B', interface_id = interface_option, orientation_id = orientation_option)
@@ -1325,6 +1378,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 
                 
                 if plot == 'y':
+
+                    # Plot particles color-coded by local density for all-all, all-A, all-B, A-all, B-all, A-A, A-B, B-A, and B-B nearest neighbor pairs in gas
                     plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='all-all', interface_id = interface_option, orientation_id = orientation_option)
                     plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='all-A', interface_id = interface_option, orientation_id = orientation_option)
                     plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='all-B', interface_id = interface_option, orientation_id = orientation_option)
@@ -1348,6 +1403,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 data_output_functs.write_to_txt(local_dens_stat_dict, dataPath + 'local_density_' + outfile + '.txt')
                 
                 if plot == 'y':
+
+                    # Plot particles color-coded by local density for all-all, all-A, all-B, A-all, B-all, A-A, A-B, B-A, and B-B nearest neighbor pairs in cluster
                     plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='all-all', interface_id = interface_option, orientation_id = orientation_option)
                     plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='all-A', interface_id = interface_option, orientation_id = orientation_option)
                     plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='all-B', interface_id = interface_option, orientation_id = orientation_option)
@@ -1377,6 +1434,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 
                 if plot == 'y':
                     
+                    # Plot particles color-coded by number of neighbors with all-all, all-A, all-B, A-all, B-all, A-A, A-B, B-A, and B-B nearest neighbor pairs
                     plotting_functs.plot_neighbors(neigh_plot_dict, ang, pos, pair='all-all', sep_surface_dict=all_surface_curves, int_comp_dict=int_comp_dict, active_fa_dict=active_fa_dict, interface_id = interface_option, orientation_id = orientation_option)
                     plotting_functs.plot_neighbors(neigh_plot_dict, ang, pos, pair='all-A', sep_surface_dict=all_surface_curves, int_comp_dict=int_comp_dict, active_fa_dict=active_fa_dict, interface_id = interface_option, orientation_id = orientation_option)
                     plotting_functs.plot_neighbors(neigh_plot_dict, ang, pos, pair='all-B', sep_surface_dict=all_surface_curves, int_comp_dict=int_comp_dict, active_fa_dict=active_fa_dict, interface_id = interface_option, orientation_id = orientation_option)
@@ -1387,6 +1445,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     plotting_functs.plot_neighbors(neigh_plot_dict, ang, pos, pair='B-A', sep_surface_dict=all_surface_curves, int_comp_dict=int_comp_dict, active_fa_dict=active_fa_dict, interface_id = interface_option, orientation_id = orientation_option)
                     plotting_functs.plot_neighbors(neigh_plot_dict, ang, pos, pair='B-B', sep_surface_dict=all_surface_curves, int_comp_dict=int_comp_dict, active_fa_dict=active_fa_dict, interface_id = interface_option, orientation_id = orientation_option)
 
+                    # Plot particles color-coded by orientational order with all-all, all-A, all-B, A-A, A-B, B-A, and B-B nearest neighbor pairs
                     plotting_functs.plot_neighbors_ori(neigh_plot_dict, ang, pos, all_surface_curves, int_comp_dict, active_fa_dict, pair='all-all', mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option)
                     plotting_functs.plot_neighbors_ori(neigh_plot_dict, ang, pos, all_surface_curves, int_comp_dict, active_fa_dict, pair='all-A', mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option)
                     plotting_functs.plot_neighbors_ori(neigh_plot_dict, ang, pos, all_surface_curves, int_comp_dict, active_fa_dict, pair='all-B', mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option)
@@ -1398,7 +1457,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
             elif measurement_options[0] == 'orientation':
                 #DONE!
                 if plot == 'y':
-
+                    # Plot all, A, and B particles and color-code by active force orientation
                     plotting_functs.plot_ang(ang, pos, all_surface_curves, int_comp_dict, active_fa_dict, type='all', mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option)
                     plotting_functs.plot_ang(ang, pos, all_surface_curves, int_comp_dict, active_fa_dict, type='A', mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option)
                     plotting_functs.plot_ang(ang, pos, all_surface_curves, int_comp_dict, active_fa_dict, type='B', mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option)
@@ -1428,15 +1487,20 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 data_output_functs.write_to_txt(shear_dict, dataPath + 'shear_stress_' + outfile + '.txt')
 
                 if plot == 'y':
+
+                    # Calculate binned interparticle pressure
                     vp_bin_arr = stress_and_pressure_functs.virial_pressure_binned(stress_plot_dict)
+
+                    # Calculate interparticle pressure per particle
                     vp_part_arr = stress_and_pressure_functs.virial_pressure_part(stress_plot_dict)
 
+                    # Plot binned interparticle pressure
                     plotting_functs.plot_interpart_press_binned(vp_bin_arr, all_surface_curves, int_comp_dict, active_fa_dict, type='all', interface_id = interface_option, orientation_id = orientation_option)
 
             elif measurement_options[0] == 'interparticle-pressure-nlist':
                 
                 # Initialize stress and pressure functions
-                stress_and_pressure_functs = stress_and_pressure.stress_and_pressure(l_box, NBins, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
+                stress_and_pressure_functs = stress_and_pressure.stress_and_pressure(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
                 stress_plot_dict, stress_stat_dict = stress_and_pressure_functs.interparticle_stress_nlist(phase_dict['part'])
 
             elif measurement_options[0] == 'com-interface-pressure':
@@ -1493,13 +1557,14 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 # Calculate hexatic order of particles with nearest neighbors
                 hexatic_order_dict= lattice_structure_functs.hexatic_order()
 
-                #data_output_functs = data_output.data_output(l_box, sizeBin, tst, clust_large, dt_step)
                 #data_output_functs.write_to_txt(hexatic_order_dict, dataPath + 'hexatic_order_' + outfile + '.txt')
 
                 if plot == 'y':
 
+                    # Plot particles and color-code by hexatic order parameter
                     plotting_functs.plot_hexatic_order(pos, hexatic_order_dict['order'], all_surface_curves, int_comp_dict, active_fa_dict, interface_id = interface_option, orientation_id = orientation_option)
 
+                    # Plot particles and color-code by domain angle from hexatic order parameter
                     plotting_functs.plot_domain_angle(pos, hexatic_order_dict['theta'], all_surface_curves, int_comp_dict, active_fa_dict, interface_id = interface_option, orientation_id = orientation_option)
             
             elif measurement_options[0] == 'voronoi':
@@ -1510,13 +1575,14 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 # Calculate voronoi tesselation of particles
                 voronoi_dict= lattice_structure_functs.voronoi()
                 
-                #data_output_functs = data_output.data_output(l_box, sizeBin, tst, clust_large, dt_step)
                 #data_output_functs.write_to_txt(hexatic_order_dict, dataPath + 'hexatic_order_' + outfile + '.txt')
 
                 if plot == 'y':
 
+                    # Plot particles and color-code by hexatic order parameter
                     plotting_functs.plot_hexatic_order(pos, hexatic_order_dict['order'], all_surface_curves, int_comp_dict)
 
+                    # Plot particles and color-code by domain angle from hexatic order parameter
                     plotting_functs.plot_domain_angle(pos, hexatic_order_dict['theta'], all_surface_curves, int_comp_dict)
 
             elif measurement_options[0] == 'translational-order':
@@ -1527,11 +1593,11 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 # Calculate translational order parameter
                 trans_order_param= lattice_structure_functs.translational_order()
 
-                #data_output_functs = data_output.data_output(l_box, sizeBin, tst, clust_large, dt_step)
                 #data_output_functs.write_to_txt(hexatic_order_dict, dataPath + 'hexatic_order_' + outfile + '.txt')
 
                 if plot == 'y':
 
+                    # Plot particles and color-code by translational order parameter
                     plotting_functs.plot_trans_order(pos, trans_order_param, all_surface_curves, int_comp_dict, active_fa_dict, interface_id = interface_option, orientation_id = orientation_option)
 
             elif measurement_options[0] == 'steinhardt-order':
@@ -1542,12 +1608,13 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 # Calculate steinhardt order parameter
                 stein_order_param= lattice_structure_functs.steinhardt_order()
 
-                #data_output_functs = data_output.data_output(l_box, sizeBin, tst, clust_large, dt_step)
                 #data_output_functs.write_to_txt(hexatic_order_dict, dataPath + 'hexatic_order_' + outfile + '.txt')
 
                 if plot == 'y':
-
+                    
+                    # Plot particles and color-code by Steinhardt order parameter
                     plotting_functs.plot_stein_order(pos, stein_order_param, all_surface_curves, int_comp_dict, active_fa_dict, interface_id = interface_option, orientation_id = orientation_option)
+            
             elif measurement_options[0] == 'nematic-order':
 
                 # Initialize lattice structure functions
@@ -1556,11 +1623,11 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 # Calculate nematic order parameter
                 nematic_order_param= lattice_structure_functs.nematic_order()
 
-                #data_output_functs = data_output.data_output(l_box, sizeBin, tst, clust_large, dt_step)
                 #data_output_functs.write_to_txt(hexatic_order_dict, dataPath + 'hexatic_order_' + outfile + '.txt')
 
                 if plot == 'y':
                     plotting_functs.plot_stein_order(pos, nematic_order_param, all_surface_curves, int_comp_dict)
+            
             elif measurement_options[0] == 'adsorption-final':
                 #DONE!
                 if len(partPhase_time_arr)>1:
@@ -1573,8 +1640,19 @@ with hoomd.open(name=inFile, mode='rb') as t:
                         data_output_functs.write_to_txt(adsorption_dict, dataPath + 'not_adsorption_final_' + outfile + '.txt')
                         data_output_functs.write_to_txt(clust_motion_dict, dataPath + 'not_clust_motion_final_' + outfile + '.txt')
         else:
+            
+             # Instantiate plotting functions module
+            plotting_functs = plotting.plotting(orient_dict, pos_dict, lx_box, ly_box, NBins_x, NBins_y, sizeBin_x, sizeBin_y, peA, peB, parFrac, eps, typ, tst, partNum, picPath, outFile)
+            
+            # Instantiate data output module
+            data_output_functs = data_output.data_output(lx_box, ly_box, sizeBin_x, sizeBin_y, tst, clust_large, dt_step)
 
+            # Instantiate particle properties module
+            particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, eps, typ, pos, ang)
+            
             if j>(start*time_step):
+
+                # Bin average velocity, angular velocity, and curl and divergence of velocity
                 vel_dict = binning_functs.bin_vel(pos, prev_pos, part_dict, dt_step)
                 ang_vel_dict = binning_functs.bin_ang_vel(ang, prev_ang, part_dict, dt_step)
                 vel_grad = binning_functs.curl_and_div(vel_dict)
@@ -1583,51 +1661,40 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                 #DONE
                 if plot == 'y':
-                    plotting_functs = plotting.plotting(orient_dict, pos_dict, lx_box, ly_box, NBins_x, NBins_y, sizeBin_x, sizeBin_y, peA, peB, parFrac, eps, typ, tst, partNum, picPath, outFile)
+
+                    # Plot partices and color-code by activity
                     plotting_functs.plot_part_activity(pos, mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option, banner_id = banner_option, presentation_id = presentation_option)
 
             elif measurement_options[0] == 'neighbors':
                 #DONE
-                particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, eps, typ, pos, ang)
-                
+                # Calculate nearest shell of neighbor data for membrane penetration
                 neigh_stat_dict, ori_stat_dict, neigh_plot_dict = particle_prop_functs.nearest_neighbors_penetrate()                
                 
-                data_output_functs = data_output.data_output(lx_box, ly_box, sizeBin_x, sizeBin_y, tst, clust_large, dt_step)
-
+                # Write neighbor data to output file
                 data_output_functs.write_to_txt(neigh_stat_dict, dataPath + 'nearest_neighbors_' + outfile + '.txt')
+                
                 if plot == 'y':
 
-                    plotting_functs = plotting.plotting(orient_dict, pos_dict, lx_box, ly_box, NBins_x, NBins_y, sizeBin_x, sizeBin_y, peA, peB, parFrac, eps, typ, tst, partNum, picPath, outFile)
-
-                    #if j>(start*time_step):
-                    #    plotting_functs.plot_neighbors2(neigh_plot_dict, ang, pos, prev_pos, pair='all-all')
-                    #else:
+                    # Plot particles and color-code by number of nearest neighbors
                     plotting_functs.plot_neighbors(neigh_plot_dict, ang, pos, pair='all-all')
 
             elif measurement_options[0] == 'penetration':
                 #DONE~
-                
-                particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, eps, typ, pos, ang)
+
                 if j>(start*time_step):
                     penetration_dict, start_dict, vertical_shift, dify_long = particle_prop_functs.penetration_depth(start_dict, prev_pos, vertical_shift, dify_long)
-
-                    data_output_functs = data_output.data_output(lx_box, ly_box, sizeBin_x, sizeBin_y, tst, clust_large, dt_step)
 
                     data_output_functs.write_to_txt(penetration_dict, dataPath + 'penetration_depth_' + outfile + '.txt')
 
                     action_arr = np.append(action_arr, penetration_dict['action'])
-            elif measurement_options[0] == 'part_velocity':
+            elif measurement_options[0] == 'part-velocity':
                 if j>(start * time_step):
-                    particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, eps, typ, pos, ang)
-
-                    data_output_functs = data_output.data_output(lx_box, ly_box, sizeBin_x, sizeBin_y, tst, clust_large, dt_step)
 
                     vel_plot_dict, vel_stat_dict = particle_prop_functs.part_velocity(prev_pos, prev_ang, ori)
                     data_output_functs.write_to_txt(vel_stat_dict, dataPath + 'velocity_' + outfile + '.txt')
 
-            elif measurement_options[0] == 'single-velocity':
+            elif measurement_options[0] == 'velocity-corr':
                 if j>(start * time_step):
-                    particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, eps, typ, pos, ang)
 
                     #try:
                     #    part_msd_dict = particle_prop_functs.single_msd(prev_pos, displace_dict)
@@ -1635,16 +1702,12 @@ with hoomd.open(name=inFile, mode='rb') as t:
                         #displace_dict = {'A': {'x': np.array([]), 'y': np.array([]), 'mag': np.array([])}, 'B': {'x': np.array([]), 'y': np.array([]), 'mag': np.array([])} }
                         #part_msd_dict = particle_prop_functs.single_msd(prev_pos, displace_dict)
 
-                    data_output_functs = data_output.data_output(lx_box, ly_box, sizeBin_x, sizeBin_y, tst, clust_large, dt_step)
-
-                    vel_plot_dict, corr_dict, vel_stat_dict = particle_prop_functs.single_velocity(vel_dict['part'], prev_pos, prev_ang, ori)
-                    data_output_functs.write_to_txt(vel_stat_dict, dataPath + 'collision_' + outfile + '.txt')
+                    vel_plot_dict, corr_dict, vel_stat_dict = particle_prop_functs.velocity_corr(vel_dict['part'], prev_pos, prev_ang, ori)
+                    data_output_functs.write_to_txt(vel_stat_dict, dataPath + 'velocity_corr_' + outfile + '.txt')
             elif measurement_options[0] == 'collision':
                 #DONE!
                 collision_dict = particle_prop_functs.collision_rate()
                 
-                data_output_functs = data_output.data_output(lx_box, ly_box, sizeBin_x, sizeBin_y, tst, clust_large, dt_step)
-
                 data_output_functs.write_to_txt(collision_dict, dataPath + 'collision_' + outfile + '.txt')       
 
         particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, eps, typ, pos, ang)
