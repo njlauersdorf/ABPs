@@ -215,6 +215,10 @@ com_x_msd = np.array([0])                       # Cluster CoM x-MSD
 com_y_msd = np.array([0])                       # Cluster CoM y-MSD
 com_r_msd = np.array([0])                       # Cluster CoM total MSD
 
+# Instantiate part-velocity outputs
+time_velA_mag = np.array([])
+time_velB_mag = np.array([])
+
 # Optional input parameters for plotting data
 com_option = False
 mono_option = False
@@ -246,11 +250,12 @@ with hoomd.open(name=inFile, mode='rb') as t:
     
     dumps = int(t.__len__())
 
-    start = int(501/time_step)#205                                             # first frame to process
+    start = int(500/time_step)#205                                             # first frame to process
     
                                 # get number of timesteps dumped
     
-    end = start + 20 #int(dumps/time_step)-1                                             # final frame to process
+    end = start + 1 #int(dumps/time_step)-1                                             # final frame to process
+
     snap = t[0]                                             # Take first snap for box
     first_tstep = snap.configuration.step                   # First time step
 
@@ -258,7 +263,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
     second_tstep = snap.configuration.step                   # First time step
     second_tstep -= first_tstep                          # normalize by first timestep
     dt_step = second_tstep * dtau                                 # convert to Brownian time
-
+    
     # Get box dimensions
     box_data = snap.configuration.box
 
@@ -1420,7 +1425,6 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     plotting_functs.plot_homogeneity(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='A-B', interface_id = interface_option, orientation_id = orientation_option)
                     plotting_functs.plot_homogeneity(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='B-A', interface_id = interface_option, orientation_id = orientation_option)
                     plotting_functs.plot_homogeneity(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='B-B', interface_id = interface_option, orientation_id = orientation_option)
-                    stop
 
                     # Plot particles color-coded by local density for all-all, all-A, all-B, A-all, B-all, A-A, A-B, B-A, and B-B nearest neighbor pairs in cluster
                     plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='all-all', interface_id = interface_option, orientation_id = orientation_option)
@@ -1721,6 +1725,11 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     vel_plot_dict, vel_stat_dict = particle_prop_functs.part_velocity(prev_pos, prev_ang, ori)
                     data_output_functs.write_to_txt(vel_stat_dict, dataPath + 'velocity_' + outfile + '.txt')
 
+                    time_velA_mag = np.append(time_velA_mag, vel_plot_dict['A']['mag'])
+                    time_velB_mag = np.append(time_velB_mag, vel_plot_dict['B']['mag'])
+
+                    if plot == 'y':
+                        plotting_functs.vel_histogram(vel_plot_dict, dt_step)
             elif measurement_options[0] == 'velocity-corr':
                 if j>(start * time_step):
 
@@ -1872,3 +1881,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                     plotting_functs.plot_general_rdf(radial_df_dict)
                     plotting_functs.plot_all_rdfs(radial_df_dict)
+    elif measurement_options[0] == 'part-velocity':
+        if j>(start * time_step):
+            
+            vel_plot_dict = {'A': {'mag': time_velA_mag}, 'B': {'mag': time_velB_mag}}
+            if plot == 'y':
+                plotting_functs.vel_histogram(vel_plot_dict, dt_step, avg='True')

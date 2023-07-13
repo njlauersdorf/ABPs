@@ -2379,35 +2379,27 @@ class measurement:
         BB_local_dens_std_arr = []
         
         #Initiate empty arrays for finding nearest A neighboring dense particles surrounding type A bulk particles
-        AA_bulk_neigh_ind = np.zeros(len(pos_A_bulk))
         AA_bulk_num_neigh = np.zeros(len(pos_A_bulk))
 
         #Initiate empty arrays for finding nearest A neighboring dense particles surrounding type B bulk particles
-        AB_bulk_neigh_ind = np.zeros(len(pos_B_bulk))
         AB_bulk_num_neigh = np.zeros(len(pos_B_bulk))
 
         #Initiate empty arrays for finding nearest B neighboring dense particles surrounding type A bulk particles
-        BA_bulk_neigh_ind = np.zeros(len(pos_A_bulk))
         BA_bulk_num_neigh = np.zeros(len(pos_A_bulk))
 
         #Initiate empty arrays for finding nearest B neighboring dense particles surrounding type B bulk particles
-        BB_bulk_neigh_ind = np.zeros(len(pos_B_bulk))
         BB_bulk_num_neigh = np.zeros(len(pos_B_bulk))
 
         #Initiate empty arrays for finding nearest A neighboring dense particles surrounding type A bulk particles
-        AA_int_neigh_ind = np.zeros(len(pos_A_int))
         AA_int_num_neigh = np.zeros(len(pos_A_int))
 
         #Initiate empty arrays for finding nearest A neighboring dense particles surrounding type B bulk particles
-        AB_int_neigh_ind = np.zeros(len(pos_B_int))
         AB_int_num_neigh = np.zeros(len(pos_B_int))
 
         #Initiate empty arrays for finding nearest B neighboring dense particles surrounding type A bulk particles
-        BA_int_neigh_ind = np.zeros(len(pos_A_int))
         BA_int_num_neigh = np.zeros(len(pos_A_int))
 
         #Initiate empty arrays for finding nearest B neighboring dense particles surrounding type B bulk particles
-        BB_int_neigh_ind = np.zeros(len(pos_B_int))
         BB_int_num_neigh = np.zeros(len(pos_B_int))
 
         # Search distance for neighbors in local density calculation
@@ -2415,6 +2407,16 @@ class measurement:
         
         # Loop over search distances
         for j in range(1, len(rad_dist)):
+
+            #Initiate empty arrays for tracking which particles have been analyzed when finding local neighbors
+            AA_bulk_neigh_ind = np.array([], dtype=int)
+            AB_bulk_neigh_ind = np.array([], dtype=int)
+            BA_bulk_neigh_ind = np.array([], dtype=int)
+            BB_bulk_neigh_ind = np.array([], dtype=int)
+            AA_int_neigh_ind = np.array([], dtype=int)
+            AB_int_neigh_ind = np.array([], dtype=int)
+            BA_int_neigh_ind = np.array([], dtype=int)
+            BB_int_neigh_ind = np.array([], dtype=int)
 
             # List of query arguments for neighbor list caculation
             query_args = dict(mode='ball', r_min = rad_dist[j-1]+0.001, r_max = rad_dist[j])#r_max=self.theory_functs.conForRClust(peNet_int-45., self.eps) * 1.0)
@@ -2438,24 +2440,25 @@ class measurement:
 
                         #Save nearest neighbor information to array
                         AA_bulk_num_neigh[i] += len(loc)
-                        AA_bulk_neigh_ind[i] = int(i)
+                        AA_bulk_neigh_ind = np.append(AA_bulk_neigh_ind, int(i))
                     else:
                         #Save nearest neighbor information to array
-                        AA_bulk_neigh_ind[i] = int(i)
+                        AA_bulk_neigh_ind = np.append(AA_bulk_neigh_ind, int(i))
 
             #Loop over neighbor pairings of B-A neighbor pairs to calculate number of nearest neighbors
             for i in range(0, len(pos_A_bulk)):
                 if i in BA_bulk_nlist.query_point_indices:
                     if i not in BA_bulk_neigh_ind:
+                        
                         # Find neighbors list IDs where i is reference particle
                         loc = np.where(BA_bulk_nlist.query_point_indices==i)[0]
 
                         #Save nearest neighbor information to array
                         BA_bulk_num_neigh[i] += len(loc)
-                        BA_bulk_neigh_ind[i] = int(i)
+                        BA_bulk_neigh_ind = np.append(BA_bulk_neigh_ind, int(i))
                     else:
                         #Save nearest neighbor information to array
-                        BA_bulk_neigh_ind[i] = int(i)
+                        BA_bulk_neigh_ind = np.append(BA_bulk_neigh_ind, int(i))
 
             #Loop over neighbor pairings of A-B neighbor pairs to calculate number of nearest neighbors
             for i in range(0, len(pos_B_bulk)):
@@ -2466,10 +2469,10 @@ class measurement:
 
                         #Save nearest neighbor information to array
                         AB_bulk_num_neigh[i] += len(loc)
-                        AB_bulk_neigh_ind[i] = int(i)
+                        AB_bulk_neigh_ind = np.append(AB_bulk_neigh_ind, int(i))
                     else:
                         #Save nearest neighbor information to array
-                        AB_bulk_neigh_ind[i] = int(i)
+                        AB_bulk_neigh_ind = np.append(AB_bulk_neigh_ind, int(i))
 
             #Loop over neighbor pairings of B-B neighbor pairs to calculate number of nearest neighbors
             for i in range(0, len(pos_B_bulk)):
@@ -2480,10 +2483,10 @@ class measurement:
 
                         #Save nearest neighbor information to array
                         BB_bulk_num_neigh[i] += len(loc)
-                        BB_bulk_neigh_ind[i] = int(i)
+                        BB_bulk_neigh_ind = np.append(BB_bulk_neigh_ind, int(i))
                     else:
                         #Save nearest neighbor information to array
-                        BB_bulk_neigh_ind[i] = int(i)
+                        BB_bulk_neigh_ind = np.append(BB_bulk_neigh_ind, int(i))
 
             # Locate potential neighbor particles by type in the dense phase
             system_A_int = freud.AABBQuery(self.f_box, self.f_box.wrap(pos_A))
@@ -2504,10 +2507,10 @@ class measurement:
 
                         #Save nearest neighbor information to array
                         AA_int_num_neigh[i] += len(loc)
-                        AA_int_neigh_ind[i] = int(i)
+                        AA_int_neigh_ind = np.append(AA_int_neigh_ind, int(i))
                     else:
                         #Save nearest neighbor information to array
-                        AA_int_neigh_ind[i] = int(i)
+                        AA_int_neigh_ind = np.append(AA_int_neigh_ind, int(i))
 
             #Loop over neighbor pairings of B-A neighbor pairs to calculate number of nearest neighbors
             for i in range(0, len(pos_A_int)):
@@ -2518,10 +2521,10 @@ class measurement:
 
                         #Save nearest neighbor information to array
                         BA_int_num_neigh[i] += len(loc)
-                        BA_int_neigh_ind[i] = int(i)
+                        BA_int_neigh_ind = np.append(BA_int_neigh_ind, int(i))
                     else:
                         #Save nearest neighbor information to array
-                        BA_int_neigh_ind[i] = int(i)
+                        BA_int_neigh_ind = np.append(BA_int_neigh_ind, int(i))
 
             #Loop over neighbor pairings of A-B neighbor pairs to calculate number of nearest neighbors
             for i in range(0, len(pos_B_int)):
@@ -2532,10 +2535,10 @@ class measurement:
 
                         #Save nearest neighbor information to array
                         AB_int_num_neigh[i] += len(loc)
-                        AB_int_neigh_ind[i] = int(i)
+                        AB_int_neigh_ind = np.append(AB_int_neigh_ind, int(i))
                     else:
                         #Save nearest neighbor information to array
-                        AB_int_neigh_ind[i] = int(i)
+                        AB_int_neigh_ind = np.append(AB_int_neigh_ind, int(i))
 
             #Loop over neighbor pairings of B-B neighbor pairs to calculate number of nearest neighbors
             for i in range(0, len(pos_B_int)):
@@ -2546,10 +2549,10 @@ class measurement:
 
                         #Save nearest neighbor information to array
                         BB_int_num_neigh[i] += len(loc)
-                        BB_int_neigh_ind[i] = int(i)
+                        BB_int_neigh_ind = np.append(BB_int_neigh_ind, int(i))
                     else:
                         #Save nearest neighbor information to array
-                        BB_int_neigh_ind[i] = int(i)
+                        BB_int_neigh_ind = np.append(BB_int_neigh_ind, int(i))
 
             # Local density of A neighbor particles around A reference particles in bulk
             AA_bulk_local_dens = AA_bulk_num_neigh / (np.pi*rad_dist[j]**2)
@@ -2564,24 +2567,24 @@ class measurement:
             BB_bulk_local_dens = BB_bulk_num_neigh / (np.pi*rad_dist[j]**2)
 
             # Local density of A neighbor particles around A reference particles in interface
-            AA_int_local_dens = AA_bulk_num_neigh / (np.pi*rad_dist[j]**2)
+            AA_int_local_dens = AA_int_num_neigh / (np.pi*rad_dist[j]**2)
 
             # Local density of A neighbor particles around B reference particles in interface
-            AB_int_local_dens = AB_bulk_num_neigh / (np.pi*rad_dist[j]**2)
+            AB_int_local_dens = AB_int_num_neigh / (np.pi*rad_dist[j]**2)
 
             # Local density of B neighbor particles around A reference particles in interface
-            BA_int_local_dens = BA_bulk_num_neigh / (np.pi*rad_dist[j]**2)
+            BA_int_local_dens = BA_int_num_neigh / (np.pi*rad_dist[j]**2)
 
             # Local density of B neighbor particles around B reference particles in interface
-            BB_int_local_dens = BB_bulk_num_neigh / (np.pi*rad_dist[j]**2)
+            BB_int_local_dens = BB_int_num_neigh / (np.pi*rad_dist[j]**2)
             
             # Save neighbor and local orientational order to arrays for all B reference particles of the respective phase with all nearest neighbors
             Ball_bulk_local_dens= np.append(BA_bulk_local_dens, BB_bulk_local_dens)
             Ball_int_local_dens = np.append(BA_int_local_dens, BB_int_local_dens)
 
             # Save neighbor and local orientational order to arrays for all A reference particles of the respective phase with all nearest neighbors
-            Aall_bulk_local_dens = np.append(AB_bulk_local_dens, AA_bulk_local_dens)
-            Aall_int_local_dens = np.append(AB_int_local_dens, AA_int_local_dens)
+            Aall_bulk_local_dens = np.append(AA_bulk_local_dens, AB_bulk_local_dens)
+            Aall_int_local_dens = np.append(AA_int_local_dens, AB_int_local_dens)
 
             # Save neighbor and local orientational order to arrays for all reference particles of the respective phase with B nearest neighbors
             allB_bulk_num_neigh = AB_bulk_num_neigh + BB_bulk_num_neigh
@@ -2711,12 +2714,12 @@ class measurement:
                 allall_int_pos_y = np.append(pos_A_int[:,1], pos_B_int[:,1])
 
                 # Save neighbor, local orientational order, and position to arrays for A dense phase reference particles with all nearest neighbors
-                Aall_dense_pos_x = np.append(pos_bulk[:,0], pos_int[:,0])
-                Aall_dense_pos_y = np.append(pos_bulk[:,1], pos_int[:,1])
+                Aall_dense_pos_x = np.append(allall_bulk_pos_x, allall_int_pos_x)
+                Aall_dense_pos_y = np.append(allall_bulk_pos_y, allall_int_pos_y)
 
                 # Save neighbor, local orientational order, and position to arrays for B dense phase reference particles with all nearest neighbors
-                Ball_dense_pos_x = np.append(pos_bulk[:,0], pos_int[:,0])
-                Ball_dense_pos_y = np.append(pos_bulk[:,1], pos_int[:,1])
+                Ball_dense_pos_x = np.append(allall_bulk_pos_x, allall_int_pos_x)
+                Ball_dense_pos_y = np.append(allall_bulk_pos_y, allall_int_pos_y)
 
                 # Save neighbor, local orientational order, and position to arrays for all dense phase reference particles with A nearest neighbors
                 allA_dense_pos_x = np.append(pos_A_bulk[:,0], pos_A_int[:,0])
@@ -2731,7 +2734,7 @@ class measurement:
                 allall_dense_pos_y = np.append(allall_bulk_pos_y, allall_int_pos_y)
 
                 # Create output dictionary for single particle values of local density per phase/activity pairing for plotting
-                local_dens_plot_dict = {'all-all': {'dens': allall_dense_local_dens, 'homo': allall_dense_local_dens_inhomog, 'pos_x': allall_dense_pos_x, 'pos_y': allall_dense_pos_y}, 'all-A': {'dens': allA_dense_local_dens, 'homo': allA_dense_local_dens_inhomog, 'pos_x': allA_dense_pos_x, 'pos_y': allA_dense_pos_y}, 'all-B': {'dens': allB_dense_local_dens, 'homo': allB_dense_local_dens_inhomog, 'pos_x': allB_dense_pos_x, 'pos_y': allB_dense_pos_y}, 'A-all': {'dens': Aall_dense_local_dens, 'homo': Aall_dense_local_dens_inhomog, 'pos_x': Aall_dense_pos_x, 'pos_y': Aall_dense_pos_y}, 'B-all': {'dens': Ball_dense_local_dens, 'homo': Ball_dense_local_dens_inhomog, 'pos_x': Ball_dense_pos_x, 'pos_y': Ball_dense_pos_y}, 'A-A': {'dens': AA_dense_local_dens, 'homo': AA_dense_local_dens_inhomog, 'pos_x': allB_dense_pos_x, 'pos_y': allB_dense_pos_y}, 'A-B': {'dens': AB_dense_local_dens, 'homo': AB_dense_local_dens_inhomog, 'pos_x': allB_dense_pos_x, 'pos_y': allB_dense_pos_y}, 'B-A': {'dens': BA_dense_local_dens, 'homo': BA_dense_local_dens_inhomog, 'pos_x': allA_dense_pos_x, 'pos_y': allA_dense_pos_y}, 'B-B': {'dens': BB_dense_local_dens, 'homo': BB_dense_local_dens_inhomog, 'pos_x': allB_dense_pos_x, 'pos_y': allB_dense_pos_y}}
+                local_dens_plot_dict = {'all-all': {'dens': allall_dense_local_dens, 'homo': allall_dense_local_dens_inhomog, 'pos_x': allall_dense_pos_x, 'pos_y': allall_dense_pos_y}, 'all-A': {'dens': allA_dense_local_dens, 'homo': allA_dense_local_dens_inhomog, 'pos_x': allA_dense_pos_x, 'pos_y': allA_dense_pos_y}, 'all-B': {'dens': allB_dense_local_dens, 'homo': allB_dense_local_dens_inhomog, 'pos_x': allB_dense_pos_x, 'pos_y': allB_dense_pos_y}, 'A-all': {'dens': Aall_dense_local_dens, 'homo': Aall_dense_local_dens_inhomog, 'pos_x': Aall_dense_pos_x, 'pos_y': Aall_dense_pos_y}, 'B-all': {'dens': Ball_dense_local_dens, 'homo': Ball_dense_local_dens_inhomog, 'pos_x': Ball_dense_pos_x, 'pos_y': Ball_dense_pos_y}, 'A-A': {'dens': AA_dense_local_dens, 'homo': AA_dense_local_dens_inhomog, 'pos_x': allA_dense_pos_x, 'pos_y': allA_dense_pos_y}, 'A-B': {'dens': AB_dense_local_dens, 'homo': AB_dense_local_dens_inhomog, 'pos_x': allB_dense_pos_x, 'pos_y': allB_dense_pos_y}, 'B-A': {'dens': BA_dense_local_dens, 'homo': BA_dense_local_dens_inhomog, 'pos_x': allA_dense_pos_x, 'pos_y': allA_dense_pos_y}, 'B-B': {'dens': BB_dense_local_dens, 'homo': BB_dense_local_dens_inhomog, 'pos_x': allB_dense_pos_x, 'pos_y': allB_dense_pos_y}}
 
         # Create output dictionary for statistical averages of local density per phase/activity pairing
         local_dens_stat_dict = {'radius': rad_dist[1:], 'allA_mean': allA_local_dens_mean_arr, 'allA_std': allA_local_dens_std_arr, 'allB_mean': allB_local_dens_mean_arr, 'allB_std': allB_local_dens_std_arr, 'AA_mean': AA_local_dens_mean_arr, 'AA_std': AA_local_dens_std_arr, 'AB_mean': AB_local_dens_mean_arr, 'AB_std': AB_local_dens_std_arr, 'BA_mean': BA_local_dens_mean_arr, 'BA_std': BA_local_dens_std_arr, 'BB_mean': BB_local_dens_mean_arr, 'BB_std': BB_local_dens_std_arr}

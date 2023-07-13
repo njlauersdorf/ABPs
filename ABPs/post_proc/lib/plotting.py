@@ -1267,6 +1267,90 @@ class plotting:
         plt.tight_layout()
         plt.savefig(self.outPath + 'plot_lat_histo_' + self.outFile + ".png", dpi=150, transparent=False)
         plt.close()
+    
+    def vel_histogram(self, vel_plot_dict, dt_step, avg='False'):
+        """
+        This function plots a histogram of the lattice spacings of bulk (green)
+        and interface (purple) particles
+
+        Inputs:
+        lat_plot_dict: dictionary (output from lattice_spacing() in
+        measurement.py) containing information on the lattice spacing, averaged
+        over all neighbors within the potential cut-off radius, of each bulk and
+        interface particle.
+
+        Outputs:
+        .png file with a histogram of all bulk (green) and interface (purple)
+        particle lattice spacings color coded.
+        """
+
+        A_vel = vel_plot_dict['A']['mag']/dt_step
+        B_vel = vel_plot_dict['B']['mag']/dt_step
+
+        fig = plt.figure(figsize=(8,6))
+        ax = fig.add_subplot(111)
+
+        #Define colors for plots
+        fastCol = '#e31a1c'
+        slowCol = '#081d58'
+
+        xmin = np.min(A_vel)-5
+        xmax = np.max(B_vel)+5
+
+        yA, xA, _ = plt.hist(A_vel, bins=100, color=slowCol, range=[xmin, xmax], alpha=0.2, density=True)
+        yB, xB, _ = plt.hist(B_vel, bins=100, color=fastCol, range=[xmin, xmax], alpha=0.2, density=True)
+
+        if np.max(yB) >= np.max(yA):
+            y_max = 1.1 * np.max(yB)      
+        else:
+            y_max = 1.1 * np.max(yA)
+
+        ax.plot([self.peA, self.peA], [0, y_max], color=slowCol, linestyle='solid', linewidth=3.0)
+        ax.plot([self.peB, self.peB], [0, y_max], color=fastCol, linestyle='solid', linewidth=3.0)
+        ax.plot([np.mean(A_vel), np.mean(A_vel)], [0, y_max], color=slowCol, linestyle='dashed', linewidth=3.0)
+        ax.plot([np.median(A_vel), np.median(A_vel)], [0, y_max], color=slowCol, linestyle='dotted', linewidth=3.0)
+        ax.plot([np.mean(B_vel), np.mean(B_vel)], [0, y_max], color=fastCol, linestyle='dashed', linewidth=3.0)
+        ax.plot([np.median(B_vel), np.median(B_vel)], [0, y_max], color=fastCol, linestyle='dotted', linewidth=3.0)
+        
+        fast_leg = []
+        fast_leg.append(Line2D([0], [0], linestyle='solid', lw = 3.0, color=slowCol, label=r'$\mathrm{Pe}_\mathrm{S} = $'+str(int(self.peA)), markersize=25))
+        fast_leg.append(Line2D([0], [0], linestyle='solid', lw = 3.0, color=fastCol, label=r'$\mathrm{Pe}_\mathrm{F} = $'+str(int(self.peB)), markersize=25))
+        fast_leg.append(Line2D([0], [0], linestyle='dashed', lw = 3.0, color=slowCol, label=r'$\overline{v}_\mathrm{S} = $'+str(int(np.mean(A_vel))), markersize=25))
+        fast_leg.append(Line2D([0], [0], linestyle='dashed', lw = 3.0, color=fastCol, label=r'$\overline{v}_\mathrm{F} = $'+str(int(np.mean(B_vel))), markersize=25))
+        fast_leg.append(Line2D([0], [0], linestyle='dotted', lw = 3.0, color=slowCol, label=r'$\widetilde{v}_\mathrm{S} = $'+str(int(np.median(A_vel))), markersize=25))
+        fast_leg.append(Line2D([0], [0], linestyle='dotted', lw = 3.0, color=fastCol, label=r'$\widetilde{v}_\mathrm{F} = $'+str(int(np.median(B_vel))), markersize=25))
+        one_leg = ax.legend(handles=fast_leg, loc='upper right', borderpad=0.3, labelspacing=0.2, handletextpad=0.3, bbox_transform=ax.transAxes, bbox_to_anchor=[1.03, 1.23], handlelength=1.5, columnspacing=0.9, fontsize=25, ncol=3, facecolor='None', edgecolor='None')
+        ax.add_artist(one_leg)
+
+        # Create legend of phases
+        blue_patch = mpatches.Patch(color=slowCol, label='A')
+        red_patch = mpatches.Patch(color=fastCol, label='B')
+        #plt.legend(handles=[blue_patch, red_patch], fancybox=True, framealpha=0.75, ncol=1, fontsize=18, loc='upper right',labelspacing=0.1, handletextpad=0.1)
+
+        
+        # Modify plot parameters
+        ax.set_xlabel(r'Effective Velocity ($v$)', fontsize=25)
+        ax.set_ylabel('Density', fontsize=25)
+        ax.set_xlim([xmin,xmax])
+        ax.set_ylim([0,y_max])
+        plt.xticks(fontsize=21)
+        plt.yticks(fontsize=21)
+        if avg=='False':
+            # Label current time step
+            plt.text(0.735, 0.92, s=r'$\tau$' + ' = ' + '{:.2f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+                fontsize=25,transform = ax.transAxes,
+                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+            plt.tight_layout()
+        
+            plt.savefig(self.outPath + 'plot_vel_histo_' + self.outFile + ".png", dpi=150, transparent=False, bbox_inches='tight')
+            plt.close()
+        else:
+            plt.tight_layout()
+        
+            plt.savefig(self.outPath + 'plot_avg_vel_histo_' + self.outFile + ".png", dpi=150, transparent=False, bbox_inches='tight')
+            plt.close()
+
+        
 
     def lat_map(self, lat_plot_dict, sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None, type='all', interface_id = False, orientation_id = False):
         """
@@ -3558,11 +3642,11 @@ class plotting:
 
         # Label respective reference and neighbor particle types
         if neigh_pair[0] == 'A':
-            clb.set_label(r'$\phi^\mathrm{S}_\mathrm{local}$', labelpad=35, y=0.5, rotation=270, fontsize=30)
+            clb.set_label(r'$(\phi_\mathrm{S}(x)-\langle \phi_\mathrm{S} \rangle )^2$', labelpad=35, y=0.5, rotation=270, fontsize=30)
         elif neigh_pair[0] == 'B':
-            clb.set_label(r'$\phi^\mathrm{F}_\mathrm{local}$', labelpad=35, y=0.5, rotation=270, fontsize=30)
+            clb.set_label(r'$(\phi_\mathrm{F}(x)-\langle \phi_\mathrm{F} \rangle )^2$', labelpad=35, y=0.5, rotation=270, fontsize=30)
         else:
-            clb.set_label(r'$\phi_\mathrm{local}$', labelpad=35, y=0.5, rotation=270, fontsize=30)
+            clb.set_label(r'$(\phi(x)-\langle \phi \rangle )^2$', labelpad=35, y=0.5, rotation=270, fontsize=30)
 
         # Plot interpolated inner and outer interface surface curves
         if interface_id == True:
@@ -3641,7 +3725,7 @@ class plotting:
         ax.axis('off')
         plt.tight_layout()
         #plt.show()
-        plt.savefig(self.outPath + 'local_density_' + str(pair) + '_' + self.outFile + ".png", dpi=250, transparent=False)
+        plt.savefig(self.outPath + 'local_homogeneity_' + str(pair) + '_' + self.outFile + ".png", dpi=250, transparent=False)
         plt.close() 
 
     def plot_clustering(self, neigh_plot_dict, sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None, type='all', interface_id = False, orientation_id = False):
