@@ -106,7 +106,7 @@ if [ $dont_run == "no" ]; then
 
     # Length of simulation in Brownian time steps
     declare -i runfor
-    runfor=$(( 6 ))
+    runfor=$(( 60 ))
 
     # Frequency for dumping simulation data
     declare -a dump_freq
