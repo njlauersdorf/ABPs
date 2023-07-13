@@ -110,7 +110,14 @@ class stress_and_pressure:
         self.theory_functs = theory.theory()
 
     def interparticle_stress(self):
+        '''
+        Purpose: Calculates total interparticle stress between particles in each phase
 
+        Output:
+        stress_plot_dict: dictionary containing interparticle stresses experienced by individual particles
+
+        stress_stat_dict: dictionary containing the statistical values of interparticle stresses by all particles in each phase
+        '''
         phase_dict, part_dict = self.binning.decrease_bin_size(self.phase_dict['bin'], self.phase_dict['part'], self.part_dict['id'], self.pos, self.typ)
 
         NBins = len(phase_dict['bin'])
@@ -290,7 +297,14 @@ class stress_and_pressure:
         return stress_plot_dict, stress_stat_dict
 
     def shear_stress(self, stress_stat_dict):
+        '''
+        Purpose: Calculates total shear stress between particles in each phase
 
+        Output:
+        stress_plot_dict: dictionary containing interparticle stresses experienced by individual particles
+
+        shear_dict: dictionary containing the average shear pressure in each phase
+        '''
         count_dict = self.phase_ident.phase_count(self.phase_dict)
 
         bulk_area = count_dict['bulk'] * self.sizeBin_x * self.sizeBin_y
@@ -314,6 +328,12 @@ class stress_and_pressure:
         return shear_dict
 
     def virial_pressure_binned(self, stress_plot_dict):
+        '''
+        Purpose: Calculates and bins the average interparticle pressure
+
+        Output:
+        press_arr: array (NBins_x, NBins_y) containing the total Virial formulation of interparticle pressure in each bin
+        '''
 
         press_arr = np.zeros((self.NBins_x, self.NBins_y))
 
@@ -326,7 +346,15 @@ class stress_and_pressure:
         return press_arr
 
     def virial_pressure_part(self, stress_plot_dict):
+        '''
+        Purpose: Calculates the average interparticle pressure experienced by each particle
 
+        Inputs:
+        stress_plot_dict: dictionary containing interparticle stresses experienced by individual particles
+
+        Output:
+        press_arr: array (partNum) containing the total Virial formulation of interparticle pressure for each particle
+        '''
         press_arr = np.zeros(self.partNum)
 
         for h in range(0, self.partNum):
@@ -336,7 +364,15 @@ class stress_and_pressure:
         return press_arr
 
     def virial_pressure(self, stress_stat_dict):
+        '''
+        Purpose: Calculates and bins the average interparticle pressure
 
+        Inputs:
+        stress_stat_dict: dictionary containing the statistical values of interparticle stresses by all particles in each phase
+
+        Output:
+        press_dict: array (NBins_x, NBins_y) containing the total Virial formulation of interparticle pressure in each bin
+        '''
         bulkTrace = (stress_stat_dict['bulk']['all']['XX'] + stress_stat_dict['bulk']['all']['YY'])/2.
         intTrace = (stress_stat_dict['int']['all']['XX'] + stress_stat_dict['int']['all']['YY'])/2.
         gasTrace = (stress_stat_dict['gas']['all']['XX'] + stress_stat_dict['gas']['all']['YY'])/2.
@@ -369,6 +405,7 @@ class stress_and_pressure:
 
         press_dict = {'bulk': {'all': bulk_press, 'A': bulkA_press, 'B': bulkB_press}, 'int': {'all': int_press, 'A': intA_press, 'B': intB_press}, 'gas': {'all': gas_press, 'A': gasA_press, 'B': gasB_press}}
         return press_dict
+
     def radial_com_interparticle_pressure(self, radial_stress_dict):
 
         #X locations across interface for integration

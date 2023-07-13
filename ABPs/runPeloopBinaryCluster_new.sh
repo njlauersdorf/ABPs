@@ -102,11 +102,11 @@ fi
 if [ $dont_run == "no" ]; then
     # Default values for simulations
     declare -i part_num
-    part_num=( 20000 )
+    part_num=( 50000 )
 
     # Length of simulation in Brownian time steps
     declare -i runfor
-    runfor=$(( 600 ))
+    runfor=$(( 3 ))
 
     # Frequency for dumping simulation data
     declare -a dump_freq
@@ -115,7 +115,7 @@ if [ $dont_run == "no" ]; then
 
     # Lists for activity of A and B species
     declare -a pa
-    pa=(0 50 100 150 200 350 500)
+    pa=(150)
     # 25 50 75)
 
     declare -a pb
@@ -127,7 +127,7 @@ if [ $dont_run == "no" ]; then
 
     # List for phi
     declare -a phi
-    phi=(150 155)
+    phi=(60)
    
     # List for epsilon
     declare -a eps

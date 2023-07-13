@@ -11,21 +11,6 @@ from scipy import interpolate
 from scipy import ndimage
 
 import numpy as np
-import matplotlib
-
-import matplotlib.pyplot as plt
-import matplotlib.collections
-from matplotlib.patches import Circle
-from matplotlib import pyplot as plt
-from matplotlib.path import Path
-from matplotlib.patches import Ellipse
-from matplotlib import collections  as mc
-import matplotlib.colors as colors
-import matplotlib.patches as mpatches
-from matplotlib import cm
-import matplotlib.patches as patches
-import matplotlib.ticker as tick
-
 
 #from symfit import parameters, variables, sin, cos, Fit
 
@@ -129,7 +114,7 @@ class utility:
             return difr[:,0], difr[:,1], difr_mag
         else:
             return difr_mag
-            
+
     def shift_quadrants(self, difx, dify):
         '''
         Purpose: Calculates angle between X-axis and a given location (neighbor particle)
@@ -228,80 +213,3 @@ class utility:
                 if x[d][f]!=0:
                     out_arr[d][f]=np.sign(x[d][f]) * np.log10(np.abs(x[d][f]))
         return out_arr
-    """
-    class Node:
-       def __init__(self, key, val):
-          self.key = key
-          self.val = val
-          self.next = None
-    class LinkedList:
-       def __init__(self):
-          self.prehead = Node(None, None)
-       def search(self, key):
-          p = self.prehead.next
-          while p:
-             if p.key == key:
-                return p
-             p = p.next
-          return None
-       def add(self, key, val):
-          p = self.search(key)
-          if p:
-             p.val = val
-          else:
-             node = Node(key, val)
-             self.prehead.next, node.next = node, self.prehead.next
-       def get(self, key):
-          p = self.search(key)
-          if p:
-             return p.val
-          else:
-             return None
-       def remove(self, key):
-          prev = self.prehead
-          cur = prev.next
-          while cur:
-             if cur.key == key:
-                break
-             prev, cur = cur, cur.next
-          if cur:
-             prev.next = cur.next
-       def serialize(self):
-          p = self.prehead.next
-          ret = []
-          while p:
-             ret.append([p.key, p.val])
-             p = p.next
-          return ret
-    class MyHashMap:
-       def __init__(self):
-          self.size = 1033
-          self.arr = [LinkedList() for _ in range(self.size)]
-       def _hash(self, key):
-          return key % self.size
-       def put(self, key, value):
-          h = self._hash(key)
-          self.arr[h].add(key, value)
-       def get(self, key):
-          h = self._hash(key)
-          ret = self.arr[h].get(key)
-          if ret is not None:
-             return ret
-          else:
-             return -1
-       def remove(self, key):
-          h = self._hash(key)
-          self.arr[h].remove(key)
-    ob = utility_functs.utility.MyHashMap()
-    key = ix * len(self.binParts) + iy
-    ix = int(key / len(self.binParts));
-    j = int(key % len(self.binParts));
-    ob.put(1, 1)
-    ob.put(2, 2)
-    print(ob.get(1))
-    print(ob.get(3))
-    ob.put(2, 1)
-    print(ob.get(2))
-    ob.remove(2)
-    print(ob.get(2))
-    """

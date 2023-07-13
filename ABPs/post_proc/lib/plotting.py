@@ -3430,6 +3430,220 @@ class plotting:
         plt.savefig(self.outPath + 'local_density_' + str(pair) + '_' + self.outFile + ".png", dpi=250, transparent=False)
         plt.close()    
 
+    def plot_homogeneity(self, local_dens_plot_dict, sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None, pair='all-all', interface_id = False, orientation_id = False):
+        """
+        This function plots the binned average area fraction at each location
+        in space.
+
+        Inputs:
+        local_dens_plot_dict: dictionary (output from local_density() in
+        measurement.py) containing information on the local density of all, type A, 
+        or type B particles around all, type A, or type B particles in the dense phase.
+
+        sep_surface_dict (default value = None): dictionary (output from surface_curve_interp() in
+        interface.py) that contains the interpolated curve representing the
+        inner and outer surfaces of each interface.
+
+        int_comp_dict (default value = None): dictionary (output from int_sort2() in
+        phase_identification.py) that contains information on each
+        isolated/individual interface.
+
+        pair (optional): string specifying whether the local density of all
+        (pair='all-X'), type A (pair='A-X'), type B (pair='B-X') around all 
+        (pair='X-all), type A (pair='X-A), or type B (pair='X-B) particles
+
+        interface_id ( default value = False): True/False value that specifies whether
+        the interface interior and exterior surfaces should be plotted
+
+        orientation_id ( default value = False): True/False value that specifies whether
+        the average, binned orientation of particles should be plotted
+
+        Outputs:
+        .png file with position of each dense phase particle plotted and color coded by the 
+        local area fraction around it with color bar
+        """
+        
+        typ0ind = np.where(self.typ == 0)[0]
+        typ1ind = np.where(self.typ == 1)[0]
+
+        # If box is rectangular with long dimension of x-axis
+        if self.lx_box > self.ly_box:
+
+            # Estimated area of dense phase
+            area_dense = (1.0 * self.partNum * (np.pi/4) / self.phiCP)
+
+            # Mid point of dense phase across longest box dimension (x)
+            dense_x_mid = self.hx_box
+
+            # estimated shortest dimension length of dense phase (y)
+            dense_x_width = np.amax(neigh_plot_dict['all-all']['x'][typ0ind]) * 1.5 #(area_dense / self.ly_box)
+            #dense_x_width = 42.23 * 1.5
+            # Set maximum dimension length (x) of simulation box to be 12 inches (plus 1 inch color bar)
+            scaling = 13.0
+
+            # X and Y-dimension lengths (in inches)
+            x_dim = int(scaling)
+            y_dim = int(scaling/ (2*dense_x_width / self.ly_box))
+            #y_dim = y_dim# * 3
+        # If box is rectangular with long dimension of y-axis
+        elif self.lx_box < self.ly_box:
+
+            # Estimated area of dense phase
+            area_dense = (0.8 * self.partNum * (np.pi/4) / self.phiCP)
+
+            # Mid point of dense phase across longest box dimension (y)
+            mid_point = np.mean(neigh_plot_dict['all-all']['y']+self.hy_box)
+
+            # estimated shorted dimension length of dense phase (x)
+            dense_x_width = (area_dense / self.lx_box)
+
+            # Set maximum dimension length (y) of simulation box to be 13 inches
+            scaling = 13.0
+
+            # X and Y-dimension lengths (in inches)
+            x_dim = int((scaling/(dense_x_width / self.lx_box)) + 1.0)
+            y_dim = int(scaling)
+
+        # If box is square
+        else:
+
+            # Minimum dimension length (in inches)
+            scaling =7.0
+
+            # X and Y-dimension lengths (in inches)
+            x_dim = int(scaling + 2.0)
+            y_dim = int(scaling)
+
+        # Generate figure of dimensions proportional to simulation box size (with added x-length for color bar)
+        fig = plt.figure(figsize=(x_dim,y_dim))
+        ax = fig.add_subplot(111)
+
+        # Set plotted particle size
+        sz = 0.755
+
+        # Find min/max number of neighbors
+        min_neigh = np.min(local_dens_plot_dict[pair]['homo'])
+        max_neigh = np.max(local_dens_plot_dict[pair]['homo'])
+
+        # Generate list of ellipses for all particles to plot containing position (x,y) and point size that automatically scales with figure size
+        ells = [Ellipse(xy=np.array([local_dens_plot_dict[pair]['pos_x'][i]+self.hx_box,local_dens_plot_dict[pair]['pos_y'][i]+self.hy_box]),
+                width=sz, height=sz)
+        for i in range(0,len(local_dens_plot_dict[pair]['pos_x']))]
+
+        # Plot position colored by number of A neighbors
+        neighborGroup = mc.PatchCollection(ells, cmap=plt.cm.get_cmap('cool', 1000))#facecolors=slowCol)
+        coll = ax.add_collection(neighborGroup)
+
+        # Plot title
+        coll.set_array(np.ravel(local_dens_plot_dict[pair]['homo']))
+        neigh_pair = pair.split('-')
+        plt.title(neigh_pair[1].capitalize() + ' Reference Particles', fontsize=30)
+
+        # Define color bar min and max
+        minClb = np.min(local_dens_plot_dict[pair]['homo'])
+        maxClb = np.max(local_dens_plot_dict[pair]['homo'])
+
+        # Set color bar range
+        coll.set_clim([minClb, maxClb])
+
+        # Set tick levels
+        tick_lev = np.linspace(minClb, maxClb, 10)
+
+        # Define boundaries of colors (such that ticks at midpoints)
+        level_boundaries = np.linspace(minClb, maxClb, 1000)
+        
+        # Define colorbar
+        clb = plt.colorbar(coll, ticks=tick_lev, orientation="vertical", format=tick.FormatStrFormatter('%.4f'), boundaries=level_boundaries)
+        clb.ax.tick_params(labelsize=24)
+
+        # Label respective reference and neighbor particle types
+        if neigh_pair[0] == 'A':
+            clb.set_label(r'$\phi^\mathrm{S}_\mathrm{local}$', labelpad=35, y=0.5, rotation=270, fontsize=30)
+        elif neigh_pair[0] == 'B':
+            clb.set_label(r'$\phi^\mathrm{F}_\mathrm{local}$', labelpad=35, y=0.5, rotation=270, fontsize=30)
+        else:
+            clb.set_label(r'$\phi_\mathrm{local}$', labelpad=35, y=0.5, rotation=270, fontsize=30)
+
+        # Plot interpolated inner and outer interface surface curves
+        if interface_id == True:
+            try:
+
+                if sep_surface_dict!=None:
+                    
+                    for m in range(0, len(sep_surface_dict)):
+                        key = 'surface id ' + str(int(int_comp_dict['ids'][m]))
+                        print(key)
+
+                        try:
+                            pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
+                            pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
+                            plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_interior_surface_x + self.lx_box, pos_interior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_interior_surface_x - self.lx_box, pos_interior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_interior_surface_x, pos_interior_surface_y+self.ly_box, c='black', s=3.0)
+                            plt.scatter(pos_interior_surface_x, pos_interior_surface_y-self.ly_box, c='black', s=3.0)
+                        except:
+                            pass
+
+                        try:
+                            
+                            pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
+                            pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
+                            plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_exterior_surface_x + self.lx_box, pos_exterior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_exterior_surface_x - self.lx_box, pos_exterior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y+self.ly_box, c='black', s=3.0)
+                            plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y-self.ly_box, c='black', s=3.0) 
+                        except:
+                            pass
+            except:
+                pass
+        
+        # Plot averaged, binned orientation of particles
+        if orientation_id == True:
+            try:
+                if active_fa_dict!=None:
+                    plt.quiver(self.pos_x, self.pos_y, active_fa_dict['bin']['x'], active_fa_dict['bin']['y'], scale=20.0, color='black', alpha=0.8)
+            except:
+                pass
+
+        # Label time step
+        if self.lx_box == self.ly_box:
+            #plt.text(0.69, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+            #    fontsize=24, transform = ax.transAxes,
+            #    bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+            plt.text(0.62, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+                fontsize=30, transform = ax.transAxes,
+                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+        elif self.lx_box > self.ly_box:
+            plt.text(0.85, 0.1, s=r'$\tau$' + ' = ' + '{:.4f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+                fontsize=18, transform = ax.transAxes,
+                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+
+       # If rectangular box, reduce system size plotted
+        if self.lx_box > self.ly_box:
+            plt.xlim(dense_x_mid-(dense_x_width/2), dense_x_mid+(dense_x_width/2))
+            plt.ylim(0, self.ly_box)
+        elif self.lx_box < self.ly_box:
+            plt.ylim(dense_y_mid-(dense_y_width/2), dense_y_mid+(dense_y_width/2))
+            plt.xlim(0, self.lx_box)
+        # Plot entire system
+        else:
+            plt.ylim(0, self.ly_box)
+            plt.xlim(0, self.lx_box)
+
+        
+
+        # Modify plot parameters
+        plt.tick_params(axis='both', which='both',
+                        bottom=False, top=False, left=False, right=False,
+                        labelbottom=False, labeltop=False, labelleft=False, labelright=False)
+        ax.axis('off')
+        plt.tight_layout()
+        #plt.show()
+        plt.savefig(self.outPath + 'local_density_' + str(pair) + '_' + self.outFile + ".png", dpi=250, transparent=False)
+        plt.close() 
+
     def plot_clustering(self, neigh_plot_dict, sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None, type='all', interface_id = False, orientation_id = False):
         """
         This function plots the clustering coefficient of all dense phase particles

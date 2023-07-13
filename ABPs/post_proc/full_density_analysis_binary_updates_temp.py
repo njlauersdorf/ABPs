@@ -250,7 +250,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
     
                                 # get number of timesteps dumped
     
-    end = start + 1 #int(dumps/time_step)-1                                             # final frame to process
+    end = start + 20 #int(dumps/time_step)-1                                             # final frame to process
     snap = t[0]                                             # Take first snap for box
     first_tstep = snap.configuration.step                   # First time step
 
@@ -890,11 +890,18 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 # Instantiate array for saving phase information over time
                 partPhase_time = phase_dict['part']
 
+                time_entered_bulk = np.ones(partNum) * tst
+                time_entered_gas = np.ones(partNum) * tst
+
                 # Instantiate array for saving time step
                 partPhase_time_arr = np.append(partPhase_time_arr, tst)
 
                 # Change to True since steady state has been reached
                 steady_state_once = 'True'
+
+                start_dict = {'bulk': {'time': time_entered_bulk}, 'gas': {'time': time_entered_gas} }
+                lifetime_dict = {}
+                lifetime_stat_dict = {}
 
             # If cluster has been formed previously
             else:
@@ -1404,6 +1411,17 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 
                 if plot == 'y':
 
+                    plotting_functs.plot_homogeneity(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='all-all', interface_id = interface_option, orientation_id = orientation_option)
+                    plotting_functs.plot_homogeneity(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='all-A', interface_id = interface_option, orientation_id = orientation_option)
+                    plotting_functs.plot_homogeneity(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='all-B', interface_id = interface_option, orientation_id = orientation_option)
+                    plotting_functs.plot_homogeneity(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='A-all', interface_id = interface_option, orientation_id = orientation_option)
+                    plotting_functs.plot_homogeneity(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='B-all', interface_id = interface_option, orientation_id = orientation_option)
+                    plotting_functs.plot_homogeneity(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='A-A', interface_id = interface_option, orientation_id = orientation_option)
+                    plotting_functs.plot_homogeneity(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='A-B', interface_id = interface_option, orientation_id = orientation_option)
+                    plotting_functs.plot_homogeneity(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='B-A', interface_id = interface_option, orientation_id = orientation_option)
+                    plotting_functs.plot_homogeneity(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='B-B', interface_id = interface_option, orientation_id = orientation_option)
+                    stop
+
                     # Plot particles color-coded by local density for all-all, all-A, all-B, A-all, B-all, A-A, A-B, B-A, and B-B nearest neighbor pairs in cluster
                     plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='all-all', interface_id = interface_option, orientation_id = orientation_option)
                     plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='all-A', interface_id = interface_option, orientation_id = orientation_option)
@@ -1639,6 +1657,16 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                         data_output_functs.write_to_txt(adsorption_dict, dataPath + 'not_adsorption_final_' + outfile + '.txt')
                         data_output_functs.write_to_txt(clust_motion_dict, dataPath + 'not_clust_motion_final_' + outfile + '.txt')
+            elif measurement_options[0] == 'lifetime':
+                #DONE!
+                if len(partPhase_time_arr)>1:
+                
+                    if steady_state_once == 'True':
+                        kinetic_functs = kinetics.kinetic_props(lx_box, ly_box, NBins_x, NBins_y, partNum, typ, eps, peA, peB, parFrac)
+
+                        start_dict, lifetime_dict, lifetime_stat_dict,  = kinetic_functs.cluster_lifetime(partPhase_time, start_dict, lifetime_dict, lifetime_stat_dict, in_clust_arr, partPhase_time_arr)
+
+                        data_output_functs.write_to_txt(lifetime_stat_dict, dataPath + 'lifetime_' + outfile + '.txt')
         else:
             
              # Instantiate plotting functions module
@@ -1727,10 +1755,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
             if steady_state_once == 'True':
                 kinetic_functs = kinetics.kinetic_props(lx_box, ly_box, NBins_x, NBins_y, partNum, typ, eps, peA, peB, parFrac)
 
-                adsorption_dict, clust_motion_dict = kinetic_functs.particle_flux_final(partPhase_time, in_clust_arr, partPhase_time_arr, clust_size_arr, pos_x_arr_time, pos_y_arr_time, com_x_arr_time, com_y_arr_time, com_x_parts_arr_time, com_y_parts_arr_time)
+                adsorption_dict = kinetic_functs.particle_flux_final(partPhase_time, time_entered_bulk, time_entered_gas, in_clust_arr, partPhase_time_arr, clust_size_arr, pos_x_arr_time, pos_y_arr_time, com_x_arr_time, com_y_arr_time, com_x_parts_arr_time, com_y_parts_arr_time)
 
                 data_output_functs.write_all_time_to_txt(adsorption_dict, dataPath + 'adsorption_final_' + outfile + '.txt')
-                data_output_functs.write_all_time_to_txt(clust_motion_dict, dataPath + 'clust_motion_final_' + outfile + '.txt')
     elif measurement_options[0] == 'penetration':
         
         x = 1

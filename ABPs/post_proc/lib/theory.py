@@ -280,6 +280,23 @@ class theory:
         return fx, fy
 
     def computeFLJ(self, difr, difx, dify, eps):
+        """
+        Purpose: Compute Lennard-Jones force between two particles
+
+        Inputs:
+        difr: total interparticle separation distance
+
+        difx: x-dimension interparticle separation distance
+
+        dify: y-dimension interparticle separation distance
+
+        eps: particle softness
+
+        Outputs:
+        fx: Lennard-Jones interparticle force in x-dimension
+
+        fy: Lennard-Jones interpartice force in y-dimension
+        """
         f = (24. * eps / difr) * ( (2*((self.sigma/difr)**12)) - ((self.sigma/difr)**6) )
 
         fx = f * difx / difr
@@ -287,6 +304,24 @@ class theory:
         return fx, fy
 
     def computeFLJ_arr(self, difr, difx, dify, eps):
+        """
+        Compute Lennard-Jones force between all given particle pairs
+
+        Inputs:
+        difr: total interparticle separation distance
+
+        difx: x-dimension interparticle separation distance
+
+        dify: y-dimension interparticle separation distance
+
+        eps: particle softness
+
+        Outputs:
+        fx: Lennard-Jones interparticle force in x-dimension
+
+        fy: Lennard-Jones interpartice force in y-dimension
+        """
+
         fx = np.zeros(len(difr))
         fy = np.zeros(len(difr))
         for i in range(0, len(difr)):

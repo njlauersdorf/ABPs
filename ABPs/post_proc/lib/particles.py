@@ -1469,8 +1469,8 @@ class particle_props:
         Purpose: Calculates the rate of collision between particles in the gas phase
 
         Output:
-        vel_phase_dict: dictionary containing the average and standard deviation of velocity
-        of each phase and each respective type ('all', 'A', or 'B')
+        collision_dict: dictionary containing the total number of colisions
+        in gas for each respective type ('all', 'A', or 'B')
         '''
 
         # Find fast and slow particle IDs
@@ -1515,8 +1515,29 @@ class particle_props:
 
     def cluster_msd(self, com_x_msd, com_y_msd, com_r_msd, com_x_parts_arr_time, com_y_parts_arr_time):
         
-        difx = com_x_parts_arr_time[-1] - com_x_parts_arr_time[-2]
+        '''
+        Purpose: Calculates the mean squared displacement of the cluster
 
+        Inputs:
+        com_x_msd: total x displacement from initial time point
+
+        com_y_msd: total y displacement from initial time point
+
+        com_r_msd: total men squared displacement from initial time point
+
+        com_x_parts_arr_time: com x-location over time
+
+        com_y_parts_arr_time: com y-location over time
+
+        Output:
+        cluster_msd_dict: dictionary containing the total x- and y- displacement  and mean squared displacement 
+        from initial time point
+        '''
+
+        # X-displacement between time points
+        difx = com_x_parts_arr_time[-1] - com_x_parts_arr_time[-2]
+        
+        #Enforce periodic boundary conditions
         difx_abs = np.abs(difx)
         if difx_abs>=self.hx_box:
             if difx < -self.hx_box:
@@ -1524,8 +1545,10 @@ class particle_props:
             else:
                 difx -= self.lx_box
 
+        # X-displacement over time
         com_x_msd = np.append(com_x_msd, com_x_msd[-1] + difx)
 
+        # Y-displacement between time points
         dify = com_y_parts_arr_time[-1] - com_y_parts_arr_time[-2]
 
         #Enforce periodic boundary conditions
@@ -1536,12 +1559,72 @@ class particle_props:
             else:
                 dify -= self.ly_box
         
+        # Y-displacement over time
         com_y_msd = np.append(com_y_msd, com_y_msd[-1] + dify)
 
+        # Total displacement between time points
         difr = (difx**2 + dify**2)**0.5
 
+        # MSD over time
         com_r_msd = np.append(com_r_msd, (com_x_msd[-1] ** 2 + com_y_msd[-1] ** 2) ** 0.5 )
 
+        # Dictionary containing MSD
+        cluster_msd_dict = {'x': com_x_msd, 'y': com_y_msd, 'r': com_r_msd}
+
+        return cluster_msd_dict
+
+    def particle_msd(self, msd_arr, prev_pos):
+        
+        '''
+        Purpose: Calculates the mean squared displacement of the cluster
+
+        Inputs:
+        msd_arr: total men squared displacement from initial time point for each particle
+
+        com_x_parts_arr_time: com x-location over time
+
+        com_y_parts_arr_time: com y-location over time
+
+        Output:
+        cluster_msd_dict: dictionary containing the total x- and y- displacement  and mean squared displacement 
+        from initial time point
+        '''
+
+        # X-displacement between time points
+        difx = com_x_parts_arr_time[-1] - com_x_parts_arr_time[-2]
+        
+        #Enforce periodic boundary conditions
+        difx_abs = np.abs(difx)
+        if difx_abs>=self.hx_box:
+            if difx < -self.hx_box:
+                difx += self.lx_box
+            else:
+                difx -= self.lx_box
+
+        # X-displacement over time
+        com_x_msd = np.append(com_x_msd, com_x_msd[-1] + difx)
+
+        # Y-displacement between time points
+        dify = com_y_parts_arr_time[-1] - com_y_parts_arr_time[-2]
+
+        #Enforce periodic boundary conditions
+        dify_abs = np.abs(dify)
+        if dify_abs>=self.hy_box:
+            if dify < -self.hy_box:
+                dify += self.ly_box
+            else:
+                dify -= self.ly_box
+        
+        # Y-displacement over time
+        com_y_msd = np.append(com_y_msd, com_y_msd[-1] + dify)
+
+        # Total displacement between time points
+        difr = (difx**2 + dify**2)**0.5
+
+        # MSD over time
+        com_r_msd = np.append(com_r_msd, (com_x_msd[-1] ** 2 + com_y_msd[-1] ** 2) ** 0.5 )
+
+        # Dictionary containing MSD
         cluster_msd_dict = {'x': com_x_msd, 'y': com_y_msd, 'r': com_r_msd}
 
         return cluster_msd_dict

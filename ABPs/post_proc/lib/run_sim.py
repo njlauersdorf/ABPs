@@ -9,6 +9,9 @@ import numpy as np
 import theory
 
 class run_sim:
+    """
+    A class containing functions to run different HOOMD-Blue simulations using the runPeloopBinaryCluster_new.sh script
+    """
     def __init__(self, hoomdPath, runFor, dumpFreq, partPercA, peA, peB, partNum, intPhi, eps, aspect_ratio, seed1, seed2, seed3, seed4, seed5, kT, threeEtaPiSigma, sigma, r_cut, tauLJ, epsA, epsB, dt):
 
         # Read in bash arguments
@@ -291,30 +294,30 @@ class run_sim:
 
             # If the loop makes it this far, append
             pos.append((x, y, z))
-            typ.append(i)
+            typ.append(0)
 
             if x != 0 and y != 0:
                 # Mirror positions, alignment and type
                 if (len(pos)<self.partNum):
                     pos.append((-x, y, z))
-                    typ.append(i)
+                    typ.append(0)
                 if (len(pos)<self.partNum):
                     pos.append((-x, -y, z))
-                    typ.append(i)
+                    typ.append(0)
                 if (len(pos)<self.partNum):
                     pos.append((x, -y, z))
-                    typ.append(i)
+                    typ.append(0)
 
             # y must be zero
             elif (x != 0) & (len(pos)<self.partNum):
                 pos.append((-x, y, z))
-                typ.append(i)
+                typ.append(0)
 
                 #typ.append(i)
             # x must be zero
             elif (y != 0) & (len(pos)<self.partNum):
                 pos.append((x, -y, z))
-                typ.append(i)
+                typ.append(0)
 
                 #typ.append(i)
 
@@ -441,6 +444,7 @@ class run_sim:
                         dynamic=['attribute', 'property', 'momentum'])
         
         # NPT (constant pressure) integration method
+        interparticle_pressure = 4600
         hoomd.md.integrate.npt(group=all, kT=self.kT, tau=100 * self.dt, P=(interparticle_pressure/2), tauP = 1000 * self.dt, couple="xy")
 
         # Run simulation
