@@ -1728,8 +1728,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     time_velA_mag = np.append(time_velA_mag, vel_plot_dict['A']['mag'])
                     time_velB_mag = np.append(time_velB_mag, vel_plot_dict['B']['mag'])
 
-                    if plot == 'y':
-                        plotting_functs.vel_histogram(vel_plot_dict, dt_step)
+                    #if plot == 'y':
+                        #plotting_functs.vel_histogram(vel_plot_dict, dt_step)
             elif measurement_options[0] == 'velocity-corr':
                 if j>(start * time_step):
 
