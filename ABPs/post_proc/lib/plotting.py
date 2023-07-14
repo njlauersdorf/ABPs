@@ -1349,6 +1349,87 @@ class plotting:
         
             plt.savefig(self.outPath + 'plot_avg_vel_histo_' + self.outFile + ".png", dpi=150, transparent=False, bbox_inches='tight')
             plt.close()
+    def cluster_size_histogram(self, collision_plot_dict, avg='False'):
+        """
+        This function plots a histogram of the lattice spacings of bulk (green)
+        and interface (purple) particles
+
+        Inputs:
+        lat_plot_dict: dictionary (output from lattice_spacing() in
+        measurement.py) containing information on the lattice spacing, averaged
+        over all neighbors within the potential cut-off radius, of each bulk and
+        interface particle.
+
+        Outputs:
+        .png file with a histogram of all bulk (green) and interface (purple)
+        particle lattice spacings color coded.
+        """
+
+        A_size = collision_plot_dict['A']
+        B_size = collision_plot_dict['B']
+
+        fig = plt.figure(figsize=(8,6))
+        ax = fig.add_subplot(111)
+
+        #Define colors for plots
+        fastCol = '#e31a1c'
+        slowCol = '#081d58'
+
+        xmin = 1
+        xmax = np.max(B_size)+1
+
+        yA, xA, _ = plt.hist(A_size, bins=int(xmax-1), color=slowCol, range=[xmin, xmax], alpha=0.2)
+        yB, xB, _ = plt.hist(B_size, bins=int(xmax-1), color=fastCol, range=[xmin, xmax], alpha=0.2)
+
+        if np.max(yB) >= np.max(yA):
+            y_max = 1.1 * np.max(yB)      
+        else:
+            y_max = 1.1 * np.max(yA)
+
+        #ax.plot([self.peA, self.peA], [0, y_max], color=slowCol, linestyle='solid', linewidth=3.0)
+        #ax.plot([self.peB, self.peB], [0, y_max], color=fastCol, linestyle='solid', linewidth=3.0)
+        #ax.plot([np.mean(A_vel), np.mean(A_vel)], [0, y_max], color=slowCol, linestyle='dashed', linewidth=3.0)
+        #ax.plot([np.median(A_vel), np.median(A_vel)], [0, y_max], color=slowCol, linestyle='dotted', linewidth=3.0)
+        #ax.plot([np.mean(B_vel), np.mean(B_vel)], [0, y_max], color=fastCol, linestyle='dashed', linewidth=3.0)
+        #ax.plot([np.median(B_vel), np.median(B_vel)], [0, y_max], color=fastCol, linestyle='dotted', linewidth=3.0)
+        
+        #fast_leg = []
+        #fast_leg.append(Line2D([0], [0], linestyle='solid', lw = 3.0, color=slowCol, label=r'$\mathrm{Pe}_\mathrm{S} = $'+str(int(self.peA)), markersize=25))
+        #fast_leg.append(Line2D([0], [0], linestyle='solid', lw = 3.0, color=fastCol, label=r'$\mathrm{Pe}_\mathrm{F} = $'+str(int(self.peB)), markersize=25))
+        #fast_leg.append(Line2D([0], [0], linestyle='dashed', lw = 3.0, color=slowCol, label=r'$\overline{v}_\mathrm{S} = $'+str(int(np.mean(A_vel))), markersize=25))
+        #fast_leg.append(Line2D([0], [0], linestyle='dashed', lw = 3.0, color=fastCol, label=r'$\overline{v}_\mathrm{F} = $'+str(int(np.mean(B_vel))), markersize=25))
+        #fast_leg.append(Line2D([0], [0], linestyle='dotted', lw = 3.0, color=slowCol, label=r'$\widetilde{v}_\mathrm{S} = $'+str(int(np.median(A_vel))), markersize=25))
+        #fast_leg.append(Line2D([0], [0], linestyle='dotted', lw = 3.0, color=fastCol, label=r'$\widetilde{v}_\mathrm{F} = $'+str(int(np.median(B_vel))), markersize=25))
+        #one_leg = ax.legend(handles=fast_leg, loc='upper right', borderpad=0.3, labelspacing=0.2, handletextpad=0.3, bbox_transform=ax.transAxes, bbox_to_anchor=[1.03, 1.23], handlelength=1.5, columnspacing=0.9, fontsize=25, ncol=3, facecolor='None', edgecolor='None')
+        #ax.add_artist(one_leg)
+
+        # Create legend of phases
+        blue_patch = mpatches.Patch(color=slowCol, label='A')
+        red_patch = mpatches.Patch(color=fastCol, label='B')
+        #plt.legend(handles=[blue_patch, red_patch], fancybox=True, framealpha=0.75, ncol=1, fontsize=18, loc='upper right',labelspacing=0.1, handletextpad=0.1)
+
+        
+        # Modify plot parameters
+        ax.set_xlabel(r'Cluster Size ($N_\mathrm{c}$)', fontsize=25)
+        ax.set_ylabel('Density', fontsize=25)
+        ax.set_xlim([xmin,xmax])
+        ax.set_ylim([0,y_max])
+        plt.xticks(fontsize=21)
+        plt.yticks(fontsize=21)
+        if avg=='False':
+            # Label current time step
+            plt.text(0.735, 0.92, s=r'$\tau$' + ' = ' + '{:.2f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+                fontsize=25,transform = ax.transAxes,
+                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+            plt.tight_layout()
+        
+            plt.savefig(self.outPath + 'plot_clust_size_histo_' + self.outFile + ".png", dpi=150, transparent=False, bbox_inches='tight')
+            plt.close()
+        else:
+            plt.tight_layout()
+        
+            plt.savefig(self.outPath + 'plot_avg_clust_size_histo_' + self.outFile + ".png", dpi=150, transparent=False, bbox_inches='tight')
+            plt.close()
 
         
 

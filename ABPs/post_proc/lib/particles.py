@@ -1473,6 +1473,8 @@ class particle_props:
         in gas for each respective type ('all', 'A', or 'B')
         '''
 
+        from statistics import mode
+
         # Find fast and slow particle IDs
         slow_ids = np.where( (self.typ==0) )[0]
         fast_ids = np.where( (self.typ==1) )[0]
@@ -1481,6 +1483,7 @@ class particle_props:
         query_args = dict(mode='ball', r_min = 0.1, r_max=self.r_cut)
 
         #Compute cluster parameters using system_all neighbor list
+        system_all = freud.AABBQuery(self.f_box, self.f_box.wrap(self.pos))
         system_B = freud.AABBQuery(self.f_box, self.f_box.wrap(self.pos[fast_ids]))
         system_A = freud.AABBQuery(self.f_box, self.f_box.wrap(self.pos[slow_ids]))
 
@@ -1508,10 +1511,62 @@ class particle_props:
         # Find Slow-Slow number of collisions
         AA_collision_num = len(AA_nlist) / 2.0
 
+        #Compute cluster parameters using neighbor list of all particles within LJ cut-off distance
+        cl_all=freud.cluster.Cluster()                              #Define cluster
+        cl_all.compute(system_all, neighbors={'r_max': self.r_cut})        # Calculate clusters given neighbor list, positions,
+                                                                    # and maximal radial interaction distance
+        clp_all = freud.cluster.ClusterProperties()                 #Define cluster properties
+        ids = cl_all.cluster_idx                                    # get id of each cluster
+        clp_all.compute(system_all, ids)                            # Calculate cluster properties given cluster IDs
+        clust_all_size = clp_all.sizes                                  # find cluster sizes
+
+        #Compute cluster parameters using neighbor list of A particles within LJ cut-off distance
+        cl_A=freud.cluster.Cluster()                              #Define cluster
+        cl_A.compute(system_A, neighbors={'r_max': self.r_cut})        # Calculate clusters given neighbor list, positions,
+                                                                    # and maximal radial interaction distance
+        clp_A = freud.cluster.ClusterProperties()                 #Define cluster properties
+        ids = cl_A.cluster_idx                                    # get id of each cluster
+        clp_A.compute(system_A, ids)                            # Calculate cluster properties given cluster IDs
+        clust_A_size = clp_A.sizes                                  # find cluster sizes
+
+        #Compute cluster parameters using neighbor list of A particles within LJ cut-off distance
+        cl_B=freud.cluster.Cluster()                              #Define cluster
+        cl_B.compute(system_B, neighbors={'r_max': self.r_cut})        # Calculate clusters given neighbor list, positions,
+                                                                    # and maximal radial interaction distance
+        clp_B = freud.cluster.ClusterProperties()                 #Define cluster properties
+        ids = cl_B.cluster_idx                                    # get id of each cluster
+        clp_B.compute(system_B, ids)                            # Calculate cluster properties given cluster IDs
+        clust_B_size = clp_B.sizes        
+
+        clust_all_large = np.amax(clust_all_size)
+        clust_A_large = np.amax(clust_A_size)
+        clust_B_large = np.amax(clust_B_size)
+
+        lcID_all = np.where(clust_all_size >= 1)[0]    
+        lcID_A = np.where(clust_A_size >= 1)[0]    
+        lcID_B = np.where(clust_B_size >= 1)[0]
+
+        clust_all_mean = np.mean(clust_all_size[lcID_all])
+        clust_A_mean = np.mean(clust_A_size[lcID_A])
+        clust_B_mean = np.mean(clust_B_size[lcID_B])
+
+        clust_all_mode = mode(clust_all_size[lcID_all])
+        clust_A_mode = mode(clust_A_size[lcID_A])
+        clust_B_mode = mode(clust_B_size[lcID_B])
+
+        clust_all_std = np.std(clust_all_size[lcID_all])
+        clust_A_std = np.std(clust_A_size[lcID_A])
+        clust_B_std = np.std(clust_B_size[lcID_B])
+
+        clust_all_median = np.median(clust_all_size[lcID_all])
+        clust_A_median = np.median(clust_A_size[lcID_A])
+        clust_B_median = np.median(clust_B_size[lcID_B])
+
         # Dictionary containing rates of collisions
-        collision_dict = {'AA': AA_collision_num, 'AB': AB_collision_num, 'BA': BA_collision_num, 'BB': BB_collision_num}
-        
-        return collision_dict
+        collision_stat_dict = {'num':{'AA': AA_collision_num, 'AB': AB_collision_num, 'BA': BA_collision_num, 'BB': BB_collision_num}, 'size': {'all': {'large': clust_all_large, 'mean': clust_all_mean, 'mode': clust_all_mode, 'median': clust_all_median, 'std': clust_all_std}, 'A': {'large': clust_A_large, 'mean': clust_A_mean, 'mode': clust_A_mode, 'median': clust_A_median, 'std': clust_A_std}, 'B': {'large': clust_B_large, 'mean': clust_B_mean, 'mode': clust_B_mode, 'median': clust_B_median, 'std': clust_B_std}}}
+        collision_plot_dict = {'all': clust_all_size, 'A': clust_A_size, 'B': clust_B_size}
+
+        return collision_stat_dict, collision_plot_dict
 
     def cluster_msd(self, com_x_msd, com_y_msd, com_r_msd, com_x_parts_arr_time, com_y_parts_arr_time):
         

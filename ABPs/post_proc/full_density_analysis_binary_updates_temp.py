@@ -219,6 +219,10 @@ com_r_msd = np.array([0])                       # Cluster CoM total MSD
 time_velA_mag = np.array([])
 time_velB_mag = np.array([])
 
+time_clust_all_size = np.array([])
+time_clust_A_size = np.array([])
+time_clust_B_size = np.array([])
+
 # Optional input parameters for plotting data
 com_option = False
 mono_option = False
@@ -978,12 +982,14 @@ with hoomd.open(name=inFile, mode='rb') as t:
             
             elif measurement_options[0] == 'collision':
                 #DONE!
-
-                # Calculate the rate of collisions between particles
-                collision_dict = particle_prop_functs.collision_rate()
+                collision_stat_dict, collision_plot_dict = particle_prop_functs.collision_rate()
                 
-                # Save collision data
-                data_output_functs.write_to_txt(collision_dict, dataPath + 'collision_' + outfile + '.txt')       
+                time_clust_all_size = np.append(time_clust_all_size, collision_plot_dict['all'])
+                time_clust_A_size = np.append(time_clust_A_size, collision_plot_dict['A'])
+                time_clust_B_size = np.append(time_clust_B_size, collision_plot_dict['B'])
+
+                data_output_functs.write_to_txt(collision_stat_dict, dataPath + 'collision_' + outfile + '.txt')       
+                 
 
             elif measurement_options[0] == 'phase-velocity':
                 if j>(start*time_step):
@@ -1743,10 +1749,14 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     data_output_functs.write_to_txt(vel_stat_dict, dataPath + 'velocity_corr_' + outfile + '.txt')
             elif measurement_options[0] == 'collision':
                 #DONE!
-                collision_dict = particle_prop_functs.collision_rate()
+                collision_stat_dict, collision_plot_dict = particle_prop_functs.collision_rate()
                 
-                data_output_functs.write_to_txt(collision_dict, dataPath + 'collision_' + outfile + '.txt')       
+                time_clust_all_size = np.append(time_clust_all_size, collision_plot_dict['all'])
+                time_clust_A_size = np.append(time_clust_A_size, collision_plot_dict['A'])
+                time_clust_B_size = np.append(time_clust_B_size, collision_plot_dict['B'])
 
+                data_output_functs.write_to_txt(collision_stat_dict, dataPath + 'collision_' + outfile + '.txt')       
+            
         particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, eps, typ, pos, ang)
 
         utility_functs = utility.utility(lx_box, ly_box)
@@ -1887,3 +1897,12 @@ with hoomd.open(name=inFile, mode='rb') as t:
             vel_plot_dict = {'A': {'mag': time_velA_mag}, 'B': {'mag': time_velB_mag}}
             if plot == 'y':
                 plotting_functs.vel_histogram(vel_plot_dict, dt_step, avg='True')
+
+    elif measurement_options[0] == 'collision':
+        #DONE!
+
+        # Calculate the rate of collisions between particles
+        collision_plot_dict = {'all': time_clust_all_size, 'A': time_clust_A_size, 'B': time_clust_B_size}
+        
+        if plot == 'y':
+            plotting_functs.cluster_size_histogram(collision_plot_dict, avg='True')
