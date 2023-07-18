@@ -254,11 +254,11 @@ with hoomd.open(name=inFile, mode='rb') as t:
     
     dumps = int(t.__len__())
 
-    start = int(0/time_step)#205                                             # first frame to process
+    start = int(500/time_step)#205                                             # first frame to process
     
                                 # get number of timesteps dumped
     
-    end = int(dumps/time_step)-1                                             # final frame to process
+    end = start + 2# int(dumps/time_step)-1                                             # final frame to process
 
     snap = t[0]                                             # Take first snap for box
     first_tstep = snap.configuration.step                   # First time step
@@ -1373,14 +1373,15 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
                 
                 # Measure clustering coefficient
-                neigh_plot_dict = lattice_structure_functs.clustering_coefficient()
+                clust_plot_dict, clust_stat_dict, prob_stat_dict = lattice_structure_functs.clustering_coefficient()
                 
                 if plot == 'y':
+                    plotting_functs.prob_histogram(prob_stat_dict)
 
                     # Plot all, A, and B particles and color-code by clustering coefficient
-                    plotting_functs.plot_clustering(neigh_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, type='all', interface_id = interface_option, orientation_id = orientation_option)
-                    plotting_functs.plot_clustering(neigh_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, type='A', interface_id = interface_option, orientation_id = orientation_option)
-                    plotting_functs.plot_clustering(neigh_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, type='B', interface_id = interface_option, orientation_id = orientation_option)
+                    plotting_functs.plot_clustering(clust_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, type='all', interface_id = interface_option, orientation_id = orientation_option)
+                    plotting_functs.plot_clustering(clust_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, type='A', interface_id = interface_option, orientation_id = orientation_option)
+                    plotting_functs.plot_clustering(clust_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, type='B', interface_id = interface_option, orientation_id = orientation_option)
 
             elif measurement_options[0] == 'local-gas-density':
 
@@ -1396,6 +1397,17 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 
                 
                 if plot == 'y':
+
+                    plotting_functs.plot_homogeneity(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='all-all', interface_id = interface_option, orientation_id = orientation_option)
+                    plotting_functs.plot_homogeneity(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='all-A', interface_id = interface_option, orientation_id = orientation_option)
+                    plotting_functs.plot_homogeneity(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='all-B', interface_id = interface_option, orientation_id = orientation_option)
+                    plotting_functs.plot_homogeneity(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='A-all', interface_id = interface_option, orientation_id = orientation_option)
+                    plotting_functs.plot_homogeneity(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='B-all', interface_id = interface_option, orientation_id = orientation_option)
+                    plotting_functs.plot_homogeneity(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='A-A', interface_id = interface_option, orientation_id = orientation_option)
+                    plotting_functs.plot_homogeneity(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='A-B', interface_id = interface_option, orientation_id = orientation_option)
+                    plotting_functs.plot_homogeneity(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='B-A', interface_id = interface_option, orientation_id = orientation_option)
+                    plotting_functs.plot_homogeneity(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='B-B', interface_id = interface_option, orientation_id = orientation_option)
+
 
                     # Plot particles color-coded by local density for all-all, all-A, all-B, A-all, B-all, A-A, A-B, B-A, and B-B nearest neighbor pairs in gas
                     plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='all-all', interface_id = interface_option, orientation_id = orientation_option)

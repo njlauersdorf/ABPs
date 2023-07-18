@@ -2048,6 +2048,16 @@ class measurement:
         allB_local_dens_std_arr = []
 
         #Initiate empty arrays for calculating mean and standard deviation of local density
+        #of A neighbor particles around all reference particles
+        Aall_local_dens_mean_arr = []
+        Aall_local_dens_std_arr = []
+        
+        #Initiate empty arrays for calculating mean and standard deviation of local density
+        #of B neighbor particles around all reference particles
+        Ball_local_dens_mean_arr = []
+        Ball_local_dens_std_arr = []
+
+        #Initiate empty arrays for calculating mean and standard deviation of local density
         #of all neighbor particles around all reference particles
         allall_local_dens_mean_arr = []
         allall_local_dens_std_arr = []
@@ -2071,21 +2081,17 @@ class measurement:
         #of B neighbor particles around B reference particles
         BB_local_dens_mean_arr = []
         BB_local_dens_std_arr = []
-        
+
         #Initiate empty arrays for finding nearest A neighboring dense particles surrounding type A bulk particles
-        AA_gas_neigh_ind = np.zeros(len(pos_A_gas))
         AA_gas_num_neigh = np.zeros(len(pos_A_gas))
 
         #Initiate empty arrays for finding nearest A neighboring dense particles surrounding type B bulk particles
-        AB_gas_neigh_ind = np.zeros(len(pos_B_gas))
         AB_gas_num_neigh = np.zeros(len(pos_B_gas))
 
         #Initiate empty arrays for finding nearest B neighboring dense particles surrounding type A bulk particles
-        BA_gas_neigh_ind = np.zeros(len(pos_A_gas))
         BA_gas_num_neigh = np.zeros(len(pos_A_gas))
 
         #Initiate empty arrays for finding nearest B neighboring dense particles surrounding type B bulk particles
-        BB_gas_neigh_ind = np.zeros(len(pos_B_gas))
         BB_gas_num_neigh = np.zeros(len(pos_B_gas))
 
         print('total_density')
@@ -2095,6 +2101,12 @@ class measurement:
         
         # Loop over search distances
         for j in range(1, len(rad_dist)):
+
+            #Initiate empty arrays for tracking which particles have been analyzed when finding local neighbors
+            AA_gas_neigh_ind = np.array([], dtype=int)
+            AB_gas_neigh_ind = np.array([], dtype=int)
+            BA_gas_neigh_ind = np.array([], dtype=int)
+            BB_gas_neigh_ind = np.array([], dtype=int)
 
             #Initiate empty arrays for finding nearest A neighboring dense particles surrounding type A bulk particles
             AA_gas_neigh_ind = np.zeros(len(pos_A_gas))
@@ -2130,10 +2142,10 @@ class measurement:
 
                         #Save nearest neighbor information to array
                         AA_gas_num_neigh[i] += len(loc)
-                        AA_gas_neigh_ind[i] = int(i)
+                        AA_gas_neigh_ind = np.append(AA_gas_neigh_ind, int(i))
                     else:
                         #Save nearest neighbor information to array
-                        AA_gas_neigh_ind[i] = int(i)
+                        AA_gas_neigh_ind = np.append(AA_gas_neigh_ind, int(i))
 
             #Loop over neighbor pairings of B-A neighbor pairs to calculate number of nearest neighbors
             for i in range(0, len(pos_A_gas)):
@@ -2144,10 +2156,10 @@ class measurement:
 
                         #Save nearest neighbor information to array
                         BA_gas_num_neigh[i] += len(loc)
-                        BA_gas_neigh_ind[i] = int(i)
+                        BA_gas_neigh_ind = np.append(BA_gas_neigh_ind, int(i))
                     else:
                         #Save nearest neighbor information to array
-                        BA_gas_neigh_ind[i] = int(i)
+                        BA_gas_neigh_ind = np.append(BA_gas_neigh_ind, int(i))
 
             #Loop over neighbor pairings of A-B neighbor pairs to calculate number of nearest neighbors
             for i in range(0, len(pos_B_gas)):
@@ -2158,10 +2170,10 @@ class measurement:
 
                         #Save nearest neighbor information to array
                         AB_gas_num_neigh[i] += len(loc)
-                        AB_gas_neigh_ind[i] = int(i)
+                        AB_gas_neigh_ind = np.append(AB_gas_neigh_ind, int(i))
                     else:
                         #Save nearest neighbor information to array
-                        AB_gas_neigh_ind[i] = int(i)
+                        AB_gas_neigh_ind = np.append(AB_gas_neigh_ind, int(i))
 
             #Loop over neighbor pairings of B-B neighbor pairs to calculate number of nearest neighbors
             for i in range(0, len(pos_B_gas)):
@@ -2172,10 +2184,10 @@ class measurement:
 
                         #Save nearest neighbor information to array
                         BB_gas_num_neigh[i] += len(loc)
-                        BB_gas_neigh_ind[i] = int(i)
+                        BB_gas_neigh_ind = np.append(BB_gas_neigh_ind, int(i))
                     else:
                         #Save nearest neighbor information to array
-                        BB_gas_neigh_ind[i] = int(i)
+                        BB_gas_neigh_ind = np.append(BB_gas_neigh_ind, int(i))
 
             slice_area = (np.pi*rad_dist[j]**2)
             # Local density of A neighbor particles around A reference particles in bulk
@@ -2194,7 +2206,7 @@ class measurement:
             Ball_gas_local_dens= np.append(BA_gas_local_dens, BB_gas_local_dens)
 
             # Save neighbor and local orientational order to arrays for all A reference particles of the respective phase with all nearest neighbors
-            Aall_gas_local_dens = np.append(AB_gas_local_dens, AA_gas_local_dens)
+            Aall_gas_local_dens = np.append(AA_gas_local_dens, AB_gas_local_dens)
 
             # Save neighbor and local orientational order to arrays for all reference particles of the respective phase with B nearest neighbors
             allB_gas_num_neigh = AB_gas_num_neigh + BB_gas_num_neigh
@@ -2212,37 +2224,56 @@ class measurement:
             # around A reference particles in dense phase
             AA_local_dens_mean_arr.append(np.mean(AA_gas_local_dens))
             AA_local_dens_std_arr.append(np.std(AA_gas_local_dens))
+            AA_gas_local_dens_inhomog = (AA_gas_local_dens - AA_local_dens_mean_arr[-1])**2
 
             # Calculate mean and standard deviation of local density of A neighbor particles 
             # around B reference particles in dense phase
             AB_local_dens_mean_arr.append(np.mean(AB_gas_local_dens))
             AB_local_dens_std_arr.append(np.std(AB_gas_local_dens))
+            AB_gas_local_dens_inhomog = (AB_gas_local_dens - AB_local_dens_mean_arr[-1])**2
 
             # Calculate mean and standard deviation of local density of B neighbor particles 
             # around A reference particles in dense phase
             BA_local_dens_mean_arr.append(np.mean(BA_gas_local_dens))
             BA_local_dens_std_arr.append(np.std(BA_gas_local_dens))
+            BA_gas_local_dens_inhomog = (BA_gas_local_dens - BA_local_dens_mean_arr[-1])**2
 
             # Calculate mean and standard deviation of local density of B neighbor particles 
             # around B reference particles in dense phase
             BB_local_dens_mean_arr.append(np.mean(BB_gas_local_dens))
             BB_local_dens_std_arr.append(np.std(BB_gas_local_dens))
+            BB_gas_local_dens_inhomog = (BB_gas_local_dens - BB_local_dens_mean_arr[-1])**2
 
             # Calculate mean and standard deviation of local density of all neighbor particles 
             # around A reference particles in dense phase
             allA_local_dens_mean_arr.append(np.mean(allA_gas_local_dens))
             allA_local_dens_std_arr.append(np.std(allA_gas_local_dens))
+            allA_gas_local_dens_inhomog = (allA_gas_local_dens - allA_local_dens_mean_arr[-1])**2
 
             # Calculate mean and standard deviation of local density of all neighbor particles 
             # around B reference particles in dense phase
             allB_local_dens_mean_arr.append(np.mean(allB_gas_local_dens))
             allB_local_dens_std_arr.append(np.std(allB_gas_local_dens))
+            allB_gas_local_dens_inhomog = (allB_gas_local_dens - allB_local_dens_mean_arr[-1])**2
+
+            # Calculate mean and standard deviation of local density of all neighbor particles 
+            # around A reference particles in dense phase
+            Aall_local_dens_mean_arr.append(np.mean(Aall_gas_local_dens))
+            Aall_local_dens_std_arr.append(np.std(Aall_gas_local_dens))
+            Aall_gas_local_dens_inhomog = (Aall_gas_local_dens - Aall_local_dens_mean_arr[-1])**2
+
+            # Calculate mean and standard deviation of local density of all neighbor particles 
+            # around B reference particles in dense phase
+            Ball_local_dens_mean_arr.append(np.mean(Ball_gas_local_dens))
+            Ball_local_dens_std_arr.append(np.std(Ball_gas_local_dens))
+            Ball_gas_local_dens_inhomog = (Ball_gas_local_dens - Ball_local_dens_mean_arr[-1])**2
 
             # Calculate mean and standard deviation of local density of all neighbor particles 
             # around all reference particles in dense phase
             allall_local_dens_mean_arr.append(np.mean(allall_gas_local_dens))
             allall_local_dens_std_arr.append(np.std(allall_gas_local_dens))
-            
+            allall_gas_local_dens_inhomog = (allall_gas_local_dens - allall_local_dens_mean_arr[-1])**2
+
             # If search distance given, then prepare data for plotting!
             if rad_dist[j]==2*self.r_cut:
 
@@ -2251,12 +2282,12 @@ class measurement:
                 allall_gas_pos_y = np.append(pos_A_gas[:,1], pos_B_gas[:,1])
 
                 # Save neighbor, local orientational order, and position to arrays for A dense phase reference particles with all nearest neighbors
-                Aall_gas_pos_x = pos_gas[:,0]
-                Aall_gas_pos_y = pos_gas[:,1]
+                Aall_gas_pos_x = np.append(pos_A_gas[:,0], pos_B_gas[:,0])
+                Aall_gas_pos_y = np.append(pos_A_gas[:,1], pos_B_gas[:,1])
 
                 # Save neighbor, local orientational order, and position to arrays for B dense phase reference particles with all nearest neighbors
-                Ball_gas_pos_x = pos_gas[:,0]
-                Ball_gas_pos_y = pos_gas[:,1]
+                Ball_gas_pos_x = np.append(pos_A_gas[:,0], pos_B_gas[:,0])
+                Ball_gas_pos_y = np.append(pos_A_gas[:,1], pos_B_gas[:,1])
 
                 # Save neighbor, local orientational order, and position to arrays for all dense phase reference particles with A nearest neighbors
                 allA_gas_pos_x = pos_A_gas[:,0]
@@ -2267,7 +2298,7 @@ class measurement:
                 allB_gas_pos_y = pos_B_gas[:,1]
 
                 # Create output dictionary for single particle values of local density per phase/activity pairing for plotting
-                local_gas_dens_plot_dict = {'all-all': {'dens': allall_gas_local_dens, 'pos_x': allall_gas_pos_x, 'pos_y': allall_gas_pos_y}, 'all-A': {'dens': allA_gas_local_dens, 'pos_x': allA_gas_pos_x, 'pos_y': allA_gas_pos_y}, 'all-B': {'dens': allB_gas_local_dens, 'pos_x': allB_gas_pos_x, 'pos_y': allB_gas_pos_y}, 'A-all': {'dens': Aall_gas_local_dens, 'pos_x': Aall_gas_pos_x, 'pos_y': Aall_gas_pos_y}, 'B-all': {'dens': Ball_gas_local_dens, 'pos_x': Ball_gas_pos_x, 'pos_y': Ball_gas_pos_y}, 'A-A': {'dens': AA_gas_local_dens, 'pos_x': allB_gas_pos_x, 'pos_y': allB_gas_pos_y}, 'A-B': {'dens': AB_gas_local_dens, 'pos_x': allB_gas_pos_x, 'pos_y': allB_gas_pos_y}, 'B-A': {'dens': BA_gas_local_dens, 'pos_x': allA_gas_pos_x, 'pos_y': allA_gas_pos_y}, 'B-B': {'dens': BB_gas_local_dens, 'pos_x': allB_gas_pos_x, 'pos_y': allB_gas_pos_y}}
+                local_gas_dens_plot_dict = {'all-all': {'dens': allall_gas_local_dens, 'homo': allall_gas_local_dens_inhomog, 'pos_x': allall_gas_pos_x, 'pos_y': allall_gas_pos_y}, 'all-A': {'dens': allA_gas_local_dens, 'homo': allA_gas_local_dens_inhomog, 'pos_x': allA_gas_pos_x, 'pos_y': allA_gas_pos_y}, 'all-B': {'dens': allB_gas_local_dens, 'homo': allB_gas_local_dens_inhomog, 'pos_x': allB_gas_pos_x, 'pos_y': allB_gas_pos_y}, 'A-all': {'dens': Aall_gas_local_dens, 'homo': Aall_gas_local_dens_inhomog, 'pos_x': Aall_gas_pos_x, 'pos_y': Aall_gas_pos_y}, 'B-all': {'dens': Ball_gas_local_dens, 'homo': Ball_gas_local_dens_inhomog, 'pos_x': Ball_gas_pos_x, 'pos_y': Ball_gas_pos_y}, 'A-A': {'dens': AA_gas_local_dens, 'homo': AA_gas_local_dens_inhomog, 'pos_x': allB_gas_pos_x, 'pos_y': allB_gas_pos_y}, 'A-B': {'dens': AB_gas_local_dens, 'homo': AB_gas_local_dens_inhomog, 'pos_x': allB_gas_pos_x, 'pos_y': allB_gas_pos_y}, 'B-A': {'dens': BA_gas_local_dens, 'homo': BA_gas_local_dens_inhomog, 'pos_x': allA_gas_pos_x, 'pos_y': allA_gas_pos_y}, 'B-B': {'dens': BB_gas_local_dens, 'homo': BB_gas_local_dens_inhomog, 'pos_x': allB_gas_pos_x, 'pos_y': allB_gas_pos_y}}
 
         # Create output dictionary for statistical averages of local density per phase/activity pairing
         local_gas_dens_stat_dict = {'radius': rad_dist[1:], 'allall_mean': allall_local_dens_mean_arr, 'allall_std': allall_local_dens_std_arr, 'allA_mean': allA_local_dens_mean_arr, 'allA_std': allA_local_dens_std_arr, 'allB_mean': allB_local_dens_mean_arr, 'allB_std': allB_local_dens_std_arr, 'AA_mean': AA_local_dens_mean_arr, 'AA_std': AA_local_dens_std_arr, 'AB_mean': AB_local_dens_mean_arr, 'AB_std': AB_local_dens_std_arr, 'BA_mean': BA_local_dens_mean_arr, 'BA_std': BA_local_dens_std_arr, 'BB_mean': BB_local_dens_mean_arr, 'BB_std': BB_local_dens_std_arr}
@@ -2607,94 +2638,94 @@ class measurement:
             # Local density of all neighbor particles around all reference particles in dense phase
             allall_dense_local_dens = np.append(allall_bulk_local_dens, allall_int_local_dens)
             allall_dense_local_dens_mean_arr.append(np.mean(allall_dense_local_dens))
-            allall_dense_local_dens_inhomog = (allall_dense_local_dens - allall_dense_local_dens_mean_arr[-1])**2
+            allall_dense_local_dens_inhomog = (allall_dense_local_dens - allall_dense_local_dens_mean_arr[-1])
 
             # Local density of B neighbor particles around all reference particles in dense phase
             Ball_dense_local_dens= np.append(Ball_bulk_local_dens, Ball_int_local_dens)
             Ball_dense_local_dens_mean_arr.append(np.mean(Ball_dense_local_dens))
-            Ball_dense_local_dens_inhomog = (Ball_dense_local_dens - Ball_dense_local_dens_mean_arr[-1])**2
+            Ball_dense_local_dens_inhomog = (Ball_dense_local_dens - Ball_dense_local_dens_mean_arr[-1])
 
             # Local density of A neighbor particles around all reference particles in dense phase
             Aall_dense_local_dens= np.append(Aall_bulk_local_dens, Aall_int_local_dens)
             Aall_dense_local_dens_mean_arr.append(np.mean(Aall_dense_local_dens))
-            Aall_dense_local_dens_inhomog = (Aall_dense_local_dens - Aall_dense_local_dens_mean_arr[-1])**2
+            Aall_dense_local_dens_inhomog = (Aall_dense_local_dens - Aall_dense_local_dens_mean_arr[-1])
 
             # Local density of all neighbor particles around A reference particles in dense phase
             allA_dense_local_dens = np.append(allA_bulk_local_dens, allA_int_local_dens)
             allA_dense_local_dens_mean_arr.append(np.mean(allA_dense_local_dens))
-            allA_dense_local_dens_inhomog = (allA_dense_local_dens - allA_dense_local_dens_mean_arr[-1])**2
+            allA_dense_local_dens_inhomog = (allA_dense_local_dens - allA_dense_local_dens_mean_arr[-1])
 
             # Local density of all neighbor particles around B reference particles in dense phase
             allB_dense_local_dens = np.append(allB_bulk_local_dens, allB_int_local_dens)
             allB_dense_local_dens_mean_arr.append(np.mean(allB_dense_local_dens))
-            allB_dense_local_dens_inhomog = (allB_dense_local_dens - allB_dense_local_dens_mean_arr[-1])**2
+            allB_dense_local_dens_inhomog = (allB_dense_local_dens - allB_dense_local_dens_mean_arr[-1])
 
             # Local density of A neighbor particles around A reference particles in dense phase
             AA_dense_local_dens = np.append(AA_bulk_local_dens, AA_int_local_dens)
             AA_dense_local_dens_mean_arr.append(np.mean(AA_dense_local_dens))
-            AA_dense_local_dens_inhomog = (AA_dense_local_dens - AA_dense_local_dens_mean_arr[-1])**2
+            AA_dense_local_dens_inhomog = (AA_dense_local_dens - AA_dense_local_dens_mean_arr[-1])
 
             # Local density of A neighbor particles around B reference particles in dense phase
             AB_dense_local_dens = np.append(AB_bulk_local_dens, AB_int_local_dens)
             AB_dense_local_dens_mean_arr.append(np.mean(AB_dense_local_dens))
-            AB_dense_local_dens_inhomog = (AB_dense_local_dens - AB_dense_local_dens_mean_arr[-1])**2
+            AB_dense_local_dens_inhomog = (AB_dense_local_dens - AB_dense_local_dens_mean_arr[-1])
 
             # Local density of B neighbor particles around A reference particles in dense phase
             BA_dense_local_dens = np.append(BA_bulk_local_dens, BA_int_local_dens)
             BA_dense_local_dens_mean_arr.append(np.mean(BA_dense_local_dens))
-            BA_dense_local_dens_inhomog = (BA_dense_local_dens - BA_dense_local_dens_mean_arr[-1])**2
+            BA_dense_local_dens_inhomog = (BA_dense_local_dens - BA_dense_local_dens_mean_arr[-1])
 
             # Local density of B neighbor particles around B reference particles in dense phase
             BB_dense_local_dens = np.append(BB_bulk_local_dens, BB_int_local_dens)
             BB_dense_local_dens_mean_arr.append(np.mean(BB_dense_local_dens))
-            BB_dense_local_dens_inhomog = (BB_dense_local_dens - BB_dense_local_dens_mean_arr[-1])**2
+            BB_dense_local_dens_inhomog = (BB_dense_local_dens - BB_dense_local_dens_mean_arr[-1])
 
             # Calculate mean and standard deviation of local density of A neighbor particles 
             # around A reference particles in dense phase
             AA_local_dens_mean_arr.append(np.mean(AA_bulk_local_dens))
-            AA_local_dens_inhomog = (AA_bulk_local_dens - AA_local_dens_mean_arr[-1])**2
+            AA_local_dens_inhomog = (AA_bulk_local_dens - AA_local_dens_mean_arr[-1])
             AA_local_dens_std_arr.append(np.std(AA_bulk_local_dens))
 
             # Calculate mean and standard deviation of local density of A neighbor particles 
             # around B reference particles in dense phase
             AB_local_dens_mean_arr.append(np.mean(AB_bulk_local_dens))
-            AB_local_dens_inhomog = (AB_bulk_local_dens - AB_local_dens_mean_arr[-1])**2
+            AB_local_dens_inhomog = (AB_bulk_local_dens - AB_local_dens_mean_arr[-1])
             AB_local_dens_std_arr.append(np.std(AB_bulk_local_dens))
 
             # Calculate mean and standard deviation of local density of B neighbor particles 
             # around A reference particles in dense phase
             BA_local_dens_mean_arr.append(np.mean(BA_bulk_local_dens))
-            BA_local_dens_inhomog = (BA_bulk_local_dens - BA_local_dens_mean_arr[-1])**2
+            BA_local_dens_inhomog = (BA_bulk_local_dens - BA_local_dens_mean_arr[-1])
             BA_local_dens_std_arr.append(np.std(BA_bulk_local_dens))
 
             # Calculate mean and standard deviation of local density of B neighbor particles 
             # around B reference particles in dense phase
             BB_local_dens_mean_arr.append(np.mean(BB_bulk_local_dens))
-            BB_local_dens_inhomog = (BB_bulk_local_dens - BB_local_dens_mean_arr[-1])**2
+            BB_local_dens_inhomog = (BB_bulk_local_dens - BB_local_dens_mean_arr[-1])
             BB_local_dens_std_arr.append(np.std(BB_bulk_local_dens))
 
             # Calculate mean and standard deviation of local density of all neighbor particles 
             # around A reference particles in dense phase
             allA_local_dens_mean_arr.append(np.mean(allA_bulk_local_dens))
-            allA_local_dens_inhomog = (allA_bulk_local_dens - allA_local_dens_mean_arr[-1])**2
+            allA_local_dens_inhomog = (allA_bulk_local_dens - allA_local_dens_mean_arr[-1])
             allA_local_dens_std_arr.append(np.std(allA_bulk_local_dens))
 
             # Calculate mean and standard deviation of local density of all neighbor particles 
             # around B reference particles in dense phase
             allB_local_dens_mean_arr.append(np.mean(allB_bulk_local_dens))
-            allB_local_dens_inhomog = (allB_bulk_local_dens - allB_local_dens_mean_arr[-1])**2
+            allB_local_dens_inhomog = (allB_bulk_local_dens - allB_local_dens_mean_arr[-1])
             allB_local_dens_std_arr.append(np.std(allB_bulk_local_dens))
 
             # Calculate mean and standard deviation of local density of all neighbor particles 
             # around A reference particles in dense phase
             Aall_local_dens_mean_arr.append(np.mean(Aall_bulk_local_dens))
-            Aall_local_dens_inhomog = (Aall_bulk_local_dens - Aall_local_dens_mean_arr[-1])**2
+            Aall_local_dens_inhomog = (Aall_bulk_local_dens - Aall_local_dens_mean_arr[-1])
             Aall_local_dens_std_arr.append(np.std(Aall_bulk_local_dens))
 
             # Calculate mean and standard deviation of local density of all neighbor particles 
             # around B reference particles in dense phase
             Ball_local_dens_mean_arr.append(np.mean(Ball_bulk_local_dens))
-            Ball_local_dens_inhomog = (Ball_bulk_local_dens - Ball_local_dens_mean_arr[-1])**2
+            Ball_local_dens_inhomog = (Ball_bulk_local_dens - Ball_local_dens_mean_arr[-1])
             Ball_local_dens_std_arr.append(np.std(Ball_bulk_local_dens))
 
             # Calculate mean and standard deviation of local density of all neighbor particles 
@@ -4435,6 +4466,63 @@ class measurement:
         system_A_bulk = freud.AABBQuery(self.f_box, self.f_box.wrap(pos_A_dense))
         system_B_bulk = freud.AABBQuery(self.f_box, self.f_box.wrap(pos_B_dense))
         
+        # Python3 Program to print BFS traversal
+        # from a given source vertex. BFS(int s)
+        # traverses vertices reachable from s.
+        from collections import defaultdict
+        
+        # This class represents a directed graph
+        # using adjacency list representation
+        class Graph:
+        
+            # Constructor
+            def __init__(self):
+        
+                # default dictionary to store graph
+                self.graph = defaultdict(list)
+        
+            # function to add an edge to graph
+        # Make a list visited[] to check if a node is already visited or not
+            def addEdge(self,u,v):
+                self.graph[u].append(v)
+                self.visited=[]
+        
+            # Function to print a BFS of graph
+            def BFS(self, s):
+        
+                # Create a queue for BFS
+                queue = []
+                path=[]
+        
+                # Add the source node in
+                # visited and enqueue it
+                queue.append(s)
+                path.append(s)
+                
+                self.visited.append(s)
+        
+                while queue:        
+                    # Dequeue a vertex from
+                    # queue and print it
+                    s = queue.pop(0)
+        
+                    # Get all adjacent vertices of the
+                    # dequeued vertex s. If a adjacent
+                    # has not been visited, then add it
+                    # in visited and enqueue it
+                    for i in self.graph[s]:
+                        if i not in self.visited:
+                            queue.append(i)
+                            self.visited.append(s)
+                            path.append(i)
+                return path
+        
+        # Driver code
+
+        # Create a graph given in
+        # the above diagram
+        g = Graph()
+
         # Generate neighbor list of dense phase particles (per query args) of respective type (A or B) neighboring bulk phase reference particles of respective type (A or B)
         AA_bulk_nlist = system_A_bulk.query(self.f_box.wrap(pos_A_bulk), query_args).toNeighborList()
         AB_bulk_nlist = system_A_bulk.query(self.f_box.wrap(pos_B_bulk), query_args).toNeighborList()
@@ -4444,6 +4532,7 @@ class measurement:
         #Initiate empty arrays for finding nearest A neighboring dense particles surrounding type A bulk particles
         AA_bulk_neigh_ind = np.array([], dtype=int)
         AA_bulk_num_neigh = np.array([])
+        AA_path_length = np.array([])
         
         #Loop over neighbor pairings of A-A neighbor pairs to calculate number of nearest neighbors
         for i in range(0, len(pos_A_bulk)):
@@ -4459,10 +4548,33 @@ class measurement:
                     #Save nearest neighbor information to array
                     AA_bulk_num_neigh = np.append(AA_bulk_num_neigh, len(loc))
                     AA_bulk_neigh_ind = np.append(AA_bulk_neigh_ind, int(i))
+                    for j in loc:
+                        g.addEdge(i, j)
+                    AA_path_length = np.append(AA_path_length, len(g.BFS(i)))
             else:
                 #Save nearest neighbor information to array
                 AA_bulk_num_neigh = np.append(AA_bulk_num_neigh, 0)
                 AA_bulk_neigh_ind = np.append(AA_bulk_neigh_ind, int(i))
+                path_length = np.append(AA_path_length, 0)
+        
+        print ("Following is Breadth First Traversal"
+                        " (starting from vertex 2)")
+        #g.BFS(11249)
+        print(AA_path_length)
+        print(np.mean(AA_path_length))
+        print(np.min(AA_path_length))
+        print(np.max(AA_path_length))
+        stop
+
+        p0_AA_bulk = len(np.where(AA_bulk_num_neigh==0)[0])/len(pos_A_bulk)
+        p1_AA_bulk = len(np.where(AA_bulk_num_neigh==1)[0])/len(pos_A_bulk)
+        p2_AA_bulk = len(np.where(AA_bulk_num_neigh==2)[0])/len(pos_A_bulk)
+        p3_AA_bulk = len(np.where(AA_bulk_num_neigh==3)[0])/len(pos_A_bulk)
+        p4_AA_bulk = len(np.where(AA_bulk_num_neigh==4)[0])/len(pos_A_bulk)
+        p5_AA_bulk = len(np.where(AA_bulk_num_neigh==5)[0])/len(pos_A_bulk)
+        p6_AA_bulk = len(np.where(AA_bulk_num_neigh==6)[0])/len(pos_A_bulk)
+        p7_AA_bulk = len(np.where(AA_bulk_num_neigh==7)[0])/len(pos_A_bulk)
+        p8_AA_bulk = len(np.where(AA_bulk_num_neigh==8)[0])/len(pos_A_bulk)
         
         #Initiate empty arrays for finding nearest B neighboring dense particles surrounding type A bulk particles
         BA_bulk_neigh_ind = np.array([], dtype=int)
@@ -4487,6 +4599,16 @@ class measurement:
                 BA_bulk_num_neigh = np.append(BA_bulk_num_neigh, 0)
                 BA_bulk_neigh_ind = np.append(BA_bulk_neigh_ind, int(i))
 
+        p0_BA_bulk = len(np.where(BA_bulk_num_neigh==0)[0])/len(pos_A_bulk)
+        p1_BA_bulk = len(np.where(BA_bulk_num_neigh==1)[0])/len(pos_A_bulk)
+        p2_BA_bulk = len(np.where(BA_bulk_num_neigh==2)[0])/len(pos_A_bulk)
+        p3_BA_bulk = len(np.where(BA_bulk_num_neigh==3)[0])/len(pos_A_bulk)
+        p4_BA_bulk = len(np.where(BA_bulk_num_neigh==4)[0])/len(pos_A_bulk)
+        p5_BA_bulk = len(np.where(BA_bulk_num_neigh==5)[0])/len(pos_A_bulk)
+        p6_BA_bulk = len(np.where(BA_bulk_num_neigh==6)[0])/len(pos_A_bulk)
+        p7_BA_bulk = len(np.where(BA_bulk_num_neigh==7)[0])/len(pos_A_bulk)
+        p8_BA_bulk = len(np.where(BA_bulk_num_neigh==8)[0])/len(pos_A_bulk)
+
         #Initiate empty arrays for finding nearest A neighboring dense particles surrounding type B bulk particles
         AB_bulk_neigh_ind = np.array([], dtype=int)
         AB_bulk_num_neigh = np.array([])
@@ -4510,6 +4632,16 @@ class measurement:
                 AB_bulk_num_neigh = np.append(AB_bulk_num_neigh, 0)
                 AB_bulk_neigh_ind = np.append(AB_bulk_neigh_ind, int(i))
 
+        p0_AB_bulk = len(np.where(AB_bulk_num_neigh==0)[0])/len(pos_B_bulk)
+        p1_AB_bulk = len(np.where(AB_bulk_num_neigh==1)[0])/len(pos_B_bulk)
+        p2_AB_bulk = len(np.where(AB_bulk_num_neigh==2)[0])/len(pos_B_bulk)
+        p3_AB_bulk = len(np.where(AB_bulk_num_neigh==3)[0])/len(pos_B_bulk)
+        p4_AB_bulk = len(np.where(AB_bulk_num_neigh==4)[0])/len(pos_B_bulk)
+        p5_AB_bulk = len(np.where(AB_bulk_num_neigh==5)[0])/len(pos_B_bulk)
+        p6_AB_bulk = len(np.where(AB_bulk_num_neigh==6)[0])/len(pos_B_bulk)
+        p7_AB_bulk = len(np.where(AB_bulk_num_neigh==7)[0])/len(pos_B_bulk)
+        p8_AB_bulk = len(np.where(AB_bulk_num_neigh==8)[0])/len(pos_B_bulk)
+
         #Initiate empty arrays for finding nearest B neighboring dense particles surrounding type B bulk particles
         BB_bulk_neigh_ind = np.array([], dtype=int)
         BB_bulk_num_neigh = np.array([])
@@ -4532,6 +4664,16 @@ class measurement:
                 #Save nearest neighbor information to array
                 BB_bulk_num_neigh = np.append(BB_bulk_num_neigh, 0)
                 BB_bulk_neigh_ind = np.append(BB_bulk_neigh_ind, int(i))
+
+        p0_BB_bulk = len(np.where(BB_bulk_num_neigh==0)[0])/len(pos_B_bulk)
+        p1_BB_bulk = len(np.where(BB_bulk_num_neigh==1)[0])/len(pos_B_bulk)
+        p2_BB_bulk = len(np.where(BB_bulk_num_neigh==2)[0])/len(pos_B_bulk)
+        p3_BB_bulk = len(np.where(BB_bulk_num_neigh==3)[0])/len(pos_B_bulk)
+        p4_BB_bulk = len(np.where(BB_bulk_num_neigh==4)[0])/len(pos_B_bulk)
+        p5_BB_bulk = len(np.where(BB_bulk_num_neigh==5)[0])/len(pos_B_bulk)
+        p6_BB_bulk = len(np.where(BB_bulk_num_neigh==6)[0])/len(pos_B_bulk)
+        p7_BB_bulk = len(np.where(BB_bulk_num_neigh==7)[0])/len(pos_B_bulk)
+        p8_BB_bulk = len(np.where(BB_bulk_num_neigh==8)[0])/len(pos_B_bulk)
 
         # Locate potential neighbor particles by type in the entire system
         system_A_int = freud.AABBQuery(self.f_box, self.f_box.wrap(pos_A))
@@ -4566,6 +4708,16 @@ class measurement:
                 AA_int_num_neigh = np.append(AA_int_num_neigh, 0)
                 AA_int_neigh_ind = np.append(AA_int_neigh_ind, int(i))
 
+        p0_AA_int = len(np.where(AA_int_num_neigh==0)[0])/len(pos_A_int)
+        p1_AA_int = len(np.where(AA_int_num_neigh==1)[0])/len(pos_A_int)
+        p2_AA_int = len(np.where(AA_int_num_neigh==2)[0])/len(pos_A_int)
+        p3_AA_int = len(np.where(AA_int_num_neigh==3)[0])/len(pos_A_int)
+        p4_AA_int = len(np.where(AA_int_num_neigh==4)[0])/len(pos_A_int)
+        p5_AA_int = len(np.where(AA_int_num_neigh==5)[0])/len(pos_A_int)
+        p6_AA_int = len(np.where(AA_int_num_neigh==6)[0])/len(pos_A_int)
+        p7_AA_int = len(np.where(AA_int_num_neigh==7)[0])/len(pos_A_int)
+        p8_AA_int = len(np.where(AA_int_num_neigh==8)[0])/len(pos_A_int)
+
         #Initiate empty arrays for finding nearest B neighboring particles surrounding type A interface particles
         AB_int_neigh_ind = np.array([], dtype=int)
         AB_int_num_neigh = np.array([])
@@ -4588,6 +4740,16 @@ class measurement:
                 #Save nearest neighbor information to array
                 AB_int_num_neigh = np.append(AB_int_num_neigh, 0)
                 AB_int_neigh_ind = np.append(AB_int_neigh_ind, int(i))
+
+        p0_AB_int = len(np.where(AB_int_num_neigh==0)[0])/len(pos_B_int)
+        p1_AB_int = len(np.where(AB_int_num_neigh==1)[0])/len(pos_B_int)
+        p2_AB_int = len(np.where(AB_int_num_neigh==2)[0])/len(pos_B_int)
+        p3_AB_int = len(np.where(AB_int_num_neigh==3)[0])/len(pos_B_int)
+        p4_AB_int = len(np.where(AB_int_num_neigh==4)[0])/len(pos_B_int)
+        p5_AB_int = len(np.where(AB_int_num_neigh==5)[0])/len(pos_B_int)
+        p6_AB_int = len(np.where(AB_int_num_neigh==6)[0])/len(pos_B_int)
+        p7_AB_int = len(np.where(AB_int_num_neigh==7)[0])/len(pos_B_int)
+        p8_AB_int = len(np.where(AB_int_num_neigh==8)[0])/len(pos_B_int)
 
         #Initiate empty arrays for finding nearest A neighboring particles surrounding type B interface particles
         BA_int_neigh_ind = np.array([], dtype=int)
@@ -4612,6 +4774,16 @@ class measurement:
                 BA_int_num_neigh = np.append(BA_int_num_neigh, 0)
                 BA_int_neigh_ind = np.append(BA_int_neigh_ind, int(i))
 
+        p0_BA_int = len(np.where(BA_int_num_neigh==0)[0])/len(pos_A_int)
+        p1_BA_int = len(np.where(BA_int_num_neigh==1)[0])/len(pos_A_int)
+        p2_BA_int = len(np.where(BA_int_num_neigh==2)[0])/len(pos_A_int)
+        p3_BA_int = len(np.where(BA_int_num_neigh==3)[0])/len(pos_A_int)
+        p4_BA_int = len(np.where(BA_int_num_neigh==4)[0])/len(pos_A_int)
+        p5_BA_int = len(np.where(BA_int_num_neigh==5)[0])/len(pos_A_int)
+        p6_BA_int = len(np.where(BA_int_num_neigh==6)[0])/len(pos_A_int)
+        p7_BA_int = len(np.where(BA_int_num_neigh==7)[0])/len(pos_A_int)
+        p8_BA_int = len(np.where(BA_int_num_neigh==8)[0])/len(pos_A_int)
+
         # Initiate empty arrays for finding nearest B neighboring particles surrounding type B interface particles
         BB_int_neigh_ind = np.array([], dtype=int)
         BB_int_num_neigh = np.array([])
@@ -4635,7 +4807,17 @@ class measurement:
                 # Save nearest neighbor information to array
                 BB_int_num_neigh = np.append(BB_int_num_neigh, 0)
                 BB_int_neigh_ind = np.append(BB_int_neigh_ind, int(i))
-                
+        
+        p0_BB_int = len(np.where(BB_int_num_neigh==0)[0])/len(pos_B_int)
+        p1_BB_int = len(np.where(BB_int_num_neigh==1)[0])/len(pos_B_int)
+        p2_BB_int = len(np.where(BB_int_num_neigh==2)[0])/len(pos_B_int)
+        p3_BB_int = len(np.where(BB_int_num_neigh==3)[0])/len(pos_B_int)
+        p4_BB_int = len(np.where(BB_int_num_neigh==4)[0])/len(pos_B_int)
+        p5_BB_int = len(np.where(BB_int_num_neigh==5)[0])/len(pos_B_int)
+        p6_BB_int = len(np.where(BB_int_num_neigh==6)[0])/len(pos_B_int)
+        p7_BB_int = len(np.where(BB_int_num_neigh==7)[0])/len(pos_B_int)
+        p8_BB_int = len(np.where(BB_int_num_neigh==8)[0])/len(pos_B_int)
+
         # Save neighbor and local orientational order to arrays for all reference particles of the respective phase with B nearest neighbors
         allB_bulk_num_neigh = AB_bulk_num_neigh + BB_bulk_num_neigh
 
@@ -4674,7 +4856,7 @@ class measurement:
         for i in range(0, len(allA_int_num_neigh)):
             if allA_int_num_neigh[i]>0:
                 A_int_clust_coeff[i] = AA_int_num_neigh[i]/allA_int_num_neigh[i]
-
+        
         # Save number of neighbors for the respective activity dense phase reference particles with the respective activity nearest neighbors
         AA_dense_num_neigh = np.append(AA_bulk_num_neigh, AA_int_num_neigh)
         AB_dense_num_neigh = np.append(AB_bulk_num_neigh, AB_int_num_neigh)
@@ -4696,7 +4878,9 @@ class measurement:
 
         # Create output dictionary for plotting of cluster coefficient information of each particle per phase/activity pairing and their respective x-y locations
         clust_plot_dict = {'A': {'pos': {'x': A_dense_pos_x, 'y': A_dense_pos_y}, 'clust': A_dense_clust_coeff}, 'B': {'pos': {'x': B_dense_pos_x, 'y': B_dense_pos_y}, 'clust': B_dense_clust_coeff}, 'all': {'pos': {'x': all_dense_pos_x, 'y': all_dense_pos_y}, 'clust': all_dense_clust_coeff}}
-        return clust_plot_dict
+        clust_stat_dict = {'dense': {'clust_coeff': {'all': np.mean(all_dense_clust_coeff), 'A': np.mean(A_dense_clust_coeff), 'B': np.mean(B_dense_clust_coeff)}}, 'bulk': {'clust_coeff': {'all': np.mean(all_bulk_clust_coeff), 'A': np.mean(A_bulk_clust_coeff), 'B': np.mean(B_bulk_clust_coeff)}}, 'int': {'clust_coeff': {'all': np.mean(all_int_clust_coeff), 'A': np.mean(A_int_clust_coeff), 'B': np.mean(B_int_clust_coeff)}}}
+        prob_stat_dict = {'bulk': {'AA': {'0': p0_AA_bulk, '1': p1_AA_bulk, '2': p2_AA_bulk, '3': p3_AA_bulk, '4': p4_AA_bulk, '5': p5_AA_bulk, '6': p6_AA_bulk, '7': p7_AA_bulk, '8': p8_AA_bulk}, 'BA': {'0': p0_BA_bulk, '1': p1_BA_bulk, '2': p2_BA_bulk, '3': p3_BA_bulk, '4': p4_BA_bulk, '5': p5_BA_bulk, '6': p6_BA_bulk, '7': p7_BA_bulk, '8': p8_BA_bulk}, 'AB': {'0': p0_AB_bulk, '1': p1_AB_bulk, '2': p2_AB_bulk, '3': p3_AB_bulk, '4': p4_AB_bulk, '5': p5_AB_bulk, '6': p6_AB_bulk, '7': p7_AB_bulk, '8': p8_AB_bulk}, 'AA': {'0': p0_BB_bulk, '1': p1_BB_bulk, '2': p2_BB_bulk, '3': p3_BB_bulk, '4': p4_BB_bulk, '5': p5_BB_bulk, '6': p6_BB_bulk, '7': p7_BB_bulk, '8': p8_BB_bulk}}, 'bulk': {'AA': {'0': p0_AA_int, '1': p1_AA_int, '2': p2_AA_int, '3': p3_AA_int, '4': p4_AA_int, '5': p5_AA_int, '6': p6_AA_int, '7': p7_AA_int, '8': p8_AA_int}, 'BA': {'0': p0_BA_int, '1': p1_BA_int, '2': p2_BA_int, '3': p3_BA_int, '4': p4_BA_int, '5': p5_BA_int, '6': p6_BA_int, '7': p7_BA_int, '8': p8_BA_int}, 'AB': {'0': p0_AB_int, '1': p1_AB_int, '2': p2_AB_int, '3': p3_AB_int, '4': p4_AB_int, '5': p5_AB_int, '6': p6_AB_int, '7': p7_AB_int, '8': p8_AB_int}, 'AA': {'0': p0_BB_int, '1': p1_BB_int, '2': p2_BB_int, '3': p3_BB_int, '4': p4_BB_int, '5': p5_BB_int, '6': p6_BB_int, '7': p7_BB_int, '8': p8_BB_int}}}
+        return clust_plot_dict, clust_stat_dict, prob_stat_dict
 
     def domain_size(self):
         '''

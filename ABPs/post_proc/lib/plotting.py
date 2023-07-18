@@ -1267,6 +1267,72 @@ class plotting:
         plt.tight_layout()
         plt.savefig(self.outPath + 'plot_lat_histo_' + self.outFile + ".png", dpi=150, transparent=False)
         plt.close()
+
+    def prob_histogram(self, prob_stat_dict):
+        """
+        This function plots a histogram of the lattice spacings of bulk (green)
+        and interface (purple) particles
+
+        Inputs:
+        lat_plot_dict: dictionary (output from lattice_spacing() in
+        measurement.py) containing information on the lattice spacing, averaged
+        over all neighbors within the potential cut-off radius, of each bulk and
+        interface particle.
+
+        Outputs:
+        .png file with a histogram of all bulk (green) and interface (purple)
+        particle lattice spacings color coded.
+        """
+
+        bulk_lats = lat_plot_dict['bulk']['all']['vals']
+        int_lats = lat_plot_dict['int']['all']['vals']
+
+        fig = plt.figure(figsize=(8,6))
+        ax = fig.add_subplot(111)
+
+        #Define colors for plots
+        yellow = ("#7570b3")
+        green = ("#77dd77")
+
+        #Remove bulk particles that are outside plot's xrange
+        bulk_lat_mean = np.mean(lat_plot_dict['bulk']['all']['vals'])
+
+        xmin = 0.85*bulk_lat_mean
+        xmax = 1.15*bulk_lat_mean
+
+        if (len(bulk_lats)>0):
+            bulk_id = np.where((bulk_lats > xmax) | (bulk_lats < xmin))[0]
+            bulk_lats = np.delete(bulk_lats, bulk_id)
+
+            plt.hist(bulk_lats, alpha = 1.0, bins=100, color=green)
+
+        #If interface particle measured, include it in histogram
+        if (len(int_lats)>0):
+            int_id = np.where((int_lats > xmax) | (int_lats < xmin))[0]
+            int_lats = np.delete(int_lats, int_id)
+
+            plt.hist(int_lats, alpha = 0.8, bins=100, color=yellow)
+
+        # Create legend of phases
+        green_patch = mpatches.Patch(color=green, label='Bulk')
+        yellow_patch = mpatches.Patch(color=yellow, label='Interface')
+        plt.legend(handles=[green_patch, yellow_patch], fancybox=True, framealpha=0.75, ncol=1, fontsize=18, loc='upper right',labelspacing=0.1, handletextpad=0.1)
+
+        # Label current time step
+        plt.text(0.03, 0.94, s=r'$\tau$' + ' = ' + '{:.2f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+            fontsize=18,transform = ax.transAxes,
+            bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+
+        # Modify plot parameters
+        plt.xlabel(r'lattice spacing ($a$)', fontsize=18)
+        plt.ylabel('Number of particles', fontsize=18)
+        plt.xlim([xmin,xmax])
+        plt.xticks(fontsize=15)
+        plt.yticks(fontsize=15)
+
+        plt.tight_layout()
+        plt.savefig(self.outPath + 'plot_lat_histo_' + self.outFile + ".png", dpi=150, transparent=False)
+        plt.close()
     
     def vel_histogram(self, vel_plot_dict, dt_step, avg='False'):
         """
@@ -3687,8 +3753,8 @@ class plotting:
         sz = 0.755
 
         # Find min/max number of neighbors
-        min_neigh = np.min(local_dens_plot_dict[pair]['homo'])
-        max_neigh = np.max(local_dens_plot_dict[pair]['homo'])
+        min_neigh = -1.2#-np.min(local_dens_plot_dict[pair]['homo'])
+        max_neigh = 1.2#np.max(local_dens_plot_dict[pair]['homo'])
 
         # Generate list of ellipses for all particles to plot containing position (x,y) and point size that automatically scales with figure size
         ells = [Ellipse(xy=np.array([local_dens_plot_dict[pair]['pos_x'][i]+self.hx_box,local_dens_plot_dict[pair]['pos_y'][i]+self.hy_box]),
@@ -3705,8 +3771,8 @@ class plotting:
         plt.title(neigh_pair[1].capitalize() + ' Reference Particles', fontsize=30)
 
         # Define color bar min and max
-        minClb = np.min(local_dens_plot_dict[pair]['homo'])
-        maxClb = np.max(local_dens_plot_dict[pair]['homo'])
+        minClb = -1.2#np.min(local_dens_plot_dict[pair]['homo'])
+        maxClb = 1.2#np.max(local_dens_plot_dict[pair]['homo'])
 
         # Set color bar range
         coll.set_clim([minClb, maxClb])
