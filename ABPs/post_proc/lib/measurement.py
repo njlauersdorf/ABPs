@@ -4564,7 +4564,6 @@ class measurement:
         print(np.mean(AA_path_length))
         print(np.min(AA_path_length))
         print(np.max(AA_path_length))
-        stop
 
         p0_AA_bulk = len(np.where(AA_bulk_num_neigh==0)[0])/len(pos_A_bulk)
         p1_AA_bulk = len(np.where(AA_bulk_num_neigh==1)[0])/len(pos_A_bulk)
@@ -4833,9 +4832,11 @@ class measurement:
         # Initiate empty arrays for calculating cluster coefficients
         A_bulk_clust_coeff = np.zeros(len(allA_bulk_num_neigh))
         B_bulk_clust_coeff = np.zeros(len(allB_bulk_num_neigh))
+        all_bulk_clust_coeff = np.append(A_bulk_clust_coeff, B_bulk_clust_coeff)
 
         A_int_clust_coeff = np.zeros(len(allA_int_num_neigh))
         B_int_clust_coeff = np.zeros(len(allB_int_num_neigh))
+        all_int_clust_coeff = np.append(A_int_clust_coeff, B_int_clust_coeff)
 
         # Cluster coefficient for each B reference particle in bulk
         for i in range(0, len(allB_bulk_num_neigh)):
@@ -4876,11 +4877,14 @@ class measurement:
         all_dense_pos_x = np.append(A_dense_pos_x, B_dense_pos_x)
         all_dense_pos_y = np.append(A_dense_pos_y, B_dense_pos_y)
 
+        num_neigh_arr = [0, 1, 2, 3, 4, 5, 6, 7, 8]
+
         # Create output dictionary for plotting of cluster coefficient information of each particle per phase/activity pairing and their respective x-y locations
         clust_plot_dict = {'A': {'pos': {'x': A_dense_pos_x, 'y': A_dense_pos_y}, 'clust': A_dense_clust_coeff}, 'B': {'pos': {'x': B_dense_pos_x, 'y': B_dense_pos_y}, 'clust': B_dense_clust_coeff}, 'all': {'pos': {'x': all_dense_pos_x, 'y': all_dense_pos_y}, 'clust': all_dense_clust_coeff}}
         clust_stat_dict = {'dense': {'clust_coeff': {'all': np.mean(all_dense_clust_coeff), 'A': np.mean(A_dense_clust_coeff), 'B': np.mean(B_dense_clust_coeff)}}, 'bulk': {'clust_coeff': {'all': np.mean(all_bulk_clust_coeff), 'A': np.mean(A_bulk_clust_coeff), 'B': np.mean(B_bulk_clust_coeff)}}, 'int': {'clust_coeff': {'all': np.mean(all_int_clust_coeff), 'A': np.mean(A_int_clust_coeff), 'B': np.mean(B_int_clust_coeff)}}}
-        prob_stat_dict = {'bulk': {'AA': {'0': p0_AA_bulk, '1': p1_AA_bulk, '2': p2_AA_bulk, '3': p3_AA_bulk, '4': p4_AA_bulk, '5': p5_AA_bulk, '6': p6_AA_bulk, '7': p7_AA_bulk, '8': p8_AA_bulk}, 'BA': {'0': p0_BA_bulk, '1': p1_BA_bulk, '2': p2_BA_bulk, '3': p3_BA_bulk, '4': p4_BA_bulk, '5': p5_BA_bulk, '6': p6_BA_bulk, '7': p7_BA_bulk, '8': p8_BA_bulk}, 'AB': {'0': p0_AB_bulk, '1': p1_AB_bulk, '2': p2_AB_bulk, '3': p3_AB_bulk, '4': p4_AB_bulk, '5': p5_AB_bulk, '6': p6_AB_bulk, '7': p7_AB_bulk, '8': p8_AB_bulk}, 'AA': {'0': p0_BB_bulk, '1': p1_BB_bulk, '2': p2_BB_bulk, '3': p3_BB_bulk, '4': p4_BB_bulk, '5': p5_BB_bulk, '6': p6_BB_bulk, '7': p7_BB_bulk, '8': p8_BB_bulk}}, 'bulk': {'AA': {'0': p0_AA_int, '1': p1_AA_int, '2': p2_AA_int, '3': p3_AA_int, '4': p4_AA_int, '5': p5_AA_int, '6': p6_AA_int, '7': p7_AA_int, '8': p8_AA_int}, 'BA': {'0': p0_BA_int, '1': p1_BA_int, '2': p2_BA_int, '3': p3_BA_int, '4': p4_BA_int, '5': p5_BA_int, '6': p6_BA_int, '7': p7_BA_int, '8': p8_BA_int}, 'AB': {'0': p0_AB_int, '1': p1_AB_int, '2': p2_AB_int, '3': p3_AB_int, '4': p4_AB_int, '5': p5_AB_int, '6': p6_AB_int, '7': p7_AB_int, '8': p8_AB_int}, 'AA': {'0': p0_BB_int, '1': p1_BB_int, '2': p2_BB_int, '3': p3_BB_int, '4': p4_BB_int, '5': p5_BB_int, '6': p6_BB_int, '7': p7_BB_int, '8': p8_BB_int}}}
-        return clust_plot_dict, clust_stat_dict, prob_stat_dict
+        prob_plot_dict = {'bulk': {'AA': AA_bulk_num_neigh, 'AB': AB_bulk_num_neigh, 'BA': BA_bulk_num_neigh, 'BB': BB_bulk_num_neigh}, 'int': {'AA': AA_int_num_neigh, 'AB': AB_int_num_neigh, 'BA': BA_int_num_neigh, 'BB': BB_int_num_neigh}, 'dense': {'AA': AA_dense_num_neigh, 'AB': AB_dense_num_neigh, 'BA': BA_dense_num_neigh, 'BB': BB_dense_num_neigh}}
+        prob_stat_dict = {'neigh': num_neigh_arr, 'bulk': {'AA': [p0_AA_bulk, p1_AA_bulk, p2_AA_bulk, p3_AA_bulk, p4_AA_bulk, p5_AA_bulk, p6_AA_bulk, p7_AA_bulk, p8_AA_bulk], 'BA': [p0_BA_bulk, p1_BA_bulk, p2_BA_bulk, p3_BA_bulk, p4_BA_bulk, p5_BA_bulk, p6_BA_bulk, p7_BA_bulk, p8_BA_bulk], 'AB': [p0_AB_bulk, p1_AB_bulk, p2_AB_bulk, p3_AB_bulk, p4_AB_bulk, p5_AB_bulk, p6_AB_bulk, p7_AB_bulk, p8_AB_bulk], 'BB': [p0_BB_bulk, p1_BB_bulk, p2_BB_bulk, p3_BB_bulk, p4_BB_bulk, p5_BB_bulk, p6_BB_bulk, p7_BB_bulk, p8_BB_bulk]}, 'bulk': {'AA': [p0_AA_int, p1_AA_int, p2_AA_int, p3_AA_int, p4_AA_int, p5_AA_int, p6_AA_int, p7_AA_int, p8_AA_int], 'BA': [p0_BA_int, p1_BA_int, p2_BA_int, p3_BA_int, p4_BA_int, p5_BA_int, p6_BA_int, p7_BA_int, p8_BA_int], 'AB': [p0_AB_int, p1_AB_int, p2_AB_int, p3_AB_int, p4_AB_int, p5_AB_int, p6_AB_int, p7_AB_int, p8_AB_int], 'BB': [p0_BB_int, p1_BB_int, p2_BB_int, p3_BB_int, p4_BB_int, p5_BB_int, p6_BB_int, p7_BB_int, p8_BB_int]}}
+        return clust_plot_dict, clust_stat_dict, prob_plot_dict, prob_stat_dict
 
     def domain_size(self):
         '''

@@ -1268,7 +1268,7 @@ class plotting:
         plt.savefig(self.outPath + 'plot_lat_histo_' + self.outFile + ".png", dpi=150, transparent=False)
         plt.close()
 
-    def prob_histogram(self, prob_stat_dict):
+    def prob_histogram(self, prob_plot_dict, prob_stat_dict):
         """
         This function plots a histogram of the lattice spacings of bulk (green)
         and interface (purple) particles
@@ -1284,8 +1284,8 @@ class plotting:
         particle lattice spacings color coded.
         """
 
-        bulk_lats = lat_plot_dict['bulk']['all']['vals']
-        int_lats = lat_plot_dict['int']['all']['vals']
+        bulk_lats = prob_plot_dict['bulk']['AA']
+        int_lats = prob_plot_dict['int']['AA']
 
         fig = plt.figure(figsize=(8,6))
         ax = fig.add_subplot(111)
@@ -1294,24 +1294,121 @@ class plotting:
         yellow = ("#7570b3")
         green = ("#77dd77")
 
-        #Remove bulk particles that are outside plot's xrange
-        bulk_lat_mean = np.mean(lat_plot_dict['bulk']['all']['vals'])
+        print(prob_stat_dict)
 
-        xmin = 0.85*bulk_lat_mean
-        xmax = 1.15*bulk_lat_mean
+        xmin = -0.5
+        xmax=7.5
 
-        if (len(bulk_lats)>0):
-            bulk_id = np.where((bulk_lats > xmax) | (bulk_lats < xmin))[0]
-            bulk_lats = np.delete(bulk_lats, bulk_id)
+        bins_1 = [-0.4, 0.4, 0.6, 1.4, 1.6, 2.4, 2.6, 3.4, 3.6, 4.4, 4.6, 5.4, 5.6, 6.4, 6.6, 7.4]
+        bins_2 = [-0.3, 0.3, 0.7, 1.3, 1.7, 2.3, 2.7, 3.3, 3.7, 4.3, 4.7, 5.3, 5.7, 6.3, 6.7, 7.3]
+        bins_3 = [-0.2, 0.2, 0.8, 1.2, 1.8, 2.2, 2.8, 3.2, 3.8, 4.2, 4.8, 5.2, 5.8, 6.2, 6.8, 7.2]
+        bins_4 = [-0.1, 0.1, 0.9, 1.1, 1.9, 2.1, 2.9, 3.1, 3.9, 4.1, 4.9, 5.1, 5.9, 6.1, 6.9, 7.1]
 
-            plt.hist(bulk_lats, alpha = 1.0, bins=100, color=green)
-
-        #If interface particle measured, include it in histogram
-        if (len(int_lats)>0):
-            int_id = np.where((int_lats > xmax) | (int_lats < xmin))[0]
-            int_lats = np.delete(int_lats, int_id)
-
-            plt.hist(int_lats, alpha = 0.8, bins=100, color=yellow)
+        if (np.max(prob_stat_dict['bulk']['AA']) >= np.max(prob_stat_dict['bulk']['AB'])) & (np.max(prob_stat_dict['bulk']['AA']) >= np.max(prob_stat_dict['bulk']['BA'])) & (np.max(prob_stat_dict['bulk']['AA']) >= np.max(prob_stat_dict['bulk']['BB'])):
+            
+            plt.hist(prob_plot_dict['bulk']['AA'], alpha = 0.3, bins=bins_1, color='blue', rwidth=1.0, density=False, edgecolor='black', linewidth=1.5)
+            if (np.max(prob_stat_dict['bulk']['AB']) >= np.max(prob_stat_dict['bulk']['BA'])) & (np.max(prob_stat_dict['bulk']['AB']) >= np.max(prob_stat_dict['bulk']['BB'])):
+                plt.hist(prob_plot_dict['bulk']['AB'], alpha = 0.3, bins=bins_2, color='purple', rwidth=1.0, density=False)
+                if (np.max(prob_stat_dict['bulk']['BA']) >= np.max(prob_stat_dict['bulk']['BB'])):
+                    plt.hist(prob_plot_dict['bulk']['BA'], alpha = 0.3, bins=bins_3, color='teal', rwidth=1.0, density=False)
+                    plt.hist(prob_plot_dict['bulk']['BB'], alpha = 0.3, bins=bins_4, color='red', rwidth=1.0, density=False)
+                elif (np.max(prob_stat_dict['bulk']['BB']) >= np.max(prob_stat_dict['bulk']['BA'])):
+                    plt.hist(prob_plot_dict['bulk']['BB'], alpha = 0.3, bins=bins_3, color='red', rwidth=1.0, density=False)
+                    plt.hist(prob_plot_dict['bulk']['BA'], alpha = 0.3, bins=bins_4, color='teal', rwidth=1.0, density=False)
+            elif (np.max(prob_stat_dict['bulk']['BA']) >= np.max(prob_stat_dict['bulk']['AB'])) & (np.max(prob_stat_dict['bulk']['BA']) >= np.max(prob_stat_dict['bulk']['BB'])):
+                plt.hist(prob_plot_dict['bulk']['BA'], alpha = 0.3, bins=bins_2, color='teal', rwidth=1.0, density=False)
+                if (np.max(prob_stat_dict['bulk']['AB']) >= np.max(prob_stat_dict['bulk']['BB'])):
+                    plt.hist(prob_plot_dict['bulk']['AB'], alpha = 0.3, bins=bins_3, color='purple', rwidth=1.0, density=False)
+                    plt.hist(prob_plot_dict['bulk']['BB'], alpha = 0.3, bins=bins_4, color='red', rwidth=1.0, density=False)
+                elif (np.max(prob_stat_dict['bulk']['BB']) >= np.max(prob_stat_dict['bulk']['AB'])):
+                    plt.hist(prob_plot_dict['bulk']['BB'], alpha = 0.3, bins=bins_3, color='red', rwidth=1.0, density=False)
+                    plt.hist(prob_plot_dict['bulk']['AB'], alpha = 0.3, bins=bins_4, color='purple', rwidth=1.0, density=False)
+            elif (np.max(prob_stat_dict['bulk']['BB']) >= np.max(prob_stat_dict['bulk']['AB'])) & (np.max(prob_stat_dict['bulk']['BB']) >= np.max(prob_stat_dict['bulk']['BA'])):
+                plt.hist(prob_plot_dict['bulk']['BB'], alpha = 0.3, bins=bins_2, color='red', rwidth=1.0, density=False)
+                if (np.max(prob_stat_dict['bulk']['BA']) >= np.max(prob_stat_dict['bulk']['AB'])):
+                    plt.hist(prob_plot_dict['bulk']['BA'], alpha = 0.3, bins=bins_3, color='teal', rwidth=1.0, density=False)
+                    plt.hist(prob_plot_dict['bulk']['AB'], alpha = 0.3, bins=bins_4, color='purple', rwidth=1.0, density=False)
+                elif (np.max(prob_stat_dict['bulk']['AB']) >= np.max(prob_stat_dict['bulk']['BA'])):
+                    plt.hist(prob_plot_dict['bulk']['AB'], alpha = 0.3, bins=bins_3, color='purple', rwidth=1.0, density=False)
+                    plt.hist(prob_plot_dict['bulk']['BA'], alpha = 0.3, bins=bins_4, color='teal', rwidth=1.0, density=False)
+        elif (np.max(prob_stat_dict['bulk']['AB']) >= np.max(prob_stat_dict['bulk']['AA'])) & (np.max(prob_stat_dict['bulk']['AB']) >= np.max(prob_stat_dict['bulk']['BA'])) & (np.max(prob_stat_dict['bulk']['AB']) >= np.max(prob_stat_dict['bulk']['BB'])):
+            plt.hist(prob_plot_dict['bulk']['AB'], alpha = 0.3, bins=bins_1, color='purple', rwidth=1.0, density=False, edgecolor='black', linewidth=1.5)
+            if (np.max(prob_stat_dict['bulk']['AA']) >= np.max(prob_stat_dict['bulk']['BA'])) & (np.max(prob_stat_dict['bulk']['AA']) >= np.max(prob_stat_dict['bulk']['BB'])):
+                plt.hist(prob_plot_dict['bulk']['AA'], alpha = 0.3, bins=bins_2, color='blue', rwidth=1.0, density=False)
+                if (np.max(prob_stat_dict['bulk']['BA']) >= np.max(prob_stat_dict['bulk']['BB'])):
+                    plt.hist(prob_plot_dict['bulk']['BA'], alpha = 0.3, bins=bins_3, color='teal', rwidth=1.0, density=False)
+                    plt.hist(prob_plot_dict['bulk']['BB'], alpha = 0.3, bins=bins_4, color='red', rwidth=1.0, density=False)
+                if (np.max(prob_stat_dict['bulk']['BB']) >= np.max(prob_stat_dict['bulk']['BA'])):
+                    plt.hist(prob_plot_dict['bulk']['BB'], alpha = 0.3, bins=bins_3, color='red', rwidth=1.0, density=False)
+                    plt.hist(prob_plot_dict['bulk']['BA'], alpha = 0.3, bins=bins_4, color='teal', rwidth=1.0, density=False)
+            elif (np.max(prob_stat_dict['bulk']['BA']) >= np.max(prob_stat_dict['bulk']['AA'])) & (np.max(prob_stat_dict['bulk']['BA']) >= np.max(prob_stat_dict['bulk']['BB'])):
+                plt.hist(prob_plot_dict['bulk']['BA'], alpha = 0.3, bins=bins_2, color='teal', rwidth=1.0, density=False)
+                if (np.max(prob_stat_dict['bulk']['AA']) >= np.max(prob_stat_dict['bulk']['BB'])):
+                    plt.hist(prob_plot_dict['bulk']['AA'], alpha = 0.3, bins=bins_3, color='blue', rwidth=1.0, density=False)
+                    plt.hist(prob_plot_dict['bulk']['BB'], alpha = 0.3, bins=bins_4, color='red', rwidth=1.0, density=False)
+                elif (np.max(prob_stat_dict['bulk']['BB']) >= np.max(prob_stat_dict['bulk']['AA'])):
+                    plt.hist(prob_plot_dict['bulk']['BB'], alpha = 0.3, bins=bins_3, color='red', rwidth=1.0, density=False)
+                    plt.hist(prob_plot_dict['bulk']['AA'], alpha = 0.3, bins=bins_4, color='blue', rwidth=1.0, density=False)
+            elif (np.max(prob_stat_dict['bulk']['BB']) >= np.max(prob_stat_dict['bulk']['AA'])) & (np.max(prob_stat_dict['bulk']['BB']) >= np.max(prob_stat_dict['bulk']['BA'])):
+                plt.hist(prob_plot_dict['bulk']['BB'], alpha = 0.3, bins=bins_2, color='red', rwidth=1.0, density=False)
+                if (np.max(prob_stat_dict['bulk']['AA']) >= np.max(prob_stat_dict['bulk']['BA'])):
+                    plt.hist(prob_plot_dict['bulk']['AA'], alpha = 0.3, bins=bins_3, color='blue', rwidth=1.0, density=False)
+                    plt.hist(prob_plot_dict['bulk']['BA'], alpha = 0.3, bins=bins_4, color='teal', rwidth=1.0, density=False)
+                elif (np.max(prob_stat_dict['bulk']['BA']) >= np.max(prob_stat_dict['bulk']['AA'])):
+                    plt.hist(prob_plot_dict['bulk']['BA'], alpha = 0.3, bins=bins_3, color='teal', rwidth=1.0, density=False)
+                    plt.hist(prob_plot_dict['bulk']['AA'], alpha = 0.3, bins=bins_4, color='blue', rwidth=1.0, density=False)
+        elif (np.max(prob_stat_dict['bulk']['BA']) >= np.max(prob_stat_dict['bulk']['AA'])) & (np.max(prob_stat_dict['bulk']['BA']) >= np.max(prob_stat_dict['bulk']['AB'])) & (np.max(prob_stat_dict['bulk']['BA']) >= np.max(prob_stat_dict['bulk']['BB'])):
+            plt.hist(prob_plot_dict['bulk']['BA'], alpha = 0.3, bins=bins_1, color='teal', rwidth=1.0, density=False, edgecolor='black', linewidth=1.5)
+            if (np.max(prob_stat_dict['bulk']['AA']) >= np.max(prob_stat_dict['bulk']['AB'])) & (np.max(prob_stat_dict['bulk']['AA']) >= np.max(prob_stat_dict['bulk']['BB'])):
+                plt.hist(prob_plot_dict['bulk']['AA'], alpha = 0.3, bins=bins_2, color='blue', rwidth=1.0, density=False)
+                if (np.max(prob_stat_dict['bulk']['AB']) >= np.max(prob_stat_dict['bulk']['BB'])):
+                    plt.hist(prob_plot_dict['bulk']['AB'], alpha = 0.3, bins=bins_3, color='purple', rwidth=1.0, density=False)
+                    plt.hist(prob_plot_dict['bulk']['BB'], alpha = 0.3, bins=bins_4, color='red', rwidth=1.0, density=False)
+                elif (np.max(prob_stat_dict['bulk']['BB']) >= np.max(prob_stat_dict['bulk']['AB'])):
+                    plt.hist(prob_plot_dict['bulk']['BB'], alpha = 0.3, bins=bins_3, color='red', rwidth=1.0, density=False)
+                    plt.hist(prob_plot_dict['bulk']['AB'], alpha = 0.3, bins=bins_4, color='purple', rwidth=1.0, density=False)
+            elif (np.max(prob_stat_dict['bulk']['AB']) >= np.max(prob_stat_dict['bulk']['AA'])) & (np.max(prob_stat_dict['bulk']['AB']) >= np.max(prob_stat_dict['bulk']['BB'])):
+                plt.hist(prob_plot_dict['bulk']['AB'], alpha = 0.3, bins=bins_2, color='purple', rwidth=1.0, density=False)
+                if (np.max(prob_stat_dict['bulk']['AA']) >= np.max(prob_stat_dict['bulk']['BB'])):
+                    plt.hist(prob_plot_dict['bulk']['AA'], alpha = 0.3, bins=bins_3, color='blue', rwidth=1.0, density=False)
+                    plt.hist(prob_plot_dict['bulk']['BB'], alpha = 0.3, bins=bins_4, color='red', rwidth=1.0, density=False)
+                elif (np.max(prob_stat_dict['bulk']['BB']) >= np.max(prob_stat_dict['bulk']['AA'])):
+                    plt.hist(prob_plot_dict['bulk']['BB'], alpha = 0.3, bins=bins_3, color='red', rwidth=1.0, density=False)
+                    plt.hist(prob_plot_dict['bulk']['AA'], alpha = 0.3, bins=bins_4, color='blue', rwidth=1.0, density=False)
+            elif (np.max(prob_stat_dict['bulk']['BB']) >= np.max(prob_stat_dict['bulk']['AA'])) & (np.max(prob_stat_dict['bulk']['BB']) >= np.max(prob_stat_dict['bulk']['AB'])):
+                plt.hist(prob_plot_dict['bulk']['BB'], alpha = 0.3, bins=bins_2, color='red', rwidth=1.0, density=False)
+                if (np.max(prob_stat_dict['bulk']['AA']) >= np.max(prob_stat_dict['bulk']['AB'])):
+                    plt.hist(prob_plot_dict['bulk']['AA'], alpha = 0.3, bins=bins_3, color='blue', rwidth=1.0, density=False)
+                    plt.hist(prob_plot_dict['bulk']['AB'], alpha = 0.3, bins=bins_4, color='purple', rwidth=1.0, density=False)
+                elif (np.max(prob_stat_dict['bulk']['AB']) >= np.max(prob_stat_dict['bulk']['AA'])):
+                    plt.hist(prob_plot_dict['bulk']['AB'], alpha = 0.3, bins=bins_3, color='purple', rwidth=1.0, density=False)
+                    plt.hist(prob_plot_dict['bulk']['AA'], alpha = 0.3, bins=bins_4, color='blue', rwidth=1.0, density=False)
+        elif (np.max(prob_stat_dict['bulk']['BB']) >= np.max(prob_stat_dict['bulk']['AA'])) & (np.max(prob_stat_dict['bulk']['BB']) >= np.max(prob_stat_dict['bulk']['AB'])) & (np.max(prob_stat_dict['bulk']['BB']) >= np.max(prob_stat_dict['bulk']['BA'])):
+            plt.hist(prob_plot_dict['bulk']['BB'], alpha = 0.3, bins=bins_1, color='red', rwidth=1.0, density=False, edgecolor='black', linewidth=1.5)
+            if (np.max(prob_stat_dict['bulk']['AA']) >= np.max(prob_stat_dict['bulk']['AB'])) & (np.max(prob_stat_dict['bulk']['AA']) >= np.max(prob_stat_dict['bulk']['BA'])):
+                plt.hist(prob_plot_dict['bulk']['AA'], alpha = 0.3, bins=bins_2, color='blue', rwidth=1.0, density=False)
+                if (np.max(prob_stat_dict['bulk']['AB']) >= np.max(prob_stat_dict['bulk']['BA'])):
+                    plt.hist(prob_plot_dict['bulk']['AB'], alpha = 0.3, bins=bins_3, color='purple', rwidth=1.0, density=False)
+                    plt.hist(prob_plot_dict['bulk']['BA'], alpha = 0.3, bins=bins_4, color='teal', rwidth=1.0, density=False)
+                elif (np.max(prob_stat_dict['bulk']['BA']) >= np.max(prob_stat_dict['bulk']['AB'])):
+                    plt.hist(prob_plot_dict['bulk']['BA'], alpha = 0.3, bins=bins_3, color='teal', rwidth=1.0, density=False)
+                    plt.hist(prob_plot_dict['bulk']['AB'], alpha = 0.3, bins=bins_4, color='purple', rwidth=1.0, density=False)
+            elif (np.max(prob_stat_dict['bulk']['AB']) >= np.max(prob_stat_dict['bulk']['AA'])) & (np.max(prob_stat_dict['bulk']['AB']) >= np.max(prob_stat_dict['bulk']['BA'])):
+                plt.hist(prob_plot_dict['bulk']['AB'], alpha = 0.3, bins=bins_2, color='purple', rwidth=1.0, density=False)
+                if (np.max(prob_stat_dict['bulk']['AA']) >= np.max(prob_stat_dict['bulk']['BA'])):
+                    plt.hist(prob_plot_dict['bulk']['AA'], alpha = 0.3, bins=bins_3, color='blue', rwidth=1.0, density=False)
+                    plt.hist(prob_plot_dict['bulk']['BA'], alpha = 0.3, bins=bins_4, color='teal', rwidth=1.0, density=False)
+                elif (np.max(prob_stat_dict['bulk']['BA']) >= np.max(prob_stat_dict['bulk']['AA'])):
+                    plt.hist(prob_plot_dict['bulk']['BA'], alpha = 0.3, bins=bins_3, color='teal', rwidth=1.0, density=False)
+                    plt.hist(prob_plot_dict['bulk']['AA'], alpha = 0.3, bins=bins_4, color='blue', rwidth=1.0, density=False)
+            elif (np.max(prob_stat_dict['bulk']['BA']) >= np.max(prob_stat_dict['bulk']['AA'])) & (np.max(prob_stat_dict['bulk']['BA']) >= np.max(prob_stat_dict['bulk']['AB'])):
+                plt.hist(prob_plot_dict['bulk']['BA'], alpha = 0.3, bins=bins_2, color='teal', rwidth=1.0, density=False)
+                if (np.max(prob_stat_dict['bulk']['AA']) >= np.max(prob_stat_dict['bulk']['AB'])):
+                    plt.hist(prob_plot_dict['bulk']['AA'], alpha = 0.3, bins=bins_3, color='blue', rwidth=1.0, density=False)
+                    plt.hist(prob_plot_dict['bulk']['AB'], alpha = 0.3, bins=bins_4, color='purple', rwidth=1.0, density=False)
+                elif (np.max(prob_stat_dict['bulk']['AB']) >= np.max(prob_stat_dict['bulk']['AA'])):
+                    plt.hist(prob_plot_dict['bulk']['AB'], alpha = 0.3, bins=bins_3, color='purple', rwidth=1.0, density=False)
+                    plt.hist(prob_plot_dict['bulk']['AA'], alpha = 0.3, bins=bins_4, color='blue', rwidth=1.0, density=False)
 
         # Create legend of phases
         green_patch = mpatches.Patch(color=green, label='Bulk')
@@ -1331,7 +1428,185 @@ class plotting:
         plt.yticks(fontsize=15)
 
         plt.tight_layout()
-        plt.savefig(self.outPath + 'plot_lat_histo_' + self.outFile + ".png", dpi=150, transparent=False)
+        plt.savefig(self.outPath + 'plot_prob_histo_' + self.outFile + ".png", dpi=150, transparent=False)
+        plt.close()
+
+    def prob_histogram2(self, prob_plot_dict, prob_stat_dict, avg=False):
+        """
+        This function plots a histogram of the lattice spacings of bulk (green)
+        and interface (purple) particles
+
+        Inputs:
+        lat_plot_dict: dictionary (output from lattice_spacing() in
+        measurement.py) containing information on the lattice spacing, averaged
+        over all neighbors within the potential cut-off radius, of each bulk and
+        interface particle.
+
+        Outputs:
+        .png file with a histogram of all bulk (green) and interface (purple)
+        particle lattice spacings color coded.
+        """
+
+        bulk_lats = prob_plot_dict['bulk']['AA']
+        int_lats = prob_plot_dict['int']['AA']
+
+        fig = plt.figure(figsize=(8,6))
+        ax = fig.add_subplot(111)
+
+        #Define colors for plots
+        yellow = ("#7570b3")
+        green = ("#77dd77")
+
+        print(prob_stat_dict)
+
+        xmin = -0.5
+        xmax=7.5
+
+        slowslowCol = '#045a8d'
+        fastslowCol = '#a6bddb'
+        fastfastCol = '#b30000'
+        slowfastCol = '#fdb884'
+
+        bins_1 = [-0.4, 0.4, 0.6, 1.4, 1.6, 2.4, 2.6, 3.4, 3.6, 4.4, 4.6, 5.4, 5.6, 6.4, 6.6, 7.4]
+        bins_2 = [-0.3, 0.3, 0.7, 1.3, 1.7, 2.3, 2.7, 3.3, 3.7, 4.3, 4.7, 5.3, 5.7, 6.3, 6.7, 7.3]
+        bins_3 = [-0.2, 0.2, 0.8, 1.2, 1.8, 2.2, 2.8, 3.2, 3.8, 4.2, 4.8, 5.2, 5.8, 6.2, 6.8, 7.2]
+        bins_4 = [-0.1, 0.1, 0.9, 1.1, 1.9, 2.1, 2.9, 3.1, 3.9, 4.1, 4.9, 5.1, 5.9, 6.1, 6.9, 7.1]
+
+        if (np.max(prob_stat_dict['bulk']['AA']) >= np.max(prob_stat_dict['bulk']['AB'])) & (np.max(prob_stat_dict['bulk']['AA']) >= np.max(prob_stat_dict['bulk']['BA'])) & (np.max(prob_stat_dict['bulk']['AA']) >= np.max(prob_stat_dict['bulk']['BB'])):
+            
+            plt.bar(prob_stat_dict['neigh'], prob_stat_dict['bulk']['AA'], alpha = 1.0, color=slowslowCol, width=0.9, edgecolor='black', linewidth=1.5)
+            
+            if (np.max(prob_stat_dict['bulk']['AB']) >= np.max(prob_stat_dict['bulk']['BA'])) & (np.max(prob_stat_dict['bulk']['AB']) >= np.max(prob_stat_dict['bulk']['BB'])):
+                plt.bar(prob_stat_dict['neigh'], prob_stat_dict['bulk']['AB'], alpha = 1.0, color=slowfastCol, width=0.7, edgecolor='black', linewidth=1.5)
+                if (np.max(prob_stat_dict['bulk']['BA']) >= np.max(prob_stat_dict['bulk']['BB'])):
+                    plt.bar(prob_stat_dict['neigh'], prob_stat_dict['bulk']['BA'], alpha = 1.0, color=fastslowCol, width=0.5, edgecolor='black', linewidth=1.5)
+                    plt.bar(prob_stat_dict['neigh'], prob_stat_dict['bulk']['BB'], alpha = 1.0, color=fastfastCol, width=0.3, edgecolor='black', linewidth=1.5)
+                elif (np.max(prob_stat_dict['bulk']['BB']) >= np.max(prob_stat_dict['bulk']['BA'])):
+                    plt.bar(prob_stat_dict['neigh'], prob_stat_dict['bulk']['BB'], alpha = 1.0, color=fastfastCol, width=0.5, edgecolor='black', linewidth=1.5)
+                    plt.bar(prob_stat_dict['neigh'], prob_stat_dict['bulk']['BA'], alpha = 1.0, color=fastslowCol, width=0.3, edgecolor='black', linewidth=1.5)
+            elif (np.max(prob_stat_dict['bulk']['BA']) >= np.max(prob_stat_dict['bulk']['AB'])) & (np.max(prob_stat_dict['bulk']['BA']) >= np.max(prob_stat_dict['bulk']['BB'])):
+                plt.bar(prob_stat_dict['neigh'], prob_stat_dict['bulk']['BA'], alpha = 1.0, color=fastslowCol, width=0.7, edgecolor='black', linewidth=1.5)
+                if (np.max(prob_stat_dict['bulk']['AB']) >= np.max(prob_stat_dict['bulk']['BB'])):
+                    plt.bar(prob_stat_dict['neigh'], prob_stat_dict['bulk']['AB'], alpha = 1.0, color=slowfastCol, width=0.5, edgecolor='black', linewidth=1.5)
+                    plt.bar(prob_stat_dict['neigh'], prob_stat_dict['bulk']['BB'], alpha = 1.0, color=fastfastCol, width=0.3, edgecolor='black', linewidth=1.5)
+                elif (np.max(prob_stat_dict['bulk']['BB']) >= np.max(prob_stat_dict['bulk']['AB'])):
+                    plt.bar(prob_stat_dict['neigh'], prob_stat_dict['bulk']['BB'], alpha = 1.0, color=fastfastCol, width=0.5, edgecolor='black', linewidth=1.5)
+                    plt.bar(prob_stat_dict['neigh'], prob_stat_dict['bulk']['AB'], alpha = 1.0, color=slowfastCol, width=0.3, edgecolor='black', linewidth=1.5)
+            elif (np.max(prob_stat_dict['bulk']['BB']) >= np.max(prob_stat_dict['bulk']['AB'])) & (np.max(prob_stat_dict['bulk']['BB']) >= np.max(prob_stat_dict['bulk']['BA'])):
+                plt.bar(prob_stat_dict['neigh'], prob_stat_dict['bulk']['BB'], alpha = 1.0, color=fastfastCol, width=0.7, edgecolor='black', linewidth=1.5)
+                if (np.max(prob_stat_dict['bulk']['BA']) >= np.max(prob_stat_dict['bulk']['AB'])):
+                    plt.bar(prob_stat_dict['neigh'], prob_stat_dict['bulk']['BA'], alpha = 1.0, color=fastslowCol, width=0.5, edgecolor='black', linewidth=1.5)
+                    plt.bar(prob_stat_dict['neigh'], prob_stat_dict['bulk']['AB'], alpha = 1.0, color=slowfastCol, width=0.3, edgecolor='black', linewidth=1.5)
+                elif (np.max(prob_stat_dict['bulk']['AB']) >= np.max(prob_stat_dict['bulk']['BA'])):
+                    plt.bar(prob_stat_dict['neigh'], prob_stat_dict['bulk']['AB'], alpha = 1.0, color=slowfastCol, width=0.5, edgecolor='black', linewidth=1.5)
+                    plt.bar(prob_stat_dict['neigh'], prob_stat_dict['bulk']['BA'], alpha = 1.0, color=fastslowCol, width=0.3, edgecolor='black', linewidth=1.5)
+            
+        elif (np.max(prob_stat_dict['bulk']['AB']) >= np.max(prob_stat_dict['bulk']['AA'])) & (np.max(prob_stat_dict['bulk']['AB']) >= np.max(prob_stat_dict['bulk']['BA'])) & (np.max(prob_stat_dict['bulk']['AB']) >= np.max(prob_stat_dict['bulk']['BB'])):
+            plt.bar(prob_stat_dict['neigh'], prob_stat_dict['bulk']['AB'], alpha = 1.0, color=slowfastCol, width=0.9, edgecolor='black', linewidth=1.5)
+            
+            if (np.max(prob_stat_dict['bulk']['AA']) >= np.max(prob_stat_dict['bulk']['BA'])) & (np.max(prob_stat_dict['bulk']['AA']) >= np.max(prob_stat_dict['bulk']['BB'])):
+                plt.bar(prob_stat_dict['neigh'], prob_stat_dict['bulk']['AA'], alpha = 1.0, color=slowslowCol, width=0.7, edgecolor='black', linewidth=1.5)
+                if (np.max(prob_stat_dict['bulk']['BA']) >= np.max(prob_stat_dict['bulk']['BB'])):
+                    plt.bar(prob_stat_dict['neigh'], prob_stat_dict['bulk']['BA'], alpha = 1.0, color=fastslowCol, width=0.5, edgecolor='black', linewidth=1.5)
+                    plt.bar(prob_stat_dict['neigh'], prob_stat_dict['bulk']['BB'], alpha = 1.0, color=fastfastCol, width=0.3, edgecolor='black', linewidth=1.5)
+                if (np.max(prob_stat_dict['bulk']['BB']) >= np.max(prob_stat_dict['bulk']['BA'])):
+                    plt.bar(prob_stat_dict['neigh'], prob_stat_dict['bulk']['BB'], alpha = 1.0, color=fastfastCol, width=0.5, edgecolor='black', linewidth=1.5)
+                    plt.bar(prob_stat_dict['neigh'], prob_stat_dict['bulk']['BA'], alpha = 1.0, color=fastslowCol, width=0.3, edgecolor='black', linewidth=1.5)
+            elif (np.max(prob_stat_dict['bulk']['BA']) >= np.max(prob_stat_dict['bulk']['AA'])) & (np.max(prob_stat_dict['bulk']['BA']) >= np.max(prob_stat_dict['bulk']['BB'])):
+                plt.bar(prob_stat_dict['neigh'], prob_stat_dict['bulk']['BA'], alpha = 1.0, color=fastslowCol, width=0.7, edgecolor='black', linewidth=1.5)
+                if (np.max(prob_stat_dict['bulk']['AA']) >= np.max(prob_stat_dict['bulk']['BB'])):
+                    plt.bar(prob_stat_dict['neigh'], prob_stat_dict['bulk']['AA'], alpha = 1.0, color=slowslowCol, width=0.5, edgecolor='black', linewidth=1.5)
+                    plt.bar(prob_stat_dict['neigh'], prob_stat_dict['bulk']['BB'], alpha = 1.0, color=fastfastCol, width=0.3, edgecolor='black', linewidth=1.5)
+                elif (np.max(prob_stat_dict['bulk']['BB']) >= np.max(prob_stat_dict['bulk']['AA'])):
+                    plt.bar(prob_stat_dict['neigh'], prob_stat_dict['bulk']['BB'], alpha = 1.0, color=fastfastCol, width=0.5, edgecolor='black', linewidth=1.5)
+                    plt.bar(prob_stat_dict['neigh'], prob_stat_dict['bulk']['AA'], alpha = 1.0, color=slowslowCol, width=0.3, edgecolor='black', linewidth=1.5)
+            elif (np.max(prob_stat_dict['bulk']['BB']) >= np.max(prob_stat_dict['bulk']['AA'])) & (np.max(prob_stat_dict['bulk']['BB']) >= np.max(prob_stat_dict['bulk']['BA'])):
+                plt.bar(prob_stat_dict['neigh'], prob_stat_dict['bulk']['BB'], alpha = 1.0, color=fastfastCol, width=0.7, edgecolor='black', linewidth=1.5)
+                if (np.max(prob_stat_dict['bulk']['AA']) >= np.max(prob_stat_dict['bulk']['BA'])):
+                    plt.bar(prob_stat_dict['neigh'], prob_stat_dict['bulk']['AA'], alpha = 1.0, color=slowslowCol, width=0.5, edgecolor='black', linewidth=1.5)
+                    plt.bar(prob_stat_dict['neigh'], prob_stat_dict['bulk']['BA'], alpha = 1.0, color=fastslowCol, width=0.3, edgecolor='black', linewidth=1.5)
+                elif (np.max(prob_stat_dict['bulk']['BA']) >= np.max(prob_stat_dict['bulk']['AA'])):
+                    plt.bar(prob_stat_dict['neigh'], prob_stat_dict['bulk']['BA'], alpha = 1.0, color=fastslowCol, width=0.5, edgecolor='black', linewidth=1.5)
+                    plt.bar(prob_stat_dict['neigh'], prob_stat_dict['bulk']['AA'], alpha = 1.0, color=slowslowCol, width=0.3, edgecolor='black', linewidth=1.5)
+            
+        elif (np.max(prob_stat_dict['bulk']['BA']) >= np.max(prob_stat_dict['bulk']['AA'])) & (np.max(prob_stat_dict['bulk']['BA']) >= np.max(prob_stat_dict['bulk']['AB'])) & (np.max(prob_stat_dict['bulk']['BA']) >= np.max(prob_stat_dict['bulk']['BB'])):
+            plt.bar(prob_stat_dict['neigh'], prob_stat_dict['bulk']['BA'], alpha = 1.0, color=fastslowCol, width=0.9, edgecolor='black', linewidth=1.5)
+            
+            if (np.max(prob_stat_dict['bulk']['AA']) >= np.max(prob_stat_dict['bulk']['AB'])) & (np.max(prob_stat_dict['bulk']['AA']) >= np.max(prob_stat_dict['bulk']['BB'])):
+                plt.bar(prob_stat_dict['neigh'], prob_stat_dict['bulk']['AA'], alpha = 1.0, color=slowslowCol, width=0.7, edgecolor='black', linewidth=1.5)
+                if (np.max(prob_stat_dict['bulk']['AB']) >= np.max(prob_stat_dict['bulk']['BB'])):
+                    plt.bar(prob_stat_dict['neigh'], prob_stat_dict['bulk']['AB'], alpha = 1.0, color=slowfastCol, width=0.5, edgecolor='black', linewidth=1.5)
+                    plt.bar(prob_stat_dict['neigh'], prob_stat_dict['bulk']['BB'], alpha = 1.0, color=fastfastCol, width=0.3, edgecolor='black', linewidth=1.5)
+                elif (np.max(prob_stat_dict['bulk']['BB']) >= np.max(prob_stat_dict['bulk']['AB'])):
+                    plt.bar(prob_stat_dict['neigh'], prob_stat_dict['bulk']['BB'], alpha = 1.0, color=fastfastCol, width=0.5, edgecolor='black', linewidth=1.5)
+                    plt.bar(prob_stat_dict['neigh'], prob_stat_dict['bulk']['AB'], alpha = 1.0, color=slowfastCol, width=0.3, edgecolor='black', linewidth=1.5)
+            elif (np.max(prob_stat_dict['bulk']['AB']) >= np.max(prob_stat_dict['bulk']['AA'])) & (np.max(prob_stat_dict['bulk']['AB']) >= np.max(prob_stat_dict['bulk']['BB'])):
+                plt.bar(prob_stat_dict['neigh'], prob_stat_dict['bulk']['AB'], alpha = 1.0, color=slowfastCol, width=0.7, edgecolor='black', linewidth=1.5)
+                if (np.max(prob_stat_dict['bulk']['AA']) >= np.max(prob_stat_dict['bulk']['BB'])):
+                    plt.bar(prob_stat_dict['neigh'], prob_stat_dict['bulk']['AA'], alpha = 1.0, color=slowslowCol, width=0.5, edgecolor='black', linewidth=1.5)
+                    plt.bar(prob_stat_dict['neigh'], prob_stat_dict['bulk']['BB'], alpha = 1.0, color=fastfastCol, width=0.3, edgecolor='black', linewidth=1.5)
+                elif (np.max(prob_stat_dict['bulk']['BB']) >= np.max(prob_stat_dict['bulk']['AA'])):
+                    plt.bar(prob_stat_dict['neigh'], prob_stat_dict['bulk']['BB'], alpha = 1.0, color=fastfastCol, width=0.5, edgecolor='black', linewidth=1.5)
+                    plt.bar(prob_stat_dict['neigh'], prob_stat_dict['bulk']['AA'], alpha = 1.0, color=slowslowCol, width=0.3, edgecolor='black', linewidth=1.5)
+            elif (np.max(prob_stat_dict['bulk']['BB']) >= np.max(prob_stat_dict['bulk']['AA'])) & (np.max(prob_stat_dict['bulk']['BB']) >= np.max(prob_stat_dict['bulk']['AB'])):
+                plt.bar(prob_stat_dict['neigh'], prob_stat_dict['bulk']['BB'], alpha = 1.0, color=fastfastCol, width=0.7, edgecolor='black', linewidth=1.5)
+                if (np.max(prob_stat_dict['bulk']['AA']) >= np.max(prob_stat_dict['bulk']['AB'])):
+                    plt.bar(prob_stat_dict['neigh'], prob_stat_dict['bulk']['AA'], alpha = 1.0, color=slowslowCol, width=0.5, edgecolor='black', linewidth=1.5)
+                    plt.bar(prob_stat_dict['neigh'], prob_stat_dict['bulk']['AB'], alpha = 1.0, color=slowfastCol, width=0.3, edgecolor='black', linewidth=1.5)
+                elif (np.max(prob_stat_dict['bulk']['AB']) >= np.max(prob_stat_dict['bulk']['AA'])):
+                    plt.bar(prob_stat_dict['neigh'], prob_stat_dict['bulk']['AB'], alpha = 1.0, color=slowfastCol, width=0.5, edgecolor='black', linewidth=1.5)
+                    plt.bar(prob_stat_dict['neigh'], prob_stat_dict['bulk']['AA'], alpha = 1.0, color=slowslowCol, width=0.3, edgecolor='black', linewidth=1.5)
+            
+        elif (np.max(prob_stat_dict['bulk']['BB']) >= np.max(prob_stat_dict['bulk']['AA'])) & (np.max(prob_stat_dict['bulk']['BB']) >= np.max(prob_stat_dict['bulk']['AB'])) & (np.max(prob_stat_dict['bulk']['BB']) >= np.max(prob_stat_dict['bulk']['BA'])):
+            plt.bar(prob_stat_dict['neigh'], prob_stat_dict['bulk']['BB'], alpha = 1.0, color=fastfastCol, width=0.9, edgecolor='black', linewidth=1.5)
+            
+            if (np.max(prob_stat_dict['bulk']['AA']) >= np.max(prob_stat_dict['bulk']['AB'])) & (np.max(prob_stat_dict['bulk']['AA']) >= np.max(prob_stat_dict['bulk']['BA'])):
+                plt.bar(prob_stat_dict['neigh'], prob_stat_dict['bulk']['AA'], alpha = 1.0, color=slowslowCol, width=0.7, edgecolor='black', linewidth=1.5)
+                if (np.max(prob_stat_dict['bulk']['AB']) >= np.max(prob_stat_dict['bulk']['BA'])):
+                    plt.bar(prob_stat_dict['neigh'], prob_stat_dict['bulk']['AB'], alpha = 1.0, color=slowfastCol, width=0.5, edgecolor='black', linewidth=1.5)
+                    plt.bar(prob_stat_dict['neigh'], prob_stat_dict['bulk']['BA'], alpha = 1.0, color=fastslowCol, width=0.3, edgecolor='black', linewidth=1.5)
+                elif (np.max(prob_stat_dict['bulk']['BA']) >= np.max(prob_stat_dict['bulk']['AB'])):
+                    plt.bar(prob_stat_dict['neigh'], prob_stat_dict['bulk']['BA'], alpha = 1.0, color=fastslowCol, width=0.5, edgecolor='black', linewidth=1.5)
+                    plt.bar(prob_stat_dict['neigh'], prob_stat_dict['bulk']['AB'], alpha = 1.0, color=slowfastCol, width=0.3, edgecolor='black', linewidth=1.5)
+            elif (np.max(prob_stat_dict['bulk']['AB']) >= np.max(prob_stat_dict['bulk']['AA'])) & (np.max(prob_stat_dict['bulk']['AB']) >= np.max(prob_stat_dict['bulk']['BA'])):
+                plt.bar(prob_stat_dict['neigh'], prob_stat_dict['bulk']['AB'], alpha = 1.0, color=slowfastCol, width=0.7, edgecolor='black', linewidth=1.5)
+                if (np.max(prob_stat_dict['bulk']['AA']) >= np.max(prob_stat_dict['bulk']['BA'])):
+                    plt.bar(prob_stat_dict['neigh'], prob_stat_dict['bulk']['AA'], alpha = 1.0, color=slowslowCol, width=0.5, edgecolor='black', linewidth=1.5)
+                    plt.bar(prob_stat_dict['neigh'], prob_stat_dict['bulk']['BA'], alpha = 1.0, color=fastslowCol, width=0.3, edgecolor='black', linewidth=1.5)
+                elif (np.max(prob_stat_dict['bulk']['BA']) >= np.max(prob_stat_dict['bulk']['AA'])):
+                    plt.bar(prob_stat_dict['neigh'], prob_stat_dict['bulk']['BA'], alpha = 1.0, color=fastslowCol, width=0.5, edgecolor='black', linewidth=1.5)
+                    plt.bar(prob_stat_dict['neigh'], prob_stat_dict['bulk']['AA'], alpha = 1.0, color=slowslowCol, width=0.3, edgecolor='black', linewidth=1.5)
+            elif (np.max(prob_stat_dict['bulk']['BA']) >= np.max(prob_stat_dict['bulk']['AA'])) & (np.max(prob_stat_dict['bulk']['BA']) >= np.max(prob_stat_dict['bulk']['AB'])):
+                plt.bar(prob_stat_dict['neigh'], prob_stat_dict['bulk']['BA'], alpha = 1.0, color=fastslowCol, width=0.7, edgecolor='black', linewidth=1.5)
+                if (np.max(prob_stat_dict['bulk']['AA']) >= np.max(prob_stat_dict['bulk']['AB'])):
+                    plt.bar(prob_stat_dict['neigh'], prob_stat_dict['bulk']['AA'], alpha = 1.0, color=slowslowCol, width=0.5, edgecolor='black', linewidth=1.5)
+                    plt.bar(prob_stat_dict['neigh'], prob_stat_dict['bulk']['AB'], alpha = 1.0, color=slowfastCol, width=0.3, edgecolor='black', linewidth=1.5)
+                elif (np.max(prob_stat_dict['bulk']['AB']) >= np.max(prob_stat_dict['bulk']['AA'])):
+                    plt.bar(prob_stat_dict['neigh'], prob_stat_dict['bulk']['AB'], alpha = 1.0, color=slowfastCol, width=0.5, edgecolor='black', linewidth=1.5)
+                    plt.bar(prob_stat_dict['neigh'], prob_stat_dict['bulk']['AA'], alpha = 1.0, color=slowslowCol, width=0.3, edgecolor='black', linewidth=1.5)
+            
+        # Create legend of phases
+        slowslow_patch = mpatches.Patch(color=slowslowCol, label='Slow-Slow')
+        fastslow_patch = mpatches.Patch(color=fastslowCol, label='Fast-Slow')
+        fastfast_patch = mpatches.Patch(color=fastfastCol, label='Fast-Fast')
+        slowfast_patch = mpatches.Patch(color=slowfastCol, label='Slow-Fast')
+        plt.legend(handles=[slowslow_patch, fastslow_patch, fastfast_patch, slowfast_patch], fancybox=False, ncol=4, fontsize=21, bbox_transform=ax.transAxes, bbox_to_anchor=[0.1, 1.13], labelspacing=0.1, handletextpad=0.1, facecolor='None', edgecolor='None')
+
+        # Label current time step
+        if avg == False:
+            plt.text(0.03, 0.94, s=r'$\tau$' + ' = ' + '{:.2f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+                fontsize=21,transform = ax.transAxes,
+                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+
+        # Modify plot parameters
+        plt.xlabel(r'Number of Neighbors', fontsize=21)
+        plt.ylabel('Probability', fontsize=21)
+        plt.xlim([xmin,xmax])
+        plt.xticks(fontsize=18)
+        plt.yticks(fontsize=18)
+
+        plt.tight_layout()
+        plt.savefig(self.outPath + 'plot_prob_histo_' + self.outFile + ".png", dpi=150, transparent=False)
         plt.close()
     
     def vel_histogram(self, vel_plot_dict, dt_step, avg='False'):

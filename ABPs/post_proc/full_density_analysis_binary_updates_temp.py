@@ -250,6 +250,12 @@ for i in range(0, len(measurement_options)):
     elif measurement_options[i] == 'presentation':
         presentation_option = True
 
+time_prob_AA_bulk = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0], dtype=np.float64)
+time_prob_AB_bulk = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0], dtype=np.float64)
+time_prob_BA_bulk = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0], dtype=np.float64)
+time_prob_BB_bulk = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0], dtype=np.float64)
+time_prob_num = 0 
+
 with hoomd.open(name=inFile, mode='rb') as t:
     
     dumps = int(t.__len__())
@@ -258,7 +264,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
     
                                 # get number of timesteps dumped
     
-    end = start + 2# int(dumps/time_step)-1                                             # final frame to process
+    end = start + 3# int(dumps/time_step)-1                                             # final frame to process
 
     snap = t[0]                                             # Take first snap for box
     first_tstep = snap.configuration.step                   # First time step
@@ -910,6 +916,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                 start_dict = {'bulk': {'time': time_entered_bulk}, 'gas': {'time': time_entered_gas} }
                 lifetime_dict = {}
+                msd_bulk_dict = {}
                 lifetime_stat_dict = {}
 
             # If cluster has been formed previously
@@ -1373,15 +1380,24 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
                 
                 # Measure clustering coefficient
-                clust_plot_dict, clust_stat_dict, prob_stat_dict = lattice_structure_functs.clustering_coefficient()
+                clust_plot_dict, clust_stat_dict, prob_plot_dict, prob_stat_dict = lattice_structure_functs.clustering_coefficient()
                 
-                if plot == 'y':
-                    plotting_functs.prob_histogram(prob_stat_dict)
+                time_prob_AA_bulk += np.array(prob_stat_dict['bulk']['AA'])
+                time_prob_AB_bulk += np.array(prob_stat_dict['bulk']['AB'])
+                time_prob_BA_bulk += np.array(prob_stat_dict['bulk']['BA'])
+                time_prob_BB_bulk += np.array(prob_stat_dict['bulk']['BB'])
+                time_prob_num += 1
+
+                #if plot == 'y':
+                    #plotting_functs.prob_histogram(prob_plot_dict, prob_stat_dict)
+                    #plotting_functs.prob_histogram2(prob_plot_dict, prob_stat_dict)
+
+                    #stop
 
                     # Plot all, A, and B particles and color-code by clustering coefficient
-                    plotting_functs.plot_clustering(clust_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, type='all', interface_id = interface_option, orientation_id = orientation_option)
-                    plotting_functs.plot_clustering(clust_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, type='A', interface_id = interface_option, orientation_id = orientation_option)
-                    plotting_functs.plot_clustering(clust_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, type='B', interface_id = interface_option, orientation_id = orientation_option)
+                    #plotting_functs.plot_clustering(clust_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, type='all', interface_id = interface_option, orientation_id = orientation_option)
+                    #plotting_functs.plot_clustering(clust_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, type='A', interface_id = interface_option, orientation_id = orientation_option)
+                    #plotting_functs.plot_clustering(clust_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, type='B', interface_id = interface_option, orientation_id = orientation_option)
 
             elif measurement_options[0] == 'local-gas-density':
 
@@ -1686,9 +1702,19 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     if steady_state_once == 'True':
                         kinetic_functs = kinetics.kinetic_props(lx_box, ly_box, NBins_x, NBins_y, partNum, typ, eps, peA, peB, parFrac)
 
-                        start_dict, lifetime_dict, lifetime_stat_dict,  = kinetic_functs.cluster_lifetime(partPhase_time, start_dict, lifetime_dict, lifetime_stat_dict, in_clust_arr, partPhase_time_arr)
+                        start_dict, lifetime_dict, lifetime_stat_dict,  = kinetic_functs.cluster_lifetime(partPhase_time, start_dict, lifetime_dict, lifetime_stat_dict, in_clust_arr, partPhase_time_arr, msd_bulk_dict, pos, prev_pos)
 
                         data_output_functs.write_to_txt(lifetime_stat_dict, dataPath + 'lifetime_' + outfile + '.txt')
+            elif measurement_options[0] == 'bulk-msd':
+                #DONE!
+                if len(partPhase_time_arr)>1:
+                
+                    if steady_state_once == 'True':
+                        kinetic_functs = kinetics.kinetic_props(lx_box, ly_box, NBins_x, NBins_y, partNum, typ, eps, peA, peB, parFrac)
+
+                        start_dict, lifetime_dict, lifetime_stat_dict,  = kinetic_functs.bulk_msd(partPhase_time, start_dict, msd_bulk_dict, pos, prev_pos)
+
+                        #data_output_functs.write_to_txt(lifetime_stat_dict, dataPath + 'lifetime_' + outfile + '.txt')
         else:
             
              # Instantiate plotting functions module
@@ -1918,3 +1944,10 @@ with hoomd.open(name=inFile, mode='rb') as t:
         
         if plot == 'y':
             plotting_functs.cluster_size_histogram(collision_plot_dict, avg='True')
+    elif measurement_options[0] == 'clustering-coefficient':
+
+        prob_stat_dict = {'neigh': prob_stat_dict['neigh'], 'bulk': {'AA': time_prob_AA_bulk/time_prob_num, 'BA': time_prob_BA_bulk/time_prob_num, 'AB': time_prob_AB_bulk/time_prob_num, 'BB': time_prob_BB_bulk/time_prob_num}}
+
+        if plot == 'y':
+            #plotting_functs.prob_histogram(prob_plot_dict, prob_stat_dict)
+            plotting_functs.prob_histogram2(prob_plot_dict, prob_stat_dict, avg=True)

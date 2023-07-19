@@ -644,8 +644,10 @@ class kinetic_props:
         lifetime_dict = {}
 
         return adsorption_dict
-    def cluster_lifetime(self, partPhase_time, time_entered_bulk, time_entered_gas, start_dict, lifetime_dict, lifetime_stat_dict, in_clust_arr, partPhase_time_arr):
+    
+    def cluster_lifetime(self, partPhase_time, time_entered_bulk, time_entered_gas, start_dict, lifetime_dict, lifetime_stat_dict, in_clust_arr, partPhase_time_arr, msd_bulk_dict, pos, prev_pos):
         
+        # If cluster life time has been run before, take those values
         try:
             start_bulk_id = start_dict['bulk']['id']
             start_gas_id = start_dict['gas']['id']
@@ -657,10 +659,148 @@ class kinetic_props:
             A_time_in_gas_to_bulk = lifetime_dict['gas_to_bulk']['A']
             B_time_in_gas_to_bulk = lifetime_dict['gas_to_bulk']['B']
 
+            msd = msd_bulk_dict['r']
+
             all_time_in_bulk_to_gas = lifetime_dict['bulk_to_gas']['all']
             A_time_in_bulk_to_gas = lifetime_dict['bulk_to_gas']['A']
             B_time_in_bulk_to_gas = lifetime_dict['bulk_to_gas']['B']
 
+        # Otherwise initialize starting arrays
+        except:
+
+            start_bulk_id = np.where(partPhase_time[0,:]==0)[0]
+            start_gas_id = np.where(partPhase_time[0,:]==2)[0]
+
+            start_pos_x = pos_x
+            start_pos_y = pos_y
+
+            start_bulk_time = start_dict['bulk']['time']
+            start_gas_time = start_dict['gas']['time']
+
+            all_time_in_gas_to_bulk = np.array([])
+            A_time_in_gas_to_bulk = np.array([])
+            B_time_in_gas_to_bulk = np.array([])
+
+            msd = np.zeros(start_bulk_id)
+
+            all_time_in_bulk_to_gas = np.array([])
+            A_time_in_bulk_to_gas = np.array([])
+            B_time_in_bulk_to_gas = np.array([])
+        
+        bulk_id = np.where(partPhase_time[j,:]==0)[0]
+        gas_id = np.where(partPhase_time[j,:]==2)[0]
+        int_id = np.where(partPhase_time[j,:]==1)[0]
+
+        # Particles still in bulk from initial time step
+        still_in_bulk_no_int = np.intersect1d(start_bulk_id, bulk_id, return_indices=True)
+
+        # Particles no longer in bulk as of this time step
+        not_in_bulk_no_int = np.delete(start_bulk_id, still_in_bulk_no_int[1])
+
+        # Calculate 
+
+        difx = np.zeros(start_bulk_time)
+        dify = np.zeros(start_bulk_time)
+        difx[still_in_bulk_no_int[0]] = pos[still_in_bulk_no_int[0], 0] - prev_pos[still_in_bulk_no_int[0], 0]
+        dify[still_in_bulk_no_int[0]] = pos[still_in_bulk_no_int[0], 1] - prev_pos[still_in_bulk_no_int[0], 1]
+
+        msd = msd + (difx ** 2 + dify ** 2)
+        
+        # Loops over all time steps (except initial) until current time
+        for j in range(1, np.shape(partPhase_time)[0]):
+            
+            # Find particles currently in each phase
+            bulk_id = np.where(partPhase_time[j,:]==0)[0]
+            gas_id = np.where(partPhase_time[j,:]==2)[0]
+            int_id = np.where(partPhase_time[j,:]==1)[0]
+
+            # Particles still in bulk from initial time step
+            still_in_bulk_no_int = np.intersect1d(start_bulk_id, bulk_id, return_indices=True)
+
+            # Particles no longer in bulk as of this time step
+            not_in_bulk_no_int = np.delete(start_bulk_id, still_in_bulk_no_int[1])
+
+            # Particles still in gas from initial time step
+            still_in_gas_no_int = np.intersect1d(start_gas_id, gas_id, return_indices=True)
+
+            # Particles no longer in gas as of this time step
+            not_in_gas_no_int = np.delete(start_gas_id, still_in_gas_no_int[1])
+
+            # Initially bulk particles now in gas as of this time step
+            bulk_now_in_gas_no_int = np.intersect1d(gas_id, not_in_bulk_no_int, return_indices=True)
+
+            # Initially gas particles now in bulk as of this time step 
+            gas_now_in_bulk_no_int = np.intersect1d(bulk_id, not_in_gas_no_int, return_indices=True)
+
+            # Lifetime of each species in bulk
+            all_time_in_bulk_to_gas = np.append(all_time_in_bulk_to_gas, partPhase_time_arr[j] - start_bulk_time[bulk_now_in_gas_no_int[0]])
+            A_time_in_bulk_to_gas = np.append(A_time_in_bulk_to_gas, partPhase_time_arr[j] - start_bulk_time[np.where(self.typ[bulk_now_in_gas_no_int[0]]==0)[0]])
+            B_time_in_bulk_to_gas = np.append(B_time_in_bulk_to_gas, partPhase_time_arr[j] - start_bulk_time[np.where(self.typ[bulk_now_in_gas_no_int[0]]==1)[0]])
+
+            # Lifetime of each species in gas
+            all_time_in_gas_to_bulk = np.append(all_time_in_gas_to_bulk, partPhase_time_arr[j] - start_gas_time[gas_now_in_bulk_no_int[0]])
+            A_time_in_gas_to_bulk = np.append(A_time_in_gas_to_bulk, partPhase_time_arr[j] - start_gas_time[np.where(self.typ[gas_now_in_bulk_no_int[0]]==0)[0]])
+            B_time_in_gas_to_bulk = np.append(B_time_in_gas_to_bulk, partPhase_time_arr[j] - start_gas_time[np.where(self.typ[gas_now_in_bulk_no_int[0]]==1)[0]])
+
+            # Particles no longer in bulk as of this time step
+            not_in_bulk_ids_to_gas_no_int = np.intersect1d(start_bulk_id, bulk_now_in_gas_no_int[0], return_indices=True)
+            
+            # Particles no longer in gas as of this time step
+            not_in_gas_ids_to_bulk_no_int = np.intersect1d(start_gas_id, gas_now_in_bulk_no_int[0], return_indices=True)
+
+            # Remove particles that left bulk for next time step
+            start_bulk_id = np.delete(start_bulk_id, not_in_bulk_ids_to_gas_no_int[1])
+
+            # Remove particles that left gas for next time step
+            start_gas_id = np.delete(start_gas_id, not_in_gas_ids_to_bulk_no_int[1])
+
+            # Remove particle times that left bulk for next time step
+            start_bulk_time = np.delete(start_bulk_time, not_in_bulk_ids_to_gas_no_int[0])
+
+            # Remove particle times that left gas for next time step
+            start_gas_time = np.delete(start_gas_time, not_in_gas_ids_to_bulk_no_int[0])
+
+            # Add particles that joined gas for next time step
+            start_gas_id = np.append(start_gas_id, bulk_now_in_gas_no_int[0])
+
+            # Add particles that joined bulk for next time step
+            start_bulk_id = np.append(start_bulk_id, gas_now_in_bulk_no_int[0])
+
+            # Add particle times that joined gas for next time step
+            start_gas_time = np.append(start_gas_time, phasePart_time_arr[j] * np.ones(len(bulk_now_in_gas_no_int)))
+            
+            # Add particle times that joined gas for next time step
+            start_bulk_time = np.append(start_bulk_time, phasePart_time_arr[j] * np.ones(len(gas_now_in_bulk_no_int)))
+
+        lifetime_dict = {'gas_to_bulk': {'all': all_time_in_gas_to_bulk, 'A': A_time_in_gas_to_bulk , 'B': B_time_in_gas_to_bulk}, 'bulk_to_gas': {'all': all_time_in_bulk_to_gas, 'A': A_time_in_bulk_to_gas, 'B': B_time_in_bulk_to_gas}}
+
+        lifetime_stat_dict = {'gas': {'avg': {'all': np.mean(all_time_in_gas_to_bulk), 'A': np.mean(A_time_in_gas_to_bulk) , 'B': np.mean(B_time_in_gas_to_bulk)}, 'std': {'all': np.std(all_time_in_gas_to_bulk), 'A': np.std(A_time_in_gas_to_bulk) , 'B': np.std(B_time_in_gas_to_bulk)}, 'num': {'all': len(all_time_in_gas_to_bulk), 'A': len(A_time_in_gas_to_bulk) , 'B': len(B_time_in_gas_to_bulk)}}, 'bulk': {'avg': {'all': np.mean(all_time_in_bulk_to_gas), 'A': np.mean(A_time_in_bulk_to_gas), 'B': np.mean(B_time_in_bulk_to_gas)}, 'std': {'all': np.std(all_time_in_bulk_to_gas), 'A': np.std(A_time_in_bulk_to_gas), 'B': np.std(B_time_in_bulk_to_gas)}, 'num': {'all': len(all_time_in_bulk_to_gas), 'A': len(A_time_in_bulk_to_gas), 'B': len(B_time_in_bulk_to_gas)}}}
+
+        start_dict = {'bulk': {'time': start_bulk_time, 'id': start_bulk_id}, 'gas': {'time': start_gas_time, 'id': start_gas_id}}
+
+        return lifetime_dict, lifetime_stat_dict, start_dict
+    
+    def bulk_msd(self, partPhase_time, start_dict, msd_bulk_dict, pos, prev_pos):
+        
+        # If cluster life time has been run before, take those values
+        try:
+            start_bulk_id = start_dict['bulk']['id']
+            start_gas_id = start_dict['gas']['id']
+
+            start_bulk_time = start_dict['bulk']['time']
+            start_gas_time = start_dict['gas']['time']
+
+            all_time_in_gas_to_bulk = lifetime_dict['gas_to_bulk']['all']
+            A_time_in_gas_to_bulk = lifetime_dict['gas_to_bulk']['A']
+            B_time_in_gas_to_bulk = lifetime_dict['gas_to_bulk']['B']
+
+            msd = msd_bulk_dict['r']
+
+            all_time_in_bulk_to_gas = lifetime_dict['bulk_to_gas']['all']
+            A_time_in_bulk_to_gas = lifetime_dict['bulk_to_gas']['A']
+            B_time_in_bulk_to_gas = lifetime_dict['bulk_to_gas']['B']
+
+        # Otherwise initialize starting arrays
         except:
 
             start_bulk_id = np.where(partPhase_time[0,:]==0)[0]
@@ -673,50 +813,72 @@ class kinetic_props:
             A_time_in_gas_to_bulk = np.array([])
             B_time_in_gas_to_bulk = np.array([])
 
+            msd = np.zeros(np.shape(start_bulk_id))
+
             all_time_in_bulk_to_gas = np.array([])
             A_time_in_bulk_to_gas = np.array([])
             B_time_in_bulk_to_gas = np.array([])
-            
+        
+        bulk_id = np.where(partPhase_time[j,:]==0)[0]
+        gas_id = np.where(partPhase_time[j,:]==2)[0]
+        int_id = np.where(partPhase_time[j,:]==1)[0]
 
-        for j in range(1, np.shape(partPhase_time)[0]):
+        # Particles still in bulk from initial time step
+        still_in_bulk_no_int = np.intersect1d(start_bulk_id, bulk_id, return_indices=True)
 
-            bulk_id = np.where(partPhase_time[j,:]==0)[0]
-            gas_id = np.where(partPhase_time[j,:]==2)[0]
-            int_id = np.where(partPhase_time[j,:]==1)[0]
+        # Particles no longer in bulk as of this time step
+        not_in_bulk_no_int = np.delete(start_bulk_id, still_in_bulk_no_int[1])
 
-            still_in_bulk_no_int = np.intersect1d(start_bulk_id, bulk_id, return_indices=True)
-            not_in_bulk_no_int = np.delete(start_bulk_id, still_in_bulk_no_int[1])
+        # Calculate 
 
-            still_in_gas_no_int = np.intersect1d(start_gas_id, gas_id, return_indices=True)
-            not_in_gas_no_int = np.delete(start_gas_id, still_in_gas_no_int[1])
+        difx = np.zeros(np.shape(msd))
+        dify = np.zeros(np.shape(msd))
 
-            bulk_now_in_gas_no_int = np.intersect1d(gas_id, not_in_bulk_no_int, return_indices=True)
-            gas_now_in_bulk_no_int = np.intersect1d(bulk_id, not_in_gas_no_int, return_indices=True)
+        difx[still_in_bulk_no_int[0]] = pos[still_in_bulk_no_int[0], 0] - prev_pos[still_in_bulk_no_int[0], 0]
+        dify[still_in_bulk_no_int[0]] = pos[still_in_bulk_no_int[0], 1] - prev_pos[still_in_bulk_no_int[0], 1]
 
-            all_time_in_bulk_to_gas = np.append(all_time_in_bulk_to_gas, partPhase_time_arr[j] - start_bulk_time[bulk_now_in_gas_no_int[0]])
-            A_time_in_bulk_to_gas = np.append(A_time_in_bulk_to_gas, partPhase_time_arr[j] - start_bulk_time[np.where(self.typ[bulk_now_in_gas_no_int[0]]==0)[0]])
-            B_time_in_bulk_to_gas = np.append(B_time_in_bulk_to_gas, partPhase_time_arr[j] - start_bulk_time[np.where(self.typ[bulk_now_in_gas_no_int[0]]==1)[0]])
+        msd = msd + (difx ** 2 + dify ** 2)
+        
+        # Initially bulk particles now in gas as of this time step
+        bulk_now_in_gas_no_int = np.intersect1d(gas_id, not_in_bulk_no_int, return_indices=True)
 
-            all_time_in_gas_to_bulk = np.append(all_time_in_gas_to_bulk, partPhase_time_arr[j] - start_gas_time[gas_now_in_bulk_no_int[0]])
-            A_time_in_gas_to_bulk = np.append(A_time_in_gas_to_bulk, partPhase_time_arr[j] - start_gas_time[np.where(self.typ[gas_now_in_bulk_no_int[0]]==0)[0]])
-            B_time_in_gas_to_bulk = np.append(B_time_in_gas_to_bulk, partPhase_time_arr[j] - start_gas_time[np.where(self.typ[gas_now_in_bulk_no_int[0]]==1)[0]])
+        # Initially gas particles now in bulk as of this time step 
+        gas_now_in_bulk_no_int = np.intersect1d(bulk_id, not_in_gas_no_int, return_indices=True)
 
-            not_in_bulk_ids_to_gas_no_int = np.intersect1d(start_bulk_id, bulk_now_in_gas_no_int[0], return_indices=True)
-            not_in_gas_ids_to_bulk_no_int = np.intersect1d(start_gas_id, gas_now_in_bulk_no_int[0], return_indices=True)
+        # Lifetime of each species in bulk
+        all_bulk_msd = np.append(all_bulk_msd, msd[bulk_now_in_gas_no_int[0]])
+        A_bulk_msd = np.append(A_bulk_msd, msd[np.where(self.typ[bulk_now_in_gas_no_int[0]]==0)[0]])
+        B_bulk_msd = np.append(B_bulk_msd, msd[np.where(self.typ[bulk_now_in_gas_no_int[0]]==1)[0]])
 
-            start_bulk_id = np.delete(start_bulk_id, not_in_bulk_ids_to_gas_no_int[1])
-            start_gas_id = np.delete(start_gas_id, not_in_gas_ids_to_bulk_no_int[1])
+        # Particles no longer in bulk as of this time step
+        not_in_bulk_ids_to_gas_no_int = np.intersect1d(start_bulk_id, bulk_now_in_gas_no_int[0], return_indices=True)
+        
+        # Particles no longer in gas as of this time step
+        not_in_gas_ids_to_bulk_no_int = np.intersect1d(start_gas_id, gas_now_in_bulk_no_int[0], return_indices=True)
 
-            start_bulk_time = np.delete(start_bulk_time, not_in_bulk_ids_to_gas_no_int[0])
-            start_gas_time = np.delete(start_gas_time, not_in_gas_ids_to_bulk_no_int[0])
+        # Remove particles that left bulk for next time step
+        msd = np.delete(start_bulk_id, not_in_bulk_ids_to_gas_no_int[1])
+        
+        # Remove particles that left bulk for next time step
+        start_bulk_id = np.delete(start_bulk_id, not_in_bulk_ids_to_gas_no_int[1])
 
-            start_gas_id = np.append(start_gas_id, bulk_now_in_gas_no_int[0])
-            start_bulk_id = np.append(start_bulk_id, gas_now_in_bulk_no_int[0])
+        # Remove particles that left gas for next time step
+        start_gas_id = np.delete(start_gas_id, not_in_gas_ids_to_bulk_no_int[1])
 
-            start_gas_time = np.append(start_gas_time, phasePart_time_arr[j] * np.ones(len(bulk_now_in_gas_no_int)))
-            start_bulk_time = np.append(start_bulk_time, phasePart_time_arr[j] * np.ones(len(gas_now_in_bulk_no_int)))
+        # Remove particle times that left bulk for next time step
+        msd = np.delete(msd, not_in_bulk_ids_to_gas_no_int[0])
 
-        lifetime_dict = {'gas_to_bulk': {'all': all_time_in_gas_to_bulk, 'A': A_time_in_gas_to_bulk , 'B': B_time_in_gas_to_bulk}, 'bulk_to_gas': {'all': all_time_in_bulk_to_gas, 'A': A_time_in_bulk_to_gas, 'B': B_time_in_bulk_to_gas}}
+        # Add particles that joined gas for next time step
+        start_gas_id = np.append(start_gas_id, bulk_now_in_gas_no_int[0])
+
+        # Add particles that joined bulk for next time step
+        start_bulk_id = np.append(start_bulk_id, gas_now_in_bulk_no_int[0])
+
+        # Add particle times that joined gas for next time step
+        msd = np.append(msd, msd[gas_now_in_bulk_no_int]))
+
+        
+        msd_dict = {'gas_to_bulk': {'all': all_time_in_gas_to_bulk, 'A': A_time_in_gas_to_bulk , 'B': B_time_in_gas_to_bulk}, 'bulk_to_gas': {'all': all_time_in_bulk_to_gas, 'A': A_time_in_bulk_to_gas, 'B': B_time_in_bulk_to_gas}}
 
         lifetime_stat_dict = {'gas': {'avg': {'all': np.mean(all_time_in_gas_to_bulk), 'A': np.mean(A_time_in_gas_to_bulk) , 'B': np.mean(B_time_in_gas_to_bulk)}, 'std': {'all': np.std(all_time_in_gas_to_bulk), 'A': np.std(A_time_in_gas_to_bulk) , 'B': np.std(B_time_in_gas_to_bulk)}, 'num': {'all': len(all_time_in_gas_to_bulk), 'A': len(A_time_in_gas_to_bulk) , 'B': len(B_time_in_gas_to_bulk)}}, 'bulk': {'avg': {'all': np.mean(all_time_in_bulk_to_gas), 'A': np.mean(A_time_in_bulk_to_gas), 'B': np.mean(B_time_in_bulk_to_gas)}, 'std': {'all': np.std(all_time_in_bulk_to_gas), 'A': np.std(A_time_in_bulk_to_gas), 'B': np.std(B_time_in_bulk_to_gas)}, 'num': {'all': len(all_time_in_bulk_to_gas), 'A': len(A_time_in_bulk_to_gas), 'B': len(B_time_in_bulk_to_gas)}}}
 
