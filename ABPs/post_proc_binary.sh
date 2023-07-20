@@ -36,6 +36,16 @@ mkdir ${current}_vid_files
 
 outpath="$this_path"/"$current"
 
+echo "|----------------------------------------------------------------------|"
+echo "|          -----------------Operating Systems-----------------         |"
+echo "| mac: composition and area of each phase                              |"
+echo "| windows: activity distribution of particles                          |"
+echo "| linux: orientation distribution of particles                         |"
+echo "|----------------------------------------------------------------------|"
+
+echo "What is your operating system? (y/n)"
+read os
+
 echo "What is your bin size?"
 read bin_size
 
@@ -112,9 +122,9 @@ fi
 for file in $(ls *gsd)
 do
     if [ "$parallel" = "y" ]; then
-        $submit $script_path/analyze_binary_parallel.sh $hoomd_path $outpath $script_path $file $bin_size $time_step $method $plot
+        $submit $script_path/analyze_binary_parallel.sh $hoomd_path $outpath $script_path $file $bin_size $time_step $method $plot $os
     elif [ "$parallel" = "n" ]; then
-        $submit $script_path/analyze_binary.sh $hoomd_path $outpath $script_path $file $bin_size $time_step $method $plot
+        $submit $script_path/analyze_binary.sh $hoomd_path $outpath $script_path $file $bin_size $time_step $method $plot $os
     else
         echo "did not recognize response to parallel processing"
     fi

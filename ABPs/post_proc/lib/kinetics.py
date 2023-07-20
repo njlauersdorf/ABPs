@@ -875,7 +875,7 @@ class kinetic_props:
         start_bulk_id = np.append(start_bulk_id, gas_now_in_bulk_no_int[0])
 
         # Add particle times that joined gas for next time step
-        msd = np.append(msd, msd[gas_now_in_bulk_no_int]))
+        msd = np.append(msd, msd[gas_now_in_bulk_no_int])
 
         
         msd_dict = {'gas_to_bulk': {'all': all_time_in_gas_to_bulk, 'A': A_time_in_gas_to_bulk , 'B': B_time_in_gas_to_bulk}, 'bulk_to_gas': {'all': all_time_in_bulk_to_gas, 'A': A_time_in_bulk_to_gas, 'B': B_time_in_bulk_to_gas}}

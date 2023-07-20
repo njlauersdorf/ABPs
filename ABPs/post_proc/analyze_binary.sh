@@ -5,6 +5,11 @@
 #SBATCH --mem=10g
 # Command to increase memory allocated --mem=100g
 
+if [ $os == "windows" ]; then
+    source ~/.profile
+    conda activate rekt
+fi
+
 #This is the path to hoomd
 hoomd_path=$1
 #This is the path to save the text files
@@ -21,6 +26,8 @@ step=$6
 method=$7
 # This is whether you want videos/plots generated (1=yes, 0=no)
 plot=$8
+# This is the given operating system
+os=$9
 
 echo hoom_path
 echo $hoomd_path
@@ -41,6 +48,10 @@ if [ $hoomd_path == '/Users/nicklauersdorf/hoomd-blue/build' ]; then
     vars="$(python3 ${script_path}/get_parameters.py ${fname})"
 fi
 
+if [ $hoomd_path == '/c/Users/Nick/hoomd-blue/build' ]; then
+    vars="$(python ${script_path}/get_parameters.py ${fname})"
+fi
+
 if [ $hoomd_path == "/nas/longleaf/home/njlauers/hoomd-blue/build" ]; then
     vars="$(python3.8 ${script_path}/get_parameters.py ${fname})"
     source ~/.bashrc
@@ -54,6 +65,7 @@ do
     pass+=($i)
 done
 
+echo $vars
 # This is activity (monodisperse)
 pe=${pass[0]}
 # This is A-type activity
@@ -103,14 +115,20 @@ fi
 echo $xa2
 
 declare -i pa2=0
-if (( ${pe%%.*} > ${pa%%.*} )); then
+
+if [ ${pe%%.*} > ${pa%%.*} ]; then
     pa2=${pe%%.*}
 else
     pa2=${pa%%.*}
 fi
 
-python3 $script_path/full_density_analysis_binary_updates_temp.py $fname $hoomd_path $outpath $pa2 $pb $xa2 $ep $phi $dtau $bin $step $method $plot
+echo $pa2
 
+if [ $os == "mac" ]; then
+    python3 $script_path/full_density_analysis_binary_updates_temp.py $fname $hoomd_path $outpath $pa2 $pb $xa2 $ep $phi $dtau $bin $step $method $plot
+elif [ $os == "windows" ]; then
+    python $script_path/full_density_analysis_binary_updates_temp.py $fname $hoomd_path $outpath $pa2 $pb $xa2 $ep $phi $dtau $bin $step $method $plot
+fi
 
 pe=${pe%%.*}
 pa=${pa%%.*}
