@@ -116,10 +116,18 @@ echo $xa2
 
 declare -i pa2=0
 
-if [ ${pe%%.*} > ${pa%%.*} ]; then
-    pa2=${pe%%.*}
-else
-    pa2=${pa%%.*}
+if [ $os == "windows" ]; then
+    if [ ${pe%%.*} > ${pa%%.*} ]; then
+        pa2=${pe%%.*}
+    else
+        pa2=${pa%%.*}
+    fi
+elif [ $os == "mac" ]; then
+    if (( ${pe%%.*} > ${pa%%.*} )); then
+        pa2=${pe%%.*}
+    else
+        pa2=${pa%%.*}
+    fi
 fi
 
 echo $pa2
