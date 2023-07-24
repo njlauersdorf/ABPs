@@ -1487,6 +1487,7 @@ class particle_props:
         pos_B=self.pos[fast_ids]                               # Find positions of type 0 particles
         ang_B=self.ang[fast_ids]
 
+        
         # Neighbor list query arguments to find interacting particles
         query_args = dict(mode='ball', r_min = 0.1, r_max=self.r_cut)
 
@@ -1550,7 +1551,7 @@ class particle_props:
                         BB_num_neigh = np.append(BB_num_neigh, len(loc))
 
                     BB_neigh_ind = np.append(BB_neigh_ind, int(i))
-
+                    
                     BB_dot = np.append(BB_dot, np.sum(np.cos(ang_B[i]-ang_B[BB_nlist.point_indices[loc]])))
 
                     ang_rel = (vel_B['x'][i] * vel_B['x'][BB_nlist.point_indices[loc]] + vel_B['y'][i] * vel_B['y'][BB_nlist.point_indices[loc]])/(vel_B['mag'][i] * vel_B['mag'][BB_nlist.point_indices[loc]])
@@ -1699,7 +1700,7 @@ class particle_props:
 
                     BA_neigh_ind = np.append(BA_neigh_ind, int(i))
 
-                    BA_dot = np.append(BA_dot, np.sum(np.cos(ang_A[i]-ang_B[AB_nlist.point_indices[loc]])))
+                    BA_dot = np.append(BA_dot, np.sum(np.cos(ang_A[i]-ang_B[BA_nlist.point_indices[loc]])))
 
             else:
                 #Save nearest neighbor information to array
