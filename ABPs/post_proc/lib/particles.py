@@ -1464,7 +1464,7 @@ class particle_props:
             start_int_id_with_int = np.append(start_int_id_with_int, now_in_int_comb)
             start_gas_id_with_int = np.append(start_gas_id_with_int, now_in_gas_comb)
             start_bulk_id_with_int = np.append(start_bulk_id_with_int, now_in_bulk_comb)
-    def collision_rate(self):
+    def collision_rate(self, vel_plot_dict, prev_neigh_dict):
         '''
         Purpose: Calculates the rate of collision between particles in the gas phase
 
@@ -1479,6 +1479,14 @@ class particle_props:
         slow_ids = np.where( (self.typ==0) )[0]
         fast_ids = np.where( (self.typ==1) )[0]
 
+        vel_A = vel_plot_dict['A']
+        pos_A=self.pos[slow_ids]                               # Find positions of type 0 particles
+        ang_A=self.ang[slow_ids]
+
+        vel_B = vel_plot_dict['B']
+        pos_B=self.pos[fast_ids]                               # Find positions of type 0 particles
+        ang_B=self.ang[fast_ids]
+
         # Neighbor list query arguments to find interacting particles
         query_args = dict(mode='ball', r_min = 0.1, r_max=self.r_cut)
 
@@ -1492,24 +1500,287 @@ class particle_props:
 
         # Find Fast-fast number of collisions
         BB_collision_num = len(BB_nlist) / 2.0
+
+        #Initiate empty arrays for finding nearest A neighboring dense particles surrounding type A bulk particles
+        BB_neigh_ind = np.array([], dtype=int)
+        BB_num_neigh = np.array([])
+        BB_dot = np.array([])
+        BB_rel_vel_all = np.array([])
+        BB_rel_vel_new = np.array([])
+        BB_rel_vel_stay = np.array([])
         
+        #Loop over neighbor pairings of A-A neighbor pairs to calculate number of nearest neighbors
+        for i in range(0, len(pos_B)):
+            if i in BB_nlist.query_point_indices:
+                if i not in BB_neigh_ind:
+                    # Find neighbors list IDs where i is reference particle
+                    loc = np.where(BB_nlist.query_point_indices==i)[0]
+                    
+                    try:
+
+                        neigh_num_temp = 0
+
+                        loc_prev = np.where(prev_neigh_dict['BB'].query_point_indices==i)[0]
+
+                        for j in range(0, len(loc)):
+                            prev_neigh = np.where( prev_neigh_dict['BB'].point_indices[loc_prev]==BB_nlist.point_indices[loc[j]])[0]
+
+                            if len(prev_neigh)==0:
+                                neigh_num_temp += 1
+
+                                if (vel_B['mag'][i]>0) & ( vel_B['mag'][BB_nlist.point_indices[loc[j]]]>0):
+                                    ang_rel = (vel_B['x'][i] * vel_B['x'][BB_nlist.point_indices[loc[j]]] + vel_B['y'][i] * vel_B['y'][BB_nlist.point_indices[loc[j]]])/(vel_B['mag'][i] * vel_B['mag'][BB_nlist.point_indices[loc[j]]])
+                                else:
+                                    ang_rel = 0
+
+                                BB_rel_vel_new = np.append(BB_rel_vel_new, np.sqrt(vel_B['mag'][i]**2 + vel_B['mag'][BB_nlist.point_indices[loc[j]]]**2 - 2 * vel_B['mag'][i] * vel_B['mag'][BB_nlist.point_indices[loc[j]]]*ang_rel) )
+
+                            else:
+                                if (vel_B['mag'][i]>0) & ( vel_B['mag'][BB_nlist.point_indices[loc[j]]]>0):
+                                    ang_rel = (vel_B['x'][i] * vel_B['x'][BB_nlist.point_indices[loc[j]]] + vel_B['y'][i] * vel_B['y'][BB_nlist.point_indices[loc[j]]])/(vel_B['mag'][i] * vel_B['mag'][BB_nlist.point_indices[loc[j]]])
+                                else:
+                                    ang_rel = 0
+                                BB_rel_vel_stay = np.append(BB_rel_vel_stay, np.sqrt(vel_B['mag'][i]**2 + vel_B['mag'][BB_nlist.point_indices[loc[j]]]**2 - 2 * vel_B['mag'][i] * vel_B['mag'][BB_nlist.point_indices[loc[j]]]*ang_rel) )
+
+                        BB_num_neigh = np.append(BB_num_neigh, neigh_num_temp)
+
+                    except:
+
+                        #Save nearest neighbor information to array
+                        BB_num_neigh = np.append(BB_num_neigh, len(loc))
+
+                    BB_neigh_ind = np.append(BB_neigh_ind, int(i))
+
+                    BB_dot = np.append(BB_dot, np.sum(np.cos(ang_B[i]-ang_B[BB_nlist.point_indices[loc]])))
+
+                    ang_rel = (vel_B['x'][i] * vel_B['x'][BB_nlist.point_indices[loc]] + vel_B['y'][i] * vel_B['y'][BB_nlist.point_indices[loc]])/(vel_B['mag'][i] * vel_B['mag'][BB_nlist.point_indices[loc]])
+
+                    BB_rel_vel_all = np.append(BB_rel_vel_all, np.sqrt(vel_B['mag'][i]**2 + vel_B['mag'][BB_nlist.point_indices[loc]]**2 - 2 * vel_B['mag'][i] * vel_B['mag'][BB_nlist.point_indices[loc]]*ang_rel) )
+
+            else:
+                #Save nearest neighbor information to array
+                BB_num_neigh = np.append(BB_num_neigh, 0)
+                BB_neigh_ind = np.append(BB_neigh_ind, int(i))
+                BB_dot = np.append(BB_dot, 0)
+        
+        BB_collision_num_unique = np.sum(BB_num_neigh)/2
+
         # Find Slow-Fast neighbor list
         AB_nlist = system_A.query(self.f_box.wrap(self.pos[fast_ids]), query_args).toNeighborList()
 
         # Find Slow-fast number of collisions
-        AB_collision_num = len(AB_nlist) / 2.0
+        AB_collision_num = len(AB_nlist)
+
+        #Initiate empty arrays for finding nearest A neighboring dense particles surrounding type A bulk particles
+        AB_neigh_ind = np.array([], dtype=int)
+        AB_num_neigh = np.array([])
+        AB_dot = np.array([])
+        AB_rel_vel_all = np.array([])
+        AB_rel_vel_new = np.array([])
+        AB_rel_vel_stay = np.array([])
+        
+        #Loop over neighbor pairings of A-B neighbor pairs to calculate number of nearest neighbors
+        for i in range(0, len(pos_B)):
+            if i in AB_nlist.query_point_indices:
+                if i not in AB_neigh_ind:
+                    # Find neighbors list IDs where i is reference particle
+                    loc = np.where(AB_nlist.query_point_indices==i)[0]
+                    
+                    try:
+
+                        neigh_num_temp = 0
+
+                        loc_prev = np.where(prev_neigh_dict['AB'].query_point_indices==i)[0]
+
+                        for j in range(0, len(loc)):
+                            prev_neigh = np.where( prev_neigh_dict['AB'].point_indices[loc_prev]==AB_nlist.point_indices[loc[j]])[0]
+
+                            if len(prev_neigh)==0:
+                                neigh_num_temp += 1
+
+                                if (vel_B['mag'][i]>0) & ( vel_A['mag'][AB_nlist.point_indices[loc[j]]]>0):
+                                    ang_rel = (vel_B['x'][i] * vel_A['x'][AB_nlist.point_indices[loc[j]]] + vel_B['y'][i] * vel_A['y'][AB_nlist.point_indices[loc[j]]])/(vel_B['mag'][i] * vel_A['mag'][AB_nlist.point_indices[loc[j]]])
+                                else:
+                                    ang_rel = 0
+
+
+                                AB_rel_vel_new = np.append(AB_rel_vel_new, np.sqrt(vel_B['mag'][i]**2 + vel_A['mag'][AB_nlist.point_indices[loc[j]]]**2 - 2 * vel_B['mag'][i] * vel_A['mag'][AB_nlist.point_indices[loc[j]]]*ang_rel) )
+
+                        
+                            else:
+                                if (vel_B['mag'][i]>0) & ( vel_A['mag'][AB_nlist.point_indices[loc[j]]]>0):
+
+                                    ang_rel = (vel_B['x'][i] * vel_A['x'][AB_nlist.point_indices[loc[j]]] + vel_B['y'][i] * vel_A['y'][AB_nlist.point_indices[loc[j]]])/(vel_B['mag'][i] * vel_A['mag'][AB_nlist.point_indices[loc[j]]])
+                                else:
+                                    ang_rel = 0
+
+                                AB_rel_vel_stay = np.append(AB_rel_vel_stay, np.sqrt(vel_B['mag'][i]**2 + vel_A['mag'][AB_nlist.point_indices[loc[j]]]**2 - 2 * vel_B['mag'][i] * vel_A['mag'][AB_nlist.point_indices[loc[j]]]*ang_rel) )
+
+                        AB_num_neigh = np.append(AB_num_neigh, neigh_num_temp)
+
+                    except:
+
+                        #Save nearest neighbor information to array
+                        AB_num_neigh = np.append(AB_num_neigh, len(loc))
+
+                    AB_neigh_ind = np.append(AB_neigh_ind, int(i))
+
+                    AB_dot = np.append(AB_dot, np.sum(np.cos(ang_B[i]-ang_A[AB_nlist.point_indices[loc]])))
+
+                    ang_rel = (vel_B['x'][i] * vel_A['x'][AB_nlist.point_indices[loc]] + vel_B['y'][i] * vel_A['y'][AB_nlist.point_indices[loc]])/(vel_B['mag'][i] * vel_A['mag'][AB_nlist.point_indices[loc]])
+
+                    AB_rel_vel_all = np.append(AB_rel_vel_all, np.sqrt(vel_B['mag'][i]**2 + vel_A['mag'][AB_nlist.point_indices[loc]]**2 - 2 * vel_B['mag'][i] * vel_A['mag'][AB_nlist.point_indices[loc]]*ang_rel) )
+
+            else:
+                #Save nearest neighbor information to array
+                AB_num_neigh = np.append(AB_num_neigh, 0)
+                AB_neigh_ind = np.append(AB_neigh_ind, int(i))
+                AB_dot = np.append(AB_dot, 0)
+        
+        AB_collision_num_unique = np.sum(AB_num_neigh)
 
         # Find Fast-Slow neighbor list
         BA_nlist = system_B.query(self.f_box.wrap(self.pos[slow_ids]), query_args).toNeighborList()
 
         # Find Fast-Slow number of collisions
-        BA_collision_num = len(BA_nlist) / 2.0
+        BA_collision_num = len(BA_nlist)
+
+        #Initiate empty arrays for finding nearest A neighboring dense particles surrounding type A bulk particles
+        BA_neigh_ind = np.array([], dtype=int)
+        BA_num_neigh = np.array([])
+        BA_dot = np.array([])
+        BA_rel_vel_all = np.array([])
+        BA_rel_vel_new = np.array([])
+        BA_rel_vel_stay = np.array([])
+        
+        #Loop over neighbor pairings of A-B neighbor pairs to calculate number of nearest neighbors
+        for i in range(0, len(pos_A)):
+            if i in BA_nlist.query_point_indices:
+                if i not in BA_neigh_ind:
+                    # Find neighbors list IDs where i is reference particle
+                    loc = np.where(BA_nlist.query_point_indices==i)[0]
+                    
+                    try:
+
+                        neigh_num_temp = 0
+
+                        loc_prev = np.where(prev_neigh_dict['BA'].query_point_indices==i)[0]
+
+                        for j in range(0, len(loc)):
+                            prev_neigh = np.where( prev_neigh_dict['BA'].point_indices[loc_prev]==BA_nlist.point_indices[loc[j]])[0]
+
+                            if len(prev_neigh)==0:
+                                neigh_num_temp += 1
+
+                                if (vel_A['mag'][i]>0) & ( vel_B['mag'][BA_nlist.point_indices[loc[j]]]>0):
+                                    ang_rel = (vel_A['x'][i] * vel_B['x'][BA_nlist.point_indices[loc[j]]] + vel_A['y'][i] * vel_B['y'][BA_nlist.point_indices[loc[j]]])/(vel_A['mag'][i] * vel_B['mag'][BA_nlist.point_indices[loc[j]]])
+                                else:
+                                    ang_rel = 0
+                                BA_rel_vel_new = np.append(BA_rel_vel_new, np.sqrt(vel_A['mag'][i]**2 + vel_B['mag'][BA_nlist.point_indices[loc[j]]]**2 - 2 * vel_A['mag'][i] * vel_B['mag'][BA_nlist.point_indices[loc[j]]]*ang_rel) )
+
+                            else:
+                                if (vel_A['mag'][i]>0) & ( vel_B['mag'][BA_nlist.point_indices[loc[j]]]>0):
+
+                                    ang_rel = (vel_A['x'][i] * vel_B['x'][BA_nlist.point_indices[loc[j]]] + vel_A['y'][i] * vel_B['y'][BA_nlist.point_indices[loc[j]]])/(vel_A['mag'][i] * vel_B['mag'][BA_nlist.point_indices[loc[j]]])
+                                else:
+                                    ang_rel = 0
+                                BA_rel_vel_stay = np.append(BA_rel_vel_stay, np.sqrt(vel_A['mag'][i]**2 + vel_B['mag'][BA_nlist.point_indices[loc[j]]]**2 - 2 * vel_A['mag'][i] * vel_B['mag'][BA_nlist.point_indices[loc[j]]]*ang_rel) )
+
+                        BA_num_neigh = np.append(BA_num_neigh, neigh_num_temp)
+
+                    except:
+
+                        #Save nearest neighbor information to array
+                        BA_num_neigh = np.append(BA_num_neigh, len(loc))
+
+                    ang_rel = (vel_A['x'][i] * vel_B['x'][BA_nlist.point_indices[loc]] + vel_A['y'][i] * vel_B['y'][BA_nlist.point_indices[loc]])/(vel_A['mag'][i] * vel_B['mag'][BA_nlist.point_indices[loc]])
+
+                    BA_rel_vel_all = np.append(BA_rel_vel_all, np.sqrt(vel_A['mag'][i]**2 + vel_B['mag'][BA_nlist.point_indices[loc]]**2 - 2 * vel_A['mag'][i] * vel_B['mag'][BA_nlist.point_indices[loc]]*ang_rel) )
+
+                    BA_neigh_ind = np.append(BA_neigh_ind, int(i))
+
+                    BA_dot = np.append(BA_dot, np.sum(np.cos(ang_A[i]-ang_B[AB_nlist.point_indices[loc]])))
+
+            else:
+                #Save nearest neighbor information to array
+                BA_num_neigh = np.append(BA_num_neigh, 0)
+                BA_neigh_ind = np.append(BA_neigh_ind, int(i))
+                BA_dot = np.append(BA_dot, 0)
+        
+        BA_collision_num_unique = np.sum(BA_num_neigh)
 
         # Find Slow-Slow neighbor list
         AA_nlist = system_A.query(self.f_box.wrap(self.pos[slow_ids]), query_args).toNeighborList()
 
         # Find Slow-Slow number of collisions
         AA_collision_num = len(AA_nlist) / 2.0
+
+        #Initiate empty arrays for finding nearest A neighboring dense particles surrounding type A bulk particles
+        AA_neigh_ind = np.array([], dtype=int)
+        AA_num_neigh = np.array([])
+        AA_dot = np.array([])
+        AA_rel_vel_all = np.array([])
+        AA_rel_vel_new = np.array([])
+        AA_rel_vel_stay = np.array([])
+
+        #Loop over neighbor pairings of A-B neighbor pairs to calculate number of nearest neighbors
+        for i in range(0, len(pos_A)):
+            if i in AA_nlist.query_point_indices:
+                if i not in AA_neigh_ind:
+                    # Find neighbors list IDs where i is reference particle
+                    loc = np.where(AA_nlist.query_point_indices==i)[0]
+                    
+                    try:
+
+                        neigh_num_temp = 0
+
+                        loc_prev = np.where(prev_neigh_dict['AA'].query_point_indices==i)[0]
+
+                        for j in range(0, len(loc)):
+                            prev_neigh = np.where( prev_neigh_dict['AA'].point_indices[loc_prev]==AA_nlist.point_indices[loc[j]])[0]
+
+                            if len(prev_neigh)==0:
+                                neigh_num_temp += 1
+
+                                if (vel_A['mag'][i]>0) & ( vel_A['mag'][AA_nlist.point_indices[loc[j]]]>0):
+
+                                    ang_rel = (vel_A['x'][i] * vel_A['x'][AA_nlist.point_indices[loc[j]]] + vel_A['y'][i] * vel_A['y'][AA_nlist.point_indices[loc[j]]])/(vel_A['mag'][i] * vel_A['mag'][AA_nlist.point_indices[loc[j]]])
+                                else:
+                                    ang_rel = 0
+                                    
+                                AA_rel_vel_new = np.append(AA_rel_vel_new, np.sqrt(vel_A['mag'][i]**2 + vel_A['mag'][AA_nlist.point_indices[loc[j]]]**2 - 2 * vel_A['mag'][i] * vel_A['mag'][AA_nlist.point_indices[loc[j]]]*ang_rel) )
+
+                            else:
+
+                                if (vel_A['mag'][i]>0) & ( vel_A['mag'][AA_nlist.point_indices[loc[j]]]>0):
+
+                                    ang_rel = (vel_A['x'][i] * vel_A['x'][AA_nlist.point_indices[loc[j]]] + vel_A['y'][i] * vel_A['y'][AA_nlist.point_indices[loc[j]]])/(vel_A['mag'][i] * vel_A['mag'][AA_nlist.point_indices[loc[j]]])
+                                else:
+                                    ang_rel = 0
+                                AA_rel_vel_stay = np.append(AA_rel_vel_stay, np.sqrt(vel_A['mag'][i]**2 + vel_A['mag'][AA_nlist.point_indices[loc[j]]]**2 - 2 * vel_A['mag'][i] * vel_A['mag'][AA_nlist.point_indices[loc[j]]]*ang_rel) )
+
+                        
+                        AA_num_neigh = np.append(AA_num_neigh, neigh_num_temp)
+
+                    except:
+
+                        #Save nearest neighbor information to array
+                        AA_num_neigh = np.append(AA_num_neigh, len(loc))
+
+                    AA_neigh_ind = np.append(AA_neigh_ind, int(i))
+
+                    AA_dot = np.append(AA_dot, np.sum(np.cos(ang_A[i]-ang_A[AA_nlist.point_indices[loc]])))
+
+                    ang_rel = (vel_A['x'][i] * vel_A['x'][AA_nlist.point_indices[loc]] + vel_A['y'][i] * vel_A['y'][AA_nlist.point_indices[loc]])/(vel_A['mag'][i] * vel_A['mag'][AA_nlist.point_indices[loc]])
+
+                    AA_rel_vel_all = np.append(AA_rel_vel_all, np.sqrt(vel_A['mag'][i]**2 + vel_A['mag'][AA_nlist.point_indices[loc]]**2 - 2 * vel_A['mag'][i] * vel_A['mag'][AA_nlist.point_indices[loc]]*ang_rel) )
+
+            else:
+                #Save nearest neighbor information to array
+                AA_num_neigh = np.append(AA_num_neigh, 0)
+                AA_neigh_ind = np.append(AA_neigh_ind, int(i))
+
+        AA_collision_num_unique = np.sum(AA_num_neigh)/2
 
         #Compute cluster parameters using neighbor list of all particles within LJ cut-off distance
         cl_all=freud.cluster.Cluster()                              #Define cluster
@@ -1561,12 +1832,17 @@ class particle_props:
         clust_all_median = np.median(clust_all_size[lcID_all])
         clust_A_median = np.median(clust_A_size[lcID_A])
         clust_B_median = np.median(clust_B_size[lcID_B])
-
+        
+        if len(BB_rel_vel_stay)==0:
+            collision_stat_dict = {'rel_vel_stay': {'AA': 0, 'AB': 0, 'BA': 0, 'BB': 0}, 'rel_vel_new':{'AA': 0, 'AB': 0, 'BA': 0, 'BB': 0}, 'rel_vel_all':{'AA': np.mean(AA_rel_vel_all), 'AB': np.mean(AB_rel_vel_all), 'BA': np.mean(BA_rel_vel_all), 'BB': np.mean(BB_rel_vel_all)}, 'num':{'AA': AA_collision_num, 'AB': AB_collision_num, 'BA': BA_collision_num, 'BB': BB_collision_num}, 'new_num':{'AA': AA_collision_num_unique, 'AB': AB_collision_num_unique, 'BA': BA_collision_num_unique, 'BB': BB_collision_num_unique}, 'size': {'all': {'large': clust_all_large, 'mean': clust_all_mean, 'mode': clust_all_mode, 'median': clust_all_median, 'std': clust_all_std}, 'A': {'large': clust_A_large, 'mean': clust_A_mean, 'mode': clust_A_mode, 'median': clust_A_median, 'std': clust_A_std}, 'B': {'large': clust_B_large, 'mean': clust_B_mean, 'mode': clust_B_mode, 'median': clust_B_median, 'std': clust_B_std}}}
+        else:
+            collision_stat_dict = {'rel_vel_stay': {'AA': np.mean(AA_rel_vel_stay), 'AB': np.mean(AB_rel_vel_stay), 'BA': np.mean(BA_rel_vel_stay), 'BB': np.mean(BB_rel_vel_stay)}, 'rel_vel_new':{'AA': np.mean(AA_rel_vel_new), 'AB': np.mean(AB_rel_vel_new), 'BA': np.mean(BA_rel_vel_new), 'BB': np.mean(BB_rel_vel_new)}, 'rel_vel_all':{'AA': np.mean(AA_rel_vel_all), 'AB': np.mean(AB_rel_vel_all), 'BA': np.mean(BA_rel_vel_all), 'BB': np.mean(BB_rel_vel_all)}, 'num':{'AA': AA_collision_num, 'AB': AB_collision_num, 'BA': BA_collision_num, 'BB': BB_collision_num}, 'new_num':{'AA': AA_collision_num_unique, 'AB': AB_collision_num_unique, 'BA': BA_collision_num_unique, 'BB': BB_collision_num_unique}, 'size': {'all': {'large': clust_all_large, 'mean': clust_all_mean, 'mode': clust_all_mode, 'median': clust_all_median, 'std': clust_all_std}, 'A': {'large': clust_A_large, 'mean': clust_A_mean, 'mode': clust_A_mode, 'median': clust_A_median, 'std': clust_A_std}, 'B': {'large': clust_B_large, 'mean': clust_B_mean, 'mode': clust_B_mode, 'median': clust_B_median, 'std': clust_B_std}}}
+        
         # Dictionary containing rates of collisions
-        collision_stat_dict = {'num':{'AA': AA_collision_num, 'AB': AB_collision_num, 'BA': BA_collision_num, 'BB': BB_collision_num}, 'size': {'all': {'large': clust_all_large, 'mean': clust_all_mean, 'mode': clust_all_mode, 'median': clust_all_median, 'std': clust_all_std}, 'A': {'large': clust_A_large, 'mean': clust_A_mean, 'mode': clust_A_mode, 'median': clust_A_median, 'std': clust_A_std}, 'B': {'large': clust_B_large, 'mean': clust_B_mean, 'mode': clust_B_mode, 'median': clust_B_median, 'std': clust_B_std}}}
         collision_plot_dict = {'all': clust_all_size, 'A': clust_A_size, 'B': clust_B_size}
+        neigh_dict = {'AA': AA_nlist, 'AB': AB_nlist, 'BA': BA_nlist, 'BB': BB_nlist}
 
-        return collision_stat_dict, collision_plot_dict
+        return collision_stat_dict, collision_plot_dict, neigh_dict
 
     def cluster_msd(self, com_x_msd, com_y_msd, com_r_msd, com_x_parts_arr_time, com_y_parts_arr_time):
         

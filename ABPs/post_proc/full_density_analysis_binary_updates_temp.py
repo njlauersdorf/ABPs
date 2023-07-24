@@ -256,15 +256,17 @@ time_prob_BA_bulk = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0], dtype=np.float64)
 time_prob_BB_bulk = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0], dtype=np.float64)
 time_prob_num = 0 
 
+neigh_dict = {}
+
 with hoomd.open(name=inFile, mode='rb') as t:
     
     dumps = int(t.__len__())
 
-    start = int(500/time_step)#205                                             # first frame to process
+    start = int(0/time_step)#205                                             # first frame to process
     
                                 # get number of timesteps dumped
     
-    end = start + 3# int(dumps/time_step)-1                                             # final frame to process
+    end = int(dumps/time_step)-1                                             # final frame to process
 
     snap = t[0]                                             # Take first snap for box
     first_tstep = snap.configuration.step                   # First time step
@@ -1787,13 +1789,17 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     data_output_functs.write_to_txt(vel_stat_dict, dataPath + 'velocity_corr_' + outfile + '.txt')
             elif measurement_options[0] == 'collision':
                 #DONE!
-                collision_stat_dict, collision_plot_dict = particle_prop_functs.collision_rate()
-                
-                time_clust_all_size = np.append(time_clust_all_size, collision_plot_dict['all'])
-                time_clust_A_size = np.append(time_clust_A_size, collision_plot_dict['A'])
-                time_clust_B_size = np.append(time_clust_B_size, collision_plot_dict['B'])
+                if j>(start * time_step):
 
-                data_output_functs.write_to_txt(collision_stat_dict, dataPath + 'collision_' + outfile + '.txt')       
+                    vel_plot_dict, vel_stat_dict = particle_prop_functs.part_velocity(prev_pos, prev_ang, ori)
+
+                    collision_stat_dict, collision_plot_dict, neigh_dict = particle_prop_functs.collision_rate(vel_plot_dict, neigh_dict)
+                
+                    time_clust_all_size = np.append(time_clust_all_size, collision_plot_dict['all'])
+                    time_clust_A_size = np.append(time_clust_A_size, collision_plot_dict['A'])
+                    time_clust_B_size = np.append(time_clust_B_size, collision_plot_dict['B'])
+
+                    data_output_functs.write_to_txt(collision_stat_dict, dataPath + 'collision_' + outfile + '.txt')       
             
         particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, eps, typ, pos, ang)
 

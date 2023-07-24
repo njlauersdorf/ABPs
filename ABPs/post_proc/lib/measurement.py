@@ -1619,6 +1619,7 @@ class measurement:
                 AA_bulk_num_neigh = np.append(AA_bulk_num_neigh, 0)
                 AA_bulk_neigh_ind = np.append(AA_bulk_neigh_ind, int(i))
                 AA_bulk_dot = np.append(AA_bulk_dot, 0)
+                
         #Initiate empty arrays for finding nearest B neighboring dense particles surrounding type A bulk particles
         BA_bulk_neigh_ind = np.array([], dtype=int)
         BA_bulk_num_neigh = np.array([])
