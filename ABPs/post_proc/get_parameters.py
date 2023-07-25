@@ -62,6 +62,7 @@ def txtValue(fname, string):
                 mybool = False
         else:
             mybool = False
+
     return float(out)
     
 def getdtau(fname, string="dtau"):
@@ -97,7 +98,7 @@ else:
     pa = 0
 print(pa)
 
-if checkFile(file, "pe"):
+if checkFile(file, "_pe"):
     pe = txtValue(file, "pe")
 else:
     pe = 0

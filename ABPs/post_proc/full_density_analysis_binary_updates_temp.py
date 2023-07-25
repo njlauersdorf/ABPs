@@ -1134,18 +1134,17 @@ with hoomd.open(name=inFile, mode='rb') as t:
             elif measurement_options[0] == 'cluster-msd':
                 if j>(start * time_step):
 
-                    if round(partPhase_time_arr[-1] - partPhase_time_arr[-2],1) == round(dt_step,1):
-                        particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, eps, typ, pos, ang)
+                    particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, eps, typ, pos, ang)
 
-                        cluster_msd_dict = particle_prop_functs.cluster_msd(com_x_msd, com_y_msd, com_r_msd, com_x_parts_arr_time, com_y_parts_arr_time)
+                    cluster_msd_dict = particle_prop_functs.cluster_msd(com_x_msd, com_y_msd, com_r_msd, com_x_parts_arr_time, com_y_parts_arr_time)
 
-                        com_x_msd = cluster_msd_dict['x']
-                        com_y_msd = cluster_msd_dict['y']
-                        com_r_msd = cluster_msd_dict['r']
+                    com_x_msd = cluster_msd_dict['x']
+                    com_y_msd = cluster_msd_dict['y']
+                    com_r_msd = cluster_msd_dict['r']
 
-                        cluster_msd_dict = {'x': com_x_msd[-1], 'y': com_y_msd[-1], 'r': com_r_msd[-1]}
+                    cluster_msd_dict = {'x': com_x_msd[-1], 'y': com_y_msd[-1], 'r': com_r_msd[-1]}
 
-                        data_output_functs.write_to_txt(cluster_msd_dict, dataPath + 'cluster_msd_' + outfile + '.txt')
+                    data_output_functs.write_to_txt(cluster_msd_dict, dataPath + 'cluster_msd_' + outfile + '.txt')
 
             elif measurement_options[0] == 'compressibility':
                 #DONE!
