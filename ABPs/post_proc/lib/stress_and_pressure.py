@@ -496,7 +496,7 @@ class stress_and_pressure:
                         int_stressA_YX_r[i-1] = np.sum((radial_stress_dict['A']['YX'][partsA_inrange][partsA_defined]))
                         int_pressA_r[i-1] = np.sum((radial_stress_dict['A']['XX'][partsA_inrange][partsA_defined] + radial_stress_dict['A']['YY'][partsA_inrange][partsA_defined])/2)
                         #Calculate density
-                        num_densA_r[i-1] = len([partsA_defined])
+                        num_densA_r[i-1] = len(partsA_defined)
                         #If area of slice is non-zero, calculate the pressure [F/A]
                         if area > 0:
                             int_pressA_r[i-1] = int_pressA_r[i-1]/area
@@ -510,7 +510,7 @@ class stress_and_pressure:
                         int_stressB_YX_r[i-1] = np.sum((radial_stress_dict['B']['YX'][partsB_inrange][partsB_defined]))
                         int_pressB_r[i-1] = np.sum((radial_stress_dict['B']['XX'][partsB_inrange][partsB_defined] + radial_stress_dict['B']['YY'][partsB_inrange][partsB_defined])/2)
                         #Calculate density
-                        num_densB_r[i-1] = len([partsB_defined])
+                        num_densB_r[i-1] = len(partsB_defined)
                         #If area of slice is non-zero, calculate the pressure [F/A]
                         if area > 0:
                             int_pressB_r[i-1] = int_pressB_r[i-1]/area
