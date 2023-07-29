@@ -262,11 +262,11 @@ with hoomd.open(name=inFile, mode='rb') as t:
     
     dumps = int(t.__len__())
 
-    start = int(0/time_step)#205                                             # first frame to process
+    start = int(15500/time_step)#205                                             # first frame to process
     
                                 # get number of timesteps dumped
     
-    end = int(dumps/time_step)-1                                             # final frame to process
+    end = 15501#int(dumps/time_step)-1                                             # final frame to process
 
     snap = t[0]                                             # Take first snap for box
     first_tstep = snap.configuration.step                   # First time step
@@ -1799,7 +1799,40 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     time_clust_B_size = np.append(time_clust_B_size, collision_plot_dict['B'])
 
                     data_output_functs.write_to_txt(collision_stat_dict, dataPath + 'collision_' + outfile + '.txt')       
-            
+            elif measurement_options[0] == 'local-gas-density':
+
+                # Calculate local density of gas phase
+                if lx_box == ly_box:
+                    local_dens_stat_dict, local_dens_plot_dict = particle_prop_functs.local_gas_density()
+
+                # Save local density of gas phase data
+                data_output_functs.write_to_txt(local_dens_stat_dict, dataPath + 'local_gas_density_' + outfile + '.txt')
+                
+                
+                if plot == 'y':
+
+                    plotting_functs.plot_homogeneity(local_dens_plot_dict, pair='all-all', interface_id = interface_option, orientation_id = orientation_option)
+                    plotting_functs.plot_homogeneity(local_dens_plot_dict, pair='all-A', interface_id = interface_option, orientation_id = orientation_option)
+                    plotting_functs.plot_homogeneity(local_dens_plot_dict, pair='all-B', interface_id = interface_option, orientation_id = orientation_option)
+                    plotting_functs.plot_homogeneity(local_dens_plot_dict, pair='A-all', interface_id = interface_option, orientation_id = orientation_option)
+                    plotting_functs.plot_homogeneity(local_dens_plot_dict, pair='B-all', interface_id = interface_option, orientation_id = orientation_option)
+                    plotting_functs.plot_homogeneity(local_dens_plot_dict, pair='A-A', interface_id = interface_option, orientation_id = orientation_option)
+                    plotting_functs.plot_homogeneity(local_dens_plot_dict, pair='A-B', interface_id = interface_option, orientation_id = orientation_option)
+                    plotting_functs.plot_homogeneity(local_dens_plot_dict, pair='B-A', interface_id = interface_option, orientation_id = orientation_option)
+                    plotting_functs.plot_homogeneity(local_dens_plot_dict, pair='B-B', interface_id = interface_option, orientation_id = orientation_option)
+
+
+                    # Plot particles color-coded by local density for all-all, all-A, all-B, A-all, B-all, A-A, A-B, B-A, and B-B nearest neighbor pairs in gas
+                    plotting_functs.plot_local_density(local_dens_plot_dict, pair='all-all', interface_id = interface_option, orientation_id = orientation_option)
+                    plotting_functs.plot_local_density(local_dens_plot_dict, pair='all-A', interface_id = interface_option, orientation_id = orientation_option)
+                    plotting_functs.plot_local_density(local_dens_plot_dict, pair='all-B', interface_id = interface_option, orientation_id = orientation_option)
+                    plotting_functs.plot_local_density(local_dens_plot_dict, pair='A-all', interface_id = interface_option, orientation_id = orientation_option)
+                    plotting_functs.plot_local_density(local_dens_plot_dict, pair='B-all', interface_id = interface_option, orientation_id = orientation_option)
+                    plotting_functs.plot_local_density(local_dens_plot_dict, pair='A-A', interface_id = interface_option, orientation_id = orientation_option)
+                    plotting_functs.plot_local_density(local_dens_plot_dict, pair='A-B', interface_id = interface_option, orientation_id = orientation_option)
+                    plotting_functs.plot_local_density(local_dens_plot_dict, pair='B-A', interface_id = interface_option, orientation_id = orientation_option)
+                    plotting_functs.plot_local_density(local_dens_plot_dict, pair='B-B', interface_id = interface_option, orientation_id = orientation_option)
+
         particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, eps, typ, pos, ang)
 
         utility_functs = utility.utility(lx_box, ly_box)
