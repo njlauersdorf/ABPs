@@ -23,9 +23,11 @@ method=$7
 plot=$8
 # This is the given operating system
 os=$9
+# This is the start frame for analysis
+start_frame=${10}
+# This is the end frame for analysis
+end_frame=${11}
 
-echo os
-echo $os
 if [ $os == "windows" ]; then
     source ~/.profile
     conda activate rekt
@@ -45,6 +47,10 @@ echo step
 echo $step
 echo plot
 echo $plot
+echo start_frame
+echo $start_frame
+echo end_frame
+echo $end_frame
 
 if [ $hoomd_path == '/Users/nicklauersdorf/hoomd-blue/build' ]; then
     vars="$(python3 ${script_path}/get_parameters.py ${fname})"
@@ -139,9 +145,9 @@ fi
 echo $pa2
 
 if [ $os == "mac" ]; then
-    python3 $script_path/full_density_analysis_binary_updates_temp.py $fname $hoomd_path $outpath $pa2 $pb $xa2 $ep $phi $dtau $bin $step $method $plot
+    python3 $script_path/full_density_analysis_binary_updates_temp.py $fname $hoomd_path $outpath $pa2 $pb $xa2 $ep $phi $dtau $bin $step $method $plot $start_frame $end_frame
 elif [ $os == "windows" ]; then
-    python $script_path/full_density_analysis_binary_updates_temp.py $fname $hoomd_path $outpath $pa2 $pb $xa2 $ep $phi $dtau $bin $step $method $plot
+    python $script_path/full_density_analysis_binary_updates_temp.py $fname $hoomd_path $outpath $pa2 $pb $xa2 $ep $phi $dtau $bin $step $method $plot $start_frame $end_frame
 fi
 
 pe=${pe%%.*}
@@ -151,30 +157,269 @@ eps=${ep}
 phi=${phi}
 pNum=${pNum%.*}
 
-echo "test"
 if [ $method == "activity" ]; then
     if [ $os == "mac" ]; then
         pic_path="${outpath}_pic_files/part_activity_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}"
         vid_path="${outpath}_vid_files/part_activity_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}"
-        ffmpeg -start_number 0 -framerate 24 -i "$pic_path"_frame_%05d.png\
+        ffmpeg -start_number 0 -framerate 8 -i "$pic_path"_frame_%05d.png\
         -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
         "$vid_path".mp4
     elif [ $os == "windows" ]; then
         pic_path=$(echo "${outpath}_pic_files/part_activity_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}" | tr -d '\r')
         vid_path=$(echo "${outpath}_vid_files/part_activity_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}" | tr -d '\r')
-        echo $pic_path
-        echo $vid_path
-        ffmpeg -start_number 0 -framerate 24 -i "$pic_path"_frame_%05d.png\
+        ffmpeg -start_number 0 -framerate 8 -i "$pic_path"_frame_%05d.png\
         -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
         "$vid_path".mp4
     fi
-    
-elif [ $method == "fluctuations" ]; then
-    pic_path="${outpath}_pic_files/clust_fluctuations_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}"
-    vid_path="${outpath}_vid_files/clust_fluctuations_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}"
-    ffmpeg -start_number 0 -framerate 8 -i "$pic_path"_frame_%05d.png\
+elif [ $method == "vorticity" ]; then
+    if [ $os == "mac" ]; then
+        pic_path="${outpath}_pic_files/vorticity_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}"
+        vid_path="${outpath}_vid_files/vorticity_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}"
+        ffmpeg -start_number 1 -framerate 8 -i "$pic_path"_frame_%05d.png\
         -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
         "$vid_path".mp4
+    elif [ $os == "windows" ]; then
+        pic_path=$(echo "${outpath}_pic_files/vorticity_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}" | tr -d '\r')
+        vid_path=$(echo "${outpath}_vid_files/vorticity_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}" | tr -d '\r')
+        ffmpeg -start_number 1 -framerate 8 -i "$pic_path"_frame_%05d.png\
+        -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
+        "$vid_path".mp4
+    fi
+elif [ $method == "phases" ]; then
+    if [ $os == "mac" ]; then
+        pic_path="${outpath}_pic_files/phases_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}"
+        vid_path="${outpath}_vid_files/phases_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}"
+        ffmpeg -start_number 0 -framerate 8 -i "$pic_path"_frame_%05d.png\
+        -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
+        "$vid_path".mp4
+    elif [ $os == "windows" ]; then
+        pic_path=$(echo "${outpath}_pic_files/phases_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}" | tr -d '\r')
+        vid_path=$(echo "${outpath}_vid_files/phases_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}" | tr -d '\r')
+        ffmpeg -start_number 0 -framerate 8 -i "$pic_path"_frame_%05d.png\
+        -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
+        "$vid_path".mp4
+    fi
+elif [ $method == "density" ]; then
+    if [ $os == "mac" ]; then
+        pic_path="${outpath}_pic_files/density_all_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}"
+        vid_path="${outpath}_vid_files/density_all_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}"
+        ffmpeg -start_number 0 -framerate 8 -i "$pic_path"_frame_%05d.png\
+        -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
+        "$vid_path".mp4
+
+        pic_path="${outpath}_pic_files/density_A_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}"
+        vid_path="${outpath}_vid_files/density_A_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}"
+        ffmpeg -start_number 0 -framerate 8 -i "$pic_path"_frame_%05d.png\
+        -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
+        "$vid_path".mp4
+
+        pic_path="${outpath}_pic_files/density_B_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}"
+        vid_path="${outpath}_vid_files/density_B_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}"
+        ffmpeg -start_number 0 -framerate 8 -i "$pic_path"_frame_%05d.png\
+        -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
+        "$vid_path".mp4
+
+        pic_path="${outpath}_pic_files/density_dif_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}"
+        vid_path="${outpath}_vid_files/density_dif_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}"
+        ffmpeg -start_number 0 -framerate 8 -i "$pic_path"_frame_%05d.png\
+        -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
+        "$vid_path".mp4
+
+        pic_path="${outpath}_pic_files/part_frac_B_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}"
+        vid_path="${outpath}_vid_files/part_frac_B_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}"
+        ffmpeg -start_number 0 -framerate 8 -i "$pic_path"_frame_%05d.png\
+        -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
+        "$vid_path".mp4
+    elif [ $os == "windows" ]; then
+        pic_path=$(echo "${outpath}_pic_files/density_all_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}" | tr -d '\r')
+        vid_path=$(echo "${outpath}_vid_files/density_all_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}" | tr -d '\r')
+        ffmpeg -start_number 0 -framerate 8 -i "$pic_path"_frame_%05d.png\
+        -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
+        "$vid_path".mp4
+
+        pic_path=$(echo "${outpath}_pic_files/density_A_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}" | tr -d '\r')
+        vid_path=$(echo "${outpath}_vid_files/density_A_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}" | tr -d '\r')
+        ffmpeg -start_number 0 -framerate 8 -i "$pic_path"_frame_%05d.png\
+        -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
+        "$vid_path".mp4
+
+        pic_path=$(echo "${outpath}_pic_files/density_B_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}" | tr -d '\r')
+        vid_path=$(echo "${outpath}_vid_files/density_B_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}" | tr -d '\r')
+        ffmpeg -start_number 0 -framerate 8 -i "$pic_path"_frame_%05d.png\
+        -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
+        "$vid_path".mp4
+
+        pic_path=$(echo "${outpath}_pic_files/density_dif_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}" | tr -d '\r')
+        vid_path=$(echo "${outpath}_vid_files/density_dif_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}" | tr -d '\r')
+        ffmpeg -start_number 0 -framerate 8 -i "$pic_path"_frame_%05d.png\
+        -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
+        "$vid_path".mp4
+
+        pic_path=$(echo "${outpath}_pic_files/part_frac_B_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}" | tr -d '\r')
+        vid_path=$(echo "${outpath}_vid_files/part_frac_B_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}" | tr -d '\r')
+        ffmpeg -start_number 0 -framerate 8 -i "$pic_path"_frame_%05d.png\
+        -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
+        "$vid_path".mp4
+    fi
+
+elif [ $method == "com-align" ]; then
+    if [ $os == "mac" ]; then
+        pic_path="${outpath}_pic_files/com_alignment_all_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}"
+        vid_path="${outpath}_vid_files/com_alignment_all_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}"
+        ffmpeg -start_number 0 -framerate 8 -i "$pic_path"_frame_%05d.png\
+        -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
+        "$vid_path".mp4
+
+        pic_path="${outpath}_pic_files/com_alignment_A_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}"
+        vid_path="${outpath}_vid_files/com_alignment_A_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}"
+        ffmpeg -start_number 0 -framerate 8 -i "$pic_path"_frame_%05d.png\
+        -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
+        "$vid_path".mp4
+
+        pic_path="${outpath}_pic_files/com_alignment_B_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}"
+        vid_path="${outpath}_vid_files/com_alignment_B_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}"
+        ffmpeg -start_number 0 -framerate 8 -i "$pic_path"_frame_%05d.png\
+        -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
+        "$vid_path".mp4
+
+        pic_path="${outpath}_pic_files/com_normal_fa_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}"
+        vid_path="${outpath}_vid_files/com_normal_fa_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}"
+        ffmpeg -start_number 0 -framerate 8 -i "$pic_path"_frame_%05d.png\
+        -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
+        "$vid_path".mp4
+
+    elif [ $os == "windows" ]; then
+        pic_path=$(echo "${outpath}_pic_files/com_alignment_all_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}" | tr -d '\r')
+        vid_path=$(echo "${outpath}_vid_files/com_alignment_all_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}" | tr -d '\r')
+        ffmpeg -start_number 0 -framerate 8 -i "$pic_path"_frame_%05d.png\
+        -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
+        "$vid_path".mp4
+
+        pic_path=$(echo "${outpath}_pic_files/com_alignment_A_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}" | tr -d '\r')
+        vid_path=$(echo "${outpath}_vid_files/com_alignment_A_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}" | tr -d '\r')
+        ffmpeg -start_number 0 -framerate 8 -i "$pic_path"_frame_%05d.png\
+        -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
+        "$vid_path".mp4
+
+        pic_path=$(echo "${outpath}_pic_files/com_alignment_B_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}" | tr -d '\r')
+        vid_path=$(echo "${outpath}_vid_files/com_alignment_B_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}" | tr -d '\r')
+        ffmpeg -start_number 0 -framerate 8 -i "$pic_path"_frame_%05d.png\
+        -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
+        "$vid_path".mp4
+
+        pic_path=$(echo "${outpath}_pic_files/com_normal_fa_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}" | tr -d '\r')
+        vid_path=$(echo "${outpath}_vid_files/com_normal_fa_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}" | tr -d '\r')
+        ffmpeg -start_number 0 -framerate 8 -i "$pic_path"_frame_%05d.png\
+        -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
+        "$vid_path".mp4
+    fi
+elif [ $method == "surface-align" ]; then
+    if [ $os == "mac" ]; then
+        pic_path="${outpath}_pic_files/surface_alignment_all_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}"
+        vid_path="${outpath}_vid_files/surface_alignment_all_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}"
+        ffmpeg -start_number 0 -framerate 8 -i "$pic_path"_frame_%05d.png\
+        -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
+        "$vid_path".mp4
+
+        pic_path="${outpath}_pic_files/surface_alignment_A_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}"
+        vid_path="${outpath}_vid_files/surface_alignment_A_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}"
+        ffmpeg -start_number 0 -framerate 8 -i "$pic_path"_frame_%05d.png\
+        -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
+        "$vid_path".mp4
+
+        pic_path="${outpath}_pic_files/surface_alignment_B_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}"
+        vid_path="${outpath}_vid_files/surface_alignment_B_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}"
+        ffmpeg -start_number 0 -framerate 8 -i "$pic_path"_frame_%05d.png\
+        -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
+        "$vid_path".mp4
+
+    elif [ $os == "windows" ]; then
+        pic_path=$(echo "${outpath}_pic_files/surface_alignment_all_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}" | tr -d '\r')
+        vid_path=$(echo "${outpath}_vid_files/surface_alignment_all_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}" | tr -d '\r')
+        ffmpeg -start_number 0 -framerate 8 -i "$pic_path"_frame_%05d.png\
+        -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
+        "$vid_path".mp4
+
+        pic_path=$(echo "${outpath}_pic_files/surface_alignment_A_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}" | tr -d '\r')
+        vid_path=$(echo "${outpath}_vid_files/surface_alignment_A_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}" | tr -d '\r')
+        ffmpeg -start_number 0 -framerate 8 -i "$pic_path"_frame_%05d.png\
+        -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
+        "$vid_path".mp4
+
+        pic_path=$(echo "${outpath}_pic_files/surface_alignment_B_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}" | tr -d '\r')
+        vid_path=$(echo "${outpath}_vid_files/surface_alignment_B_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}" | tr -d '\r')
+        ffmpeg -start_number 0 -framerate 8 -i "$pic_path"_frame_%05d.png\
+        -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
+        "$vid_path".mp4
+    fi
+elif [ $method == "fluctuations" ]; then
+    if [ $os == "mac" ]; then
+        pic_path="${outpath}_pic_files/clust_fluctuations_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}"
+        vid_path="${outpath}_vid_files/clust_fluctuations_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}"
+        ffmpeg -start_number 0 -framerate 8 -i "$pic_path"_frame_%05d.png\
+        -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
+        "$vid_path".mp4
+    elif [ $os == "windows" ]; then
+        pic_path=$(echo "${outpath}_pic_files/clust_fluctuations_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}" | tr -d '\r')
+        vid_path=$(echo "${outpath}_vid_files/clust_fluctuations_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}" | tr -d '\r')
+        ffmpeg -start_number 0 -framerate 8 -i "$pic_path"_frame_%05d.png\
+        -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
+        "$vid_path".mp4
+    fi
+elif [ $method == "int-press" ]; then
+    if [ $os == "mac" ]; then
+        pic_path="${outpath}_pic_files/int_press_all_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}"
+        vid_path="${outpath}_vid_files/int_press_all_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}"
+        ffmpeg -start_number 0 -framerate 8 -i "$pic_path"_frame_%05d.png\
+        -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
+        "$vid_path".mp4
+    elif [ $os == "windows" ]; then
+        pic_path=$(echo "${outpath}_pic_files/int_press_all_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}" | tr -d '\r')
+        vid_path=$(echo "${outpath}_vid_files/int_press_all_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}" | tr -d '\r')
+        ffmpeg -start_number 0 -framerate 8 -i "$pic_path"_frame_%05d.png\
+        -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
+        "$vid_path".mp4
+    fi
+elif [ $method == "centrosymmetry" ]; then
+    if [ $os == "mac" ]; then
+        pic_path="${outpath}_pic_files/csp_all_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}"
+        vid_path="${outpath}_vid_files/csp_all_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}"
+        ffmpeg -start_number 0 -framerate 8 -i "$pic_path"_frame_%05d.png\
+        -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
+        "$vid_path".mp4
+    elif [ $os == "windows" ]; then
+        pic_path=$(echo "${outpath}_pic_files/csp_all_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}" | tr -d '\r')
+        vid_path=$(echo "${outpath}_vid_files/csp_all_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}" | tr -d '\r')
+        ffmpeg -start_number 0 -framerate 8 -i "$pic_path"_frame_%05d.png\
+        -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
+        "$vid_path".mp4
+    fi
+elif [ $method == "lattice-spacing" ]; then
+    if [ $os == "mac" ]; then
+        pic_path="${outpath}_pic_files/lat_histo_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}"
+        vid_path="${outpath}_vid_files/lat_histo_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}"
+        ffmpeg -start_number 0 -framerate 8 -i "$pic_path"_frame_%05d.png\
+        -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
+        "$vid_path".mp4
+
+        pic_path="${outpath}_pic_files/lat_map_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}"
+        vid_path="${outpath}_vid_files/lat_map_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}"
+        ffmpeg -start_number 0 -framerate 8 -i "$pic_path"_frame_%05d.png\
+        -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
+        "$vid_path".mp4
+    elif [ $os == "windows" ]; then
+        pic_path=$(echo "${outpath}_pic_files/lat_histo_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}" | tr -d '\r')
+        vid_path=$(echo "${outpath}_vid_files/lat_histo_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}" | tr -d '\r')
+        ffmpeg -start_number 0 -framerate 8 -i "$pic_path"_frame_%05d.png\
+        -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
+        "$vid_path".mp4
+
+        pic_path=$(echo "${outpath}_pic_files/lat_map_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}" | tr -d '\r')
+        vid_path=$(echo "${outpath}_vid_files/lat_map_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}" | tr -d '\r')
+        ffmpeg -start_number 0 -framerate 8 -i "$pic_path"_frame_%05d.png\
+        -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
+        "$vid_path".mp4
+    fi
 elif [ $method == "neighbors" ]; then
     pic_path="${outpath}_pic_files/all_all_neigh_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}"
     vid_path="${outpath}_vid_files/all_all_neigh_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}"
@@ -184,7 +429,7 @@ elif [ $method == "neighbors" ]; then
 
     pic_path="${outpath}_pic_files/all-all_local_ori_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}"
     vid_path="${outpath}_vid_files/all-all_local_ori_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}"
-    ffmpeg -start_number 430 -framerate 1 -i "$pic_path"_frame_%05d.png\
+    ffmpeg -start_number 0 -framerate 1 -i "$pic_path"_frame_%05d.png\
         -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
         "$vid_path".mp4
 elif [ $method == "orientation" ]; then
@@ -202,7 +447,7 @@ elif [ $method == "penetration" ]; then
 elif [ $method == "phases" ]; then
     pic_path="${outpath}_pic_files/plot_phases_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}"
     vid_path="${outpath}_vid_files/plot_phases_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}"
-    ffmpeg -start_number 500 -framerate 8 -i "$pic_path"_frame_%05d.png\
+    ffmpeg -start_number 0 -framerate 8 -i "$pic_path"_frame_%05d.png\
         -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
         "$vid_path".mp4
 elif [ $method == "csp" ]; then
@@ -228,7 +473,7 @@ elif [ $method == "local_density" ]; then
 
     pic_path="${outpath}_pic_files/local_density2_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}"
     vid_path="${outpath}_vid_files/local_density2_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}"
-    ffmpeg -start_number 430 -framerate 1 -i "$pic_path"_frame_%05d.png\
+    ffmpeg -start_number 0 -framerate 1 -i "$pic_path"_frame_%05d.png\
         -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
         "$vid_path".mp4
 fi

@@ -189,6 +189,8 @@ bin_width = float(sys.argv[10])
 time_step = float(sys.argv[11])
 measurement_method = str(sys.argv[12])
 plot = str(sys.argv[13])
+start_frame = str(sys.argv[14])
+end_frame = str(sys.argv[15])
 
 outfile = 'pa'+str(int(peA))+'_pb'+str(int(peB))+'_xa'+str(int(parFrac))+'_eps'+str(eps)+'_phi'+str(intPhi)+'_pNum' + str(int(partNum)) + '_bin' + str(int(bin_width)) + '_time' + str(int(time_step))
 out = outfile + "_frame_"
@@ -262,11 +264,15 @@ with hoomd.open(name=inFile, mode='rb') as t:
     
     dumps = int(t.__len__())
 
-    start = int(15500/time_step)#205                                             # first frame to process
-    
-                                # get number of timesteps dumped
-    
-    end = 15501#int(dumps/time_step)-1                                             # final frame to process
+    try:
+        start = int(int(start_frame)/time_step)
+    except:
+        start = int(0/time_step)                                                 # first frame to process
+
+    try:
+        end = int(int(end_frame)/time_step)
+    except:
+        end = int(dumps/time_step)-1                                             # final frame to process
 
     snap = t[0]                                             # Take first snap for box
     first_tstep = snap.configuration.step                   # First time step
@@ -565,198 +571,6 @@ with hoomd.open(name=inFile, mode='rb') as t:
             # Find radius of surface
             surface_radius_bin = interface_functs.surface_radius_bins(int_dict, int_comp_dict, surface_dict, surface_com_dict)
 
-            '''
-            #Measures radius and width of each interface
-            edge_width = []
-            bub_width_ext = []
-            bub_width_int = []
-            bub_width = []
-
-            id_step = 0
-
-            #Loop over interfaces
-            for m in range(0, len(bub_id_arr)):
-
-                #Always true
-                if if_bub_id_arr[m]==1:
-
-                    #Find which particles belong to mth interface structure
-                    edge_parts = np.where((edgePhase==bub_size_id_arr[m]))[0]
-
-                    #If particles belong to mth interface structure, continue...
-                    if len(edge_parts)>0:
-
-                        #Initiate empty arrays
-                        shortest_r=np.array([])
-                        bub_rad_int=np.array([])
-                        bub_rad_ext=np.array([])
-
-                        #Find interior and exterior particles of interface
-                        int_bub_id_tmp = np.where((edgePhase==bub_size_id_arr[m]) & (intedgePhase==1))[0]
-                        ext_bub_id_tmp = np.where((edgePhase==bub_size_id_arr[m]) & (extedgePhase==1))[0]
-
-                        #Calculate (x,y) center of mass of interface
-                        x_com_bub = np.mean(pos[edge_parts,0]+h_box)
-                        y_com_bub = np.mean(pos[edge_parts,1]+h_box)
-
-                        #Loop over bins in system
-                        for ix in range(0, len(occParts)):
-                                    for iy in range(0, len(occParts)):
-
-                                        #If bin belongs to mth interface structure, continue...
-                                        if edge_id[ix][iy]==bub_size_id_arr[m]:
-
-                                            #If bin is an exterior particle of mth interface structure, continue...
-                                            if ext_edge_id[ix][iy]==1:
-
-                                                #Calculate (x,y) position of bin
-                                                pos_box_x1 = (ix+0.5)*sizeBin
-                                                pos_box_y1 = (iy+0.5)*sizeBin
-
-                                                #Calculate x distance from mth interface structure's center of mass
-                                                bub_rad_tmp_x = (pos_box_x1-x_com_bub)
-                                                bub_rad_tmp_x_abs = np.abs(pos_box_x1-x_com_bub)
-
-                                                #Enforce periodic boundary conditions
-                                                if bub_rad_tmp_x_abs>=h_box:
-                                                    if bub_rad_tmp_x < -h_box:
-                                                        bub_rad_tmp_x += l_box
-                                                    else:
-                                                        bub_rad_tmp_x -= l_box
-
-                                                #Calculate y distance from mth interface structure's center of mass
-                                                bub_rad_tmp_y = (pos_box_y1-y_com_bub)
-                                                bub_rad_tmp_y_abs = np.abs(pos_box_y1-y_com_bub)
-
-                                                #Enforce periodic boundary conditions
-                                                if bub_rad_tmp_y_abs>=h_box:
-                                                    if bub_rad_tmp_y < -h_box:
-                                                        bub_rad_tmp_y += l_box
-                                                    else:
-                                                        bub_rad_tmp_y -= l_box
-
-                                                #Calculate magnitude of distance from center of mass of mth interface structure
-                                                bub_rad_tmp = (bub_rad_tmp_x**2 + bub_rad_tmp_y**2)**0.5
-
-                                                #Save this interface's radius to array
-                                                bub_rad_ext = np.append(bub_rad_ext, bub_rad_tmp+(sizeBin/2))
-
-                                            #If bin is interior particle of mth interface structure, continue
-                                            if int_edge_id[ix][iy]==1:
-
-                                                #Calculate (x,y) position of bin
-                                                pos_box_x1 = (ix+0.5)*sizeBin
-                                                pos_box_y1 = (iy+0.5)*sizeBin
-
-                                                #Calculate x distance from mth interface structure's center of mass
-                                                bub_rad_tmp_x = (pos_box_x1-x_com_bub)
-                                                bub_rad_tmp_x_abs = np.abs(pos_box_x1-x_com_bub)
-
-                                                #Enforce periodic boundary conditions
-                                                if bub_rad_tmp_x_abs>=h_box:
-                                                    if bub_rad_tmp_x < -h_box:
-                                                        bub_rad_tmp_x += l_box
-                                                    else:
-                                                        bub_rad_tmp_x -= l_box
-
-                                                #Calculate y distance from mth interface structure's center of mass
-                                                bub_rad_tmp_y = (pos_box_y1-y_com_bub)
-                                                bub_rad_tmp_y_abs = np.abs(pos_box_y1-y_com_bub)
-
-                                                #Enforce periodic boundary conditions
-                                                if bub_rad_tmp_y_abs>=h_box:
-                                                    if bub_rad_tmp_y < -h_box:
-                                                        bub_rad_tmp_y += l_box
-                                                    else:
-                                                        bub_rad_tmp_y -= l_box
-
-                                                #Calculate magnitude of distance to mth interface structure's center of mass
-                                                bub_rad_tmp = (bub_rad_tmp_x**2 + bub_rad_tmp_y**2)**0.5
-
-                                                #Save this interface's interior radius to array
-                                                bub_rad_int = np.append(bub_rad_int, bub_rad_tmp+(sizeBin/2))
-                        #if there were interior bins found, calculate the average interior radius of mth interface structure
-                        if len(bub_rad_int)>0:
-                            bub_width_int.append(np.mean(bub_rad_int)+sizeBin/2)
-                        else:
-                            bub_width_int.append(0)
-
-                        #if there were exterior bins found, calculate the average exterior radius of mth interface structure
-                        if len(bub_rad_ext)>0:
-                            bub_width_ext.append(np.mean(bub_rad_ext)+sizeBin/2)
-                        else:
-                            bub_width_ext.append(0)
-
-                        #Use whichever is larger to calculate the true radius of the mth interface structure
-                        if bub_width_ext[id_step]>bub_width_int[id_step]:
-                            bub_width.append(bub_width_ext[id_step])
-                        else:
-                            bub_width.append(bub_width_int[id_step])
-
-                        #If both interior and exterior particles were identified, continue...
-                        if (len(int_bub_id_tmp)>0) & (len(ext_bub_id_tmp)>0):
-
-                                #Loop over bins in system
-                                for ix in range(0, len(occParts)):
-                                    for iy in range(0, len(occParts)):
-
-                                        #If bin is part of mth interface structure, continue...
-                                        if edge_id[ix][iy]==bub_size_id_arr[m]:
-
-                                            #If bin is an exterior bin of mth interface structure, continue...
-                                            if ext_edge_id[ix][iy]==1:
-
-                                                #Very large initial distance to calculate closest interior edge bin to this exterior edge bin
-                                                difr_short=10000000.
-
-                                                #Calculate position of exterior edge bin
-                                                pos_box_x1 = (ix+0.5)*sizeBin
-                                                pos_box_y1 = (iy+0.5)*sizeBin
-
-                                                #Loop over bins of system
-                                                for ix2 in range(0, len(occParts)):
-                                                    for iy2 in range(0, len(occParts)):
-
-                                                        #If bin belongs to mth interface structure, continue...
-                                                        if edge_id[ix2][iy2]==bub_size_id_arr[m]:
-
-                                                            #If bin is an interior edge bin for mth interface structure, continue...
-                                                            if int_edge_id[ix2][iy2]==1:
-
-                                                                    #Calculate position of interior edge bin
-                                                                    pos_box_x2 = (ix2+0.5)*sizeBin
-                                                                    pos_box_y2 = (iy2+0.5)*sizeBin
-
-                                                                    #Calculate distance from interior edge bin to exterior edge bin
-                                                                    difr = ( (pos_box_x1-pos_box_x2)**2 + (pos_box_y1-pos_box_y2)**2)**0.5
-
-                                                                    #If this distance is the shortest calculated thus far, replace the value with it
-                                                                    if difr<difr_short:
-                                                                        difr_short=difr
-                                                #Save each shortest distance to an interior edge bin calculated for each exterior edge bin
-                                                shortest_r = np.append(shortest_r, difr_short)
-
-                                #Calculate and save the average shortest-distance between each interior edge and exterior edge bins for the mth interface structure
-                                edge_width.append(np.mean(shortest_r)+sizeBin)
-
-                        #If both an interior and exterior edge were not identified, save the cluster radius instead for the edge width
-                        else:
-                            edge_width.append(bub_width[id_step])
-
-                        #Step for number of bins with identified edge width
-                        id_step +=1
-
-                    #If no particles in interface, save zeros for radius and width
-                    else:
-                        edge_width.append(0)
-                        bub_width.append(0)
-
-                #Never true
-                else:
-                    edge_width.append(0)
-                    bub_width.append(0)
-            '''
-
             # Count bins per phase
             bin_count_dict = phase_ident_functs.phase_bin_count(phase_dict, bulk_dict, int_dict, bulk_comp_dict, int_comp_dict)
 
@@ -960,7 +774,6 @@ with hoomd.open(name=inFile, mode='rb') as t:
             method1_align_dict, method2_align_dict = interface_functs.gas_alignment(method1_align_dict, method2_align_dict, all_surface_measurements, all_surface_curves, sep_surface_dict, int_comp_dict)
 
             if measurement_options[0] == 'vorticity':
-
                 #DONE!
                 if j>(start*time_step):
 
@@ -1001,6 +814,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                  
 
             elif measurement_options[0] == 'phase-velocity':
+                
                 if j>(start*time_step):
 
                     part_ang_vel_dict = particle_prop_functs.angular_velocity(ang_vel_dict['part'], phase_dict['part'])
@@ -1110,9 +924,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 if plot == 'y':
 
                     # Plot contour map of degree of alignment of particle's active forces with direction toward cluster CoM
-                    plotting_functs.plot_alignment(method1_align_dict, all_surface_curves, int_comp_dict, pos, interface_id = interface_option, type='all')
-                    plotting_functs.plot_alignment(method1_align_dict, all_surface_curves, int_comp_dict, pos, interface_id = interface_option, type='A')
-                    plotting_functs.plot_alignment(method1_align_dict, all_surface_curves, int_comp_dict, pos, interface_id = interface_option, type='B')
+                    plotting_functs.plot_alignment(method1_align_dict, all_surface_curves, int_comp_dict, pos, interface_id = interface_option, type='all', method='com')
+                    plotting_functs.plot_alignment(method1_align_dict, all_surface_curves, int_comp_dict, pos, interface_id = interface_option, type='A', method='com')
+                    plotting_functs.plot_alignment(method1_align_dict, all_surface_curves, int_comp_dict, pos, interface_id = interface_option, type='B', method='com')
                     plotting_functs.plot_normal_fa_map(normal_fa_dict, all_surface_curves, int_comp_dict, active_fa_dict, type='all', interface_id = interface_option, orientation_id = orientation_option)
                     
             elif measurement_options[0] == 'surface-align':
@@ -1120,12 +934,12 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 if plot == 'y':
 
                     # Plot contour map of degree of alignment of particle's active forces with nearest normal to cluster surface
-                    plotting_functs.plot_alignment(method2_align_dict, all_surface_curves, int_comp_dict, pos, interface_id = interface_option, type='all') 
-                    plotting_functs.plot_alignment(method2_align_dict, all_surface_curves, int_comp_dict, pos, interface_id = interface_option, type='A')
-                    plotting_functs.plot_alignment(method2_align_dict, all_surface_curves, int_comp_dict, pos, interface_id = interface_option, type='B')       
+                    plotting_functs.plot_alignment(method2_align_dict, all_surface_curves, int_comp_dict, pos, interface_id = interface_option, type='all', method='surface') 
+                    plotting_functs.plot_alignment(method2_align_dict, all_surface_curves, int_comp_dict, pos, interface_id = interface_option, type='A', method='surface')
+                    plotting_functs.plot_alignment(method2_align_dict, all_surface_curves, int_comp_dict, pos, interface_id = interface_option, type='B', method='surface')       
              
             elif measurement_options[0] == 'fluctuations':
-                
+                #DONE! (need to add .txt to sample github)
                 if plot == 'y':
 
                     # Plot particles color-coded by activity with sub-plot of change in cluster size over time
@@ -1161,7 +975,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 # Save compressibility data
                 data_output_functs.write_to_txt(compress_dict, dataPath + 'compressibility_' + outfile + '.txt')
             
-            elif measurement_options[0] == 'structure-factor2':
+            elif measurement_options[0] == 'structure-factor-sep':
                 #DONE!
 
                 # Initialize lattice structure functions
@@ -1190,7 +1004,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 # Save compressibility data
                 data_output_functs.write_to_txt(compress_dict, dataPath + 'sf_compressibility_freud_' + outfile + '.txt')
 
-            elif measurement_options[0] == 'structure-factor':
+            elif measurement_options[0] == 'structure-factor-rdf':
                 #DONE!
                 # Initialize lattice structure functions
                 lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
@@ -1685,7 +1499,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 if plot == 'y':
                     plotting_functs.plot_stein_order(pos, nematic_order_param, all_surface_curves, int_comp_dict)
             
-            elif measurement_options[0] == 'adsorption-final':
+            elif measurement_options[0] == 'kinetic-motion':
                 #DONE!
                 if len(partPhase_time_arr)>1:
                 

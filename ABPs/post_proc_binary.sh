@@ -17,6 +17,11 @@ echo "|----------------------------------------------------------------------|"
 echo "Are you running on Longleaf (y/n)?"
 read answer
 
+if [ -z "$answer" ]; then 
+    echo 'Inputs cannot be blank please try again!' 
+    exit 0 
+fi 
+
 if [ $answer == "y" ]; then
     hoomd_path="$HOME/hoomd-blue/build"
     script_path="$HOME/klotsa/ABPs/post_proc"
@@ -38,69 +43,99 @@ outpath="$this_path"/"$current"
 
 echo "|----------------------------------------------------------------------|"
 echo "|          -----------------Operating Systems-----------------         |"
-echo "| mac: composition and area of each phase                              |"
-echo "| windows: activity distribution of particles                          |"
-echo "| linux: orientation distribution of particles                         |"
+echo "| mac: macOS X operating system                                        |"
+echo "| windows: windows operating system                                    |"
+echo "| linux: linux operating system                                        |"
 echo "|----------------------------------------------------------------------|"
 
-echo "What is your operating system? (y/n)"
+echo "What is your operating system?"
 read os
 
-echo "What is your bin size?"
+if [ -z "$os" ]; then 
+    echo 'Inputs cannot be blank please try again!' 
+    exit 0 
+fi 
+
+if [ $os != "mac" ] &&  [ $os != "windows" ] && [ $os != "linux" ]; then
+    echo 'Input must correspond to given options!' 
+    exit 0 
+fi
+
+echo "What is your bin size? (recommended = 5)"
 read bin_size
 
-echo "What is your step size?"
+if [ -z "$bin_size" ]; then 
+    echo 'Inputs cannot be blank please try again!' 
+    exit 0 
+fi 
+
+if ! [[ "$bin_size" =~ ^[+-]?[0-9]+\.?[0-9]*$ ]]; then 
+    echo "Inputs must be a numbers" 
+    exit 0 
+fi
+
+echo "What is your step size? (recommended = 1)"
 read time_step
+
+if [ -z "$time_step" ]; then 
+    echo 'Inputs cannot be blank please try again!' 
+    exit 0 
+fi 
+
+if ! [[ "$time_step" =~ ^[+-]?[0-9]+\.?[0-9]*$ ]]; then 
+    echo "Inputs must be a numbers" 
+    exit 0 
+fi
 
 echo "|----------------------------------------------------------------------|"
 echo "|      Possible simulation options and corresponding user inputs       |"
 echo "|          **************************************************          |"
 echo "|          -----------------System Properties-----------------         |"
-#echo "| phases: composition and area of each phase                           |"
-#echo "| activity: activity distribution of particles                         |"
-#echo "| orientation: orientation distribution of particles                   |"
+echo "| phases: composition and area of each phase                           |"
+echo "| activity: activity distribution of particles                         |"
+echo "| orientation: orientation distribution of particles                   |"
 echo "|          -----------------Kinetic Properties----------------         |"
-#echo "| adsorption: adsorption to/desorption from cluster                    |"
-echo "| adsorption-final: flux of particles between each phase               |"
-#echo "| collision: collision frequency of gas particles                      |"
-#echo "| fluctuations: fluctuations in cluster size                           |"
+echo "| adsorption: adsorption to/desorption from cluster                    |"
+echo "| kinetic-motion: cluster displacement driven by particle flux         |"
+echo "| collision: collision frequency of gas particles                      |"
+echo "| fluctuations: fluctuations in cluster size                           |"
 echo "|          ----------------Structural Properties--------------         |"
 echo "| lattice-spacing: lattice spacing of cluster                          |"
 echo "| compressibility: structural compressibility of particles in cluster  |"
-echo "| structure-factor2: vorticity of particle motion                              |"
-echo "| structure-factor: structural compressibility and S(k->0) of cluster  |"
-echo "| structure-factor-freud: structural compressibility and S(k->0) of cluster using Freud module                        |"
-#echo "| centrosymmetry: centrosymmetry parameter of particles                |"
-#echo "| radial-df: radial distribution function of cluster                   |"
-#echo "| angular-df: angular distribution function of cluster                 |"
-#echo "| clustering-coefficient: clustering coefficient of particles          |"
-#echo "| hexatic-order: hexatic order parameter of particles                  |"
-#echo "| voronoi: voronoi tesselation of system                               |"
-#echo "| translational-order: translational order of particles                |"
-#echo "| steinhardt-order: Steinhardt order parameter of particles            |"
-#echo "| neighbors: probability of being neighbors for each species in cluster|"
-#echo "| domain-size: size of domains of like-species within cluster          |"
+echo "| structure-factor-sep: structure factor given lattice spacings        |"
+echo "| structure-factor-rdf: structure factor given g(r)                    |"
+echo "| structure-factor-freud: structure factor using Freud algorithm       |"
+echo "| centrosymmetry: centrosymmetry parameter of particles                |"
+echo "| radial-df: radial distribution function of cluster                   |"
+echo "| angular-df: angular distribution function of cluster                 |"
+echo "| clustering-coefficient: clustering coefficient of particles          |"
+echo "| hexatic-order: hexatic order parameter of particles                  |"
+echo "| voronoi: voronoi tesselation of system                               |"
+echo "| translational-order: translational order of particles                |"
+echo "| steinhardt-order: Steinhardt order parameter of particles            |"
+echo "| neighbors: probability of being neighbors for each species in cluster|"
+echo "| domain-size: size of domains of like-species within cluster          |"
 echo "|          ----------------Nematic Properties-----------------         |"
-#echo "| nematic-order: nematic order of particles                            |"
-#echo "| surface-align: alignment of particles toward cluster surface normal  |"
-#echo "| interface-props: structural properties of interface                  |"
-#echo "| com-align: alignment of particles toward cluster center of mass      |"
+echo "| nematic-order: nematic order of particles                            |"
+echo "| surface-align: alignment of particles toward cluster surface normal  |"
+echo "| interface-props: structural properties of interface                  |"
+echo "| com-align: alignment of particles toward cluster center of mass      |"
 echo "|          ----------------Motion Properties------------------         |"
-#echo "| cluster-msd: mean squared displacement of cluster center of mass     |"
-#echo "| cluster-velocity: velocity of cluster center of mass                 |"
+echo "| cluster-msd: mean squared displacement of cluster center of mass     |"
+echo "| cluster-velocity: velocity of cluster center of mass                 |"
 echo "| activity-com: tracked motion of cluster center of mass               |"
-echo "| velocity-corr: local correlation in particle velocities              |"
-#echo "| vorticity: vorticity of particle motion                              |"
-#echo "| phase-velocity: velocity of particles in each phase                  |"
-#echo "| penetration: ability for fast particles to penetrate slow membranes  |"
+#echo "| velocity-corr: local correlation in particle velocities              |"
+echo "| vorticity: vorticity of particle motion                              |"
+echo "| phase-velocity: velocity of particles in each phase                  |"
+echo "| penetration: ability for fast particles to penetrate slow membranes  |"
 echo "|          ----------------Mechanical Properties-----------------      |"
 echo "| int-press: interparticle pressure and stress of each phase           |"
-echo "| bubble-interface-pressure: vorticity of particle motion                              |"
-echo "| interparticle-pressure: vorticity of particle motion                              |"
-echo "| interparticle-pressure-nlist: vorticity of particle motion                              |"
-echo "| com-interface-pressure: interface pressure using center of mass alignment                             |"
+#echo "| bubble-interface-pressure: vorticity of particle motion                              |"
+#echo "| interparticle-pressure: vorticity of particle motion                              |"
+#echo "| interparticle-pressure-nlist: vorticity of particle motion                              |"
+echo "| com-interface-pressure: interface pressure using center of mass alignment |"
 echo "| surface-interface-pressure: interface pressure using surface normal alignment       |"
-echo "| density: vorticity of particle motion                              |"
+#echo "| density: vorticity of particle motion                                |"
 echo "| local-gas-density: local density within the gas phase only           |"
 echo "| local-density: local density within the cluster only                 |"
 echo "|----------------------------------------------------------------------|"
@@ -108,8 +143,38 @@ echo "|----------------------------------------------------------------------|"
 echo "What do you want to analyze?"
 read method
 
+if [ -z "$method" ]; then 
+    echo 'Inputs cannot be blank please try again!' 
+    exit 0 
+fi 
+
+echo "What is your starting frame for analysis? (default = start of simulation)"
+read start_step
+
+if [ -z "$start_step" ]; then 
+    echo 'Set to default value'  
+fi 
+
+echo "What is your ending frame for analysis? (default = end of simulation)"
+read end_step
+
+if [ -z "$end_step" ]; then 
+    echo 'Set to default value' 
+fi 
+
 echo "Do you want to generate plots? (y/n)"
 read plot
+
+if [ -z "$plot" ]; then 
+    echo 'Inputs cannot be blank please try again!' 
+    exit 0 
+fi 
+
+if [ $plot != "y" ] &&  [ $plot != "n" ]; then
+    echo 'Input must correspond to given options!' 
+    exit 0 
+fi
+
 
 if [ $method == "lattice_spacing" ]; then
   echo "Do you want to use parallel processing, namely for lattice spacing (y/n)?"
@@ -118,13 +183,12 @@ else
   parallel="n"
 fi
 
-
 for file in $(ls *gsd)
 do
     if [ "$parallel" = "y" ]; then
         $submit $script_path/analyze_binary_parallel.sh $hoomd_path $outpath $script_path $file $bin_size $time_step $method $plot $os
     elif [ "$parallel" = "n" ]; then
-        $submit $script_path/analyze_binary.sh $hoomd_path $outpath $script_path $file $bin_size $time_step $method $plot $os
+        $submit $script_path/analyze_binary.sh $hoomd_path $outpath $script_path $file $bin_size $time_step $method $plot $os $start_step $end_step
     else
         echo "did not recognize response to parallel processing"
     fi

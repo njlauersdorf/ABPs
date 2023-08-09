@@ -322,7 +322,7 @@ class plotting:
         
         plt.tight_layout()
 
-        plt.savefig(self.outPath + 'plot_phases_' + self.outFile + ".png", dpi=200, transparent=False, bbox_inches='tight')
+        plt.savefig(self.outPath + 'phases_' + self.outFile + ".png", dpi=200, transparent=False, bbox_inches='tight')
         plt.close()  
     def plot_area_fraction(self, area_frac_dict, pos, sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None, type='all', interface_id = False, orientation_id = False):#, int_comp_dict):#sep_surface_dict, int_comp_dict):
         #DONE!
@@ -548,7 +548,7 @@ class plotting:
                         labelbottom=False, labeltop=False, labelleft=False, labelright=False)
         ax.axis('off')
         plt.tight_layout()
-        plt.savefig(self.outPath + 'plot_density_' + type + '_' + self.outFile + ".png", dpi=200, transparent=False, bbox_inches='tight')
+        plt.savefig(self.outPath + 'density_' + type + '_' + self.outFile + ".png", dpi=200, transparent=False, bbox_inches='tight')
         plt.close()
 
     def plot_normal_fa_map(self, normal_fa_dict, sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None, type='all', interface_id = False, orientation_id = False):
@@ -764,7 +764,7 @@ class plotting:
 
         ax.axis('off')
         plt.tight_layout()
-        plt.savefig(self.outPath + 'plot_normalfa_' + self.outFile + ".png", dpi=200, transparent=False, bbox_inches='tight')
+        plt.savefig(self.outPath + 'com_normal_fa_' + self.outFile + ".png", dpi=200, transparent=False, bbox_inches='tight')
         plt.close()
 
     def plot_particle_fraction(self, num_dens_dict, pos, sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None, type='A', interface_id = False, orientation_id = False):
@@ -981,11 +981,10 @@ class plotting:
 
         ax.axis('off')
         plt.tight_layout()
-        plt.show()
-        plt.savefig(self.outPath + 'plot_part_frac_' + type + '_' + self.outFile + ".png", dpi=200, transparent=False, bbox_inches='tight')
+        plt.savefig(self.outPath + 'part_frac_' + type + '_' + self.outFile + ".png", dpi=200, transparent=False, bbox_inches='tight')
         plt.close()
 
-    def plot_alignment(self, align_dict, sep_surface_dict, int_comp_dict, pos, interface_id = True, type='all'):
+    def plot_alignment(self, align_dict, sep_surface_dict, int_comp_dict, pos, interface_id = True, type='all', method='com'):
         #DONE!
         """
         This function plots the average alignment (toward cluster surface
@@ -1014,6 +1013,9 @@ class plotting:
         type (optional): string specifying whether the area fraction of all
         (type='all'), type A (type='A'), type B (type='B'), or the difference
         of types B and A ('dif') should be plotted.
+
+        method (optional): string specifying whether the alignment input is calculated
+        using the cluster's center of mass ('com') or the cluster's surface normal ('surface).
 
         Outputs:
         .png file with binned average alignment of respective type at each
@@ -1199,7 +1201,10 @@ class plotting:
 
         ax.axis('off')
         plt.tight_layout()
-        plt.savefig(self.outPath + 'plot_com_alignment_' + type + '_' + self.outFile + ".png", dpi=200, transparent=False, bbox_inches='tight')
+        if method == 'com':
+            plt.savefig(self.outPath + 'com_alignment_' + type + '_' + self.outFile + ".png", dpi=200, transparent=False, bbox_inches='tight')
+        else:
+            plt.savefig(self.outPath + 'surface_alignment_' + type + '_' + self.outFile + ".png", dpi=200, transparent=False, bbox_inches='tight')
         plt.close()
 
     def lat_histogram(self, lat_plot_dict):
@@ -1265,7 +1270,7 @@ class plotting:
         plt.yticks(fontsize=15)
 
         plt.tight_layout()
-        plt.savefig(self.outPath + 'plot_lat_histo_' + self.outFile + ".png", dpi=150, transparent=False)
+        plt.savefig(self.outPath + 'lat_histo_' + self.outFile + ".png", dpi=150, transparent=False)
         plt.close()
 
     def prob_histogram(self, prob_plot_dict, prob_stat_dict):
@@ -1978,7 +1983,7 @@ class plotting:
         ax.axis('off')
         plt.tight_layout()
 
-        plt.savefig(self.outPath + 'plot_lat_map_' + self.outFile + ".png", dpi=150, transparent=False)
+        plt.savefig(self.outPath + 'lat_map_' + self.outFile + ".png", dpi=150, transparent=False)
         plt.close()
 
     def plot_general_rdf(self, radial_df_dict):
@@ -2729,7 +2734,7 @@ class plotting:
         ax.axis('off')
         
         plt.tight_layout()
-        plt.savefig(self.outPath + 'plot_csp_' + pair + '_' + self.outFile + ".png", dpi=150, transparent=False)
+        plt.savefig(self.outPath + 'csp_' + pair + '_' + self.outFile + ".png", dpi=150, transparent=False)
         plt.close() 
     
     def plot_neighbors(self, neigh_plot_dict, ang, pos, pair='all-all', sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None, interface_id = False, orientation_id = False):
@@ -6041,7 +6046,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
         ax.axis('off')
         plt.tight_layout()
-        plt.savefig(self.outPath + 'plot_int_press_' + type + '_' + self.outFile + ".png", dpi=200, transparent=False, bbox_inches='tight')
+        plt.savefig(self.outPath + 'int_press_' + type + '_' + self.outFile + ".png", dpi=200, transparent=False, bbox_inches='tight')
         plt.close()
     
     def interpart_press_map2(self, interpart_press_part, pos, prev_pos, ang):
@@ -8340,7 +8345,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         plt.tight_layout()
 
 
-        plt.savefig(self.outPath + 'plot_vorticity_' + species + '_' + self.outFile + ".png", dpi=200, transparent=False, bbox_inches='tight')
+        plt.savefig(self.outPath + 'vorticity_' + species + '_' + self.outFile + ".png", dpi=200, transparent=False, bbox_inches='tight')
         plt.close()  
 
     def plot_voronoi(self, pos):
