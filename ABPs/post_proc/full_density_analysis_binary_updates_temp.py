@@ -861,7 +861,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     # Plot particles color-coded by phase
                     plotting_functs.plot_phases(pos, part_id_dict, all_surface_curves, int_comp_dict, active_fa_dict, interface_id = interface_option, orientation_id = orientation_option)
             
-            elif measurement_options[0]== 'bubble-interface-pressure':
+            elif measurement_options[0]== 'bubble-body-forces':
                 #DONE!
                 lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
 
@@ -1333,7 +1333,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     plotting_functs.plot_ang(ang, pos, all_surface_curves, int_comp_dict, active_fa_dict, type='A', mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option)
                     plotting_functs.plot_ang(ang, pos, all_surface_curves, int_comp_dict, active_fa_dict, type='B', mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option)
     
-            elif measurement_options[0] == 'interparticle-pressure':
+            elif measurement_options[0] == 'int-press-dep':
                 #DONE!
                 #DEPRECATED! Use measurement_method = 'int_press'
                 # Initialize stress and pressure functions
@@ -1368,13 +1368,13 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     # Plot binned interparticle pressure
                     plotting_functs.plot_interpart_press_binned(vp_bin_arr, all_surface_curves, int_comp_dict, active_fa_dict, type='all', interface_id = interface_option, orientation_id = orientation_option)
 
-            elif measurement_options[0] == 'interparticle-pressure-nlist':
+            elif measurement_options[0] == 'int-press-nlist':
                 
                 # Initialize stress and pressure functions
                 stress_and_pressure_functs = stress_and_pressure.stress_and_pressure(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
                 stress_plot_dict, stress_stat_dict = stress_and_pressure_functs.interparticle_stress_nlist(phase_dict['part'])
 
-            elif measurement_options[0] == 'com-interface-pressure':
+            elif measurement_options[0] == 'com-body-forces':
                 #DONE!
                 # Initialize stress and pressure functions
                 stress_and_pressure_functs = stress_and_pressure.stress_and_pressure(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
@@ -1397,7 +1397,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 # Save total active force pressure toward cluster CoM
                 data_output_functs.write_to_txt(act_press_dict, dataPath + 'com_interface_pressure_' + outfile + '.txt')
             
-            elif measurement_options[0] == 'surface-interface-pressure':
+            elif measurement_options[0] == 'surface-body-forces':
                 #DONE!
                 # Initialize stress and pressure functions
                 stress_and_pressure_functs = stress_and_pressure.stress_and_pressure(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
