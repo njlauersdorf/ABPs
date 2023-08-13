@@ -533,4 +533,3 @@ where the -r signifies a recursive method since there are multiple files in the 
 
 To collaborate or ask questions, please contact me at: njlauers@live.unc.edu. If you wish to use any part of this package in your research, please supply my name in the acknowledgments or cite any of my publications.
    
-# Personal
