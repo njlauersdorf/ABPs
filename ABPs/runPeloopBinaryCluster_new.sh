@@ -102,11 +102,11 @@ fi
 if [ $dont_run == "no" ]; then
     # Default values for simulations
     declare -i part_num
-    part_num=( 50000 )
+    part_num=( 20000 )
 
     # Length of simulation in Brownian time steps
     declare -i runfor
-    runfor=$(( 60 ))
+    runfor=$(( 3 ))
 
     # Frequency for dumping simulation data
     declare -a dump_freq
