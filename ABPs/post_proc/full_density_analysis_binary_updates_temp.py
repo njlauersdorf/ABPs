@@ -859,7 +859,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 if plot == 'y':
 
                     # Plot particles color-coded by phase
-                    plotting_functs.plot_phases(pos, part_id_dict, all_surface_curves, int_comp_dict, active_fa_dict, interface_id = interface_option, orientation_id = orientation_option)
+                    plotting_functs.plot_phases(pos, part_id_dict, all_surface_curves, int_comp_dict, active_fa_dict, interface_id = interface_option, orientation_id = orientation_option, presentation_id = presentation_option)
             
             elif measurement_options[0]== 'bubble-body-forces':
                 #DONE!
@@ -1587,8 +1587,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     time_velA_mag = np.append(time_velA_mag, vel_plot_dict['A']['mag'])
                     time_velB_mag = np.append(time_velB_mag, vel_plot_dict['B']['mag'])
 
-                    #if plot == 'y':
-                        #plotting_functs.vel_histogram(vel_plot_dict, dt_step)
+                    if plot == 'y':
+                        plotting_functs.vel_histogram(vel_plot_dict, dt_step)
             elif measurement_options[0] == 'velocity-corr':
                 if j>(start * time_step):
 
