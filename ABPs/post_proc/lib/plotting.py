@@ -6975,8 +6975,8 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         else:
 
             if zoom_id == True:
-                plt.ylim(self.hy_box-20-2, self.hy_box+20+2)
-                plt.xlim(self.hy_box-20-2, self.hy_box+20+2)
+                plt.ylim(self.hy_box-30-2, self.hy_box+30+2)
+                plt.xlim(self.hy_box-30-2, self.hy_box+30+2)
             elif banner_id == True: 
                 plt.ylim(1.5*self.ly_box/5, 3.5*self.ly_box/5)
                 plt.xlim(0, self.lx_box)

@@ -153,7 +153,9 @@ echo "What is your starting frame for analysis? (default = start of simulation)"
 read start_step
 
 if [ -z "$start_step" ]; then 
-    echo 'Set to default value'  
+    echo 'Set to default value' 
+    unset start_step 
+    start_step="default"
 fi 
 
 echo "What is your ending frame for analysis? (default = end of simulation)"
@@ -161,6 +163,8 @@ read end_step
 
 if [ -z "$end_step" ]; then 
     echo 'Set to default value' 
+    unset end_step
+    end_step="default"
 fi 
 
 echo "Do you want to generate plots? (y/n)"
