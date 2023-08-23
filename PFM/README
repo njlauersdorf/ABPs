@@ -1,0 +1,123 @@
+General Model Basics
+
+	The model consists of 7 modules, one of which is the SXR_Example.py, demonstrating how to run the code.  
+	
+
+	The sxr_lib.py is a module that contains many very basic functions needed for multiple functions in the 
+	program.  These are the functions that are used within the major components of the program (listed below).  
+	It also contains many arrays of variables needed to run the program, including the arrays loaded from 
+	different .sav files such as from the mu.sav and bessy2015.sav files.  In order to use these functions, 
+	one must first import the entirety of sxr_lib.py or its specific functions to make it part of the python 
+	path or have python opened from the directory containing sxr_lib.py.  
+
+
+	Another major module is that of SXR_Model.py, which contains the major functions needed to set up and 
+	run the code.  It is here in the sxr_x_emission where all of the variables are defined that will be 
+	used for all other functions in the program.  Also included in this module are the major functions 
+	necessary to calculate the line integral for the expected measured brightness and, in turn, the 
+	emissivity spectra.  There are also some smaller functions used strictly within sxr_x_emission and 
+	sxr_spectrum functions contained within this module (shown below).
+
+
+	Besides these two modules, there are 5 smaller modules: Corona.py, imp_info.py, Islands.py, Profiles.py,
+	and sxr_example.py.  The group of Profiles.py, Corona.py, and Islands.py serve the purpose of 
+	calculating the total density due to different structures/variables.  The functions are only called 
+	within each other or SXR_Model.py.  imp_info.py contains a class of all of the ion and impurity info 
+	necessary. This data is easy to include in the SXR_Model module but giving it its own separate module 
+	allows ion information to be much more easily manipulated.  Finally, there is the sxr_example module in 
+	which there is an example procedure to assigning variables, running the code, and plotting the outputs.  
+	This code is an exact translation of the IDL version, SXR_Example.pro, so it’s easy to understand 
+	and see how the code is run.
+
+
+	Code Organization (functions in order of appearance in each respective module):
+
+	pySXR_Model:
+
+		SXR_Model.py:
+			
+			CLASS sxr_x_emission:
+			
+				-sXe_N()
+				
+				-__init__()
+				
+				-sxr_line_integral()
+
+				-sxr_Zeff()
+
+				-sxr_spectrum()
+
+				-sxr_Be()
+
+				-sxr_tr_Si()
+
+				-check_delta()
+
+				-sxr_rho()
+
+				-sxr_delta_rho()
+
+				-sxr_tzeta()
+
+		sxr_lib.py:
+
+			-vect_0_1()
+
+			-sign()
+			
+			-diff_ang()
+
+			-getFirstValue()
+
+			-np_array()
+
+			-idl_where()
+
+			-between()
+
+			-sxrGeometry class (contains preset arrays and arrays loaded from .sav)
+
+			-keyword_set()
+			
+			-findvalue()
+			
+			-findvalue2()
+			
+			-belong5()
+			
+			-belong()
+			
+			-add_float()
+			
+			-Save()
+			
+			-Load()
+			
+			-add_array_line()
+			
+			-idl_size()
+			
+			-exclude()
+
+		Profiles.py:
+
+			-sxr_prof_te()
+
+			-sxr_prof_ne()
+
+			-sxr_prof_ni()
+
+		Corona.py:
+
+			-sxr_corona_ne()
+
+			-sxr_corona_ni()
+
+		Islands.py:
+
+			-island()
+
+			-island_ne()
+
+			-sxr_island_ni()
