@@ -210,7 +210,7 @@ class plotting:
             if presentation_id == True:
                 x_dim = int(scaling)
             else:
-                x_dim = int(scaling + 1.0)
+                x_dim = int(scaling + 0.5)
             y_dim = int(scaling)
 
         # Generate figure of dimensions proportional to simulation box size (with added x-length for color bar)
@@ -335,13 +335,13 @@ class plotting:
             one_leg = ax.legend(handles=fast_leg, loc='upper right', borderpad=0.2, labelspacing=0.4, handletextpad=-0.2, bbox_transform=ax.transAxes, bbox_to_anchor=[1.015, 1.025], handlelength=1.5, columnspacing=0.5, fontsize=36, ncol=3, facecolor='white', edgecolor='black', framealpha=0.6)
             ax.add_artist(one_leg)
         else:
-            fast_leg = [Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=green, label='Bulk', markersize=42), Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=yellow, label='Interface', markersize=42), Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=red, label='Gas', markersize=42)]
+            fast_leg = [Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=green, label='Bulk', markersize=36), Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=yellow, label='Interface', markersize=36), Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=red, label='Gas', markersize=36)]
 
-            one_leg = ax.legend(handles=fast_leg, loc='upper right', borderpad=0.3, labelspacing=0.4, handletextpad=-0.2, bbox_transform=ax.transAxes, bbox_to_anchor=[1.06, 1.17], handlelength=1.5, columnspacing=0.5, fontsize=46, ncol=3, facecolor='None', edgecolor='None')
+            one_leg = ax.legend(handles=fast_leg, loc='upper right', borderpad=0.3, labelspacing=0.4, handletextpad=-0.2, bbox_transform=ax.transAxes, bbox_to_anchor=[1.06, 1.17], handlelength=1.5, columnspacing=0.5, fontsize=40, ncol=3, facecolor='None', edgecolor='None')
             ax.add_artist(one_leg)
         plt.tight_layout()
 
-        plt.savefig(self.outPath + 'phases_' + self.outFile + ".png", dpi=400, transparent=False, bbox_inches='tight')
+        plt.savefig(self.outPath + 'phases_' + self.outFile + ".png", dpi=200, transparent=False, bbox_inches='tight')
         plt.close()  
     def plot_area_fraction(self, area_frac_dict, pos, sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None, type='all', interface_id = False, orientation_id = False):#, int_comp_dict):#sep_surface_dict, int_comp_dict):
         #DONE!
@@ -6772,8 +6772,6 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         if banner_id == True:
             y_dim = y_dim * (3/5)
         
-        print(x_dim)
-        print(y_dim)
         if (len(typ1ind)==0):
             mono=1
             mono_activity=self.peA
@@ -6941,8 +6939,14 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                             plt.scatter(pos_interior_surface_x, pos_interior_surface_y+self.ly_box, c='black', s=3.0)
                             plt.scatter(pos_interior_surface_x, pos_interior_surface_y-self.ly_box, c='black', s=3.0)
                         except:
-                            pass
-
+                            pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
+                            pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
+                            plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_exterior_surface_x + self.lx_box, pos_exterior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_exterior_surface_x - self.lx_box, pos_exterior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y+self.ly_box, c='black', s=3.0)
+                            plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y-self.ly_box, c='black', s=3.0) 
+                        
                         try:
                             
                             pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
@@ -6954,6 +6958,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                             plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y-self.ly_box, c='black', s=3.0) 
                         except:
                             pass
+                        
             except:
                 pass
         if orientation_id == True:
@@ -6983,7 +6988,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
             else:
                 plt.ylim(0, self.ly_box)
                 plt.xlim(0, self.lx_box)
-        """
+        
         # Label simulation time
         if banner_id == False:
             if self.lx_box == self.ly_box:
@@ -6997,7 +7002,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                 plt.text(0.85, 0.1, s=r'$\tau$' + ' = ' + '{:.4f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
                     fontsize=18, transform = ax.transAxes,
                     bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
-        """
+        
         ax.axes.set_xticks([])
         ax.axes.set_yticks([])
         ax.axes.set_xticklabels([])
