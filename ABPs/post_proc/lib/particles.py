@@ -2632,6 +2632,81 @@ class particle_props:
             
             # Loop over all particles
             for h in range(0, len(self.pos)):
+                #if int_dict['part'][h] == int(int_comp_dict['ids'][m]):
+                # Separation distance from largest custer's CoM (middle of box)
+                difx = self.pos[h,0] - (com_x-self.hx_box)
+                dify = self.pos[h,1] - (com_y-self.hy_box)
+
+                difr= ( (difx )**2 + (dify)**2)**0.5
+
+                # Save active force magnitude toward the nearest interface surface normal
+                if self.typ[h] == 0:
+                    fa_norm=np.append(fa_norm, part_align[h]*self.peA)
+                    faA_norm=np.append(faA_norm, part_align[h]*self.peA)
+                    rA_dist_norm = np.append(rA_dist_norm, difr)
+                    alignA_norm=np.append(alignA_norm, part_align[h])
+                else:
+                    fa_norm=np.append(fa_norm, part_align[h]*self.peB)
+                    faB_norm=np.append(faB_norm, part_align[h]*self.peB)
+                    alignB_norm=np.append(alignB_norm, part_align[h])
+                    rB_dist_norm = np.append(rB_dist_norm, difr)
+
+                # Save separation distance from the nearest interface surface
+                r_dist_norm = np.append(r_dist_norm, difr)
+                align_norm=np.append(align_norm, part_align[h])
+            # Dictionary containing each particle's alignment and aligned active force toward
+            # the nearest interface surface normal as a function of separation distance from
+            # largest custer's CoM
+            radial_fa_dict[key] = {'all': {'r': r_dist_norm, 'fa': fa_norm, 'align': align_norm}, 'A': {'r': rA_dist_norm, 'fa': faA_norm, 'align': alignA_norm}, 'B': {'r': rB_dist_norm, 'fa': faB_norm, 'align': alignB_norm}}
+
+        return radial_fa_dict
+    
+    def radial_surface_normal_fa_bubble3(self, method2_align_dict, sep_surface_dict, int_comp_dict, all_surface_measurements, int_dict):
+        '''
+        Purpose: Takes the orientation, position, and active force of each particle
+        to calculate the active force magnitude toward, alignment toward, and separation
+        distance from the nearest interface surface normal
+
+        Input:
+        method2_align_dict: dictionary containing the alignment
+        of each particle's active force with the nearest interface's surface normal,
+        per and averaged per bin
+        
+        Output:
+        radial_fa_dict: dictionary containing each particle's alignment and aligned active force with
+        the nearest interface surface normal as a function of separation distance from largest custer's CoM
+        '''
+        radial_fa_dict = {}
+        for m in range(0, len(sep_surface_dict)):
+            key = 'surface id ' + str(int(int_comp_dict['ids'][m]))
+            try: 
+                com_x = all_surface_measurements[key]['exterior']['com']['x']
+                com_y = all_surface_measurements[key]['exterior']['com']['y']
+            except:
+                com_x = all_surface_measurements[key]['interior']['com']['x']
+                com_y = all_surface_measurements[key]['interior']['com']['y']
+        
+            # Instantiate empty array (partNum) containing the average active force alignment
+            # with the nearest interface surface normal
+            part_align = method2_align_dict['part']['align']
+
+            # Instantiate empty array (partNum) containing the average active force magnitude
+            # toward the nearest interface surface normal
+            fa_norm = np.array([])
+            faA_norm = np.array([])
+            faB_norm = np.array([])
+
+            # Instantiate empty array (partNum) containing the distance from the nearest interface surface
+            r_dist_norm = np.array([])
+            rA_dist_norm = np.array([])
+            rB_dist_norm = np.array([])
+
+            align_norm = np.array([])
+            alignA_norm = np.array([])
+            alignB_norm = np.array([])
+            
+            # Loop over all particles
+            for h in range(0, len(self.pos)):
                 if int_dict['part'][h] == int(int_comp_dict['ids'][m]):
                     # Separation distance from largest custer's CoM (middle of box)
                     difx = self.pos[h,0] - (com_x-self.hx_box)
@@ -2660,6 +2735,7 @@ class particle_props:
             radial_fa_dict[key] = {'all': {'r': r_dist_norm, 'fa': fa_norm, 'align': align_norm}, 'A': {'r': rA_dist_norm, 'fa': faA_norm, 'align': alignA_norm}, 'B': {'r': rB_dist_norm, 'fa': faB_norm, 'align': alignB_norm}}
 
         return radial_fa_dict
+
     def radial_measurements2(self, radial_fa_dict, surface_dict, sep_surface_dict, int_comp_dict, all_surface_measurements, averaged_data_arr, int_dict):
         int_id = averaged_data_arr['int_id']
 
@@ -2906,7 +2982,8 @@ class particle_props:
             else:
                 radius = interior_radius
 
-            r = np.linspace(np.min(radial_fa_dict[key]['all']['r']), np.max(radial_fa_dict[key]['all']['r']), num=int((np.ceil(np.max(radial_fa_dict[key]['all']['r']) - np.min(radial_fa_dict[key]['all']['r']))+1)/2))
+            #r = np.linspace(np.min(radial_fa_dict[key]['all']['r']), np.max(radial_fa_dict[key]['all']['r']), num=int((np.ceil(np.max(radial_fa_dict[key]['all']['r']) - np.min(radial_fa_dict[key]['all']['r']))+1)/2))
+            r = np.linspace(0, self.hx_box, num=100)
 
             #Pressure integrand components for each value of X
             int_stress_XX_r = np.zeros((len(r)-1))
