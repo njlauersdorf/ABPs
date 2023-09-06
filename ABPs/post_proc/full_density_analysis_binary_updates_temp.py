@@ -859,7 +859,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 if plot == 'y':
 
                     # Plot particles color-coded by phase
-                    plotting_functs.plot_phases(pos, part_id_dict, all_surface_curves, int_comp_dict, active_fa_dict, interface_id = interface_option, orientation_id = orientation_option, presentation_id = presentation_option)
+                    plotting_functs.plot_phases(pos, part_id_dict, phase_dict, all_surface_curves, int_comp_dict, active_fa_dict, interface_id = interface_option, orientation_id = orientation_option, presentation_id = presentation_option)
             
             elif measurement_options[0]== 'bubble-body-forces':
                 #DONE!
@@ -874,7 +874,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 #radial_int_press_dict = particle_prop_functs.radial_int_press_bubble2(stress_plot_dict, all_surface_curves, int_comp_dict, all_surface_measurements)
 
                 #com_radial_dict_bubble, com_radial_dict_fa_bubble = particle_prop_functs.radial_measurements2(radial_int_press_dict, radial_fa_dict, surface_dict, all_surface_curves, int_comp_dict, all_surface_measurements, averaged_data_arr, int_dict)
-                com_radial_dict_fa_bubble = particle_prop_functs.radial_measurements3(radial_fa_dict, surface_dict, all_surface_curves, int_comp_dict, all_surface_measurements, averaged_data_arr, int_dict)
+                #com_radial_dict_fa_bubble = particle_prop_functs.radial_measurements3(radial_fa_dict, surface_dict, all_surface_curves, int_comp_dict, all_surface_measurements, averaged_data_arr, int_dict)
+                
+                com_radial_dict_fa_bubble = particle_prop_functs.radial_ang_measurements(radial_fa_dict, surface_dict, all_surface_curves, int_comp_dict, all_surface_measurements, averaged_data_arr, int_dict)
                 for m in range(0, len(sep_surface_dict)):
                     key = 'surface id ' + str(int(int_comp_dict['ids'][m]))
                     data_output_functs.write_to_txt(com_radial_dict_fa_bubble[key], dataPath + 'bubble_com_active_pressure_radial_' + outfile + '.txt')

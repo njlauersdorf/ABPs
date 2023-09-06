@@ -2629,6 +2629,10 @@ class particle_props:
             align_norm = np.array([])
             alignA_norm = np.array([])
             alignB_norm = np.array([])
+
+            theta_dist_norm = np.array([])
+            thetaA_dist_norm = np.array([])
+            thetaB_dist_norm = np.array([])
             
             # Loop over all particles
             for h in range(0, len(self.pos)):
@@ -2639,25 +2643,29 @@ class particle_props:
 
                 difr= ( (difx )**2 + (dify)**2)**0.5
 
+
                 # Save active force magnitude toward the nearest interface surface normal
                 if self.typ[h] == 0:
                     fa_norm=np.append(fa_norm, part_align[h]*self.peA)
                     faA_norm=np.append(faA_norm, part_align[h]*self.peA)
                     rA_dist_norm = np.append(rA_dist_norm, difr)
                     alignA_norm=np.append(alignA_norm, part_align[h])
+                    thetaA_dist_norm = np.append(thetaA_dist_norm, np.arctan2(dify, difx)*(180/np.pi))
                 else:
                     fa_norm=np.append(fa_norm, part_align[h]*self.peB)
                     faB_norm=np.append(faB_norm, part_align[h]*self.peB)
                     alignB_norm=np.append(alignB_norm, part_align[h])
                     rB_dist_norm = np.append(rB_dist_norm, difr)
+                    thetaB_dist_norm = np.append(thetaB_dist_norm, np.arctan2(dify, difx)*(180/np.pi))
 
                 # Save separation distance from the nearest interface surface
                 r_dist_norm = np.append(r_dist_norm, difr)
                 align_norm=np.append(align_norm, part_align[h])
+                theta_dist_norm = np.append(theta_dist_norm, np.arctan2(dify, difx)*(180/np.pi))
             # Dictionary containing each particle's alignment and aligned active force toward
             # the nearest interface surface normal as a function of separation distance from
             # largest custer's CoM
-            radial_fa_dict[key] = {'all': {'r': r_dist_norm, 'fa': fa_norm, 'align': align_norm}, 'A': {'r': rA_dist_norm, 'fa': faA_norm, 'align': alignA_norm}, 'B': {'r': rB_dist_norm, 'fa': faB_norm, 'align': alignB_norm}}
+            radial_fa_dict[key] = {'all': {'r': r_dist_norm, 'fa': fa_norm, 'align': align_norm, 'theta': theta_dist_norm}, 'A': {'r': rA_dist_norm, 'fa': faA_norm, 'align': alignA_norm, 'theta': thetaA_dist_norm}, 'B': {'r': rB_dist_norm, 'fa': faB_norm, 'align': alignB_norm, 'theta': thetaB_dist_norm}}
 
         return radial_fa_dict
     
@@ -2945,7 +2953,290 @@ class particle_props:
         com_radial_dict_fa = {'r': r[1:].tolist(), 'fa_press': {'all': act_press_r.tolist(), 'A': act_pressA_r.tolist(), 'B': act_pressB_r.tolist()}, 'fa': {'all': act_fa_r.tolist(), 'A': act_faA_r.tolist(), 'B': act_faB_r.tolist()}, 'align': {'all': align_r.tolist(), 'A': alignA_r.tolist(), 'B': alignB_r.tolist()}, 'num_dens': {'all': num_dens_r.tolist(), 'A': num_densA_r.tolist(), 'B': num_densB_r.tolist()}}
         com_radial_dict = {'r': r[1:].tolist(), 'all': {'XX': int_stress_XX_r.tolist(), 'YY': int_stress_YY_r.tolist(), 'XY': int_stress_XY_r.tolist(), 'YX': int_stress_YX_r.tolist(), 'press': int_press_r.tolist(), 'num_dens': num_dens_r.tolist()}, 'A': {'XX': int_stressA_XX_r.tolist(), 'YY': int_stressA_YY_r.tolist(), 'XY': int_stressA_XY_r.tolist(), 'YX': int_stressA_YX_r.tolist(), 'press': int_pressA_r.tolist(), 'num_dens': num_densA_r.tolist()}, 'B': {'XX': int_stressB_XX_r.tolist(), 'YY': int_stressB_YY_r.tolist(), 'XY': int_stressB_XY_r.tolist(), 'YX': int_stressB_YX_r.tolist(), 'press': int_pressB_r.tolist(), 'num_dens': num_densB_r.tolist()}}
         return com_radial_dict, com_radial_dict_fa
-    
+    def radial_ang_measurements(self, radial_fa_dict, surface_dict, sep_surface_dict, int_comp_dict, all_surface_measurements, averaged_data_arr, int_dict):
+        int_id = averaged_data_arr['int_id']
+        com_radial_dict_fa = {}
+        int_ids = int_dict['bin']
+        for m in range(0, len(sep_surface_dict)):
+            print('test')
+            print(m)
+            key = 'surface id ' + str(int(int_comp_dict['ids'][m]))
+            key2 = 'surface ' + str(int(int_comp_dict['ids'][m]))
+
+
+            try: 
+                surface_x = sep_surface_dict[key]['exterior']['pos']['x']
+                surface_y = sep_surface_dict[key]['exterior']['pos']['y']
+                com_x = all_surface_measurements[key]['exterior']['com']['x']
+                com_y = all_surface_measurements[key]['exterior']['com']['y']
+            except:
+                surface_x = sep_surface_dict[key]['interior']['pos']['x']
+                surface_y = sep_surface_dict[key]['interior']['pos']['y']
+                com_x = all_surface_measurements[key]['interior']['com']['x']
+                com_y = all_surface_measurements[key]['interior']['com']['y']
+
+            try: 
+                exterior_radius = all_surface_measurements[key]['exterior']['mean radius']
+                exterior = 1
+            except:
+                exterior = 0
+                exterior_radius = 0
+
+            try:
+                interior_radius = all_surface_measurements[key]['interior']['mean radius']
+                interior = 1
+            except:
+                interior = 0
+                interior_radius = 0
+                
+            if exterior_radius >= interior_radius:
+                radius = exterior_radius
+            else:
+                radius = interior_radius
+                
+            theta_all = ((radial_fa_dict[key]['all']['theta'] + 360 ) % 360)
+            theta_A = ((radial_fa_dict[key]['A']['theta'] + 360 ) % 360)
+            theta_B = ((radial_fa_dict[key]['B']['theta'] + 360 ) % 360)
+            
+            
+            difx = surface_x - (com_x)
+            dify = surface_y - (com_y)
+
+            difr= ( (difx )**2 + (dify)**2)**0.5
+            thetar = np.arctan2(dify, difx)*(180/np.pi)
+            
+            thetar_ang = ((thetar + 360 ) % 360)
+
+            #r = np.linspace(np.min(radial_fa_dict[key]['all']['r']), np.max(radial_fa_dict[key]['all']['r']), num=int((np.ceil(np.max(radial_fa_dict[key]['all']['r']) - np.min(radial_fa_dict[key]['all']['r']))+1)/2))
+            
+            
+            r = np.linspace(0, 1.5, num=75)
+            theta = np.linspace(0, 360, num=45)
+
+            #Pressure integrand components for each value of X
+            int_stress_XX_r = np.zeros((len(r)-1))
+            int_stress_YY_r = np.zeros((len(r)-1))
+            int_stress_XY_r = np.zeros((len(r)-1))
+            int_stress_YX_r = np.zeros((len(r)-1))
+            int_press_r = np.zeros((len(r)-1))
+            #act_fa_r = []
+            #lat_r = []
+            num_dens_r = np.zeros((len(r)-1))
+
+            int_stressA_XX_r = np.zeros((len(r)-1))
+            int_stressA_YY_r = np.zeros((len(r)-1))
+            int_stressA_XY_r = np.zeros((len(r)-1))
+            int_stressA_YX_r = np.zeros((len(r)-1))
+            int_pressA_r = np.zeros((len(r)-1))
+
+            #act_faA_r = []
+            #latA_r = []
+            num_densA_r = np.zeros((len(r)-1))
+
+            int_stressB_XX_r = np.zeros((len(r)-1))
+            int_stressB_YY_r = np.zeros((len(r)-1))
+            int_stressB_XY_r = np.zeros((len(r)-1))
+            int_stressB_YX_r = np.zeros((len(r)-1))
+            int_pressB_r = np.zeros((len(r)-1))
+            #act_faB_r = []
+            #latB_r = []
+            num_densB_r = np.zeros((len(r)-1))
+
+            #If exterior and interior surfaces defined, continue...
+
+            total_area_prev = 0
+            total_area_prev_slice = 0
+
+            #Pressure integrand components for each value of X
+            act_press_r = np.zeros((len(r)-1))
+            act_fa_r = np.zeros((len(r)-1))
+            align_r = np.zeros((len(r)-1))
+            num_dens_r = np.zeros((len(r)-1))
+            num_r = np.zeros((len(r)-1))
+            area_r = np.zeros((len(r)-1))
+
+            act_pressA_r = np.zeros((len(r)-1))
+            act_faA_r = np.zeros((len(r)-1))
+            alignA_r = np.zeros((len(r)-1))
+            num_densA_r = np.zeros((len(r)-1))
+            numA_r = np.zeros((len(r)-1))
+
+            act_pressB_r = np.zeros((len(r)-1))
+            act_faB_r = np.zeros((len(r)-1))
+            alignB_r = np.zeros((len(r)-1))
+            num_densB_r = np.zeros((len(r)-1))
+            numB_r = np.zeros((len(r)-1))
+
+            rad_arr = np.zeros((len(r)-1))
+
+            sum_act_press_r = np.zeros((len(r)-1)) 
+            sum_act_fa_r = np.zeros((len(r)-1))
+            sum_align_r = np.zeros((len(r)-1))
+            sum_num_dens_r = np.zeros((len(r)-1))
+            sum_num_r = np.zeros((len(r)-1))
+            sum_area_r = np.zeros((len(r)-1))
+
+            sum_act_pressA_r = np.zeros((len(r)-1))
+            sum_act_faA_r = np.zeros((len(r)-1))
+            sum_alignA_r = np.zeros((len(r)-1))
+            sum_num_densA_r = np.zeros((len(r)-1))
+            sum_numA_r = np.zeros((len(r)-1))
+
+            sum_act_pressB_r = np.zeros((len(r)-1))
+            sum_act_faB_r = np.zeros((len(r)-1))
+            sum_alignB_r = np.zeros((len(r)-1))
+            sum_num_densB_r = np.zeros((len(r)-1))
+            sum_numB_r = np.zeros((len(r)-1))
+
+            num_theta = 0
+            
+            #If exterior and interior surfaces defined, continue...
+        
+            #For each step across interface, calculate pressure in that step's area (averaged over angle from CoM)
+            num_theta = 0
+            for j in range(1, len(theta)):
+
+                min_theta = theta[j-1]
+                max_theta = theta[j]
+
+                dif_theta = (max_theta - min_theta)/360
+
+                surface_inrange = np.where((min_theta<=thetar_ang) & (thetar_ang<=max_theta))[0]
+                radius_temp = np.mean(difr[surface_inrange])
+
+                for i in range(1, len(r)):
+
+                    if r[i] * radius_temp <= self.hx_box:
+
+                        #Min and max location across interface of current step
+                        min_r = r[i-1]
+                        max_r = r[i]
+
+                        
+
+                        #Calculate area of rectangle for current step
+                        total_area = (np.pi * ((max_r*radius_temp) ** 2) - total_area_prev)
+                        total_area_slice = total_area * dif_theta
+
+                        #Save total area of previous step sizes
+                        total_area_prev = np.pi * ((max_r*radius_temp) ** 2)
+                        total_area_prev_slice = total_area_prev * dif_theta
+
+                        #Find particles that are housed within current slice
+                        parts_inrange_fa = np.where((min_r<=(radial_fa_dict[key]['all']['r']/radius_temp)) & ((radial_fa_dict[key]['all']['r']/radius_temp)<=max_r) & (min_theta<=theta_all) & (theta_all<=max_theta))[0]
+                        partsA_inrange_fa = np.where((min_r<=(radial_fa_dict[key]['A']['r']/radius_temp)) & ((radial_fa_dict[key]['A']['r']/radius_temp)<=max_r) & (min_theta<=theta_A) & (theta_A<=max_theta))[0]
+                        partsB_inrange_fa = np.where((min_r<=(radial_fa_dict[key]['B']['r']/radius_temp)) & ((radial_fa_dict[key]['B']['r']/radius_temp)<=max_r) & (min_theta<=theta_B) & (theta_B<=max_theta))[0]
+
+                        #If at least 1 particle in slice, continue...
+                        if len(parts_inrange_fa)>0:
+
+                            #If the force is defined, continue...
+                            parts_defined = np.logical_not(np.isnan(radial_fa_dict[key]['all']['fa'][parts_inrange_fa]))
+
+                            if len(parts_defined)>0:
+                                #Calculate total active force normal to interface in slice
+                                act_press_r[i-1] = np.sum(radial_fa_dict[key]['all']['fa'][parts_inrange_fa][parts_defined])
+                                act_fa_r[i-1] = np.mean(radial_fa_dict[key]['all']['fa'][parts_inrange_fa][parts_defined])
+                                align_r[i-1] = np.mean(radial_fa_dict[key]['all']['align'][parts_inrange_fa][parts_defined])
+                                num_dens_r[i-1] = len(parts_defined)
+                                num_r[i-1] = len(parts_defined)
+                                area_r[i-1] = total_area_slice
+                                #If area of slice is non-zero, calculate the pressure [F/A]
+                                if total_area_slice > 0:
+                                    act_press_r[i-1] = act_press_r[i-1]/total_area_slice
+                                    num_dens_r[i-1] = num_dens_r[i-1]/total_area_slice
+
+                                partsA_defined = np.logical_not(np.isnan(radial_fa_dict[key]['A']['fa'][partsA_inrange_fa]))
+                                if len(partsA_defined)>0:
+                                    act_pressA_r[i-1] = np.sum(radial_fa_dict[key]['A']['fa'][partsA_inrange_fa][partsA_defined])
+                                    act_faA_r[i-1] = np.mean(radial_fa_dict[key]['A']['fa'][partsA_inrange_fa][partsA_defined])
+                                    alignA_r[i-1] = np.mean(radial_fa_dict[key]['A']['align'][partsA_inrange_fa][partsA_defined])
+                                    num_densA_r[i-1] = len(partsA_defined)
+                                    numA_r[i-1] = len(partsA_defined)
+                                    #If area of slice is non-zero, calculate the pressure [F/A]
+                                    if total_area_slice > 0:
+                                        act_pressA_r[i-1] = act_pressA_r[i-1]/total_area_slice
+                                        num_densA_r[i-1] = num_densA_r[i-1]/total_area_slice
+
+                                partsB_defined = np.logical_not(np.isnan(radial_fa_dict[key]['B']['fa'][partsB_inrange_fa]))
+                                if len(partsB_defined)>0:
+                                    act_pressB_r[i-1] = np.sum(radial_fa_dict[key]['B']['fa'][partsB_inrange_fa][partsB_defined])
+                                    act_faB_r[i-1] = np.mean(radial_fa_dict[key]['B']['fa'][partsB_inrange_fa][partsB_defined])
+                                    alignB_r[i-1] = np.mean(radial_fa_dict[key]['B']['align'][partsB_inrange_fa][partsB_defined])
+                                    #Calculate density
+                                    num_densB_r[i-1] = len(partsB_defined)
+                                    numB_r[i-1] = len(partsB_defined)
+                                    #If area of slice is non-zero, calculate the pressure [F/A]
+                                    if total_area_slice > 0:
+                                        act_pressB_r[i-1] = act_pressB_r[i-1]/total_area_slice
+                                        num_densB_r[i-1] = num_densB_r[i-1]/total_area_slice
+                                
+                                
+                    
+                    else:
+                        act_press_r[i-1] = 0
+                        act_fa_r[i-1] = 0
+                        align_r[i-1] = 0
+                        num_dens_r[i-1] = 0
+                        num_r[i-1] = 0
+                        area_r[i-1] = 0
+
+                        act_pressA_r[i-1] = 0
+                        act_faA_r[i-1] = 0
+                        alignA_r[i-1] = 0
+                        num_densA_r[i-1] = 0
+                        numA_r[i-1] = 0
+
+                        act_pressB_r[i-1] = 0
+                        act_faB_r[i-1] = 0
+                        alignB_r[i-1] = 0
+                        num_densB_r[i-1] = 0
+                        numB_r[i-1] = 0
+
+                #save this theta's measurement
+                sum_act_press_r += act_press_r
+                sum_act_fa_r += act_fa_r
+                sum_align_r += align_r
+                sum_num_dens_r += num_dens_r
+                sum_num_r += num_r
+                sum_area_r += area_r
+
+                sum_act_pressA_r += act_pressA_r
+                sum_act_faA_r += act_faA_r
+                sum_alignA_r += alignA_r
+                sum_num_densA_r += num_densA_r
+                sum_numA_r += numA_r
+
+                sum_act_pressB_r += act_pressB_r
+                sum_act_faB_r += act_faB_r
+                sum_alignB_r += alignB_r
+                sum_num_densB_r += num_densB_r
+                sum_numB_r += numB_r
+
+                num_theta += 1
+
+            avg_act_press_r = sum_act_press_r / num_theta
+            avg_act_fa_r = sum_act_fa_r / num_theta
+            avg_align_r = sum_align_r / num_theta
+            avg_num_dens_r = sum_num_dens_r / num_theta
+            avg_num_r = sum_num_r / num_theta
+            avg_area_r = sum_area_r / num_theta
+
+            avg_act_pressA_r = sum_act_pressA_r / num_theta
+            avg_act_faA_r = sum_act_faA_r / num_theta
+            avg_alignA_r = sum_alignA_r / num_theta
+            avg_num_densA_r = sum_num_densA_r / num_theta
+            avg_numA_r = sum_numA_r / num_theta
+
+            avg_act_pressB_r = sum_act_pressB_r / num_theta
+            avg_act_faB_r = sum_act_faB_r / num_theta
+            avg_alignB_r = sum_alignB_r / num_theta
+            avg_num_densB_r = sum_num_densB_r / num_theta
+            avg_numB_r = sum_numB_r / num_theta
+
+
+            com_radial_dict_fa[key] = {'int_id': int_id, 'current_id': int(int_comp_dict['ids'][m]), 'ext_rad': exterior_radius, 'int_rad': interior_radius, 'r': r[1:].tolist(), 'area': avg_area_r.tolist(), 'com_x': com_x, 'com_y': com_y, 'fa_press': {'all': avg_act_press_r.tolist(), 'A': avg_act_pressA_r.tolist(), 'B': avg_act_pressB_r.tolist()}, 'fa': {'all': avg_act_fa_r.tolist(), 'A': avg_act_faA_r.tolist(), 'B': avg_act_faB_r.tolist()}, 'align': {'all': avg_align_r.tolist(), 'A': avg_alignA_r.tolist(), 'B': avg_alignB_r.tolist()}, 'num_dens': {'all': avg_num_dens_r.tolist(), 'A': avg_num_densA_r.tolist(), 'B': avg_num_densB_r.tolist()}, 'num': {'all': avg_num_r.tolist(), 'A': avg_numA_r.tolist(), 'B': avg_numB_r.tolist()}}
+        return com_radial_dict_fa
     def radial_measurements3(self, radial_fa_dict, surface_dict, sep_surface_dict, int_comp_dict, all_surface_measurements, averaged_data_arr, int_dict):
         int_id = averaged_data_arr['int_id']
         com_radial_dict_fa = {}

@@ -115,7 +115,7 @@ class plotting:
         # Initialize theory functions for call back later
         self.theory_functs = theory.theory()
 
-    def plot_phases(self, pos, phase_ids_dict, sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None, interface_id = False, orientation_id = False, presentation_id=False):
+    def plot_phases(self, pos, phase_ids_dict, phase_dict, sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None, interface_id = False, orientation_id = False, presentation_id=False):
         #DONE!
         """
         This function plots each particle's position and color-codes each
@@ -155,8 +155,22 @@ class plotting:
         """
 
         yellow = ("#7570b3")
+        yellow = ("#ffd700")
+        red = ("#fd8d3c")
+        red = ("#dd571c")
+        red = ("#ff7700")
+        red = ("#cc5500")
+        red = ("#71797E")
         green = ("#77dd77")
-        red = ("#ff6961")
+        green = ("#4a3728")
+        green = ("#3c4142")
+        green = ("#878787")
+        green = ("#71797E")
+
+        green = ("#cc5500")
+        #green = ("#b3de69")
+        #red = ("#ff6961")
+        #red = ("#000000")
 
         bulk_part_ids = phase_ids_dict['bulk']['all']
         gas_part_ids = phase_ids_dict['gas']['all']
@@ -208,7 +222,7 @@ class plotting:
 
             # X and Y-dimension lengths (in inches)
             if presentation_id == True:
-                x_dim = int(scaling)
+                x_dim = scaling+0.18
             else:
                 x_dim = int(scaling + 0.5)
             y_dim = int(scaling)
@@ -278,11 +292,20 @@ class plotting:
             except:
                 pass
        
+        active_r = ( active_fa_dict['bin']['x'] ** 2 + active_fa_dict['bin']['y'] ** 2 ) ** 0.5
+        print(np.shape(active_r))
+        
+        nonzero_id = np.nonzero(active_r)
+        
+        nonzero_x_id = nonzero_id[0]
+        nonzero_y_id = nonzero_id[1]
+
         # Plot averaged, binned orientation of particles
         if orientation_id == True:
             try:
                 if active_fa_dict!=None:
-                    plt.quiver(self.pos_x, self.pos_y, active_fa_dict['bin']['x'], active_fa_dict['bin']['y'], scale=20.0, color='black', alpha=0.8)
+                    for i in range(0, len(nonzero_x_id)):
+                        plt.quiver(self.pos_x[nonzero_x_id[i]][nonzero_y_id[i]], self.pos_y[nonzero_x_id[i]][nonzero_y_id[i]], active_fa_dict['bin']['x'][nonzero_x_id[i]][nonzero_y_id[i]], active_fa_dict['bin']['y'][nonzero_x_id[i]][nonzero_y_id[i]], scale=30.0, width=0.003, color='black', alpha=0.8)
             except:
                 pass
 
@@ -293,7 +316,7 @@ class plotting:
         # Label simulation time
         if presentation_id == True:
             if self.lx_box == self.ly_box:
-                plt.text(0.64, 0.04, s=r'$\tau$' + ' = ' + '{:.1f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+                plt.text(0.647, 0.04, s=r'$\tau$' + ' = ' + '{:.1f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
                     fontsize=30, transform = ax.transAxes,
                     bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
             elif self.lx_box > self.ly_box:
@@ -332,7 +355,7 @@ class plotting:
         if presentation_id == True:
             fast_leg = [Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=green, label='Bulk', markersize=32), Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=yellow, label='Interface', markersize=32), Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=red, label='Gas', markersize=32)]
 
-            one_leg = ax.legend(handles=fast_leg, loc='upper right', borderpad=0.2, labelspacing=0.4, handletextpad=-0.2, bbox_transform=ax.transAxes, bbox_to_anchor=[1.015, 1.025], handlelength=1.5, columnspacing=0.5, fontsize=36, ncol=3, facecolor='white', edgecolor='black', framealpha=0.6)
+            one_leg = ax.legend(handles=fast_leg, loc='upper right', borderpad=0.2, labelspacing=0.4, handletextpad=-0.2, bbox_transform=ax.transAxes, bbox_to_anchor=[1.003, 1.025], handlelength=1.5, columnspacing=0.5, fontsize=36, ncol=3, facecolor='white', edgecolor='black', framealpha=0.6)
             ax.add_artist(one_leg)
         else:
             fast_leg = [Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=green, label='Bulk', markersize=36), Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=yellow, label='Interface', markersize=36), Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=red, label='Gas', markersize=36)]
@@ -340,8 +363,8 @@ class plotting:
             one_leg = ax.legend(handles=fast_leg, loc='upper right', borderpad=0.3, labelspacing=0.4, handletextpad=-0.2, bbox_transform=ax.transAxes, bbox_to_anchor=[1.06, 1.17], handlelength=1.5, columnspacing=0.5, fontsize=40, ncol=3, facecolor='None', edgecolor='None')
             ax.add_artist(one_leg)
         plt.tight_layout()
-
-        plt.savefig(self.outPath + 'phases_' + self.outFile + ".png", dpi=200, transparent=False, bbox_inches='tight')
+        ax.set_facecolor('#F2f2f2')
+        plt.savefig(self.outPath + 'phases_' + self.outFile + ".png", dpi=400, transparent=False, bbox_inches='tight')
         plt.close()  
     def plot_area_fraction(self, area_frac_dict, pos, sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None, type='all', interface_id = False, orientation_id = False):#, int_comp_dict):#sep_surface_dict, int_comp_dict):
         #DONE!
@@ -6767,7 +6790,13 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         #Set plot colors
         fastCol = '#e31a1c'
         #slowCol = '#e31a1c'
+        fastCol = '#a50f15'
+        fastCol = '#b2182b'
+        #fastCol = '#d6604d'
         slowCol = '#081d58'
+        slowCol = '#2b8cbe'
+        slowCol = '#2166ac'
+        slowCol = '#4393c3'
 
         if banner_id == True:
             y_dim = y_dim * (3/5)
@@ -6930,6 +6959,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                         key = 'surface id ' + str(int(int_comp_dict['ids'][m]))
                         print(key)
 
+                        
                         try:
                             pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
                             pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
@@ -6946,7 +6976,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                             plt.scatter(pos_exterior_surface_x - self.lx_box, pos_exterior_surface_y, c='black', s=3.0)
                             plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y+self.ly_box, c='black', s=3.0)
                             plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y-self.ly_box, c='black', s=3.0) 
-                        
+                        """
                         try:
                             
                             pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
@@ -6958,7 +6988,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                             plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y-self.ly_box, c='black', s=3.0) 
                         except:
                             pass
-                        
+                        """
             except:
                 pass
         if orientation_id == True:
@@ -6980,8 +7010,8 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         else:
 
             if zoom_id == True:
-                plt.ylim(self.hy_box-30-2, self.hy_box+30+2)
-                plt.xlim(self.hy_box-30-2, self.hy_box+30+2)
+                plt.ylim(self.hy_box-25-2, self.hy_box+25+2)
+                plt.xlim(self.hy_box-25-2, self.hy_box+25+2)
             elif banner_id == True: 
                 plt.ylim(1.5*self.ly_box/5, 3.5*self.ly_box/5)
                 plt.xlim(0, self.lx_box)
@@ -7010,10 +7040,10 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         ax.set_aspect('equal')
 
         # Create frame images
-        ax.set_facecolor('white')
+        #ax.set_facecolor('white')
         #ax.set_facecolor('#F4F4F4') .  # For website
         plt.tight_layout()
-        plt.savefig(self.outPath + 'part_activity_' + self.outFile + ".png", dpi=200, transparent=False, bbox_inches='tight')
+        plt.savefig(self.outPath + 'part_activity_' + self.outFile + ".png", dpi=400, transparent=False, bbox_inches='tight')
         #plt.savefig(self.outPath + 'part_activity_' + self.outFile + ".eps", format='eps', dpi=150, bbox_inches='tight')
         plt.close()  
 
