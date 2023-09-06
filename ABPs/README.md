@@ -1,29 +1,20 @@
-# klotsa
+# ABPs
 ***
 
 ## Table of Contents
-1. [Introduction](#introduction)
-2. [ABPs](#abps)
-   - [General Info](#general-info)
-   - [Technologies](#technologies)
-   - [Installation](#installation)
-     - [Prerequisites](#prerequisites)
-     - [HOOMD-Blue](#HOOMD-Blue)
-       - [Local install via conda](#local-install-via-conda)
-       - [Local install via source](#local-install-via-source)
-       - [Cluster install via source](#cluster-install-via-source)
-     - [Github](#Github)
-   - [Running Code](#running-code)
-     - [Submitting Simulations](#Submitting-Simulations)
-     - [Submitting Post-Processing](#Submitting-Post-Processing)
-   - [Collaboration](#collaboration)
-3. [Personal](#personal)
-
-## Introduction
-This github profile consists of 2 parts currently: a collection of software and packages for simulating systems of active and passive Brownian particles in HOOMD-Blue using molecular dynamics, located in the /klotsa/ABPs folder, and a collection of various projects to develop and demonstrate my skills in various languages and applications (both front-end and back-end software development), located in /klotsa/personal.
-
-# ABPs
-***
+1. [General Info](#general-info)
+2. [Technologies](#technologies)
+3. [Installation](#installation)
+  - [Prerequisites](#prerequisites)
+  - [HOOMD-Blue](#HOOMD-Blue)
+    - [Local install via conda](#local-install-via-conda)
+    - [Local install via source](#local-install-via-source)
+    - [Cluster install via source](#cluster-install-via-source)
+  - [Github](#Github)
+4. [Running Code](#running-code)
+  - [Submitting Simulations](#Submitting-Simulations)
+  - [Submitting Post-Processing](#Submitting-Post-Processing)
+5. [Collaboration](#collaboration)
 
 ## General Info
 This github project consists of a collection of software and packages for simulating systems of active and passive Brownian particles in HOOMD-Blue using molecular dynamics, located in the /klotsa/ABPs folder. Simulation submission bash files read in the user's desired system (particle activities, particle softness, system density, particle fraction, particle size, and population size) and initial conditions (box dimensions, box shape, initial positions, whether it's a randomized gas phase or an instantiated liquid-gas phase separated system, and initial orientation, whether it's randomized or biased with local alignment, i.e. the liquid-gas interface) creates an initial hoomd snapshot/frame using these specified conditions, and runs and saves a simulation for the desired time at the desired stepsize. In addition, this software enables the post-processing of the outputted system over time with focus placed on steady-state measurements and characterization (see Lauersdorf, et al. (2021) for derivation of the theory these measurements led to). 
