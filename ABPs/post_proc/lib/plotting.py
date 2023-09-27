@@ -160,7 +160,7 @@ class plotting:
         red = ("#dd571c")
         red = ("#ff7700")
         red = ("#cc5500")
-        red = ("#71797E")
+        red = ("#f66e8d")
         green = ("#77dd77")
         green = ("#4a3728")
         green = ("#3c4142")
@@ -291,21 +291,68 @@ class plotting:
                             pass
             except:
                 pass
-       
-        active_r = ( active_fa_dict['bin']['x'] ** 2 + active_fa_dict['bin']['y'] ** 2 ) ** 0.5
-        print(np.shape(active_r))
-        
+        """
+        #active_r = ( active_fa_dict['bin']['x'] ** 2 + active_fa_dict['bin']['y'] ** 2 ) ** 0.5
+        active_r = ( np.array(active_fa_dict['bin']['all']['x']) ** 2 + np.array(active_fa_dict['bin']['all']['y']) ** 2 ) ** 0.5
         nonzero_id = np.nonzero(active_r)
         
         nonzero_x_id = nonzero_id[0]
         nonzero_y_id = nonzero_id[1]
-
+        print(active_fa_dict)
         # Plot averaged, binned orientation of particles
         if orientation_id == True:
             try:
                 if active_fa_dict!=None:
                     for i in range(0, len(nonzero_x_id)):
-                        plt.quiver(self.pos_x[nonzero_x_id[i]][nonzero_y_id[i]], self.pos_y[nonzero_x_id[i]][nonzero_y_id[i]], active_fa_dict['bin']['x'][nonzero_x_id[i]][nonzero_y_id[i]], active_fa_dict['bin']['y'][nonzero_x_id[i]][nonzero_y_id[i]], scale=30.0, width=0.003, color='black', alpha=0.8)
+                        #plt.quiver(self.pos_x[nonzero_x_id[i]][nonzero_y_id[i]]*3, self.pos_y[nonzero_x_id[i]][nonzero_y_id[i]]*3, active_fa_dict['bin']['x'][nonzero_x_id[i]][nonzero_y_id[i]], active_fa_dict['bin']['y'][nonzero_x_id[i]][nonzero_y_id[i]], scale=10.0, width=0.01, color='black', alpha=0.8)
+                        plt.quiver(self.pos_x[nonzero_x_id[i]][nonzero_y_id[i]]*3, self.pos_y[nonzero_x_id[i]][nonzero_y_id[i]]*3, active_fa_dict['bin']['all']['x'][nonzero_x_id[i]][nonzero_y_id[i]], active_fa_dict['bin']['all']['y'][nonzero_x_id[i]][nonzero_y_id[i]], scale=10.0, width=0.01, color='black', alpha=0.8)
+            except:
+                pass
+        """
+        
+        new_orient_dict_x = np.zeros(np.shape(active_fa_dict['bin']['all']['x']))
+        new_orient_dict_y = np.zeros(np.shape(active_fa_dict['bin']['all']['x']))
+
+        pos_x_new = np.zeros(np.shape(active_fa_dict['bin']['all']['x']))
+        pos_y_new = np.zeros(np.shape(active_fa_dict['bin']['all']['x']))
+
+        if orientation_id == True:
+            try:
+                if active_fa_dict!=None:
+                    for k in range(0, len(active_fa_dict['bin']['all']['x'])):
+                        for l in range(0, len(active_fa_dict['bin']['all']['x'])):
+                            count = 0
+                            noncount = 0
+                            for i in range(0, len(phase_dict['bin'])):
+                                for j in range(0, len(phase_dict['bin'])):
+                                    if (self.pos_x[i][j] <= self.pos_x[k+1][l] * 3) & (self.pos_x[i][j] >= self.pos_x[k][l] * 3) & (self.pos_y[i][j] <= self.pos_y[k][l+1] * 3) & (self.pos_y[i][j] >= self.pos_y[k][l] * 3):
+                                        if phase_dict['bin'][i][j]==1:
+                                            count += 1
+                                        else:
+                                            noncount += 1
+                            if count > 0:
+                                #print(k)
+                                #print(l)
+                                if (active_fa_dict['bin']['all']['x'][k][l] ** 2 + active_fa_dict['bin']['all']['y'][k][l] ** 2) ** 0.5 >=0.20:
+                                    new_orient_dict_x[k][l]=active_fa_dict['bin']['all']['x'][k][l]
+                                    new_orient_dict_y[k][l]=active_fa_dict['bin']['all']['y'][k][l]
+                                    pos_x_new[k][l] = self.pos_x[k][l]*3
+                                    pos_y_new[k][l] = self.pos_y[k][l]*3
+
+
+                    active_r = ( np.array(new_orient_dict_x) ** 2 + np.array(new_orient_dict_y) ** 2 ) ** 0.5
+                    print(active_r)
+                    nonzero_id = np.nonzero(active_r)
+                    
+                    nonzero_x_id = nonzero_id[0]
+                    nonzero_y_id = nonzero_id[1]
+                    
+                    for i in range(0, len(nonzero_x_id)):
+                        print('test')
+                        print(i)
+                        #plt.quiver(self.pos_x[nonzero_x_id[i]][nonzero_y_id[i]]*3, self.pos_y[nonzero_x_id[i]][nonzero_y_id[i]]*3, active_fa_dict['bin']['x'][nonzero_x_id[i]][nonzero_y_id[i]], active_fa_dict['bin']['y'][nonzero_x_id[i]][nonzero_y_id[i]], scale=10.0, width=0.01, color='black', alpha=0.8)
+                        plt.quiver(pos_x_new[nonzero_x_id[i]][nonzero_y_id[i]], pos_y_new[nonzero_x_id[i]][nonzero_y_id[i]], new_orient_dict_x[nonzero_x_id[i]][nonzero_y_id[i]], new_orient_dict_y[nonzero_x_id[i]][nonzero_y_id[i]], scale=10.0, width=0.01, color='black', alpha=0.8)
+                    
             except:
                 pass
 
@@ -1675,7 +1722,7 @@ class plotting:
         A_vel = vel_plot_dict['A']['mag']/dt_step
         B_vel = vel_plot_dict['B']['mag']/dt_step
 
-        fig = plt.figure(figsize=(8,6))
+        fig = plt.figure(figsize=(14,6))
         ax = fig.add_subplot(111)
 
         #Define colors for plots
@@ -1707,7 +1754,7 @@ class plotting:
         fast_leg.append(Line2D([0], [0], linestyle='dashed', lw = 3.0, color=fastCol, label=r'$\overline{v}_\mathrm{F} = $'+str(int(np.mean(B_vel))), markersize=25))
         fast_leg.append(Line2D([0], [0], linestyle='dotted', lw = 3.0, color=slowCol, label=r'$\widetilde{v}_\mathrm{S} = $'+str(int(np.median(A_vel))), markersize=25))
         fast_leg.append(Line2D([0], [0], linestyle='dotted', lw = 3.0, color=fastCol, label=r'$\widetilde{v}_\mathrm{F} = $'+str(int(np.median(B_vel))), markersize=25))
-        one_leg = ax.legend(handles=fast_leg, loc='upper right', borderpad=0.3, labelspacing=0.2, handletextpad=0.3, bbox_transform=ax.transAxes, bbox_to_anchor=[1.03, 1.23], handlelength=1.5, columnspacing=0.9, fontsize=25, ncol=3, facecolor='None', edgecolor='None')
+        one_leg = ax.legend(handles=fast_leg, loc='upper right', borderpad=0.3, labelspacing=0.2, handletextpad=0.3, bbox_transform=ax.transAxes, bbox_to_anchor=[0.75, 1.23], handlelength=1.5, columnspacing=0.9, fontsize=25, ncol=3, facecolor='None', edgecolor='None')
         ax.add_artist(one_leg)
 
         # Create legend of phases
@@ -7018,7 +7065,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
             else:
                 plt.ylim(0, self.ly_box)
                 plt.xlim(0, self.lx_box)
-        
+        """
         # Label simulation time
         if banner_id == False:
             if self.lx_box == self.ly_box:
@@ -7032,7 +7079,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                 plt.text(0.85, 0.1, s=r'$\tau$' + ' = ' + '{:.4f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
                     fontsize=18, transform = ax.transAxes,
                     bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
-        
+        """
         ax.axes.set_xticks([])
         ax.axes.set_yticks([])
         ax.axes.set_xticklabels([])

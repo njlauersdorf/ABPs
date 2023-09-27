@@ -577,6 +577,28 @@ with hoomd.open(name=inFile, mode='rb') as t:
             # Bin average active force
             active_fa_dict = binning_functs.bin_active_fa(orient_dict, part_dict, phase_dict['bin'])
 
+
+            bin_width2 = 15
+            #Bin system to calculate orientation and alignment that will be used in vector plots
+            NBins_x2 = utility_functs.getNBins(lx_box, bin_width2)
+            NBins_y2 = utility_functs.getNBins(ly_box, bin_width2)
+
+            # Calculate size of bins
+            sizeBin_x2 = utility_functs.roundUp(((lx_box) / NBins_x2), 6)
+            sizeBin_y2 = utility_functs.roundUp(((ly_box) / NBins_y2), 6)
+
+            # Instantiate binning functions module
+            binning_functs2 = binning.binning(lx_box, ly_box, partNum, NBins_x2, NBins_y2, peA, peB, typ, eps)
+                
+            # Calculate bin positions
+            pos_dict2 = binning_functs2.create_bins()
+
+            # Assign particles to bins
+            part_dict2 = binning_functs2.bin_parts(pos, ids, clust_size)
+
+            # Calculate average orientation per bin
+            orient_dict2 = binning_functs2.bin_orient(part_dict2, pos, ang, com_dict['com'])
+
             #Slow/fast composition of bulk phase
             part_count_dict, part_id_dict = phase_ident_functs.phase_part_count(phase_dict, int_dict, int_comp_dict, bulk_dict, bulk_comp_dict, typ)
 
@@ -859,7 +881,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 if plot == 'y':
 
                     # Plot particles color-coded by phase
-                    plotting_functs.plot_phases(pos, part_id_dict, phase_dict, all_surface_curves, int_comp_dict, active_fa_dict, interface_id = interface_option, orientation_id = orientation_option, presentation_id = presentation_option)
+                    #active_fa_dict2
+                    plotting_functs.plot_phases(pos, part_id_dict, phase_dict, all_surface_curves, int_comp_dict, orient_dict2, interface_id = interface_option, orientation_id = orientation_option, presentation_id = presentation_option)
             
             elif measurement_options[0]== 'bubble-body-forces':
                 #DONE!
@@ -1597,8 +1620,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     time_velA_mag = np.append(time_velA_mag, vel_plot_dict['A']['mag'])
                     time_velB_mag = np.append(time_velB_mag, vel_plot_dict['B']['mag'])
 
-                    if plot == 'y':
-                        plotting_functs.vel_histogram(vel_plot_dict, dt_step)
+                    #if plot == 'y':
+                    #plotting_functs.vel_histogram(vel_plot_dict, dt_step)
             elif measurement_options[0] == 'velocity-corr':
                 if j>(start * time_step):
 
