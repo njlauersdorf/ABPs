@@ -1395,6 +1395,15 @@ class run_sim:
 
         import random
 
+        # Use path to HOOMD-Blue
+        if self.hoomdPath == '/Users/nicklauersdorf/hoomd-blue/build/':
+            sys.path.insert(0,self.hoomdPath)
+
+        import hoomd                    # import hoomd functions based on path
+        from hoomd import md
+        from hoomd import deprecated
+
+
         peNet = self.theory_functs.compPeNet(self.partFracA, self.peA, self.peB)
 
         # Compute lattice spacing based on each activity
@@ -1542,26 +1551,34 @@ class run_sim:
         lbox = np.sqrt(abox)
         hbox = lbox / 2.
 
+        lx_box = lbox
+        ly_box = lbox
+        hx_box = lx_box / 2
+        hy_box = ly_box / 2
+
         import utility
 
-        utility_functs = utility.utility(lbox)
+        # Instantiate utility functions module
+        utility_functs = utility.utility(lx_box, ly_box)
 
+        # If particles overlap, find new position
         tooClose = 0.9
 
         # Compute mesh
-
-        nBins = (utility_functs.getNBins(lbox, self.r_cut))
-        sizeBin = utility_functs.roundUp((lbox / nBins), 6)
+        nBins_x = (utility_functs.getNBins(lx_box, self.r_cut))
+        nBins_y = (utility_functs.getNBins(ly_box, self.r_cut))
+        sizeBin_x = utility_functs.roundUp((lx_box / nBins_x), 6)
+        sizeBin_y = utility_functs.roundUp((ly_box / nBins_y), 6)
 
         # Place particles in gas phase
         count = 0
         gaspos = []
-        binParts = [[[] for b in range(nBins)] for a in range(nBins)]
+        binParts = [[[] for b in range(nBins_x)] for a in range(nBins_y)]
         while count < NGas:
             place = 1
             # Generate random position
-            gasx = (np.random.rand() - 0.5) * lbox
-            gasy = (np.random.rand() - 0.5) * lbox
+            gasx = (np.random.rand() - 0.5) * lx_box
+            gasy = (np.random.rand() - 0.5) * ly_box
             r = computeDistance(gasx, gasy)
 
             # Is this an HCP bin?
@@ -1569,19 +1586,20 @@ class run_sim:
                 continue
 
             # Are any gas particles too close?
-            tmpx = gasx + hbox
-            tmpy = gasy + hbox
-            indx = int(tmpx / sizeBin)
-            indy = int(tmpy / sizeBin)
+            tmpx = gasx + hx_box
+            tmpy = gasy + hy_box
+            indx = int(tmpx / sizeBin_x)
+            indy = int(tmpy / sizeBin_y)
+
             # Get index of surrounding bins
             lbin = indx - 1  # index of left bins
             rbin = indx + 1  # index of right bins
             bbin = indy - 1  # index of bottom bins
             tbin = indy + 1  # index of top bins
-            if rbin == nBins:
-                rbin -= nBins  # adjust if wrapped
-            if tbin == nBins:
-                tbin -= nBins  # adjust if wrapped
+            if rbin == nBins_x:
+                rbin -= nBins_x  # adjust if wrapped
+            if tbin == nBins_y:
+                tbin -= nBins_y  # adjust if wrapped
             hlist = [lbin, indx, rbin]  # list of horizontal bin indices
             vlist = [bbin, indy, tbin]  # list of vertical bin indices
 
@@ -1592,13 +1610,13 @@ class run_sim:
                     wrapX = 0.0
                     wrapY = 0.0
                     if h == 0 and hlist[h] == -1:
-                        wrapX -= lbox
+                        wrapX -= lx_box
                     if h == 2 and hlist[h] == 0:
-                        wrapX += lbox
+                        wrapX += lx_box
                     if v == 0 and vlist[v] == -1:
-                        wrapY -= lbox
+                        wrapY -= ly_box
                     if v == 2 and vlist[v] == 0:
-                        wrapY += lbox
+                        wrapY += ly_box
                     # Compute distance between particles
                     if binParts[hlist[h]][vlist[v]]:
                         for b in range(0, len(binParts[hlist[h]][vlist[v]])):
@@ -1664,8 +1682,8 @@ class run_sim:
         hoomd.context.initialize()
         # A small shift to help with the periodic box
         snap = hoomd.data.make_snapshot(N = self.partNum,
-                                        box = hoomd.data.boxdim(Lx=lbox,
-                                                                Ly=lbox,
+                                        box = hoomd.data.boxdim(Lx=lx_box,
+                                                                Ly=ly_box,
                                                                 dimensions=2),
                                         particle_types = unique_char_types)
 
@@ -1750,6 +1768,15 @@ class run_sim:
         '''
 
         import random
+
+        # Use path to HOOMD-Blue
+        if self.hoomdPath == '/Users/nicklauersdorf/hoomd-blue/build/':
+            sys.path.insert(0,self.hoomdPath)
+
+        import hoomd                    # import hoomd functions based on path
+        from hoomd import md
+        from hoomd import deprecated
+
 
         peNet = self.theory_functs.compPeNet(self.partFracA, self.peA, self.peB)
 
@@ -1914,26 +1941,34 @@ class run_sim:
         lbox = np.sqrt(abox)
         hbox = lbox / 2.
 
+        lx_box = lbox
+        ly_box = lbox
+        hx_box = lx_box / 2
+        hy_box = ly_box / 2
+
         import utility
 
-        utility_functs = utility.utility(lbox)
+        # Instantiate utility functions module
+        utility_functs = utility.utility(lx_box, ly_box)
 
+        # If particles overlap, find new position
         tooClose = 0.9
 
         # Compute mesh
-
-        nBins = (utility_functs.getNBins(lbox, self.r_cut))
-        sizeBin = utility_functs.roundUp((lbox / nBins), 6)
+        nBins_x = (utility_functs.getNBins(lx_box, self.r_cut))
+        nBins_y = (utility_functs.getNBins(ly_box, self.r_cut))
+        sizeBin_x = utility_functs.roundUp((lx_box / nBins_x), 6)
+        sizeBin_y = utility_functs.roundUp((ly_box / nBins_y), 6)
 
         # Place particles in gas phase
         count = 0
         gaspos = []
-        binParts = [[[] for b in range(nBins)] for a in range(nBins)]
+        binParts = [[[] for b in range(nBins_x)] for a in range(nBins_y)]
         while count < NGas:
             place = 1
             # Generate random position
-            gasx = (np.random.rand() - 0.5) * lbox
-            gasy = (np.random.rand() - 0.5) * lbox
+            gasx = (np.random.rand() - 0.5) * lx_box
+            gasy = (np.random.rand() - 0.5) * ly_box
             r = computeDistance(gasx, gasy)
 
             # Is this an HCP bin?
@@ -1941,19 +1976,19 @@ class run_sim:
                 continue
 
             # Are any gas particles too close?
-            tmpx = gasx + hbox
-            tmpy = gasy + hbox
-            indx = int(tmpx / sizeBin)
-            indy = int(tmpy / sizeBin)
+            tmpx = gasx + hx_box
+            tmpy = gasy + hy_box
+            indx = int(tmpx / sizeBin_x)
+            indy = int(tmpy / sizeBin_y)
             # Get index of surrounding bins
             lbin = indx - 1  # index of left bins
             rbin = indx + 1  # index of right bins
             bbin = indy - 1  # index of bottom bins
             tbin = indy + 1  # index of top bins
-            if rbin == nBins:
-                rbin -= nBins  # adjust if wrapped
-            if tbin == nBins:
-                tbin -= nBins  # adjust if wrapped
+            if rbin == nBins_x:
+                rbin -= nBins_x  # adjust if wrapped
+            if tbin == nBins_y:
+                tbin -= nBins_y  # adjust if wrapped
             hlist = [lbin, indx, rbin]  # list of horizontal bin indices
             vlist = [bbin, indy, tbin]  # list of vertical bin indices
 
@@ -1964,13 +1999,13 @@ class run_sim:
                     wrapX = 0.0
                     wrapY = 0.0
                     if h == 0 and hlist[h] == -1:
-                        wrapX -= lbox
+                        wrapX -= lx_box
                     if h == 2 and hlist[h] == 0:
-                        wrapX += lbox
+                        wrapX += lx_box
                     if v == 0 and vlist[v] == -1:
-                        wrapY -= lbox
+                        wrapY -= ly_box
                     if v == 2 and vlist[v] == 0:
-                        wrapY += lbox
+                        wrapY += ly_box
                     # Compute distance between particles
                     if binParts[hlist[h]][vlist[v]]:
                         for b in range(0, len(binParts[hlist[h]][vlist[v]])):
@@ -2142,6 +2177,15 @@ class run_sim:
 
     def half_cluster(self):
         import random
+
+        # Use path to HOOMD-Blue
+        if self.hoomdPath == '/Users/nicklauersdorf/hoomd-blue/build/':
+            sys.path.insert(0,self.hoomdPath)
+
+        import hoomd                    # import hoomd functions based on path
+        from hoomd import md
+        from hoomd import deprecated
+
 
         peNet = self.theory_functs.compPeNet(self.partFracA, self.peA, self.peB)
 
@@ -2319,26 +2363,34 @@ class run_sim:
         lbox = np.sqrt(abox)
         hbox = lbox / 2.
 
+        lx_box = lbox
+        ly_box = lbox
+        hx_box = lx_box / 2
+        hy_box = ly_box / 2
+
         import utility
 
-        utility_functs = utility.utility(lbox)
+        # Instantiate utility functions module
+        utility_functs = utility.utility(lx_box, ly_box)
 
+        # If particles overlap, find new position
         tooClose = 0.9
 
         # Compute mesh
-
-        nBins = (utility_functs.getNBins(lbox, self.r_cut))
-        sizeBin = utility_functs.roundUp((lbox / nBins), 6)
+        nBins_x = (utility_functs.getNBins(lx_box, self.r_cut))
+        nBins_y = (utility_functs.getNBins(ly_box, self.r_cut))
+        sizeBin_x = utility_functs.roundUp((lx_box / nBins_x), 6)
+        sizeBin_y = utility_functs.roundUp((ly_box / nBins_y), 6)
 
         # Place particles in gas phase
         count = 0
         gaspos = []
-        binParts = [[[] for b in range(nBins)] for a in range(nBins)]
+        binParts = [[[] for b in range(nBins_x)] for a in range(nBins_y)]
         while count < NGas:
             place = 1
             # Generate random position
-            gasx = (np.random.rand() - 0.5) * lbox
-            gasy = (np.random.rand() - 0.5) * lbox
+            gasx = (np.random.rand() - 0.5) * lx_box
+            gasy = (np.random.rand() - 0.5) * ly_box
             r = computeDistance(gasx, gasy)
 
             # Is this an HCP bin?
@@ -2346,19 +2398,19 @@ class run_sim:
                 continue
 
             # Are any gas particles too close?
-            tmpx = gasx + hbox
-            tmpy = gasy + hbox
-            indx = int(tmpx / sizeBin)
-            indy = int(tmpy / sizeBin)
+            tmpx = gasx + hx_box
+            tmpy = gasy + hy_box
+            indx = int(tmpx / sizeBin_x)
+            indy = int(tmpy / sizeBin_y)
             # Get index of surrounding bins
             lbin = indx - 1  # index of left bins
             rbin = indx + 1  # index of right bins
             bbin = indy - 1  # index of bottom bins
             tbin = indy + 1  # index of top bins
-            if rbin == nBins:
-                rbin -= nBins  # adjust if wrapped
-            if tbin == nBins:
-                tbin -= nBins  # adjust if wrapped
+            if rbin == nBins_x:
+                rbin -= nBins_x  # adjust if wrapped
+            if tbin == nBins_y:
+                tbin -= nBins_y  # adjust if wrapped
             hlist = [lbin, indx, rbin]  # list of horizontal bin indices
             vlist = [bbin, indy, tbin]  # list of vertical bin indices
 
@@ -2369,13 +2421,13 @@ class run_sim:
                     wrapX = 0.0
                     wrapY = 0.0
                     if h == 0 and hlist[h] == -1:
-                        wrapX -= lbox
+                        wrapX -= lx_box
                     if h == 2 and hlist[h] == 0:
-                        wrapX += lbox
+                        wrapX += lx_box
                     if v == 0 and vlist[v] == -1:
-                        wrapY -= lbox
+                        wrapY -= ly_box
                     if v == 2 and vlist[v] == 0:
-                        wrapY += lbox
+                        wrapY += ly_box
                     # Compute distance between particles
                     if binParts[hlist[h]][vlist[v]]:
                         for b in range(0, len(binParts[hlist[h]][vlist[v]])):
