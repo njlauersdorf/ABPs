@@ -840,22 +840,22 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 if j>(start*time_step):
 
                     part_ang_vel_dict = particle_prop_functs.angular_velocity(ang_vel_dict['part'], phase_dict['part'])
-                    part_vel_dict = particle_prop_functs.velocity(vel_dict['part']['mag'], phase_dict['part'])
+                    part_vel_dict, vel_phase_plot_dict = particle_prop_functs.velocity(vel_dict['part']['mag'], phase_dict['part'])
 
                     data_output_functs.write_to_txt(part_ang_vel_dict, dataPath + 'angular_velocity_' + outfile + '.txt')
                     data_output_functs.write_to_txt(part_vel_dict, dataPath + 'velocity_' + outfile + '.txt')
 
-                    if plot == 'y':
+                    #if plot == 'y':
 
-                        # Plot histograms of angular velocities in each phase
-                        plotting_functs.ang_vel_histogram(ang_vel_dict['part'], phase_dict['part'])
-                        plotting_functs.ang_vel_bulk_sf_histogram(ang_vel_dict['part'], phase_dict['part'])
-                        plotting_functs.ang_vel_int_sf_histogram(ang_vel_dict['part'], phase_dict['part'])
-           
-            #elif measurement_method == 'voronoi':
-            #    if plot == 'y':
-            #        plotting_functs = plotting.plotting(orient_dict, pos_dict, lx_box, ly_box, NBins_x, NBins_y, sizeBin_x, sizeBin_y, peA, peB, parFrac, eps, typ, tst)
-            #        plotting_functs.plot_voronoi(pos)
+                    # Plot histograms of angular velocities in each phase
+                    #plotting_functs.ang_vel_histogram(ang_vel_dict['part'], phase_dict['part'])
+                    #plotting_functs.ang_vel_bulk_sf_histogram(ang_vel_dict['part'], phase_dict['part'])
+                    #plotting_functs.ang_vel_int_sf_histogram(ang_vel_dict['part'], phase_dict['part'])
+        
+                #elif measurement_method == 'voronoi':
+                #    if plot == 'y':
+                #        plotting_functs = plotting.plotting(orient_dict, pos_dict, lx_box, ly_box, NBins_x, NBins_y, sizeBin_x, sizeBin_y, peA, peB, parFrac, eps, typ, tst)
+                #        plotting_functs.plot_voronoi(pos)
 
             elif (measurement_options[0] == 'activity'):
                 #DONE!
@@ -890,6 +890,18 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                 particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, eps, typ, pos, ang)
 
+                # Initialize stress and pressure functions
+                stress_and_pressure_functs = stress_and_pressure.stress_and_pressure(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
+                
+                # Initialize lattice structure functions
+                lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
+
+                # Calculate interparticle stresses and pressures
+                stress_stat_dict, press_stat_dict, press_plot_dict, stress_plot_dict = lattice_structure_functs.interparticle_pressure_nlist()
+
+                # Measure radial interparticle pressure
+                radial_int_press_dict = particle_prop_functs.radial_int_press(stress_plot_dict)
+
                 radial_fa_dict = particle_prop_functs.radial_surface_normal_fa_bubble2(method2_align_dict, all_surface_curves, int_comp_dict, all_surface_measurements, int_dict)
 
                 #stress_stat_dict, press_stat_dict, press_plot_dict, stress_plot_dict = lattice_structure_functs.interparticle_pressure_nlist()
@@ -899,7 +911,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 #com_radial_dict_bubble, com_radial_dict_fa_bubble = particle_prop_functs.radial_measurements2(radial_int_press_dict, radial_fa_dict, surface_dict, all_surface_curves, int_comp_dict, all_surface_measurements, averaged_data_arr, int_dict)
                 #com_radial_dict_fa_bubble = particle_prop_functs.radial_measurements3(radial_fa_dict, surface_dict, all_surface_curves, int_comp_dict, all_surface_measurements, averaged_data_arr, int_dict)
                 
-                com_radial_dict_fa_bubble = particle_prop_functs.radial_ang_measurements(radial_fa_dict, surface_dict, all_surface_curves, int_comp_dict, all_surface_measurements, averaged_data_arr, int_dict)
+                com_radial_dict_fa_bubble = particle_prop_functs.radial_ang_measurements(radial_fa_dict, radial_int_press_dict, surface_dict, all_surface_curves, int_comp_dict, all_surface_measurements, averaged_data_arr, int_dict)
                 for m in range(0, len(sep_surface_dict)):
                     key = 'surface id ' + str(int(int_comp_dict['ids'][m]))
                     data_output_functs.write_to_txt(com_radial_dict_fa_bubble[key], dataPath + 'bubble_com_active_pressure_radial_' + outfile + '.txt')
@@ -1620,6 +1632,14 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     time_velA_mag = np.append(time_velA_mag, vel_plot_dict['A']['mag'])
                     time_velB_mag = np.append(time_velB_mag, vel_plot_dict['B']['mag'])
 
+            elif measurement_options[0] == 'part-velocity':
+                if j>(start * time_step):
+
+                    vel_plot_dict, vel_stat_dict = particle_prop_functs.part_velocity_phases(prev_pos, prev_ang, ori)
+                    data_output_functs.write_to_txt(vel_stat_dict, dataPath + 'velocity_' + outfile + '.txt')
+
+                    time_velA_mag = np.append(time_velA_mag, vel_plot_dict['A']['mag'])
+                    time_velB_mag = np.append(time_velB_mag, vel_plot_dict['B']['mag'])
                     #if plot == 'y':
                     #plotting_functs.vel_histogram(vel_plot_dict, dt_step)
             elif measurement_options[0] == 'velocity-corr':
@@ -1820,6 +1840,19 @@ with hoomd.open(name=inFile, mode='rb') as t:
             vel_plot_dict = {'A': {'mag': time_velA_mag}, 'B': {'mag': time_velB_mag}}
             if plot == 'y':
                 plotting_functs.vel_histogram(vel_plot_dict, dt_step, avg='True')
+    elif measurement_options[0] == 'phase-velocity':
+                
+        if j>(start*time_step):
+
+            part_ang_vel_dict = particle_prop_functs.angular_velocity(ang_vel_dict['part'], phase_dict['part'])
+            part_vel_dict, vel_phase_plot_dict = particle_prop_functs.velocity(vel_dict['part']['mag'], phase_dict['part'])
+
+            data_output_functs.write_to_txt(part_ang_vel_dict, dataPath + 'angular_velocity_' + outfile + '.txt')
+            data_output_functs.write_to_txt(part_vel_dict, dataPath + 'velocity_' + outfile + '.txt')
+
+            if plot == 'y':
+
+                plotting_functs.vel_histogram(vel_phase_plot_dict, dt_step, avg='True')
 
     elif measurement_options[0] == 'collision':
         #DONE!
