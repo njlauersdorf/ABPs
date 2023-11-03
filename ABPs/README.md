@@ -187,10 +187,9 @@ $ cmake --install .
 
 Before running HOOMD-Blue, be sure you always have `source ~/virtual_envs/[virtual environment name]/bin/activate` included at the beginning of any bash scripts.
 
-### Cluster Install via Source
+### Cluster Install Via Source
 
-#### Cluster install via source
-
+First, get access to UNC's Longleaf supercomputer. If you do not have access, email: research@unc.edu. Ask for "read, write, and execute permissions for the contents of /proj/dklotsalab directory
 Login to Longleaf with SSH using your ONYEN as your username:
 
 ```
