@@ -1,7 +1,4 @@
-# klotsa
-***
-
-## Table of Contents
+# Table of Contents
 1. [General Info](#general-info)
 2. [Technologies](#technologies)
 3. [Installation](#installation)
@@ -16,10 +13,10 @@
     - [Submitting Post-Processing](#Submitting-Post-Processing)
 5. [Collaboration](#collaboration)
 
-## General Info
+# General Info
 This github project consists of a collection of software and packages for simulating systems of active and passive Brownian particles in HOOMD-Blue using molecular dynamics. Simulation submission bash files read in the user's desired system (particle activities, particle softness, system density, particle fraction, particle size, and population size) and initial conditions (box dimensions, box shape, initial positions, whether it's a randomized gas phase or an instantiated liquid-gas phase separated system, and initial orientation, whether it's randomized or biased with local alignment, i.e. the liquid-gas interface) creates an initial hoomd snapshot/frame using these specified conditions, and runs and saves a simulation for the desired time at the desired stepsize. In addition, this software enables the post-processing of the outputted system over time with focus placed on steady-state measurements and characterization (see Lauersdorf, et al. (2021) for derivation of the theory these measurements led to). 
 
-## Technologies
+# Technologies
 
 A list of technologies used within the project:
 * HOOMD-Blue (https://hoomd-blue.readthedocs.io/en/stable/installation.html): Version 2.9.7
@@ -37,64 +34,98 @@ A list of technologies used within the project:
 * FFMPEG (https://www.ffmpeg.org/): Version 3.4
 * Anaconda (https://www.anaconda.com/): Version 4.11.0
 
-## Installation
+# HOOMD-Blue Installation Instructions
 
-It is highly recommended one install's both HOOMD-Blue and this github repository in their user's home directory due to the pathing in the analysis files. This can be modified manually otherwise. Furthermore, this installation instruction and github repository is intended for use with HOOMD v2.9.7. This is not the most recent version of HOOMD. There is a beta release for v3+ released which drastically changes the methodology for running simulations, hence, the simulation submission scripts must be modified to use with HOOMD v3+. However, post-processing files can still be used normally. One should reference the guide for the newest version (https://hoomd-blue.readthedocs.io/en/latest/) to determine how these submission files need to be modified. HOOMD really only works on Mac/Linux systems. It can run using emulation on a Windows computer, but lots of bugs arise. It is strongly suggested one sticks to Mac or Linux when running simulations. Post-processing scripts of simulations have been written and tested for analysis on both Mac, Linux, and Windows.
+It is highly recommended one install's both HOOMD-Blue and this github repository in their user's home directory due to the pathing in the analysis files. This can be modified line-by-line otherwise. Furthermore, this installation instruction and github repository is intended for use with HOOMD v2.9.7. This is not the most recent version of HOOMD. HOOMD-Blue v3+ drastically changes the methodology for running simulations, hence, the simulation submission scripts must be modified to use with HOOMD v3+. However, post-processing files can still be used normally. One should reference the guide for the newest version (https://hoomd-blue.readthedocs.io/en/latest/) to determine how these submission files need to be modified. It is recommended one installs HOOMD-Blue on either a Mac or Linux OS or problems may arise with use of an emulat. It is strongly suggested one sticks to Mac or Linux when running simulations. Post-processing scripts of simulations have been written and tested for analysis on both Mac, Linux, and Windows.
 
-### Prerequisites
+## Installing Prerequisite Software and Tools
 
-The installation instructions that follow are for Mac exclusively. The same prerequisites are used for Windows, but installation is much more reliant on installation in a conda environment. First, navigate to the app store and install Xcode. You can use this as an IDE if you'd like. This should take a couple hours to install. Once Xcode installation is complete, open Xcode and agree to the license agreement. Alternatively, in a Terminal window, you can run: 
+### Homebrew (mac exclusive)
+For mac users, Homebrew (https://brew.sh/) is a package manager that will help you to install and manage the required software packages easily. If you're familiar with Linux systems, think of Homebrew as apt-get on Debian-based systems or dnf/yum on RedHat-based systems.
 
-```
-$ sudo xcodebuild -license
-```
-
-While Xcode is installing, navigate to anaconda.com to install Anaconda Individual Edition to get access to conda/miniconda. This will be used for installing hoomd/prerequisites. In addition, you can install Spyder through Anaconda for a different IDE. Open the Anaconda installer that was downloaded and follow the instructions until the installation is complete. 
-
-Once the installations for both Anaconda and Xcode finish (be sure Xcode installation is complete and has been launched at least once as Homebrew uses it and it can help identify the Xcode command line tools, which are needed for Homebrew), navigate to https://brew.sh and install Homebrew for your Mac. Per their website (though double check to be sure this command is up to date), open your Terminal and enter:
+Go to https://brew.sh and run the installation command shown in Terminal.
 
 ```
-$ /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 ```
 
-Once homebrew finishes its install, install a few prerequisites with it:
+This will install Homebrew package manager as well as the Command Line Tools that are used to carry out the following guide.
+
+### git
+
+Git will be installed with the following commands.
 
 ```
-$ brew install gnu-sed
+brew install git
 ```
 
-Now, it's time to set the default shell to BASH. Select the apple symbol>System Preferences>Users & Groups. Click the lock and verify your account password to enable changes. Right click on your user and select Advanced Options. Under Login Shell, click the dropdown arrow and see if /bin/bash is available. If so, select it and press OK. Your default shell is now set to BASH, so any newly opened Terminal windows will operate with BASH. Close your Terminal window and re-open a new one. To verify which shell you are using, enter:
+Note that macOS's default shell has changed to zsh from bash. There should not be much significant differences but if you do prefer to use bash, install bash via homebrew brew install bash and then change the default shell with chsh -s /usr/local/bin/bash.
+
+### Miniconda
+
+Go to https://docs.conda.io/en/latest/miniconda.html to download and install Miniconda for Python 3.9 or run the code shown below to install Miniconda 4.11.0. I have confirmed that updating to version 4.12.0 works without any problem.
 
 ```
-$ echo $SHELL
+curl -sO https://repo.anaconda.com/miniconda/Miniconda3-py39_4.11.0-MacOSX-x86_64.sh
+/bin/bash ./Miniconda*.sh -b -p $HOME/miniconda3
+$HOME/miniconda3/bin/conda init bash zsh
+source $HOME/.bash_profile $HOME/.zshrc
+rm $HOME/Miniconda*.sh
 ```
 
-If the terminal output reads: `/usr/local/bin/bash`, then you're good to go! If you open the new Terminal window and see a [Process completed] in the output line and are unable to type anything, the shell/path to shell that you changed to does not exist. You must navigate to Apple icon>System Preferences>Users & Groups and follow the instructions above for changing your shell from the currently non-existent path back to the default `/bin/zsh` shell or try installing your own bash using:
+You can confirm the Miniconda installation by running conda -V in your terminal. The output should resemble the following:
+
+conda 4.11.0
+
+## Create Conda Environment
+
+Conda is capable of creating environments with specified versions of python and packages. You can switch between the environments by activating them, providing you with a customized, separate environment for each specific task. In this guide, we will separate our environments into one specificically for HOOMD-blue simulation package and another for post-processing of the simulation data. By default, the environments are contained within $HOME/miniconda3/envs/, but this guide will contain all the environments within $HOME/pyEnvs/. If desired, changing the environment directory should not affect workflow as long as the paths in your simulation scripts are changed accordingly.
+
+First, we start with creating an environment for HOOMD-blue simulation package.
 
 ```
-$ brew install bash
+mkdir $HOME/pyEnvs
+conda create --prefix $HOME/pyEnvs/rekt -y python=3.8
 ```
 
-and switching your default shell to that version's path.
+Note that I am using python 3.8 here, but HOOMD-blue V3.0 requires any python above 3.6. Change this according to your needs.
 
-Next, you need to make a virtual environment via Anaconda to install HOOMD and its prerequisite modules. To do this, download Anaconda. Open the Anaconda-Navigator and select 'create' under the listed environments. Enter a name for your environment and select Python 3.8 for your Python version (which is the same as on Longleaf). After your environment is created, open a terminal and download the HOOMD pre-requisites into this environment:
+Activate the created conda environment.
+```
+conda activate $HOME/pyEnvs/hoomd
+Run conda list to ensure the specified python version is installed.
+```
+## Installing HOOMD-Blue V3.0
 
 ```
-$ cd ~
-$ bash
-$ source activate [virtual environment name]
-$ conda install -c conda-forge sphinx git numpy cmake clang openmpi gsd numpy matplotlib yaml llvm ipython gsd pybind11 eigen ffmpeg
-$ conda install -c anaconda conda-package-handling
-$ python3 -m pip install gsd
-$ python3 -m pip install freud-analysis
-$ python3 -m pip install shapely
+conda install -c conda-forge eigen numpy pybind11 tbb tbb-devel gsd cereal "hoomd=3.0.0=*cpu*"
 ```
 
-### Prerequisites
+Note the quotation marks as zsh may interpret the asterisk for something else and not pass it to conda.
 
-### HOOMD-Blue
+If you see an output regarding
 
-#### Local install via conda
+failed with initial frozen solve,
+
+don't worry about it. It is most likely will resolve itself.
+
+As far as I know, there is no support from HOOMD-blue for AMD GPUs on Mac (more specifically no support for ROCm for Mac). Thus, you shouldn't need any GPU related builds on your Mac. I doubt this will ever be the case, but if you do have an eGPU, just search for instructions on CUDA setup on Macs and then install the GPU build instead of CPU.
+
+This sets up the conda environment with HOOMD-blue simulation package on your machine. Confirm that the simulation package is working by starting up a python session with python. Then, run the following to confirm the installation.
+
+```
+import hoomd
+integrator = hoomd.md.Integrator(dt=0.005)
+integrator.dt
+```
+
+This should output the following.
+
+0.005
+
+## Installing HOOMD-Blue V2.9
+
+### Local install via conda
 
 This only works on your local computer. One downside to this is that if you need to compile anything special (i.e. the compile/cmake commands), you can't modify them.  However, this is the easiest method as we'll mainly just be doing local testing before running on the cluster, so I suggest using this method of installing HOOMD.
 
@@ -102,35 +133,17 @@ This only works on your local computer. One downside to this is that if you need
 $ conda install -c conda-forge hoomd
 ```
 
-All done! That was easy! This conda command will configure HOOMD-Blue v2.9.7 for your computer. You can skip to the section titled "Setting Up Github" to test your HOOMD-Blue install. Simply clone the directory or download a ZIP file and unzip it. Run a HOOMD simulation by entering the following in your Terminal window:
+All done! That was easy! 
 
-```
-$ bash
-$ source activate [virtual environment name]
-$ sh /Path/to/Klotsa/ABPs/runPeloopBinaryCluster.sh
-```
+### Local install via source
 
-Once the Brownian equilibration starts, you can close the Terminal window to cancel the run. A full simulation should work fine.
-
-#### Local install via source
-
-See the next section for installing HOOMD-Blue via source on the cluster. First, download HOOMD-Blue version 2.9.7:
+First, download HOOMD-Blue version 2.9.7:
 
 ```
 $ curl -O https://glotzerlab.engin.umich.edu/Downloads/hoomd/hoomd-v2.9.7.tar.gz
 ```
 
-or you can run the following command to download the most recent version of HOOMD-Blue (v3.0.0 beta at the time of writing this). This download instruction and github is designed to be used for HOOMD-Blue version 2.9.7:
-
-```
-$ git clone --recursive https://github.com/glotzerlab/hoomd-blue
-$ cd hoomd-blue
-$ git fetch --all --tags
-$ git checkout tags/v2.9.7
-$ python3 ./install-prereq-headers.py
-```
-
-If you use the following command, these instructions and git repository will not fully apply due to large modifications in HOOMD-Blue's prerequisites and how it is run. If you chose the former, proceed with these instructions by untarring the downloaded folder:
+Proceed with these instructions by untarring the downloaded folder:
 
 ```
 $ tar -xzvf hoomd-v2.9.7.tar.gz
@@ -174,6 +187,8 @@ $ cmake --install .
 
 Before running HOOMD-Blue, be sure you always have `source ~/virtual_envs/[virtual environment name]/bin/activate` included at the beginning of any bash scripts.
 
+### Cluster Install via Source
+
 #### Cluster install via source
 
 Login to Longleaf with SSH using your ONYEN as your username:
@@ -182,7 +197,7 @@ Login to Longleaf with SSH using your ONYEN as your username:
 $ ssh username@longleaf.unc.edu
 ```
 
-If this is your first time logging in from this computer, enter 'yes' to the prompt of remoting into a new computer. Then, type your password (current password for your ONYEN) and press enter. You will log into a log-in node located in your user's folder within the `/nas` directory. This is your home directory (`cd ~`). 
+If you do not have a username, email and cc your advisor to ask for oneIf this is your first time logging in from this computer, enter 'yes' to the prompt of remoting into a new computer. Then, type your password (current password for your ONYEN) and press enter. You will log into a log-in node located in your user's folder within the `/nas` directory. This is your home directory (`cd ~`). 
 
 If you run your compile in the /nas directory, you will run it in your login node which can have memory limitations. Modify your ~/.bashrc file to enable quick login to a compile node (you can use one without graphics for compilation) for these steps, although you can also login to a GPU node:
 
@@ -298,6 +313,66 @@ $ cmake --install .
 ```
 
 Before running HOOMD-Blue, be sure you always have `source ~/virtual_envs/[virtual environment name]/bin/activate` included at the beginning of any bash scripts.
+
+
+
+
+
+
+
+
+
+
+
+
+### Create Conda Environment
+
+The installation instructions that follow are for Mac exclusively. The same prerequisites are used for Windows, but installation is much more reliant on installation in a conda environment. First, navigate to the app store and install Xcode. You can use this as an IDE if you'd like. This should take a couple hours to install. Once Xcode installation is complete, open Xcode and agree to the license agreement. Alternatively, in a Terminal window, you can run: 
+
+```
+$ sudo xcodebuild -license
+```
+
+While Xcode is installing, navigate to anaconda.com to install Anaconda Individual Edition to get access to conda/miniconda. This will be used for installing hoomd/prerequisites. In addition, you can install Spyder through Anaconda for a different IDE. Open the Anaconda installer that was downloaded and follow the instructions until the installation is complete. 
+
+
+
+
+Once the installations for both Anaconda and Xcode finish (be sure Xcode installation is complete and has been launched at least once as Homebrew uses it and it can help identify the Xcode command line tools, which are needed for Homebrew), navigate to https://brew.sh and install Homebrew for your Mac. Per their website (though double check to be sure this command is up to date), open your Terminal and enter:
+
+```
+$ /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+
+Once homebrew finishes its install, install a few prerequisites with it:
+
+```
+$ brew install gnu-sed
+```
+
+
+
+
+Next, you need to make a virtual environment via Anaconda to install HOOMD and its prerequisite modules. To do this, download Anaconda. Open the Anaconda-Navigator and select 'create' under the listed environments. Enter a name for your environment and select Python 3.8 for your Python version (which is the same as on Longleaf). After your environment is created, open a terminal and download the HOOMD pre-requisites into this environment:
+
+```
+$ cd ~
+$ bash
+$ source activate [virtual environment name]
+$ conda install -c conda-forge sphinx git numpy cmake clang openmpi gsd numpy matplotlib yaml llvm ipython gsd pybind11 eigen ffmpeg
+$ conda install -c anaconda conda-package-handling
+$ python3 -m pip install gsd
+$ python3 -m pip install freud-analysis
+$ python3 -m pip install shapely
+```
+
+### Prerequisites
+
+### HOOMD-Blue
+
+
+
+
 
 ### Github
 
