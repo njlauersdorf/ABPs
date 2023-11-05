@@ -51,6 +51,18 @@ Go to https://brew.sh and run the installation command shown in Terminal.
 
 This will install Homebrew package manager as well as the Command Line Tools that are used to carry out the following guide.
 
+If an error ensues related to Xcode, you can install the full Xcode suite via the app store. You can use this as an IDE if you'd like. This should take a couple hours to install. Once Xcode installation is complete, open Xcode and agree to the license agreement so that Homebrew can help identify the Xcode command line tools. Alternatively, in a Terminal window, you can run: 
+
+```
+$ sudo xcodebuild -license
+```
+
+Once homebrew finishes its install, install a few prerequisites with it:
+
+```
+$ brew install gnu-sed
+```
+
 ### git
 
 Git will be installed with the following commands.
@@ -60,6 +72,150 @@ brew install git
 ```
 
 Note that macOS's default shell has changed to zsh from bash. There should not be much significant differences but if you do prefer to use bash, install bash via homebrew brew install bash and then change the default shell with chsh -s /usr/local/bin/bash.
+
+#### Setting up your Github
+
+First, open your teerminal and navigate to your home directory and start the ssh-agent in the background:
+
+```
+$ cd ~
+$ eval "$(ssh-agent -s)"
+```
+
+This should output:
+
+> Agent pid #####
+
+where ##### is some combination of integers. Depending on your environment, you may need to use a different command. For example, you may need to use root access by running sudo -s -H before starting the ssh-agent, or you may need to use exec ssh-agent bash or exec ssh-agent zsh to run the ssh-agent.
+
+
+Next, generate an ssh key with either of the following command while replacing your_email@example.com held within the quotations (do not remove quotation marks!) with the email you used for your Github profile. The former command is intended for non-legacy systems (i.e. macOS Monterrey):
+
+```
+$ ssh-keygen -t ed25519 -C "your_email@example.com"
+```
+
+If you are using a non-legacy system (i.e. macOS Monterrey), you will see the following output:
+
+> Generating public/private ed25519 key pair.
+
+If you are using a legacy system that doesn't support the Ed25519 algorithm you will get an output that reads:
+
+> command not found
+
+If that's the case, instead, use:
+
+```
+$ ssh-keygen -t rsa -b 4096 -C "your_email@example.com"
+```
+
+Upon the succesful creation of an ssh key, the terminal should output: 
+
+> Generating public/private rsa key pair.
+
+and proceed with the following prompt: 
+
+> Enter a file in which to save the key (/Users/you/.ssh/id_XXX):
+
+XXX is replaced with the type of keypair you generated in the previous step. I always just press the enter key and the ssh-keycode is generated in the default file location, which is /Users/you/.ssh/id_rsa for the latter method (rsa key pair) or /Users/you/.ssh/id_ed25519 (ed25519 key pair). For now on, id_XXX will refer to either id_rsa or id_ed25519 depending on which key generation option you used. Alternatively, you can choose your own location in the /Users/you/.ssh folder. After responding to the above prompt, two more prompts will appear:
+
+> Enter passphrase (empty for no passphrase): [Type a passphrase]
+> Enter same passphrase again: [Type passphrase again]
+
+Similar to the prompt before, I simply press enter for both of these prompts and leave the passphrase blank. 
+
+#### Adding your SSH key to the ssh-agent
+
+Now that you have your ssh-keycode, you will want to save it in your ssh-agent. Start the ssh-agent in the background again with the following prompt:
+
+```
+$ eval "$(ssh-agent -s)"
+```
+
+Next, we have to verify the existence and contents of your ~/.ssh/config file.  
+
+```
+$ cd ~/.ssh
+$ ls
+```
+
+If you do not see the config file, create one:
+
+```
+$ touch ~/.ssh/config
+```
+
+Since you have a config file now, you want to open the file and modify its contents:
+
+```
+$ open ~/.ssh/config
+```
+
+Make sure the config file reads:
+
+>Host *
+>  AddKeysToAgent yes
+>  UseKeychain yes
+>  IdentityFile ~/.ssh/id_XXX
+
+If it does not, copy and paste these lines into your file, ensuring that the lines under `Host *` are indented. Furthermore, if you chose not to add a passphrase to your key, you can choose to omit the UseKeychain line. Be sure to replace id_XXX in the command with the name of your private key file generated earlier.
+
+You may also choose to add additional lines such that your config file reads:
+
+>Host *
+>  ServerAliveInterval 60
+>  ServerAliveCountMax 30
+>  AddKeysToAgent yes
+>  UseKeychain yes
+>  IdentityFile ~/.ssh/id_XXX
+  
+These two additional lines refresh your connection to github (when uploading files) in case you have a large amount of data to upload or else the link to github will be automatically broken after a short amount of time.
+
+If you see an error later on, such as:
+
+> /Users/USER/.ssh/config: line 16: Bad configuration option: usekeychain
+
+Then you want to add the following line to your config file indented under `Host *`:
+
+```
+IgnoreUnknown AddKeysToAgent,UseKeychain
+```
+
+For me, that line was necessary for Longleaf, but was not necessary for setting up Github on my local computer. Now, add your SSH private key to the ssh-agent and store your passphrase in the keychain. Be sure to replace id_XXX in the command with the name of your private key file.
+  
+```
+$ ssh-add -K ~/.ssh/id_XXX
+```
+
+The -K option is Apple's standard version of ssh-add, which stores the passphrase in your keychain for you when you add an SSH key to the ssh-agent. If you chose not to add a passphrase to your key, run the command without the `-K` option. In MacOS Monterey (12.0), the -K and -A flags are deprecated and have been replaced by the --apple-use-keychain and --apple-load-keychain flags, respectively.
+
+Finally, now that you have the ssh-key fully set up on your local computer or on the cluster (Longleaf), you want to copy your ssh-keycode so that you can put it in your Github profile. 
+
+Next, is where Longleaf deviates from a local computer. On your local computer, copy the contents of the file to your clipboard that you saved your ssh-keycode in by inputting the following into your terminal (for a mac):
+```
+$ pbcopy < ~/.ssh/id_XXX.pub
+```
+If you want to set up your Github profile on Longleaf, simply download the file that you saved your ssh-keycode in to your local computer:
+
+```
+$ scp username@longleaf.unc.edu:~/.ssh/id_XXX.pub /~/Desktop/
+```
+
+Then, copy the contents of this file to your clipboard:
+
+```
+$ pbcopy < ~/Desktop/id_XXX.pub
+```
+
+With your ssh-key in your clipboard, navigate and login to Github. In the upper-right corner of any page, click your profile photo, then click Settings. In the user settings sidebar, click SSH and GPG keys. Click New SSH key or Add SSH key. In the "Title" field, add a descriptive label for the new key. For example, if you're using a personal Mac, you might call this key "Personal MacBook Air". Paste your key into the "Key" field. Click Add SSH key. Now you can clone and upload to that repository.
+
+After doing the above steps for setting up Github, you can download this current github by navigate to your home directory then entering the command below.
+```
+$ cd ~
+$ git clone https://github.com/njlauersdorf/klotsa.git
+```
+
+Now you're ready to run some code! 
 
 ### Miniconda
 
@@ -76,6 +232,8 @@ rm $HOME/Miniconda*.sh
 You can confirm the Miniconda installation by running conda -V in your terminal. The output should resemble the following:
 
 conda 4.11.0
+
+Alternatively to miniconda, you can download the full Anaconda suite. Open the Anaconda-Navigator and select 'create' under the listed environments. Enter a name for your environment and select Python 3.8 for your Python version (which is the same as on Longleaf). 
 
 ## Create Conda Environment
 
@@ -95,6 +253,17 @@ Activate the created conda environment.
 conda activate $HOME/pyEnvs/hoomd
 Run conda list to ensure the specified python version is installed.
 ```
+
+After your environment is created either with miniconda or full, open a terminal and download the HOOMD pre-requisites into this environment:
+
+```
+$ conda install -c conda-forge sphinx git numpy cmake clang openmpi gsd numpy matplotlib yaml llvm ipython gsd pybind11 eigen ffmpeg
+$ conda install -c anaconda conda-package-handling
+$ python3 -m pip install gsd
+$ python3 -m pip install freud-analysis
+$ python3 -m pip install shapely
+```
+
 ## Installing HOOMD-Blue V3.0
 
 ```
@@ -189,14 +358,15 @@ Before running HOOMD-Blue, be sure you always have `source ~/virtual_envs/[virtu
 
 ### Cluster Install Via Source
 
-First, get access to UNC's Longleaf supercomputer. If you do not have access, email: research@unc.edu. Ask for "read, write, and execute permissions for the contents of /proj/dklotsalab directory
+First, get access to UNC's Longleaf supercomputer. If you do not have access, email: research@unc.edu. Ask for "a Longleaf account in the Klotsa group with access to the GPUs" along with "read, write, and execute permissions for the contents of /proj/dklotsalab directory"
+
 Login to Longleaf with SSH using your ONYEN as your username:
 
 ```
 $ ssh username@longleaf.unc.edu
 ```
 
-If you do not have a username, email and cc your advisor to ask for oneIf this is your first time logging in from this computer, enter 'yes' to the prompt of remoting into a new computer. Then, type your password (current password for your ONYEN) and press enter. You will log into a log-in node located in your user's folder within the `/nas` directory. This is your home directory (`cd ~`). 
+If this is your first time logging in from this computer, enter 'yes' to the prompt of remoting into a new computer. Then, type your password (current password for your ONYEN) and press enter. You will log into a log-in node located in your user's folder within the `/nas` directory. This is your home directory (`cd ~`). 
 
 If you run your compile in the /nas directory, you will run it in your login node which can have memory limitations. Modify your ~/.bashrc file to enable quick login to a compile node (you can use one without graphics for compilation) for these steps, although you can also login to a GPU node:
 
@@ -315,286 +485,4 @@ Before running HOOMD-Blue, be sure you always have `source ~/virtual_envs/[virtu
 
 
 
-
-
-
-
-
-
-
-
-
-### Create Conda Environment
-
-The installation instructions that follow are for Mac exclusively. The same prerequisites are used for Windows, but installation is much more reliant on installation in a conda environment. First, navigate to the app store and install Xcode. You can use this as an IDE if you'd like. This should take a couple hours to install. Once Xcode installation is complete, open Xcode and agree to the license agreement. Alternatively, in a Terminal window, you can run: 
-
-```
-$ sudo xcodebuild -license
-```
-
-While Xcode is installing, navigate to anaconda.com to install Anaconda Individual Edition to get access to conda/miniconda. This will be used for installing hoomd/prerequisites. In addition, you can install Spyder through Anaconda for a different IDE. Open the Anaconda installer that was downloaded and follow the instructions until the installation is complete. 
-
-
-
-
-Once the installations for both Anaconda and Xcode finish (be sure Xcode installation is complete and has been launched at least once as Homebrew uses it and it can help identify the Xcode command line tools, which are needed for Homebrew), navigate to https://brew.sh and install Homebrew for your Mac. Per their website (though double check to be sure this command is up to date), open your Terminal and enter:
-
-```
-$ /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-```
-
-Once homebrew finishes its install, install a few prerequisites with it:
-
-```
-$ brew install gnu-sed
-```
-
-
-
-
-Next, you need to make a virtual environment via Anaconda to install HOOMD and its prerequisite modules. To do this, download Anaconda. Open the Anaconda-Navigator and select 'create' under the listed environments. Enter a name for your environment and select Python 3.8 for your Python version (which is the same as on Longleaf). After your environment is created, open a terminal and download the HOOMD pre-requisites into this environment:
-
-```
-$ cd ~
-$ bash
-$ source activate [virtual environment name]
-$ conda install -c conda-forge sphinx git numpy cmake clang openmpi gsd numpy matplotlib yaml llvm ipython gsd pybind11 eigen ffmpeg
-$ conda install -c anaconda conda-package-handling
-$ python3 -m pip install gsd
-$ python3 -m pip install freud-analysis
-$ python3 -m pip install shapely
-```
-
-### Prerequisites
-
-### HOOMD-Blue
-
-
-
-
-
-### Github
-
-First, open your teerminal and navigate to your home directory and start the ssh-agent in the background:
-
-```
-$ cd ~
-$ eval "$(ssh-agent -s)"
-```
-
-This should output:
-
-> Agent pid #####
-
-where ##### is some combination of integers. Depending on your environment, you may need to use a different command. For example, you may need to use root access by running sudo -s -H before starting the ssh-agent, or you may need to use exec ssh-agent bash or exec ssh-agent zsh to run the ssh-agent.
-
-
-Next, generate an ssh key with either of the following command while replacing your_email@example.com held within the quotations (do not remove quotation marks!) with the email you used for your Github profile. The former command is intended for non-legacy systems (i.e. macOS Monterrey):
-
-```
-$ ssh-keygen -t ed25519 -C "your_email@example.com"
-```
-
-If you are using a non-legacy system (i.e. macOS Monterrey), you will see the following output:
-
-> Generating public/private ed25519 key pair.
-
-If you are using a legacy system that doesn't support the Ed25519 algorithm you will get an output that reads:
-
-> command not found
-
-If that's the case, instead, use:
-
-```
-$ ssh-keygen -t rsa -b 4096 -C "your_email@example.com"
-```
-
-Upon the succesful creation of an ssh key, the terminal should output: 
-
-> Generating public/private rsa key pair.
-
-and proceed with the following prompt: 
-
-> Enter a file in which to save the key (/Users/you/.ssh/id_XXX):
-
-XXX is replaced with the type of keypair you generated in the previous step. I always just press the enter key and the ssh-keycode is generated in the default file location, which is /Users/you/.ssh/id_rsa for the latter method (rsa key pair) or /Users/you/.ssh/id_ed25519 (ed25519 key pair). For now on, id_XXX will refer to either id_rsa or id_ed25519 depending on which key generation option you used. Alternatively, you can choose your own location in the /Users/you/.ssh folder. After responding to the above prompt, two more prompts will appear:
-
-> Enter passphrase (empty for no passphrase): [Type a passphrase]
-> Enter same passphrase again: [Type passphrase again]
-
-Similar to the prompt before, I simply press enter for both of these prompts and leave the passphrase blank. 
-
-##### Adding your SSH key to the ssh-agent
-
-Now that you have your ssh-keycode, you will want to save it in your ssh-agent. Start the ssh-agent in the background again with the following prompt:
-
-```
-$ eval "$(ssh-agent -s)"
-```
-
-Next, we have to verify the existence and contents of your ~/.ssh/config file.  
-
-```
-$ cd ~/.ssh
-$ ls
-```
-
-If you do not see the config file, create one:
-
-```
-$ touch ~/.ssh/config
-```
-
-Since you have a config file now, you want to open the file and modify its contents:
-
-```
-$ open ~/.ssh/config
-```
-
-Make sure the config file reads:
-
->Host *
->  AddKeysToAgent yes
->  UseKeychain yes
->  IdentityFile ~/.ssh/id_XXX
-
-If it does not, copy and paste these lines into your file, ensuring that the lines under `Host *` are indented. Furthermore, if you chose not to add a passphrase to your key, you can choose to omit the UseKeychain line. Be sure to replace id_XXX in the command with the name of your private key file generated earlier.
-
-You may also choose to add additional lines such that your config file reads:
-
->Host *
->  ServerAliveInterval 60
->  ServerAliveCountMax 30
->  AddKeysToAgent yes
->  UseKeychain yes
->  IdentityFile ~/.ssh/id_XXX
-  
-These two additional lines refresh your connection to github (when uploading files) in case you have a large amount of data to upload or else the link to github will be automatically broken after a short amount of time.
-
-If you see an error later on, such as:
-
-> /Users/USER/.ssh/config: line 16: Bad configuration option: usekeychain
-
-Then you want to add the following line to your config file indented under `Host *`:
-
-```
-IgnoreUnknown AddKeysToAgent,UseKeychain
-```
-
-For me, that line was necessary for Longleaf, but was not necessary for setting up Github on my local computer. Now, add your SSH private key to the ssh-agent and store your passphrase in the keychain. Be sure to replace id_XXX in the command with the name of your private key file.
-  
-```
-$ ssh-add -K ~/.ssh/id_XXX
-```
-
-The -K option is Apple's standard version of ssh-add, which stores the passphrase in your keychain for you when you add an SSH key to the ssh-agent. If you chose not to add a passphrase to your key, run the command without the `-K` option. In MacOS Monterey (12.0), the -K and -A flags are deprecated and have been replaced by the --apple-use-keychain and --apple-load-keychain flags, respectively.
-
-Finally, now that you have the ssh-key fully set up on your local computer or on the cluster (Longleaf), you want to copy your ssh-keycode so that you can put it in your Github profile. 
-
-Next, is where Longleaf deviates from a local computer. On your local computer, copy the contents of the file to your clipboard that you saved your ssh-keycode in by inputting the following into your terminal (for a mac):
-```
-$ pbcopy < ~/.ssh/id_XXX.pub
-```
-If you want to set up your Github profile on Longleaf, simply download the file that you saved your ssh-keycode in to your local computer:
-
-```
-$ scp username@longleaf.unc.edu:~/.ssh/id_XXX.pub /~/Desktop/
-```
-
-Then, copy the contents of this file to your clipboard:
-
-```
-$ pbcopy < ~/Desktop/id_XXX.pub
-```
-
-With your ssh-key in your clipboard, navigate and login to Github. In the upper-right corner of any page, click your profile photo, then click Settings. In the user settings sidebar, click SSH and GPG keys. Click New SSH key or Add SSH key. In the "Title" field, add a descriptive label for the new key. For example, if you're using a personal Mac, you might call this key "Personal MacBook Air". Paste your key into the "Key" field. Click Add SSH key. Now you can clone and upload to that repository.
-
-After doing the above steps for setting up Github, you can download this current github by navigate to your home directory then entering the command below.
-```
-$ cd ~
-$ git clone https://github.com/njlauersdorf/klotsa.git
-```
-
-Now you're ready to run some code! 
-
-## Running Code
-Here we will discuss some basics of SLURM which is Longleaf's method of submitting and managing running of code. Longleaf uses BASH, similar to your Mac now, so you can easily submit code using the `sh` prefix before a bash script for defining variables and submitting individual runs for each specified set of initial conditions. This github project utilizes bash scripts to read in user's desired measurement/simulation type, select the desired python file to run (either for a simulation or post-processing) based on user input, and to read in the specified initial/system conditions into a template python file for a) post-processing of each .gsd file (simulation file) within the current directory or b) create a python file for instantiating a system and running that file to simulate each possible configuration of initial conditions inputted, which, in turn, outputs a .gsd file detailing the simulation at each time step.  
-
-
-### Submitting simulations
-The bash file used to submit a simulation is /klotsa/ABPs/runPeloopBinaryCluster.sh. Before submitting the bash file, one should manually input all desired possible physical conditions of each system to run as lists in each variable's location at the top of the page. The bash file will loop through all possible pairings of these variables and submit create and submit individual python files for each possible configuration based on template python files. Whether running on a cluster (i.e. Longleaf) or locally, one should submit this file as:
-
-```
-$ sh ~/klotsa/ABPs/runPeloopBinaryCluster.sh
-```
-
-If running on Longleaf, be sure you are running these simulations in the /proj/ (group workspace) or /pine/ (personal workspace) (note that /pine/ workspace has very limited storage compared to the group workspace). Upon submitting this bash file, a folder named /MM_DD_YYYY_parent, where MM is the month, DD is the day, and YYYY is the year, will be created where each python file for every run is created and saved. To determine which template python file to use, the user is prompted to answer a few questions that describe the initial conditions of the system and where the simulation is being run.
-
-> Are you running on Longleaf (y/n)?
-
-If true, answer `y` otherwise answer `n`. Answering this correctly will automatically specify the pathing to hoomd for you and proper slurm terminology for submitting a run to separate GPU nodes (as opposed to CPU nodes if ran locally). Your input is then followed by four yes-or-no questions in a row to specify the initial conditions
-
-> Do you want homogeneous cluster (y/n)?
-> 
-> Do you want slow bulk, fast interface (y/n)?
-> 
-> Do you want fast bulk, slow interface (y/n)?
-> 
-> Do you want half slow, half fast cluster (y/n)?
-
-Answering `y` to any of these will terminate the question asking process and choose that respective template python file for creating and submitting each simulation run. If `n` is answered to all of them, the submission will abort. Future initial conditions are planned to be added soon. 
-
-At the end of that bash script, a second bash script, run_gpu.sh, will be submitted for each .gsd file in the current directory where this information is passed to. run_gpu.sh feeds the specified initial conditions into a template python file and saves that new python file in the parent directory, then submits the python file to Longleaf (using SLURM) or your local computer to run. This python file can be referenced later to verify initial conditions. 
-
-Once the python file is submitted on Longleaf, a slurm-XXXXXXXXXXX.out file will be created that documents the progress of the run and which submission number it is (if ran on Longleaf). Be sure to check this to file to be sure the submission will take less than 11 days or else the simulation will be automatically aborted per Longleaf's maximum run length. Similarly, the slurm file is where to go to see if and what type of error occurred. There are two common errors: 1) a particle exits the simulation box, which occurs due to too great of particle overlap from too small of a time step (therefore, increase the time step and re-submit to fix this) and 2) the simulation finds a faulty GPU node. If the latter occurs, the simulation never starts and the slurm file remains empty despite the simulation queue (squeue -u <Longleaf username, i.e. Onyen>) saying the simulation is still running (and it will continue to take up a GPU node until it his the maximum time limit of 11:00:00 days unless cancelled beforehand (scancel <submission number>). If running locally, the estimated simulation time will be output to the terminal at a regular interval. In addition only the first error commonly occurs when you have too small of a time step. Testing a run locally (using the most active and hard spheres desired of your input systems) is a good method to find a good starting time step to use. Sometimes, a particle will exit the box later in the simulation, however, this is less common with the initial conditions being the main culprit for most errors.
-   
-You can check the progress of your simulations using some basic slurm commands:
-   
-```
-squeue -u [ONYEN]   
-```
-
-If you need to cancel a simulation, you can run:
-   
-```
-$ scancel [SLURM RUN ID]   
-```
-   
-where SLURM RUN ID is the XXXXXXX simulation number in your slurm_XXXXXXX.out file or when you input `squeue`.
-   
-### Submitting post-processing
-The bash file used to submit a simulation is /klotsa/ABPs/post_proc_binary.sh. This file will submit the specified post processing routine for every simulation file (.gsd) in the current directory. Submit this bash file similarly to running a simulation:
-   
-```
-$ sh ~/klotsa/ABPs/post_proc_binary.sh
-```
-   
-Upon submitting this bash file, three folders will be created: /MM_DD_YYYY_txt_files, /MM_DD_YYYY_pic_files, and /MM_DD_YYYY_vid_files, where they store the outputted .txt, .png, and .mp4 files respectively for all post-processing scripts started on that date (MM/DD/YYYY). In addition, there will be prompts to specify a few analytical details, such as:
-   
-> What is your bin size?
-> 
-> What is your step size?
-> 
-> What do you want to analyze?
-   
-   
-where it seeks the length of the bin for meshing the system (typically 5), the time step size to be analyzed (always 1 unless we care about velocity), and our post-processing method. A second bash script will be submitted for each .gsd file in the current directory where this information is passed to. There, a python post-processing file will be ran on each .gsd file separately that corresponds to our response to the third prompt. These post processing files typically output a series of .png files for each frame and a .txt file (located in the /MM_DD_YYYY_txt_files_folder) compiling certain information at each time step. Once the python script finishes running, the second bash file will compile each series of .png files (located in the /MM_DD_YYYY_pic_files folder) into a .mp4 (located in the /MM_DD_YYYY_vid_files folder). The bash script will proceed to delete all .png files that were created by that post-processing script. Therefore, what we're left with will always be .mp4 files. or.txt files unless an error occurs. These .txt files are typically read into certain jupyter notebook scripts to analyze them averaged over time and to identify trends over our input parameters.
-
-If you'd like to download a file from Longleaf to your local computer, you can input:
-   
-```
-scp [ONYEN]@longleaf.unc.edu:/path/to/file ~/Desktop/
-```
-   
-which will download a single file based on its path from Longleaf to your local Desktop. If you want to download a whole folder, you can modify it as below:
-   
-```
-$ scp -r [ONYEN]@longleaf.unc.edu:/path/to/folder ~/Desktop/
-```
-
-where the -r signifies a recursive method since there are multiple files in the folder.
-   
-## Collaboration
-
-To collaborate or ask questions, please contact me at: njlauers@live.unc.edu. If you wish to use any part of this package in your research, please supply my name in the acknowledgments or cite any of my publications.
    
