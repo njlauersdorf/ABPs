@@ -11,11 +11,12 @@
       - [Local install via source](#local-install-via-source)
       - [Cluster install via source](#cluster-install-via-source)
 4. [ABPs Code Package](#abps-code-package)
+    - [Organization](#organization)
     - [Running Simulations](#Running-Simulations)
     - [Longleaf Simulations and SLURM](#Longleaf-Simulations-and-SLURM)
     - [Submitting post-processing](#Submitting-Post-Processing)
     - [Downloading data from Longleaf](#Downloading-data-from-Longleaf)
-5. [Collaboration](#collaboration)
+6. [Collaboration](#collaboration)
 
 # General Info
 This github project consists of a collection of software and packages for simulating systems of active and passive Brownian particles in HOOMD-Blue using molecular dynamics. Simulation submission bash files read in the user's desired system (particle activities, particle softness, system density, particle fraction, particle size, and population size) and initial conditions (box dimensions, box shape, initial positions, whether it's a randomized gas phase or an instantiated liquid-gas phase separated system, and initial orientation, whether it's randomized or biased with local alignment, i.e. the liquid-gas interface) creates an initial hoomd snapshot/frame using these specified conditions, and runs and saves a simulation for the desired time at the desired stepsize. In addition, this software enables the post-processing of the outputted system over time with focus placed on steady-state measurements and characterization (see Lauersdorf, et al. (2021) for derivation of the theory these measurements led to). 
@@ -595,6 +596,16 @@ Before running HOOMD-Blue, be sure you always have `source ~/virtual_envs/[virtu
 
 ## ABPs Code Package
 Here we will discuss some basics of SLURM which is Longleaf's method of submitting and managing running of code. Longleaf uses BASH, similar to your Mac now, so you can easily submit code using the `sh` prefix before a bash script for defining variables and submitting individual runs for each specified set of initial conditions. This github project utilizes bash scripts to read in user's desired measurement/simulation type, select the desired python file to run (either for a simulation or post-processing) based on user input, and to read in the specified initial/system conditions into a template python file for a) post-processing of each .gsd file (simulation file) within the current directory or b) create a python file for instantiating a system and running that file to simulate each possible configuration of initial conditions inputted, which, in turn, outputs a .gsd file detailing the simulation at each time step.  
+
+### Organization
+This package is organized into 7 main directories:
+1. deprecated: contains deprecated post-processing files whose structure were updated to fit with the new standard of running post-processing or simulation files. All functionality of these files is included in the updated files in post_proc detailed later.
+2. papers: contains LaTeX files for our published works
+3. post_proc: contains post-processing files that are 1) deprecated but need to be updated contained in /post_proc/to_update directory, current, updated files for running simulations and post-processing conforming with the proper structure in /post_proc/lib directory, post-processing files for cleaning, wrangling, and analyzing wrangled data in Jupyter Notebooks in /post_proc/Jupyter directory, and template and shell scripts for running post-processing and simulations in parent directory: /post_proc/
+4. run_sim: contains deprecated files for running simulations whose structure were updated to fit with the new standard of running simulations (also consistent with running post-processing). All functionality of these files is included in the updated files in post_proc detailed later.
+5. sample_post_proc_outputs: contains sample image, video, and txt outputs from all post-processing files
+6. sample_sim: contains sample simulation file for analysis of post-processing files to verify functionality
+7. theory: contains python files that apply theory to make predictions. Does not analyze simulation files. Can be run on their own.
 
 ### Running Simulations
 The bash file used to submit a simulation is /klotsa/ABPs/runPeloopBinaryCluster.sh. Before submitting the bash file, one should manually input all desired possible physical conditions of each system to run as lists in each variable's location at the top of the page. The bash file will loop through all possible pairings of these variables and submit create and submit individual python files for each possible configuration based on template python files. Whether running on a cluster (i.e. Longleaf) or locally, one should submit this file as:
