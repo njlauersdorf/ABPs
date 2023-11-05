@@ -3,14 +3,18 @@
 2. [Technologies](#technologies)
 3. [Installation](#installation)
     - [Prerequisites](#prerequisites)
-    - [HOOMD-Blue](#HOOMD-Blue)
+    - [Install HOOMD-Blue V3.0](#hoomd-3)
+        - [Local Install via Conda](#local-install-via-conda)
+        - [Cluster Install via Conda](#cluster-install-via-conda)
+    - [Install HOOMD-Blue V2.9](#hoomd-2)
       - [Local install via conda](#local-install-via-conda)
       - [Local install via source](#local-install-via-source)
       - [Cluster install via source](#cluster-install-via-source)
-    - [Github](#Github)
-4. [Running Code](#running-code)
-    - [Submitting Simulations](#Submitting-Simulations)
-    - [Submitting Post-Processing](#Submitting-Post-Processing)
+4. [ABPs Code Package](#abps-code-package)
+    - [Running Simulations](#Running-Simulations)
+    - [Longleaf Simulations and SLURM](#Longleaf-Simulations-and-SLURM)
+    - [Submitting post-processing](#Submitting-Post-Processing)
+    - [Downloading data from Longleaf](#Downloading-data-from-Longleaf)
 5. [Collaboration](#collaboration)
 
 # General Info
@@ -235,7 +239,7 @@ conda 4.11.0
 
 Alternatively to miniconda, you can download the full Anaconda suite. Open the Anaconda-Navigator and select 'create' under the listed environments. Enter a name for your environment and select Python 3.8 for your Python version (which is the same as on Longleaf). 
 
-## Create Conda Environment
+#### Create Conda Environment
 
 Conda is capable of creating environments with specified versions of python and packages. You can switch between the environments by activating them, providing you with a customized, separate environment for each specific task. In this guide, we will separate our environments into one specificically for HOOMD-blue simulation package and another for post-processing of the simulation data. By default, the environments are contained within $HOME/miniconda3/envs/, but this guide will contain all the environments within $HOME/pyEnvs/. If desired, changing the environment directory should not affect workflow as long as the paths in your simulation scripts are changed accordingly.
 
@@ -264,7 +268,7 @@ $ python3 -m pip install freud-analysis
 $ python3 -m pip install shapely
 ```
 
-## Installing HOOMD-Blue V3.0
+## Install HOOMD-Blue V3.0
 
 ### Local Install via Conda
 
@@ -392,7 +396,7 @@ This should output the following.
 
 0.005
 
-## Installing HOOMD-Blue V2.9
+## Install HOOMD-Blue V2.9
 
 ### Local install via conda
 
@@ -652,14 +656,16 @@ $ scancel [SLURM RUN ID]
 where SLURM RUN ID is the XXXXXXX simulation number in your slurm_XXXXXXX.out file or when you input `squeue`.
    
 ### Submitting post-processing
-The bash file used to submit a simulation is /klotsa/ABPs/post_proc_binary.sh. This file will submit the specified post processing routine for every simulation file (.gsd) in the current directory. Submit this bash file similarly to running a simulation:
+The bash file used to submit a simulation is /klotsa/ABPs/post_proc_binary.sh. While HOOMD-Blue can only be run on MacOS or Linux based systems, post-processing of simulation files can be run on Windows as well. This file will submit the specified post processing routine for every simulation file (.gsd) in the current directory. Submit this bash file similarly to running a simulation:
    
 ```
 $ sh ~/klotsa/ABPs/post_proc_binary.sh
 ```
    
 Upon submitting this bash file, three folders will be created: /MM_DD_YYYY_txt_files, /MM_DD_YYYY_pic_files, and /MM_DD_YYYY_vid_files, where they store the outputted .txt, .png, and .mp4 files respectively for all post-processing scripts started on that date (MM/DD/YYYY). In addition, there will be prompts to specify a few analytical details, such as:
-   
+
+> What is your operating system?
+> 
 > What is your bin size?
 > 
 > What is your step size?
@@ -667,7 +673,9 @@ Upon submitting this bash file, three folders will be created: /MM_DD_YYYY_txt_f
 > What do you want to analyze?
    
    
-where it seeks the length of the bin for meshing the system (typically 5), the time step size to be analyzed (always 1 unless we care about velocity), and our post-processing method. A second bash script will be submitted for each .gsd file in the current directory where this information is passed to. There, a python post-processing file will be ran on each .gsd file separately that corresponds to our response to the third prompt. These post processing files typically output a series of .png files for each frame and a .txt file (located in the /MM_DD_YYYY_txt_files_folder) compiling certain information at each time step. Once the python script finishes running, the second bash file will compile each series of .png files (located in the /MM_DD_YYYY_pic_files folder) into a .mp4 (located in the /MM_DD_YYYY_vid_files folder). The bash script will proceed to delete all .png files that were created by that post-processing script. Therefore, what we're left with will always be .mp4 files. or.txt files unless an error occurs. These .txt files are typically read into certain jupyter notebook scripts to analyze them averaged over time and to identify trends over our input parameters.
+where it seeks the length of the bin for meshing the system (typically 5), the time step size to be analyzed (always 1 unless we care about velocity), and our post-processing method. Right before the prompt, the optional inputs are given for each, similar to the initial conditions in running simulations in the previous section. A second bash script will be submitted for each .gsd file in the current directory where this information is passed to. While running each python post-processing for each .gsd file on at a time on your local CPU, each will be submitted separately and run together on separate CPUs on Longleaf using SLURM. These post processing files typically output a series of .png files for each frame (optional input) and a .txt file (located in the /MM_DD_YYYY_txt_files_folder) compiling certain information at each time step. Once the python script finishes running, the second bash file will compile each series of .png files (located in the /MM_DD_YYYY_pic_files folder) into a .mp4 (located in the /MM_DD_YYYY_vid_files folder). The bash script will proceed to delete all .png files that were created by that post-processing script. Therefore, what we're left with will always be .mp4 files. or.txt files unless an error occurs. These .txt files are typically read into certain jupyter notebook scripts to clean, wrangle, and analyze them further (i.e. averaged over time and to identify trends over our input parameters).
+
+### Downloading data from Longleaf
 
 If you'd like to download a file from Longleaf to your local computer, you can input:
    
