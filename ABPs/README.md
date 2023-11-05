@@ -1,7 +1,7 @@
 # Table of Contents
 1. [General Info](#general-info)
 2. [Technologies](#technologies)
-3. [HOOMD-Blue Installation Instructions](#installation)
+3. [HOOMD-Blue Installation Instructions](#HOOMD-Blue-Installation-Instructions)
     - [Prerequisites](#prerequisites)
     - [Install HOOMD-Blue V3.0](#hoomd-3)
         - [Local Install via Conda](#local-install-via-conda)
