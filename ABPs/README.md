@@ -266,6 +266,8 @@ $ python3 -m pip install shapely
 
 ## Installing HOOMD-Blue V3.0
 
+### Local Install via Conda
+
 ```
 conda install -c conda-forge eigen numpy pybind11 tbb tbb-devel gsd cereal "hoomd=3.0.0=*cpu*"
 ```
@@ -281,6 +283,104 @@ don't worry about it. It is most likely will resolve itself.
 As far as I know, there is no support from HOOMD-blue for AMD GPUs on Mac (more specifically no support for ROCm for Mac). Thus, you shouldn't need any GPU related builds on your Mac. I doubt this will ever be the case, but if you do have an eGPU, just search for instructions on CUDA setup on Macs and then install the GPU build instead of CPU.
 
 This sets up the conda environment with HOOMD-blue simulation package on your machine. Confirm that the simulation package is working by starting up a python session with python. Then, run the following to confirm the installation.
+
+```
+import hoomd
+integrator = hoomd.md.Integrator(dt=0.005)
+integrator.dt
+```
+
+This should output the following.
+
+0.005
+
+### Cluster Install via Conda
+
+This guide will walk you through the installation process for HOOMD-blue(http://glotzerlab.engin.umich.edu/hoomd-blue/) molecular dynamics simulation package and some commonly used data processing tools on the UNC-CH's Longleaf Research Computing system. Prior experience with UNIX CLI would be helpful for you to understand this guide better, but is not required. This installation guide assumes you have established an account on the Longleaf Cluster (https://its.unc.edu/research-computing/request-a-cluster-account/). Should you choose or need to run any HOOMD-blue simulations on the Dogwood Cluster, this installation guide can be followed without any alterations. The following steps assume you have bash as your shell, which is the default setup for longleaf. If you chose to use other shells such as tcsh, change the commands appropriately. There may be some syntax differences that require you to modify the commands accordingly.
+
+#### Load Modules
+
+Modules are pre-built software that are on the cluster for you to easily use. Load and save the following modules
+
+git
+gcc/9.1.0
+cuda/11.4
+cmake
+geos
+
+```
+module load git gcc/9.1.0 cuda/11.4 cmake geos
+module save
+```
+
+#### Install miniconda
+
+Type the following commands to download and install miniconda3 with Python version 3.9 and conda version 4.11.
+
+```
+curl -sO https://repo.anaconda.com/miniconda/Miniconda3-py39_4.11.0-Linux-x86_64.sh
+bash ./Miniconda*.sh -b -p $HOME/miniconda3
+$HOME/miniconda3/bin/conda init bash
+source $HOME/.bashrc
+rm $HOME/Miniconda*.sh
+```
+
+You can confirm the Miniconda installation by running conda -V in your terminal. The output should resemble the following:
+
+conda 4.11.0
+
+Not necessary, but you can update your conda install with conda install -n base -c defaults conda.
+
+#### Activate Conda Environment
+
+Conda is capable of creating environments with specified versions of python and packages. You can switch between the environments by activating them, providing you with a customized, separate environment for each specific task. In this guide, we will separate our environments into one specificically for HOOMD-blue simulation package and another for post-processing of the simulation data.
+
+First, we start with creating an environment for HOOMD-blue simulation package.
+
+```
+conda create -n hoomd -y python=3.8
+```
+
+Note that I am using python 3.8 here, but HOOMD-blue V3 requires any python above 3.6. Change this according to your needs.
+
+Activate the created conda environment.
+
+```
+conda activate rekt
+```
+
+Run conda list to ensure the specified python version is installed.
+
+Install the prerequisite conda packages needed for building HOOMD-blue.
+
+```
+conda install -c conda-forge eigen numpy pybind11 tbb tbb-devel gsd cereal
+```
+
+Confirm the installation by running conda list again.
+
+#### Build and Install HOOMD-BLue V3.0
+
+Start by cloning the github repository.
+
+```
+git clone --recursive https://github.com/glotzerlab/hoomd-blue
+```
+
+Configure build settings with CUDA and TBB enabled.
+
+```
+CC=gcc CXX=g++ cmake -B build/hoomd -S hoomd-blue -DCMAKE_INSTALL_PREFIX=`python3 -c "import site; print(site.getsitepackages()[0])"` -DCMAKE_CXX_FLAGS=-march=native -DCMAKE_C_FLAGS=-march=native -DENABLE_GPU=ON -DENABLE_TBB=ON
+```
+
+Once the configuration has finished, build and install HOOMD-blue.
+
+```
+cmake --build build/hoomd -j8
+cmake --install build/hoomd
+```
+
+To confirm the installation, start an interactive python session with python and run the following.
 
 ```
 import hoomd
@@ -358,7 +458,9 @@ Before running HOOMD-Blue, be sure you always have `source ~/virtual_envs/[virtu
 
 ### Cluster Install Via Source
 
-First, get access to UNC's Longleaf supercomputer. If you do not have access, email: research@unc.edu. Ask for "a Longleaf account in the Klotsa group with access to the GPUs" along with "read, write, and execute permissions for the contents of /proj/dklotsalab directory"
+This guide will walk you through the installation process for HOOMD-blue(http://glotzerlab.engin.umich.edu/hoomd-blue/) molecular dynamics simulation package and some commonly used data processing tools on the UNC-CH's Longleaf Research Computing system. Prior experience with UNIX CLI would be helpful for you to understand this guide better, but is not required. This installation guide assumes you have established an account on the Longleaf Cluster (https://its.unc.edu/research-computing/request-a-cluster-account/). Should you choose or need to run any HOOMD-blue simulations on the Dogwood Cluster, this installation guide can be followed without any alterations. The following steps assume you have bash as your shell, which is the default setup for longleaf. If you chose to use other shells such as tcsh, change the commands appropriately. There may be some syntax differences that require you to modify the commands accordingly.
+
+Once you get access to UNC's Longleaf supercomputer, email: research@unc.edu. Ask for "access to the GPUs" along with "read, write, and execute permissions for the contents of /proj/dklotsalab directory"
 
 Login to Longleaf with SSH using your ONYEN as your username:
 
@@ -384,6 +486,8 @@ alias sinteractivegpu="srun --ntasks=1 --cpus-per-task=8 --mem=8G --time=8:00:00
 alias sinteractivevolta="srun --ntasks=1 --cpus-per-task=8 --mem=8G --time=8:00:00 --partition=volta-gpu --gres=gpu:1 --qos=gpu_access --pty /bin/bash"
 ```
 
+#### Load Modules
+
 Install prerequisite modules and save them for future logins on cluster. These are the versions I have currently installed, but you can install the most recent versions as well.
 
 ```
@@ -393,13 +497,15 @@ $ module save
 $ module list
 ```
 
+#### Create a Virtual Environment
+
 Create a python virtual environment to load everything into with 'install' command later. Make sure it is the same name as your local virtual environment for uniformity between your local HOOMD and the Longleaf HOOMD codes.
 
 ```
 $ cd ~
 $ mkdir virtual_envs
-$ python3 -m venv virtual_envs/[virtual environment name]
-$ source ~/virtual_envs/[virtual environment name]/bin/activate
+$ python3 -m venv virtual_envs/rekt
+$ source ~/virtual_envs/rekt/bin/activate
 ```
 
 Install some useful tools for HOOMD post-processing:
@@ -438,7 +544,7 @@ Configure HOOMD-Blue. First, activate a compile node for more memory. After you 
 
 ```
 $ sinteractivevolta
-$ source ~/virtual_envs/[virtual environment name]/bin/activate
+$ source ~/virtual_envs/rekt/bin/activate
 $ which python3
 ```
 > ~/virtual_envs/[virtual environment name]/bin/python3
@@ -483,6 +589,102 @@ $ cmake --install .
 
 Before running HOOMD-Blue, be sure you always have `source ~/virtual_envs/[virtual environment name]/bin/activate` included at the beginning of any bash scripts.
 
+## ABPs Code Package
+Here we will discuss some basics of SLURM which is Longleaf's method of submitting and managing running of code. Longleaf uses BASH, similar to your Mac now, so you can easily submit code using the `sh` prefix before a bash script for defining variables and submitting individual runs for each specified set of initial conditions. This github project utilizes bash scripts to read in user's desired measurement/simulation type, select the desired python file to run (either for a simulation or post-processing) based on user input, and to read in the specified initial/system conditions into a template python file for a) post-processing of each .gsd file (simulation file) within the current directory or b) create a python file for instantiating a system and running that file to simulate each possible configuration of initial conditions inputted, which, in turn, outputs a .gsd file detailing the simulation at each time step.  
 
+### Running Simulations
+The bash file used to submit a simulation is /klotsa/ABPs/runPeloopBinaryCluster.sh. Before submitting the bash file, one should manually input all desired possible physical conditions of each system to run as lists in each variable's location at the top of the page. The bash file will loop through all possible pairings of these variables and submit create and submit individual python files for each possible configuration based on template python files. Whether running on a cluster (i.e. Longleaf) or locally, one should submit this file as:
+
+```
+$ sh ~/klotsa/ABPs/runPeloopBinaryCluster.sh
+```
+
+If running on Longleaf, be sure you are running these simulations in the /proj/ (group workspace) or /pine/ (personal workspace) (note that /pine/ workspace has very limited storage compared to the group workspace). Upon submitting this bash file, a folder named /MM_DD_YYYY_parent, where MM is the month, DD is the day, and YYYY is the year, will be created where each python file for every run is created and saved. To determine which template python file to use, the user is prompted to answer a few questions that describe the initial conditions of the system and where the simulation is being run.
+
+> Are you running on Longleaf (y/n)?
+
+If true, answer `y` otherwise answer `n`. Answering this correctly will automatically specify the pathing to hoomd for you and proper slurm terminology for submitting a run to separate GPU nodes (as opposed to CPU nodes if ran locally). Your input is then followed by four yes-or-no questions in a row to specify the initial conditions
+
+|----------------------------------------------------------------------|
+|      Possible simulation options and corresponding user inputs       |
+|          **************************************************          |
+|          -------------Random initial conditions-------------         |
+| Random gas: random_init                                              |
+|          ----------Near steady-state MIPS clusters----------         |
+| Homogeneous cluster: homogeneous_cluster                             |
+| 100% slow bulk, 100% fast interface cluster: slow_bulk_cluster       |
+| 100% fast bulk, 100% slow interface cluster: fast_bulk_cluster       |
+| Half-slow, half-fast cluster: half_cluster                           |
+|             ----------Bulk only of MIPS cluster----------            |
+| Constant pressure (changing volume): constant_pressure               |
+|          -----------Elongated planar membranes--------------         |
+| Slow planar membrane: slow_membrane                                  |
+| Immobile planar membrane: immobile_membrane                          |
+| Immobile oriented planar membrane: immobile_orient_membrane          |
+| Slow constrained planar membrane: slow_constrained_membrane          |
+| Slow adsorb constrained membrane: slow_adsorb_constrained_membrane   |
+| Slow interior constrained membrane: slow_int_constrained_membrane    |
+| Diffusive mixture membrane: slow_int_constrained_membrane_dif_temp   |
+|----------------------------------------------------------------------|
+
+> What initial conditions do you want (see above for options)?
+
+For whichever initial condition you desire (see left of colon for brief description of each option and more detailed description within called functions themselves), input the exact wording right of the colon (e.g. for a "Random gas" initial condition, you'd want to input "random_init" without the quotation marks. If your input does not match any possible options, the submission will abort. Future initial conditions are planned to be added soon. 
+
+At the end of that bash script, a second bash script, either run_local.sh or run_gpu.sh depending on if you selected to run on your local CPU or Longleaf's GPU respectively, will be submitted for each .gsd file in the current directory where this information is passed to. These shell scripts feed the specified initial conditions into a template python file, run_sim_sample.py, and saves that new python file in the parent directory based on the current date, then submits the python file to Longleaf (using SLURM) or your local computer to run. This python file can be referenced later to verify initial conditions. 
+
+### Longleaf Simulations and SLURM
+
+Once the python file is submitted on Longleaf, a slurm-XXXXXXXXXXX.out file will be created that documents the progress of the run and which submission number it is (if ran on Longleaf). Be sure to check this to file to be sure the submission will take less than 11 days or else the simulation will be automatically aborted per Longleaf's maximum run length. Similarly, the slurm file is where to go to see if and what type of error occurred. There are two common errors: 1) a particle exits the simulation box, which occurs due to too great of particle overlap from too small of a time step (therefore, increase the time step and re-submit to fix this) and 2) the simulation finds a faulty GPU node. If the latter occurs, the simulation never starts and the slurm file remains empty despite the simulation queue (squeue -u <Longleaf username, i.e. Onyen>) saying the simulation is still running (and it will continue to take up a GPU node until it his the maximum time limit of 11:00:00 days unless cancelled beforehand (scancel <submission number>). If running locally, the estimated simulation time will be output to the terminal at a regular interval. In addition only the first error commonly occurs when you have too small of a time step. Testing a run locally (using the most active and hard spheres desired of your input systems) is a good method to find a good starting time step to use. Sometimes, a particle will exit the box later in the simulation, however, this is less common with the initial conditions being the main culprit for most errors.
+   
+You can check the progress of your simulations using some basic slurm commands:
+   
+```
+squeue -u [ONYEN]   
+```
+
+If you need to cancel a simulation, you can run:
+   
+```
+$ scancel [SLURM RUN ID]   
+```
+   
+where SLURM RUN ID is the XXXXXXX simulation number in your slurm_XXXXXXX.out file or when you input `squeue`.
+   
+### Submitting post-processing
+The bash file used to submit a simulation is /klotsa/ABPs/post_proc_binary.sh. This file will submit the specified post processing routine for every simulation file (.gsd) in the current directory. Submit this bash file similarly to running a simulation:
+   
+```
+$ sh ~/klotsa/ABPs/post_proc_binary.sh
+```
+   
+Upon submitting this bash file, three folders will be created: /MM_DD_YYYY_txt_files, /MM_DD_YYYY_pic_files, and /MM_DD_YYYY_vid_files, where they store the outputted .txt, .png, and .mp4 files respectively for all post-processing scripts started on that date (MM/DD/YYYY). In addition, there will be prompts to specify a few analytical details, such as:
+   
+> What is your bin size?
+> 
+> What is your step size?
+> 
+> What do you want to analyze?
+   
+   
+where it seeks the length of the bin for meshing the system (typically 5), the time step size to be analyzed (always 1 unless we care about velocity), and our post-processing method. A second bash script will be submitted for each .gsd file in the current directory where this information is passed to. There, a python post-processing file will be ran on each .gsd file separately that corresponds to our response to the third prompt. These post processing files typically output a series of .png files for each frame and a .txt file (located in the /MM_DD_YYYY_txt_files_folder) compiling certain information at each time step. Once the python script finishes running, the second bash file will compile each series of .png files (located in the /MM_DD_YYYY_pic_files folder) into a .mp4 (located in the /MM_DD_YYYY_vid_files folder). The bash script will proceed to delete all .png files that were created by that post-processing script. Therefore, what we're left with will always be .mp4 files. or.txt files unless an error occurs. These .txt files are typically read into certain jupyter notebook scripts to analyze them averaged over time and to identify trends over our input parameters.
+
+If you'd like to download a file from Longleaf to your local computer, you can input:
+   
+```
+scp [ONYEN]@longleaf.unc.edu:/path/to/file ~/Desktop/
+```
+   
+which will download a single file based on its path from Longleaf to your local Desktop. If you want to download a whole folder, you can modify it as below:
+   
+```
+$ scp -r [ONYEN]@longleaf.unc.edu:/path/to/folder ~/Desktop/
+```
+
+where the -r signifies a recursive method since there are multiple files in the folder.
+   
+## Collaboration
+
+To collaborate or ask questions, please contact me at: njlauers@live.unc.edu. If you wish to use any part of this package in your research, please supply my name in the acknowledgments or cite any of my publications.
 
    
