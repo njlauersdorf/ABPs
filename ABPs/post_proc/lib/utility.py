@@ -28,6 +28,14 @@ class utility:
         self.ly_box = ly_box
         self.hy_box = self.ly_box/2
 
+    def crop_sim(self, start, end):
+        import gsd.hoomd
+        pre_crop = gsd.hoomd.open("file_name", mode='r')
+        post_crop = "new_file_name"
+        with gsd.hoomd.open(post_crop, mode='wb') as f:
+            for i in range(start, end):
+                f.append(pre_crop[i])
+
     def sep_dist_x(self, pos1, pos2):
         '''
         Purpose: Calculates separation distance (accounting for periodic boundary conditions)
