@@ -2,7 +2,7 @@
 1. [General Info](#general-info)
 2. [Technologies](#technologies)
 3. [HOOMD-Blue Installation Instructions](#HOOMD-Blue-Installation-Instructions)
-    - [Prerequisites](#prerequisites)
+    - [Install Prerequisite Software and Tools](#Install-Prerequisite-Software-and-Tools)
     - [Install HOOMD-Blue V3.0](#hoomd-3)
         - [Local Install via Conda](#local-install-via-conda)
         - [Cluster Install via Conda](#cluster-install-via-conda)
@@ -42,7 +42,7 @@ A list of technologies used within the project:
 
 It is highly recommended one install's both HOOMD-Blue and this github repository in their user's home directory due to the pathing in the analysis files. This can be modified line-by-line otherwise. Furthermore, this installation instruction and github repository is intended for use with HOOMD v2.9.7. This is not the most recent version of HOOMD. HOOMD-Blue v3+ drastically changes the methodology for running simulations, hence, the simulation submission scripts must be modified to use with HOOMD v3+. However, post-processing files can still be used normally. One should reference the guide for the newest version (https://hoomd-blue.readthedocs.io/en/latest/) to determine how these submission files need to be modified. It is recommended one installs HOOMD-Blue on either a Mac or Linux OS or problems may arise with use of an emulat. It is strongly suggested one sticks to Mac or Linux when running simulations. Post-processing scripts of simulations have been written and tested for analysis on both Mac, Linux, and Windows.
 
-## Installing Prerequisite Software and Tools
+## Install Prerequisite Software and Tools
 
 ### Homebrew (mac exclusive)
 For mac users, Homebrew (https://brew.sh/) is a package manager that will help you to install and manage the required software packages easily. If you're familiar with Linux systems, think of Homebrew as apt-get on Debian-based systems or dnf/yum on RedHat-based systems.
