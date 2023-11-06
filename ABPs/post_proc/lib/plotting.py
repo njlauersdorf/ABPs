@@ -291,7 +291,7 @@ class plotting:
                             pass
             except:
                 pass
-        """
+        
         #active_r = ( active_fa_dict['bin']['x'] ** 2 + active_fa_dict['bin']['y'] ** 2 ) ** 0.5
         active_r = ( np.array(active_fa_dict['bin']['all']['x']) ** 2 + np.array(active_fa_dict['bin']['all']['y']) ** 2 ) ** 0.5
         nonzero_id = np.nonzero(active_r)
@@ -300,6 +300,7 @@ class plotting:
         nonzero_y_id = nonzero_id[1]
         print(active_fa_dict)
         # Plot averaged, binned orientation of particles
+        """
         if orientation_id == True:
             try:
                 if active_fa_dict!=None:
@@ -308,8 +309,8 @@ class plotting:
                         plt.quiver(self.pos_x[nonzero_x_id[i]][nonzero_y_id[i]]*3, self.pos_y[nonzero_x_id[i]][nonzero_y_id[i]]*3, active_fa_dict['bin']['all']['x'][nonzero_x_id[i]][nonzero_y_id[i]], active_fa_dict['bin']['all']['y'][nonzero_x_id[i]][nonzero_y_id[i]], scale=10.0, width=0.01, color='black', alpha=0.8)
             except:
                 pass
-        """
         
+        """
         new_orient_dict_x = np.zeros(np.shape(active_fa_dict['bin']['all']['x']))
         new_orient_dict_y = np.zeros(np.shape(active_fa_dict['bin']['all']['x']))
 
@@ -355,7 +356,7 @@ class plotting:
                     
             except:
                 pass
-
+        
         plt.tick_params(axis='both', which='both',
                         bottom=False, top=False, left=False, right=False,
                         labelbottom=False, labeltop=False, labelleft=False, labelright=False)
@@ -411,7 +412,7 @@ class plotting:
             ax.add_artist(one_leg)
         plt.tight_layout()
         ax.set_facecolor('#F2f2f2')
-        plt.savefig(self.outPath + 'phases_' + self.outFile + ".png", dpi=400, transparent=False, bbox_inches='tight')
+        plt.savefig(self.outPath + 'phases_' + self.outFile + ".png", dpi=150, transparent=False, bbox_inches='tight')
         plt.close()  
     def plot_area_fraction(self, area_frac_dict, pos, sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None, type='all', interface_id = False, orientation_id = False):#, int_comp_dict):#sep_surface_dict, int_comp_dict):
         #DONE!
@@ -7023,7 +7024,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                             plt.scatter(pos_exterior_surface_x - self.lx_box, pos_exterior_surface_y, c='black', s=3.0)
                             plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y+self.ly_box, c='black', s=3.0)
                             plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y-self.ly_box, c='black', s=3.0) 
-                        """
+                        
                         try:
                             
                             pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
@@ -7035,7 +7036,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                             plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y-self.ly_box, c='black', s=3.0) 
                         except:
                             pass
-                        """
+                        
             except:
                 pass
         if orientation_id == True:
