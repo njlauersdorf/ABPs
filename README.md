@@ -611,7 +611,7 @@ This package is organized into 7 main directories:
 The bash file used to submit a simulation is /klotsa/ABPs/runPeloopBinaryCluster.sh. Before submitting the bash file, one should manually input all desired possible physical conditions of each system to run as lists in each variable's location at the top of the page. The bash file will loop through all possible pairings of these variables and submit create and submit individual python files for each possible configuration based on template python files. Whether running on a cluster (i.e. Longleaf) or locally, one should submit this file as:
 
 ```
-$ sh ~/klotsa/ABPs/runPeloopBinaryCluster.sh
+$ sh ~/ABPs/runPeloopBinaryCluster.sh
 ```
 
 If running on Longleaf, be sure you are running these simulations in the /proj/ (group workspace) or /pine/ (personal workspace) (note that /pine/ workspace has very limited storage compared to the group workspace). Upon submitting this bash file, a folder named /MM_DD_YYYY_parent, where MM is the month, DD is the day, and YYYY is the year, will be created where each python file for every run is created and saved. To determine which template python file to use, the user is prompted to answer a few questions that describe the initial conditions of the system and where the simulation is being run.
@@ -670,7 +670,7 @@ where SLURM RUN ID is the XXXXXXX simulation number in your slurm_XXXXXXX.out fi
 The bash file used to submit a simulation is /klotsa/ABPs/post_proc_binary.sh. While HOOMD-Blue can only be run on MacOS or Linux based systems, post-processing of simulation files can be run on Windows as well. This file will submit the specified post processing routine for every simulation file (.gsd) in the current directory. Submit this bash file similarly to running a simulation:
    
 ```
-$ sh ~/klotsa/ABPs/post_proc_binary.sh
+$ sh ~/ABPs/post_proc_binary.sh
 ```
    
 Upon submitting this bash file, three folders will be created: /MM_DD_YYYY_txt_files, /MM_DD_YYYY_pic_files, and /MM_DD_YYYY_vid_files, where they store the outputted .txt, .png, and .mp4 files respectively for all post-processing scripts started on that date (MM/DD/YYYY). In addition, there will be prompts to specify a few analytical details, such as:
