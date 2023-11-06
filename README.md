@@ -599,10 +599,10 @@ Here we will discuss some basics of SLURM which is Longleaf's method of submitti
 
 ### Organization
 This package is organized into 7 main directories:
-1. deprecated: contains deprecated post-processing files whose structure were updated to fit with the new standard of running post-processing or simulation files. All functionality of these files is included in the updated files in post_proc detailed later.
-2. papers: contains LaTeX files for our published works
-3. post_proc: contains post-processing files that are 1) deprecated but need to be updated contained in /post_proc/to_update directory, current, updated files for running simulations and post-processing conforming with the proper structure in /post_proc/lib directory, post-processing files for cleaning, wrangling, and analyzing wrangled data in Jupyter Notebooks in /post_proc/Jupyter directory, and template and shell scripts for running post-processing and simulations in parent directory: /post_proc/
-4. run_sim: contains deprecated files for running simulations whose structure were updated to fit with the new standard of running simulations (also consistent with running post-processing). All functionality of these files is included in the updated files in post_proc detailed later.
+1. deprecated: contains deprecated files for post-processing and running simulations whose structure were updated to fit with the new standard of running post-processing or simulation files. All functionality of these files is included in the updated files in post_proc detailed later.
+2. images: contains images used in Github readme.md.
+3. papers: contains LaTeX files for our published works
+4. post_proc: contains post-processing files that are 1) deprecated but need to be updated contained in /post_proc/to_update directory, current, updated files for running simulations and post-processing conforming with the proper structure in /post_proc/lib directory, post-processing files for cleaning, wrangling, and analyzing wrangled data in Jupyter Notebooks in /post_proc/Jupyter directory, and template and shell scripts for running post-processing and simulations in parent directory: /post_proc/
 5. sample_post_proc_outputs: contains sample image, video, and txt outputs from all post-processing files
 6. sample_sim: contains sample simulation file for analysis of post-processing files to verify functionality
 7. theory: contains python files that apply theory to make predictions. Does not analyze simulation files. Can be run on their own.
