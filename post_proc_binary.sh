@@ -24,11 +24,11 @@ fi
 
 if [ $answer == "y" ]; then
     hoomd_path="$HOME/hoomd-blue/build"
-    script_path="$HOME/klotsa/ABPs/post_proc"
+    script_path="$HOME/ABPs/post_proc"
     submit='sbatch'
 else
     hoomd_path="$HOME/hoomd-blue/build"
-    script_path="$HOME/klotsa/ABPs/post_proc"
+    script_path="$HOME/ABPs/post_proc"
     submit='sh'
 fi
 
