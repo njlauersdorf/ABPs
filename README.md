@@ -2,6 +2,7 @@
 1. [General Info](#general-info)
 2. [Technologies](#technologies)
 3. [HOOMD-Blue Installation Instructions](#HOOMD-Blue-Installation-Instructions)
+    - [Creating a Longleaf account](#creating-a-longleaf-account)
     - [Install Prerequisite Software and Tools](#Install-Prerequisite-Software-and-Tools)
     - [Install HOOMD-Blue V3.0](#Install-HOOMD-Blue-V3.0)
         - [Local Install via Conda](#local-install-via-conda)
@@ -10,7 +11,7 @@
       - [Local install via conda](#local-install-via-conda)
       - [Local install via source](#local-install-via-source)
       - [Cluster install via source](#cluster-install-via-source)
-4. [ABPs Code Package](#abps-code-package)
+5. [ABPs Code Package](#abps-code-package)
     - [Organization](#organization)
     - [Running Simulations](#Running-Simulations)
     - [Longleaf Simulations and SLURM](#Longleaf-Simulations-and-SLURM)
@@ -42,6 +43,10 @@ A list of technologies used within the project:
 # HOOMD-Blue Installation Instructions
 
 It is highly recommended one install's both HOOMD-Blue and this github repository in their user's home directory due to the pathing in the analysis files. This can be modified line-by-line otherwise. Furthermore, this installation instruction and github repository is intended for use with HOOMD v2.9.7. This is not the most recent version of HOOMD. HOOMD-Blue v3+ drastically changes the methodology for running simulations, hence, the simulation submission scripts must be modified to use with HOOMD v3+. However, post-processing files can still be used normally. One should reference the guide for the newest version (https://hoomd-blue.readthedocs.io/en/latest/) to determine how these submission files need to be modified. It is recommended one installs HOOMD-Blue on either a Mac or Linux OS or problems may arise with use of an emulat. It is strongly suggested one sticks to Mac or Linux when running simulations. Post-processing scripts of simulations have been written and tested for analysis on both Mac, Linux, and Windows.
+
+## Creating a Longleaf account
+
+To create a Longleaf account, follow the instructions on this link: [https://help.rc.unc.edu/request-a-cluster-account/](https://help.rc.unc.edu/request-a-cluster-account/). In a relevant prompt, be sure to mention that you "need access to the GPUs on Longleaf" and that you "need access to the shared /proj space for Daphne Klotsa's lab (/proj/dklotsalab/)". You may need to provide approval from your advisor or cc her in an email for the latter request. If you get an account and they don't fulfill the latter two requests, email them at research@unc.edu to explicitly ask for it.
 
 ## Install Prerequisite Software and Tools
 
@@ -463,7 +468,7 @@ Before running HOOMD-Blue, be sure you always have `source ~/virtual_envs/[virtu
 
 ### Cluster Install Via Source
 
-This guide will walk you through the installation process for HOOMD-blue(http://glotzerlab.engin.umich.edu/hoomd-blue/) molecular dynamics simulation package and some commonly used data processing tools on the UNC-CH's Longleaf Research Computing system. Prior experience with UNIX CLI would be helpful for you to understand this guide better, but is not required. This installation guide assumes you have established an account on the Longleaf Cluster (https://its.unc.edu/research-computing/request-a-cluster-account/). Should you choose or need to run any HOOMD-blue simulations on the Dogwood Cluster, this installation guide can be followed without any alterations. The following steps assume you have bash as your shell, which is the default setup for longleaf. If you chose to use other shells such as tcsh, change the commands appropriately. There may be some syntax differences that require you to modify the commands accordingly.
+This guide will walk you through the installation process for HOOMD-blue([http://glotzerlab.engin.umich.edu/hoomd-blue/](http://glotzerlab.engin.umich.edu/hoomd-blue/)) molecular dynamics simulation package and some commonly used data processing tools on the UNC-CH's Longleaf Research Computing system. Prior experience with UNIX CLI would be helpful for you to understand this guide better, but is not required. This installation guide assumes you have established an account on the Longleaf Cluster ([https://its.unc.edu/research-computing/request-a-cluster-account/](https://help.rc.unc.edu/request-a-cluster-account/)). Should you choose or need to run any HOOMD-blue simulations on the Dogwood Cluster, this installation guide can be followed without any alterations. The following steps assume you have bash as your shell, which is the default setup for longleaf. If you chose to use other shells such as tcsh, change the commands appropriately. There may be some syntax differences that require you to modify the commands accordingly.
 
 Once you get access to UNC's Longleaf supercomputer, email: research@unc.edu. Ask for "access to the GPUs" along with "read, write, and execute permissions for the contents of /proj/dklotsalab directory"
 
