@@ -334,7 +334,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
         #Compute cluster parameters using neighbor list of all particles within LJ cut-off distance
         system_all = freud.AABBQuery(f_box, f_box.wrap(pos))
         cl_all=freud.cluster.Cluster()                              #Define cluster
-        cl_all.compute(system_all, neighbors={'r_max': 1.0})        # Calculate clusters given neighbor list, positions,
+        cl_all.compute(system_all, neighbors={'r_max': 1.3})        # Calculate clusters given neighbor list, positions,
                                                                     # and maximal radial interaction distance
         clp_all = freud.cluster.ClusterProperties()                 #Define cluster properties
         ids = cl_all.cluster_idx                                    # get id of each cluster
@@ -733,9 +733,14 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     com_x_arr_time = np.array([all_surface_measurements['surface id ' + str(int(int_comp_dict['ids'][0]))]['interior']['com']['x']-hx_box])
                     com_y_arr_time = np.array([all_surface_measurements['surface id ' + str(int(int_comp_dict['ids'][0]))]['interior']['com']['y']-hy_box])
                 except:
+                    com_x_arr_time = np.array([])
+                    com_y_arr_time = np.array([])
+                try:
                     com_x_arr_time = np.array([all_surface_measurements['surface id ' + str(int(int_comp_dict['ids'][0]))]['exterior']['com']['x']-hx_box])
                     com_y_arr_time = np.array([all_surface_measurements['surface id ' + str(int(int_comp_dict['ids'][0]))]['exterior']['com']['y']-hy_box])
-                
+                except:
+                    com_x_arr_time = np.array([])
+                    com_y_arr_time = np.array([])
                 # Instantiate array for saving cluster CoM over time
                 com_x_parts_arr_time = np.array([com_dict['com']['x']])
                 com_y_parts_arr_time = np.array([com_dict['com']['y']])

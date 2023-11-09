@@ -2335,6 +2335,8 @@ class interface:
                             difr_trad= ( (difx_trad )**2 + (dify_trad)**2)**0.5
                             difr_bub= ( (difx_trad )**2 + (dify_trad)**2)**0.5
                             difr_short= 1000000
+                            #exterior_bin_short = 0
+                            #interior_bin_short = 0
                             x_norm_unitv = difx_trad / difr_trad
                             y_norm_unitv = dify_trad / difr_trad
 
@@ -2386,6 +2388,7 @@ class interface:
                                         y_norm_unitv = dify_ext / difr_short
                                         interior_bin_short = 0
                                         exterior_bin_short = 0
+
 
                                 if (interior_exist == 1):
                                     difx_int = self.utility_functs.sep_dist_x(xpos_ref, interior_int_com_x)
@@ -2629,6 +2632,8 @@ class interface:
 
 
                     difr_short= 100000
+                    exterior_bin_short = 0
+                    interior_bin_short = 0
 
                     # If at least no surfaces have been defined...
                     if len(sep_surface_dict) >= 0:
@@ -2746,6 +2751,9 @@ class interface:
                             elif interior_bin_short == 1:
                                 Surface_x_dot_p = (Surface_x_norm_unitv * px)
                                 Surface_y_dot_p = (Surface_y_norm_unitv * px)
+                            else:
+                                Surface_x_dot_p = (-CoM_x_norm_unitv * px)
+                                Surface_y_dot_p = (-CoM_y_norm_unitv * py)
 
                             # Total alignment with nearest surface
                             Surface_r_dot_p = Surface_x_dot_p + Surface_y_dot_p
