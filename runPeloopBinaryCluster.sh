@@ -55,6 +55,7 @@ echo "|      Possible simulation options and corresponding user inputs       |"
 echo "|          **************************************************          |"
 echo "|          -------------Random initial conditions-------------         |"
 echo "| Random gas: random_init                                              |"
+echo "| Random gas fine time step: random_init_fine                          |"
 echo "|          ----------Near steady-state MIPS clusters----------         |"
 echo "| Homogeneous cluster: homogeneous_cluster                             |"
 echo "| 100% slow bulk, 100% fast interface cluster: slow_bulk_cluster       |"
@@ -78,7 +79,7 @@ read answer
 
 init_cond=$answer
 
-list_of_sims="random_init chemical_equilibrium homogeneous_cluster slow_bulk_cluster fast_bulk_cluster half_cluster constant_pressure slow_membrane immobile_membrane immobile_orient_membrane slow_constrained_membrane slow_adsorb_constrained_membrane slow_int_constrained_membrane slow_int_constrained_membrane_dif_temp"
+list_of_sims="random_init_fine random_init chemical_equilibrium homogeneous_cluster slow_bulk_cluster fast_bulk_cluster half_cluster constant_pressure slow_membrane immobile_membrane immobile_orient_membrane slow_constrained_membrane slow_adsorb_constrained_membrane slow_int_constrained_membrane slow_int_constrained_membrane_dif_temp"
 
 if exists_in_list "$list_of_sims" " " $init_cond; then
     dont_run='no'
@@ -86,7 +87,7 @@ else
     dont_run='yes'
 fi
 
-list_of_elongated_sims="random_init slow_membrane immobile_membrane immobile_orient_membrane slow_constrained_membrane slow_adsorb_constrained_membrane slow_int_constrained_membrane slow_int_constrained_membrane_dif_temp"
+list_of_elongated_sims="random_init_fine random_init slow_membrane immobile_membrane immobile_orient_membrane slow_constrained_membrane slow_adsorb_constrained_membrane slow_int_constrained_membrane slow_int_constrained_membrane_dif_temp"
 
 if exists_in_list "$list_of_elongated_sims" " " $init_cond; then
 
@@ -102,20 +103,20 @@ fi
 if [ $dont_run == "no" ]; then
     # Default values for simulations
     declare -i part_num
-    part_num=( 20000 )
+    part_num=( 50000 )
 
     # Length of simulation in Brownian time steps
     declare -i runfor
-    runfor=$(( 3 ))
+    runfor=$(( 40 ))
 
     # Frequency for dumping simulation data
     declare -a dump_freq
-    dump_freq=( 0.3 )
+    dump_freq=( 0.0025 )
     #( 0.0025 )
 
     # Lists for activity of A and B species
     declare -a pa
-    pa=(0)
+    pa=(0 150 250 500)
     # 25 50 75)
 
     declare -a pb

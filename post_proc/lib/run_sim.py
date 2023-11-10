@@ -973,6 +973,220 @@ class run_sim:
         #Number of time steps to run simulation for.
         hoomd.run(self.totTsteps)
 
+    def random_init_fine(self):
+        '''
+        Purpose: Run simulation of specified properties using random initialization and Brownian
+        integration method
+        '''
+
+        import random
+
+        # Use path to HOOMD-Blue
+        if self.hoomdPath == '/Users/nicklauersdorf/hoomd-blue/build/':
+            sys.path.insert(0,self.hoomdPath)
+
+        import hoomd                    # import hoomd functions based on path
+        from hoomd import md
+        from hoomd import deprecated
+
+        # Initialize system
+        hoomd.context.initialize()
+
+
+        if self.length != self.width:
+
+            # If non-square box, define new simulation box given input density and system size
+            area_ratio = self.length * self.width
+
+            box_area = self.partNum/self.phi
+            box_length = (box_area/area_ratio)**0.5
+            lx = self.length*box_length
+            ly = self.width * box_length
+            set_box = hoomd.data.boxdim(Lx=lx, Ly=ly, Lz=0, dimensions=2)
+
+            #Randomly distrubte N particles within given simulation box
+
+            system = hoomd.deprecated.init.create_random(N = self.partNum,
+                                                         name = 'A',
+                                                         min_dist = 0.70,
+                                                         seed = self.seed1,
+                                                         box = set_box)
+        else:
+            #Randomly distrubte N particles with specified system density phi (dictates simulation box size)
+            #of particle type name with minimum separation distance min_dist with random seed in 2 dimensions
+            system = hoomd.deprecated.init.create_random(N = self.partNum,
+                                                         phi_p = self.phi,
+                                                         name = 'A',
+                                                         min_dist = 0.70,
+                                                         seed = self.seed1,
+                                                         dimensions = 2)
+        # Add B-type particles
+        system.particles.types.add('B')
+
+        #Save current time step of system
+        snapshot = system.take_snapshot()
+
+
+        mid = int(self.partNumA)                    # starting index to assign B particles
+
+        # Assign particles B type within the snapshot
+        if self.partPercA == 0:                      # take care of all b case
+            mid = 0
+            for i in range(mid, self.partNum):
+                system.particles[i].type = 'B'
+        elif self.partPercA != 100:                  # mix of each or all A
+            for i in range(mid, self.partNum):
+                system.particles[i].type = 'B'
+
+        # Assigning groups and lengths to particles
+        all = hoomd.group.all()
+        gA = hoomd.group.type(type = 'A', update=True)
+        gB = hoomd.group.type(type = 'B', update=True)
+
+        # Define potential between pairs
+        nl = hoomd.md.nlist.cell()
+
+        #Can change potential between particles here with hoomd.md.pair...
+        lj = hoomd.md.pair.lj(r_cut=self.r_cut, nlist=nl)
+
+        #Set parameters of pair force dependent on type of interaction
+        lj.set_params(mode='shift')
+        lj.pair_coeff.set('A', 'A', epsilon=self.epsA, sigma=1.0)
+        lj.pair_coeff.set('A', 'B', epsilon=self.epsAB, sigma=1.0)
+        lj.pair_coeff.set('B', 'B', epsilon=self.epsB, sigma=1.0)
+
+        # General integration parameters
+
+        #Equilibration number of time steps
+        brownEquil = 1000
+
+        # Each time step corresponds to time step size of dt
+        hoomd.md.integrate.mode_standard(dt=self.dt)
+
+        # Overdamped Langevin equations without activity at temperature kT.  Seed2 specifies translational diffusion.
+        hoomd.md.integrate.brownian(group=all, kT=self.kT, seed=self.seed2)
+
+        #Run hoomd over brownEquil time steps
+        hoomd.run(brownEquil)
+
+        #set the activity of each type
+        np.random.seed(self.seed3)                           # seed for random orientations
+        angle = np.random.rand(self.partNum) * 2 * np.pi    # random particle orientation
+
+        # Case 1: Mixture
+        if self.partPercA != 0 and self.partPercA != 100:
+            # First assign A-type active force vectors (w/ peA)
+            activity_a = []
+            for i in range(0,mid):
+                x = (np.cos(angle[i])) * self.peA    # x active force vector
+                y = (np.sin(angle[i])) * self.peA    # y active force vector
+                z = 0                           # z active force vector
+                tuple = (x, y, z)               # made into a tuple
+                activity_a.append(tuple)        # add to activity A list
+
+            # Now assign B-type active force vectors (w/ peB)
+            activity_b = []
+            for i in range(mid,self.partNum):
+                x = (np.cos(angle[i])) * self.peB
+                y = (np.sin(angle[i])) * self.peB
+                z = 0
+                tuple = (x, y, z)
+                activity_b.append(tuple)
+            # Set A-type activity in hoomd
+            hoomd.md.force.active(group=gA,
+                                  seed=self.seed4,
+                                  f_lst=activity_a,
+                                  rotation_diff=self.D_r,
+                                  orientation_link=False,
+                                  orientation_reverse_link=True)
+            # Set B-type activity in hoomd
+            hoomd.md.force.active(group=gB,
+                                  seed=self.seed5,
+                                  f_lst=activity_b,
+                                  rotation_diff=self.D_r,
+                                  orientation_link=False,
+                                  orientation_reverse_link=True)
+        else:
+            # Case 2: All B system
+            if self.partPercA == 0:
+                activity_b = []
+                for i in range(0,self.partNum):
+                    x = (np.cos(angle[i])) * self.peB
+                    y = (np.sin(angle[i])) * self.peB
+                    z = 0
+                    tuple = (x, y, z)
+                    activity_b.append(tuple)
+                hoomd.md.force.active(group=gB,
+                                      seed=self.seed5,
+                                      f_lst=activity_b,
+                                      rotation_diff=self.D_r,
+                                      orientation_link=False,
+                                      orientation_reverse_link=True)
+            # Case 3: All A system
+            else:
+                activity_a = []
+                for i in range(0,self.partNum):
+                    x = (np.cos(angle[i])) * self.peA
+                    y = (np.sin(angle[i])) * self.peA
+                    z = 0
+                    tuple = (x, y, z)
+                    activity_a.append(tuple)
+                hoomd.md.force.active(group=gA,
+                                      seed=self.seed4,
+                                      f_lst=activity_a,
+                                      rotation_diff=self.D_r,
+                                      orientation_link=False,
+                                      orientation_reverse_link=True)
+
+        runFor_pre_equilib = 300
+        simLength_pre_equilib = runFor_pre_equilib * self.tauBrown               # how long to run (in tauBrown)
+        totTsteps_pre_equilib = int(simLength_pre_equilib / self.dt)             # how many tsteps to run
+
+        hoomd.run(totTsteps_pre_equilib)
+
+        # base file name for output (specify variables that will be changed or that you care about)
+        name = "random_init_fine_step_pa" + str(self.peA) +\
+        "_pb" + str(self.peB) +\
+        "_xa" + str(self.partPercA) +\
+        "_ep" + str(self.epsAB)+\
+        "_phi"+str(self.intPhi)+\
+        "_pNum" + str(self.partNum)+\
+        "_aspect" + str(self.length) + '.' + str(self.width)
+
+        # Actual gsd file name for output
+        gsdName = name + ".gsd"
+
+        # Remove .gsd files if they exist
+
+        try:
+            os.remove(gsdName)
+        except OSError:
+            pass
+
+        #Specify how often and what to save
+
+        # Options for what to save (dynamic)
+        # 'attribute' important quantities: total particle number (N), types (types), which particles are each type (typeid),
+        #  diameter of particle (diameter)
+        #'property' important quantities: particle position (position), particle orientation in quaternions (orientation)
+        #'momentum': I save this but it's unimportant.  It saves velocity, angular momentum, and image.  I looked into this and the v
+        # velocity calculation is incorrect in my current version of hoomd.  THe newer version seems to have fixed this I believe. They mis-calculated
+        # the quaternions to angles.
+        #'topology' is another option for working with molecules.
+
+        numDumps = float(self.simLength / (5/self.peB))           # dump data every 0.1 tauBrown.
+        dumpFreq = float(self.totTsteps / numDumps)      # normalized dump frequency.
+        
+        hoomd.dump.gsd(gsdName,
+                       period=dumpFreq,
+                       group=all,
+                       overwrite=False,
+                       phase=-1,
+                       dynamic=['attribute', 'property', 'momentum'])
+
+        #Number of time steps to run simulation for.
+        hoomd.run(self.totTsteps)
+
     def homogeneous_cluster(self):
         '''
         Purpose: Run simulation of specified properties using near steady-state initialization of

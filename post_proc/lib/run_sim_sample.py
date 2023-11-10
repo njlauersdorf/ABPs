@@ -31,7 +31,7 @@ seed3 = ${seed3}                # seed for initial orientations
 seed4 = ${seed4}                # seed for A activity
 seed5 = ${seed5}                # seed for B activity
 
-sys.path.append(os.path.expanduser('~') + '/klotsa/ABPs/post_proc/lib')
+sys.path.append(os.path.expanduser('~') + '/ABPs/post_proc/lib')
 #sys.path.append(os.path.expanduser('~') + '/hoomd-blue/build/run_test/lib')
 
 import run_sim
@@ -70,6 +70,8 @@ sim_functs = run_sim.run_sim(hoomdPath, runFor, dumpFreq, partPercA, peA, peB, p
 
 if init_cond == 'random_init':
     sim_functs.random_init()
+elif init_cond == 'random_init_fine':
+    sim_functs.random_init_fine()
 elif init_cond == 'homogeneous_cluster':
     sim_functs.homogeneous_cluster()
 elif init_cond == 'fast_bulk_cluster':
