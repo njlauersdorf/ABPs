@@ -444,6 +444,10 @@ with hoomd.open(name=inFile, mode='rb') as t:
         # Assign particles to bins
         part_dict = binning_functs.bin_parts(pos, ids, clust_size)
 
+        # Heterogeneity
+        heterogeneity = binning_functs.bin_heterogeneity_system(part_dict['typ'], np.var(typ))
+        print(heterogeneity)
+
         # Calculate average orientation per bin
         orient_dict = binning_functs.bin_orient(part_dict, pos, ang, com_dict['com'])
 
@@ -534,6 +538,12 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
             # Find interface composition
             phase_dict, bulk_dict, int_dict, int_comp_dict = phase_ident_functs.int_comp(part_dict, phase_dict, bulk_dict, int_dict)
+
+            heterogeneity_phases = binning_functs.bin_heterogeneity_phases(part_dict['typ'], typ, phase_dict)
+            print(heterogeneity_phases)
+            
+            stop
+
 
             # Find bulk composition
             bulk_comp_dict = phase_ident_functs.bulk_comp(part_dict, phase_dict, bulk_dict)

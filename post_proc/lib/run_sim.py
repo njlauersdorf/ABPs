@@ -1999,14 +1999,14 @@ class run_sim:
         hoomd.run(totTsteps_pre_equilib)
 
         # Name the file from parameters
-        out = "homogeneous_cluster_fine_pa" + str(int(self.peA))
-        out += "_pb" + str(int(self.peB))
-        out += "_phi" + str(self.intPhi)
-        out += "_eps" + str(self.eps)
-        out += "_xa" + str(self.partFracA)
-        out += "_pNum" + str(self.partNum)
-        out += "_dtau" + "{:.1e}".format(self.dt)
-        out += ".gsd"
+        gsdName = "homogeneous_cluster_fine_pa" + str(int(self.peA))
+        gsdName += "_pb" + str(int(self.peB))
+        gsdName += "_phi" + str(self.intPhi)
+        gsdName += "_eps" + str(self.eps)
+        gsdName += "_xa" + str(self.partFracA)
+        gsdName += "_pNum" + str(self.partNum)
+        gsdName += "_dtau" + "{:.1e}".format(self.dt)
+        gsdName += ".gsd"
 
         numDumps = float(self.simLength / (5/self.peB))           # dump data every 0.1 tauBrown.
         dumpFreq = float(self.totTsteps / numDumps)      # normalized dump frequency.

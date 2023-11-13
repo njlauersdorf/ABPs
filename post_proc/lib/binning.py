@@ -107,6 +107,78 @@ class binning:
 
         return pos_dict
 
+    def bin_heterogeneity_system(self, binned_arr, var_binned_arr):
+        '''
+        Purpose: Takes the number and size of bins to calculate an array of bin positions
+
+        Inputs:
+        pos: array (partNum) of positions (x,y,z) of each particle
+
+        ids: array (partNum) of cluster ids (int) that each particle is a part of
+
+        clust_size: array of cluster sizes (int) in terms of number of particles for each cluster id
+
+        Outputs:
+        part_dict: dictionary containing arrays (NBins_x, NBins_y) whose elements contains information
+        on whether each particle within the bin a) is part of a cluster ('occParts'), b) on which type
+        of particles are in the bin ('typ'), and c) on what each particle's id is ('id')
+        '''
+
+        std_sum = 0
+        # Loop over all cluster IDs
+        for ix in range(0, len(binned_arr)):
+            for iy in range(0, len(binned_arr)):
+                if len(binned_arr[ix][iy])>0:
+                    std_sum += len(binned_arr[ix][iy]) * np.var(binned_arr[ix][iy])
+        
+        q = 1.0 - (1/(self.partNum * np.var(self.typ))) * std_sum
+
+        return q
+
+    def bin_heterogeneity_phases(self, binned_arr, part_binned_arr, phase_dict):
+        '''
+        Purpose: Takes the number and size of bins to calculate an array of bin positions
+
+        Inputs:
+        pos: array (partNum) of positions (x,y,z) of each particle
+
+        ids: array (partNum) of cluster ids (int) that each particle is a part of
+
+        clust_size: array of cluster sizes (int) in terms of number of particles for each cluster id
+
+        Outputs:
+        part_dict: dictionary containing arrays (NBins_x, NBins_y) whose elements contains information
+        on whether each particle within the bin a) is part of a cluster ('occParts'), b) on which type
+        of particles are in the bin ('typ'), and c) on what each particle's id is ('id')
+        '''
+
+        bulk_id = np.where(phase_dict['part']==0)[0]
+        int_id = np.where(phase_dict['part']==1)[0]
+        gas_id = np.where(phase_dict['part']==2)[0]
+
+        bulk_std_sum = 0
+        int_std_sum = 0
+        gas_std_sum = 0
+
+        print(phase_dict['bin'])
+        # Loop over all cluster IDs
+        for ix in range(0, len(binned_arr)):
+            for iy in range(0, len(binned_arr)):
+                if len(binned_arr[ix][iy])>0:
+                    if phase_dict['bin'][ix][iy]==0:
+                        bulk_std_sum += len(binned_arr[ix][iy]) * np.var(binned_arr[ix][iy])
+                    elif phase_dict['bin'][ix][iy]==1:
+                        int_std_sum += len(binned_arr[ix][iy]) * np.var(binned_arr[ix][iy])
+                    elif phase_dict['bin'][ix][iy]==2:
+                        gas_std_sum += len(binned_arr[ix][iy]) * np.var(binned_arr[ix][iy])
+
+        bulk_q = 1.0 - (1/(len(bulk_id) * np.var(part_binned_arr[bulk_id]))) * bulk_std_sum
+        int_q = 1.0 - (1/(len(int_id) * np.var(part_binned_arr[int_id]))) * int_std_sum
+        gas_q = 1.0 - (1/(len(gas_id) * np.var(part_binned_arr[gas_id]))) * gas_std_sum
+
+        q_dict = {'bulk': bulk_q, 'int': int_q, 'gas': gas_q}
+        return q_dict
+
     def bin_parts(self, pos, ids, clust_size):
         '''
         Purpose: Takes the number and size of bins to calculate an array of bin positions
@@ -133,6 +205,9 @@ class binning:
         # Instantiate empty array that tells whether each bin is part of a cluster (1) or not (0)
         occParts = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
 
+        # Instantiate empty array that tells what each particle's activity in bin is
+        actParts = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+
         # Loop over all cluster IDs
         for k in range(0, len(ids)):
 
@@ -150,12 +225,18 @@ class binning:
             # Appent particle type
             typParts[x_ind][y_ind].append(self.typ[k])
 
+            # Append particle activity
+            if self.typ[k]==0:
+                actParts[x_ind][y_ind].append(self.peA)
+            elif self.typ[k]==1:
+                actParts[x_ind][y_ind].append(self.peB)
+
             # Label whether particle (and bin) is part of cluster (1) or not (0)
             if clust_size[ids[k]] >= self.min_size:
                 occParts[x_ind][y_ind] = 1
 
         # Dictionary of arrays (NBins_x, NBins_y) of binned cluster ids, particle types, and particle ids
-        part_dict = {'clust':occParts,  'typ':typParts,  'id':binParts}
+        part_dict = {'clust':occParts,  'typ':typParts,  'id':binParts, 'act': actParts}
 
         return part_dict
 

@@ -2152,7 +2152,7 @@ class particle_props:
         local_gas_dens_stat_dict = {'radius': rad_dist[1:], 'allall_mean': allall_local_dens_mean_arr, 'allall_std': allall_local_dens_std_arr, 'allA_mean': allA_local_dens_mean_arr, 'allA_std': allA_local_dens_std_arr, 'allB_mean': allB_local_dens_mean_arr, 'allB_std': allB_local_dens_std_arr, 'AA_mean': AA_local_dens_mean_arr, 'AA_std': AA_local_dens_std_arr, 'AB_mean': AB_local_dens_mean_arr, 'AB_std': AB_local_dens_std_arr, 'BA_mean': BA_local_dens_mean_arr, 'BA_std': BA_local_dens_std_arr, 'BB_mean': BB_local_dens_mean_arr, 'BB_std': BB_local_dens_std_arr}
     
         return local_gas_dens_stat_dict, local_gas_dens_plot_dict
-
+        
     def cluster_msd(self, com_x_msd, com_y_msd, com_r_msd, com_x_parts_arr_time, com_y_parts_arr_time):
         
         '''
