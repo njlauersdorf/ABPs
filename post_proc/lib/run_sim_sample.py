@@ -74,6 +74,8 @@ elif init_cond == 'random_init_fine':
     sim_functs.random_init_fine()
 elif init_cond == 'homogeneous_cluster':
     sim_functs.homogeneous_cluster()
+elif init_cond == 'homogeneous_cluster_fine':
+    sim_functs.homogeneous_cluster_fine()
 elif init_cond == 'fast_bulk_cluster':
     sim_functs.fast_bulk_cluster()
 elif init_cond == 'slow_bulk_cluster':
