@@ -112,7 +112,7 @@ if [ $dont_run == "no" ]; then
 
     # Frequency for dumping simulation data
     declare -a dump_freq
-    dump_freq=( 0.0025 )
+    dump_freq=( 0.001 )
     #( 0.0025 )
 
     # Lists for activity of A and B species

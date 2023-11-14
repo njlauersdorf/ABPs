@@ -2008,7 +2008,7 @@ class run_sim:
         gsdName += "_dtau" + "{:.1e}".format(self.dt)
         gsdName += ".gsd"
 
-        numDumps = float(self.simLength / (5/self.peB))           # dump data every 0.1 tauBrown.
+        numDumps = float(self.simLength / (1/self.peB))           # dump data every 0.1 tauBrown.
         dumpFreq = float(self.totTsteps / numDumps)      # normalized dump frequency.
         
         hoomd.dump.gsd(gsdName,
