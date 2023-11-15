@@ -7137,7 +7137,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         #ax.set_facecolor('white')
         #ax.set_facecolor('#F4F4F4') .  # For website
         plt.tight_layout()
-        plt.savefig(self.outPath + 'part_activity_' + self.outFile + ".png", dpi=200, transparent=True, bbox_inches='tight')
+        plt.savefig(self.outPath + 'part_activity_desorb_' + self.outFile + ".png", dpi=200, transparent=True, bbox_inches='tight')
         #plt.savefig(self.outPath + 'part_activity_' + self.outFile + ".eps", format='eps', dpi=150, bbox_inches='tight')
         plt.close()  
 
