@@ -1011,12 +1011,18 @@ with hoomd.open(name=inFile, mode='rb') as t:
                         
                         # Plot particles color-coded by activity
                         plotting_functs.plot_part_activity(pos, all_surface_curves, int_comp_dict, active_fa_dict, mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option, banner_id = banner_option, presentation_id = presentation_option)
-                elif (measurement_options[0] == 'activity-wide'):
+                elif (measurement_options[0] == 'activity-wide-adsorb'):
                     #DONE!
                     if plot == 'y':
                         
                         # Plot particles color-coded by activity
-                        plotting_functs.plot_part_activity_wide(pos, all_surface_curves, int_comp_dict, active_fa_dict, mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option, banner_id = banner_option, presentation_id = presentation_option)
+                        plotting_functs.plot_part_activity_wide_adsorb(pos, all_surface_curves, int_comp_dict, active_fa_dict, mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option, banner_id = banner_option, presentation_id = presentation_option)
+                elif (measurement_options[0] == 'activity-wide-desorb'):
+                    #DONE!
+                    if plot == 'y':
+                        
+                        # Plot particles color-coded by activity
+                        plotting_functs.plot_part_activity_wide_desorb(pos, all_surface_curves, int_comp_dict, active_fa_dict, mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option, banner_id = banner_option, presentation_id = presentation_option)
 
 
                 elif measurement_options[0] == 'activity-com':
