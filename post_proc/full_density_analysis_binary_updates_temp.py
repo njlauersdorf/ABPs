@@ -420,7 +420,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
         edgePhase=np.zeros(partNum)
         bulkPhase=np.zeros(partNum)
 
-        if measurement_options[0]=='heterogeneity':
+        if measurement_options[0]=='heterogeneity-activity':
             
             # Calculate cluster CoM
             com_dict = plotting_utility_functs.com_view(pos, clp_all)
@@ -1016,13 +1016,26 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     if plot == 'y':
                         
                         # Plot particles color-coded by activity
-                        plotting_functs.plot_part_activity_wide_adsorb(pos, all_surface_curves, int_comp_dict, active_fa_dict, mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option, banner_id = banner_option, presentation_id = presentation_option)
+                        plotting_functs.plot_part_activity_wide_adsorb(pos, ang, all_surface_curves, int_comp_dict, active_fa_dict, mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option, banner_id = banner_option, presentation_id = presentation_option)
                 elif (measurement_options[0] == 'activity-wide-desorb'):
                     #DONE!
                     if plot == 'y':
                         
                         # Plot particles color-coded by activity
-                        plotting_functs.plot_part_activity_wide_desorb(pos, all_surface_curves, int_comp_dict, active_fa_dict, mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option, banner_id = banner_option, presentation_id = presentation_option)
+                        plotting_functs.plot_part_activity_wide_desorb(pos, ang, all_surface_curves, int_comp_dict, active_fa_dict, mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option, banner_id = banner_option, presentation_id = presentation_option)
+
+                elif (measurement_options[0] == 'activity-wide-adsorb-orient'):
+                    #DONE!
+                    if plot == 'y':
+                        
+                        # Plot particles color-coded by activity
+                        plotting_functs.plot_part_activity_wide_adsorb_orient(pos, ang, all_surface_curves, int_comp_dict, active_fa_dict, mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option, banner_id = banner_option, presentation_id = presentation_option)
+                elif (measurement_options[0] == 'activity-wide-desorb-orient'):
+                    #DONE!
+                    if plot == 'y':
+                        
+                        # Plot particles color-coded by activity
+                        plotting_functs.plot_part_activity_wide_desorb_orient(pos, ang, all_surface_curves, int_comp_dict, active_fa_dict, mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option, banner_id = banner_option, presentation_id = presentation_option)
 
 
                 elif measurement_options[0] == 'activity-com':
@@ -1236,12 +1249,13 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
 
                     # Calculate interparticle stresses and pressures
-                    stress_stat_dict, press_stat_dict, press_plot_dict, stress_plot_dict = lattice_structure_functs.interparticle_pressure_nlist()
+                    stress_stat_dict, press_stat_dict, press_stat_indiv_dict, press_plot_dict, stress_plot_dict = lattice_structure_functs.interparticle_pressure_nlist()
 
                     # Save stress and pressure data
                     data_output_functs.write_to_txt(stress_stat_dict, dataPath + 'interparticle_stress_' + outfile + '.txt')
                     data_output_functs.write_to_txt(press_stat_dict, dataPath + 'interparticle_press_' + outfile + '.txt')
-                    
+                    data_output_functs.write_to_txt(press_stat_indiv_dict, dataPath + 'interparticle_press_indiv_' + outfile + '.txt')
+
                     # Measure radial interparticle pressure
                     radial_int_press_dict = particle_prop_functs.radial_int_press(stress_plot_dict)
 
@@ -1766,13 +1780,13 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     if plot == 'y':
                         
                         # Plot particles color-coded by activity
-                        plotting_functs.plot_part_activity_wide_adsorb(pos, mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option, banner_id = banner_option, presentation_id = presentation_option)
+                        plotting_functs.plot_part_activity_wide_adsorb(pos, ang, mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option, banner_id = banner_option, presentation_id = presentation_option)
                 elif (measurement_options[0] == 'activity-wide-desorb'):
                     #DONE!
                     if plot == 'y':
                         
                         # Plot particles color-coded by activity
-                        plotting_functs.plot_part_activity_wide_desorb(pos, mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option, banner_id = banner_option, presentation_id = presentation_option)
+                        plotting_functs.plot_part_activity_wide_desorb(pos, ang, mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option, banner_id = banner_option, presentation_id = presentation_option)
 
                 elif measurement_options[0] == 'activity-wide':
 
