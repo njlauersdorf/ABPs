@@ -4247,6 +4247,10 @@ class measurement:
         allall_system_int_press = np.sum(allall_system_SigXX_part + allall_system_SigYY_part)/(4*system_area)
         allall_int_press = np.append(allall_bulk_int_press, allall_int_int_press)
         allall_int_press = np.append(allall_int_press, allall_gas_int_press)
+        allall_dense_part_ids = np.append(phase_part_dict['bulk']['all'], phase_part_dict['int']['all'])
+        allall_system_part_ids = np.append(phase_part_dict['bulk']['all'], phase_part_dict['int']['all'])
+        allall_system_part_ids = np.append(allall_system_part_ids, phase_part_dict['gas']['all'])
+
 
         # Calculate total interparticle pressure experienced by each particles in each phase
         allall_bulk_int_press_indiv = (allall_bulk_SigXX_part + allall_bulk_SigYY_part)/(2*np.pi * (self.r_cut/2)**2)
@@ -4263,6 +4267,9 @@ class measurement:
         allA_int_int_press = np.sum(allA_int_SigXX_part + allA_int_SigYY_part)/(4*int_area)
         allA_dense_int_press = np.sum(allA_dense_SigXX_part + allA_dense_SigYY_part)/(4*dense_area)
         allA_system_int_press = np.sum(allA_system_SigXX_part + allA_system_SigYY_part)/(4*system_area)
+        allA_dense_part_ids = np.append(phase_part_dict['bulk']['A'], phase_part_dict['int']['A'])
+        allA_system_part_ids = np.append(phase_part_dict['bulk']['A'], phase_part_dict['int']['A'])
+        allA_system_part_ids = np.append(allA_system_part_ids, phase_part_dict['gas']['A'])
 
         # Calculate total interparticle pressure experienced by each particles in each phase
         allA_bulk_int_press_indiv = (allA_bulk_SigXX_part + allA_bulk_SigYY_part)/(2*np.pi * (self.r_cut/2)**2)
@@ -4270,13 +4277,16 @@ class measurement:
         allA_int_int_press_indiv = (allA_int_SigXX_part + allA_int_SigYY_part)/(2*np.pi * (self.r_cut/2)**2)
         allA_dense_int_press_indiv = (allA_dense_SigXX_part + allA_dense_SigYY_part)/(2*np.pi * (self.r_cut/2)**2)
         allA_system_int_press_indiv = (allA_system_SigXX_part + allA_system_SigYY_part)/(2*np.pi * (self.r_cut/2)**2)
-
+        
         # Calculate total interparticle pressure experienced by all A particles in each phase
         Aall_bulk_int_press = np.sum(Aall_bulk_SigXX_part + Aall_bulk_SigYY_part)/(4*bulk_area)
         Aall_gas_int_press = np.sum(Aall_gas_SigXX_part + Aall_gas_SigYY_part)/(4*gas_area)
         Aall_int_int_press = np.sum(Aall_int_SigXX_part + Aall_int_SigYY_part)/(4*int_area)
         Aall_dense_int_press = np.sum(Aall_dense_SigXX_part + Aall_dense_SigYY_part)/(4*dense_area)
         Aall_system_int_press = np.sum(Aall_system_SigXX_part + Aall_system_SigYY_part)/(4*system_area)
+        Aall_dense_part_ids = np.append(phase_part_dict['bulk']['all'], phase_part_dict['int']['all'])
+        Aall_system_part_ids = np.append(phase_part_dict['bulk']['all'], phase_part_dict['int']['all'])
+        Aall_system_part_ids = np.append(Aall_system_part_ids, phase_part_dict['gas']['all'])
 
         # Calculate total interparticle pressure experienced by each particles in each phase
         Aall_bulk_int_press_indiv = (Aall_bulk_SigXX_part + Aall_bulk_SigYY_part)/(2*np.pi * (self.r_cut/2)**2)
@@ -4291,6 +4301,9 @@ class measurement:
         allB_int_int_press = np.sum(allB_int_SigXX_part + allB_int_SigYY_part)/(4*int_area)
         allB_dense_int_press = np.sum(allB_dense_SigXX_part + allB_dense_SigYY_part)/(4*dense_area)
         allB_system_int_press = np.sum(allB_system_SigXX_part + allB_system_SigYY_part)/(4*system_area)
+        allB_dense_part_ids = np.append(phase_part_dict['bulk']['B'], phase_part_dict['int']['B'])
+        allB_system_part_ids = np.append(phase_part_dict['bulk']['B'], phase_part_dict['int']['B'])
+        allB_system_part_ids = np.append(allB_system_part_ids, phase_part_dict['gas']['B'])
 
         # Calculate total interparticle pressure experienced by each particles in each phase
         allB_bulk_int_press_indiv = (allB_bulk_SigXX_part + allB_bulk_SigYY_part)/(2*np.pi * (self.r_cut/2)**2)
@@ -4305,6 +4318,9 @@ class measurement:
         Ball_int_int_press = np.sum(Ball_int_SigXX_part + Ball_int_SigYY_part)/(4*int_area)
         Ball_dense_int_press = np.sum(Ball_dense_SigXX_part + Ball_dense_SigYY_part)/(4*dense_area)
         Ball_system_int_press = np.sum(Ball_system_SigXX_part + Ball_system_SigYY_part)/(4*system_area)
+        Ball_dense_part_ids = np.append(phase_part_dict['bulk']['all'], phase_part_dict['int']['all'])
+        Ball_system_part_ids = np.append(phase_part_dict['bulk']['all'], phase_part_dict['int']['all'])
+        Ball_system_part_ids = np.append(Ball_system_part_ids, phase_part_dict['gas']['all'])
 
         # Calculate total interparticle pressure experienced by each particles in each phase
         Ball_bulk_int_press_indiv = (Ball_bulk_SigXX_part + Ball_bulk_SigYY_part)/(2*np.pi * (self.r_cut/2)**2)
@@ -4319,6 +4335,9 @@ class measurement:
         AA_int_int_press = np.sum(SigXX_AA_int_part + SigYY_AA_int_part)/(4*int_area)
         AA_dense_int_press = np.sum(SigXX_AA_dense_part + SigYY_AA_dense_part)/(4*dense_area)
         AA_system_int_press = np.sum(SigXX_AA_system_part + SigYY_AA_system_part)/(4*system_area)
+        AA_dense_part_ids = np.append(phase_part_dict['bulk']['A'], phase_part_dict['int']['A'])
+        AA_system_part_ids = np.append(phase_part_dict['bulk']['A'], phase_part_dict['int']['A'])
+        AA_system_part_ids = np.append(AA_system_part_ids, phase_part_dict['gas']['A'])
 
                 # Calculate total interparticle pressure experienced by each particles in each phase
         AA_bulk_int_press_indiv = (SigXX_AA_bulk_part + SigYY_AA_bulk_part)/(2*np.pi * (self.r_cut/2)**2)
@@ -4333,6 +4352,9 @@ class measurement:
         AB_int_int_press = np.sum(SigXX_AB_int_part + SigYY_AB_int_part)/(4*int_area)
         AB_dense_int_press = np.sum(SigXX_AB_dense_part + SigYY_AB_dense_part)/(4*dense_area)
         AB_system_int_press = np.sum(SigXX_AB_system_part + SigYY_AB_system_part)/(4*system_area)
+        AB_dense_part_ids = np.append(phase_part_dict['bulk']['B'], phase_part_dict['int']['B'])
+        AB_system_part_ids = np.append(phase_part_dict['bulk']['B'], phase_part_dict['int']['B'])
+        AB_system_part_ids = np.append(AB_system_part_ids, phase_part_dict['gas']['B'])
 
         # Calculate total interparticle pressure experienced by each particles in each phase
         AB_bulk_int_press_indiv = (SigXX_AB_bulk_part + SigYY_AB_bulk_part)/(2*np.pi * (self.r_cut/2)**2)
@@ -4347,6 +4369,9 @@ class measurement:
         BA_int_int_press = np.sum(SigXX_BA_int_part + SigYY_BA_int_part)/(4*int_area)
         BA_dense_int_press = np.sum(SigXX_BA_dense_part + SigYY_BA_dense_part)/(4*dense_area)
         BA_system_int_press = np.sum(SigXX_BA_system_part + SigYY_BA_system_part)/(4*system_area)
+        BA_dense_part_ids = np.append(phase_part_dict['bulk']['A'], phase_part_dict['int']['A'])
+        BA_system_part_ids = np.append(phase_part_dict['bulk']['A'], phase_part_dict['int']['A'])
+        BA_system_part_ids = np.append(BA_system_part_ids, phase_part_dict['gas']['A'])
 
         # Calculate total interparticle pressure experienced by each particles in each phase
         BA_bulk_int_press_indiv = (SigXX_BA_bulk_part + SigYY_BA_bulk_part)/(2*np.pi * (self.r_cut/2)**2)
@@ -4361,6 +4386,9 @@ class measurement:
         BB_int_int_press = np.sum(SigXX_BB_int_part + SigYY_BB_int_part)/(4*int_area)
         BB_dense_int_press = np.sum(SigXX_BB_dense_part + SigYY_BB_dense_part)/(4*dense_area)
         BB_system_int_press = np.sum(SigXX_BB_system_part + SigYY_BB_system_part)/(4*system_area)
+        BB_dense_part_ids = np.append(phase_part_dict['bulk']['B'], phase_part_dict['int']['B'])
+        BB_system_part_ids = np.append(phase_part_dict['bulk']['B'], phase_part_dict['int']['B'])
+        BB_system_part_ids = np.append(BB_system_part_ids, phase_part_dict['gas']['B'])
 
         # Calculate total interparticle pressure experienced by each particles in each phase
         BB_bulk_int_press_indiv = (SigXX_BB_bulk_part + SigYY_BB_bulk_part)/(2*np.pi * (self.r_cut/2)**2)
@@ -4477,7 +4505,10 @@ class measurement:
         # Create output dictionary for plotting of total stress/pressure on each particle per phase/activity pairing and their respective x-y locations
         press_plot_dict = {'all-all': {'press': allall_int_press, 'shear': allall_shear_stress, 'x': allall_pos_x, 'y': allall_pos_y}}
 
-        return stress_stat_dict, press_stat_dict, press_stat_indiv_dict, press_plot_dict, stress_plot_dict
+        # Create output dictionary for plotting of total stress/pressure on each particle per phase/activity pairing and their respective x-y locations
+        press_hetero_dict = {'system': {'all-all': {'press': allall_system_int_press_indiv, 'id': allall_system_part_ids}, 'all-A': {'press': allA_system_int_press_indiv, 'id': allA_system_part_ids}, 'A-all': {'press': Aall_system_int_press_indiv, 'id': Aall_system_part_ids}, 'all-B': {'press': allB_system_int_press_indiv, 'id': allB_system_part_ids}, 'B-all': {'press': Ball_system_int_press_indiv, 'id': Ball_system_part_ids}, 'A-A': {'press': AA_system_int_press_indiv, 'id': AA_system_part_ids}, 'A-B': {'press': AB_system_int_press_indiv, 'id': AB_system_part_ids}, 'B-A': {'press': BA_system_int_press_indiv, 'id': BA_system_part_ids}, 'B-B': {'press': BB_system_int_press_indiv, 'id': BB_system_part_ids} }, 'dense': {'all-all': {'press': allall_dense_int_press_indiv, 'id': allall_dense_part_ids}, 'all-A': {'press': allA_dense_int_press_indiv, 'id': allA_dense_part_ids}, 'A-all': {'press': Aall_dense_int_press_indiv, 'id': Aall_dense_part_ids}, 'all-B': {'press': allB_dense_int_press_indiv, 'id': allB_dense_part_ids}, 'B-all': {'press': Ball_dense_int_press_indiv, 'id': Ball_dense_part_ids}, 'A-A': {'press': AA_dense_int_press_indiv, 'id': AA_dense_part_ids}, 'A-B': {'press': AB_dense_int_press_indiv, 'id': AB_dense_part_ids}, 'B-A': {'press': BA_dense_int_press_indiv, 'id': BA_dense_part_ids}, 'B-B': {'press': BB_dense_int_press_indiv, 'id': BB_dense_part_ids} }, 'bulk': {'all-all': {'press': allall_bulk_int_press_indiv, 'id': phase_part_dict['bulk']['all']}, 'all-A': {'press': allA_bulk_int_press_indiv, 'id': phase_part_dict['bulk']['A']}, 'A-all': {'press': Aall_bulk_int_press_indiv, 'id': phase_part_dict['bulk']['all']}, 'all-B': {'press': allB_bulk_int_press_indiv, 'id': phase_part_dict['bulk']['B']}, 'B-all': {'press': Ball_bulk_int_press_indiv, 'id': phase_part_dict['bulk']['all']}, 'A-A': {'press': AA_bulk_int_press_indiv, 'id': phase_part_dict['bulk']['A']}, 'A-B': {'press': AB_bulk_int_press_indiv, 'id': phase_part_dict['bulk']['B']}, 'B-A': {'press': BA_bulk_int_press_indiv, 'id': phase_part_dict['bulk']['A']}, 'B-B': {'press': BB_bulk_int_press_indiv, 'id': phase_part_dict['bulk']['B']} }, 'int': {'all-all': {'press': allall_int_int_press_indiv, 'id': phase_part_dict['int']['all']}, 'all-A': {'press': allA_int_int_press_indiv, 'id': phase_part_dict['int']['A']}, 'A-all': {'press': Aall_int_int_press_indiv, 'id': phase_part_dict['int']['all']}, 'all-B': {'press': allB_int_int_press_indiv, 'id': phase_part_dict['int']['B']}, 'B-all': {'press': Ball_int_int_press_indiv, 'id': phase_part_dict['int']['all']}, 'A-A': {'press': AA_int_int_press_indiv, 'id': phase_part_dict['int']['A']}, 'A-B': {'press': AB_int_int_press_indiv, 'id': phase_part_dict['int']['B']}, 'B-A': {'press': BA_int_int_press_indiv, 'id': phase_part_dict['int']['A']}, 'B-B': {'press': BB_int_int_press_indiv, 'id': phase_part_dict['int']['B']} }, 'gas': {'all-all': {'press': allall_gas_int_press_indiv, 'id': phase_part_dict['gas']['all']}, 'all-A': {'press': allA_gas_int_press_indiv, 'id': phase_part_dict['gas']['A']}, 'A-all': {'press': Aall_gas_int_press_indiv, 'id': phase_part_dict['gas']['all']}, 'all-B': {'press': allB_gas_int_press_indiv, 'id': phase_part_dict['gas']['B']}, 'B-all': {'press': Ball_gas_int_press_indiv, 'id': phase_part_dict['gas']['all']}, 'A-A': {'press': AA_gas_int_press_indiv, 'id': phase_part_dict['gas']['A']}, 'A-B': {'press': AB_gas_int_press_indiv, 'id': phase_part_dict['gas']['B']}, 'B-A': {'press': BA_gas_int_press_indiv, 'id': phase_part_dict['gas']['A']}, 'B-B': {'press': BB_gas_int_press_indiv, 'id': phase_part_dict['gas']['B']} }  }
+        
+        return stress_stat_dict, press_stat_dict, press_stat_indiv_dict, press_plot_dict, stress_plot_dict, press_hetero_dict
     def clustering_coefficient(self):
         '''
         Purpose: Takes the composition of each phase and uses neighbor lists to find the

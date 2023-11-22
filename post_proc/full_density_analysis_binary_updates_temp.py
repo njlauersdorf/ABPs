@@ -420,7 +420,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
         edgePhase=np.zeros(partNum)
         bulkPhase=np.zeros(partNum)
 
-        if measurement_options[0]=='heterogeneity-activity':
+        if measurement_options[0]=='spatial-heterogeneity':
             
             # Calculate cluster CoM
             com_dict = plotting_utility_functs.com_view(pos, clp_all)
@@ -429,133 +429,246 @@ with hoomd.open(name=inFile, mode='rb') as t:
             if com_option == True:
                 pos = com_dict['pos']
 
-            bin_width_arr = np.linspace(1, bin_width, int(bin_width-1))
-            heterogeneity_gas = np.array([])
-            heterogeneity_int = np.array([])
-            heterogeneity_bulk = np.array([])
-            heterogeneity_system = np.array([])
+            NBins_x = utility_functs.getNBins(lx_box, bin_width)
+            NBins_y = utility_functs.getNBins(ly_box, bin_width)
 
-            for q in range(0, len(bin_width_arr)):
-                #Bin system to calculate orientation and alignment that will be used in vector plots
-                NBins_x = utility_functs.getNBins(lx_box, bin_width_arr[q])
-                NBins_y = utility_functs.getNBins(ly_box, bin_width_arr[q])
+            # Calculate size of bins
+            sizeBin_x = utility_functs.roundUp(((lx_box) / NBins_x), 6)
+            sizeBin_y = utility_functs.roundUp(((ly_box) / NBins_y), 6)
 
-                # Calculate size of bins
-                sizeBin_x = utility_functs.roundUp(((lx_box) / NBins_x), 6)
-                sizeBin_y = utility_functs.roundUp(((ly_box) / NBins_y), 6)
+            # Instantiate binning functions module
+            binning_functs = binning.binning(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, typ, eps)
+            
+            # Calculate bin positions
+            pos_dict = binning_functs.create_bins()
 
-                # Instantiate binning functions module
-                binning_functs = binning.binning(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, typ, eps)
+            # Assign particles to bins
+            part_dict = binning_functs.bin_parts(pos, ids, clust_size)
+
+            # Heterogeneity
+            heterogeneity_typ = binning_functs.bin_heterogeneity_system(part_dict['typ'])
+            heterogeneity_typ_system = np.append(heterogeneity_typ_system, heterogeneity_typ)
+
+            heterogeneity_activity = binning_functs.bin_heterogeneity_system(part_dict['act'])
+            heterogeneity_activity_system = np.append(heterogeneity_activity_system, heterogeneity_activity)
+
+            # Calculate average orientation per bin
+            orient_dict = binning_functs.bin_orient(part_dict, pos, ang, com_dict['com'])
+
+            # Calculate area fraction per bin
+            area_frac_dict = binning_functs.bin_area_frac(part_dict)
+
+            # Heterogeneity
+            heterogeneity_area_frac_all = binning_functs.bin_heterogeneity_binned_system(area_frac_dict['bin']['all'], (intPhi/100))
+            heterogeneity_area_frac_A = binning_functs.bin_heterogeneity_binned_system(area_frac_dict['bin']['A'], (intPhi/100)*parFrac/100)
+            heterogeneity_area_frac_B = binning_functs.bin_heterogeneity_binned_system(area_frac_dict['bin']['B'], (intPhi/100)*(1.0-parFrac/100))
+
+            heterogeneity_area_frac_system_all = np.append(heterogeneity_area_frac_system_all, heterogeneity_area_frac_all)
+            heterogeneity_area_frac_system_A = np.append(heterogeneity_area_frac_system_A, heterogeneity_area_frac_A)
+            heterogeneity_area_frac_system_B = np.append(heterogeneity_area_frac_system_B, heterogeneity_area_frac_B)
+
+            # Calculate average activity per bin
+            activ_dict = binning_functs.bin_activity(part_dict)
+
+            # Define output file name
+            outfile = 'pa'+str(int(peA))+'_pb'+str(int(peB))+'_xa'+str(int(parFrac))+'_eps'+str(eps)+'_phi'+str(phi)+'_pNum' + str(int(partNum)) + '_bin' + str(int(bin_width)) + '_time' + str(int(time_step))
+            out = outfile + "_frame_"
+            pad = str(j).zfill(5)
+            outFile = out + pad
+
+            # If cluster sufficiently large
+            if clust_large >= min_size:
                 
-                # Calculate bin positions
-                pos_dict = binning_functs.create_bins()
+                # Instantiate empty binning arrays
+                clust_size_arr = np.append(clust_size_arr, clust_large)
+                fa_all_tot = [[0 for b in range(NBins_y)] for a in range(NBins_x)]
+                fa_all_x_tot = [[0 for b in range(NBins_y)] for a in range(NBins_x)]
+                fa_all_y_tot = [[0 for b in range(NBins_y)] for a in range(NBins_x)]
+                fa_fast_tot = [[0 for b in range(NBins_y)] for a in range(NBins_x)]
+                fa_slow_tot = [[0 for b in range(NBins_y)] for a in range(NBins_x)]
 
-                # Assign particles to bins
-                part_dict = binning_functs.bin_parts(pos, ids, clust_size)
+                fa_all_num = [[0 for b in range(NBins_y)] for a in range(NBins_x)]
+                fa_fast_num = [[0 for b in range(NBins_y)] for a in range(NBins_x)]
+                fa_slow_num = [[0 for b in range(NBins_y)] for a in range(NBins_x)]
 
-                # Heterogeneity
-                heterogeneity = binning_functs.bin_heterogeneity_system(part_dict['typ'], np.var(typ))
-                heterogeneity_system = np.append(heterogeneity_system, heterogeneity)
+                # Bin average alignment toward cluster's CoM
+                align_dict = binning_functs.bin_align(orient_dict)
 
-                # Calculate average orientation per bin
-                orient_dict = binning_functs.bin_orient(part_dict, pos, ang, com_dict['com'])
-
-                # Calculate area fraction per bin
-                area_frac_dict = binning_functs.bin_area_frac(part_dict)
-
-                # Calculate average activity per bin
-                activ_dict = binning_functs.bin_activity(part_dict)
-
-                # Define output file name
-                outfile = 'pa'+str(int(peA))+'_pb'+str(int(peB))+'_xa'+str(int(parFrac))+'_eps'+str(eps)+'_phi'+str(phi)+'_pNum' + str(int(partNum)) + '_bin' + str(int(bin_width)) + '_time' + str(int(time_step))
-                out = outfile + "_frame_"
+                #Time frame for plots
                 pad = str(j).zfill(5)
-                outFile = out + pad
 
-                # If cluster sufficiently large
-                if clust_large >= min_size:
+                # Bin average aligned active force pressure
+                press_dict = binning_functs.bin_active_press(align_dict, area_frac_dict)
+
+                # Bin average active force normal to cluster CoM
+                normal_fa_dict = binning_functs.bin_normal_active_fa(align_dict, area_frac_dict, activ_dict)
+
+                # Find curl and divergence of binned average alignment toward cluster CoM
+                align_grad_dict = binning_functs.curl_and_div(align_dict)
+
+                # Instantiate plotting functions module
+                plotting_functs = plotting.plotting(orient_dict, pos_dict, lx_box, ly_box, NBins_x, NBins_y, sizeBin_x, sizeBin_y, peA, peB, parFrac, eps, typ, tst, partNum, picPath, outFile)
+
+                # Instantiate phase identification functions module
+                phase_ident_functs = phase_identification.phase_identification(area_frac_dict, align_dict, part_dict, press_dict, lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, parFrac, eps, typ)
+
+                # Identify phases of system
+                phase_dict = phase_ident_functs.phase_ident()
+                #phase_dict = phase_ident_functs.phase_ident_planar()
+
+                # Find IDs of particles in each phase
+                bulk_id = np.where(phase_dict['part']==0)[0]
+                int_id = np.where(phase_dict['part']==1)[0]
+                gas_id = np.where(phase_dict['part']==2)[0]
+                
+                # Blur phases to mitigate noise
+                phase_dict = phase_ident_functs.phase_blur(phase_dict)
+
+                # Update phases of each particle ID
+                phase_dict = phase_ident_functs.update_phasePart(phase_dict)
+
+                bulk_id = np.where(phase_dict['part']==0)[0]
+                int_id = np.where(phase_dict['part']==1)[0]
+                gas_id = np.where(phase_dict['part']==2)[0]
+                
+                # Count number of particles per phase
+                count_dict = phase_ident_functs.phase_count(phase_dict)
+
+                # Find CoM of bulk phase
+                bulk_com_dict = phase_ident_functs.com_bulk(phase_dict, count_dict)
+
+                # Separate non-connecting bulk phases
+                bulk_dict = phase_ident_functs.separate_bulks(phase_dict, count_dict, bulk_com_dict)
+
+                # Separate non-connecting interfaces
+                phase_dict, bulk_dict, int_dict = phase_ident_functs.separate_ints(phase_dict, count_dict, bulk_dict)
+
+                # Update phase identification array
+                phase_dict = phase_ident_functs.update_phasePart(phase_dict)
+
+                # Reduce mis-identification of gas
+                phase_dict, bulk_dict, int_dict = phase_ident_functs.reduce_gas_noise(phase_dict, bulk_dict, int_dict)
+
+                # Find interface composition
+                phase_dict, bulk_dict, int_dict, int_comp_dict = phase_ident_functs.int_comp(part_dict, phase_dict, bulk_dict, int_dict)
+
+                # Find bulk composition
+                bulk_comp_dict = phase_ident_functs.bulk_comp(part_dict, phase_dict, bulk_dict)
+
+                # Sort bulk by largest to smallest
+                bulk_comp_dict = phase_ident_functs.phase_sort(bulk_comp_dict)
+
+                # Sort interface by largest to smallest
+                int_comp_dict = phase_ident_functs.phase_sort(int_comp_dict)
+
+                # Instantiate interface functions module
+                interface_functs = interface.interface(area_frac_dict, align_dict, part_dict, press_dict, lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, parFrac, eps, typ, ang)
+                
+                # Identify interior and exterior surface bin points
+                surface_dict = interface_functs.det_surface_points(phase_dict, int_dict, int_comp_dict)
+
+                #planar_surface_dict = interface_functs.det_planar_surface_points(phase_dict, int_dict, int_comp_dict)
+                
+                #Save positions of external and internal edges
+                clust_true = 0
+
+                # Bin average velocity, angular velocity, and velocity curl and divergence
+                if j>(start*time_step):
+                    vel_dict = binning_functs.bin_vel(pos, prev_pos, part_dict, dt_step)
+                    ang_vel_dict = binning_functs.bin_ang_vel(ang, prev_ang, part_dict, dt_step)
+                    vel_grad = binning_functs.curl_and_div(vel_dict)
+
+                # Sort surface points for both interior and exterior surfaces of each interface
+                surface2_pos_dict = interface_functs.surface_sort(surface_dict['surface 2']['pos']['x'], surface_dict['surface 2']['pos']['y'])
+                surface1_pos_dict = interface_functs.surface_sort(surface_dict['surface 1']['pos']['x'], surface_dict['surface 1']['pos']['y'])
+
+                # Find CoM of each surface
+                surface_com_dict = interface_functs.surface_com(int_dict, int_comp_dict, surface_dict)
+
+                # Find radius of surface
+                surface_radius_bin = interface_functs.surface_radius_bins(int_dict, int_comp_dict, surface_dict, surface_com_dict)
+
+                # Count bins per phase
+                bin_count_dict = phase_ident_functs.phase_bin_count(phase_dict, bulk_dict, int_dict, bulk_comp_dict, int_comp_dict)
+
+                # Bin average active force
+                active_fa_dict = binning_functs.bin_active_fa(orient_dict, part_dict, phase_dict['bin'])
+
+                #Slow/fast composition of bulk phase
+                part_count_dict, part_id_dict = phase_ident_functs.phase_part_count(phase_dict, int_dict, int_comp_dict, bulk_dict, bulk_comp_dict, typ)
+                
+                # Initialize lattice structure functions
+                lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
+
+                # Calculate interparticle stresses and pressures
+                stress_stat_dict, press_stat_dict, press_stat_indiv_dict, press_plot_dict, stress_plot_dict, press_hetero_dict = lattice_structure_functs.interparticle_pressure_nlist()
+                
+                bin_width_arr = np.linspace(1, 49, 49, dtype=float)
+                bin_width_arr2 = np.linspace(50, int(lx_box), int((lx_box-50)/10), dtype=float)
+                bin_width_arr = np.concatenate((bin_width_arr, bin_width_arr2), axis=0)
+
+                # I NEED TO MAKE A FUNCTION THAT IDENTIFIES PHASE OF BIN BASED ON NUMBER OF PARTICLES IN IT!
+                for q in range(0, len(bin_width_arr)):
+
+                    phi_dict = {'all': {'bulk': (part_count_dict['bulk']['all'] * (np.pi/4)) / (bin_count_dict['bin']['bulk'] * (sizeBin_x * sizeBin_y)), 'int': (part_count_dict['int']['all'] * (np.pi/4)) / (bin_count_dict['bin']['int'] * (sizeBin_x * sizeBin_y)), 'gas': (part_count_dict['gas']['all'] * (np.pi/4)) / (bin_count_dict['bin']['gas'] * (sizeBin_x * sizeBin_y)) }, 'A': {'bulk': (part_count_dict['bulk']['A'] * (np.pi/4)) / (bin_count_dict['bin']['bulk'] * (sizeBin_x * sizeBin_y)), 'int': (part_count_dict['int']['A'] * (np.pi/4)) / (bin_count_dict['bin']['int'] * (sizeBin_x * sizeBin_y)), 'gas': (part_count_dict['gas']['A'] * (np.pi/4)) / (bin_count_dict['bin']['gas'] * (sizeBin_x * sizeBin_y)) }, 'B': {'bulk': (part_count_dict['bulk']['B'] * (np.pi/4)) / (bin_count_dict['bin']['bulk'] * (sizeBin_x * sizeBin_y)), 'int': (part_count_dict['int']['B'] * (np.pi/4)) / (bin_count_dict['bin']['int'] * (sizeBin_x * sizeBin_y)), 'gas': (part_count_dict['gas']['B'] * (np.pi/4)) / (bin_count_dict['bin']['gas'] * (sizeBin_x * sizeBin_y)) } }
+                    heterogeneity_area_frac_phases_all = binning_functs.bin_heterogeneity_binned_phases(area_frac_dict['bin']['all'], phase_dict, phi_dict['all'])
+                    heterogeneity_area_frac_phases_A = binning_functs.bin_heterogeneity_binned_phases(area_frac_dict['bin']['A'], phase_dict, phi_dict['A'])
+                    heterogeneity_area_frac_phases_B = binning_functs.bin_heterogeneity_binned_phases(area_frac_dict['bin']['B'], phase_dict, phi_dict['B'])
                     
-                    # Instantiate empty binning arrays
-                    clust_size_arr = np.append(clust_size_arr, clust_large)
-                    fa_all_tot = [[0 for b in range(NBins_y)] for a in range(NBins_x)]
-                    fa_all_x_tot = [[0 for b in range(NBins_y)] for a in range(NBins_x)]
-                    fa_all_y_tot = [[0 for b in range(NBins_y)] for a in range(NBins_x)]
-                    fa_fast_tot = [[0 for b in range(NBins_y)] for a in range(NBins_x)]
-                    fa_slow_tot = [[0 for b in range(NBins_y)] for a in range(NBins_x)]
+                    heterogeneity_area_frac_bulk_all = np.append(heterogeneity_area_frac_bulk_all, heterogeneity_area_frac_phases_all['bulk'])
+                    heterogeneity_area_frac_bulk_A = np.append(heterogeneity_area_frac_bulk_A, heterogeneity_area_frac_phases_A['bulk'])
+                    heterogeneity_area_frac_bulk_B = np.append(heterogeneity_area_frac_bulk_B, heterogeneity_area_frac_phases_B['bulk'])
 
-                    fa_all_num = [[0 for b in range(NBins_y)] for a in range(NBins_x)]
-                    fa_fast_num = [[0 for b in range(NBins_y)] for a in range(NBins_x)]
-                    fa_slow_num = [[0 for b in range(NBins_y)] for a in range(NBins_x)]
+                    heterogeneity_area_frac_int_all = np.append(heterogeneity_area_frac_int_all, heterogeneity_area_frac_phases_all['int'])
+                    heterogeneity_area_frac_int_A = np.append(heterogeneity_area_frac_int_A, heterogeneity_area_frac_phases_A['int'])
+                    heterogeneity_area_frac_int_B = np.append(heterogeneity_area_frac_int_B, heterogeneity_area_frac_phases_B['int'])
 
-                    # Bin average alignment toward cluster's CoM
-                    align_dict = binning_functs.bin_align(orient_dict)
+                    heterogeneity_area_frac_gas_all = np.append(heterogeneity_area_frac_gas_all, heterogeneity_area_frac_phases_all['gas'])
+                    heterogeneity_area_frac_gas_A = np.append(heterogeneity_area_frac_gas_A, heterogeneity_area_frac_phases_A['gas'])
+                    heterogeneity_area_frac_gas_B = np.append(heterogeneity_area_frac_gas_B, heterogeneity_area_frac_phases_B['gas'])
 
-                    #Time frame for plots
-                    pad = str(j).zfill(5)
-
-                    # Bin average aligned active force pressure
-                    press_dict = binning_functs.bin_active_press(align_dict, area_frac_dict)
-
-                    # Bin average active force normal to cluster CoM
-                    normal_fa_dict = binning_functs.bin_normal_active_fa(align_dict, area_frac_dict, activ_dict)
-
-                    # Find curl and divergence of binned average alignment toward cluster CoM
-                    align_grad_dict = binning_functs.curl_and_div(align_dict)
-
-                    # Instantiate plotting functions module
-                    plotting_functs = plotting.plotting(orient_dict, pos_dict, lx_box, ly_box, NBins_x, NBins_y, sizeBin_x, sizeBin_y, peA, peB, parFrac, eps, typ, tst, partNum, picPath, outFile)
-
-                    # Instantiate phase identification functions module
-                    phase_ident_functs = phase_identification.phase_identification(area_frac_dict, align_dict, part_dict, press_dict, lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, parFrac, eps, typ)
-
-                    # Identify phases of system
-                    phase_dict = phase_ident_functs.phase_ident()
-                    #phase_dict = phase_ident_functs.phase_ident_planar()
-
-                    # Find IDs of particles in each phase
-                    bulk_id = np.where(phase_dict['part']==0)[0]
-                    int_id = np.where(phase_dict['part']==1)[0]
-                    gas_id = np.where(phase_dict['part']==2)[0]
                     
-                    # Blur phases to mitigate noise
-                    phase_dict = phase_ident_functs.phase_blur(phase_dict)
-
-                    # Update phases of each particle ID
-                    phase_dict = phase_ident_functs.update_phasePart(phase_dict)
-
-                    bulk_id = np.where(phase_dict['part']==0)[0]
-                    int_id = np.where(phase_dict['part']==1)[0]
-                    gas_id = np.where(phase_dict['part']==2)[0]
+                    heterogeneity_press_all = binning_functs.bin_heterogeneity_binned_system(press_dict['bin']['all'], press_stat_dict['all-all']['system'])
+                    heterogeneity_press_A = binning_functs.bin_heterogeneity_binned_phases(press_dict['bin']['A'], press_stat_dict['all-A']['system'])
+                    heterogeneity_press_B = binning_functs.bin_heterogeneity_binned_phases(press_dict['bin']['B'], press_stat_dict['all-B']['system'])
                     
-                    # Count number of particles per phase
-                    count_dict = phase_ident_functs.phase_count(phase_dict)
+                    heterogeneity_press_system_all = np.append(heterogeneity_press_system_all, heterogeneity_press_all)
+                    heterogeneity_press_system_A = np.append(heterogeneity_press_system_A, heterogeneity_press_A)
+                    heterogeneity_press_system_B = np.append(heterogeneity_press_system_B, heterogeneity_press_B)
 
-                    # Find CoM of bulk phase
-                    bulk_com_dict = phase_ident_functs.com_bulk(phase_dict, count_dict)
+                    binPress = binning_functs.bin_parts_from_interpart_press(part_dict, press_hetero_dict['all'])
 
-                    # Separate non-connecting bulk phases
-                    bulk_dict = phase_ident_functs.separate_bulks(phase_dict, count_dict, bulk_com_dict)
+                    press_mean_dict = {'all': {'bulk': press_stat_dict['all-all']['bulk'], 'int': press_stat_dict['all-all']['int'], 'gas': press_stat_dict['all-all']['gas'] }, 'A': {'bulk': press_stat_dict['all-A']['bulk'], 'int': press_stat_dict['all-A']['int'], 'gas': press_stat_dict['all-A']['gas'] }, 'B': {'bulk': press_stat_dict['all-B']['bulk'], 'int': press_stat_dict['all-B']['int'], 'gas': press_stat_dict['all-B']['gas'] } }
 
-                    # Separate non-connecting interfaces
-                    phase_dict, bulk_dict, int_dict = phase_ident_functs.separate_ints(phase_dict, count_dict, bulk_dict)
-
-                    # Update phase identification array
-                    phase_dict = phase_ident_functs.update_phasePart(phase_dict)
-
-                    # Reduce mis-identification of gas
-                    phase_dict, bulk_dict, int_dict = phase_ident_functs.reduce_gas_noise(phase_dict, bulk_dict, int_dict)
-
-                    # Find interface composition
-                    phase_dict, bulk_dict, int_dict, int_comp_dict = phase_ident_functs.int_comp(part_dict, phase_dict, bulk_dict, int_dict)
-
-                    heterogeneity_phases = binning_functs.bin_heterogeneity_phases(part_dict['typ'], typ, phase_dict)
-                    heterogeneity_gas = np.append(heterogeneity_gas, heterogeneity_phases['gas'])
-                    heterogeneity_int = np.append(heterogeneity_int, heterogeneity_phases['int'])
-                    heterogeneity_bulk = np.append(heterogeneity_bulk, heterogeneity_phases['bulk'])
+                    heterogeneity_press_phases_all = binning_functs.bin_heterogeneity_binned_phases(press_dict['bin']['all'], phase_dict, phi_dict['all'])
+                    heterogeneity_press_phases_A = binning_functs.bin_heterogeneity_binned_phases(press_dict['bin']['A'], phase_dict, phi_dict['A'])
+                    heterogeneity_press_phases_B = binning_functs.bin_heterogeneity_binned_phases(press_dict['bin']['B'], phase_dict, phi_dict['B'])
                     
-            heterogeneity_dict = {'bulk': heterogeneity_bulk.tolist(), 'int': heterogeneity_int.tolist(), 'gas': heterogeneity_gas.tolist(), 'system': heterogeneity_system.tolist()}
-            print(heterogeneity_dict)
-            stop
+                    heterogeneity_press_bulk_all = np.append(heterogeneity_press_bulk_all, heterogeneity_press_phases_all['bulk'])
+                    heterogeneity_press_bulk_A = np.append(heterogeneity_press_bulk_A, heterogeneity_press_phases_A['bulk'])
+                    heterogeneity_press_bulk_B = np.append(heterogeneity_press_bulk_B, heterogeneity_press_phases_B['bulk'])
+
+                    heterogeneity_press_int_all = np.append(heterogeneity_press_int_all, heterogeneity_press_phases_all['int'])
+                    heterogeneity_press_int_A = np.append(heterogeneity_press_int_A, heterogeneity_press_phases_A['int'])
+                    heterogeneity_press_int_B = np.append(heterogeneity_press_int_B, heterogeneity_press_phases_B['int'])
+
+                    heterogeneity_press_gas_all = np.append(heterogeneity_press_gas_all, heterogeneity_press_phases_all['gas'])
+                    heterogeneity_press_gas_A = np.append(heterogeneity_press_gas_A, heterogeneity_press_phases_A['gas'])
+                    heterogeneity_press_gas_B = np.append(heterogeneity_press_gas_B, heterogeneity_press_phases_B['gas'])
+                    
+            heterogeneity_activity_dict = {'bin': bin_width_arr, 'bulk': heterogeneity_activity_bulk.tolist(), 'int': heterogeneity_activity_int.tolist(), 'gas': heterogeneity_activity_gas.tolist(), 'system': heterogeneity_activity_system.tolist()}
+            heterogeneity_phi_dict = {'bin': bin_width_arr, 'bulk': {'all': heterogeneity_area_frac_bulk_all.tolist(), 'A': heterogeneity_area_frac_bulk_A.tolist(), 'B': heterogeneity_area_frac_bulk_B.tolist()}, 'int': {'all': heterogeneity_area_frac_int_all.tolist(), 'A': heterogeneity_area_frac_int_A.tolist(), 'B': heterogeneity_area_frac_int_B.tolist()}, 'gas': {'all': heterogeneity_area_frac_gas_all.tolist(), 'A': heterogeneity_area_frac_gas_A.tolist(), 'B': heterogeneity_area_frac_gas_B.tolist()}, 'system': {'all': heterogeneity_area_frac_system_all.tolist(), 'A': heterogeneity_area_frac_system_A.tolist(), 'B': heterogeneity_area_frac_system_B.tolist()} }
+            heterogeneity_press_dict = {'bin': bin_width_arr, 'bulk': {'all': heterogeneity_press_bulk_all.tolist(), 'A': heterogeneity_press_bulk_A.tolist(), 'B': heterogeneity_press_bulk_B.tolist()}, 'int': {'all': heterogeneity_press_int_all.tolist(), 'A': heterogeneity_press_int_A.tolist(), 'B': heterogeneity_press_int_B.tolist()}, 'gas': {'all': heterogeneity_press_gas_all.tolist(), 'A': heterogeneity_press_gas_A.tolist(), 'B': heterogeneity_press_gas_B.tolist()}, 'system': {'all': heterogeneity_press_system_all.tolist(), 'A': heterogeneity_press_system_A.tolist(), 'B': heterogeneity_press_system_B.tolist()} }
+            
+
+            # Instantiate data output functions module
+            data_output_functs = data_output.data_output(lx_box, ly_box, sizeBin_x, sizeBin_y, tst, clust_large, dt_step)
+
+            # Write neighbor data to output file
+            data_output_functs.write_to_txt(heterogeneity_activity_dict, dataPath + 'heterogeneity_activity_' + outfile + '.txt')
+            data_output_functs.write_to_txt(heterogeneity_phi_dict, dataPath + 'heterogeneity_phi_' + outfile + '.txt')
+            data_output_functs.write_to_txt(heterogeneity_press_dict, dataPath + 'heterogeneity_press_' + outfile + '.txt')
+
         else:
 
             # Calculate cluster CoM
@@ -1249,12 +1362,42 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
 
                     # Calculate interparticle stresses and pressures
-                    stress_stat_dict, press_stat_dict, press_stat_indiv_dict, press_plot_dict, stress_plot_dict = lattice_structure_functs.interparticle_pressure_nlist()
+                    stress_stat_dict, press_stat_dict, press_stat_indiv_dict, press_plot_dict, stress_plot_dict, press_hetero_dict = lattice_structure_functs.interparticle_pressure_nlist()
 
                     # Save stress and pressure data
                     data_output_functs.write_to_txt(stress_stat_dict, dataPath + 'interparticle_stress_' + outfile + '.txt')
                     data_output_functs.write_to_txt(press_stat_dict, dataPath + 'interparticle_press_' + outfile + '.txt')
                     data_output_functs.write_to_txt(press_stat_indiv_dict, dataPath + 'interparticle_press_indiv_' + outfile + '.txt')
+
+                    binned_press = binning_functs.bin_measurement(part_dict['id'], phase_dict['bin'], press_hetero_dict)
+
+                    heterogeneity_press_phases = binning_functs.bin_heterogeneity_press_phases(binned_press, press_hetero_dict, phase_dict, part_dict)
+                    print(heterogeneity_press_phases)
+                    stop
+                    
+                    heterogeneity_press_gas = np.append(heterogeneity_gas, heterogeneity_press_phases['gas'])
+                    heterogeneity_press_int = np.append(heterogeneity_int, heterogeneity_press_phases['int'])
+                    heterogeneity_press_bulk = np.append(heterogeneity_bulk, heterogeneity_press_phases['bulk'])
+                    
+                    print(heterogeneity_press_bulk)
+                    print(heterogeneity_press_int)
+                    print(heterogeneity_press_gas)
+
+                    #heterogeneity_press_dict = {'bulk': heterogeneity_press_bulk.tolist(), 'int': heterogeneity_press_int.tolist(), 'gas': heterogeneity_press_gas.tolist(), 'system': heterogeneity_press_system.tolist()}
+            
+                    #print(heterogeneity_dict)
+                    stop
+                    # Heterogeneity
+                    heterogeneity = binning_functs.bin_heterogeneity_system(part_dict['typ'], np.var(typ))
+                    heterogeneity_system = np.append(heterogeneity_system, heterogeneity)
+
+                    heterogeneity_phases = binning_functs.bin_heterogeneity_phases(part_dict['typ'], typ, phase_dict)
+                    heterogeneity_gas = np.append(heterogeneity_gas, heterogeneity_phases['gas'])
+                    heterogeneity_int = np.append(heterogeneity_int, heterogeneity_phases['int'])
+                    heterogeneity_bulk = np.append(heterogeneity_bulk, heterogeneity_phases['bulk'])
+                    
+                    heterogeneity_dict = {'bulk': heterogeneity_bulk.tolist(), 'int': heterogeneity_int.tolist(), 'gas': heterogeneity_gas.tolist(), 'system': heterogeneity_system.tolist()}
+            
 
                     # Measure radial interparticle pressure
                     radial_int_press_dict = particle_prop_functs.radial_int_press(stress_plot_dict)
@@ -1796,6 +1939,39 @@ with hoomd.open(name=inFile, mode='rb') as t:
                         # Plot partices and color-code by activity
                         plotting_functs.plot_part_activity_wide(pos, mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option, banner_id = banner_option, presentation_id = presentation_option)
 
+                elif measurement_options[0] == 'local-system-density':
+
+                    # Calculate local density of gas phase
+                    if lx_box == ly_box:
+                        local_dens_stat_dict, local_homo_stat_dict, local_dens_plot_dict = particle_prop_functs.local_system_density()
+
+                    # Save local density of gas phase data
+                    data_output_functs.write_to_txt(local_dens_stat_dict, dataPath + 'local_system_density_' + outfile + '.txt')
+                    data_output_functs.write_to_txt(local_homo_stat_dict, dataPath + 'local_system_homogeneity_' + outfile + '.txt')
+
+                    if plot == 'y':
+
+                        plotting_functs.plot_homogeneity(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='all-all', interface_id = interface_option, orientation_id = orientation_option)
+                        plotting_functs.plot_homogeneity(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='all-A', interface_id = interface_option, orientation_id = orientation_option)
+                        plotting_functs.plot_homogeneity(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='all-B', interface_id = interface_option, orientation_id = orientation_option)
+                        plotting_functs.plot_homogeneity(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='A-all', interface_id = interface_option, orientation_id = orientation_option)
+                        plotting_functs.plot_homogeneity(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='B-all', interface_id = interface_option, orientation_id = orientation_option)
+                        plotting_functs.plot_homogeneity(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='A-A', interface_id = interface_option, orientation_id = orientation_option)
+                        plotting_functs.plot_homogeneity(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='A-B', interface_id = interface_option, orientation_id = orientation_option)
+                        plotting_functs.plot_homogeneity(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='B-A', interface_id = interface_option, orientation_id = orientation_option)
+                        plotting_functs.plot_homogeneity(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='B-B', interface_id = interface_option, orientation_id = orientation_option)
+
+
+                        # Plot particles color-coded by local density for all-all, all-A, all-B, A-all, B-all, A-A, A-B, B-A, and B-B nearest neighbor pairs in gas
+                        plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='all-all', interface_id = interface_option, orientation_id = orientation_option)
+                        plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='all-A', interface_id = interface_option, orientation_id = orientation_option)
+                        plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='all-B', interface_id = interface_option, orientation_id = orientation_option)
+                        plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='A-all', interface_id = interface_option, orientation_id = orientation_option)
+                        plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='B-all', interface_id = interface_option, orientation_id = orientation_option)
+                        plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='A-A', interface_id = interface_option, orientation_id = orientation_option)
+                        plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='A-B', interface_id = interface_option, orientation_id = orientation_option)
+                        plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='B-A', interface_id = interface_option, orientation_id = orientation_option)
+                        plotting_functs.plot_local_density(local_dens_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, pair='B-B', interface_id = interface_option, orientation_id = orientation_option)
 
                 elif measurement_options[0] == 'neighbors':
                     #DONE
@@ -1821,21 +1997,140 @@ with hoomd.open(name=inFile, mode='rb') as t:
                         action_arr = np.append(action_arr, penetration_dict['action'])
                 elif measurement_options[0] == 'part-velocity':
                     if j>(start * time_step):
-
+                        
                         vel_plot_dict, vel_stat_dict = particle_prop_functs.part_velocity(prev_pos, prev_ang, ori)
                         data_output_functs.write_to_txt(vel_stat_dict, dataPath + 'velocity_' + outfile + '.txt')
+                        
+                        stress_stat_dict, press_stat_dict, press_plot_dict = particle_prop_functs.interparticle_pressure_nlist()
 
+                        bin_width_arr = np.linspace(1, 49, 49, dtype=float)
+                        bin_width_arr2 = np.linspace(50, int(lx_box), int((lx_box-50)/10), dtype=float)
+                        bin_width_arr = np.concatenate((bin_width_arr, bin_width_arr2), axis=0)
+                        
+                        heterogeneity_part_velocity_all = np.array([])
+                        heterogeneity_part_velocity_A = np.array([])
+                        heterogeneity_part_velocity_B = np.array([])
+
+                        id_heterogeneity_velocity_system_all = np.array([])
+                        id_heterogeneity_velocity_system_A = np.array([])
+                        id_heterogeneity_velocity_system_B = np.array([])
+
+
+                        heterogeneity_activity_system = np.array([])
+                        heterogeneity_typ_system = np.array([])
+
+                        heterogeneity_part_press_all = np.array([])
+                        heterogeneity_part_press_A = np.array([])
+                        heterogeneity_part_press_B = np.array([])
+
+                        id_heterogeneity_press_system_all = np.array([])
+                        id_heterogeneity_press_system_A = np.array([])
+                        id_heterogeneity_press_system_B = np.array([])
+
+                        heterogeneity_area_frac_system_all = np.array([])
+                        heterogeneity_area_frac_system_A = np.array([])
+                        heterogeneity_area_frac_system_B = np.array([])
+
+                        id_heterogeneity_typ_system_all = np.array([])
+                        id_heterogeneity_activity_system_all = np.array([])
+
+                        for q in range(0, len(bin_width_arr)):
+                            #Bin system to calculate orientation and alignment that will be used in vector plots
+                            NBins_x_tmp = utility_functs.getNBins(lx_box, bin_width_arr[q])
+                            NBins_y_tmp = utility_functs.getNBins(ly_box, bin_width_arr[q])
+
+                            # Calculate size of bins
+                            sizeBin_x_tmp = utility_functs.roundUp(((lx_box) / NBins_x_tmp), 6)
+                            sizeBin_y_tmp = utility_functs.roundUp(((ly_box) / NBins_y_tmp), 6)
+
+                            # Instantiate binning functions module
+                            binning_functs = binning.binning(lx_box, ly_box, partNum, NBins_x_tmp, NBins_y_tmp, peA, peB, typ, eps)
+                            
+                            # Calculate bin positions
+                            pos_dict = binning_functs.create_bins()
+
+                            # Assign particles to bins
+                            part_dict = binning_functs.bin_parts(pos, ids, clust_size)
+
+                            heterogeneity_typ_all_tmp = binning_functs.bin_heterogeneity_binned_system(part_dict['typ_mean'], (1.0-parFrac/100))
+                            id_heterogeneity_typ_system_all = np.append(id_heterogeneity_typ_system_all, heterogeneity_typ_all_tmp)
+
+                            heterogeneity_activity_all_tmp = binning_functs.bin_heterogeneity_binned_system(part_dict['act_mean'], peA * (parFrac/100) + peB * (1.0-parFrac/100))
+                            id_heterogeneity_activity_system_all = np.append(id_heterogeneity_activity_system_all, heterogeneity_activity_all_tmp)
+
+                             # Calculate area fraction per bin
+                            area_frac_dict = binning_functs.bin_area_frac(part_dict)
+
+                            # Heterogeneity
+                            heterogeneity_area_frac_all = binning_functs.bin_heterogeneity_binned_system(area_frac_dict['bin']['all'], (intPhi/100))
+                            heterogeneity_area_frac_A = binning_functs.bin_heterogeneity_binned_system(area_frac_dict['bin']['A'], (intPhi/100)*parFrac/100)
+                            heterogeneity_area_frac_B = binning_functs.bin_heterogeneity_binned_system(area_frac_dict['bin']['B'], (intPhi/100)*(1.0-parFrac/100))
+
+                            heterogeneity_area_frac_system_all = np.append(heterogeneity_area_frac_system_all, heterogeneity_area_frac_all)
+                            heterogeneity_area_frac_system_A = np.append(heterogeneity_area_frac_system_A, heterogeneity_area_frac_A)
+                            heterogeneity_area_frac_system_B = np.append(heterogeneity_area_frac_system_B, heterogeneity_area_frac_B)
+
+
+                            # Heterogeneity
+                            heterogeneity_typ = binning_functs.bin_heterogeneity_system(part_dict['typ'])
+                            heterogeneity_typ_system = np.append(heterogeneity_typ_system, heterogeneity_typ)
+
+                            heterogeneity_activity = binning_functs.bin_heterogeneity_system(part_dict['typ'])
+                            heterogeneity_activity_system = np.append(heterogeneity_activity_system, heterogeneity_activity)
+                                        
+                            binned_vel, binned_vel_mean = binning_functs.bin_part_velocity(part_dict['id'], vel_plot_dict)
+
+                            heterogeneity_velocity_all_tmp = binning_functs.bin_heterogeneity_binned_system(binned_vel_mean['all'], vel_stat_dict['all']['mean'])
+                            heterogeneity_velocity_A_tmp = binning_functs.bin_heterogeneity_binned_system(binned_vel_mean['A'], vel_stat_dict['A']['mean'])
+                            heterogeneity_velocity_B_tmp = binning_functs.bin_heterogeneity_binned_system(binned_vel_mean['B'], vel_stat_dict['B']['mean'])
+                            
+                            id_heterogeneity_velocity_system_all = np.append(id_heterogeneity_velocity_system_all, heterogeneity_velocity_all_tmp)
+                            id_heterogeneity_velocity_system_A = np.append(id_heterogeneity_velocity_system_A, heterogeneity_velocity_A_tmp)
+                            id_heterogeneity_velocity_system_B = np.append(id_heterogeneity_velocity_system_B, heterogeneity_velocity_B_tmp)
+
+
+                            heterogeneity_part_velocity_all_tmp = binning_functs.bin_heterogeneity_part_vel_system(binned_vel['all'], vel_plot_dict['all']['mag'])
+                            heterogeneity_part_velocity_A_tmp = binning_functs.bin_heterogeneity_part_vel_system(binned_vel['A'], vel_plot_dict['A']['mag'])
+                            heterogeneity_part_velocity_B_tmp = binning_functs.bin_heterogeneity_part_vel_system(binned_vel['B'], vel_plot_dict['B']['mag'])
+
+                            heterogeneity_part_velocity_all = np.append(heterogeneity_part_velocity_all, heterogeneity_part_velocity_all_tmp)
+                            heterogeneity_part_velocity_A = np.append(heterogeneity_part_velocity_A, heterogeneity_part_velocity_A_tmp)
+                            heterogeneity_part_velocity_B = np.append(heterogeneity_part_velocity_B, heterogeneity_part_velocity_B_tmp)
+                        
+                            binned_press, binned_press_mean = binning_functs.bin_part_press(part_dict['id'], press_plot_dict)
+                            
+                            heterogeneity_press_all_tmp = binning_functs.bin_heterogeneity_binned_system(binned_press_mean['all'], press_stat_dict['all-all']['press'])
+                            heterogeneity_press_A_tmp = binning_functs.bin_heterogeneity_binned_system(binned_press_mean['A'], press_stat_dict['all-A']['press'])
+                            heterogeneity_press_B_tmp = binning_functs.bin_heterogeneity_binned_system(binned_press_mean['B'], press_stat_dict['all-B']['press'])
+                            
+                            id_heterogeneity_press_system_all = np.append(id_heterogeneity_press_system_all, heterogeneity_press_all_tmp)
+                            id_heterogeneity_press_system_A = np.append(id_heterogeneity_press_system_A, heterogeneity_press_A_tmp)
+                            id_heterogeneity_press_system_B = np.append(id_heterogeneity_press_system_B, heterogeneity_press_B_tmp)
+
+                            heterogeneity_part_press_all_tmp = binning_functs.bin_heterogeneity_part_press_system(binned_press['all'], press_plot_dict['all-all']['press'])
+                            heterogeneity_part_press_A_tmp = binning_functs.bin_heterogeneity_part_press_system(binned_press['A'], press_plot_dict['all-A']['press'])
+                            heterogeneity_part_press_B_tmp = binning_functs.bin_heterogeneity_part_press_system(binned_press['B'], press_plot_dict['all-B']['press'])
+
+                            heterogeneity_part_press_all = np.append(heterogeneity_part_press_all, heterogeneity_part_press_all_tmp)
+                            heterogeneity_part_press_A = np.append(heterogeneity_part_press_A, heterogeneity_part_press_A_tmp)
+                            heterogeneity_part_press_B = np.append(heterogeneity_part_press_B, heterogeneity_part_press_B_tmp)
+
+                        heterogeneity_dict = {'bin_width': bin_width_arr.tolist(), 'id_typ': id_heterogeneity_typ_system_all.tolist(), 'q_typ': heterogeneity_typ_system.tolist(), 'id_activity': id_heterogeneity_activity_system_all.tolist(), 'q_activity': heterogeneity_activity_system.tolist(), 'id_area_frac': {'all': heterogeneity_area_frac_system_all.tolist(), 'A': heterogeneity_area_frac_system_A.tolist(), 'B': heterogeneity_area_frac_system_B.tolist()}, 'id_velocity': {'all': id_heterogeneity_velocity_system_all.tolist(), 'A': id_heterogeneity_velocity_system_A.tolist(), 'B': id_heterogeneity_velocity_system_B.tolist()}, 'q_velocity': {'all': heterogeneity_part_velocity_all.tolist(), 'A': heterogeneity_part_velocity_A.tolist(), 'B': heterogeneity_part_velocity_B.tolist()}, 'id_press': {'all': id_heterogeneity_press_system_all.tolist(), 'A': id_heterogeneity_press_system_A.tolist(), 'B': id_heterogeneity_press_system_B.tolist()}, 'q_press': {'all': heterogeneity_part_press_all.tolist(), 'A': heterogeneity_part_press_A.tolist(), 'B': heterogeneity_part_press_B.tolist()}}
+
+                        # Write neighbor data to output file
+                        data_output_functs.write_to_txt(heterogeneity_dict, dataPath + 'gas_heterogeneity_' + outfile + '.txt')
+                        
                         time_velA_mag = np.append(time_velA_mag, vel_plot_dict['A']['mag'])
                         time_velB_mag = np.append(time_velB_mag, vel_plot_dict['B']['mag'])
 
-                elif measurement_options[0] == 'part-velocity':
-                    if j>(start * time_step):
+                        #elif measurement_options[0] == 'part-velocity':
+                        #    if j>(start * time_step):
 
-                        vel_plot_dict, vel_stat_dict = particle_prop_functs.part_velocity_phases(prev_pos, prev_ang, ori)
-                        data_output_functs.write_to_txt(vel_stat_dict, dataPath + 'velocity_' + outfile + '.txt')
+                        #        vel_plot_dict, vel_stat_dict = particle_prop_functs.part_velocity_phases(prev_pos, prev_ang, ori)
+                        #        data_output_functs.write_to_txt(vel_stat_dict, dataPath + 'velocity_' + outfile + '.txt')
 
-                        time_velA_mag = np.append(time_velA_mag, vel_plot_dict['A']['mag'])
-                        time_velB_mag = np.append(time_velB_mag, vel_plot_dict['B']['mag'])
+                        #        time_velA_mag = np.append(time_velA_mag, vel_plot_dict['A']['mag'])
+                        #        time_velB_mag = np.append(time_velB_mag, vel_plot_dict['B']['mag'])
                         #if plot == 'y':
                         #plotting_functs.vel_histogram(vel_plot_dict, dt_step)
                 elif measurement_options[0] == 'velocity-corr':

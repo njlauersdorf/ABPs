@@ -1040,6 +1040,8 @@ class particle_props:
         typ0ind = np.where(self.typ==0)[0]
         typ1ind = np.where(self.typ==1)[0]
 
+        typ01_vel_mag = (dx**2 + dy**2) ** 0.5
+
         # Slow particle properties
         typ0_vel_x = dx[typ0ind]
         typ0_vel_y = dy[typ0ind]
@@ -1053,27 +1055,31 @@ class particle_props:
         pos1 = self.pos[typ1ind]
 
         # Slow/fast particle average velocities
+        typ01_avg = np.mean(typ01_vel_mag)
         typ0_avg = np.mean(typ0_vel_mag)
         typ1_avg = np.mean(typ1_vel_mag)
 
         # Slow/fast particle standard deviation velocities
+        typ01_std = np.std(typ01_vel_mag)
         typ0_std = np.std(typ0_vel_mag)
         typ1_std = np.std(typ1_vel_mag)
 
         # Slow/fast particle mode velocities
+        typ01_mode = stats.mode(typ01_vel_mag)[0][0]
         typ0_mode = stats.mode(typ0_vel_mag)[0][0]
         typ1_mode = stats.mode(typ1_vel_mag)[0][0]
 
         # Slow/fast particle median velocities
+        typ01_median = np.median(typ01_vel_mag)
         typ0_median = np.median(typ0_vel_mag)
         typ1_median = np.median(typ1_vel_mag)
 
         # Dictionary containing the velocity of each particle type ('all', 'A', or 'B') for plotting
-        vel_plot_dict = {'A': {'x': typ0_vel_x, 'y': typ0_vel_y, 'mag': typ0_vel_mag, 'pos': pos0}, 'B': {'x': typ1_vel_x, 'y': typ1_vel_y, 'mag': typ1_vel_mag, 'pos': pos1} }
+        vel_plot_dict = {'all': {'x': dx, 'y': dy, 'mag': dr, 'pos': self.pos}, 'A': {'x': typ0_vel_x, 'y': typ0_vel_y, 'mag': typ0_vel_mag, 'pos': pos0}, 'B': {'x': typ1_vel_x, 'y': typ1_vel_y, 'mag': typ1_vel_mag, 'pos': pos1} }
 
         # Dictionary containing the average, mode, standard deviation, and median of velocity
         # of each particle type ('all', 'A', or 'B')
-        vel_stat_dict = {'A': {'mean': typ0_avg, 'std': typ0_std, 'mode': typ0_mode, 'median': typ0_median}, 'B': {'mean': typ1_avg, 'std': typ1_std, 'mode': typ1_mode, 'median': typ1_median} }
+        vel_stat_dict = {'all': {'mean': typ01_avg, 'std': typ01_std, 'mode': typ01_mode, 'median': typ01_median}, 'A': {'mean': typ0_avg, 'std': typ0_std, 'mode': typ0_mode, 'median': typ0_median}, 'B': {'mean': typ1_avg, 'std': typ1_std, 'mode': typ1_mode, 'median': typ1_median} }
 
         return vel_plot_dict, vel_stat_dict
 
@@ -2152,7 +2158,329 @@ class particle_props:
         local_gas_dens_stat_dict = {'radius': rad_dist[1:], 'allall_mean': allall_local_dens_mean_arr, 'allall_std': allall_local_dens_std_arr, 'allA_mean': allA_local_dens_mean_arr, 'allA_std': allA_local_dens_std_arr, 'allB_mean': allB_local_dens_mean_arr, 'allB_std': allB_local_dens_std_arr, 'AA_mean': AA_local_dens_mean_arr, 'AA_std': AA_local_dens_std_arr, 'AB_mean': AB_local_dens_mean_arr, 'AB_std': AB_local_dens_std_arr, 'BA_mean': BA_local_dens_mean_arr, 'BA_std': BA_local_dens_std_arr, 'BB_mean': BB_local_dens_mean_arr, 'BB_std': BB_local_dens_std_arr}
     
         return local_gas_dens_stat_dict, local_gas_dens_plot_dict
+    
+    def local_system_density(self):
+        '''
+        Purpose: Takes the composition of each phase and uses neighbor lists to find the
+        nearest, interacting neighbors and calculates the local density for various search
+        distances of each type for each particle and averaged over all particles of each phase.
+
+        Outputs:
+        local_dens_stat_dict: dictionary containing the local density for various search
+        distances of of each type ('all', 'A', or 'B') for a reference particle of a given 
+        type ('all', 'A', or 'B'), averaged over all particles in each phase.
+        '''
         
+        # Calculate area of system
+        system_area = self.lx_box * self.ly_box
+
+        # Position and orientation arrays of type A particles in respective phase
+        typ0ind = np.where(self.typ==0)[0]
+        pos_A=self.pos[typ0ind]                               # Find positions of type 0 particles
+        ang_A=self.ang[typ0ind]
+
+        # Position and orientation arrays of type B particles in respective phase
+        typ1ind = np.where(self.typ==1)[0]
+        pos_B=self.pos[typ1ind]
+        ang_B=self.ang[typ1ind]
+
+        #Initiate empty arrays for calculating mean and standard deviation of local density
+        #of all neighbor particles around A reference particles
+        allA_local_dens_mean_arr = []
+        allA_local_dens_std_arr = []
+        allA_inhomog_mean_arr = []
+        allA_inhomog_std_arr = []
+        
+        #Initiate empty arrays for calculating mean and standard deviation of local density
+        #of all neighbor particles around B reference particles
+        allB_local_dens_mean_arr = []
+        allB_local_dens_std_arr = []
+        allB_inhomog_mean_arr = []
+        allB_inhomog_std_arr = []
+
+        #Initiate empty arrays for calculating mean and standard deviation of local density
+        #of A neighbor particles around all reference particles
+        Aall_local_dens_mean_arr = []
+        Aall_local_dens_std_arr = []
+        Aall_inhomog_mean_arr = []
+        Aall_inhomog_std_arr = []
+        
+        #Initiate empty arrays for calculating mean and standard deviation of local density
+        #of B neighbor particles around all reference particles
+        Ball_local_dens_mean_arr = []
+        Ball_local_dens_std_arr = []
+        Ball_inhomog_mean_arr = []
+        Ball_inhomog_std_arr = []
+
+        #Initiate empty arrays for calculating mean and standard deviation of local density
+        #of all neighbor particles around all reference particles
+        allall_local_dens_mean_arr = []
+        allall_local_dens_std_arr = []
+        allall_inhomog_mean_arr = []
+        allall_inhomog_std_arr = []
+
+        #Initiate empty arrays for calculating mean and standard deviation of local density
+        #of A neighbor particles around A reference particles
+        AA_local_dens_mean_arr = []
+        AA_local_dens_std_arr = []
+        AA_inhomog_mean_arr = []
+        AA_inhomog_std_arr = []
+
+        #Initiate empty arrays for calculating mean and standard deviation of local density
+        #of A neighbor particles around B reference particles
+        AB_local_dens_mean_arr = []
+        AB_local_dens_std_arr = []
+        AB_inhomog_mean_arr = []
+        AB_inhomog_std_arr = []
+
+        #Initiate empty arrays for calculating mean and standard deviation of local density
+        #of B neighbor particles around A reference particles
+        BA_local_dens_mean_arr = []
+        BA_local_dens_std_arr = []
+        BA_inhomog_mean_arr = []
+        BA_inhomog_std_arr = []
+
+        #Initiate empty arrays for calculating mean and standard deviation of local density
+        #of B neighbor particles around B reference particles
+        BB_local_dens_mean_arr = []
+        BB_local_dens_std_arr = []
+        BB_inhomog_mean_arr = []
+        BB_inhomog_std_arr = []
+
+        #Initiate empty arrays for finding nearest A neighboring dense particles surrounding type A bulk particles
+        AA_num_neigh = np.zeros(len(pos_A))
+
+        #Initiate empty arrays for finding nearest A neighboring dense particles surrounding type B bulk particles
+        AB_num_neigh = np.zeros(len(pos_B))
+
+        #Initiate empty arrays for finding nearest B neighboring dense particles surrounding type A bulk particles
+        BA_num_neigh = np.zeros(len(pos_A))
+
+        #Initiate empty arrays for finding nearest B neighboring dense particles surrounding type B bulk particles
+        BB_num_neigh = np.zeros(len(pos_B))
+
+        # Search distance for neighbors in local density calculation
+        rad_dist = [0, self.r_cut, 2*self.r_cut, 3*self.r_cut, 4*self.r_cut, 5*self.r_cut]
+        
+        # Loop over search distances
+        for j in range(1, len(rad_dist)):
+
+            #Initiate empty arrays for finding nearest A neighboring dense particles surrounding type A bulk particles
+            AA_neigh_ind = np.zeros(len(pos_A))
+
+            #Initiate empty arrays for finding nearest A neighboring dense particles surrounding type B bulk particles
+            AB_neigh_ind = np.zeros(len(pos_B))
+
+            #Initiate empty arrays for finding nearest B neighboring dense particles surrounding type A bulk particles
+            BA_neigh_ind = np.zeros(len(pos_A))
+
+            #Initiate empty arrays for finding nearest B neighboring dense particles surrounding type B bulk particles
+            BB_neigh_ind = np.zeros(len(pos_B))
+
+            # List of query arguments for neighbor list caculation
+            query_args = dict(mode='ball', r_min = rad_dist[j-1]+0.001, r_max = rad_dist[j])#r_max=self.theory_functs.conForRClust(peNet_int-45., self.eps) * 1.0)
+
+            # Locate potential neighbor particles by type in the dense phase
+            system_A = freud.AABBQuery(self.f_box, self.f_box.wrap(pos_A))
+            system_B = freud.AABBQuery(self.f_box, self.f_box.wrap(pos_B))
+            
+            # Generate neighbor list of dense phase particles (per query args) of respective type (A or B) neighboring bulk phase reference particles of respective type (A or B)
+            AA_nlist = system_A.query(self.f_box.wrap(pos_A), query_args).toNeighborList()
+            AB_nlist = system_A.query(self.f_box.wrap(pos_B), query_args).toNeighborList()
+            BA_nlist = system_B.query(self.f_box.wrap(pos_A), query_args).toNeighborList()
+            BB_nlist = system_B.query(self.f_box.wrap(pos_B), query_args).toNeighborList()
+        
+            #Loop over neighbor pairings of A-A neighbor pairs to calculate number of nearest neighbors
+            for i in range(0, len(pos_A)):
+                if i in AA_nlist.query_point_indices:
+                    if i not in AA_neigh_ind:
+                        # Find neighbors list IDs where i is reference particle
+                        loc = np.where(AA_nlist.query_point_indices==i)[0]
+
+                        #Save nearest neighbor information to array
+                        AA_num_neigh[i] += len(loc)
+                        AA_neigh_ind = np.append(AA_neigh_ind, int(i))
+                    else:
+                        #Save nearest neighbor information to array
+                        AA_neigh_ind = np.append(AA_neigh_ind, int(i))
+
+            #Loop over neighbor pairings of B-A neighbor pairs to calculate number of nearest neighbors
+            for i in range(0, len(pos_A)):
+                if i in BA_nlist.query_point_indices:
+                    if i not in BA_neigh_ind:
+                        # Find neighbors list IDs where i is reference particle
+                        loc = np.where(BA_nlist.query_point_indices==i)[0]
+
+                        #Save nearest neighbor information to array
+                        BA_num_neigh[i] += len(loc)
+                        BA_neigh_ind = np.append(BA_neigh_ind, int(i))
+                    else:
+                        #Save nearest neighbor information to array
+                        BA_neigh_ind = np.append(BA_neigh_ind, int(i))
+
+            #Loop over neighbor pairings of A-B neighbor pairs to calculate number of nearest neighbors
+            for i in range(0, len(pos_B)):
+                if i in AB_nlist.query_point_indices:
+                    if i not in AB_neigh_ind:
+                        # Find neighbors list IDs where i is reference particle
+                        loc = np.where(AB_nlist.query_point_indices==i)[0]
+
+                        #Save nearest neighbor information to array
+                        AB_num_neigh[i] += len(loc)
+                        AB_neigh_ind = np.append(AB_neigh_ind, int(i))
+                    else:
+                        #Save nearest neighbor information to array
+                        AB_neigh_ind = np.append(AB_neigh_ind, int(i))
+
+            #Loop over neighbor pairings of B-B neighbor pairs to calculate number of nearest neighbors
+            for i in range(0, len(pos_B)):
+                if i in BB_nlist.query_point_indices:
+                    if i not in BB_neigh_ind:
+                        # Find neighbors list IDs where i is reference particle
+                        loc = np.where(BB_nlist.query_point_indices==i)[0]
+
+                        #Save nearest neighbor information to array
+                        BB_num_neigh[i] += len(loc)
+                        BB_neigh_ind = np.append(BB_neigh_ind, int(i))
+                    else:
+                        #Save nearest neighbor information to array
+                        BB_neigh_ind = np.append(BB_neigh_ind, int(i))
+
+            slice_area = (np.pi*rad_dist[j]**2)
+            # Local density of A neighbor particles around A reference particles in bulk
+            AA_local_dens = AA_num_neigh / slice_area
+
+            # Local density of A neighbor particles around B reference particles in bulk
+            AB_local_dens = AB_num_neigh / slice_area
+
+            # Local density of B neighbor particles around A reference particles in bulk
+            BA_local_dens = BA_num_neigh / slice_area
+
+            # Local density of B neighbor particles around B reference particles in bulk
+            BB_local_dens = BB_num_neigh / slice_area
+            
+            # Save neighbor and local orientational order to arrays for all B reference particles of the respective phase with all nearest neighbors
+            Ball_local_dens= np.append(BA_local_dens, BB_local_dens)
+
+            # Save neighbor and local orientational order to arrays for all A reference particles of the respective phase with all nearest neighbors
+            Aall_local_dens = np.append(AA_local_dens, AB_local_dens)
+
+            # Save neighbor and local orientational order to arrays for all reference particles of the respective phase with B nearest neighbors
+            allB_num_neigh = AB_num_neigh + BB_num_neigh
+            allB_local_dens = allB_num_neigh / slice_area
+
+            # Save neighbor and local orientational order to arrays for all reference particles of the respective phase with A nearest neighbors
+            allA_num_neigh = AA_num_neigh + BA_num_neigh
+            allA_local_dens = allA_num_neigh / slice_area
+
+            # Save neighbor, local orientational order, and position to arrays for all bulk reference particles with all nearest neighbors
+            allall_num_neigh = np.append(allA_num_neigh, allB_num_neigh)
+            allall_local_dens = allall_num_neigh / slice_area
+
+            # Calculate mean and standard deviation of local density of A neighbor particles 
+            # around A reference particles in dense phase
+            AA_local_dens_mean_arr.append(np.mean(AA_local_dens))
+            AA_local_dens_std_arr.append(np.std(AA_local_dens))
+            AA_local_dens_inhomog = (AA_local_dens - AA_local_dens_mean_arr[-1])**2
+            AA_inhomog_mean_arr.append(np.mean(AA_local_dens_inhomog))
+            AA_inhomog_std_arr.append(np.std(AA_local_dens_inhomog))
+
+            # Calculate mean and standard deviation of local density of A neighbor particles 
+            # around B reference particles in dense phase
+            AB_local_dens_mean_arr.append(np.mean(AB_local_dens))
+            AB_local_dens_std_arr.append(np.std(AB_local_dens))
+            AB_local_dens_inhomog = (AB_local_dens - AB_local_dens_mean_arr[-1])**2
+            AB_inhomog_mean_arr.append(np.mean(AB_local_dens_inhomog))
+            AB_inhomog_std_arr.append(np.std(AB_local_dens_inhomog))
+
+            # Calculate mean and standard deviation of local density of B neighbor particles 
+            # around A reference particles in dense phase
+            BA_local_dens_mean_arr.append(np.mean(BA_local_dens))
+            BA_local_dens_std_arr.append(np.std(BA_local_dens))
+            BA_local_dens_inhomog = (BA_local_dens - BA_local_dens_mean_arr[-1])**2
+            BA_inhomog_mean_arr.append(np.mean(BA_local_dens_inhomog))
+            BA_inhomog_std_arr.append(np.std(BA_local_dens_inhomog))
+
+            # Calculate mean and standard deviation of local density of B neighbor particles 
+            # around B reference particles in dense phase
+            BB_local_dens_mean_arr.append(np.mean(BB_local_dens))
+            BB_local_dens_std_arr.append(np.std(BB_local_dens))
+            BB_local_dens_inhomog = (BB_local_dens - BB_local_dens_mean_arr[-1])**2
+            BB_inhomog_mean_arr.append(np.mean(BB_local_dens_inhomog))
+            BB_inhomog_std_arr.append(np.std(BB_local_dens_inhomog))
+
+            # Calculate mean and standard deviation of local density of all neighbor particles 
+            # around A reference particles in dense phase
+            allA_local_dens_mean_arr.append(np.mean(allA_local_dens))
+            allA_local_dens_std_arr.append(np.std(allA_local_dens))
+            allA_local_dens_inhomog = (allA_local_dens - allA_local_dens_mean_arr[-1])**2
+            allA_inhomog_mean_arr.append(np.mean(allA_local_dens_inhomog))
+            allA_inhomog_std_arr.append(np.std(allA_local_dens_inhomog))
+
+            # Calculate mean and standard deviation of local density of all neighbor particles 
+            # around B reference particles in dense phase
+            allB_local_dens_mean_arr.append(np.mean(allB_local_dens))
+            allB_local_dens_std_arr.append(np.std(allB_local_dens))
+            allB_local_dens_inhomog = (allB_local_dens - allB_local_dens_mean_arr[-1])**2
+            allB_inhomog_mean_arr.append(np.mean(allB_local_dens_inhomog))
+            allB_inhomog_std_arr.append(np.std(allB_local_dens_inhomog))
+
+            # Calculate mean and standard deviation of local density of all neighbor particles 
+            # around A reference particles in dense phase
+            Aall_local_dens_mean_arr.append(np.mean(Aall_local_dens))
+            Aall_local_dens_std_arr.append(np.std(Aall_local_dens))
+            Aall_local_dens_inhomog = (Aall_local_dens - Aall_local_dens_mean_arr[-1])**2
+            Aall_inhomog_mean_arr.append(np.mean(Aall_local_dens_inhomog))
+            Aall_inhomog_std_arr.append(np.std(Aall_local_dens_inhomog))
+
+            # Calculate mean and standard deviation of local density of all neighbor particles 
+            # around B reference particles in dense phase
+            Ball_local_dens_mean_arr.append(np.mean(Ball_local_dens))
+            Ball_local_dens_std_arr.append(np.std(Ball_local_dens))
+            Ball_local_dens_inhomog = (Ball_local_dens - Ball_local_dens_mean_arr[-1])**2
+            Ball_inhomog_mean_arr.append(np.mean(Ball_local_dens_inhomog))
+            Ball_inhomog_std_arr.append(np.std(Ball_local_dens_inhomog))
+
+            # Calculate mean and standard deviation of local density of all neighbor particles 
+            # around all reference particles in dense phase
+            allall_local_dens_mean_arr.append(np.mean(allall_local_dens))
+            allall_local_dens_std_arr.append(np.std(allall_local_dens))
+            allall_local_dens_inhomog = (allall_local_dens - allall_local_dens_mean_arr[-1])**2
+            allall_inhomog_mean_arr.append(np.mean(allall_local_dens_inhomog))
+            allall_inhomog_std_arr.append(np.std(allall_local_dens_inhomog))
+
+            # If search distance given, then prepare data for plotting!
+            if rad_dist[j]==2*self.r_cut:
+
+                # Save neighbor, local orientational order, and position to arrays for all bulk reference particles with all nearest neighbors
+                allall_pos_x = np.append(pos_A[:,0], pos_B[:,0])
+                allall_pos_y = np.append(pos_A[:,1], pos_B[:,1])
+
+                # Save neighbor, local orientational order, and position to arrays for A dense phase reference particles with all nearest neighbors
+                Aall_pos_x = np.append(pos_A[:,0], pos_B[:,0])
+                Aall_pos_y = np.append(pos_A[:,1], pos_B[:,1])
+
+                # Save neighbor, local orientational order, and position to arrays for B dense phase reference particles with all nearest neighbors
+                Ball_pos_x = np.append(pos_A[:,0], pos_B[:,0])
+                Ball_pos_y = np.append(pos_A[:,1], pos_B[:,1])
+
+                # Save neighbor, local orientational order, and position to arrays for all dense phase reference particles with A nearest neighbors
+                allA_pos_x = pos_A[:,0]
+                allA_pos_y = pos_A[:,1]
+
+                # Save neighbor, local orientational order, and position to arrays for all dense phase reference particles with B nearest neighbors
+                allB_pos_x = pos_B[:,0]
+                allB_pos_y = pos_B[:,1]
+
+                # Create output dictionary for single particle values of local density per phase/activity pairing for plotting
+                local_dens_plot_dict = {'all-all': {'dens': allall_local_dens, 'homo': allall_local_dens_inhomog, 'pos_x': allall_pos_x, 'pos_y': allall_pos_y}, 'all-A': {'dens': allA_local_dens, 'homo': allA_local_dens_inhomog, 'pos_x': allA_pos_x, 'pos_y': allA_pos_y}, 'all-B': {'dens': allB_local_dens, 'homo': allB_local_dens_inhomog, 'pos_x': allB_pos_x, 'pos_y': allB_pos_y}, 'A-all': {'dens': Aall_local_dens, 'homo': Aall_local_dens_inhomog, 'pos_x': Aall_pos_x, 'pos_y': Aall_pos_y}, 'B-all': {'dens': Ball_local_dens, 'homo': Ball_local_dens_inhomog, 'pos_x': Ball_pos_x, 'pos_y': Ball_pos_y}, 'A-A': {'dens': AA_local_dens, 'homo': AA_local_dens_inhomog, 'pos_x': allB_pos_x, 'pos_y': allB_pos_y}, 'A-B': {'dens': AB_local_dens, 'homo': AB_local_dens_inhomog, 'pos_x': allB_pos_x, 'pos_y': allB_pos_y}, 'B-A': {'dens': BA_local_dens, 'homo': BA_local_dens_inhomog, 'pos_x': allA_pos_x, 'pos_y': allA_pos_y}, 'B-B': {'dens': BB_local_dens, 'homo': BB_local_dens_inhomog, 'pos_x': allB_pos_x, 'pos_y': allB_pos_y}}
+
+        # Create output dictionary for statistical averages of local density per phase/activity pairing
+        local_dens_stat_dict = {'radius': rad_dist[1:], 'allall_mean': allall_local_dens_mean_arr, 'allall_std': allall_local_dens_std_arr, 'allA_mean': allA_local_dens_mean_arr, 'allA_std': allA_local_dens_std_arr, 'allB_mean': allB_local_dens_mean_arr, 'allB_std': allB_local_dens_std_arr, 'AA_mean': AA_local_dens_mean_arr, 'AA_std': AA_local_dens_std_arr, 'AB_mean': AB_local_dens_mean_arr, 'AB_std': AB_local_dens_std_arr, 'BA_mean': BA_local_dens_mean_arr, 'BA_std': BA_local_dens_std_arr, 'BB_mean': BB_local_dens_mean_arr, 'BB_std': BB_local_dens_std_arr}
+        local_homo_stat_dict = {'radius': rad_dist[1:], 'allall_mean': allall_inhomog_mean_arr, 'allall_std': allall_inhomog_std_arr, 'allA_mean': allA_inhomog_mean_arr, 'allA_std': allA_inhomog_std_arr, 'allB_mean': allB_inhomog_mean_arr, 'allB_std': allB_inhomog_std_arr, 'AA_mean': AA_inhomog_mean_arr, 'AA_std': AA_inhomog_std_arr, 'AB_mean': AB_inhomog_mean_arr, 'AB_std': AB_inhomog_std_arr, 'BA_mean': BA_inhomog_mean_arr, 'BA_std': BA_inhomog_std_arr, 'BB_mean': BB_inhomog_mean_arr, 'BB_std': BB_inhomog_std_arr}
+
+        return local_dens_stat_dict, local_homo_stat_dict, local_dens_plot_dict
+
     def cluster_msd(self, com_x_msd, com_y_msd, com_r_msd, com_x_parts_arr_time, com_y_parts_arr_time):
         
         '''
@@ -4063,7 +4391,7 @@ class particle_props:
         if self.lx_box > self.ly_box:
             bulk_area = 2 * np.amax(pos_A[:,0]) * self.ly_box
         else:
-            bulk_area = 2 * np.amax(pos_A[:,1]) * self.lx_box
+            bulk_area = 2 * self.ly_box * self.lx_box
 
         # Neighbor list query arguments to find interacting particles
         query_args = dict(mode='ball', r_min = 0.1, r_max=self.r_cut)

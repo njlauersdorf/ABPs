@@ -107,7 +107,7 @@ class binning:
 
         return pos_dict
 
-    def bin_heterogeneity_system(self, binned_arr, var_binned_arr):
+    def bin_heterogeneity_system(self, binned_arr):
         '''
         Purpose: Takes the number and size of bins to calculate an array of bin positions
 
@@ -135,6 +135,145 @@ class binning:
 
         return q
 
+    def bin_heterogeneity_part_vel_system(self, binned_arr, part_arr):
+        '''
+        Purpose: Takes the number and size of bins to calculate an array of bin positions
+
+        Inputs:
+        pos: array (partNum) of positions (x,y,z) of each particle
+
+        ids: array (partNum) of cluster ids (int) that each particle is a part of
+
+        clust_size: array of cluster sizes (int) in terms of number of particles for each cluster id
+
+        Outputs:
+        part_dict: dictionary containing arrays (NBins_x, NBins_y) whose elements contains information
+        on whether each particle within the bin a) is part of a cluster ('occParts'), b) on which type
+        of particles are in the bin ('typ'), and c) on what each particle's id is ('id')
+        '''
+
+        std_sum = 0
+        # Loop over all cluster IDs
+        for ix in range(0, len(binned_arr)):
+            for iy in range(0, len(binned_arr)):
+                if len(binned_arr[ix][iy])>0:
+                    std_sum += len(binned_arr[ix][iy]) * np.var(binned_arr[ix][iy])
+
+        q = 1.0 - (1/(len(part_arr) * np.var(part_arr))) * std_sum
+
+        return q
+    def bin_heterogeneity_part_press_system(self, binned_arr, part_arr):
+        '''
+        Purpose: Takes the number and size of bins to calculate an array of bin positions
+
+        Inputs:
+        pos: array (partNum) of positions (x,y,z) of each particle
+
+        ids: array (partNum) of cluster ids (int) that each particle is a part of
+
+        clust_size: array of cluster sizes (int) in terms of number of particles for each cluster id
+
+        Outputs:
+        part_dict: dictionary containing arrays (NBins_x, NBins_y) whose elements contains information
+        on whether each particle within the bin a) is part of a cluster ('occParts'), b) on which type
+        of particles are in the bin ('typ'), and c) on what each particle's id is ('id')
+        '''
+
+        std_sum = 0
+        # Loop over all cluster IDs
+        for ix in range(0, len(binned_arr)):
+            for iy in range(0, len(binned_arr)):
+                if len(binned_arr[ix][iy])>0:
+                    std_sum += len(binned_arr[ix][iy]) * np.var(binned_arr[ix][iy])
+        
+        q = 1.0 - (1/(len(part_arr) * np.var(part_arr))) * std_sum
+
+        return q
+
+    def bin_heterogeneity_binned_system(self, binned_arr, mean_val):
+        '''
+        Purpose: Takes the number and size of bins to calculate an array of bin positions
+
+        Inputs:
+        pos: array (partNum) of positions (x,y,z) of each particle
+
+        ids: array (partNum) of cluster ids (int) that each particle is a part of
+
+        clust_size: array of cluster sizes (int) in terms of number of particles for each cluster id
+
+        Outputs:
+        part_dict: dictionary containing arrays (NBins_x, NBins_y) whose elements contains information
+        on whether each particle within the bin a) is part of a cluster ('occParts'), b) on which type
+        of particles are in the bin ('typ'), and c) on what each particle's id is ('id')
+        '''
+
+        
+
+        std_sum = 0
+        system_count = 0
+        # Loop over all cluster IDs
+        for ix in range(0, len(binned_arr)):
+            for iy in range(0, len(binned_arr)):
+                if np.isnan(binned_arr[ix][iy]):
+                    pass
+                else:
+                    std_sum += (binned_arr[ix][iy] - mean_val)**2
+                    system_count += 1
+
+        # Index of Dispersion
+        q = std_sum / (mean_val * system_count)
+
+        return q
+
+    def bin_heterogeneity_binned_phases(self, binned_arr, phase_dict, mean_dict):
+        '''
+        Purpose: Takes the number and size of bins to calculate an array of bin positions
+
+        Inputs:
+        pos: array (partNum) of positions (x,y,z) of each particle
+
+        ids: array (partNum) of cluster ids (int) that each particle is a part of
+
+        clust_size: array of cluster sizes (int) in terms of number of particles for each cluster id
+
+        Outputs:
+        part_dict: dictionary containing arrays (NBins_x, NBins_y) whose elements contains information
+        on whether each particle within the bin a) is part of a cluster ('occParts'), b) on which type
+        of particles are in the bin ('typ'), and c) on what each particle's id is ('id')
+        '''
+
+        bulk_id = np.where(phase_dict['part']==0)[0]
+        int_id = np.where(phase_dict['part']==1)[0]
+        gas_id = np.where(phase_dict['part']==2)[0]
+
+        bulk_std_sum = 0
+        int_std_sum = 0
+        gas_std_sum = 0
+
+        gas_count = 0
+        int_count = 0
+        bulk_count = 0
+
+        # Loop over all cluster IDs
+        for ix in range(0, len(binned_arr)):
+            for iy in range(0, len(binned_arr)):
+                if phase_dict['bin'][ix][iy]==0:
+                    bulk_std_sum += (binned_arr[ix][iy] - mean_dict['bulk'])**2
+                    bulk_count += 1
+                elif phase_dict['bin'][ix][iy]==1:
+                    int_std_sum += (binned_arr[ix][iy] - mean_dict['int'])**2
+                    int_count += 1
+                elif phase_dict['bin'][ix][iy]==2:
+                    gas_std_sum += (binned_arr[ix][iy] - mean_dict['gas'])**2
+                    gas_count += 1
+
+        bulk_q = bulk_std_sum / bulk_count
+        int_q = int_std_sum / int_count
+        gas_q = gas_std_sum / gas_count
+
+        q_dict = {'bulk': bulk_q, 'int': int_q, 'gas': gas_q}
+        return q_dict
+
     def bin_heterogeneity_phases(self, binned_arr, part_binned_arr, phase_dict):
         '''
         Purpose: Takes the number and size of bins to calculate an array of bin positions
@@ -160,7 +299,6 @@ class binning:
         int_std_sum = 0
         gas_std_sum = 0
 
-        print(phase_dict['bin'])
         # Loop over all cluster IDs
         for ix in range(0, len(binned_arr)):
             for iy in range(0, len(binned_arr)):
@@ -178,6 +316,172 @@ class binning:
 
         q_dict = {'bulk': bulk_q, 'int': int_q, 'gas': gas_q}
         return q_dict
+
+    def bin_heterogeneity_press_phases(self, binned_arr, part_binned_arr, phase_dict, part_dict):
+        '''
+        Purpose: Takes the number and size of bins to calculate an array of bin positions
+
+        Inputs:
+        pos: array (partNum) of positions (x,y,z) of each particle
+
+        ids: array (partNum) of cluster ids (int) that each particle is a part of
+
+        clust_size: array of cluster sizes (int) in terms of number of particles for each cluster id
+
+        Outputs:
+        part_dict: dictionary containing arrays (NBins_x, NBins_y) whose elements contains information
+        on whether each particle within the bin a) is part of a cluster ('occParts'), b) on which type
+        of particles are in the bin ('typ'), and c) on what each particle's id is ('id')
+        '''
+        bulk_id = np.where( (phase_dict['part']==0))[0]
+        bulk_A_id = np.where( (phase_dict['part']==0) &  (self.typ==0))[0]
+        bulk_B_id = np.where( (phase_dict['part']==0) &  (self.typ==1))[0]
+
+        int_id = np.where(phase_dict['part']==1)[0]
+        int_A_id = np.where( (phase_dict['part']==1) &  (self.typ==0))[0]
+        int_B_id = np.where( (phase_dict['part']==1) &  (self.typ==1))[0]
+
+        gas_id = np.where(phase_dict['part']==2)[0]
+        gas_A_id = np.where( (phase_dict['part']==2) &  (self.typ==0))[0]
+        gas_B_id = np.where( (phase_dict['part']==2) &  (self.typ==1))[0]
+
+        bulk_allall_std_sum = 0
+        bulk_allA_std_sum = 0
+        bulk_Aall_std_sum = 0
+        bulk_allB_std_sum = 0
+        bulk_Ball_std_sum = 0
+        bulk_AA_std_sum = 0
+        bulk_AB_std_sum = 0
+        bulk_BA_std_sum = 0
+        bulk_BB_std_sum = 0
+
+        int_allall_std_sum = 0
+        int_allA_std_sum = 0
+        int_Aall_std_sum = 0
+        int_allB_std_sum = 0
+        int_Ball_std_sum = 0
+        int_AA_std_sum = 0
+        int_AB_std_sum = 0
+        int_BA_std_sum = 0
+        int_BB_std_sum = 0
+
+        gas_allall_std_sum = 0
+        gas_allA_std_sum = 0
+        gas_Aall_std_sum = 0
+        gas_allB_std_sum = 0
+        gas_Ball_std_sum = 0
+        gas_AA_std_sum = 0
+        gas_AB_std_sum = 0
+        gas_BA_std_sum = 0
+        gas_BB_std_sum = 0
+
+        # Loop over all cluster IDs
+        for ix in range(0, len(binned_arr)):
+            for iy in range(0, len(binned_arr)):
+                if len(binned_arr['all-all'][ix][iy])>0:
+                    if phase_dict['bin'][ix][iy]==0:
+                        bulk_allall_std_sum += len(binned_arr['all-all'][ix][iy]) * np.var(binned_arr['all-all'][ix][iy])
+                        bulk_allA_std_sum += len(binned_arr['all-A'][ix][iy]) * np.var(binned_arr['all-A'][ix][iy])
+                        bulk_Aall_std_sum += len(binned_arr['A-all'][ix][iy]) * np.var(binned_arr['A-all'][ix][iy])
+                        bulk_allB_std_sum += len(binned_arr['all-B'][ix][iy]) * np.var(binned_arr['all-B'][ix][iy])
+                        bulk_Ball_std_sum += len(binned_arr['B-all'][ix][iy]) * np.var(binned_arr['B-all'][ix][iy])
+                        bulk_AA_std_sum += len(binned_arr['A-A'][ix][iy]) * np.var(binned_arr['A-A'][ix][iy])
+                        bulk_AB_std_sum += len(binned_arr['A-B'][ix][iy]) * np.var(binned_arr['A-B'][ix][iy])
+                        bulk_BA_std_sum += len(binned_arr['B-A'][ix][iy]) * np.var(binned_arr['B-A'][ix][iy])
+                        bulk_BB_std_sum += len(binned_arr['B-B'][ix][iy]) * np.var(binned_arr['B-B'][ix][iy])
+                    elif phase_dict['bin'][ix][iy]==1:
+                        int_allall_std_sum += len(binned_arr['all-all'][ix][iy]) * np.var(binned_arr['all-all'][ix][iy])
+                        int_allA_std_sum += len(binned_arr['all-A'][ix][iy]) * np.var(binned_arr['all-A'][ix][iy])
+                        int_Aall_std_sum += len(binned_arr['A-all'][ix][iy]) * np.var(binned_arr['A-all'][ix][iy])
+                        int_allB_std_sum += len(binned_arr['all-B'][ix][iy]) * np.var(binned_arr['all-B'][ix][iy])
+                        int_Ball_std_sum += len(binned_arr['B-all'][ix][iy]) * np.var(binned_arr['B-all'][ix][iy])
+                        int_AA_std_sum += len(binned_arr['A-A'][ix][iy]) * np.var(binned_arr['A-A'][ix][iy])
+                        int_AB_std_sum += len(binned_arr['A-B'][ix][iy]) * np.var(binned_arr['A-B'][ix][iy])
+                        int_BA_std_sum += len(binned_arr['B-A'][ix][iy]) * np.var(binned_arr['B-A'][ix][iy])
+                        int_BB_std_sum += len(binned_arr['B-B'][ix][iy]) * np.var(binned_arr['B-B'][ix][iy])
+                    elif phase_dict['bin'][ix][iy]==2:
+                        gas_allall_std_sum += len(binned_arr['all-all'][ix][iy]) * np.var(binned_arr['all-all'][ix][iy])
+                        gas_allA_std_sum += len(binned_arr['all-A'][ix][iy]) * np.var(binned_arr['all-A'][ix][iy])
+                        gas_Aall_std_sum += len(binned_arr['A-all'][ix][iy]) * np.var(binned_arr['A-all'][ix][iy])
+                        gas_allB_std_sum += len(binned_arr['all-B'][ix][iy]) * np.var(binned_arr['all-B'][ix][iy])
+                        gas_Ball_std_sum += len(binned_arr['B-all'][ix][iy]) * np.var(binned_arr['B-all'][ix][iy])
+                        gas_AA_std_sum += len(binned_arr['A-A'][ix][iy]) * np.var(binned_arr['A-A'][ix][iy])
+                        gas_AB_std_sum += len(binned_arr['A-B'][ix][iy]) * np.var(binned_arr['A-B'][ix][iy])
+                        gas_BA_std_sum += len(binned_arr['B-A'][ix][iy]) * np.var(binned_arr['B-A'][ix][iy])
+                        gas_BB_std_sum += len(binned_arr['B-B'][ix][iy]) * np.var(binned_arr['B-B'][ix][iy])
+
+        bulk_allall_q = 1.0 - (1/(len(bulk_id) * np.var(part_binned_arr['bulk']['all-all']['press']))) * bulk_allall_std_sum
+        int_allall_q = 1.0 - (1/(len(int_id) * np.var(part_binned_arr['int']['all-all']['press']))) * int_allall_std_sum
+        gas_allall_q = 1.0 - (1/(len(gas_id) * np.var(part_binned_arr['gas']['all-all']['press']))) * gas_allall_std_sum
+
+        bulk_allA_q = 1.0 - (1/(len(bulk_A_id) * np.var(part_binned_arr['bulk']['all-A']['press']))) * bulk_allA_std_sum
+        int_allA_q = 1.0 - (1/(len(int_A_id) * np.var(part_binned_arr['int']['all-A']['press']))) * int_allA_std_sum
+        gas_allA_q = 1.0 - (1/(len(gas_A_id) * np.var(part_binned_arr['gas']['all-A']['press']))) * gas_allA_std_sum
+
+        
+        
+        bulk_Aall_q = 1.0 - (1/(len(bulk_id) * np.var(part_binned_arr['bulk']['A-all']['press']))) * bulk_Aall_std_sum
+        int_Aall_q = 1.0 - (1/(len(int_id) * np.var(part_binned_arr['int']['A-all']['press']))) * int_Aall_std_sum
+        gas_Aall_q = 1.0 - (1/(len(gas_id) * np.var(part_binned_arr['gas']['A-all']['press']))) * gas_Aall_std_sum
+
+        bulk_allB_q = 1.0 - (1/(len(bulk_B_id) * np.var(part_binned_arr['bulk']['all-B']['press']))) * bulk_allB_std_sum
+        int_allB_q = 1.0 - (1/(len(int_B_id) * np.var(part_binned_arr['int']['all-B']['press']))) * int_allB_std_sum
+        gas_allB_q = 1.0 - (1/(len(gas_B_id) * np.var(part_binned_arr['gas']['all-B']['press']))) * gas_allB_std_sum
+
+        bulk_Ball_q = 1.0 - (1/(len(bulk_id) * np.var(part_binned_arr['bulk']['B-all']['press']))) * bulk_Ball_std_sum
+        int_Ball_q = 1.0 - (1/(len(int_id) * np.var(part_binned_arr['int']['B-all']['press']))) * int_Ball_std_sum
+        gas_Ball_q = 1.0 - (1/(len(gas_id) * np.var(part_binned_arr['gas']['B-all']['press']))) * gas_Ball_std_sum
+
+        bulk_AA_q = 1.0 - (1/(len(bulk_A_id) * np.var(part_binned_arr['bulk']['A-A']['press']))) * bulk_AA_std_sum
+        int_AA_q = 1.0 - (1/(len(int_A_id) * np.var(part_binned_arr['int']['A-A']['press']))) * int_AA_std_sum
+        gas_AA_q = 1.0 - (1/(len(gas_A_id) * np.var(part_binned_arr['gas']['A-A']['press']))) * gas_AA_std_sum
+
+        bulk_AB_q = 1.0 - (1/(len(bulk_B_id) * np.var(part_binned_arr['bulk']['A-B']['press']))) * bulk_AB_std_sum
+        int_AB_q = 1.0 - (1/(len(int_B_id) * np.var(part_binned_arr['int']['A-B']['press']))) * int_AB_std_sum
+        gas_AB_q = 1.0 - (1/(len(gas_B_id) * np.var(part_binned_arr['gas']['A-B']['press']))) * gas_AB_std_sum
+        
+        bulk_BA_q = 1.0 - (1/(len(bulk_A_id) * np.var(part_binned_arr['bulk']['B-A']['press']))) * bulk_BA_std_sum
+        int_BA_q = 1.0 - (1/(len(int_A_id) * np.var(part_binned_arr['int']['B-A']['press']))) * int_BA_std_sum
+        gas_BA_q = 1.0 - (1/(len(gas_A_id) * np.var(part_binned_arr['gas']['B-A']['press']))) * gas_BA_std_sum
+
+        bulk_BB_q = 1.0 - (1/(len(bulk_B_id) * np.var(part_binned_arr['bulk']['B-B']['press']))) * bulk_BB_std_sum
+        int_BB_q = 1.0 - (1/(len(int_B_id) * np.var(part_binned_arr['int']['B-B']['press']))) * int_BB_std_sum
+        gas_BB_q = 1.0 - (1/(len(gas_B_id) * np.var(part_binned_arr['gas']['B-B']['press']))) * gas_BB_std_sum
+        
+        print((1/(len(gas_A_id) * np.var(part_binned_arr['gas']['all-A']['press']))))
+        print(gas_allA_std_sum)
+        print(gas_allA_q)
+        q_dict = {'bulk': {'all-all': bulk_allall_q, 'all-A': bulk_allA_q, 'A-all': bulk_Aall_q, 'all-B': bulk_allB_q, 'B-all': bulk_Ball_q, 'A-A': bulk_AA_q, 'A-B': bulk_AB_q, 'B-A': bulk_BA_q, 'B-B': bulk_BB_q}, 'int': {'all-all': int_allall_q, 'all-A': int_allA_q, 'A-all': int_Aall_q, 'all-B': int_allB_q, 'B-all': int_Ball_q, 'A-A': int_AA_q, 'A-B': int_AB_q, 'B-A': int_BA_q, 'B-B': int_BB_q}, 'gas': {'all-all': gas_allall_q, 'all-A': gas_allA_q, 'A-all': gas_Aall_q, 'all-B': gas_allB_q, 'B-all': gas_Ball_q, 'A-A': gas_AA_q, 'A-B': gas_AB_q, 'B-A': gas_BA_q, 'B-B': gas_BB_q} }
+        return q_dict
+    def bin_parts_from_interpart_press(self, part_dict, press_hetero_dict):
+        '''
+        Purpose: Takes the number and size of bins to calculate an array of bin positions
+
+        Inputs:
+        pos: array (partNum) of positions (x,y,z) of each particle
+
+        ids: array (partNum) of cluster ids (int) that each particle is a part of
+
+        clust_size: array of cluster sizes (int) in terms of number of particles for each cluster id
+
+        Outputs:
+        part_dict: dictionary containing arrays (NBins_x, NBins_y) whose elements contains information
+        on whether each particle within the bin a) is part of a cluster ('occParts'), b) on which type
+        of particles are in the bin ('typ'), and c) on what each particle's id is ('id')
+        '''
+
+        # Instantiate empty array that contains list of each particle's id within the bin
+        binPress = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+
+        # Loop over all cluster IDs
+        for ix in range(0, len(part_dict['id'])):
+            for iy in range(0, len(part_dict['id'])):
+                if len(part_dict['id'][ix][iy])>0:
+                    for h in range(0, len(part_dict['id'][ix][iy])):
+                        test_id = np.where(press_hetero_dict['id']==part_dict['id'][ix][iy][h])[0]
+                        binPress[ix][iy] = binPress[ix][iy].append(press_hetero_dict['press'][test_id])
+
+        return binPress
 
     def bin_parts(self, pos, ids, clust_size):
         '''
@@ -205,8 +509,15 @@ class binning:
         # Instantiate empty array that tells whether each bin is part of a cluster (1) or not (0)
         occParts = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
 
+        # Instantiate empty array that tells whether each bin is part of a cluster (1) or not (0)
+        typParts_mean = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        actParts_mean = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+
         # Instantiate empty array that tells what each particle's activity in bin is
         actParts = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+
+        # Instantiate empty array that tells what each particle's activity in bin is
+        numParts = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
 
         # Loop over all cluster IDs
         for k in range(0, len(ids)):
@@ -235,11 +546,413 @@ class binning:
             if clust_size[ids[k]] >= self.min_size:
                 occParts[x_ind][y_ind] = 1
 
+        for ix in range(0, len(typParts)):
+            for iy in range(0, len(typParts)):
+                typParts_mean[ix][iy] = np.mean(typParts[ix][iy])
+                actParts_mean[ix][iy] = np.mean(actParts[ix][iy])
+
         # Dictionary of arrays (NBins_x, NBins_y) of binned cluster ids, particle types, and particle ids
-        part_dict = {'clust':occParts,  'typ':typParts,  'id':binParts, 'act': actParts}
+        part_dict = {'clust':occParts,  'typ':typParts, 'typ_mean':typParts_mean, 'id':binParts, 'act': actParts, 'act_mean': actParts_mean}
 
         return part_dict
+    def bin_part_velocity(self, binParts, measurement):
+        '''
+        Purpose: Takes the number and size of bins to calculate an array of bin positions
 
+        Inputs:
+        pos: array (partNum) of positions (x,y,z) of each particle
+
+        ids: array (partNum) of cluster ids (int) that each particle is a part of
+
+        clust_size: array of cluster sizes (int) in terms of number of particles for each cluster id
+
+        Outputs:
+        part_dict: dictionary containing arrays (NBins_x, NBins_y) whose elements contains information
+        on whether each particle within the bin a) is part of a cluster ('occParts'), b) on which type
+        of particles are in the bin ('typ'), and c) on what each particle's id is ('id')
+        '''
+
+        all_system = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        A_system = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        B_system = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+
+        all_system_mean = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        A_system_mean = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        B_system_mean = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+
+        # Loop over all cluster IDs
+        for ix in range(self.NBins_x):
+            for iy in range(self.NBins_y):
+
+                for h in range(0, len(binParts[ix][iy])):
+                    all_system[ix][iy].append(measurement['all']['mag'][binParts[ix][iy][h]])
+                    if self.typ[binParts[ix][iy][h]]==0:
+                        A_system[ix][iy].append(measurement['all']['mag'][binParts[ix][iy][h]])
+                    else:
+                        B_system[ix][iy].append(measurement['all']['mag'][binParts[ix][iy][h]])
+
+
+        for ix in range(self.NBins_x):
+            for iy in range(self.NBins_y):
+                all_system_mean[ix][iy] = np.mean(all_system[ix][iy])
+                if len(A_system[ix][iy])>0:
+                    A_system_mean[ix][iy] = np.mean(A_system[ix][iy])
+                else:
+                    A_system_mean[ix][iy] = 0
+                if len(B_system[ix][iy])>0:
+                    B_system_mean[ix][iy] = np.mean(B_system[ix][iy])
+                else:
+                    B_system_mean[ix][iy] = 0
+
+        #binned_measure_dict = {'system': {'all-all': allall_system, 'A-all': Aall_system, 'all-A': allA_system, 'B-all': Ball_system, 'all-B': allB_system, 'A-A': AA_system, 'A-B': AB_system, 'B-A': BA_system, 'B-B': BB_system}, 'dense': {'all-all': allall_dense, 'A-all': Aall_dense, 'all-A': allA_dense, 'B-all': Ball_dense, 'all-B': allB_dense, 'A-A': AA_dense, 'A-B': AB_dense, 'B-A': BA_dense, 'B-B': BB_dense}, 'bulk': {'all-all': allall_bulk, 'A-all': Aall_bulk, 'all-A': allA_bulk, 'B-all': Ball_bulk, 'all-B': allB_bulk, 'A-A': AA_bulk, 'A-B': AB_bulk, 'B-A': BA_bulk, 'B-B': BB_bulk}, 'int': {'all-all': allall_int, 'A-all': Aall_int, 'all-A': allA_int, 'B-all': Ball_int, 'all-B': allB_int, 'A-A': AA_int, 'A-B': AB_int, 'B-A': BA_int, 'B-B': BB_int}, 'gas': {'all-all': allall_gas, 'A-all': Aall_gas, 'all-A': allA_gas, 'B-all': Ball_gas, 'all-B': allB_gas, 'A-A': AA_gas, 'A-B': AB_gas, 'B-A': BA_gas, 'B-B': BB_gas} }
+        binned_measure_dict = {'all': all_system, 'A': A_system, 'B': B_system}
+        binned_measure_mean_dict = {'all': all_system_mean, 'A': A_system_mean, 'B': B_system_mean}
+        return binned_measure_dict, binned_measure_mean_dict
+    
+    def bin_part_press(self, binParts, measurement):
+        '''
+        Purpose: Takes the number and size of bins to calculate an array of bin positions
+
+        Inputs:
+        pos: array (partNum) of positions (x,y,z) of each particle
+
+        ids: array (partNum) of cluster ids (int) that each particle is a part of
+
+        clust_size: array of cluster sizes (int) in terms of number of particles for each cluster id
+
+        Outputs:
+        part_dict: dictionary containing arrays (NBins_x, NBins_y) whose elements contains information
+        on whether each particle within the bin a) is part of a cluster ('occParts'), b) on which type
+        of particles are in the bin ('typ'), and c) on what each particle's id is ('id')
+        '''
+
+        all_system = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        A_system = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        B_system = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+
+        all_system_mean = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        A_system_mean = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        B_system_mean = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+
+        # Loop over all cluster IDs
+        for ix in range(self.NBins_x):
+            for iy in range(self.NBins_y):
+
+                for h in range(0, len(binParts[ix][iy])):
+                    all_system[ix][iy].append(measurement['all-all']['press'][binParts[ix][iy][h]])
+                    if self.typ[binParts[ix][iy][h]]==0:
+                        A_system[ix][iy].append(measurement['all-all']['press'][binParts[ix][iy][h]])
+                    else:
+                        B_system[ix][iy].append(measurement['all-all']['press'][binParts[ix][iy][h]])
+                if len(binParts[ix][iy])>0:
+                    all_system_mean[ix][iy] = np.mean(all_system[ix][iy])
+                    if len(A_system[ix][iy])>0:
+                        A_system_mean[ix][iy] = np.mean(A_system[ix][iy])
+                    else:
+                        A_system_mean[ix][iy] = 0
+                    if len(B_system[ix][iy])>0:
+                        B_system_mean[ix][iy] = np.mean(B_system[ix][iy])
+                    else:
+                        B_system_mean[ix][iy] = 0
+
+                
+        #binned_measure_dict = {'system': {'all-all': allall_system, 'A-all': Aall_system, 'all-A': allA_system, 'B-all': Ball_system, 'all-B': allB_system, 'A-A': AA_system, 'A-B': AB_system, 'B-A': BA_system, 'B-B': BB_system}, 'dense': {'all-all': allall_dense, 'A-all': Aall_dense, 'all-A': allA_dense, 'B-all': Ball_dense, 'all-B': allB_dense, 'A-A': AA_dense, 'A-B': AB_dense, 'B-A': BA_dense, 'B-B': BB_dense}, 'bulk': {'all-all': allall_bulk, 'A-all': Aall_bulk, 'all-A': allA_bulk, 'B-all': Ball_bulk, 'all-B': allB_bulk, 'A-A': AA_bulk, 'A-B': AB_bulk, 'B-A': BA_bulk, 'B-B': BB_bulk}, 'int': {'all-all': allall_int, 'A-all': Aall_int, 'all-A': allA_int, 'B-all': Ball_int, 'all-B': allB_int, 'A-A': AA_int, 'A-B': AB_int, 'B-A': BA_int, 'B-B': BB_int}, 'gas': {'all-all': allall_gas, 'A-all': Aall_gas, 'all-A': allA_gas, 'B-all': Ball_gas, 'all-B': allB_gas, 'A-A': AA_gas, 'A-B': AB_gas, 'B-A': BA_gas, 'B-B': BB_gas} }
+        binned_measure_dict = {'all': all_system, 'A': A_system, 'B': B_system}
+        binned_measure_mean_dict = {'all': all_system_mean, 'A': A_system_mean, 'B': B_system_mean}
+        return binned_measure_dict, binned_measure_mean_dict
+
+    def bin_measurement(self, binParts, phase_dict, measurement):
+        '''
+        Purpose: Takes the number and size of bins to calculate an array of bin positions
+
+        Inputs:
+        pos: array (partNum) of positions (x,y,z) of each particle
+
+        ids: array (partNum) of cluster ids (int) that each particle is a part of
+
+        clust_size: array of cluster sizes (int) in terms of number of particles for each cluster id
+
+        Outputs:
+        part_dict: dictionary containing arrays (NBins_x, NBins_y) whose elements contains information
+        on whether each particle within the bin a) is part of a cluster ('occParts'), b) on which type
+        of particles are in the bin ('typ'), and c) on what each particle's id is ('id')
+        '''
+
+        allall_system = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        allA_system = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        Aall_system = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        allB_system = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        Ball_system = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        AA_system = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        AB_system = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        BA_system = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        BB_system = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+
+        allall_dense = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        allA_dense = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        Aall_dense = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        allB_dense = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        Ball_dense = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        AA_dense = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        AB_dense = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        BA_dense = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        BB_dense = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+
+        allall_bulk = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        allA_bulk = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        Aall_bulk = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        allB_bulk = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        Ball_bulk = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        AA_bulk = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        AB_bulk = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        BA_bulk = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        BB_bulk = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+
+        allall_int = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        allA_int = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        Aall_int = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        allB_int = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        Ball_int = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        AA_int = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        AB_int = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        BA_int = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        BB_int = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+
+        allall_gas = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        allA_gas = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        Aall_gas = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        allB_gas = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        Ball_gas = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        AA_gas = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        AB_gas = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        BA_gas = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        BB_gas = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+
+        # Loop over all cluster IDs
+        for ix in range(self.NBins_x):
+            for iy in range(self.NBins_y):
+
+                for h in range(0, len(binParts[ix][iy])):
+                    test_id = np.where(binParts[ix][iy][h]==measurement['system']['all-all']['id'])[0]
+                    if len(measurement['system']['all-all']['press'][test_id])==0:
+                        allall_system[ix][iy].append(0)
+                    else:
+                        allall_system[ix][iy].append(measurement['system']['all-all']['press'][test_id][0])
+
+                for h in range(0, len(binParts[ix][iy])):
+                    test_id = np.where(binParts[ix][iy][h]==measurement['system']['all-A']['id'])[0]
+                    if len(measurement['system']['all-A']['press'][test_id])==0:
+                        allA_system[ix][iy].append(0)
+                    else:
+                        allA_system[ix][iy].append(measurement['system']['all-A']['press'][test_id][0])
+
+                for h in range(0, len(binParts[ix][iy])):
+                    test_id = np.where(binParts[ix][iy][h]==measurement['system']['A-all']['id'])[0]
+                    if len(measurement['system']['A-all']['press'][test_id])==0:
+                        Aall_system[ix][iy].append(0)
+                    else:
+                        Aall_system[ix][iy].append(measurement['system']['A-all']['press'][test_id][0])
+
+                for h in range(0, len(binParts[ix][iy])):
+                    test_id = np.where(binParts[ix][iy][h]==measurement['system']['all-B']['id'])[0]
+                    if len(measurement['system']['all-B']['press'][test_id])==0:
+                        allB_system[ix][iy].append(0)
+                    else:
+                        allB_system[ix][iy].append(measurement['system']['all-B']['press'][test_id][0])
+
+                for h in range(0, len(binParts[ix][iy])):
+                    test_id = np.where(binParts[ix][iy][h]==measurement['system']['B-all']['id'])[0]
+                    if len(measurement['system']['B-all']['press'][test_id])==0:
+                        Ball_system[ix][iy].append(0)
+                    else:
+                        Ball_system[ix][iy].append(measurement['system']['B-all']['press'][test_id][0])
+
+                for h in range(0, len(binParts[ix][iy])):
+                    test_id = np.where(binParts[ix][iy][h]==measurement['system']['A-A']['id'])[0]
+                    if len(measurement['system']['A-A']['press'][test_id])==0:
+                        AA_system[ix][iy].append(0)
+                    else:
+                        AA_system[ix][iy].append(measurement['system']['A-A']['press'][test_id][0])
+
+                for h in range(0, len(binParts[ix][iy])):
+                    test_id = np.where(binParts[ix][iy][h]==measurement['system']['B-A']['id'])[0]
+                    if len(measurement['system']['B-A']['press'][test_id])==0:
+                        BA_system[ix][iy].append(0)
+                    else:
+                        BA_system[ix][iy].append(measurement['system']['B-A']['press'][test_id][0])
+
+                for h in range(0, len(binParts[ix][iy])):
+                    test_id = np.where(binParts[ix][iy][h]==measurement['system']['A-B']['id'])[0]
+                    if len(measurement['system']['A-B']['press'][test_id])==0:
+                        AB_system[ix][iy].append(0)
+                    else:
+                        AB_system[ix][iy].append(measurement['system']['A-B']['press'][test_id][0])
+
+                for h in range(0, len(binParts[ix][iy])):
+                    test_id = np.where(binParts[ix][iy][h]==measurement['system']['B-B']['id'])[0]
+                    if len(measurement['system']['B-B']['press'][test_id])==0:
+                        BB_system[ix][iy].append(0)
+                    else:
+                        BB_system[ix][iy].append(measurement['system']['B-B']['press'][test_id][0])
+                """
+                if (phase_dict[ix][iy] == 0) | (phase_dict[ix][iy] == 1):
+
+                    allall_dense_num = 0
+                    allall_dense_sum = 0
+                    for h in range(0, len(binParts[ix][iy])):
+                        test_id = np.where(binParts[ix][iy][h]==measurement['dense']['all-all']['id'])[0]
+                        allall_dense[ix][iy].append(measurement['dense']['all-all']['press'][test_id])
+
+                    for h in range(0, len(binParts[ix][iy])):
+                        test_id = np.where(binParts[ix][iy][h]==measurement['dense']['all-A']['id'])[0]
+                        allA_dense[ix][iy].append(measurement['dense']['all-A']['press'][test_id])
+
+                    for h in range(0, len(binParts[ix][iy])):
+                        test_id = np.where(binParts[ix][iy][h]==measurement['dense']['A-all']['id'])[0]
+                        Aall_dense[ix][iy].append(measurement['dense']['A-all']['press'][test_id])
+
+                    for h in range(0, len(binParts[ix][iy])):
+                        test_id = np.where(binParts[ix][iy][h]==measurement['dense']['all-B']['id'])[0]
+                        allB_dense[ix][iy].append(measurement['dense']['all-B']['press'][test_id])
+
+                    for h in range(0, len(binParts[ix][iy])):
+                        test_id = np.where(binParts[ix][iy][h]==measurement['dense']['B-all']['id'])[0]
+                        Ball_dense[ix][iy].append(measurement['dense']['B-all']['press'][test_id])
+
+                    for h in range(0, len(binParts[ix][iy])):
+                        test_id = np.where(binParts[ix][iy][h]==measurement['dense']['A-A']['id'])[0]
+                        AA_dense[ix][iy].append(measurement['dense']['A-A']['press'][test_id])
+
+                    for h in range(0, len(binParts[ix][iy])):
+                        test_id = np.where(binParts[ix][iy][h]==measurement['dense']['B-A']['id'])[0]
+                        BA_dense[ix][iy].append(measurement['dense']['B-A']['press'][test_id])
+
+                    for h in range(0, len(binParts[ix][iy])):
+                        test_id = np.where(binParts[ix][iy][h]==measurement['dense']['A-B']['id'])[0]
+                        AB_dense[ix][iy].append(measurement['dense']['A-B']['press'][test_id])
+
+                    for h in range(0, len(binParts[ix][iy])):
+                        test_id = np.where(binParts[ix][iy][h]==measurement['dense']['B-B']['id'])[0]
+                        BB_dense[ix][iy].append(measurement['dense']['B-B']['press'][test_id])
+
+                if phase_dict[ix][iy] == 0:
+                
+                    for h in range(0, len(binParts[ix][iy])):
+                        test_id = np.where(binParts[ix][iy][h]==measurement['bulk']['all-all']['id'])[0]
+                        allall_bulk[ix][iy].append(measurement['bulk']['all-all']['press'][test_id])
+
+                    for h in range(0, len(binParts[ix][iy])):
+                        test_id = np.where(binParts[ix][iy][h]==measurement['bulk']['all-A']['id'])[0]
+                        allA_bulk[ix][iy].append(measurement['bulk']['all-A']['press'][test_id])
+
+                    for h in range(0, len(binParts[ix][iy])):
+                        test_id = np.where(binParts[ix][iy][h]==measurement['bulk']['A-all']['id'])[0]
+                        Aall_bulk[ix][iy].append(measurement['bulk']['A-all']['press'][test_id])
+
+                    for h in range(0, len(binParts[ix][iy])):
+                        test_id = np.where(binParts[ix][iy][h]==measurement['bulk']['all-B']['id'])[0]
+                        allB_bulk[ix][iy].append(measurement['bulk']['all-B']['press'][test_id])
+
+                    for h in range(0, len(binParts[ix][iy])):
+                        test_id = np.where(binParts[ix][iy][h]==measurement['bulk']['B-all']['id'])[0]
+                        Ball_bulk[ix][iy].append(measurement['bulk']['B-all']['press'][test_id])
+
+                    for h in range(0, len(binParts[ix][iy])):
+                        test_id = np.where(binParts[ix][iy][h]==measurement['bulk']['A-A']['id'])[0]
+                        AA_bulk[ix][iy].append(measurement['bulk']['A-A']['press'][test_id])
+
+                    for h in range(0, len(binParts[ix][iy])):
+                        test_id = np.where(binParts[ix][iy][h]==measurement['bulk']['B-A']['id'])[0]
+                        BA_bulk[ix][iy].append(measurement['bulk']['B-A']['press'][test_id])
+
+                    for h in range(0, len(binParts[ix][iy])):
+                        test_id = np.where(binParts[ix][iy][h]==measurement['bulk']['A-B']['id'])[0]
+                        AB_bulk[ix][iy].append(measurement['bulk']['A-B']['press'][test_id])
+
+                    for h in range(0, len(binParts[ix][iy])):
+                        test_id = np.where(binParts[ix][iy][h]==measurement['bulk']['B-B']['id'])[0]
+                        BB_bulk[ix][iy].append(measurement['bulk']['B-B']['press'][test_id])
+                
+                elif phase_dict[ix][iy] == 1:
+
+                    for h in range(0, len(binParts[ix][iy])):
+                        test_id = np.where(binParts[ix][iy][h]==measurement['int']['all-all']['id'])[0]
+                        allall_int[ix][iy].append(measurement['int']['all-all']['press'][test_id])
+
+                    for h in range(0, len(binParts[ix][iy])):
+                        test_id = np.where(binParts[ix][iy][h]==measurement['int']['all-A']['id'])[0]
+                        allA_int[ix][iy].append(measurement['int']['all-A']['press'][test_id])
+
+                    for h in range(0, len(binParts[ix][iy])):
+                        test_id = np.where(binParts[ix][iy][h]==measurement['int']['A-all']['id'])[0]
+                        Aall_int[ix][iy].append(measurement['int']['A-all']['press'][test_id])
+
+                    for h in range(0, len(binParts[ix][iy])):
+                        test_id = np.where(binParts[ix][iy][h]==measurement['int']['all-B']['id'])[0]
+                        allB_int[ix][iy].append(measurement['int']['all-B']['press'][test_id])
+
+                    for h in range(0, len(binParts[ix][iy])):
+                        test_id = np.where(binParts[ix][iy][h]==measurement['int']['B-all']['id'])[0]
+                        Ball_int[ix][iy].append(measurement['int']['B-all']['press'][test_id])
+
+                    for h in range(0, len(binParts[ix][iy])):
+                        test_id = np.where(binParts[ix][iy][h]==measurement['int']['A-A']['id'])[0]
+                        AA_int[ix][iy].append(measurement['int']['A-A']['press'][test_id])
+
+                    for h in range(0, len(binParts[ix][iy])):
+                        test_id = np.where(binParts[ix][iy][h]==measurement['int']['B-A']['id'])[0]
+                        BA_int[ix][iy].append(measurement['int']['B-A']['press'][test_id])
+
+                    for h in range(0, len(binParts[ix][iy])):
+                        test_id = np.where(binParts[ix][iy][h]==measurement['int']['A-B']['id'])[0]
+                        AB_int[ix][iy].append(measurement['int']['A-B']['press'][test_id])
+
+                    for h in range(0, len(binParts[ix][iy])):
+                        test_id = np.where(binParts[ix][iy][h]==measurement['int']['B-B']['id'])[0]
+                        BB_int[ix][iy].append(measurement['int']['B-B']['press'][test_id])
+
+                elif phase_dict[ix][iy] == 2:
+                
+                    for h in range(0, len(binParts[ix][iy])):
+                        test_id = np.where(binParts[ix][iy][h]==measurement['gas']['all-all']['id'])[0]
+                        allall_gas[ix][iy].append(measurement['gas']['all-all']['press'][test_id])
+
+                    for h in range(0, len(binParts[ix][iy])):
+                        test_id = np.where(binParts[ix][iy][h]==measurement['gas']['all-A']['id'])[0]
+                        allA_gas[ix][iy].append(measurement['gas']['all-A']['press'][test_id])
+
+                    for h in range(0, len(binParts[ix][iy])):
+                        test_id = np.where(binParts[ix][iy][h]==measurement['gas']['A-all']['id'])[0]
+                        Aall_gas[ix][iy].append(measurement['gas']['A-all']['press'][test_id])
+
+                    for h in range(0, len(binParts[ix][iy])):
+                        test_id = np.where(binParts[ix][iy][h]==measurement['gas']['all-B']['id'])[0]
+                        allB_gas[ix][iy].append(measurement['gas']['all-B']['press'][test_id])
+
+                    for h in range(0, len(binParts[ix][iy])):
+                        test_id = np.where(binParts[ix][iy][h]==measurement['gas']['B-all']['id'])[0]
+                        Ball_gas[ix][iy].append(measurement['gas']['B-all']['press'][test_id])
+
+                    for h in range(0, len(binParts[ix][iy])):
+                        test_id = np.where(binParts[ix][iy][h]==measurement['gas']['A-A']['id'])[0]
+                        AA_gas[ix][iy].append(measurement['gas']['A-A']['press'][test_id])
+
+                    for h in range(0, len(binParts[ix][iy])):
+                        test_id = np.where(binParts[ix][iy][h]==measurement['gas']['B-A']['id'])[0]
+                        BA_gas[ix][iy].append(measurement['gas']['B-A']['press'][test_id])
+
+                    for h in range(0, len(binParts[ix][iy])):
+                        test_id = np.where(binParts[ix][iy][h]==measurement['gas']['A-B']['id'])[0]
+                        AB_gas[ix][iy].append(measurement['gas']['A-B']['press'][test_id])
+
+                    for h in range(0, len(binParts[ix][iy])):
+                        test_id = np.where(binParts[ix][iy][h]==measurement['gas']['B-B']['id'])[0]
+                        BB_gas[ix][iy].append(measurement['gas']['B-B']['press'][test_id])
+                """
+        #binned_measure_dict = {'system': {'all-all': allall_system, 'A-all': Aall_system, 'all-A': allA_system, 'B-all': Ball_system, 'all-B': allB_system, 'A-A': AA_system, 'A-B': AB_system, 'B-A': BA_system, 'B-B': BB_system}, 'dense': {'all-all': allall_dense, 'A-all': Aall_dense, 'all-A': allA_dense, 'B-all': Ball_dense, 'all-B': allB_dense, 'A-A': AA_dense, 'A-B': AB_dense, 'B-A': BA_dense, 'B-B': BB_dense}, 'bulk': {'all-all': allall_bulk, 'A-all': Aall_bulk, 'all-A': allA_bulk, 'B-all': Ball_bulk, 'all-B': allB_bulk, 'A-A': AA_bulk, 'A-B': AB_bulk, 'B-A': BA_bulk, 'B-B': BB_bulk}, 'int': {'all-all': allall_int, 'A-all': Aall_int, 'all-A': allA_int, 'B-all': Ball_int, 'all-B': allB_int, 'A-A': AA_int, 'A-B': AB_int, 'B-A': BA_int, 'B-B': BB_int}, 'gas': {'all-all': allall_gas, 'A-all': Aall_gas, 'all-A': allA_gas, 'B-all': Ball_gas, 'all-B': allB_gas, 'A-A': AA_gas, 'A-B': AB_gas, 'B-A': BA_gas, 'B-B': BB_gas} }
+        binned_measure_dict = {'all-all': allall_system, 'A-all': Aall_system, 'all-A': allA_system, 'B-all': Ball_system, 'all-B': allB_system, 'A-A': AA_system, 'A-B': AB_system, 'B-A': BA_system, 'B-B': BB_system}
+        return binned_measure_dict
+    
     def bin_align(self, orient_dict):
         '''
         Purpose: Takes the orientation of each particle and calculates the average over it and the neighboring bins.
@@ -1048,7 +1761,7 @@ class binning:
                                             if 0.1<=difr<=self.r_cut:
 
                                                 # Calculate interparticle forces
-                                                fx, fy = self.theory_functs.computeFLJ(difr, pos[binParts[ix][iy]][h][0], pos[binParts[ix][iy]][h][1], pos[binParts[ix2][iy2]][h2][0], pos[binParts[ix2][iy2]][h2][1], self.eps)
+                                                fx, fy = self.theory_functs.computeFLJ(difr, difx, dify, self.eps)
 
                                                 # Calculate the interparticle stress
                                                 sigx = fx * (difx)
