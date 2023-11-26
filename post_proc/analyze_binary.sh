@@ -144,11 +144,11 @@ fi
 
 echo $pa2
 
-if [ $os == "mac" ]; then
-    python3 $script_path/full_density_analysis_binary_updates_temp.py $fname $hoomd_path $outpath $pa2 $pb $xa2 $ep $phi $dtau $bin $step $method $plot $start_frame $end_frame
-elif [ $os == "windows" ]; then
-    python $script_path/full_density_analysis_binary_updates_temp.py $fname $hoomd_path $outpath $pa2 $pb $xa2 $ep $phi $dtau $bin $step $method $plot $start_frame $end_frame
-fi
+#if [ $os == "mac" ]; then
+#    python3 $script_path/full_density_analysis_binary_updates_temp.py $fname $hoomd_path $outpath $pa2 $pb $xa2 $ep $phi $dtau $bin $step $method $plot $start_frame $end_frame
+#elif [ $os == "windows" ]; then
+#    python $script_path/full_density_analysis_binary_updates_temp.py $fname $hoomd_path $outpath $pa2 $pb $xa2 $ep $phi $dtau $bin $step $method $plot $start_frame $end_frame
+#fi
 
 pe=${pe%%.*}
 pa=${pa%%.*}
