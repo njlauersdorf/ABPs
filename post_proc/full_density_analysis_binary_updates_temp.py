@@ -1370,7 +1370,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     data_output_functs.write_to_txt(press_stat_indiv_dict, dataPath + 'interparticle_press_indiv_' + outfile + '.txt')
 
                     binned_press = binning_functs.bin_measurement(part_dict['id'], phase_dict['bin'], press_hetero_dict)
-
+                    """
                     heterogeneity_press_phases = binning_functs.bin_heterogeneity_press_phases(binned_press, press_hetero_dict, phase_dict, part_dict)
                     print(heterogeneity_press_phases)
                     stop
@@ -1382,11 +1382,11 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     print(heterogeneity_press_bulk)
                     print(heterogeneity_press_int)
                     print(heterogeneity_press_gas)
-
+                    """
                     #heterogeneity_press_dict = {'bulk': heterogeneity_press_bulk.tolist(), 'int': heterogeneity_press_int.tolist(), 'gas': heterogeneity_press_gas.tolist(), 'system': heterogeneity_press_system.tolist()}
             
                     #print(heterogeneity_dict)
-                    stop
+                    """
                     # Heterogeneity
                     heterogeneity = binning_functs.bin_heterogeneity_system(part_dict['typ'], np.var(typ))
                     heterogeneity_system = np.append(heterogeneity_system, heterogeneity)
@@ -1397,7 +1397,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     heterogeneity_bulk = np.append(heterogeneity_bulk, heterogeneity_phases['bulk'])
                     
                     heterogeneity_dict = {'bulk': heterogeneity_bulk.tolist(), 'int': heterogeneity_int.tolist(), 'gas': heterogeneity_gas.tolist(), 'system': heterogeneity_system.tolist()}
-            
+                    """
 
                     # Measure radial interparticle pressure
                     radial_int_press_dict = particle_prop_functs.radial_int_press(stress_plot_dict)
