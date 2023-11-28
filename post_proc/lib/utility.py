@@ -188,7 +188,45 @@ class utility:
                 return nBins
             else:
                 nBins -= 1
-
+    def quaternion_rotation_matrix(Q):
+        """
+        Covert a quaternion into a full three-dimensional rotation matrix.
+    
+        Input
+        :param Q: A 4 element array representing the quaternion (q0,q1,q2,q3) 
+    
+        Output
+        :return: A 3x3 element matrix representing the full 3D rotation matrix. 
+                This rotation matrix converts a point in the local reference 
+                frame to a point in the global reference frame.
+        """
+        # Extract the values from Q
+        q0 = Q[0]
+        q1 = Q[1]
+        q2 = Q[2]
+        q3 = Q[3]
+        
+        # First row of the rotation matrix
+        r00 = 2 * (q0 * q0 + q1 * q1) - 1
+        r01 = 2 * (q1 * q2 - q0 * q3)
+        r02 = 2 * (q1 * q3 + q0 * q2)
+        
+        # Second row of the rotation matrix
+        r10 = 2 * (q1 * q2 + q0 * q3)
+        r11 = 2 * (q0 * q0 + q2 * q2) - 1
+        r12 = 2 * (q2 * q3 - q0 * q1)
+        
+        # Third row of the rotation matrix
+        r20 = 2 * (q1 * q3 - q0 * q2)
+        r21 = 2 * (q2 * q3 + q0 * q1)
+        r22 = 2 * (q0 * q0 + q3 * q3) - 1
+        
+        # 3x3 rotation matrix
+        rot_matrix = np.array([[r00, r01, r02],
+                            [r10, r11, r12],
+                            [r20, r21, r22]])
+                                
+        return rot_matrix
     def quatToAngle(self, quat):
         '''
         Purpose: Take quaternion orientation vector of particle as given by hoomd-blue
@@ -205,9 +243,97 @@ class utility:
         x = quat[1]         #x-direction
         y = quat[2]         #y-direction
         z = quat[3]         #z-direction
-        rad = math.atan2(y, x)
 
-        return rad
+        rot_matrix = utility.quaternion_rotation_matrix(quat)
+        z_axis = np.array([0,0,1])
+        z_axis = np.reshape(z_axis, (3,1))
+
+        orientation_vector = np.matmul(rot_matrix, z_axis)
+        
+        rad = math.atan2(y, x)
+        rad2 = math.atan2(r, np.sqrt(x**2+y**2+z**2))
+        alpha = 2*np.arccos(r)
+        beta_x = np.arccos(x/np.sin(alpha/2))
+        beta_y = np.arccos(y/np.sin(alpha/2))
+        beta_z = np.arccos(z/np.sin(alpha/2))
+        phi = np.arctan2(2*(r*x + y*z),1-2*(x**2+y**2))
+        theta = -np.pi/2 + 2*np.arctan2(np.sqrt(1+2*(r*y-x*z)), np.sqrt(1-2*(r*y-x*z)))
+        psi = np.arctan2(2*(r*z + x*y),1-2*(y**2+z**2))
+        
+        x_vect = orientation_vector[0]
+        y_vect = orientation_vector[1]
+        #sto
+        
+        
+        #print(rad)
+        ##print(alpha)
+        #print(beta_x)
+        #print(beta_y)
+        #print(beta_z)
+        theta = np.arctan2(orientation_vector[1][0], orientation_vector[0][0])
+        #print((orientation_vector[1]**2 + orientation_vector[0]**2)**0.5 * np.cos(np.arctan2(orientation_vector[1], orientation_vector[0])))
+        #stop
+        
+
+        return theta#rad
+
+    def quatToXOrient(self, quat):
+        '''
+        Purpose: Take quaternion orientation vector of particle as given by hoomd-blue
+        simulations and output angle between [-pi, pi]
+
+        Inputs:
+        quat: Quaternion orientation vector of particle
+
+        Output:
+        rad: angle between [-pi, pi]
+        '''
+
+        r = quat[0]         #magnitude
+        x = quat[1]         #x-direction
+        y = quat[2]         #y-direction
+        z = quat[3]         #z-direction
+
+        rot_matrix = utility.quaternion_rotation_matrix(quat)
+        z_axis = np.array([0,0,1])
+        z_axis = np.reshape(z_axis, (3,1))
+
+        orientation_vector = np.matmul(rot_matrix, z_axis)
+
+        x_vect = orientation_vector[0]
+        y_vect = orientation_vector[1]
+        
+
+        return x_vect
+
+    def quatToYOrient(self, quat):
+        '''
+        Purpose: Take quaternion orientation vector of particle as given by hoomd-blue
+        simulations and output angle between [-pi, pi]
+
+        Inputs:
+        quat: Quaternion orientation vector of particle
+
+        Output:
+        rad: angle between [-pi, pi]
+        '''
+
+        r = quat[0]         #magnitude
+        x = quat[1]         #x-direction
+        y = quat[2]         #y-direction
+        z = quat[3]         #z-direction
+
+        rot_matrix = utility.quaternion_rotation_matrix(quat)
+        z_axis = np.array([0,0,1])
+        z_axis = np.reshape(z_axis, (3,1))
+
+        orientation_vector = np.matmul(rot_matrix, z_axis)
+
+        x_vect = orientation_vector[0]
+        y_vect = orientation_vector[1]
+        
+
+        return y_vect
 
     def symlog(self, x):
         """ Returns the symmetric log10 value """

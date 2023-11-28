@@ -6914,8 +6914,8 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
         sz = 0.755
 
-        px = np.sin(ang)
-        py = -np.cos(ang)
+        px = np.cos(ang)
+        py = np.sin(ang)
 
         if mono==0:
 
@@ -6965,6 +6965,8 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                     fastGroup = mc.PatchCollection(ells0,facecolors=fastCol)
                 ax.add_collection(slowGroup)
                 ax.add_collection(fastGroup)
+
+                
 
                 plt.quiver((pos[:,0]+self.hx_box)-(np.sqrt(2)/2)*self.lx_box, (pos[:,1]+self.hy_box)-(np.sqrt(2)/2)*self.ly_box, px, py, scale=200.0, color='black', alpha=0.8)
                 plt.quiver((pos[:,0]+self.hx_box)-(np.sqrt(2)/2)*self.lx_box, (pos[:,1]+self.hy_box)+(np.sqrt(2)/2)*self.ly_box, px, py, scale=200.0, color='black', alpha=0.8)
@@ -7220,6 +7222,8 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         if orientation_id == True:
             try:
                 if active_fa_dict!=None:
+
+                    
                     plt.quiver(self.pos_x, self.pos_y, active_fa_dict['bin']['x'], active_fa_dict['bin']['y'], scale=20.0, color='black', alpha=0.8)
             except:
                 pass
@@ -7295,7 +7299,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         #plt.savefig(self.outPath + 'part_activity_' + self.outFile + ".eps", format='eps', dpi=150, bbox_inches='tight')
         plt.close()  
 
-    def plot_part_activity_wide_desorb_orient(self, pos, ang, sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None, mono_id=False, interface_id = False, orientation_id = False, zoom_id = False, banner_id = False, presentation_id = False):
+    def plot_part_activity_wide_desorb_orient(self, pos, px, py, sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None, mono_id=False, interface_id = False, orientation_id = False, zoom_id = False, banner_id = False, presentation_id = False):
 
         """
         This function plots the particle positions and color codes each particle with its intrinsic
@@ -7470,9 +7474,6 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
             pos[:,1]= np.sin(np.pi/4) * pos_old[:,0] + np.cos(np.pi/4) * pos_old[:,1]
 
         sz = 0.755
-
-        px = np.sin(ang)
-        py = -np.cos(ang)
 
         if mono==0:
 
@@ -8384,7 +8385,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         #plt.savefig(self.outPath + 'part_activity_' + self.outFile + ".eps", format='eps', dpi=150, bbox_inches='tight')
         plt.close()  
 
-    def plot_part_activity_wide_adsorb_orient(self, pos, ang, sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None, mono_id=False, interface_id = False, orientation_id = False, zoom_id = False, banner_id = False, presentation_id = False):
+    def plot_part_activity_wide_adsorb_orient(self, pos, px, py, sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None, mono_id=False, interface_id = False, orientation_id = False, zoom_id = False, banner_id = False, presentation_id = False):
 
         """
         This function plots the particle positions and color codes each particle with its intrinsic
@@ -8558,11 +8559,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
             pos[:,0]= np.cos(np.pi/4) * pos_old[:,0] - np.sin(np.pi/4) * pos_old[:,1]
             pos[:,1]= np.sin(np.pi/4) * pos_old[:,0] + np.cos(np.pi/4) * pos_old[:,1]
         
-        
-
         sz = 0.755
-        px = np.sin(ang)
-        py = -np.cos(ang)
 
         if mono==0:
 

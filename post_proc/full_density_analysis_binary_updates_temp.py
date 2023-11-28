@@ -321,6 +321,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
         ori = snap.particles.orientation            #current orientation (quaternions)
         ang = np.array(list(map(utility_functs.quatToAngle, ori))) # convert to [-pi, pi]
+        x_orient_arr = np.array(list(map(utility_functs.quatToXOrient, ori))) # convert to [-pi, pi]
+        y_orient_arr = np.array(list(map(utility_functs.quatToYOrient, ori))) # convert to [-pi, pi]
 
         typ = snap.particles.typeid                 # Particle type
         typ0ind=np.where(snap.particles.typeid==0)      # Calculate which particles are type 0
@@ -1142,13 +1144,13 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     if plot == 'y':
                         
                         # Plot particles color-coded by activity
-                        plotting_functs.plot_part_activity_wide_adsorb_orient(pos, ang, all_surface_curves, int_comp_dict, active_fa_dict, mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option, banner_id = banner_option, presentation_id = presentation_option)
+                        plotting_functs.plot_part_activity_wide_adsorb_orient(pos, x_orient_arr, y_orient_arr, all_surface_curves, int_comp_dict, active_fa_dict, mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option, banner_id = banner_option, presentation_id = presentation_option)
                 elif (measurement_options[0] == 'activity-wide-desorb-orient'):
                     #DONE!
                     if plot == 'y':
                         
                         # Plot particles color-coded by activity
-                        plotting_functs.plot_part_activity_wide_desorb_orient(pos, ang, all_surface_curves, int_comp_dict, active_fa_dict, mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option, banner_id = banner_option, presentation_id = presentation_option)
+                        plotting_functs.plot_part_activity_wide_desorb_orient(pos, x_orient_arr, y_orient_arr, all_surface_curves, int_comp_dict, active_fa_dict, mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option, banner_id = banner_option, presentation_id = presentation_option)
 
 
                 elif measurement_options[0] == 'activity-com':
@@ -2258,6 +2260,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                 ori = snap.particles.orientation            #Orientation (quaternions)
                 ang = np.array(list(map(utility_functs.quatToAngle, ori))) # convert to [-pi, pi]
+                x_orient_arr = np.array(list(map(utility_functs.quatToXOrient, ori))) # convert to [-pi, pi]
+                y_orient_arr = np.array(list(map(utility_functs.quatToYOrient, ori))) # convert to [-pi, pi]
 
 
                 typ = snap.particles.typeid                 # Particle type

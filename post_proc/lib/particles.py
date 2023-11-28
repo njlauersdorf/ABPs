@@ -954,6 +954,9 @@ class particle_props:
                 elif self.typ[h]==1:
                     gas_A_val += (np.abs(vel[h])-gas_B_vel_avg)**2
 
+        print(gas_B_num)
+        print(gas_A_num)
+        stop
         # Average sum of bulk deviations divided by number of bulk particles of respective type ('all', 'A', or 'B')
         if bulk_num > 0:
             bulk_vel_std = (bulk_all_val/bulk_num)**0.5
@@ -1001,6 +1004,10 @@ class particle_props:
             gas_vel_std = 0
             gas_A_vel_std = 0
             gas_B_vel_std = 0
+
+        print(gas_B_vel_std)
+        print(gas_A_vel_std)
+        stop
 
         # Dictionary containing the average and standard deviation of velocity
         # of each phase and each respective type ('all', 'A', or 'B')
