@@ -447,10 +447,7 @@ class binning:
         bulk_BB_q = 1.0 - (1/(len(bulk_B_id) * np.var(part_binned_arr['bulk']['B-B']['press']))) * bulk_BB_std_sum
         int_BB_q = 1.0 - (1/(len(int_B_id) * np.var(part_binned_arr['int']['B-B']['press']))) * int_BB_std_sum
         gas_BB_q = 1.0 - (1/(len(gas_B_id) * np.var(part_binned_arr['gas']['B-B']['press']))) * gas_BB_std_sum
-        
-        print((1/(len(gas_A_id) * np.var(part_binned_arr['gas']['all-A']['press']))))
-        print(gas_allA_std_sum)
-        print(gas_allA_q)
+
         q_dict = {'bulk': {'all-all': bulk_allall_q, 'all-A': bulk_allA_q, 'A-all': bulk_Aall_q, 'all-B': bulk_allB_q, 'B-all': bulk_Ball_q, 'A-A': bulk_AA_q, 'A-B': bulk_AB_q, 'B-A': bulk_BA_q, 'B-B': bulk_BB_q}, 'int': {'all-all': int_allall_q, 'all-A': int_allA_q, 'A-all': int_Aall_q, 'all-B': int_allB_q, 'B-all': int_Ball_q, 'A-A': int_AA_q, 'A-B': int_AB_q, 'B-A': int_BA_q, 'B-B': int_BB_q}, 'gas': {'all-all': gas_allall_q, 'all-A': gas_allA_q, 'A-all': gas_Aall_q, 'all-B': gas_allB_q, 'B-all': gas_Ball_q, 'A-A': gas_AA_q, 'A-B': gas_AB_q, 'B-A': gas_BA_q, 'B-B': gas_BB_q} }
         return q_dict
     def bin_parts_from_interpart_press(self, part_dict, press_hetero_dict):
@@ -1404,7 +1401,7 @@ class binning:
 
         return area_frac_dict
 
-    def bin_orient(self, part_dict, pos, ang, com):
+    def bin_orient(self, part_dict, pos, px, py, com):
         '''
         Purpose: Takes the particle ids and orientation, bins the particles,
         and calculates the average orientation of each bin
@@ -1487,30 +1484,26 @@ class binning:
 
                         difr = (difx ** 2 + dify ** 2) ** 0.5
 
-                        # x- and y-direction orientation unit vectors
-                        px = np.sin(ang[binParts[ix][iy][h]])
-                        py = -np.cos(ang[binParts[ix][iy][h]])
-
                         # Alignment toward largest cluster's CoM
-                        r_dot_p = -difx * px + -dify * py
+                        r_dot_p = -difx * px[binParts[ix][iy][h]] + -dify * py[binParts[ix][iy][h]]
 
                         # Sum orientation unit vectors in respective bin
-                        p_all_x[ix][iy] += px
-                        p_all_y[ix][iy] += py
+                        p_all_x[ix][iy] += px[binParts[ix][iy][h]]
+                        p_all_y[ix][iy] += py[binParts[ix][iy][h]]
 
                         if typParts[ix][iy][h] == 0:
                             typ0_temp += 1
-                            p_A_x[ix][iy] += px
-                            p_A_y[ix][iy] += py
+                            p_A_x[ix][iy] += px[binParts[ix][iy][h]]
+                            p_A_y[ix][iy] += py[binParts[ix][iy][h]]
 
                         elif typParts[ix][iy][h] == 1:
                             typ1_temp += 1
-                            p_B_x[ix][iy] += px
-                            p_B_y[ix][iy] += py
+                            p_B_x[ix][iy] += px[binParts[ix][iy][h]]
+                            p_B_y[ix][iy] += py[binParts[ix][iy][h]]
 
                         # Save particle orientation unit vectors
-                        bin_part_x[binParts[ix][iy][h]]=px
-                        bin_part_y[binParts[ix][iy][h]]=py
+                        bin_part_x[binParts[ix][iy][h]]=px[binParts[ix][iy][h]]
+                        bin_part_y[binParts[ix][iy][h]]=py[binParts[ix][iy][h]]
 
                     # Calculate average orientation unit vector per bin for each particle type ('all', 'A', or 'B')
                     p_avg_x[ix][iy] = p_all_x[ix][iy] / len(binParts[ix][iy])

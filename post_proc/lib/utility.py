@@ -260,8 +260,8 @@ class utility:
         theta = -np.pi/2 + 2*np.arctan2(np.sqrt(1+2*(r*y-x*z)), np.sqrt(1-2*(r*y-x*z)))
         psi = np.arctan2(2*(r*z + x*y),1-2*(y**2+z**2))
         
-        x_vect = orientation_vector[0]
-        y_vect = orientation_vector[1]
+        x_vect = orientation_vector[0][0]
+        y_vect = orientation_vector[1][0]
         #sto
         
         
@@ -300,8 +300,8 @@ class utility:
 
         orientation_vector = np.matmul(rot_matrix, z_axis)
 
-        x_vect = orientation_vector[0]
-        y_vect = orientation_vector[1]
+        x_vect = orientation_vector[0][0]
+        y_vect = orientation_vector[1][0]
         
 
         return x_vect
@@ -329,8 +329,8 @@ class utility:
 
         orientation_vector = np.matmul(rot_matrix, z_axis)
 
-        x_vect = orientation_vector[0]
-        y_vect = orientation_vector[1]
+        x_vect = orientation_vector[0][0]
+        y_vect = orientation_vector[1][0]
         
 
         return y_vect

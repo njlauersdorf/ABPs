@@ -42,7 +42,7 @@ import phase_identification
 import binning
 import particles
 class stress_and_pressure:
-    def __init__(self, lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict):
+    def __init__(self, lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, px, py, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict):
 
         import freud
 
@@ -79,7 +79,8 @@ class stress_and_pressure:
 
         self.typ = typ
 
-        self.ang = ang
+        self.px = px
+        self.py = py
 
         self.binParts = part_dict['id']
 
@@ -99,13 +100,13 @@ class stress_and_pressure:
 
         self.press_dict = press_dict
 
-        self.binning = binning.binning(self.lx_box, self.ly_box, self.partNum, self.NBins_x, self.NBins_y, self.peA, self.peB, self.ang, self.eps)
+        self.binning = binning.binning(self.lx_box, self.ly_box, self.partNum, self.NBins_x, self.NBins_y, self.peA, self.peB, self.typ, self.eps)
 
         self.plotting_utility = plotting_utility.plotting_utility(self.lx_box, self.ly_box, self.partNum, self.typ)
 
         self.phase_ident = phase_identification.phase_identification(self.area_frac_dict, self.align_dict, self.part_dict, self.press_dict, self.lx_box, self.ly_box, self.partNum, self.NBins_x, self.NBins_y, self.peA, self.peB, self.parFrac, self.eps, self.typ)
 
-        self.particle_prop_functs = particles.particle_props(self.lx_box, self.ly_box, self.partNum, self.NBins_x, self.NBins_y, self.peA, self.peB, self.eps, self.typ, self.pos, self.ang)
+        self.particle_prop_functs = particles.particle_props(self.lx_box, self.ly_box, self.partNum, self.NBins_x, self.NBins_y, self.peA, self.peB, self.eps, self.typ, self.pos, self.px, self.py)
 
         self.theory_functs = theory.theory()
 
@@ -728,10 +729,6 @@ class stress_and_pressure:
                     interior_surface_arr = np.append(interior_surface_arr, sep_surface_dict[key]['interior']['mean radius'])
                 except:
                     interior_surface_arr = np.append(interior_surface_arr, 0)
-
-        print(exterior_surface_arr)
-        print(interior_surface_arr)
-        stop
 
         #Initiate empty values for integral of pressures across interfaces
         act_press = 0

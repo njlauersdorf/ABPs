@@ -298,7 +298,6 @@ class plotting:
         
         nonzero_x_id = nonzero_id[0]
         nonzero_y_id = nonzero_id[1]
-        print(active_fa_dict)
         # Plot averaged, binned orientation of particles
         """
         if orientation_id == True:
@@ -342,15 +341,13 @@ class plotting:
 
 
                     active_r = ( np.array(new_orient_dict_x) ** 2 + np.array(new_orient_dict_y) ** 2 ) ** 0.5
-                    print(active_r)
+
                     nonzero_id = np.nonzero(active_r)
                     
                     nonzero_x_id = nonzero_id[0]
                     nonzero_y_id = nonzero_id[1]
                     
                     for i in range(0, len(nonzero_x_id)):
-                        print('test')
-                        print(i)
                         #plt.quiver(self.pos_x[nonzero_x_id[i]][nonzero_y_id[i]]*3, self.pos_y[nonzero_x_id[i]][nonzero_y_id[i]]*3, active_fa_dict['bin']['x'][nonzero_x_id[i]][nonzero_y_id[i]], active_fa_dict['bin']['y'][nonzero_x_id[i]][nonzero_y_id[i]], scale=10.0, width=0.01, color='black', alpha=0.8)
                         plt.quiver(pos_x_new[nonzero_x_id[i]][nonzero_y_id[i]], pos_y_new[nonzero_x_id[i]][nonzero_y_id[i]], new_orient_dict_x[nonzero_x_id[i]][nonzero_y_id[i]], new_orient_dict_y[nonzero_x_id[i]][nonzero_y_id[i]], scale=10.0, width=0.01, color='black', alpha=0.8)
                     
@@ -1389,8 +1386,6 @@ class plotting:
         yellow = ("#7570b3")
         green = ("#77dd77")
 
-        print(prob_stat_dict)
-
         xmin = -0.5
         xmax=7.5
 
@@ -1551,8 +1546,6 @@ class plotting:
         #Define colors for plots
         yellow = ("#7570b3")
         green = ("#77dd77")
-
-        print(prob_stat_dict)
 
         xmin = -0.5
         xmax=7.5
@@ -2827,7 +2820,7 @@ class plotting:
         plt.savefig(self.outPath + 'csp_' + pair + '_' + self.outFile + ".png", dpi=150, transparent=False)
         plt.close() 
     
-    def plot_neighbors(self, neigh_plot_dict, ang, pos, pair='all-all', sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None, interface_id = False, orientation_id = False):
+    def plot_neighbors(self, neigh_plot_dict, px, py, pos, pair='all-all', sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None, interface_id = False, orientation_id = False):
         """
         This function plots the number of neighbors of all dense phase particles
         at each location in space.
@@ -2955,8 +2948,6 @@ class plotting:
             coll = ax.add_collection(neighborGroup)
             coll.set_array(np.ravel(num_neigh_arr))
 
-            #px = np.sin(ang[typ1ind])
-            #py = -np.cos(ang[typ1ind])
 
             #plt.scatter(neigh_plot_dict['all-all']['x'][typ1ind]+self.hx_box, neigh_plot_dict['all-all']['y'][typ1ind]+self.hy_box, c='black', s=sz)
             #plt.quiver(pos[typ1ind,0]+self.hx_box, pos[typ1ind,1]+self.hy_box, px, py, color='black', width=0.003)
@@ -4451,7 +4442,7 @@ class plotting:
         plt.savefig(self.outPath + 'clustering_'  + type + '_' + self.outFile + ".png", dpi=150, transparent=False)
         plt.close()  
         
-    def plot_neighbors2(self, neigh_plot_dict, ang, pos, prev_pos, sep_surface_dict=None, int_comp_dict=None, pair='all-all'):
+    def plot_neighbors2(self, neigh_plot_dict, px, py, pos, prev_pos, sep_surface_dict=None, int_comp_dict=None, pair='all-all'):
         """
         This function plots the number of neighbors of all dense phase particles
         at each location in space.
@@ -4570,9 +4561,6 @@ class plotting:
             neighborGroup = mc.PatchCollection(ells, cmap=plt.cm.get_cmap('tab10', int(max_neigh) + 1))#facecolors=slowCol)
             coll = ax.add_collection(neighborGroup)
             coll.set_array(np.ravel(neigh_plot_dict['all-all']['neigh']))
-
-            px = np.sin(ang[typ1ind])
-            py = -np.cos(ang[typ1ind])
 
             #plt.scatter(neigh_plot_dict['all-all']['x'][typ1ind]+self.hx_box, neigh_plot_dict['all-all']['y'][typ1ind]+self.hy_box, c='black', s=sz)
             plt.quiver(pos[typ1ind,0]+self.hx_box, pos[typ1ind,1]+self.hy_box-mean_dify, px, py, color='black', width=0.003)
@@ -6301,9 +6289,6 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         coll = ax.add_collection(neighborGroup)
         coll.set_array(np.ravel(num_neigh_arr))
 
-        px = np.sin(ang[typ1ind])
-        py = -np.cos(ang[typ1ind])
-
         #plt.scatter(neigh_plot_dict['all-all']['x'][typ1ind]+self.hx_box, neigh_plot_dict['all-all']['y'][typ1ind]+self.hy_box, c='black', s=sz)
         plt.quiver(pos[typ1ind,0]+self.hx_box, pos[typ1ind,1]+self.hy_box-mean_dify, px, py, color='black', width=0.002)
         plt.quiver(pos[typ1ind,0]+self.hx_box, pos[typ1ind,1]+self.hy_box+self.ly_box-mean_dify, px, py, color='black', width=0.002)
@@ -6505,8 +6490,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                 leg = ax0.legend(handles=[ells0[0]], labels=[r'$\mathrm{Pe}_\mathrm{A} = $'+str(int(self.peA)), r'$\mathrm{Pe}_\mathrm{A} = $'+str(int(self.peA))], loc='upper right', prop={'size': 15}, markerscale=8.0)
                 leg.legendHandles[0].set_color(slowCol)
             """
-            #px = np.sin(ang[typ1ind])
-            #py = -np.cos(ang[typ1ind])
+
 
             #plt.scatter(neigh_plot_dict['all-all']['x'][typ1ind]+self.hx_box, neigh_plot_dict['all-all']['y'][typ1ind]+self.hy_box, c='black', s=sz)
             #ax0.quiver(pos[typ1ind,0]+self.hx_box, pos[typ1ind,1]+self.hy_box, px, py, color='black', width=0.003)
@@ -6641,7 +6625,6 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
         # Create frame pad for images
         #pad = str(j).zfill(4)
-        print(outfile_name)
 
         import pandas as pd
 
@@ -6738,7 +6721,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         plt.tight_layout()
         plt.savefig(self.outPath + 'clust_fluctuations_' + self.outFile + ".png", dpi=150, transparent=False)
         plt.close()   
-    def plot_part_activity_wide_desorb(self, pos, ang, sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None, mono_id=False, interface_id = False, orientation_id = False, zoom_id = False, banner_id = False, presentation_id = False):
+    def plot_part_activity_wide_desorb(self, pos, px, py, sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None, mono_id=False, interface_id = False, orientation_id = False, zoom_id = False, banner_id = False, presentation_id = False):
 
         """
         This function plots the particle positions and color codes each particle with its intrinsic
@@ -6913,9 +6896,6 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
             pos[:,1]= np.sin(np.pi/4) * pos_old[:,0] + np.cos(np.pi/4) * pos_old[:,1]
 
         sz = 0.755
-
-        px = np.cos(ang)
-        py = np.sin(ang)
 
         if mono==0:
 
@@ -7101,8 +7081,6 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                 one_leg = ax.legend(handles=fast_leg, loc='upper right', borderpad=0.3, labelspacing=0.4, handletextpad=-0.2, bbox_transform=ax.transAxes, bbox_to_anchor=[0.99, 1.19], handlelength=1.5, columnspacing=0.4, fontsize=36, ncol=2, facecolor='none', edgecolor='none')
                 ax.add_artist(one_leg)
             
-            #px = np.sin(ang[typ1ind])
-            #py = -np.cos(ang[typ1ind])
 
             #plt.scatter(neigh_plot_dict['all-all']['x'][typ1ind]+self.hx_box, neigh_plot_dict['all-all']['y'][typ1ind]+self.hy_box, c='black', s=sz)
             #plt.quiver(pos[typ1ind,0]+self.hx_box, pos[typ1ind,1]+self.hy_box, px, py, color='black', width=0.003)
@@ -7657,8 +7635,6 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                 one_leg = ax.legend(handles=fast_leg, loc='upper right', borderpad=0.3, labelspacing=0.4, handletextpad=-0.2, bbox_transform=ax.transAxes, bbox_to_anchor=[0.99, 1.19], handlelength=1.5, columnspacing=0.4, fontsize=36, ncol=2, facecolor='none', edgecolor='none')
                 ax.add_artist(one_leg)
             
-            #px = np.sin(ang[typ1ind])
-            #py = -np.cos(ang[typ1ind])
 
             #plt.scatter(neigh_plot_dict['all-all']['x'][typ1ind]+self.hx_box, neigh_plot_dict['all-all']['y'][typ1ind]+self.hy_box, c='black', s=sz)
             #plt.quiver(pos[typ1ind,0]+self.hx_box, pos[typ1ind,1]+self.hy_box, px, py, color='black', width=0.003)
@@ -7853,7 +7829,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         #plt.savefig(self.outPath + 'part_activity_' + self.outFile + ".eps", format='eps', dpi=150, bbox_inches='tight')
         plt.close()  
 
-    def plot_part_activity_wide_adsorb(self, pos, sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None, mono_id=False, interface_id = False, orientation_id = False, zoom_id = False, banner_id = False, presentation_id = False):
+    def plot_part_activity_wide_adsorb(self, pos, px, py, sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None, mono_id=False, interface_id = False, orientation_id = False, zoom_id = False, banner_id = False, presentation_id = False):
 
         """
         This function plots the particle positions and color codes each particle with its intrinsic
@@ -8199,9 +8175,6 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                     fast_leg = [Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=slowCol, label=r'$\mathrm{Pe}_\mathrm{S} = $'+str(int(self.peB)), markersize=32), Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=fastCol, label=r'$\mathrm{Pe}_\mathrm{F} = $'+str(int(self.peA)), markersize=32)]
                 one_leg = ax.legend(handles=fast_leg, loc='upper right', borderpad=0.3, labelspacing=0.4, handletextpad=-0.2, bbox_transform=ax.transAxes, bbox_to_anchor=[0.99, 1.19], handlelength=1.5, columnspacing=0.4, fontsize=36, ncol=2, facecolor='none', edgecolor='none')
                 ax.add_artist(one_leg)
-            
-            #px = np.sin(ang[typ1ind])
-            #py = -np.cos(ang[typ1ind])
 
             #plt.scatter(neigh_plot_dict['all-all']['x'][typ1ind]+self.hx_box, neigh_plot_dict['all-all']['y'][typ1ind]+self.hy_box, c='black', s=sz)
             #plt.quiver(pos[typ1ind,0]+self.hx_box, pos[typ1ind,1]+self.hy_box, px, py, color='black', width=0.003)
@@ -8743,9 +8716,6 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                     fast_leg = [Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=slowCol, label=r'$\mathrm{Pe}_\mathrm{S} = $'+str(int(self.peB)), markersize=32), Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=fastCol, label=r'$\mathrm{Pe}_\mathrm{F} = $'+str(int(self.peA)), markersize=32)]
                 one_leg = ax.legend(handles=fast_leg, loc='upper right', borderpad=0.3, labelspacing=0.4, handletextpad=-0.2, bbox_transform=ax.transAxes, bbox_to_anchor=[0.99, 1.19], handlelength=1.5, columnspacing=0.4, fontsize=36, ncol=2, facecolor='none', edgecolor='none')
                 ax.add_artist(one_leg)
-            
-            #px = np.sin(ang[typ1ind])
-            #py = -np.cos(ang[typ1ind])
 
             #plt.scatter(neigh_plot_dict['all-all']['x'][typ1ind]+self.hx_box, neigh_plot_dict['all-all']['y'][typ1ind]+self.hy_box, c='black', s=sz)
             #plt.quiver(pos[typ1ind,0]+self.hx_box, pos[typ1ind,1]+self.hy_box, px, py, color='black', width=0.003)
@@ -9114,9 +9084,6 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                     fast_leg = [Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=slowCol, label=r'$\mathrm{Pe}_\mathrm{S} = $'+str(int(self.peB)), markersize=32), Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=fastCol, label=r'$\mathrm{Pe}_\mathrm{F} = $'+str(int(self.peA)), markersize=32)]
                 one_leg = ax.legend(handles=fast_leg, loc='upper right', borderpad=0.3, labelspacing=0.4, handletextpad=-0.2, bbox_transform=ax.transAxes, bbox_to_anchor=[0.99, 1.15], handlelength=1.5, columnspacing=0.4, fontsize=36, ncol=2, facecolor='none', edgecolor='none')
                 ax.add_artist(one_leg)
-            
-            #px = np.sin(ang[typ1ind])
-            #py = -np.cos(ang[typ1ind])
 
             #plt.scatter(neigh_plot_dict['all-all']['x'][typ1ind]+self.hx_box, neigh_plot_dict['all-all']['y'][typ1ind]+self.hy_box, c='black', s=sz)
             #plt.quiver(pos[typ1ind,0]+self.hx_box, pos[typ1ind,1]+self.hy_box, px, py, color='black', width=0.003)
@@ -9300,7 +9267,6 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         
 
         #com_opt = {'x': [np.mean(pos[bulk_part_ids,0])]+self.hx_box, 'y': [np.mean(pos[bulk_part_ids,1]+self.hy_box)]}
-        print(com_opt)
         typ0ind = np.where(self.typ == 0)[0]
         typ1ind = np.where(self.typ == 1)[0]
 
@@ -9485,8 +9451,6 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                 leg = ax.legend(handles=[ells0[0]], labels=[r'$\mathrm{Pe}_\mathrm{S} = $'+str(int(self.peA)), r'$\mathrm{Pe}_\mathrm{F} = $'+str(int(self.peA))], loc='upper right', prop={'size': 22}, markerscale=8.0, edgecolor='black', linewidth=2.0)
                 leg.legendHandles[0].set_color(slowCol)
             """
-            #px = np.sin(ang[typ1ind])
-            #py = -np.cos(ang[typ1ind])
 
             #plt.scatter(neigh_plot_dict['all-all']['x'][typ1ind]+self.hx_box, neigh_plot_dict['all-all']['y'][typ1ind]+self.hy_box, c='black', s=sz)
             #plt.quiver(pos[typ1ind,0]+self.hx_box, pos[typ1ind,1]+self.hy_box, px, py, color='black', width=0.003)
@@ -9818,8 +9782,6 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                 leg = ax.legend(handles=[ells0[0]], labels=[r'$\mathrm{Pe}_\mathrm{S} = $'+str(int(self.peA)), r'$\mathrm{Pe}_\mathrm{F} = $'+str(int(self.peA))], loc='upper right', prop={'size': 22}, markerscale=8.0, edgecolor='black', linewidth=2.0)
                 leg.legendHandles[0].set_color(slowCol)
             """
-            #px = np.sin(ang[typ1ind])
-            #py = -np.cos(ang[typ1ind])
 
             #plt.scatter(neigh_plot_dict['all-all']['x'][typ1ind]+self.hx_box, neigh_plot_dict['all-all']['y'][typ1ind]+self.hy_box, c='black', s=sz)
             #plt.quiver(pos[typ1ind,0]+self.hx_box, pos[typ1ind,1]+self.hy_box, px, py, color='black', width=0.003)
@@ -9976,7 +9938,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         #plt.savefig(self.outPath + 'part_activity_' + self.outFile + ".eps", format='eps', dpi=150, bbox_inches='tight')
         plt.close()
         
-    def plot_part_activity2(self, pos, prev_pos, ang, sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None):
+    def plot_part_activity2(self, pos, prev_pos, px, py, sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None):
 
         typ0ind = np.where(self.typ == 0)[0]
         typ1ind = np.where(self.typ == 1)[0]
@@ -10111,9 +10073,6 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
             else:
                 leg = ax.legend(handles=[ells0[0]], labels=[r'$\mathrm{Pe}_\mathrm{A} = $'+str(int(self.peA)), r'$\mathrm{Pe}_\mathrm{A} = $'+str(int(self.peA))], loc='upper right', prop={'size': 15}, markerscale=8.0)
                 leg.legendHandles[0].set_color(slowCol)
-
-            px = np.sin(ang[typ1ind])
-            py = -np.cos(ang[typ1ind])
 
             #plt.scatter(neigh_plot_dict['all-all']['x'][typ1ind]+self.hx_box, neigh_plot_dict['all-all']['y'][typ1ind]+self.hy_box, c='black', s=sz)
             plt.quiver(pos[typ1ind,0]+self.hx_box, pos[typ1ind,1]+self.hy_box-mean_dify, px, py, color='black', width=0.003)

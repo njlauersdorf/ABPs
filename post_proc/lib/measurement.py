@@ -43,7 +43,7 @@ import particles
 
 # Class of lattice structure measurements
 class measurement:
-    def __init__(self, lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, ang, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict):
+    def __init__(self, lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, px, py, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict):
 
         import freud
 
@@ -98,7 +98,8 @@ class measurement:
         self.typ = typ
 
         # Array (partNum) of particle orientations
-        self.ang = ang
+        self.px = px
+        self.py = py
 
         # Array (NBins, NBins) of particle ids located per bin
         self.binParts = part_dict['id']
@@ -137,7 +138,7 @@ class measurement:
         self.phase_ident_functs = phase_identification.phase_identification(self.area_frac_dict, self.align_dict, self.part_dict, self.press_dict, self.lx_box, self.ly_box, self.partNum, self.NBins_x, self.NBins_y, self.peA, self.peB, self.parFrac, self.eps, self.typ)
 
         # Initialize particle property functions for call back later
-        self.particle_prop_functs = particles.particle_props(self.lx_box, self.ly_box, self.partNum, self.NBins_x, self.NBins_y, self.peA, self.peB, self.eps, self.typ, self.pos, self.ang)
+        self.particle_prop_functs = particles.particle_props(self.lx_box, self.ly_box, self.partNum, self.NBins_x, self.NBins_y, self.peA, self.peB, self.eps, self.typ, self.pos, self.px, self.py)
 
         # Initialize theory functions for call back later
         self.theory_functs = theory.theory()
@@ -749,16 +750,13 @@ class measurement:
         allall_bulk_nlist = system_all_bulk.query(self.f_box.wrap(pos_bulk), query_args).toNeighborList()
         elapsed = time.time() - t
 
-        print(elapsed)
         # Calculate interparticle separation distances between A reference particles and all neighbors within bulk
         bulk_lats = self.utility_functs.sep_dist_arr(pos_bulk[allall_bulk_nlist.point_indices], pos_bulk[allall_bulk_nlist.query_point_indices])
         elapsed = time.time() - t
         
 
-        print(elapsed)
         k_arr = np.linspace(0, 1, num=10)
-        print(len(bulk_lats))
-        print(type(len(bulk_lats)))
+
         ssf_all = np.zeros(len(k_arr))
         
         #Initiate empty arrays for finding nearest B neighboring dense particles surrounding type A bulk particles
@@ -804,20 +802,12 @@ class measurement:
             ssf_all_sum[k] = (np.sum(np.cos(-k_arr[k] * bulk_lats))**2 + np.sum(np.sin(-k_arr[k] * bulk_lats))**2)**0.5
             ssf_all[k] = np.sum(np.exp(k_arr[k] * bulk_lats * 1j))
 
-        print(ssf_all_sum / len(pos_bulk))
-        print(ssf_all / len(pos_bulk))
-        print(len(pos_bulk))
-        stop
         for k in range(0, len(k_arr)):
 
             ssf_all[k] = np.sum(np.cos(k_arr[k] * bulk_lats))**2 + np.sum(np.sin(k_arr[k] * bulk_lats))**2
             ssf_all[k] = np.abs(np.sum(np.exp(k_arr[k] * bulk_lats * 1j)))**2
 
-
-        print( (1/len(pos_bulk)) * ssf_all)
-
         np.einsum('i,k->k', k_arr, bulk_lats)
-        stop
         
         # Calculate interparticle separation distances between all reference particles and all neighbors within bulk
         
@@ -852,22 +842,16 @@ class measurement:
         # Position arrays of type A particles in respective phase
         typ0ind = np.where(self.typ==0)[0]
         pos_A=self.pos[typ0ind]                               # Find positions of type 0 particles
-        ang_A=self.ang[typ0ind]
         pos_A_bulk = self.pos[phase_part_dict['bulk']['A']]
-        ang_A_bulk = self.ang[phase_part_dict['bulk']['A']]
         pos_A_int = self.pos[phase_part_dict['int']['A']]
-        ang_A_int = self.ang[phase_part_dict['int']['A']]
         pos_A_gas = self.pos[phase_part_dict['gas']['A']]
         pos_A_dense = self.pos[phase_part_dict['dense']['A']]
 
         # Position arrays of type B particles in respective phase
         typ1ind = np.where(self.typ==1)[0]
         pos_B=self.pos[typ1ind]
-        ang_B=self.ang[typ1ind]
         pos_B_bulk = self.pos[phase_part_dict['bulk']['B']]
-        ang_B_bulk = self.ang[phase_part_dict['bulk']['B']]
         pos_B_int = self.pos[phase_part_dict['int']['B']]
-        ang_B_int = self.ang[phase_part_dict['int']['B']]
         pos_B_gas = self.pos[phase_part_dict['gas']['B']]
         pos_B_dense = self.pos[phase_part_dict['dense']['B']]
 
@@ -1271,26 +1255,18 @@ class measurement:
         # Position and orientation arrays of type A particles in respective phase
         typ0ind = np.where(self.typ==0)[0]
         pos_A=self.pos[typ0ind]                               # Find positions of type 0 particles
-        ang_A=self.ang[typ0ind]
         pos_A_bulk = self.pos[phase_part_dict['bulk']['A']]
-        ang_A_bulk = self.ang[phase_part_dict['bulk']['A']]
         pos_A_int = self.pos[phase_part_dict['int']['A']]
-        ang_A_int = self.ang[phase_part_dict['int']['A']]
         pos_A_gas = self.pos[phase_part_dict['gas']['A']]
         pos_A_dense = self.pos[phase_part_dict['dense']['A']]
-        ang_A_dense = self.ang[phase_part_dict['dense']['A']]
 
         # Position and orientation arrays of type B particles in respective phase
         typ1ind = np.where(self.typ==1)[0]
         pos_B=self.pos[typ1ind]
-        ang_B=self.ang[typ1ind]
         pos_B_bulk = self.pos[phase_part_dict['bulk']['B']]
-        ang_B_bulk = self.ang[phase_part_dict['bulk']['B']]
         pos_B_int = self.pos[phase_part_dict['int']['B']]
-        ang_B_int = self.ang[phase_part_dict['int']['B']]
         pos_B_gas = self.pos[phase_part_dict['gas']['B']]
         pos_B_dense = self.pos[phase_part_dict['dense']['B']]
-        ang_B_dense = self.ang[phase_part_dict['dense']['B']]
 
         # Position and orientation arrays of all particles in respective phase
         pos_bulk = self.pos[phase_part_dict['bulk']['all']]
@@ -1558,32 +1534,58 @@ class measurement:
         # Position and orientation arrays of type A particles in respective phase
         typ0ind = np.where(self.typ==0)[0]
         pos_A=self.pos[typ0ind]                               # Find positions of type 0 particles
-        ang_A=self.ang[typ0ind]
         pos_A_bulk = self.pos[phase_part_dict['bulk']['A']]
-        ang_A_bulk = self.ang[phase_part_dict['bulk']['A']]
         pos_A_int = self.pos[phase_part_dict['int']['A']]
-        ang_A_int = self.ang[phase_part_dict['int']['A']]
         pos_A_gas = self.pos[phase_part_dict['gas']['A']]
         pos_A_dense = self.pos[phase_part_dict['dense']['A']]
-        ang_A_dense = self.ang[phase_part_dict['dense']['A']]
+
+        px_A=self.px[typ0ind]
+        px_A_bulk = self.px[phase_part_dict['bulk']['A']]
+        px_A_int = self.px[phase_part_dict['int']['A']]
+        px_A_gas = self.px[phase_part_dict['gas']['A']]
+        px_A_dense = self.px[phase_part_dict['dense']['A']]
+
+        py_A=self.py[typ0ind]
+        py_A_bulk = self.py[phase_part_dict['bulk']['A']]
+        py_A_int = self.py[phase_part_dict['int']['A']]
+        py_A_gas = self.py[phase_part_dict['gas']['A']]
+        py_A_dense = self.py[phase_part_dict['dense']['A']]
 
         # Position and orientation arrays of type B particles in respective phase
         typ1ind = np.where(self.typ==1)[0]
         pos_B=self.pos[typ1ind]
-        ang_B=self.ang[typ1ind]
         pos_B_bulk = self.pos[phase_part_dict['bulk']['B']]
-        ang_B_bulk = self.ang[phase_part_dict['bulk']['B']]
         pos_B_int = self.pos[phase_part_dict['int']['B']]
-        ang_B_int = self.ang[phase_part_dict['int']['B']]
         pos_B_gas = self.pos[phase_part_dict['gas']['B']]
         pos_B_dense = self.pos[phase_part_dict['dense']['B']]
-        ang_B_dense = self.ang[phase_part_dict['dense']['B']]
+
+        px_B=self.px[typ1ind]
+        px_B_bulk = self.px[phase_part_dict['bulk']['B']]
+        px_B_int = self.px[phase_part_dict['int']['B']]
+        px_B_gas = self.px[phase_part_dict['gas']['B']]
+        px_B_dense = self.px[phase_part_dict['dense']['B']]
+
+        py_B=self.py[typ1ind]
+        py_B_bulk = self.py[phase_part_dict['bulk']['B']]
+        py_B_int = self.py[phase_part_dict['int']['B']]
+        py_B_gas = self.py[phase_part_dict['gas']['B']]
+        py_B_dense = self.py[phase_part_dict['dense']['B']]
 
         # Position and orientation arrays of all particles in respective phase
         pos_bulk = self.pos[phase_part_dict['bulk']['all']]
         pos_int = self.pos[phase_part_dict['int']['all']]
         pos_gas = self.pos[phase_part_dict['gas']['all']]
         pos_dense = self.pos[phase_part_dict['dense']['all']]
+
+        px_bulk = self.px[phase_part_dict['bulk']['all']]
+        px_int = self.px[phase_part_dict['int']['all']]
+        px_gas = self.px[phase_part_dict['gas']['all']]
+        px_dense = self.px[phase_part_dict['dense']['all']]
+
+        py_bulk = self.py[phase_part_dict['bulk']['all']]
+        py_int = self.py[phase_part_dict['int']['all']]
+        py_gas = self.py[phase_part_dict['gas']['all']]
+        py_dense = self.py[phase_part_dict['dense']['all']]
         
         # Neighbor list query arguments to find interacting particles
         query_args = dict(mode='ball', r_min = 0.1, r_max = self.r_cut)#r_max=self.theory_functs.conForRClust(peNet_int-45., self.eps) * 1.0)
@@ -1613,7 +1615,7 @@ class measurement:
                     #Save nearest neighbor information to array
                     AA_bulk_num_neigh = np.append(AA_bulk_num_neigh, len(loc))
                     AA_bulk_neigh_ind = np.append(AA_bulk_neigh_ind, int(i))
-                    AA_bulk_dot = np.append(AA_bulk_dot, np.sum(np.cos(ang_A_bulk[i]-ang_A_dense[AA_bulk_nlist.point_indices[loc]])))
+                    AA_bulk_dot = np.append(AA_bulk_dot, np.sum((px_A_bulk[i]*px_A_dense[AA_bulk_nlist.point_indices[loc]]+py_A_bulk[i]*py_A_dense[AA_bulk_nlist.point_indices[loc]])/(((px_A_bulk[i]**2+py_A_bulk[i]**2)**0.5)*((px_A_dense[AA_bulk_nlist.point_indices[loc]]**2+py_A_dense[AA_bulk_nlist.point_indices[loc]]**2)**0.5))))
             else:
                 #Save nearest neighbor information to array
                 AA_bulk_num_neigh = np.append(AA_bulk_num_neigh, 0)
@@ -1635,7 +1637,7 @@ class measurement:
                     #Save nearest neighbor information to array
                     BA_bulk_num_neigh = np.append(BA_bulk_num_neigh, len(loc))
                     BA_bulk_neigh_ind = np.append(BA_bulk_neigh_ind, int(i))
-                    BA_bulk_dot = np.append(BA_bulk_dot, np.sum(np.cos(ang_A_bulk[i]-ang_B_dense[BA_bulk_nlist.point_indices[loc]])))
+                    BA_bulk_dot = np.append(BA_bulk_dot, np.sum((px_A_bulk[i]*px_B_dense[BA_bulk_nlist.point_indices[loc]]+py_A_bulk[i]*py_B_dense[BA_bulk_nlist.point_indices[loc]])/(((px_A_bulk[i]**2+py_A_bulk[i]**2)**0.5)*((px_B_dense[BA_bulk_nlist.point_indices[loc]]**2+py_B_dense[BA_bulk_nlist.point_indices[loc]]**2)**0.5))))
             else:
                 #Save nearest neighbor information to array
                 BA_bulk_num_neigh = np.append(BA_bulk_num_neigh, 0)
@@ -1656,7 +1658,7 @@ class measurement:
 
                     #Save nearest neighbor information to array
                     AB_bulk_num_neigh = np.append(AB_bulk_num_neigh, len(loc))
-                    AB_bulk_dot = np.append(AB_bulk_dot, np.sum(np.cos(ang_B_bulk[i]-ang_A_dense[AB_bulk_nlist.point_indices[loc]])))
+                    AB_bulk_dot = np.append(AB_bulk_dot, np.sum((px_B_bulk[i]*px_A_dense[AB_bulk_nlist.point_indices[loc]]+py_B_bulk[i]*py_A_dense[AB_bulk_nlist.point_indices[loc]])/(((px_B_bulk[i]**2+py_B_bulk[i]**2)**0.5)*((px_A_dense[AB_bulk_nlist.point_indices[loc]]**2+py_A_dense[AB_bulk_nlist.point_indices[loc]]**2)**0.5))))
                     AB_bulk_neigh_ind = np.append(AB_bulk_neigh_ind, int(i))
             else:
                 #Save nearest neighbor information to array
@@ -1679,7 +1681,7 @@ class measurement:
                     #Save nearest neighbor information to array
                     BB_bulk_num_neigh = np.append(BB_bulk_num_neigh, len(loc))
                     BB_bulk_neigh_ind = np.append(BB_bulk_neigh_ind, int(i))
-                    BB_bulk_dot = np.append(BB_bulk_dot, np.sum(np.cos(ang_B_bulk[i]-ang_B_dense[BB_bulk_nlist.point_indices[loc]])))
+                    BB_bulk_dot = np.append(BB_bulk_dot, np.sum((px_B_bulk[i]*px_B_dense[BB_bulk_nlist.point_indices[loc]]+py_B_bulk[i]*py_B_dense[BB_bulk_nlist.point_indices[loc]])/(((px_B_bulk[i]**2+py_B_bulk[i]**2)**0.5)*((px_B_dense[BB_bulk_nlist.point_indices[loc]]**2+py_B_dense[BB_bulk_nlist.point_indices[loc]]**2)**0.5))))
             else:
                 #Save nearest neighbor information to array
                 BB_bulk_num_neigh = np.append(BB_bulk_num_neigh, 0)
@@ -1712,7 +1714,7 @@ class measurement:
                     #Save nearest neighbor information to array
                     AA_int_num_neigh = np.append(AA_int_num_neigh, len(loc))
                     AA_int_neigh_ind = np.append(AA_int_neigh_ind, int(i))
-                    AA_int_dot = np.append(AA_int_dot, np.sum(np.cos(ang_A_int[i]-ang_A[AA_int_nlist.point_indices[loc]])))
+                    AA_int_dot = np.append(AA_int_dot, np.sum((px_A_int[i]*px_A[AA_int_nlist.point_indices[loc]]+py_A_int[i]*py_A[AA_int_nlist.point_indices[loc]])/(((px_A_int[i]**2+py_A_int[i]**2)**0.5)*((px_A[AA_int_nlist.point_indices[loc]]**2+py_A[AA_int_nlist.point_indices[loc]]**2)**0.5))))
             else:
                 #Save nearest neighbor information to array
                 AA_int_num_neigh = np.append(AA_int_num_neigh, 0)
@@ -1734,7 +1736,7 @@ class measurement:
                     #Save nearest neighbor information to array
                     AB_int_num_neigh = np.append(AB_int_num_neigh, len(loc))
                     AB_int_neigh_ind = np.append(AB_int_neigh_ind, int(i))
-                    AB_int_dot = np.append(AB_int_dot, np.sum(np.cos(ang_B_int[i]-ang_A[AB_int_nlist.point_indices[loc]])))
+                    AB_int_dot = np.append(AB_int_dot, np.sum((px_B_int[i]*px_A[AB_int_nlist.point_indices[loc]]+py_B_int[i]*py_A[AB_int_nlist.point_indices[loc]])/(((px_B_int[i]**2+py_B_int[i]**2)**0.5)*((px_A[AB_int_nlist.point_indices[loc]]**2+py_A[AB_int_nlist.point_indices[loc]]**2)**0.5))))
             else:
                 #Save nearest neighbor information to array
                 AB_int_num_neigh = np.append(AB_int_num_neigh, 0)
@@ -1756,7 +1758,7 @@ class measurement:
                     #Save nearest neighbor information to array
                     BA_int_num_neigh = np.append(BA_int_num_neigh, len(loc))
                     BA_int_neigh_ind = np.append(BA_int_neigh_ind, int(i))
-                    BA_int_dot = np.append(BA_int_dot, np.sum(np.cos(ang_A_int[i]-ang_B[BA_int_nlist.point_indices[loc]])))
+                    BA_int_dot = np.append(BA_int_dot, np.sum((px_A_int[i]*px_B[BA_int_nlist.point_indices[loc]]+py_A_int[i]*py_B[BA_int_nlist.point_indices[loc]])/(((px_A_int[i]**2+py_A_int[i]**2)**0.5)*((px_B[BA_int_nlist.point_indices[loc]]**2+py_B[BA_int_nlist.point_indices[loc]]**2)**0.5))))
             else:
                 #Save nearest neighbor information to array
                 BA_int_num_neigh = np.append(BA_int_num_neigh, 0)
@@ -1779,7 +1781,7 @@ class measurement:
                     # Save nearest neighbor information to array
                     BB_int_num_neigh = np.append(BB_int_num_neigh, len(loc))
                     BB_int_neigh_ind = np.append(BB_int_neigh_ind, int(i))
-                    BB_int_dot = np.append(BB_int_dot, np.sum(np.cos(ang_B_int[i]-ang_B[BB_int_nlist.point_indices[loc]])))
+                    BB_int_dot = np.append(BB_int_dot, np.sum((px_B_int[i]*px_B[BB_int_nlist.point_indices[loc]]+py_B_int[i]*py_B[BB_int_nlist.point_indices[loc]])/(((px_B_int[i]**2+py_B_int[i]**2)**0.5)*((px_B[BB_int_nlist.point_indices[loc]]**2+py_B[BB_int_nlist.point_indices[loc]]**2)**0.5))))
             else:
                 # Save nearest neighbor information to array
                 BB_int_num_neigh = np.append(BB_int_num_neigh, 0)
@@ -1990,26 +1992,18 @@ class measurement:
         # Position and orientation arrays of type A particles in respective phase
         typ0ind = np.where(self.typ==0)[0]
         pos_A=self.pos[typ0ind]                               # Find positions of type 0 particles
-        ang_A=self.ang[typ0ind]
         pos_A_bulk = self.pos[phase_part_dict['bulk']['A']]
-        ang_A_bulk = self.ang[phase_part_dict['bulk']['A']]
         pos_A_int = self.pos[phase_part_dict['int']['A']]
-        ang_A_int = self.ang[phase_part_dict['int']['A']]
         pos_A_gas = self.pos[phase_part_dict['gas']['A']]
         pos_A_dense = self.pos[phase_part_dict['dense']['A']]
-        ang_A_dense = self.ang[phase_part_dict['dense']['A']]
 
         # Position and orientation arrays of type B particles in respective phase
         typ1ind = np.where(self.typ==1)[0]
         pos_B=self.pos[typ1ind]
-        ang_B=self.ang[typ1ind]
         pos_B_bulk = self.pos[phase_part_dict['bulk']['B']]
-        ang_B_bulk = self.ang[phase_part_dict['bulk']['B']]
         pos_B_int = self.pos[phase_part_dict['int']['B']]
-        ang_B_int = self.ang[phase_part_dict['int']['B']]
         pos_B_gas = self.pos[phase_part_dict['gas']['B']]
         pos_B_dense = self.pos[phase_part_dict['dense']['B']]
-        ang_B_dense = self.ang[phase_part_dict['dense']['B']]
 
         # Position and orientation arrays of all particles in respective phase
         pos_bulk = self.pos[phase_part_dict['bulk']['all']]
@@ -2094,8 +2088,6 @@ class measurement:
         #Initiate empty arrays for finding nearest B neighboring dense particles surrounding type B bulk particles
         BB_gas_num_neigh = np.zeros(len(pos_B_gas))
 
-        print('total_density')
-        print(len(pos_gas)/gas_area)
         # Search distance for neighbors in local density calculation
         rad_dist = [0, self.r_cut, 2*self.r_cut, 3*self.r_cut, 4*self.r_cut, 5*self.r_cut]
         
@@ -2328,26 +2320,18 @@ class measurement:
         # Position and orientation arrays of type A particles in respective phase
         typ0ind = np.where(self.typ==0)[0]
         pos_A=self.pos[typ0ind]                               # Find positions of type 0 particles
-        ang_A=self.ang[typ0ind]
         pos_A_bulk = self.pos[phase_part_dict['bulk']['A']]
-        ang_A_bulk = self.ang[phase_part_dict['bulk']['A']]
         pos_A_int = self.pos[phase_part_dict['int']['A']]
-        ang_A_int = self.ang[phase_part_dict['int']['A']]
         pos_A_gas = self.pos[phase_part_dict['gas']['A']]
         pos_A_dense = self.pos[phase_part_dict['dense']['A']]
-        ang_A_dense = self.ang[phase_part_dict['dense']['A']]
 
         # Position and orientation arrays of type B particles in respective phase
         typ1ind = np.where(self.typ==1)[0]
         pos_B=self.pos[typ1ind]
-        ang_B=self.ang[typ1ind]
         pos_B_bulk = self.pos[phase_part_dict['bulk']['B']]
-        ang_B_bulk = self.ang[phase_part_dict['bulk']['B']]
         pos_B_int = self.pos[phase_part_dict['int']['B']]
-        ang_B_int = self.ang[phase_part_dict['int']['B']]
         pos_B_gas = self.pos[phase_part_dict['gas']['B']]
         pos_B_dense = self.pos[phase_part_dict['dense']['B']]
-        ang_B_dense = self.ang[phase_part_dict['dense']['B']]
 
         # Position and orientation arrays of all particles in respective phase
         pos_bulk = self.pos[phase_part_dict['bulk']['all']]
@@ -4531,26 +4515,18 @@ class measurement:
         # Position and orientation arrays of type A particles in respective phase
         typ0ind = np.where(self.typ==0)[0]
         pos_A=self.pos[typ0ind]                               # Find positions of type 0 particles
-        ang_A=self.ang[typ0ind]
         pos_A_bulk = self.pos[phase_part_dict['bulk']['A']]
-        ang_A_bulk = self.ang[phase_part_dict['bulk']['A']]
         pos_A_int = self.pos[phase_part_dict['int']['A']]
-        ang_A_int = self.ang[phase_part_dict['int']['A']]
         pos_A_gas = self.pos[phase_part_dict['gas']['A']]
         pos_A_dense = self.pos[phase_part_dict['dense']['A']]
-        ang_A_dense = self.ang[phase_part_dict['dense']['A']]
 
         # Position and orientation arrays of type B particles in respective phase
         typ1ind = np.where(self.typ==1)[0]
         pos_B=self.pos[typ1ind]
-        ang_B=self.ang[typ1ind]
         pos_B_bulk = self.pos[phase_part_dict['bulk']['B']]
-        ang_B_bulk = self.ang[phase_part_dict['bulk']['B']]
         pos_B_int = self.pos[phase_part_dict['int']['B']]
-        ang_B_int = self.ang[phase_part_dict['int']['B']]
         pos_B_gas = self.pos[phase_part_dict['gas']['B']]
         pos_B_dense = self.pos[phase_part_dict['dense']['B']]
-        ang_B_dense = self.ang[phase_part_dict['dense']['B']]
 
         # Position and orientation arrays of all particles in respective phase
         pos_bulk = self.pos[phase_part_dict['bulk']['all']]
@@ -4659,10 +4635,6 @@ class measurement:
         print ("Following is Breadth First Traversal"
                         " (starting from vertex 2)")
         #g.BFS(11249)
-        print(AA_path_length)
-        print(np.mean(AA_path_length))
-        print(np.min(AA_path_length))
-        print(np.max(AA_path_length))
 
         p0_AA_bulk = len(np.where(AA_bulk_num_neigh==0)[0])/len(pos_A_bulk)
         p1_AA_bulk = len(np.where(AA_bulk_num_neigh==1)[0])/len(pos_A_bulk)
@@ -5004,26 +4976,18 @@ class measurement:
         # Position and orientation arrays of type A particles in respective phase
         typ0ind = np.where(self.typ==0)[0]
         pos_A=self.pos[typ0ind]                               # Find positions of type 0 particles
-        ang_A=self.ang[typ0ind]
         pos_A_bulk = self.pos[phase_part_dict['bulk']['A']]
-        ang_A_bulk = self.ang[phase_part_dict['bulk']['A']]
         pos_A_int = self.pos[phase_part_dict['int']['A']]
-        ang_A_int = self.ang[phase_part_dict['int']['A']]
         pos_A_gas = self.pos[phase_part_dict['gas']['A']]
         pos_A_dense = self.pos[phase_part_dict['dense']['A']]
-        ang_A_dense = self.ang[phase_part_dict['dense']['A']]
 
         # Position and orientation arrays of type B particles in respective phase
         typ1ind = np.where(self.typ==1)[0]
         pos_B=self.pos[typ1ind]
-        ang_B=self.ang[typ1ind]
         pos_B_bulk = self.pos[phase_part_dict['bulk']['B']]
-        ang_B_bulk = self.ang[phase_part_dict['bulk']['B']]
         pos_B_int = self.pos[phase_part_dict['int']['B']]
-        ang_B_int = self.ang[phase_part_dict['int']['B']]
         pos_B_gas = self.pos[phase_part_dict['gas']['B']]
         pos_B_dense = self.pos[phase_part_dict['dense']['B']]
-        ang_B_dense = self.ang[phase_part_dict['dense']['B']]
 
         # Position and orientation arrays of all particles in respective phase
         pos_bulk = self.pos[phase_part_dict['bulk']['all']]

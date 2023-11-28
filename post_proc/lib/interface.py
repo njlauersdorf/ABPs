@@ -38,7 +38,7 @@ import utility
 
 # Class of interface identification functions
 class interface:
-    def __init__(self, area_frac_dict, align_dict, part_dict, press_dict, lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, parFrac, eps, typ, ang):
+    def __init__(self, area_frac_dict, align_dict, part_dict, press_dict, lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, parFrac, eps, typ, px, py):
 
         # Array (NBins_x, NBins_y) of average alignment of all particles per bin in either direction ('x', 'y', or 'mag'nitude)
         self.align_x = align_dict['bin']['all']['x']
@@ -140,7 +140,8 @@ class interface:
         self.typ = typ
 
         # Array (partNum) of particle orientations [-pi,pi]
-        self.ang = ang
+        self.px = px
+        self.py = py
 
     def det_surface_points(self, phase_dict, int_dict, int_comp_dict):
         '''
@@ -2040,38 +2041,35 @@ class interface:
                                 if len(self.binParts[ix][iy])>0:
 
                                     for h in range(0, len(self.binParts[ix][iy])):
-                                        #Calculate x and y orientation of active force
-                                        px = np.sin(self.ang[self.binParts[ix][iy][h]])
-                                        py = -np.cos(self.ang[self.binParts[ix][iy][h]])
 
                                         #Calculate alignment towards CoM
                                         if interior_exist == 1:
                                             if (difr_short == difr_bub) | ( exterior_radius<=interior_radius):
-                                                x_dot_p = (-x_norm_unitv * px)
-                                                y_dot_p = (-y_norm_unitv * py)
+                                                x_dot_p = (-x_norm_unitv * self.px[self.binParts[ix][iy][h]])
+                                                y_dot_p = (-y_norm_unitv * self.py[self.binParts[ix][iy][h]])
                                                 r_dot_p = x_dot_p + y_dot_p
                                             else:
-                                                x_dot_p = (x_norm_unitv * px)
-                                                y_dot_p = (y_norm_unitv * py)
+                                                x_dot_p = (x_norm_unitv * self.px[self.binParts[ix][iy][h]])
+                                                y_dot_p = (y_norm_unitv * self.py[self.binParts[ix][iy][h]])
                                                 r_dot_p = x_dot_p + y_dot_p
                                         else:
                                             if (difr_short == difr_bub):
-                                                x_dot_p = (-x_norm_unitv * px)
-                                                y_dot_p = (-y_norm_unitv * py)
+                                                x_dot_p = (-x_norm_unitv * self.px[self.binParts[ix][iy][h]])
+                                                y_dot_p = (-y_norm_unitv * self.py[self.binParts[ix][iy][h]])
                                                 r_dot_p = x_dot_p + y_dot_p
                                             else:  
-                                                x_dot_p = (x_norm_unitv * px)
-                                                y_dot_p = (y_norm_unitv * py)
+                                                x_dot_p = (x_norm_unitv * self.px[self.binParts[ix][iy][h]])
+                                                y_dot_p = (y_norm_unitv * self.py[self.binParts[ix][iy][h]])
                                                 r_dot_p = x_dot_p + y_dot_p
 
-                                        x_dot_p_trad = (-x_norm_unitv_trad * px)
-                                        y_dot_p_trad = (-y_norm_unitv_trad * py)
+                                        x_dot_p_trad = (-x_norm_unitv_trad * self.px[self.binParts[ix][iy][h]])
+                                        y_dot_p_trad = (-y_norm_unitv_trad * self.py[self.binParts[ix][iy][h]])
                                         r_dot_p_trad = x_dot_p_trad + y_dot_p_trad
                                         #Sum x,y orientation over each bin
 
                                         new_align[ix][iy] += r_dot_p
-                                        new_align_x[ix][iy] += px
-                                        new_align_y[ix][iy] += py
+                                        new_align_x[ix][iy] += self.px[self.binParts[ix][iy][h]]
+                                        new_align_y[ix][iy] += self.py[self.binParts[ix][iy][h]]
                                         new_align_num[ix][iy]+= 1
                                         new_align_trad[ix][iy] += r_dot_p_trad
                                         new_align_trad_x[ix][iy] += x_dot_p
@@ -2161,27 +2159,24 @@ class interface:
 
                                 if len(self.binParts[ix][iy])>0:
                                     for h in range(0, len(self.binParts[ix][iy])):
-
-                                        px = np.sin(self.ang[self.binParts[ix][iy][h]])
-                                        py = -np.cos(self.ang[self.binParts[ix][iy][h]])
                                         #Calculate alignment towards CoM
 
                                         if interior_exist == 1:
                                             if (difr_short == difr_bub) | ( exterior_radius>interior_radius):
-                                                x_dot_p = (-x_norm_unitv * px)
-                                                y_dot_p = (-y_norm_unitv * py)
+                                                x_dot_p = (-x_norm_unitv * self.px[self.binParts[ix][iy][h]])
+                                                y_dot_p = (-y_norm_unitv * self.py[self.binParts[ix][iy][h]])
                                                 r_dot_p = x_dot_p + y_dot_p
                                             else:
-                                                x_dot_p = (x_norm_unitv * px)
-                                                y_dot_p = (y_norm_unitv * py)
+                                                x_dot_p = (x_norm_unitv * self.px[self.binParts[ix][iy][h]])
+                                                y_dot_p = (y_norm_unitv * self.py[self.binParts[ix][iy][h]])
                                                 r_dot_p = x_dot_p + y_dot_p
                                         else:
-                                            x_dot_p = (x_norm_unitv * px)
-                                            y_dot_p = (y_norm_unitv * py)
+                                            x_dot_p = (x_norm_unitv * self.px[self.binParts[ix][iy][h]])
+                                            y_dot_p = (y_norm_unitv * self.py[self.binParts[ix][iy][h]])
                                             r_dot_p = x_dot_p + y_dot_p
 
-                                        x_dot_p_trad = (-x_norm_unitv_trad * px)
-                                        y_dot_p_trad = (-y_norm_unitv_trad * py)
+                                        x_dot_p_trad = (-x_norm_unitv_trad * self.px[self.binParts[ix][iy][h]])
+                                        y_dot_p_trad = (-y_norm_unitv_trad * self.py[self.binParts[ix][iy][h]])
                                         r_dot_p_trad = x_dot_p_trad + y_dot_p_trad
 
 
@@ -2189,8 +2184,8 @@ class interface:
                                         new_align[ix][iy] += r_dot_p
                                         new_align_x[ix][iy] += x_dot_p
                                         new_align_y[ix][iy] += y_dot_p
-                                        new_align_x[ix][iy] += px
-                                        new_align_y[ix][iy] += py
+                                        new_align_x[ix][iy] += self.px[self.binParts[ix][iy][h]]
+                                        new_align_y[ix][iy] += self.py[self.binParts[ix][iy][h]]
                                         new_align_num[ix][iy]+= 1
                                         new_align_trad[ix][iy] += r_dot_p_trad
                                         new_align_trad_x[ix][iy] += x_dot_p_trad
@@ -2448,28 +2443,25 @@ class interface:
                             if len(self.binParts[ix][iy])>0:
                                 #Loop over all particles in bin
                                 for h in range(0, len(self.binParts[ix][iy])):
-                                    #Calculate x and y orientation of active force
-                                    px = np.sin(self.ang[self.binParts[ix][iy][h]])
-                                    py = -np.cos(self.ang[self.binParts[ix][iy][h]])
 
                                     #Calculate alignment of single particle with nearest surface
 
                                     if (interior_bin_short == 1) | (difr_short == difr_bub):
-                                        x_dot_p = (-x_norm_unitv * px)
-                                        y_dot_p = (-y_norm_unitv * py)
+                                        x_dot_p = (-x_norm_unitv * self.px[self.binParts[ix][iy][h]])
+                                        y_dot_p = (-y_norm_unitv * self.py[self.binParts[ix][iy][h]])
                                     elif exterior_bin_short == 1:
-                                        x_dot_p = (x_norm_unitv * px)
-                                        y_dot_p = (y_norm_unitv * py)
+                                        x_dot_p = (x_norm_unitv * self.px[self.binParts[ix][iy][h]])
+                                        y_dot_p = (y_norm_unitv * self.py[self.binParts[ix][iy][h]])
                                     else:
-                                        x_dot_p = (-x_norm_unitv * px)
-                                        y_dot_p = (-y_norm_unitv * py)
+                                        x_dot_p = (-x_norm_unitv * self.px[self.binParts[ix][iy][h]])
+                                        y_dot_p = (-y_norm_unitv * self.py[self.binParts[ix][iy][h]])
 
 
                                     r_dot_p = x_dot_p + y_dot_p
 
                                     #Calculate alignment of single particle with cluster's Center of mass
-                                    x_dot_p_trad = (-x_norm_unitv_trad * px)
-                                    y_dot_p_trad =  (-y_norm_unitv_trad * py)
+                                    x_dot_p_trad = (-x_norm_unitv_trad * self.px[self.binParts[ix][iy][h]])
+                                    y_dot_p_trad =  (-y_norm_unitv_trad * self.py[self.binParts[ix][iy][h]])
                                     r_dot_p_trad = x_dot_p_trad + y_dot_p_trad
 
                                     #Save alignment of each particle
@@ -2738,29 +2730,25 @@ class interface:
                         #Loop over particles in reference bin
                         for h in range(0, len(self.binParts[ix][iy])):
 
-                            #Calculate x and y orientation of reference particle's active force
-                            px = np.sin(self.ang[self.binParts[ix][iy][h]])
-                            py = -np.cos(self.ang[self.binParts[ix][iy][h]])
-
                             #If nearest surface is exterior surface, calculate alignment with that surface
                             if exterior_bin_short == 1:
-                                Surface_x_dot_p = (-Surface_x_norm_unitv * px)
-                                Surface_y_dot_p = (-Surface_y_norm_unitv * py)
+                                Surface_x_dot_p = (-Surface_x_norm_unitv * self.px[self.binParts[ix][iy][h]])
+                                Surface_y_dot_p = (-Surface_y_norm_unitv * self.py[self.binParts[ix][iy][h]])
 
                             #If nearest surface is interior surface, calculate alignment with that surface
                             elif interior_bin_short == 1:
-                                Surface_x_dot_p = (Surface_x_norm_unitv * px)
-                                Surface_y_dot_p = (Surface_y_norm_unitv * px)
+                                Surface_x_dot_p = (Surface_x_norm_unitv * self.px[self.binParts[ix][iy][h]])
+                                Surface_y_dot_p = (Surface_y_norm_unitv * self.py[self.binParts[ix][iy][h]])
                             else:
-                                Surface_x_dot_p = (-CoM_x_norm_unitv * px)
-                                Surface_y_dot_p = (-CoM_y_norm_unitv * py)
+                                Surface_x_dot_p = (-CoM_x_norm_unitv * self.px[self.binParts[ix][iy][h]])
+                                Surface_y_dot_p = (-CoM_y_norm_unitv * self.py[self.binParts[ix][iy][h]])
 
                             # Total alignment with nearest surface
                             Surface_r_dot_p = Surface_x_dot_p + Surface_y_dot_p
 
                             #Calculate alignment towards largest cluster's CoM (or middle of simulation box if no cluster present)
-                            CoM_x_dot_p = (-CoM_x_norm_unitv * px)
-                            CoM_y_dot_p = (-CoM_y_norm_unitv * py)
+                            CoM_x_dot_p = (-CoM_x_norm_unitv * self.px[self.binParts[ix][iy][h]])
+                            CoM_y_dot_p = (-CoM_y_norm_unitv * self.py[self.binParts[ix][iy][h]])
                             CoM_r_dot_p= CoM_x_dot_p + CoM_y_dot_p
 
                             # Save alignment of particle with nearest surface

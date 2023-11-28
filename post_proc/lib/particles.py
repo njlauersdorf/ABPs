@@ -30,7 +30,7 @@ import theory, utility, plotting_utility
 # Class of individual particle property measurements
 class particle_props:
 
-    def __init__(self, lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, eps, typ, pos, ang):
+    def __init__(self, lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, eps, typ, pos, px, py):
 
         # Initialize theory functions for call back later
         theory_functs = theory.theory()
@@ -89,7 +89,8 @@ class particle_props:
         self.pos = pos
 
         # Array (partNum) of particle orientations
-        self.ang = ang
+        self.px = px
+        self.py = py
 
         # Initialize theory functions for call back later
         self.theory_functs = theory.theory()
@@ -173,8 +174,8 @@ class particle_props:
             y_unitv = (dify) / difr
 
             #Calculate x and y orientation of active force
-            px = np.sin(self.ang[h])
-            py = -np.cos(self.ang[h])
+            px = self.px[h]
+            py = self.py[h]
 
             #Calculate alignment towards CoM
             r_dot_p = (-x_unitv * px) + (-y_unitv * py)
@@ -219,8 +220,8 @@ class particle_props:
             y_unitv = (dify) / difr
 
             #Calculate x and y orientation of active force
-            px = np.sin(self.ang[h])
-            py = -np.cos(self.ang[h])
+            px = self.px[h]
+            py = self.py[h]
 
             #Calculate alignment towards CoM
             r_dot_p = (-x_unitv * px) + (-y_unitv * py)
@@ -400,8 +401,8 @@ class particle_props:
             y_norm_unitv = (dify) / difr
 
             #Calculate x and y orientation of active force
-            px = np.sin(self.ang[h])
-            py = -np.cos(self.ang[h])
+            px = self.px[h]
+            py = self.py[h]
 
             #Calculate alignment towards CoM
             r_dot_p = (-x_norm_unitv * px) + (-y_norm_unitv * py)
@@ -954,9 +955,7 @@ class particle_props:
                 elif self.typ[h]==1:
                     gas_A_val += (np.abs(vel[h])-gas_B_vel_avg)**2
 
-        print(gas_B_num)
-        print(gas_A_num)
-        stop
+
         # Average sum of bulk deviations divided by number of bulk particles of respective type ('all', 'A', or 'B')
         if bulk_num > 0:
             bulk_vel_std = (bulk_all_val/bulk_num)**0.5
@@ -1005,9 +1004,6 @@ class particle_props:
             gas_A_vel_std = 0
             gas_B_vel_std = 0
 
-        print(gas_B_vel_std)
-        print(gas_A_vel_std)
-        stop
 
         # Dictionary containing the average and standard deviation of velocity
         # of each phase and each respective type ('all', 'A', or 'B')
@@ -1516,11 +1512,9 @@ class particle_props:
 
         vel_A = vel_plot_dict['A']
         pos_A=self.pos[slow_ids]                               # Find positions of type 0 particles
-        ang_A=self.ang[slow_ids]
 
         vel_B = vel_plot_dict['B']
         pos_B=self.pos[fast_ids]                               # Find positions of type 0 particles
-        ang_B=self.ang[fast_ids]
 
         
         # Neighbor list query arguments to find interacting particles
@@ -1587,7 +1581,7 @@ class particle_props:
 
                     BB_neigh_ind = np.append(BB_neigh_ind, int(i))
                     
-                    BB_dot = np.append(BB_dot, np.sum(np.cos(ang_B[i]-ang_B[BB_nlist.point_indices[loc]])))
+                    BB_dot = np.append(BB_dot, np.sum((px_B[i]*px_B[BB_nlist.point_indices[loc]]+py_A[i]*py_B[BB_nlist.point_indices[loc]])/(((px_B[i]**2+py_B[i]**2)**0.5)*((px_B[BB_nlist.point_indices[loc]]**2+py_B[BB_nlist.point_indices[loc]]**2)**0.5))))
 
                     ang_rel = (vel_B['x'][i] * vel_B['x'][BB_nlist.point_indices[loc]] + vel_B['y'][i] * vel_B['y'][BB_nlist.point_indices[loc]])/(vel_B['mag'][i] * vel_B['mag'][BB_nlist.point_indices[loc]])
 
@@ -1660,7 +1654,7 @@ class particle_props:
 
                     AB_neigh_ind = np.append(AB_neigh_ind, int(i))
 
-                    AB_dot = np.append(AB_dot, np.sum(np.cos(ang_B[i]-ang_A[AB_nlist.point_indices[loc]])))
+                    AB_dot = np.append(AB_dot, np.sum((px_B[i]*px_A[AB_nlist.point_indices[loc]]+py_B[i]*py_A[AB_nlist.point_indices[loc]])/(((px_B[i]**2+py_B[i]**2)**0.5)*((px_A[AB_nlist.point_indices[loc]]**2+py_A[AB_nlist.point_indices[loc]]**2)**0.5))))
 
                     ang_rel = (vel_B['x'][i] * vel_A['x'][AB_nlist.point_indices[loc]] + vel_B['y'][i] * vel_A['y'][AB_nlist.point_indices[loc]])/(vel_B['mag'][i] * vel_A['mag'][AB_nlist.point_indices[loc]])
 
@@ -1734,7 +1728,7 @@ class particle_props:
 
                     BA_neigh_ind = np.append(BA_neigh_ind, int(i))
 
-                    BA_dot = np.append(BA_dot, np.sum(np.cos(ang_A[i]-ang_B[BA_nlist.point_indices[loc]])))
+                    BA_dot = np.append(BA_dot, np.sum((px_A[i]*px_B[BA_nlist.point_indices[loc]]+py_A[i]*py_B[BA_nlist.point_indices[loc]])/(((px_A[i]**2+py_A[i]**2)**0.5)*((px_B[BA_nlist.point_indices[loc]]**2+py_B[BA_nlist.point_indices[loc]]**2)**0.5))))
 
             else:
                 #Save nearest neighbor information to array
@@ -1804,7 +1798,7 @@ class particle_props:
 
                     AA_neigh_ind = np.append(AA_neigh_ind, int(i))
 
-                    AA_dot = np.append(AA_dot, np.sum(np.cos(ang_A[i]-ang_A[AA_nlist.point_indices[loc]])))
+                    AA_dot = np.append(AA_dot, np.sum((px_A[i]*px_A[AA_nlist.point_indices[loc]]+py_A[i]*py_A[AA_nlist.point_indices[loc]])/(((px_A[i]**2+py_A[i]**2)**0.5)*((px_A[AA_nlist.point_indices[loc]]**2+py_A[AA_nlist.point_indices[loc]]**2)**0.5))))
 
                     ang_rel = (vel_A['x'][i] * vel_A['x'][AA_nlist.point_indices[loc]] + vel_A['y'][i] * vel_A['y'][AA_nlist.point_indices[loc]])/(vel_A['mag'][i] * vel_A['mag'][AA_nlist.point_indices[loc]])
 
@@ -1893,12 +1887,10 @@ class particle_props:
         # Position and orientation arrays of type A particles in respective phase
         typ0ind = np.where(self.typ==0)[0]
         pos_A=self.pos[typ0ind]                               # Find positions of type 0 particles
-        ang_A=self.ang[typ0ind]
 
         # Position and orientation arrays of type B particles in respective phase
         typ1ind = np.where(self.typ==1)[0]
         pos_B=self.pos[typ1ind]
-        ang_B=self.ang[typ1ind]
 
         #Initiate empty arrays for calculating mean and standard deviation of local density
         #of all neighbor particles around A reference particles
@@ -2184,12 +2176,10 @@ class particle_props:
         # Position and orientation arrays of type A particles in respective phase
         typ0ind = np.where(self.typ==0)[0]
         pos_A=self.pos[typ0ind]                               # Find positions of type 0 particles
-        ang_A=self.ang[typ0ind]
 
         # Position and orientation arrays of type B particles in respective phase
         typ1ind = np.where(self.typ==1)[0]
         pos_B=self.pos[typ1ind]
-        ang_B=self.ang[typ1ind]
 
         #Initiate empty arrays for calculating mean and standard deviation of local density
         #of all neighbor particles around A reference particles
@@ -2888,10 +2878,7 @@ class particle_props:
             except:
                 com_x = all_surface_measurements[key]['interior']['com']['x']
                 com_y = all_surface_measurements[key]['interior']['com']['y']
-        
-            print(com_x)
-            print(com_y)
-        stop
+
         # Instantiate empty array (partNum) containing the average active force alignment
         # with the nearest interface surface normal
         part_align = method2_align_dict['part']['align']
@@ -3106,8 +3093,6 @@ class particle_props:
 
         int_ids = int_dict['bin']
         for m in range(0, len(sep_surface_dict)):
-            print('test')
-            print(m)
             key = 'surface id ' + str(int(int_comp_dict['ids'][m]))
             key2 = 'surface ' + str(int(int_comp_dict['ids'][m]))
 
@@ -3315,8 +3300,6 @@ class particle_props:
         com_radial_dict_fa = {}
         int_ids = int_dict['bin']
         for m in range(0, len(sep_surface_dict)):
-            print('test')
-            print(m)
             key = 'surface id ' + str(int(int_comp_dict['ids'][m]))
             key2 = 'surface ' + str(int(int_comp_dict['ids'][m]))
 
@@ -3640,8 +3623,6 @@ class particle_props:
         com_radial_dict_fa = {}
         int_ids = int_dict['bin']
         for m in range(0, len(sep_surface_dict)):
-            print('test')
-            print(m)
             key = 'surface id ' + str(int(int_comp_dict['ids'][m]))
             key2 = 'surface ' + str(int(int_comp_dict['ids'][m]))
 
@@ -4125,12 +4106,14 @@ class particle_props:
         # Position and orientation arrays of type A particles in respective phase
         typ0ind = np.where(self.typ==0)[0]
         pos_A=self.pos[typ0ind]                               # Find positions of type 0 particles
-        ang_A=self.ang[typ0ind]
+        px_A=self.px[typ0ind]
+        py_A=self.py[typ0ind]
 
         # Position and orientation arrays of type B particles in respective phase
         typ1ind = np.where(self.typ==1)[0]
         pos_B=self.pos[typ1ind]
-        ang_B=self.ang[typ1ind]
+        px_B=self.px[typ1ind]
+        py_B=self.py[typ1ind]
         
         # Neighbor list query arguments to find interacting particles
         query_args = dict(mode='ball', r_min = 0.1, r_max = self.r_cut)#r_max=self.theory_functs.conForRClust(peNet_int-45., self.eps) * 1.0)
@@ -4160,7 +4143,9 @@ class particle_props:
                     #Save nearest neighbor information to array
                     AA_num_neigh = np.append(AA_num_neigh, len(loc))
                     AA_neigh_ind = np.append(AA_neigh_ind, int(i))
-                    AA_dot = np.append(AA_dot, np.sum(np.cos(ang_A[i]-ang_A[AA_nlist.point_indices[loc]])))
+
+                    
+                    AA_dot = np.append(AA_dot, np.sum((px_A[i]*px_A[AA_nlist.point_indices[loc]]+py_A[i]*py_A[AA_nlist.point_indices[loc]])/(((px_A[i]**2+py_A[i]**2)**0.5)*((px_A[AA_nlist.point_indices[loc]]**2+py_A[AA_nlist.point_indices[loc]]**2)**0.5))))
             else:
                 #Save nearest neighbor information to array
                 AA_num_neigh = np.append(AA_num_neigh, 0)
@@ -4181,7 +4166,7 @@ class particle_props:
                     #Save nearest neighbor information to array
                     BA_num_neigh = np.append(BA_num_neigh, len(loc))
                     BA_neigh_ind = np.append(BA_neigh_ind, int(i))
-                    BA_dot = np.append(BA_dot, np.sum(np.cos(ang_A[i]-ang_B[BA_nlist.point_indices[loc]])))
+                    BA_dot = np.append(BA_dot, np.sum((px_A[i]*px_B[BA_nlist.point_indices[loc]]+py_A[i]*py_B[BA_nlist.point_indices[loc]])/(((px_A[i]**2+py_A[i]**2)**0.5)*((px_B[BA_nlist.point_indices[loc]]**2+py_B[BA_nlist.point_indices[loc]]**2)**0.5))))
             else:
                 #Save nearest neighbor information to array
                 BA_num_neigh = np.append(BA_num_neigh, 0)
@@ -4202,7 +4187,7 @@ class particle_props:
 
                     #Save nearest neighbor information to array
                     AB_num_neigh = np.append(AB_num_neigh, len(loc))
-                    AB_dot = np.append(AB_dot, np.sum(np.cos(ang_B[i]-ang_A[AB_nlist.point_indices[loc]])))
+                    AB_dot = np.append(AB_dot, np.sum((px_B[i]*px_A[AB_nlist.point_indices[loc]]+py_B[i]*py_A[AB_nlist.point_indices[loc]])/(((px_B[i]**2+py_B[i]**2)**0.5)*((px_A[AB_nlist.point_indices[loc]]**2+py_A[AB_nlist.point_indices[loc]]**2)**0.5))))
                     AB_neigh_ind = np.append(AB_neigh_ind, int(i))
             else:
                 #Save nearest neighbor information to array
@@ -4225,7 +4210,7 @@ class particle_props:
                     #Save nearest neighbor information to array
                     BB_num_neigh = np.append(BB_num_neigh, len(loc))
                     BB_neigh_ind = np.append(BB_neigh_ind, int(i))
-                    BB_dot = np.append(BB_dot, np.sum(np.cos(ang_B[i]-ang_B[BB_nlist.point_indices[loc]])))
+                    BB_dot = np.append(BB_dot, np.sum((px_B[i]*px_B[BB_nlist.point_indices[loc]]+py_B[i]*py_B[BB_nlist.point_indices[loc]])/(((px_B[i]**2+py_B[i]**2)**0.5)*((px_B[BB_nlist.point_indices[loc]]**2+py_B[BB_nlist.point_indices[loc]]**2)**0.5))))
             else:
                 #Save nearest neighbor information to array
                 BB_num_neigh = np.append(BB_num_neigh, 0)
