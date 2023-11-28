@@ -933,7 +933,7 @@ class particle_props:
                 if self.typ[h]==0:
                     bulk_A_val += (np.abs(vel[h])-bulk_A_vel_avg)**2
                 elif self.typ[h]==1:
-                    bulk_A_val += (np.abs(vel[h])-bulk_B_vel_avg)**2
+                    bulk_B_val += (np.abs(vel[h])-bulk_B_vel_avg)**2
 
             # If interface, sum to interface deviations from mean of respective type ('all', 'A', or 'B')
             elif phasePart[h] == 1:
@@ -943,7 +943,7 @@ class particle_props:
                 if self.typ[h]==0:
                     int_A_val += (np.abs(vel[h])-int_A_vel_avg)**2
                 elif self.typ[h]==1:
-                    int_A_val += (np.abs(vel[h])-int_B_vel_avg)**2
+                    int_B_val += (np.abs(vel[h])-int_B_vel_avg)**2
 
             # If gas, sum to gas deviations from mean of respective type ('all', 'A', or 'B')
             elif phasePart[h] == 2:
@@ -953,7 +953,7 @@ class particle_props:
                 if self.typ[h]==0:
                     gas_A_val += (np.abs(vel[h])-gas_A_vel_avg)**2
                 elif self.typ[h]==1:
-                    gas_A_val += (np.abs(vel[h])-gas_B_vel_avg)**2
+                    gas_B_val += (np.abs(vel[h])-gas_B_vel_avg)**2
 
 
         # Average sum of bulk deviations divided by number of bulk particles of respective type ('all', 'A', or 'B')
@@ -971,7 +971,7 @@ class particle_props:
             bulk_vel_std = 0
             bulk_A_vel_std = 0
             bulk_B_vel_std = 0
-
+        
         # Average sum of interface deviations divided by number of interface particles of respective type ('all', 'A', or 'B')
         if int_num > 0:
             int_vel_std = (int_all_val/int_num)**0.5
