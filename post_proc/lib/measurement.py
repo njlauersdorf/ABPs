@@ -1956,8 +1956,56 @@ class measurement:
         allall_dense_pos_x = np.append(allall_bulk_pos_x, allall_int_pos_x)
         allall_dense_pos_y = np.append(allall_bulk_pos_y, allall_int_pos_y)
 
+        A_def_id = np.where(allA_bulk_num_neigh>0)[0]
+        B_def_id = np.where(allB_bulk_num_neigh>0)[0]
+
+        AA_prob_bulk=AA_bulk_num_neigh[A_def_id]/allA_bulk_num_neigh[A_def_id]
+        AB_prob_bulk=AB_bulk_num_neigh[B_def_id]/allB_bulk_num_neigh[B_def_id]
+        BA_prob_bulk=BA_bulk_num_neigh[A_def_id]/allA_bulk_num_neigh[A_def_id]
+        BB_prob_bulk=BB_bulk_num_neigh[B_def_id]/allB_bulk_num_neigh[B_def_id]
+
+        A_def_id = np.where(allA_int_num_neigh>0)[0]
+        B_def_id = np.where(allB_int_num_neigh>0)[0]
+
+        AA_prob_int=AA_int_num_neigh[A_def_id]/allA_int_num_neigh[A_def_id]
+        AB_prob_int=AB_int_num_neigh[B_def_id]/allB_int_num_neigh[B_def_id]
+        BA_prob_int=BA_int_num_neigh[A_def_id]/allA_int_num_neigh[A_def_id]
+        BB_prob_int=BB_int_num_neigh[B_def_id]/allB_int_num_neigh[B_def_id]
+
+        A_def_id = np.where(allA_dense_num_neigh>0)[0]
+        B_def_id = np.where(allB_dense_num_neigh>0)[0]
+
+        AA_prob_dense=AA_dense_num_neigh[A_def_id]/allA_dense_num_neigh[A_def_id]
+        AB_prob_dense=AB_dense_num_neigh[B_def_id]/allB_dense_num_neigh[B_def_id]
+        BA_prob_dense=BA_dense_num_neigh[A_def_id]/allA_dense_num_neigh[A_def_id]
+        BB_prob_dense=BB_dense_num_neigh[B_def_id]/allB_dense_num_neigh[B_def_id]
+
+        chi_s_bulk = len(pos_A_bulk)/len(pos_bulk)
+        chi_f_bulk = len(pos_B_bulk)/len(pos_bulk)
+
+        chi_s_int = len(pos_A_int)/len(pos_int)
+        chi_f_int = len(pos_B_int)/len(pos_int)
+
+        chi_s_dense = len(pos_A_dense)/len(pos_dense)
+        chi_f_dense = len(pos_B_dense)/len(pos_dense)
+
+        deg_seg_AA_bulk = AA_prob_bulk/chi_s_bulk
+        deg_seg_AB_bulk = AB_prob_bulk/chi_s_bulk
+        deg_seg_BA_bulk = BA_prob_bulk/chi_f_bulk
+        deg_seg_BB_bulk = BB_prob_bulk/chi_f_bulk
+
+        deg_seg_AA_int = AA_prob_int/chi_s_int
+        deg_seg_AB_int = AB_prob_int/chi_s_int
+        deg_seg_BA_int = BA_prob_int/chi_f_int
+        deg_seg_BB_int = BB_prob_int/chi_f_int
+
+        deg_seg_AA_dense = AA_prob_dense/chi_s_dense
+        deg_seg_AB_dense = AB_prob_dense/chi_s_dense
+        deg_seg_BA_dense = BA_prob_dense/chi_f_dense
+        deg_seg_BB_dense = BB_prob_dense/chi_f_dense
+
         # Create output dictionary for statistical averages of total nearest neighbor numbers on each particle per phase/activity pairing
-        neigh_stat_dict = {'bulk': {'all-all': {'mean': np.mean(allall_bulk_num_neigh), 'std': np.std(allall_bulk_num_neigh)}, 'all-A': {'mean': np.mean(allA_bulk_num_neigh), 'std': np.std(allA_bulk_num_neigh)}, 'all-B': {'mean': np.mean(allB_bulk_num_neigh), 'std': np.std(allB_bulk_num_neigh)}, 'A-A': {'mean': np.mean(AA_bulk_num_neigh), 'std': np.std(AA_bulk_num_neigh), 'norm_std': np.std(AA_bulk_num_neigh/Aall_bulk_num_neigh)}, 'A-B': {'mean': np.mean(AB_bulk_num_neigh), 'std': np.std(AB_bulk_num_neigh), 'norm_std': np.std(AB_bulk_num_neigh/Aall_bulk_num_neigh)}, 'B-B': {'mean': np.mean(BB_bulk_num_neigh), 'std': np.std(BB_bulk_num_neigh), 'norm_std': np.std(BB_bulk_num_neigh/Ball_bulk_num_neigh)}}, 'int': {'all-all': {'mean': np.mean(allall_int_num_neigh), 'std': np.std(allall_int_num_neigh)}, 'all-A': {'mean': np.mean(allA_int_num_neigh), 'std': np.std(allA_int_num_neigh)}, 'all-B': {'mean': np.mean(allB_int_num_neigh), 'std': np.std(allB_int_num_neigh)}, 'A-A': {'mean': np.mean(AA_int_num_neigh), 'std': np.std(AA_int_num_neigh), 'norm_std': np.std(AA_int_num_neigh/Aall_int_num_neigh)}, 'A-B': {'mean': np.mean(AB_int_num_neigh), 'std': np.std(AB_int_num_neigh), 'norm_std': np.std(AB_int_num_neigh/Aall_int_num_neigh)}, 'B-B': {'mean': np.mean(BB_int_num_neigh), 'std': np.std(BB_int_num_neigh), 'norm_std': np.std(BB_int_num_neigh/Ball_int_num_neigh)}}, 'dense': {'all-all': {'mean': np.mean(allall_dense_num_neigh), 'std': np.std(allall_dense_num_neigh)}, 'all-A': {'mean': np.mean(allA_dense_num_neigh), 'std': np.std(allA_dense_num_neigh)}, 'all-B': {'mean': np.mean(allB_dense_num_neigh), 'std': np.std(allB_dense_num_neigh)}, 'A-A': {'mean': np.mean(AA_dense_num_neigh), 'std': np.std(AA_dense_num_neigh), 'norm_std': np.std(AA_dense_num_neigh/Aall_dense_num_neigh)}, 'A-B': {'mean': np.mean(AB_dense_num_neigh), 'std': np.std(AB_dense_num_neigh), 'norm_std': np.std(AB_dense_num_neigh/Aall_dense_num_neigh)}, 'B-B': {'mean': np.mean(BB_dense_num_neigh), 'std': np.std(BB_dense_num_neigh), 'norm_std': np.std(BB_dense_num_neigh/Ball_dense_num_neigh)}}}
+        neigh_stat_dict = {'bulk': {'all-all': {'mean': np.mean(allall_bulk_num_neigh), 'std': np.std(allall_bulk_num_neigh)}, 'all-A': {'mean': np.mean(allA_bulk_num_neigh), 'std': np.std(allA_bulk_num_neigh)}, 'all-B': {'mean': np.mean(allB_bulk_num_neigh), 'std': np.std(allB_bulk_num_neigh)}, 'A-A': {'mean': np.mean(AA_bulk_num_neigh), 'std': np.std(AA_bulk_num_neigh), 'prob_mean': np.mean(AA_prob_bulk), 'prob_std': np.std(AA_prob_bulk), 'deg_seg_mean': np.mean(deg_seg_AA_bulk), 'deg_seg_std': np.std(deg_seg_AA_bulk)}, 'A-B': {'mean': np.mean(AB_bulk_num_neigh), 'std': np.std(AB_bulk_num_neigh), 'prob_mean': np.mean(AB_prob_bulk), 'prob_std': np.std(AB_prob_bulk), 'deg_seg_mean': np.mean(deg_seg_AB_bulk), 'deg_seg_std': np.std(deg_seg_AB_bulk)}, 'B-A': {'mean': np.mean(BA_bulk_num_neigh), 'std': np.std(BA_bulk_num_neigh), 'prob_mean': np.mean(BA_prob_bulk), 'prob_std': np.std(BA_prob_bulk), 'deg_seg_mean': np.mean(deg_seg_BA_bulk), 'deg_seg_std': np.std(deg_seg_BA_bulk)}, 'B-B': {'mean': np.mean(BB_bulk_num_neigh), 'std': np.std(BB_bulk_num_neigh), 'prob_mean': np.mean(BB_prob_bulk), 'prob_std': np.std(BB_prob_bulk), 'deg_seg_mean': np.mean(deg_seg_BB_bulk), 'deg_seg_std': np.std(deg_seg_BB_bulk)}}, 'int': {'all-all': {'mean': np.mean(allall_int_num_neigh), 'std': np.std(allall_int_num_neigh)}, 'all-A': {'mean': np.mean(allA_int_num_neigh), 'std': np.std(allA_int_num_neigh)}, 'all-B': {'mean': np.mean(allB_int_num_neigh), 'std': np.std(allB_int_num_neigh)}, 'A-A': {'mean': np.mean(AA_int_num_neigh), 'std': np.std(AA_int_num_neigh), 'prob_mean': np.mean(AA_prob_int), 'prob_std': np.std(AA_prob_int), 'deg_seg_mean': np.mean(deg_seg_AA_int), 'deg_seg_std': np.std(deg_seg_AA_int)}, 'A-B': {'mean': np.mean(AB_int_num_neigh), 'std': np.std(AB_int_num_neigh), 'prob_mean': np.mean(AB_prob_int), 'prob_std': np.std(AB_prob_int), 'deg_seg_mean': np.mean(deg_seg_AB_int), 'deg_seg_std': np.std(deg_seg_AB_int)}, 'B-A': {'mean': np.mean(BA_int_num_neigh), 'std': np.std(BA_int_num_neigh), 'prob_mean': np.mean(BA_prob_int), 'prob_std': np.std(BA_prob_int), 'deg_seg_mean': np.mean(deg_seg_BA_int), 'deg_seg_std': np.std(deg_seg_BA_int)}, 'B-B': {'mean': np.mean(BB_int_num_neigh), 'std': np.std(BB_int_num_neigh), 'prob_mean': np.mean(BB_prob_int), 'prob_std': np.std(BB_prob_int), 'deg_seg_mean': np.mean(deg_seg_BB_int), 'deg_seg_std': np.std(deg_seg_BB_int)}}, 'dense': {'all-all': {'mean': np.mean(allall_dense_num_neigh), 'std': np.std(allall_dense_num_neigh)}, 'all-A': {'mean': np.mean(allA_dense_num_neigh), 'std': np.std(allA_dense_num_neigh)}, 'all-B': {'mean': np.mean(allB_dense_num_neigh), 'std': np.std(allB_dense_num_neigh)}, 'A-A': {'mean': np.mean(AA_dense_num_neigh), 'std': np.std(AA_dense_num_neigh), 'prob_mean': np.mean(AA_prob_dense), 'prob_std': np.std(AA_prob_dense), 'deg_seg_mean': np.mean(deg_seg_AA_dense), 'deg_seg_std': np.std(deg_seg_AA_dense)}, 'A-B': {'mean': np.mean(AB_dense_num_neigh), 'std': np.std(AB_dense_num_neigh), 'prob_mean': np.mean(AB_prob_dense), 'prob_std': np.std(AB_prob_dense), 'deg_seg_mean': np.mean(deg_seg_AB_dense), 'deg_seg_std': np.std(deg_seg_AB_dense)}, 'B-A': {'mean': np.mean(BA_dense_num_neigh), 'std': np.std(BA_dense_num_neigh), 'prob_mean': np.mean(BA_prob_dense), 'prob_std': np.std(BA_prob_dense), 'deg_seg_mean': np.mean(deg_seg_BA_dense), 'deg_seg_std': np.std(deg_seg_BA_dense)}, 'B-B': {'mean': np.mean(BB_dense_num_neigh), 'std': np.std(BB_dense_num_neigh), 'prob_mean': np.mean(BB_prob_dense), 'prob_std': np.std(BB_prob_dense), 'deg_seg_mean': np.mean(deg_seg_BB_dense), 'deg_seg_std': np.std(deg_seg_BB_dense)}}}
 
         # Create output dictionary for statistical averages of total nearest neighbor orientational correlation on each particle per phase/activity pairing
         ori_stat_dict = {'bulk': {'all-all': {'mean': np.mean(allall_bulk_dot), 'std': np.std(allall_bulk_dot)}, 'all-A': {'mean': np.mean(allA_bulk_dot), 'std': np.std(allA_bulk_dot)}, 'all-B': {'mean': np.mean(allB_bulk_dot), 'std': np.std(allB_bulk_dot)}, 'A-A': {'mean': np.mean(AA_bulk_dot), 'std': np.std(AA_bulk_dot)}, 'A-B': {'mean': np.mean(AB_bulk_dot), 'std': np.std(AB_bulk_dot)}, 'B-B': {'mean': np.mean(BB_bulk_dot), 'std': np.std(BB_bulk_dot)}}, 'int': {'all-all': {'mean': np.mean(allall_int_dot), 'std': np.std(allall_int_dot)}, 'all-A': {'mean': np.mean(allA_int_dot), 'std': np.std(allA_int_dot)}, 'all-B': {'mean': np.mean(allB_int_dot), 'std': np.std(allB_int_dot)}, 'A-A': {'mean': np.mean(AA_int_dot), 'std': np.std(AA_int_dot)}, 'A-B': {'mean': np.mean(AB_int_dot), 'std': np.std(AB_int_dot)}, 'B-B': {'mean': np.mean(BB_int_dot), 'std': np.std(BB_int_dot)}}, 'dense': {'all-all': {'mean': np.mean(allall_dense_dot), 'std': np.std(allall_dense_dot)}, 'all-A': {'mean': np.mean(allA_dense_dot), 'std': np.std(allA_dense_dot)}, 'all-B': {'mean': np.mean(allB_dense_dot), 'std': np.std(allB_dense_dot)}, 'A-A': {'mean': np.mean(AA_dense_dot), 'std': np.std(AA_dense_dot)}, 'A-B': {'mean': np.mean(AB_dense_dot), 'std': np.std(AB_dense_dot)}, 'B-B': {'mean': np.mean(BB_dense_dot), 'std': np.std(BB_dense_dot)}}}
@@ -1965,7 +2013,6 @@ class measurement:
         # Create output dictionary for plotting of nearest neighbor information of each particle per phase/activity pairing and their respective x-y locations
         neigh_plot_dict = {'all-all': {'neigh': allall_dense_num_neigh, 'ori': allall_dense_dot, 'x': allall_dense_pos_x, 'y': allall_dense_pos_y}, 'all-A': {'neigh': allA_dense_num_neigh, 'ori': allA_dense_dot, 'x': allA_dense_pos_x, 'y': allA_dense_pos_y}, 'all-B': {'neigh': allB_dense_num_neigh, 'ori': allB_dense_dot, 'x': allB_dense_pos_x, 'y': allB_dense_pos_y}, 'A-all': {'neigh': Aall_dense_num_neigh, 'ori': Aall_dense_dot, 'x': Aall_dense_pos_x, 'y': Aall_dense_pos_y}, 'B-all': {'neigh': Ball_dense_num_neigh, 'ori': Ball_dense_dot, 'x': Ball_dense_pos_x, 'y': Ball_dense_pos_y}, 'A-A': {'neigh': AA_dense_num_neigh, 'ori': AA_dense_dot, 'x': pos_A_dense[:,0], 'y': pos_A_dense[:,1]}, 'A-B': {'neigh': AB_dense_num_neigh, 'ori': AB_dense_dot, 'x': pos_B_dense[:,0], 'y': pos_B_dense[:,1]}, 'B-A': {'neigh': BA_dense_num_neigh, 'ori': BA_dense_dot, 'x': pos_A_dense[:,0], 'y': pos_A_dense[:,1]}, 'B-B': {'neigh': BB_dense_num_neigh, 'ori': BB_dense_dot, 'x': pos_B_dense[:,0], 'y': pos_B_dense[:,1]}}
 
-        
         return neigh_stat_dict, ori_stat_dict, neigh_plot_dict
     def local_gas_density(self):
         '''
@@ -2055,26 +2102,36 @@ class measurement:
         #of all neighbor particles around all reference particles
         allall_local_dens_mean_arr = []
         allall_local_dens_std_arr = []
+        
 
         #Initiate empty arrays for calculating mean and standard deviation of local density
         #of A neighbor particles around A reference particles
         AA_local_dens_mean_arr = []
         AA_local_dens_std_arr = []
+        AA_prob_std_arr = []
+        AA_prob_mean_arr = []
 
         #Initiate empty arrays for calculating mean and standard deviation of local density
         #of A neighbor particles around B reference particles
         AB_local_dens_mean_arr = []
         AB_local_dens_std_arr = []
+        AB_prob_std_arr = []
+        AB_prob_mean_arr = []
 
         #Initiate empty arrays for calculating mean and standard deviation of local density
         #of B neighbor particles around A reference particles
         BA_local_dens_mean_arr = []
         BA_local_dens_std_arr = []
+        BA_prob_std_arr = []
+        BA_prob_mean_arr = []
 
         #Initiate empty arrays for calculating mean and standard deviation of local density
         #of B neighbor particles around B reference particles
         BB_local_dens_mean_arr = []
         BB_local_dens_std_arr = []
+        BB_prob_std_arr = []
+        BB_prob_mean_arr = []
+
 
         #Initiate empty arrays for finding nearest A neighboring dense particles surrounding type A bulk particles
         AA_gas_num_neigh = np.zeros(len(pos_A_gas))
@@ -2216,24 +2273,31 @@ class measurement:
             # around A reference particles in dense phase
             AA_local_dens_mean_arr.append(np.mean(AA_gas_local_dens))
             AA_local_dens_std_arr.append(np.std(AA_gas_local_dens))
+            AA_prob_std_arr.append(np.std(AA_gas_local_dens/allA_gas_local_dens))
+            AA_prob_mean_arr.append(np.mean(AA_gas_local_dens/allA_gas_local_dens))
             AA_gas_local_dens_inhomog = (AA_gas_local_dens - AA_local_dens_mean_arr[-1])**2
 
             # Calculate mean and standard deviation of local density of A neighbor particles 
             # around B reference particles in dense phase
             AB_local_dens_mean_arr.append(np.mean(AB_gas_local_dens))
             AB_local_dens_std_arr.append(np.std(AB_gas_local_dens))
+            AB_prob_std_arr.append(np.std(AB_gas_local_dens/allB_gas_local_dens))
+            AB_prob_mean_arr.append(np.mean(AB_gas_local_dens/allB_gas_local_dens))
             AB_gas_local_dens_inhomog = (AB_gas_local_dens - AB_local_dens_mean_arr[-1])**2
 
             # Calculate mean and standard deviation of local density of B neighbor particles 
             # around A reference particles in dense phase
             BA_local_dens_mean_arr.append(np.mean(BA_gas_local_dens))
             BA_local_dens_std_arr.append(np.std(BA_gas_local_dens))
+            
             BA_gas_local_dens_inhomog = (BA_gas_local_dens - BA_local_dens_mean_arr[-1])**2
 
             # Calculate mean and standard deviation of local density of B neighbor particles 
             # around B reference particles in dense phase
             BB_local_dens_mean_arr.append(np.mean(BB_gas_local_dens))
             BB_local_dens_std_arr.append(np.std(BB_gas_local_dens))
+            BB_prob_std_arr.append(np.std(BB_gas_local_dens/allB_gas_local_dens))
+            BB_prob_mean_arr.append(np.mean(BB_gas_local_dens/allB_gas_local_dens))
             BB_gas_local_dens_inhomog = (BB_gas_local_dens - BB_local_dens_mean_arr[-1])**2
 
             # Calculate mean and standard deviation of local density of all neighbor particles 
