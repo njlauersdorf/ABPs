@@ -1988,21 +1988,45 @@ class measurement:
 
         chi_s_dense = len(pos_A_dense)/len(pos_dense)
         chi_f_dense = len(pos_B_dense)/len(pos_dense)
+        
+        if chi_s_bulk>0:
+            deg_seg_AA_bulk = AA_prob_bulk/chi_s_bulk
+            deg_seg_AB_bulk = AB_prob_bulk/chi_s_bulk
+        else:
+            deg_seg_AA_bulk = 0
+            deg_seg_AB_bulk = 0
+        if chi_f_bulk>0:    
+            deg_seg_BA_bulk = BA_prob_bulk/chi_f_bulk
+            deg_seg_BB_bulk = BB_prob_bulk/chi_f_bulk
+        else:
+            deg_seg_BA_bulk = 0
+            deg_seg_BB_bulk = 0
 
-        deg_seg_AA_bulk = AA_prob_bulk/chi_s_bulk
-        deg_seg_AB_bulk = AB_prob_bulk/chi_s_bulk
-        deg_seg_BA_bulk = BA_prob_bulk/chi_f_bulk
-        deg_seg_BB_bulk = BB_prob_bulk/chi_f_bulk
+        if chi_s_int>0:
+            deg_seg_AA_int = AA_prob_int/chi_s_int
+            deg_seg_AB_int = AB_prob_int/chi_s_int
+        else:
+            deg_seg_AA_int = 0
+            deg_seg_AB_int = 0
+        if chi_f_int>0:
+            deg_seg_BA_int = BA_prob_int/chi_f_int
+            deg_seg_BB_int = BB_prob_int/chi_f_int
+        else:
+            deg_seg_BA_int = 0
+            deg_seg_BB_int = 0
 
-        deg_seg_AA_int = AA_prob_int/chi_s_int
-        deg_seg_AB_int = AB_prob_int/chi_s_int
-        deg_seg_BA_int = BA_prob_int/chi_f_int
-        deg_seg_BB_int = BB_prob_int/chi_f_int
-
-        deg_seg_AA_dense = AA_prob_dense/chi_s_dense
-        deg_seg_AB_dense = AB_prob_dense/chi_s_dense
-        deg_seg_BA_dense = BA_prob_dense/chi_f_dense
-        deg_seg_BB_dense = BB_prob_dense/chi_f_dense
+        if chi_s_dense>0:
+            deg_seg_AA_dense = AA_prob_dense/chi_s_dense
+            deg_seg_AB_dense = AB_prob_dense/chi_s_dense
+        else:
+            deg_seg_AA_dense = 0
+            deg_seg_AB_dense = 0
+        if chi_f_dense>0:
+            deg_seg_BA_dense = BA_prob_dense/chi_f_dense
+            deg_seg_BB_dense = BB_prob_dense/chi_f_dense
+        else:
+            deg_seg_BA_dense = 0
+            deg_seg_BB_dense = 0
 
         # Create output dictionary for statistical averages of total nearest neighbor numbers on each particle per phase/activity pairing
         neigh_stat_dict = {'bulk': {'all-all': {'mean': np.mean(allall_bulk_num_neigh), 'std': np.std(allall_bulk_num_neigh)}, 'all-A': {'mean': np.mean(allA_bulk_num_neigh), 'std': np.std(allA_bulk_num_neigh)}, 'all-B': {'mean': np.mean(allB_bulk_num_neigh), 'std': np.std(allB_bulk_num_neigh)}, 'A-A': {'mean': np.mean(AA_bulk_num_neigh), 'std': np.std(AA_bulk_num_neigh), 'prob_mean': np.mean(AA_prob_bulk), 'prob_std': np.std(AA_prob_bulk), 'deg_seg_mean': np.mean(deg_seg_AA_bulk), 'deg_seg_std': np.std(deg_seg_AA_bulk)}, 'A-B': {'mean': np.mean(AB_bulk_num_neigh), 'std': np.std(AB_bulk_num_neigh), 'prob_mean': np.mean(AB_prob_bulk), 'prob_std': np.std(AB_prob_bulk), 'deg_seg_mean': np.mean(deg_seg_AB_bulk), 'deg_seg_std': np.std(deg_seg_AB_bulk)}, 'B-A': {'mean': np.mean(BA_bulk_num_neigh), 'std': np.std(BA_bulk_num_neigh), 'prob_mean': np.mean(BA_prob_bulk), 'prob_std': np.std(BA_prob_bulk), 'deg_seg_mean': np.mean(deg_seg_BA_bulk), 'deg_seg_std': np.std(deg_seg_BA_bulk)}, 'B-B': {'mean': np.mean(BB_bulk_num_neigh), 'std': np.std(BB_bulk_num_neigh), 'prob_mean': np.mean(BB_prob_bulk), 'prob_std': np.std(BB_prob_bulk), 'deg_seg_mean': np.mean(deg_seg_BB_bulk), 'deg_seg_std': np.std(deg_seg_BB_bulk)}}, 'int': {'all-all': {'mean': np.mean(allall_int_num_neigh), 'std': np.std(allall_int_num_neigh)}, 'all-A': {'mean': np.mean(allA_int_num_neigh), 'std': np.std(allA_int_num_neigh)}, 'all-B': {'mean': np.mean(allB_int_num_neigh), 'std': np.std(allB_int_num_neigh)}, 'A-A': {'mean': np.mean(AA_int_num_neigh), 'std': np.std(AA_int_num_neigh), 'prob_mean': np.mean(AA_prob_int), 'prob_std': np.std(AA_prob_int), 'deg_seg_mean': np.mean(deg_seg_AA_int), 'deg_seg_std': np.std(deg_seg_AA_int)}, 'A-B': {'mean': np.mean(AB_int_num_neigh), 'std': np.std(AB_int_num_neigh), 'prob_mean': np.mean(AB_prob_int), 'prob_std': np.std(AB_prob_int), 'deg_seg_mean': np.mean(deg_seg_AB_int), 'deg_seg_std': np.std(deg_seg_AB_int)}, 'B-A': {'mean': np.mean(BA_int_num_neigh), 'std': np.std(BA_int_num_neigh), 'prob_mean': np.mean(BA_prob_int), 'prob_std': np.std(BA_prob_int), 'deg_seg_mean': np.mean(deg_seg_BA_int), 'deg_seg_std': np.std(deg_seg_BA_int)}, 'B-B': {'mean': np.mean(BB_int_num_neigh), 'std': np.std(BB_int_num_neigh), 'prob_mean': np.mean(BB_prob_int), 'prob_std': np.std(BB_prob_int), 'deg_seg_mean': np.mean(deg_seg_BB_int), 'deg_seg_std': np.std(deg_seg_BB_int)}}, 'dense': {'all-all': {'mean': np.mean(allall_dense_num_neigh), 'std': np.std(allall_dense_num_neigh)}, 'all-A': {'mean': np.mean(allA_dense_num_neigh), 'std': np.std(allA_dense_num_neigh)}, 'all-B': {'mean': np.mean(allB_dense_num_neigh), 'std': np.std(allB_dense_num_neigh)}, 'A-A': {'mean': np.mean(AA_dense_num_neigh), 'std': np.std(AA_dense_num_neigh), 'prob_mean': np.mean(AA_prob_dense), 'prob_std': np.std(AA_prob_dense), 'deg_seg_mean': np.mean(deg_seg_AA_dense), 'deg_seg_std': np.std(deg_seg_AA_dense)}, 'A-B': {'mean': np.mean(AB_dense_num_neigh), 'std': np.std(AB_dense_num_neigh), 'prob_mean': np.mean(AB_prob_dense), 'prob_std': np.std(AB_prob_dense), 'deg_seg_mean': np.mean(deg_seg_AB_dense), 'deg_seg_std': np.std(deg_seg_AB_dense)}, 'B-A': {'mean': np.mean(BA_dense_num_neigh), 'std': np.std(BA_dense_num_neigh), 'prob_mean': np.mean(BA_prob_dense), 'prob_std': np.std(BA_prob_dense), 'deg_seg_mean': np.mean(deg_seg_BA_dense), 'deg_seg_std': np.std(deg_seg_BA_dense)}, 'B-B': {'mean': np.mean(BB_dense_num_neigh), 'std': np.std(BB_dense_num_neigh), 'prob_mean': np.mean(BB_prob_dense), 'prob_std': np.std(BB_prob_dense), 'deg_seg_mean': np.mean(deg_seg_BB_dense), 'deg_seg_std': np.std(deg_seg_BB_dense)}}}
