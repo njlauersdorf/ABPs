@@ -2905,6 +2905,7 @@ class measurement:
         pos_gas = self.pos[phase_part_dict['gas']['all']]
         pos_gas_int = self.pos[phase_part_dict['gas_int']['all']]
         pos_dense = self.pos[phase_part_dict['dense']['all']]
+        id_system = np.append(phase_part_dict['dense']['all'], phase_part_dict['gas']['all'])
 
         # Position and orientation arrays of all particles in respective phase
         typ_bulk = self.typ[phase_part_dict['bulk']['all']]
@@ -4308,6 +4309,7 @@ class measurement:
         SigYY_BB_system_part = np.append(SigYY_BB_dense_part, SigYY_BB_gas_part)
         SigYY_BB_system_part_num = np.append(SigYY_BB_dense_part_num, SigYY_BB_gas_part_num)
 
+        typ_system = np.append(typ_dense, typ_gas)
         ###Interparticle pressure
 
         # Calculate total interparticle pressure experienced by all particles in each phase
@@ -4575,11 +4577,14 @@ class measurement:
 
         # Create output dictionary for plotting of total stress/pressure on each particle per phase/activity pairing and their respective x-y locations
         press_plot_dict = {'all-all': {'press': allall_int_press, 'shear': allall_shear_stress, 'x': allall_pos_x, 'y': allall_pos_y}}
+        
+        # Create output dictionary for statistical averages of total stress on each particle per phase/activity pairing
+        press_plot_indiv_dict = {'all-all': {'press': allall_system_int_press_indiv}, 'all-A': {'press': allA_system_int_press_indiv}, 'all-B': {'press': allB_system_int_press_indiv}, 'A-A': {'press': AA_system_int_press_indiv}, 'A-B': {'press': AB_system_int_press_indiv}, 'B-B': {'press': BB_system_int_press_indiv}, 'id': id_system, 'typ': typ_system}
 
         # Create output dictionary for plotting of total stress/pressure on each particle per phase/activity pairing and their respective x-y locations
         press_hetero_dict = {'system': {'all-all': {'press': allall_system_int_press_indiv, 'id': allall_system_part_ids}, 'all-A': {'press': allA_system_int_press_indiv, 'id': allA_system_part_ids}, 'A-all': {'press': Aall_system_int_press_indiv, 'id': Aall_system_part_ids}, 'all-B': {'press': allB_system_int_press_indiv, 'id': allB_system_part_ids}, 'B-all': {'press': Ball_system_int_press_indiv, 'id': Ball_system_part_ids}, 'A-A': {'press': AA_system_int_press_indiv, 'id': AA_system_part_ids}, 'A-B': {'press': AB_system_int_press_indiv, 'id': AB_system_part_ids}, 'B-A': {'press': BA_system_int_press_indiv, 'id': BA_system_part_ids}, 'B-B': {'press': BB_system_int_press_indiv, 'id': BB_system_part_ids} }, 'dense': {'all-all': {'press': allall_dense_int_press_indiv, 'id': allall_dense_part_ids}, 'all-A': {'press': allA_dense_int_press_indiv, 'id': allA_dense_part_ids}, 'A-all': {'press': Aall_dense_int_press_indiv, 'id': Aall_dense_part_ids}, 'all-B': {'press': allB_dense_int_press_indiv, 'id': allB_dense_part_ids}, 'B-all': {'press': Ball_dense_int_press_indiv, 'id': Ball_dense_part_ids}, 'A-A': {'press': AA_dense_int_press_indiv, 'id': AA_dense_part_ids}, 'A-B': {'press': AB_dense_int_press_indiv, 'id': AB_dense_part_ids}, 'B-A': {'press': BA_dense_int_press_indiv, 'id': BA_dense_part_ids}, 'B-B': {'press': BB_dense_int_press_indiv, 'id': BB_dense_part_ids} }, 'bulk': {'all-all': {'press': allall_bulk_int_press_indiv, 'id': phase_part_dict['bulk']['all']}, 'all-A': {'press': allA_bulk_int_press_indiv, 'id': phase_part_dict['bulk']['A']}, 'A-all': {'press': Aall_bulk_int_press_indiv, 'id': phase_part_dict['bulk']['all']}, 'all-B': {'press': allB_bulk_int_press_indiv, 'id': phase_part_dict['bulk']['B']}, 'B-all': {'press': Ball_bulk_int_press_indiv, 'id': phase_part_dict['bulk']['all']}, 'A-A': {'press': AA_bulk_int_press_indiv, 'id': phase_part_dict['bulk']['A']}, 'A-B': {'press': AB_bulk_int_press_indiv, 'id': phase_part_dict['bulk']['B']}, 'B-A': {'press': BA_bulk_int_press_indiv, 'id': phase_part_dict['bulk']['A']}, 'B-B': {'press': BB_bulk_int_press_indiv, 'id': phase_part_dict['bulk']['B']} }, 'int': {'all-all': {'press': allall_int_int_press_indiv, 'id': phase_part_dict['int']['all']}, 'all-A': {'press': allA_int_int_press_indiv, 'id': phase_part_dict['int']['A']}, 'A-all': {'press': Aall_int_int_press_indiv, 'id': phase_part_dict['int']['all']}, 'all-B': {'press': allB_int_int_press_indiv, 'id': phase_part_dict['int']['B']}, 'B-all': {'press': Ball_int_int_press_indiv, 'id': phase_part_dict['int']['all']}, 'A-A': {'press': AA_int_int_press_indiv, 'id': phase_part_dict['int']['A']}, 'A-B': {'press': AB_int_int_press_indiv, 'id': phase_part_dict['int']['B']}, 'B-A': {'press': BA_int_int_press_indiv, 'id': phase_part_dict['int']['A']}, 'B-B': {'press': BB_int_int_press_indiv, 'id': phase_part_dict['int']['B']} }, 'gas': {'all-all': {'press': allall_gas_int_press_indiv, 'id': phase_part_dict['gas']['all']}, 'all-A': {'press': allA_gas_int_press_indiv, 'id': phase_part_dict['gas']['A']}, 'A-all': {'press': Aall_gas_int_press_indiv, 'id': phase_part_dict['gas']['all']}, 'all-B': {'press': allB_gas_int_press_indiv, 'id': phase_part_dict['gas']['B']}, 'B-all': {'press': Ball_gas_int_press_indiv, 'id': phase_part_dict['gas']['all']}, 'A-A': {'press': AA_gas_int_press_indiv, 'id': phase_part_dict['gas']['A']}, 'A-B': {'press': AB_gas_int_press_indiv, 'id': phase_part_dict['gas']['B']}, 'B-A': {'press': BA_gas_int_press_indiv, 'id': phase_part_dict['gas']['A']}, 'B-B': {'press': BB_gas_int_press_indiv, 'id': phase_part_dict['gas']['B']} }  }
         
-        return stress_stat_dict, press_stat_dict, press_stat_indiv_dict, press_plot_dict, stress_plot_dict, press_hetero_dict
+        return stress_stat_dict, press_stat_dict, press_stat_indiv_dict, press_plot_dict, stress_plot_dict, press_plot_indiv_dict, press_hetero_dict
     def clustering_coefficient(self):
         '''
         Purpose: Takes the composition of each phase and uses neighbor lists to find the

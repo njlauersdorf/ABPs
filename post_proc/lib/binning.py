@@ -257,19 +257,21 @@ class binning:
         # Loop over all cluster IDs
         for ix in range(0, len(binned_arr)):
             for iy in range(0, len(binned_arr)):
-                if phase_dict['bin'][ix][iy]==0:
-                    bulk_std_sum += (binned_arr[ix][iy] - mean_dict['bulk'])**2
-                    bulk_count += 1
-                elif phase_dict['bin'][ix][iy]==1:
-                    int_std_sum += (binned_arr[ix][iy] - mean_dict['int'])**2
-                    int_count += 1
-                elif phase_dict['bin'][ix][iy]==2:
-                    gas_std_sum += (binned_arr[ix][iy] - mean_dict['gas'])**2
-                    gas_count += 1
+                if np.isnan(binned_arr[ix][iy])==0:
 
-        bulk_q = bulk_std_sum / bulk_count
-        int_q = int_std_sum / int_count
-        gas_q = gas_std_sum / gas_count
+                    if phase_dict['bin'][ix][iy]==0:
+                        bulk_std_sum += (binned_arr[ix][iy] - mean_dict['bulk'])**2
+                        bulk_count += 1
+                    elif phase_dict['bin'][ix][iy]==1:
+                        int_std_sum += (binned_arr[ix][iy] - mean_dict['int'])**2
+                        int_count += 1
+                    elif phase_dict['bin'][ix][iy]==2:
+                        gas_std_sum += (binned_arr[ix][iy] - mean_dict['gas'])**2
+                        gas_count += 1
+
+        bulk_q = bulk_std_sum / (bulk_count *  mean_dict['bulk'])
+        int_q = int_std_sum / (int_count *  mean_dict['int'])
+        gas_q = gas_std_sum / (gas_count *  mean_dict['gas'])
 
         q_dict = {'bulk': bulk_q, 'int': int_q, 'gas': gas_q}
         return q_dict
@@ -605,7 +607,58 @@ class binning:
         binned_measure_dict = {'all': all_system, 'A': A_system, 'B': B_system}
         binned_measure_mean_dict = {'all': all_system_mean, 'A': A_system_mean, 'B': B_system_mean}
         return binned_measure_dict, binned_measure_mean_dict
-    
+    def bin_part_press_phases(self, binParts, measurement):
+        '''
+        Purpose: Takes the number and size of bins to calculate an array of bin positions
+
+        Inputs:
+        pos: array (partNum) of positions (x,y,z) of each particle
+
+        ids: array (partNum) of cluster ids (int) that each particle is a part of
+
+        clust_size: array of cluster sizes (int) in terms of number of particles for each cluster id
+
+        Outputs:
+        part_dict: dictionary containing arrays (NBins_x, NBins_y) whose elements contains information
+        on whether each particle within the bin a) is part of a cluster ('occParts'), b) on which type
+        of particles are in the bin ('typ'), and c) on what each particle's id is ('id')
+        '''
+
+        all_system = [[[] for b in range(len(binParts))] for a in range(len(binParts))]
+        A_system = [[[] for b in range(len(binParts))] for a in range(len(binParts))]
+        B_system = [[[] for b in range(len(binParts))] for a in range(len(binParts))]
+
+        all_system_mean = [[0 for b in range(len(binParts))] for a in range(len(binParts))]
+        A_system_mean = [[0 for b in range(len(binParts))] for a in range(len(binParts))]
+        B_system_mean = [[0 for b in range(len(binParts))] for a in range(len(binParts))]
+
+        # Loop over all cluster IDs
+
+        for ix in range(len(binParts)):
+            for iy in range(len(binParts)):
+
+                for h in range(0, len(binParts[ix][iy])):
+                    temp_id = np.where(measurement['id']==binParts[ix][iy][h])[0]
+                    all_system[ix][iy].append(measurement['all-all']['press'][temp_id][0])
+                    if self.typ[binParts[ix][iy][h]]==0:
+                        A_system[ix][iy].append(measurement['all-all']['press'][temp_id][0])
+                    else:
+                        B_system[ix][iy].append(measurement['all-all']['press'][temp_id][0])
+                if len(binParts[ix][iy])>0:
+                    all_system_mean[ix][iy] = np.mean(all_system[ix][iy])
+                    if len(A_system[ix][iy])>0:
+                        A_system_mean[ix][iy] = np.mean(A_system[ix][iy])
+                    else:
+                        A_system_mean[ix][iy] = 0
+                    if len(B_system[ix][iy])>0:
+                        B_system_mean[ix][iy] = np.mean(B_system[ix][iy])
+                    else:
+                        B_system_mean[ix][iy] = 0
+                
+        #binned_measure_dict = {'system': {'all-all': allall_system, 'A-all': Aall_system, 'all-A': allA_system, 'B-all': Ball_system, 'all-B': allB_system, 'A-A': AA_system, 'A-B': AB_system, 'B-A': BA_system, 'B-B': BB_system}, 'dense': {'all-all': allall_dense, 'A-all': Aall_dense, 'all-A': allA_dense, 'B-all': Ball_dense, 'all-B': allB_dense, 'A-A': AA_dense, 'A-B': AB_dense, 'B-A': BA_dense, 'B-B': BB_dense}, 'bulk': {'all-all': allall_bulk, 'A-all': Aall_bulk, 'all-A': allA_bulk, 'B-all': Ball_bulk, 'all-B': allB_bulk, 'A-A': AA_bulk, 'A-B': AB_bulk, 'B-A': BA_bulk, 'B-B': BB_bulk}, 'int': {'all-all': allall_int, 'A-all': Aall_int, 'all-A': allA_int, 'B-all': Ball_int, 'all-B': allB_int, 'A-A': AA_int, 'A-B': AB_int, 'B-A': BA_int, 'B-B': BB_int}, 'gas': {'all-all': allall_gas, 'A-all': Aall_gas, 'all-A': allA_gas, 'B-all': Ball_gas, 'all-B': allB_gas, 'A-A': AA_gas, 'A-B': AB_gas, 'B-A': BA_gas, 'B-B': BB_gas} }
+        binned_measure_dict = {'all': all_system, 'A': A_system, 'B': B_system}
+        binned_measure_mean_dict = {'all': all_system_mean, 'A': A_system_mean, 'B': B_system_mean}
+        return binned_measure_dict, binned_measure_mean_dict
     def bin_part_press(self, binParts, measurement):
         '''
         Purpose: Takes the number and size of bins to calculate an array of bin positions
@@ -623,17 +676,18 @@ class binning:
         of particles are in the bin ('typ'), and c) on what each particle's id is ('id')
         '''
 
-        all_system = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
-        A_system = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
-        B_system = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        all_system = [[[] for b in range(len(binParts))] for a in range(len(binParts))]
+        A_system = [[[] for b in range(len(binParts))] for a in range(len(binParts))]
+        B_system = [[[] for b in range(len(binParts))] for a in range(len(binParts))]
 
-        all_system_mean = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
-        A_system_mean = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
-        B_system_mean = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        all_system_mean = [[0 for b in range(len(binParts))] for a in range(len(binParts))]
+        A_system_mean = [[0 for b in range(len(binParts))] for a in range(len(binParts))]
+        B_system_mean = [[0 for b in range(len(binParts))] for a in range(len(binParts))]
 
         # Loop over all cluster IDs
-        for ix in range(self.NBins_x):
-            for iy in range(self.NBins_y):
+
+        for ix in range(len(binParts)):
+            for iy in range(len(binParts)):
 
                 for h in range(0, len(binParts[ix][iy])):
                     all_system[ix][iy].append(measurement['all-all']['press'][binParts[ix][iy][h]])

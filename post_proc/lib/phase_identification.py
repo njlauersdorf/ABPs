@@ -486,6 +486,70 @@ class phase_identification:
         count_dict = {'bulk': bulk_num, 'int': int_num, 'gas': gas_num}
 
         return count_dict
+    def rebin_phases(self, part_dict, phase_dict):
+
+        new_phase_dict = np.zeros((len(part_dict['id']), len(part_dict['id'])))
+
+        for ix in range(0, len(part_dict['id'])):
+            for iy in range(0, len(part_dict['id'])):
+                if len(part_dict['id'][ix][iy])>0:
+                    bulk_count = len(np.where(phase_dict['part'][part_dict['id'][ix][iy]]==0 )[0])
+                    int_count = len(np.where(phase_dict['part'][part_dict['id'][ix][iy]]==1 )[0])
+                    gas_count = len(np.where(phase_dict['part'][part_dict['id'][ix][iy]]==2 )[0])
+                    
+                    if (bulk_count >= int_count) & (bulk_count >= gas_count):
+                        new_phase_dict[ix][iy] = 0
+                    elif (int_count >= bulk_count) & (int_count >= gas_count):
+                        new_phase_dict[ix][iy] = 1
+                    elif (gas_count >= int_count) & (gas_count >= bulk_count):
+                        new_phase_dict[ix][iy] = 2
+        
+        for ix in range(0, len(part_dict)):
+            for iy in range(0, len(part_dict)):
+                if len(part_dict['id'])==0:
+                    #Identify neighboring bin indices in x-direction
+                    if (ix + 1) == self.NBins_x:
+                        lookx = [ix-1, ix, 0]
+                    elif ix==0:
+                        lookx=[self.NBins_x-1, ix, ix+1]
+                    else:
+                        lookx = [ix-1, ix, ix+1]
+
+                    #Identify neighboring bin indices in y-direction
+                    if (iy + 1) == self.NBins_y:
+                        looky = [iy-1, iy, 0]
+                    elif iy==0:
+                        looky=[self.NBins_y-1, iy, iy+1]
+                    else:
+                        looky = [iy-1, iy, iy+1]
+
+                    #Count phases of surrounding bins
+                    gas_count=0
+                    int_count=0
+                    bulk_count=0
+
+                    #Loop through neighboring bins, including reference bin
+                    for indx in lookx:
+                        for indy in looky:
+
+                            #If not reference bin, continue
+                            if (indx!=ix) or (indy!=iy):
+
+                                #Count number of neighboring bins of each phase
+                                if phaseBin[indx][indy]==0:
+                                    bulk_count+=1
+                                elif phaseBin[indx][indy]==1:
+                                    int_count+=1
+                                else:
+                                    gas_count+=1
+                            if (bulk_count >= int_count) & (bulk_count >= gas_count):
+                                new_phase_dict[ix][iy] = 0
+                            elif (int_count >= bulk_count) & (int_count >= gas_count):
+                                new_phase_dict[ix][iy] = 1
+                            elif (gas_count >= int_count) & (gas_count >= bulk_count):
+                                new_phase_dict[ix][iy] = 2
+        phase_dict['bin'] = new_phase_dict
+        return phase_dict
 
     def com_bulk(self, phase_dict, count_dict):
         '''
