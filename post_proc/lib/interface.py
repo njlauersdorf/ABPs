@@ -38,7 +38,7 @@ import utility
 
 # Class of interface identification functions
 class interface:
-    def __init__(self, area_frac_dict, align_dict, part_dict, press_dict, lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, parFrac, eps, typ, px, py):
+    def __init__(self, area_frac_dict, align_dict, part_dict, press_dict, lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, parFrac, eps, typ, px, py, pos):
 
         # Array (NBins_x, NBins_y) of average alignment of all particles per bin in either direction ('x', 'y', or 'mag'nitude)
         self.align_x = align_dict['bin']['all']['x']
@@ -142,6 +142,8 @@ class interface:
         # Array (partNum) of particle orientations [-pi,pi]
         self.px = px
         self.py = py
+
+        self.pos = pos
 
     def det_surface_points(self, phase_dict, int_dict, int_comp_dict):
         '''
@@ -1894,6 +1896,17 @@ class interface:
         new_align_y0 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
         new_align_y1 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
 
+        new_align_fa = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_fa0 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_fa1 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+
+        new_align_fa_x = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_fa_x0 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_fa_x1 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_fa_y = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_fa_y0 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_fa_y1 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+
         new_align_trad = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
         new_align_trad0 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
         new_align_trad1 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
@@ -1904,6 +1917,17 @@ class interface:
         new_align_trad_y = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
         new_align_trad_y0 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
         new_align_trad_y1 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+
+        new_align_fa_avg = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_fa_avg0 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_fa_avg1 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+
+        new_align_fa_avg_x = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_fa_avg_x0 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_fa_avg_x1 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_fa_avg_y = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_fa_avg_y0 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_fa_avg_y1 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
 
         new_align_avg = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
         new_align_avg0 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
@@ -1931,10 +1955,32 @@ class interface:
         new_align_num0 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
         new_align_num1 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
 
+        new_align_fa_indiv= [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_fa_x_indiv = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_fa_y_indiv = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+
+        new_align_fa_indiv0= [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_fa_x_indiv0 = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_fa_y_indiv0 = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+
+        new_align_fa_indiv1= [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_fa_x_indiv1 = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_fa_y_indiv1 = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+
+        new_align_id_indiv = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_id_indiv0 = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_id_indiv1 = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+
+        new_align_indiv = [[[] for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+
         new_align_avg_dif = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
 
         part_align = np.zeros(self.partNum)
         part_difr = np.zeros(self.partNum)
+        part_id = np.zeros(self.partNum)
+        part_x_pos = np.zeros(self.partNum)
+        part_y_pos = np.zeros(self.partNum)
+        part_align_fa = np.zeros(self.partNum)
 
         int_id = int_dict['bin']
 
@@ -2075,13 +2121,65 @@ class interface:
                                         new_align_trad_x[ix][iy] += x_dot_p
                                         new_align_trad_y[ix][iy] += y_dot_p
                                         part_align[self.binParts[ix][iy][h]] = r_dot_p
+                                        if self.typ[self.binParts[ix][iy][h]] == 0:
+                                            part_align_fa[self.binParts[ix][iy][h]] = r_dot_p * self.peA
+                                        elif self.typ[self.binParts[ix][iy][h]] == 1:
+                                            part_align_fa[self.binParts[ix][iy][h]] = r_dot_p * self.peB
+                                        part_id[self.binParts[ix][iy][h]] = self.binParts[ix][iy][h]
+                                        part_x_pos[self.binParts[ix][iy][h]] = self.pos[self.binParts[ix][iy][h],0]
+                                        part_y_pos[self.binParts[ix][iy][h]] = self.pos[self.binParts[ix][iy][h],1]
+
+                                        new_align_id_indiv[ix][iy].append(self.binParts[ix][iy][h])
 
                                         if self.typ[self.binParts[ix][iy][h]]==0:
                                             new_align0[ix][iy] += r_dot_p
+                                            new_align_x0[ix][iy] += x_dot_p
+                                            new_align_y0[ix][iy] += y_dot_p
+
+                                            new_align_fa0[ix][iy] += r_dot_p * self.peA
+                                            new_align_fa_x0[ix][iy] += x_dot_p * self.peA
+                                            new_align_fa_y0[ix][iy] += y_dot_p * self.peA
+
+                                            new_align_fa[ix][iy] += r_dot_p * self.peA
+                                            new_align_fa_x[ix][iy] += x_dot_p * self.peA
+                                            new_align_fa_y[ix][iy] += y_dot_p * self.peA
+
+                                            new_align_fa_indiv0[ix][iy].append(r_dot_p * self.peA)
+                                            new_align_fa_x_indiv0[ix][iy].append(x_dot_p * self.peA)
+                                            new_align_fa_y_indiv0[ix][iy].append(y_dot_p * self.peA)
+
+                                            new_align_fa_indiv[ix][iy].append(r_dot_p * self.peA)
+                                            new_align_fa_x_indiv[ix][iy].append(x_dot_p * self.peA)
+                                            new_align_fa_y_indiv[ix][iy].append(y_dot_p * self.peA)
+
+                                            new_align_id_indiv0[ix][iy].append(self.binParts[ix][iy][h])
+
                                             new_align_num0[ix][iy]+= 1
                                             new_align_trad0[ix][iy] += r_dot_p_trad
                                         elif self.typ[self.binParts[ix][iy][h]]==1:
+
                                             new_align1[ix][iy] += r_dot_p
+                                            new_align_x1[ix][iy] += x_dot_p
+                                            new_align_y1[ix][iy] += y_dot_p
+
+                                            new_align_fa1[ix][iy] += r_dot_p * self.peB
+                                            new_align_fa_x1[ix][iy] += x_dot_p * self.peB
+                                            new_align_fa_y1[ix][iy] += y_dot_p * self.peB
+
+                                            new_align_fa[ix][iy] += r_dot_p * self.peB
+                                            new_align_fa_x[ix][iy] += x_dot_p * self.peB
+                                            new_align_fa_y[ix][iy] += y_dot_p * self.peB
+
+                                            new_align_fa_indiv1[ix][iy].append(r_dot_p * self.peB)
+                                            new_align_fa_x_indiv1[ix][iy].append(x_dot_p * self.peB)
+                                            new_align_fa_y_indiv1[ix][iy].append(y_dot_p * self.peB)
+
+                                            new_align_fa_indiv[ix][iy].append(r_dot_p * self.peB)
+                                            new_align_fa_x_indiv[ix][iy].append(x_dot_p * self.peB)
+                                            new_align_fa_y_indiv[ix][iy].append(y_dot_p * self.peB)
+
+                                            new_align_id_indiv1[ix][iy].append(self.binParts[ix][iy][h])
+
                                             new_align_num1[ix][iy]+= 1
                                             new_align_trad1[ix][iy] += r_dot_p_trad
                             #if ext_edge_id[ix][iy]==0:
@@ -2191,11 +2289,43 @@ class interface:
                                         new_align_trad_x[ix][iy] += x_dot_p_trad
                                         new_align_trad_y[ix][iy] += y_dot_p_trad
                                         part_align[self.binParts[ix][iy][h]] = r_dot_p
+                                        if self.typ[self.binParts[ix][iy][h]] == 0:
+                                            part_align_fa[self.binParts[ix][iy][h]] = r_dot_p * self.peA
+                                        elif self.typ[self.binParts[ix][iy][h]] == 1:
+                                            part_align_fa[self.binParts[ix][iy][h]] = r_dot_p * self.peB
+
                                         part_difr[self.binParts[ix][iy][h]] = difr_short
+                                        part_id[self.binParts[ix][iy][h]] = self.binParts[ix][iy][h]
+                                        part_x_pos[self.binParts[ix][iy][h]] = self.pos[self.binParts[ix][iy][h],0]
+                                        part_y_pos[self.binParts[ix][iy][h]] = self.pos[self.binParts[ix][iy][h],1]
+
+                                        new_align_id_indiv[ix][iy].append(self.binParts[ix][iy][h])
+
+                                        new_align_indiv[ix][iy].append(r_dot_p)
+                                        
                                         if self.typ[self.binParts[ix][iy][h]]==0:
                                             new_align0[ix][iy] += r_dot_p
                                             new_align_x0[ix][iy] += x_dot_p
                                             new_align_y0[ix][iy] += y_dot_p
+
+                                            new_align_fa0[ix][iy] += r_dot_p * self.peA
+                                            new_align_fa_x0[ix][iy] += x_dot_p * self.peA
+                                            new_align_fa_y0[ix][iy] += y_dot_p * self.peA
+
+                                            new_align_fa[ix][iy] += r_dot_p * self.peA
+                                            new_align_fa_x[ix][iy] += x_dot_p * self.peA
+                                            new_align_fa_y[ix][iy] += y_dot_p * self.peA
+
+                                            new_align_fa_indiv0[ix][iy].append(r_dot_p * self.peA)
+                                            new_align_fa_x_indiv0[ix][iy].append(x_dot_p * self.peA)
+                                            new_align_fa_y_indiv0[ix][iy].append(y_dot_p * self.peA)
+
+                                            new_align_fa_indiv[ix][iy].append(r_dot_p * self.peA)
+                                            new_align_fa_x_indiv[ix][iy].append(x_dot_p * self.peA)
+                                            new_align_fa_y_indiv[ix][iy].append(y_dot_p * self.peA)
+
+                                            new_align_id_indiv0[ix][iy].append(self.binParts[ix][iy][h])
+
                                             new_align_num0[ix][iy]+= 1
                                             new_align_trad0[ix][iy] += r_dot_p_trad
                                             new_align_trad_x0[ix][iy] += x_dot_p_trad
@@ -2204,6 +2334,25 @@ class interface:
                                             new_align1[ix][iy] += r_dot_p
                                             new_align_x1[ix][iy] += x_dot_p
                                             new_align_y1[ix][iy] += y_dot_p
+
+                                            new_align_fa1[ix][iy] += r_dot_p * self.peB
+                                            new_align_fa_x1[ix][iy] += x_dot_p * self.peB
+                                            new_align_fa_y1[ix][iy] += y_dot_p * self.peB
+
+                                            new_align_fa[ix][iy] += r_dot_p * self.peB
+                                            new_align_fa_x[ix][iy] += x_dot_p * self.peB
+                                            new_align_fa_y[ix][iy] += y_dot_p * self.peB
+
+                                            new_align_fa_indiv1[ix][iy].append(r_dot_p * self.peB)
+                                            new_align_fa_x_indiv1[ix][iy].append(x_dot_p * self.peB)
+                                            new_align_fa_y_indiv1[ix][iy].append(y_dot_p * self.peB)
+
+                                            new_align_fa_indiv[ix][iy].append(r_dot_p * self.peB)
+                                            new_align_fa_x_indiv[ix][iy].append(x_dot_p * self.peB)
+                                            new_align_fa_y_indiv[ix][iy].append(y_dot_p * self.peB)
+
+                                            new_align_id_indiv1[ix][iy].append(self.binParts[ix][iy][h])
+
                                             new_align_num1[ix][iy]+= 1
                                             new_align_trad1[ix][iy] += r_dot_p_trad
                                             new_align_trad_x1[ix][iy] += x_dot_p_trad
@@ -2216,6 +2365,10 @@ class interface:
                             new_align_avg_x[ix][iy] = new_align_x[ix][iy] / new_align_num[ix][iy]
                             new_align_avg_y[ix][iy] = new_align_y[ix][iy] / new_align_num[ix][iy]
 
+                            new_align_fa_avg[ix][iy] = new_align_fa[ix][iy] / new_align_num[ix][iy]
+                            new_align_fa_avg_x[ix][iy] = new_align_fa_x[ix][iy] / new_align_num[ix][iy]
+                            new_align_fa_avg_y[ix][iy] = new_align_fa_y[ix][iy] / new_align_num[ix][iy]
+
                             new_align_avg_trad[ix][iy] = new_align_trad[ix][iy] / new_align_num[ix][iy]
                             new_align_avg_trad_x[ix][iy] = new_align_trad_x[ix][iy] / new_align_num[ix][iy]
                             new_align_avg_trad_y[ix][iy] = new_align_trad_y[ix][iy] / new_align_num[ix][iy]
@@ -2225,14 +2378,22 @@ class interface:
                                 new_align_avg_x0[ix][iy] = new_align_x0[ix][iy] / new_align_num0[ix][iy]
                                 new_align_avg_y0[ix][iy] = new_align_y0[ix][iy] / new_align_num0[ix][iy]
 
+                                new_align_fa_avg0[ix][iy] = new_align_fa0[ix][iy] / new_align_num0[ix][iy]
+                                new_align_fa_avg_x0[ix][iy] = new_align_fa_x0[ix][iy] / new_align_num0[ix][iy]
+                                new_align_fa_avg_y0[ix][iy] = new_align_fa_y0[ix][iy] / new_align_num0[ix][iy]
+
                                 new_align_avg_trad0[ix][iy] = new_align_trad0[ix][iy] / new_align_num0[ix][iy]
                                 new_align_avg_trad_x0[ix][iy] = new_align_trad_x0[ix][iy] / new_align_num0[ix][iy]
                                 new_align_avg_trad_y0[ix][iy] = new_align_trad_y0[ix][iy] / new_align_num0[ix][iy]
 
                             if new_align_num1[ix][iy]>0:
                                 new_align_avg1[ix][iy] = new_align1[ix][iy] / new_align_num1[ix][iy]
-                                new_align_avg_trad_x1[ix][iy] = new_align_x1[ix][iy] / new_align_num1[ix][iy]
-                                new_align_avg_trad_y1[ix][iy] = new_align_y1[ix][iy] / new_align_num1[ix][iy]
+                                new_align_avg_x1[ix][iy] = new_align_x1[ix][iy] / new_align_num1[ix][iy]
+                                new_align_avg_y1[ix][iy] = new_align_y1[ix][iy] / new_align_num1[ix][iy]
+
+                                new_align_fa_avg1[ix][iy] = new_align_fa1[ix][iy] / new_align_num1[ix][iy]
+                                new_align_fa_avg_x1[ix][iy] = new_align_fa_x1[ix][iy] / new_align_num1[ix][iy]
+                                new_align_fa_avg_y1[ix][iy] = new_align_fa_y1[ix][iy] / new_align_num1[ix][iy]
 
                                 new_align_avg_trad1[ix][iy] = new_align_trad1[ix][iy] / new_align_num1[ix][iy]
                                 new_align_avg_trad_x1[ix][iy] = new_align_trad_x1[ix][iy] / new_align_num1[ix][iy]
@@ -2242,10 +2403,11 @@ class interface:
                                 if new_align_num0[ix][iy]>0:
                                     new_align_avg_dif[ix][iy] = np.abs(new_align_avg1[ix][iy]) - np.abs(new_align_avg0[ix][iy])
 
-
-
+        
+        
         method1_align_dict = {'bin': {'all': {'x': new_align_avg_trad_x, 'y': new_align_avg_trad_y, 'mag': new_align_avg_trad, 'num': new_align_num}, 'A': {'x': new_align_avg_trad_x0, 'y': new_align_avg_trad_y0, 'mag': new_align_avg_trad0, 'num': new_align_num0}, 'B': {'x': new_align_avg_trad_x1, 'y': new_align_avg_trad_y1, 'mag': new_align_avg_trad1, 'num': new_align_num1}}, 'part': part_align}
-        method2_align_dict = {'bin': {'all': {'x': new_align_avg_x, 'y': new_align_avg_y, 'mag': new_align_avg, 'num': new_align_num}, 'A': {'x': new_align_avg_x0, 'y': new_align_avg_y0, 'mag': new_align_avg0, 'num': new_align_num0}, 'B': {'x': new_align_avg_x1, 'y': new_align_avg_y1, 'mag': new_align_avg1, 'num': new_align_num1}}, 'part': {'align': part_align, 'difr': part_difr}}
+        method2_align_dict = {'bin': {'all': {'x': new_align_avg_x, 'y': new_align_avg_y, 'mag': new_align_avg, 'fa_x': new_align_fa_avg_x, 'fa_y': new_align_fa_avg_y, 'fa_mag': new_align_fa_avg, 'fa_x_indiv': new_align_fa_x_indiv, 'fa_y_indiv': new_align_fa_y_indiv, 'fa_mag_indiv': new_align_fa_indiv, 'align_indiv': new_align_indiv, 'id_indiv': new_align_id_indiv, 'num': new_align_num}, 'A': {'x': new_align_avg_x0, 'y': new_align_avg_y0, 'mag': new_align_avg0, 'fa_x': new_align_fa_avg_x0, 'fa_y': new_align_fa_avg_y0, 'fa_mag': new_align_fa_avg0, 'fa_x_indiv': new_align_fa_x_indiv0, 'fa_y_indiv': new_align_fa_y_indiv0, 'fa_mag_indiv': new_align_fa_indiv0, 'id_indiv': new_align_id_indiv0, 'num': new_align_num0}, 'B': {'x': new_align_avg_x1, 'y': new_align_avg_y1, 'mag': new_align_avg1, 'fa_x': new_align_fa_avg_x1, 'fa_y': new_align_fa_avg_y1, 'fa_mag': new_align_fa_avg1, 'fa_x_indiv': new_align_fa_x_indiv1, 'fa_y_indiv': new_align_fa_y_indiv1, 'fa_mag_indiv': new_align_fa_indiv1, 'id_indiv': new_align_id_indiv1, 'num': new_align_num1}}, 'part': {'align': part_align, 'align_fa': part_align_fa, 'difr': part_difr, 'id': part_id, 'x_pos': part_x_pos, 'y_pos': part_y_pos}}
+        
         return  method1_align_dict, method2_align_dict
 
     def bulk_alignment(self, method1_align_dict, method2_align_dict, surface_measurements, surface_curve, sep_surface_dict, bulk_dict, bulk_comp_dict, int_comp_dict):
@@ -2262,6 +2424,17 @@ class interface:
         new_align_y = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
         new_align_y0 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
         new_align_y1 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+
+        new_align_fa = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_fa0 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_fa1 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+
+        new_align_fa_x = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_fa_x0 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_fa_x1 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_fa_y = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_fa_y0 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        new_align_fa_y1 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
 
         new_align_trad = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
         new_align_trad0 = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
@@ -2292,6 +2465,24 @@ class interface:
         new_align_avg_trad_y0 = method1_align_dict['bin']['A']['y']
         new_align_avg_trad_y1 = method1_align_dict['bin']['B']['y']
 
+        new_align_fa_indiv = method2_align_dict['bin']['all']['fa_mag_indiv']
+        new_align_fa_x_indiv = method2_align_dict['bin']['all']['fa_x_indiv']
+        new_align_fa_y_indiv = method2_align_dict['bin']['all']['fa_y_indiv']
+
+        new_align_fa_indiv0 = method2_align_dict['bin']['A']['fa_mag_indiv']
+        new_align_fa_x_indiv0 = method2_align_dict['bin']['A']['fa_x_indiv']
+        new_align_fa_y_indiv0 = method2_align_dict['bin']['A']['fa_y_indiv']
+
+        new_align_fa_indiv1 = method2_align_dict['bin']['B']['fa_mag_indiv']
+        new_align_fa_x_indiv1 = method2_align_dict['bin']['B']['fa_x_indiv']
+        new_align_fa_y_indiv1 = method2_align_dict['bin']['B']['fa_y_indiv']
+
+        new_align_id_indiv = method2_align_dict['bin']['all']['id_indiv']
+        new_align_id_indiv0 = method2_align_dict['bin']['A']['id_indiv']
+        new_align_id_indiv1 = method2_align_dict['bin']['B']['id_indiv']
+
+        new_align_indiv = method2_align_dict['bin']['all']['align_indiv']
+
         new_align_avg = method2_align_dict['bin']['all']['mag']
         new_align_avg0 = method2_align_dict['bin']['A']['mag']
         new_align_avg1 = method2_align_dict['bin']['B']['mag']
@@ -2304,12 +2495,30 @@ class interface:
         new_align_avg_y0 = method2_align_dict['bin']['A']['y']
         new_align_avg_y1 = method2_align_dict['bin']['B']['y']
 
+        new_align_fa_avg = method2_align_dict['bin']['all']['fa_mag']
+        new_align_fa_avg0 = method2_align_dict['bin']['A']['fa_mag']
+        new_align_fa_avg1 = method2_align_dict['bin']['B']['fa_mag']
+
+        new_align_fa_avg_x = method2_align_dict['bin']['all']['fa_x']
+        new_align_fa_avg_x0 = method2_align_dict['bin']['A']['fa_x']
+        new_align_fa_avg_x1 = method2_align_dict['bin']['B']['fa_x']
+
+        new_align_fa_avg_y = method2_align_dict['bin']['all']['fa_y']
+        new_align_fa_avg_y0 = method2_align_dict['bin']['A']['fa_y']
+        new_align_fa_avg_y1 = method2_align_dict['bin']['B']['fa_y']
+
         new_align_num = method1_align_dict['bin']['all']['num']
         new_align_num0 = method1_align_dict['bin']['A']['num']
         new_align_num1 = method1_align_dict['bin']['B']['num']
 
         part_align = method2_align_dict['part']['align']
         part_difr = method2_align_dict['part']['difr']
+        part_id = method2_align_dict['part']['id']
+        part_x_pos = method2_align_dict['part']['x_pos']
+        part_y_pos = method2_align_dict['part']['y_pos']
+        part_align_fa = method2_align_dict['part']['align_fa']
+
+
 
         for m in range(0, len(bulk_large_ids)):
 
@@ -2466,7 +2675,16 @@ class interface:
 
                                     #Save alignment of each particle
                                     part_align[self.binParts[ix][iy][h]] = r_dot_p
+                                    if self.typ[self.binParts[ix][iy][h]] == 0:
+                                        part_align_fa[self.binParts[ix][iy][h]] = r_dot_p * self.peA
+                                    elif self.typ[self.binParts[ix][iy][h]] == 1:
+                                        part_align_fa[self.binParts[ix][iy][h]] = r_dot_p * self.peB
+
                                     part_difr[self.binParts[ix][iy][h]] = difr_short
+                                    part_id[self.binParts[ix][iy][h]] = self.binParts[ix][iy][h]
+                                    part_x_pos[self.binParts[ix][iy][h]] = self.pos[self.binParts[ix][iy][h],0]
+                                    part_y_pos[self.binParts[ix][iy][h]] = self.pos[self.binParts[ix][iy][h],1]
+                                    
                                     #Calculate alignment of all particles per bin
                                     new_align[ix][iy] += r_dot_p
                                     new_align_x[ix][iy] += x_dot_p
@@ -2476,25 +2694,69 @@ class interface:
                                     new_align_trad_x[ix][iy] += x_dot_p_trad
                                     new_align_trad_y[ix][iy] += y_dot_p_trad
 
+                                    new_align_id_indiv[ix][iy].append(self.binParts[ix][iy][h])
+
+                                    new_align_indiv[ix][iy].append(r_dot_p)
+
+                                    
+
                                     #if particle type is B, add to total alignment
                                     if self.typ[self.binParts[ix][iy][h]]==0:
                                         new_align0[ix][iy] += r_dot_p
                                         new_align_x0[ix][iy] += x_dot_p
                                         new_align_y0[ix][iy] += y_dot_p
+
+                                        new_align_fa0[ix][iy] += r_dot_p * self.peA
+                                        new_align_fa_x0[ix][iy] += x_dot_p * self.peA
+                                        new_align_fa_y0[ix][iy] += y_dot_p * self.peA
+
+                                        new_align_fa[ix][iy] += r_dot_p * self.peA
+                                        new_align_fa_x[ix][iy] += x_dot_p * self.peA
+                                        new_align_fa_y[ix][iy] += y_dot_p * self.peA
+                                        
                                         new_align_num0[ix][iy]+= 1
                                         new_align_trad0[ix][iy] += r_dot_p_trad
                                         new_align_trad_x0[ix][iy] += x_dot_p_trad
                                         new_align_trad_y0[ix][iy] += y_dot_p_trad
+
+                                        new_align_fa_indiv0[ix][iy].append(r_dot_p * self.peA)
+                                        new_align_fa_x_indiv0[ix][iy].append(x_dot_p * self.peA)
+                                        new_align_fa_y_indiv0[ix][iy].append(y_dot_p * self.peA)
+
+                                        new_align_fa_indiv[ix][iy].append(r_dot_p * self.peA)
+                                        new_align_fa_x_indiv[ix][iy].append(x_dot_p * self.peA)
+                                        new_align_fa_y_indiv[ix][iy].append(y_dot_p * self.peA)
+
+                                        new_align_id_indiv0[ix][iy].append(self.binParts[ix][iy][h])
 
                                     #if particle type is B, add to total alignment
                                     elif self.typ[self.binParts[ix][iy][h]]==1:
                                         new_align1[ix][iy] += r_dot_p
                                         new_align_x1[ix][iy] += x_dot_p
                                         new_align_y1[ix][iy] += y_dot_p
+
+                                        new_align_fa1[ix][iy] += r_dot_p * self.peB
+                                        new_align_fa_x1[ix][iy] += x_dot_p * self.peB
+                                        new_align_fa_y1[ix][iy] += y_dot_p * self.peB
+
+                                        new_align_fa[ix][iy] += r_dot_p * self.peB
+                                        new_align_fa_x[ix][iy] += x_dot_p * self.peB
+                                        new_align_fa_y[ix][iy] += y_dot_p * self.peB
+
                                         new_align_num1[ix][iy]+= 1
                                         new_align_trad1[ix][iy] += r_dot_p_trad
                                         new_align_trad_x1[ix][iy] += x_dot_p_trad
                                         new_align_trad_y1[ix][iy] += y_dot_p_trad
+
+                                        new_align_fa_indiv1[ix][iy].append(r_dot_p * self.peB)
+                                        new_align_fa_x_indiv1[ix][iy].append(x_dot_p * self.peB)
+                                        new_align_fa_y_indiv1[ix][iy].append(y_dot_p * self.peB)
+
+                                        new_align_fa_indiv[ix][iy].append(r_dot_p * self.peB)
+                                        new_align_fa_x_indiv[ix][iy].append(x_dot_p * self.peB)
+                                        new_align_fa_y_indiv[ix][iy].append(y_dot_p * self.peB)
+
+                                        new_align_id_indiv1[ix][iy].append(self.binParts[ix][iy][h])
 
 
         #Calculate average alignment of bulk bins
@@ -2509,6 +2771,10 @@ class interface:
                         new_align_avg_x[ix][iy] = new_align_x[ix][iy] / new_align_num[ix][iy]
                         new_align_avg_y[ix][iy] = new_align_y[ix][iy] / new_align_num[ix][iy]
 
+                        new_align_fa_avg[ix][iy] = new_align_fa[ix][iy] / new_align_num[ix][iy]
+                        new_align_fa_avg_x[ix][iy] = new_align_fa_x[ix][iy] / new_align_num[ix][iy]
+                        new_align_fa_avg_y[ix][iy] = new_align_fa_y[ix][iy] / new_align_num[ix][iy]
+
                         new_align_avg_trad[ix][iy] = new_align_trad[ix][iy] / new_align_num[ix][iy]
                         new_align_avg_trad_x[ix][iy] = new_align_trad_x[ix][iy] / new_align_num[ix][iy]
                         new_align_avg_trad_y[ix][iy] = new_align_trad_y[ix][iy] / new_align_num[ix][iy]
@@ -2517,6 +2783,10 @@ class interface:
                             new_align_avg0[ix][iy] = new_align0[ix][iy] / new_align_num0[ix][iy]
                             new_align_avg_x0[ix][iy] = new_align_x0[ix][iy] / new_align_num0[ix][iy]
                             new_align_avg_y0[ix][iy] = new_align_y0[ix][iy] / new_align_num0[ix][iy]
+
+                            new_align_fa_avg0[ix][iy] = new_align_fa0[ix][iy] / new_align_num[ix][iy]
+                            new_align_fa_avg_x0[ix][iy] = new_align_fa_x0[ix][iy] / new_align_num[ix][iy]
+                            new_align_fa_avg_y0[ix][iy] = new_align_fa_y0[ix][iy] / new_align_num[ix][iy]
 
                             new_align_avg_trad0[ix][iy] = new_align_trad0[ix][iy] / new_align_num0[ix][iy]
                             new_align_avg_trad_x0[ix][iy] = new_align_trad_x0[ix][iy] / new_align_num0[ix][iy]
@@ -2527,12 +2797,16 @@ class interface:
                             new_align_avg_x1[ix][iy] = new_align_x1[ix][iy] / new_align_num1[ix][iy]
                             new_align_avg_y1[ix][iy] = new_align_y1[ix][iy] / new_align_num1[ix][iy]
 
+                            new_align_fa_avg1[ix][iy] = new_align_fa1[ix][iy] / new_align_num[ix][iy]
+                            new_align_fa_avg_x1[ix][iy] = new_align_fa_x1[ix][iy] / new_align_num[ix][iy]
+                            new_align_fa_avg_y1[ix][iy] = new_align_fa_y1[ix][iy] / new_align_num[ix][iy]
+
                             new_align_avg_trad1[ix][iy] = new_align_trad1[ix][iy] / new_align_num1[ix][iy]
                             new_align_avg_trad_x1[ix][iy] = new_align_trad_x1[ix][iy] / new_align_num1[ix][iy]
                             new_align_avg_trad_y1[ix][iy] = new_align_trad_y1[ix][iy] / new_align_num1[ix][iy]
 
         method1_align_dict = {'bin': {'all': {'x': new_align_avg_trad_x, 'y': new_align_avg_trad_y, 'mag': new_align_avg_trad, 'num': new_align_num}, 'A': {'x': new_align_avg_trad_x0, 'y': new_align_avg_trad_y0, 'mag': new_align_avg_trad0, 'num': new_align_num0}, 'B': {'x': new_align_avg_trad_x1, 'y': new_align_avg_trad_y1, 'mag': new_align_avg_trad1, 'num': new_align_num1}}, 'part': part_align}
-        method2_align_dict = {'bin': {'all': {'x': new_align_avg_x, 'y': new_align_avg_y, 'mag': new_align_avg, 'num': new_align_num}, 'A': {'x': new_align_avg_x0, 'y': new_align_avg_y0, 'mag': new_align_avg0, 'num': new_align_num0}, 'B': {'x': new_align_avg_x1, 'y': new_align_avg_y1, 'mag': new_align_avg1, 'num': new_align_num1}}, 'part': {'align': part_align, 'difr': part_difr}}
+        method2_align_dict = {'bin': {'all': {'x': new_align_avg_x, 'y': new_align_avg_y, 'mag': new_align_avg, 'fa_x': new_align_fa_avg_x, 'fa_y': new_align_fa_avg_y, 'fa_mag': new_align_fa_avg, 'fa_x_indiv': new_align_fa_x_indiv, 'fa_y_indiv': new_align_fa_y_indiv, 'fa_mag_indiv': new_align_fa_indiv, 'align_indiv': new_align_indiv, 'id_indiv': new_align_id_indiv, 'num': new_align_num}, 'A': {'x': new_align_avg_x0, 'y': new_align_avg_y0, 'mag': new_align_avg0, 'fa_x': new_align_fa_avg_x0, 'fa_y': new_align_fa_avg_y0, 'fa_mag': new_align_fa_avg0, 'fa_x_indiv': new_align_fa_x_indiv0, 'fa_y_indiv': new_align_fa_y_indiv0, 'fa_mag_indiv': new_align_fa_indiv0, 'id_indiv': new_align_id_indiv0, 'num': new_align_num0}, 'B': {'x': new_align_avg_x1, 'y': new_align_avg_y1, 'mag': new_align_avg1, 'fa_x': new_align_fa_avg_x1, 'fa_y': new_align_fa_avg_y1, 'fa_mag': new_align_fa_avg1, 'fa_x_indiv': new_align_fa_x_indiv1, 'fa_y_indiv': new_align_fa_y_indiv1, 'fa_mag_indiv': new_align_fa_indiv1, 'id_indiv': new_align_id_indiv1, 'num': new_align_num1}}, 'part': {'align': part_align, 'align_fa': part_align_fa, 'difr': part_difr, 'id': part_id, 'x_pos': part_x_pos, 'y_pos': part_y_pos}}
         return  method1_align_dict, method2_align_dict
     def gas_alignment(self, method1_align_dict, method2_align_dict, surface_measurements, surface_curve, sep_surface_dict, int_comp_dict):
 
@@ -2552,6 +2826,21 @@ class interface:
         Surface_align_y = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
         Surface_align_y_A = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
         Surface_align_y_B = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+
+        # Total alignment with nearest surface normal for each particle type ('all', 'A', or 'B') per bin
+        Surface_align_fa = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        Surface_align_fa_A = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        Surface_align_fa_B = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+
+        # Total x-dimension alignment with nearest surface normal in x-dimension for each particle type ('all', 'A', or 'B') per bin
+        Surface_align_fa_x = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        Surface_align_fa_x_A = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        Surface_align_fa_x_B = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+
+        # Total y-dimension alignment with nearest surface normal in y-dimension for each particle type ('all', 'A', or 'B') per bin
+        Surface_align_fa_y = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        Surface_align_fa_y_A = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+        Surface_align_fa_y_B = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
 
         # Total alignment with largest cluster's CoM for each particle type ('all', 'A', or 'B') per bin
         CoM_align = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
@@ -2598,6 +2887,36 @@ class interface:
         Surface_align_avg_y_A = method2_align_dict['bin']['A']['y']
         Surface_align_avg_y_B = method2_align_dict['bin']['B']['y']
 
+        Surface_align_fa_avg_A = method2_align_dict['bin']['A']['fa_mag']
+        Surface_align_fa_avg_x_A = method2_align_dict['bin']['A']['fa_x']
+        Surface_align_fa_avg_y_A = method2_align_dict['bin']['A']['fa_y']
+
+        Surface_align_fa_avg_B = method2_align_dict['bin']['B']['fa_mag']
+        Surface_align_fa_avg_x_B = method2_align_dict['bin']['B']['fa_x']
+        Surface_align_fa_avg_y_B = method2_align_dict['bin']['B']['fa_y']
+
+        Surface_align_fa_avg = method2_align_dict['bin']['all']['fa_mag']
+        Surface_align_fa_avg_x = method2_align_dict['bin']['all']['fa_x']
+        Surface_align_fa_avg_y = method2_align_dict['bin']['all']['fa_y']
+
+        new_align_fa_indiv = method2_align_dict['bin']['all']['fa_mag_indiv']
+        new_align_fa_x_indiv = method2_align_dict['bin']['all']['fa_x_indiv']
+        new_align_fa_y_indiv = method2_align_dict['bin']['all']['fa_y_indiv']
+
+        new_align_fa_indiv0 = method2_align_dict['bin']['A']['fa_mag_indiv']
+        new_align_fa_x_indiv0 = method2_align_dict['bin']['A']['fa_x_indiv']
+        new_align_fa_y_indiv0 = method2_align_dict['bin']['A']['fa_y_indiv']
+
+        new_align_fa_indiv1 = method2_align_dict['bin']['B']['fa_mag_indiv']
+        new_align_fa_x_indiv1 = method2_align_dict['bin']['B']['fa_x_indiv']
+        new_align_fa_y_indiv1 = method2_align_dict['bin']['B']['fa_y_indiv']
+
+        new_align_id_indiv = method2_align_dict['bin']['all']['id_indiv']
+        new_align_id_indiv0 = method2_align_dict['bin']['A']['id_indiv']
+        new_align_id_indiv1 = method2_align_dict['bin']['B']['id_indiv']
+
+        new_align_indiv = method2_align_dict['bin']['all']['align_indiv']
+
         # Number of particles in each bin of respective particle type ('all', 'A', or 'B')
         Align_num = method1_align_dict['bin']['all']['num']
         Align_num_A = method1_align_dict['bin']['A']['num']
@@ -2609,15 +2928,24 @@ class interface:
         # Separation distance with nearest surface normal per particle
         part_difr = method2_align_dict['part']['difr']
 
+        part_id = method2_align_dict['part']['id']
+        part_x_pos = method2_align_dict['part']['x_pos']
+        part_y_pos = method2_align_dict['part']['y_pos']
+        part_align_fa = method2_align_dict['part']['align_fa']
+
         #Calculate alignment of gas bins
 
         #Loop over all bins
         for ix in range(0, self.NBins_x):
             for iy in range(0, self.NBins_y):
-
+                #for h in range(0, len(self.binParts[ix][iy])):
+                #    if self.binParts[ix][iy][h]==19584:
+                #        stop
                 # If average alignment has not been calculated previously (gas)
                 if Surface_align_avg[ix][iy]==0:
-
+                    for h in range(0, len(self.binParts[ix][iy])):
+                        if self.binParts[ix][iy][h]==19584:
+                            stop
                     #Calculate reference bin position
                     xpos_ref = (ix+0.5)*self.sizeBin_x
                     ypos_ref = (iy+0.5)*self.sizeBin_y
@@ -2729,7 +3057,7 @@ class interface:
 
                         #Loop over particles in reference bin
                         for h in range(0, len(self.binParts[ix][iy])):
-
+                            
                             #If nearest surface is exterior surface, calculate alignment with that surface
                             if exterior_bin_short == 1:
                                 Surface_x_dot_p = (-Surface_x_norm_unitv * self.px[self.binParts[ix][iy][h]])
@@ -2755,7 +3083,15 @@ class interface:
                             part_align[self.binParts[ix][iy][h]] = Surface_r_dot_p
 
                             # Save alignment of particle with nearest surface
+                            if self.typ[self.binParts[ix][iy][h]] == 0:
+                                part_align_fa[self.binParts[ix][iy][h]] = Surface_r_dot_p * self.peA
+                            elif self.typ[self.binParts[ix][iy][h]] == 1:
+                                part_align_fa[self.binParts[ix][iy][h]] = Surface_r_dot_p * self.peB
+
                             part_difr[self.binParts[ix][iy][h]] = difr_short
+                            part_id[self.binParts[ix][iy][h]] = self.binParts[ix][iy][h]
+                            part_x_pos[self.binParts[ix][iy][h]] = self.pos[self.binParts[ix][iy][h],0]
+                            part_y_pos[self.binParts[ix][iy][h]] = self.pos[self.binParts[ix][iy][h],1]
 
                             # Total alignment of all particles per dimension with nearest surface in reference bin
                             Surface_align[ix][iy] += Surface_r_dot_p
@@ -2768,25 +3104,67 @@ class interface:
                             CoM_align_x[ix][iy] += CoM_x_dot_p
                             CoM_align_y[ix][iy] += CoM_y_dot_p
 
+                            new_align_id_indiv[ix][iy].append(self.binParts[ix][iy][h])
+
+                            new_align_indiv[ix][iy].append(Surface_r_dot_p)
+
                             #Calculate total alignment and number of particles per bin for type A particles
                             if self.typ[self.binParts[ix][iy][h]]==0:
                                 Surface_align_A[ix][iy] += Surface_r_dot_p
                                 Surface_align_x_A[ix][iy] += Surface_x_dot_p
                                 Surface_align_y_A[ix][iy] += Surface_y_dot_p
+
+                                Surface_align_fa_A[ix][iy] += Surface_r_dot_p * self.peA
+                                Surface_align_fa_x_A[ix][iy] += Surface_x_dot_p * self.peA
+                                Surface_align_fa_y_A[ix][iy] += Surface_y_dot_p * self.peA
+
+                                Surface_align_fa[ix][iy] += Surface_r_dot_p * self.peA
+                                Surface_align_fa_x[ix][iy] += Surface_x_dot_p * self.peA
+                                Surface_align_fa_y[ix][iy] += Surface_y_dot_p * self.peA
+
                                 Align_num_A[ix][iy]+= 1
                                 CoM_align_A[ix][iy] += CoM_r_dot_p
                                 CoM_align_x_A[ix][iy] += CoM_x_dot_p
                                 CoM_align_y_A[ix][iy] += CoM_y_dot_p
+
+                                new_align_fa_indiv0[ix][iy].append(Surface_r_dot_p * self.peA)
+                                new_align_fa_x_indiv0[ix][iy].append(Surface_x_dot_p * self.peA)
+                                new_align_fa_y_indiv0[ix][iy].append(Surface_y_dot_p * self.peA)
+
+                                new_align_fa_indiv[ix][iy].append(Surface_r_dot_p * self.peA)
+                                new_align_fa_x_indiv[ix][iy].append(Surface_x_dot_p * self.peA)
+                                new_align_fa_y_indiv[ix][iy].append(Surface_y_dot_p * self.peA)
+
+                                new_align_id_indiv0[ix][iy].append(self.binParts[ix][iy][h])
 
                             #Calculate total alignment and number of particles per bin for type B particles
                             elif self.typ[self.binParts[ix][iy][h]]==1:
                                 Surface_align_B[ix][iy] += Surface_r_dot_p
                                 Surface_align_x_B[ix][iy] += Surface_x_dot_p
                                 Surface_align_y_B[ix][iy] += Surface_y_dot_p
+
+                                Surface_align_fa[ix][iy] += Surface_r_dot_p * self.peB
+                                Surface_align_fa_x[ix][iy] += Surface_x_dot_p * self.peB
+                                Surface_align_fa_y[ix][iy] += Surface_y_dot_p * self.peB
+
+                                Surface_align_fa_B[ix][iy] += Surface_r_dot_p * self.peB
+                                Surface_align_fa_x_B[ix][iy] += Surface_x_dot_p * self.peB
+                                Surface_align_fa_y_B[ix][iy] += Surface_y_dot_p * self.peB
+
                                 Align_num_B[ix][iy]+= 1
                                 CoM_align_B[ix][iy] += CoM_r_dot_p
                                 CoM_align_x_B[ix][iy] += CoM_x_dot_p
                                 CoM_align_y_B[ix][iy] += CoM_y_dot_p
+
+                                new_align_fa_indiv1[ix][iy].append(Surface_r_dot_p * self.peB)
+                                new_align_fa_x_indiv1[ix][iy].append(Surface_x_dot_p * self.peB)
+                                new_align_fa_y_indiv1[ix][iy].append(Surface_y_dot_p * self.peB)
+
+                                new_align_fa_indiv[ix][iy].append(Surface_r_dot_p * self.peB)
+                                new_align_fa_x_indiv[ix][iy].append(Surface_x_dot_p * self.peB)
+                                new_align_fa_y_indiv[ix][iy].append(Surface_y_dot_p * self.peB)
+
+                                new_align_id_indiv1[ix][iy].append(self.binParts[ix][iy][h])
 
 
         #Calculate average alignment per bin
@@ -2802,6 +3180,10 @@ class interface:
                         Surface_align_avg_x[ix][iy] = Surface_align_x[ix][iy] / Align_num[ix][iy]
                         Surface_align_avg_y[ix][iy] = Surface_align_y[ix][iy] / Align_num[ix][iy]
 
+                        Surface_align_fa_avg[ix][iy] = Surface_align_fa[ix][iy] / Align_num[ix][iy]
+                        Surface_align_fa_avg_x[ix][iy] = Surface_align_fa_x[ix][iy] / Align_num[ix][iy]
+                        Surface_align_fa_avg_y[ix][iy] = Surface_align_fa_y[ix][iy] / Align_num[ix][iy]
+
                         CoM_align_avg[ix][iy] = CoM_align[ix][iy] / Align_num[ix][iy]
                         CoM_align_avg_x[ix][iy] = CoM_align_x[ix][iy] / Align_num[ix][iy]
                         CoM_align_avg_y[ix][iy] = CoM_align_y[ix][iy] / Align_num[ix][iy]
@@ -2809,6 +3191,10 @@ class interface:
                             Surface_align_avg_A[ix][iy] = Surface_align_A[ix][iy] / Align_num_A[ix][iy]
                             Surface_align_avg_x_A[ix][iy] = Surface_align_x_A[ix][iy] / Align_num_A[ix][iy]
                             Surface_align_avg_y_A[ix][iy] = Surface_align_y_A[ix][iy] / Align_num_A[ix][iy]
+
+                            Surface_align_fa_avg_A[ix][iy] = Surface_align_fa_A[ix][iy] / Align_num_A[ix][iy]
+                            Surface_align_fa_avg_x_A[ix][iy] = Surface_align_fa_x_A[ix][iy] / Align_num_A[ix][iy]
+                            Surface_align_fa_avg_y_A[ix][iy] = Surface_align_fa_y_A[ix][iy] / Align_num_A[ix][iy]
 
                             CoM_align_avg_A[ix][iy] = CoM_align_A[ix][iy] / Align_num_A[ix][iy]
                             CoM_align_avg_x_A[ix][iy] = CoM_align_x_A[ix][iy] / Align_num_A[ix][iy]
@@ -2818,12 +3204,16 @@ class interface:
                             Surface_align_avg_x_B[ix][iy] = Surface_align_x_B[ix][iy] / Align_num_B[ix][iy]
                             Surface_align_avg_y_B[ix][iy] = Surface_align_y_B[ix][iy] / Align_num_B[ix][iy]
 
+                            Surface_align_fa_avg_B[ix][iy] = Surface_align_fa_B[ix][iy] / Align_num_B[ix][iy]
+                            Surface_align_fa_avg_x_B[ix][iy] = Surface_align_fa_x_B[ix][iy] / Align_num_B[ix][iy]
+                            Surface_align_fa_avg_y_B[ix][iy] = Surface_align_fa_y_B[ix][iy] / Align_num_B[ix][iy]
+
                             CoM_align_avg_B[ix][iy] = CoM_align_B[ix][iy] / Align_num_B[ix][iy]
                             CoM_align_avg_x_B[ix][iy] = CoM_align_x_B[ix][iy] / Align_num_B[ix][iy]
                             CoM_align_avg_y_B[ix][iy] = CoM_align_y_B[ix][iy] / Align_num_B[ix][iy]
 
         CoM_align_dict = {'bin': {'all': {'x': CoM_align_avg_x, 'y': CoM_align_avg_y, 'mag': CoM_align_avg, 'num': Align_num}, 'A': {'x': CoM_align_avg_x_A, 'y': CoM_align_avg_y_A, 'mag': CoM_align_avg_A, 'num': Align_num_A}, 'B': {'x': CoM_align_avg_x_B, 'y': CoM_align_avg_y_B, 'mag': CoM_align_avg_B, 'num': Align_num_B}}, 'part': part_align}
-        Surface_align_dict = {'bin': {'all': {'x': Surface_align_avg_x, 'y': Surface_align_avg_y, 'mag': Surface_align_avg, 'num': Align_num}, 'A': {'x': Surface_align_avg_x_A, 'y': Surface_align_avg_y_A, 'mag': Surface_align_avg_A, 'num': Align_num_A}, 'B': {'x': Surface_align_avg_x_B, 'y': Surface_align_avg_y_B, 'mag': Surface_align_avg_B, 'num': Align_num_B}}, 'part': {'align': part_align, 'difr': part_difr}}
+        Surface_align_dict = {'bin': {'all': {'x': Surface_align_avg_x, 'y': Surface_align_avg_y, 'mag': Surface_align_avg, 'fa_x': Surface_align_fa_avg_x, 'fa_y': Surface_align_fa_avg_y, 'fa_mag': Surface_align_fa_avg, 'fa_x_indiv': new_align_fa_x_indiv, 'fa_y_indiv': new_align_fa_y_indiv, 'fa_mag_indiv': new_align_fa_indiv, 'align_indiv': new_align_indiv, 'id_indiv': new_align_id_indiv, 'num': Align_num}, 'A': {'x': Surface_align_avg_x_A, 'y': Surface_align_avg_y_A, 'mag': Surface_align_avg_A, 'fa_x': Surface_align_fa_avg_x_A, 'fa_y': Surface_align_fa_avg_y_A, 'fa_mag': Surface_align_fa_avg_A, 'fa_x_indiv': new_align_fa_x_indiv0, 'fa_y_indiv': new_align_fa_y_indiv0, 'fa_mag_indiv': new_align_fa_indiv0, 'id_indiv': new_align_id_indiv0, 'num': Align_num_A}, 'B': {'x': Surface_align_avg_x_B, 'y': Surface_align_avg_y_B, 'mag': Surface_align_avg_B, 'fa_x': Surface_align_fa_avg_x_B, 'fa_y': Surface_align_fa_avg_y_B, 'fa_mag': Surface_align_fa_avg_B, 'fa_x_indiv': new_align_fa_x_indiv1, 'fa_y_indiv': new_align_fa_y_indiv1, 'fa_mag_indiv': new_align_fa_indiv1, 'id_indiv': new_align_id_indiv1, 'num': Align_num_B}}, 'part': {'align': part_align, 'align_fa': part_align_fa, 'difr': part_difr, 'id': part_id, 'x_pos': part_x_pos, 'y_pos': part_y_pos}}
         return  CoM_align_dict, Surface_align_dict
     def det_planar_surface_points(self):
 

@@ -225,6 +225,8 @@ time_clust_all_size = np.array([])
 time_clust_A_size = np.array([])
 time_clust_B_size = np.array([])
 
+tracer_ids = np.array([])
+
 # Optional input parameters for plotting data
 com_option = False
 mono_option = False
@@ -548,7 +550,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 int_comp_dict = phase_ident_functs.phase_sort(int_comp_dict)
 
                 # Instantiate interface functions module
-                interface_functs = interface.interface(area_frac_dict, align_dict, part_dict, press_dict, lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, parFrac, eps, typ, x_orient_arr, y_orient_arr)
+                interface_functs = interface.interface(area_frac_dict, align_dict, part_dict, press_dict, lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, parFrac, eps, typ, x_orient_arr, y_orient_arr, pos)
                 
                 # Identify interior and exterior surface bin points
                 surface_dict = interface_functs.det_surface_points(phase_dict, int_dict, int_comp_dict)
@@ -667,7 +669,6 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 activity_dict = {'bulk': (part_count_dict['bulk']['A']/part_count_dict['bulk']['all']) * peA + (part_count_dict['bulk']['B']/part_count_dict['bulk']['all']) * peB, 'int': (part_count_dict['int']['A']/part_count_dict['int']['all'])*peA + (part_count_dict['int']['B']/part_count_dict['int']['all'])*peB, 'gas': (part_count_dict['gas']['A']/part_count_dict['gas']['all']) * peA + (part_count_dict['gas']['B']/part_count_dict['gas']['all']) * peB}
                 # I NEED TO MAKE A FUNCTION THAT IDENTIFIES PHASE OF BIN BASED ON NUMBER OF PARTICLES IN IT!
                 for q in range(0, len(bin_width_arr)):
-                    print(q)
                     """
                     #Bin system to calculate orientation and alignment that will be used in vector plots
                     NBins_x_tmp = utility_functs.getNBins(lx_box, bin_width_arr[q])
@@ -1028,7 +1029,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 int_comp_dict = phase_ident_functs.phase_sort(int_comp_dict)
 
                 # Instantiate interface functions module
-                interface_functs = interface.interface(area_frac_dict, align_dict, part_dict, press_dict, lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, parFrac, eps, typ, x_orient_arr, y_orient_arr)
+                interface_functs = interface.interface(area_frac_dict, align_dict, part_dict, press_dict, lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, parFrac, eps, typ, x_orient_arr, y_orient_arr, pos)
                 
                 # Identify interior and exterior surface bin points
                 surface_dict = interface_functs.det_surface_points(phase_dict, int_dict, int_comp_dict)
@@ -1285,6 +1286,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 # Calculate alignment of gas with nearest surface normal
                 method1_align_dict, method2_align_dict = interface_functs.gas_alignment(method1_align_dict, method2_align_dict, all_surface_measurements, all_surface_curves, sep_surface_dict, int_comp_dict)
 
+                
                 if measurement_options[0] == 'vorticity':
                     #DONE!
                     if j>(start*time_step):
@@ -1353,6 +1355,13 @@ with hoomd.open(name=inFile, mode='rb') as t:
                         
                         # Plot particles color-coded by activity
                         plotting_functs.plot_part_activity(pos, all_surface_curves, int_comp_dict, active_fa_dict, mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option, banner_id = banner_option, presentation_id = presentation_option)
+                elif (measurement_options[0] == 'activity-seg'):
+                    #DONE!
+                    if plot == 'y':
+                        
+                        # Plot particles color-coded by activity
+                        
+                        plotting_functs.plot_part_activity_zoom_seg(pos, all_surface_curves, int_comp_dict, active_fa_dict, mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option, banner_id = banner_option, presentation_id = presentation_option)
                 elif (measurement_options[0] == 'activity-wide-adsorb'):
                     #DONE!
                     if plot == 'y':
@@ -1401,6 +1410,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                         plotting_functs.plot_phases(pos, part_id_dict, phase_dict, all_surface_curves, int_comp_dict, orient_dict2, interface_id = interface_option, orientation_id = orientation_option, presentation_id = presentation_option)
                 
                 elif measurement_options[0]== 'bubble-body-forces':
+
+                    
                     #DONE!
                     lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, x_orient_arr, y_orient_arr, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
 
@@ -1413,7 +1424,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, x_orient_arr, y_orient_arr, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
 
                     # Calculate interparticle stresses and pressures
-                    stress_stat_dict, press_stat_dict, press_stat_indiv_dict, press_plot_dict, stress_plot_dict, press_hetero_dict = lattice_structure_functs.interparticle_pressure_nlist()
+                    stress_stat_dict, press_stat_dict, press_stat_indiv_dict, press_plot_dict, stress_plot_dict, press_plot_indiv_dict, press_hetero_dict = lattice_structure_functs.interparticle_pressure_nlist()
 
                     # Measure radial interparticle pressure
                     radial_int_press_dict = particle_prop_functs.radial_int_press(stress_plot_dict)
@@ -1442,7 +1453,421 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                     stress_and_pressure_functs = stress_and_pressure.stress_and_pressure(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, x_orient_arr, y_orient_arr, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
                     act_press_dict_bubble = stress_and_pressure_functs.total_active_pressure_bubble(com_radial_dict_fa_bubble, all_surface_measurements, int_comp_dict, all_surface_measurements)
+
+
+                    bin_width_arr = np.linspace(1, 10, 10, dtype=float)
+
+                    # Heterogeneity
+                    bulk_id = np.where(phase_dict['part']==0)[0]
+                    bulk_A_id = np.where((phase_dict['part']==0) & (typ==0))[0]
+                    bulk_B_id = np.where((phase_dict['part']==0) & (typ==1))[0]
+
+                    int_id = np.where(phase_dict['part']==1)[0]
+                    int_A_id = np.where((phase_dict['part']==1) & (typ==0))[0]
+                    int_B_id = np.where((phase_dict['part']==1) & (typ==1))[0]
+
+                    gas_id = np.where(phase_dict['part']==2)[0]
+                    gas_A_id = np.where((phase_dict['part']==2) & (typ==0))[0]
+                    gas_B_id = np.where((phase_dict['part']==2) & (typ==1))[0]
+
+                    A_id = np.where((typ==0))[0]
+                    B_id = np.where((typ==1))[0]
                     
+                    act_press_mean_dict = {'all': {'bulk': np.mean(method2_align_dict['part']['align_fa'][bulk_id]), 'int': np.mean(method2_align_dict['part']['align_fa'][int_id]), 'gas': np.mean(method2_align_dict['part']['align_fa'][gas_id]), 'system': np.mean(method2_align_dict['part']['align_fa'])}, 'A': {'bulk': np.mean(method2_align_dict['part']['align_fa'][bulk_A_id]), 'int': np.mean(method2_align_dict['part']['align_fa'][int_A_id]), 'gas': np.mean(method2_align_dict['part']['align_fa'][gas_A_id]), 'system': np.mean(method2_align_dict['part']['align_fa'][A_id]) }, 'B': {'bulk': np.mean(method2_align_dict['part']['align_fa'][bulk_B_id]), 'int': np.mean(method2_align_dict['part']['align_fa'][int_B_id]), 'gas': np.mean(method2_align_dict['part']['align_fa'][gas_B_id]), 'system': np.mean(method2_align_dict['part']['align_fa'][B_id]) } }
+                    
+                    align_mean_dict = {'all': {'bulk': np.mean(method2_align_dict['part']['align'][bulk_id]), 'int': np.mean(method2_align_dict['part']['align'][int_id]), 'gas': np.mean(method2_align_dict['part']['align'][gas_id]), 'system': np.mean(method2_align_dict['part']['align'])}, 'A': {'bulk': np.mean(method2_align_dict['part']['align'][bulk_A_id]), 'int': np.mean(method2_align_dict['part']['align'][int_A_id]), 'gas': np.mean(method2_align_dict['part']['align'][gas_A_id]), 'system': np.mean(method2_align_dict['part']['align'][A_id]) }, 'B': {'bulk': np.mean(method2_align_dict['part']['align'][bulk_B_id]), 'int': np.mean(method2_align_dict['part']['align'][int_B_id]), 'gas': np.mean(method2_align_dict['part']['align'][gas_B_id]), 'system': np.mean(method2_align_dict['part']['align'][B_id]) } }
+                    
+                    bulk_area = bin_count_dict['bin']['bulk'] * (sizeBin_x * sizeBin_y)
+                    int_area = bin_count_dict['bin']['int'] * (sizeBin_x * sizeBin_y)
+                    gas_area = bin_count_dict['bin']['gas'] * (sizeBin_x * sizeBin_y)
+                    
+                    num_dens_mean_dict = {'all': {'bulk': part_count_dict['bulk']['all']/bulk_area, 'int': part_count_dict['int']['all']/int_area, 'gas': part_count_dict['gas']['all']/gas_area, 'system': (intPhi/100)/(np.pi/4)}, 'A': {'bulk': part_count_dict['bulk']['A']/bulk_area, 'int': part_count_dict['int']['A']/int_area, 'gas': part_count_dict['gas']['A']/gas_area, 'system': (parFrac/100)*(intPhi/100)/(np.pi/4) }, 'B': {'bulk': part_count_dict['bulk']['B']/bulk_area, 'int': part_count_dict['int']['B']/int_area, 'gas': part_count_dict['gas']['B']/gas_area, 'system': (1.0-parFrac/100)*(intPhi/100)/(np.pi/4) } }
+
+                    heterogeneity_act_press_bulk_all = np.array([])
+                    heterogeneity_act_press_bulk_A = np.array([])
+                    heterogeneity_act_press_bulk_B = np.array([])
+
+                    heterogeneity_act_press_int_all = np.array([])
+                    heterogeneity_act_press_int_A = np.array([])
+                    heterogeneity_act_press_int_B = np.array([])
+
+                    heterogeneity_act_press_gas_all = np.array([])
+                    heterogeneity_act_press_gas_A = np.array([])
+                    heterogeneity_act_press_gas_B = np.array([])
+
+                    heterogeneity_act_press_bulk_all_system = np.array([])
+                    heterogeneity_act_press_bulk_A_system = np.array([])
+                    heterogeneity_act_press_bulk_B_system = np.array([])
+
+                    heterogeneity_act_press_int_all_system = np.array([])
+                    heterogeneity_act_press_int_A_system = np.array([])
+                    heterogeneity_act_press_int_B_system = np.array([])
+
+                    heterogeneity_act_press_gas_all_system = np.array([])
+                    heterogeneity_act_press_gas_A_system = np.array([])
+                    heterogeneity_act_press_gas_B_system = np.array([])
+
+                    heterogeneity_act_press_bulk_all_non_norm = np.array([])
+                    heterogeneity_act_press_bulk_A_non_norm = np.array([])
+                    heterogeneity_act_press_bulk_B_non_norm = np.array([])
+
+                    heterogeneity_act_press_int_all_non_norm = np.array([])
+                    heterogeneity_act_press_int_A_non_norm = np.array([])
+                    heterogeneity_act_press_int_B_non_norm = np.array([])
+
+                    heterogeneity_act_press_gas_all_non_norm = np.array([])
+                    heterogeneity_act_press_gas_A_non_norm = np.array([])
+                    heterogeneity_act_press_gas_B_non_norm = np.array([])
+
+                    heterogeneity_act_press_bulk_all_mean = np.array([])
+                    heterogeneity_act_press_bulk_A_mean = np.array([])
+                    heterogeneity_act_press_bulk_B_mean = np.array([])
+
+                    heterogeneity_act_press_int_all_mean = np.array([])
+                    heterogeneity_act_press_int_A_mean = np.array([])
+                    heterogeneity_act_press_int_B_mean = np.array([])
+
+                    heterogeneity_act_press_gas_all_mean = np.array([])
+                    heterogeneity_act_press_gas_A_mean = np.array([])
+                    heterogeneity_act_press_gas_B_mean = np.array([])
+
+
+
+
+                    heterogeneity_align_bulk_all = np.array([])
+                    heterogeneity_align_bulk_A = np.array([])
+                    heterogeneity_align_bulk_B = np.array([])
+
+                    heterogeneity_align_int_all = np.array([])
+                    heterogeneity_align_int_A = np.array([])
+                    heterogeneity_align_int_B = np.array([])
+
+                    heterogeneity_align_gas_all = np.array([])
+                    heterogeneity_align_gas_A = np.array([])
+                    heterogeneity_align_gas_B = np.array([])
+
+                    heterogeneity_align_bulk_all_system = np.array([])
+                    heterogeneity_align_bulk_A_system = np.array([])
+                    heterogeneity_align_bulk_B_system = np.array([])
+
+                    heterogeneity_align_int_all_system = np.array([])
+                    heterogeneity_align_int_A_system = np.array([])
+                    heterogeneity_align_int_B_system = np.array([])
+
+                    heterogeneity_align_gas_all_system = np.array([])
+                    heterogeneity_align_gas_A_system = np.array([])
+                    heterogeneity_align_gas_B_system = np.array([])
+
+                    heterogeneity_align_bulk_all_non_norm = np.array([])
+                    heterogeneity_align_bulk_A_non_norm = np.array([])
+                    heterogeneity_align_bulk_B_non_norm = np.array([])
+
+                    heterogeneity_align_int_all_non_norm = np.array([])
+                    heterogeneity_align_int_A_non_norm = np.array([])
+                    heterogeneity_align_int_B_non_norm = np.array([])
+
+                    heterogeneity_align_gas_all_non_norm = np.array([])
+                    heterogeneity_align_gas_A_non_norm = np.array([])
+                    heterogeneity_align_gas_B_non_norm = np.array([])
+
+                    heterogeneity_align_bulk_all_mean = np.array([])
+                    heterogeneity_align_bulk_A_mean = np.array([])
+                    heterogeneity_align_bulk_B_mean = np.array([])
+
+                    heterogeneity_align_int_all_mean = np.array([])
+                    heterogeneity_align_int_A_mean = np.array([])
+                    heterogeneity_align_int_B_mean = np.array([])
+
+                    heterogeneity_align_gas_all_mean = np.array([])
+                    heterogeneity_align_gas_A_mean = np.array([])
+                    heterogeneity_align_gas_B_mean = np.array([])
+
+
+
+                    heterogeneity_num_dens_bulk_all = np.array([])
+                    heterogeneity_num_dens_bulk_A = np.array([])
+                    heterogeneity_num_dens_bulk_B = np.array([])
+
+                    heterogeneity_num_dens_int_all = np.array([])
+                    heterogeneity_num_dens_int_A = np.array([])
+                    heterogeneity_num_dens_int_B = np.array([])
+
+                    heterogeneity_num_dens_gas_all = np.array([])
+                    heterogeneity_num_dens_gas_A = np.array([])
+                    heterogeneity_num_dens_gas_B = np.array([])
+
+                    heterogeneity_num_dens_bulk_all_system = np.array([])
+                    heterogeneity_num_dens_bulk_A_system = np.array([])
+                    heterogeneity_num_dens_bulk_B_system = np.array([])
+
+                    heterogeneity_num_dens_int_all_system = np.array([])
+                    heterogeneity_num_dens_int_A_system = np.array([])
+                    heterogeneity_num_dens_int_B_system = np.array([])
+
+                    heterogeneity_num_dens_gas_all_system = np.array([])
+                    heterogeneity_num_dens_gas_A_system = np.array([])
+                    heterogeneity_num_dens_gas_B_system = np.array([])
+
+                    heterogeneity_num_dens_bulk_all_non_norm = np.array([])
+                    heterogeneity_num_dens_bulk_A_non_norm = np.array([])
+                    heterogeneity_num_dens_bulk_B_non_norm = np.array([])
+
+                    heterogeneity_num_dens_int_all_non_norm = np.array([])
+                    heterogeneity_num_dens_int_A_non_norm = np.array([])
+                    heterogeneity_num_dens_int_B_non_norm = np.array([])
+
+                    heterogeneity_num_dens_gas_all_non_norm = np.array([])
+                    heterogeneity_num_dens_gas_A_non_norm = np.array([])
+                    heterogeneity_num_dens_gas_B_non_norm = np.array([])
+
+                    heterogeneity_num_dens_bulk_all_mean = np.array([])
+                    heterogeneity_num_dens_bulk_A_mean = np.array([])
+                    heterogeneity_num_dens_bulk_B_mean = np.array([])
+
+                    heterogeneity_num_dens_int_all_mean = np.array([])
+                    heterogeneity_num_dens_int_A_mean = np.array([])
+                    heterogeneity_num_dens_int_B_mean = np.array([])
+
+                    heterogeneity_num_dens_gas_all_mean = np.array([])
+                    heterogeneity_num_dens_gas_A_mean = np.array([])
+                    heterogeneity_num_dens_gas_B_mean = np.array([])
+
+
+
+                    #hetero_plot_dict = particle_prop_functs.heterogeneity_single_particles(method2_align_dict['part'], phase_dict, act_press_mean_dict, type_m='phases')   
+                    #hetero_plot_system_dict = particle_prop_functs.heterogeneity_single_particles(method2_align_dict['part'], phase_dict, act_press_mean_dict, type_m='system')                       
+
+                    #plotting_functs.plot_heterogeneity(hetero_plot_dict, type_m='phases', interface_id = interface_option, orientation_id = orientation_option)
+                    #plotting_functs.plot_heterogeneity(hetero_plot_dict, type_m='system', interface_id = interface_option, orientation_id = orientation_option)
+                    # I NEED TO MAKE A FUNCTION THAT IDENTIFIES PHASE OF BIN BASED ON NUMBER OF PARTICLES IN IT!
+                    for q in range(0, len(bin_width_arr)):
+                        
+                        #Bin system to calculate orientation and alignment that will be used in vector plots
+                        NBins_x_tmp = utility_functs.getNBins(lx_box, bin_width_arr[q])
+                        NBins_y_tmp = utility_functs.getNBins(ly_box, bin_width_arr[q])
+
+                        # Calculate size of bins
+                        sizeBin_x_tmp = utility_functs.roundUp(((lx_box) / NBins_x_tmp), 6)
+                        sizeBin_y_tmp = utility_functs.roundUp(((ly_box) / NBins_y_tmp), 6)
+
+                        # Instantiate binning functions module
+                        binning_functs = binning.binning(lx_box, ly_box, partNum, NBins_x_tmp, NBins_y_tmp, peA, peB, typ, eps)
+
+                        # Calculate bin positions
+                        pos_dict_tmp = binning_functs.create_bins()
+
+                        # Assign particles to bins
+                        part_dict_tmp = binning_functs.bin_parts(pos, ids, clust_size)
+
+                        phase_dict_tmp = phase_ident_functs.rebin_phases(part_dict_tmp, phase_dict)
+
+                        # Calculate area fraction per bin
+                        area_frac_dict_tmp = binning_functs.bin_area_frac(part_dict_tmp)
+                        
+                        #print(len(phase_dict_tmp['part']))
+                        #print(phase_dict_tmp['part'][np.where(phase_dict_tmp['part']==19584)[0]])
+                        
+                        bulk_id = np.where(phase_dict_tmp['part']==0)[0]
+                        bulk_A_id = np.where((phase_dict_tmp['part']==0) & (typ==0))[0]
+                        bulk_B_id = np.where((phase_dict_tmp['part']==0) & (typ==1))[0]
+
+                        int_id = np.where(phase_dict_tmp['part']==1)[0]
+                        int_A_id = np.where((phase_dict_tmp['part']==1) & (typ==0))[0]
+                        int_B_id = np.where((phase_dict_tmp['part']==1) & (typ==1))[0]
+
+                        gas_id = np.where(phase_dict_tmp['part']==2)[0]
+                        gas_A_id = np.where((phase_dict_tmp['part']==2) & (typ==0))[0]
+                        gas_B_id = np.where((phase_dict_tmp['part']==2) & (typ==1))[0]
+
+                        binned_press, binned_press_mean = binning_functs.bin_act_press_phases(part_dict_tmp['id'], method2_align_dict['part'])
+                        
+                        heterogeneity_act_press_phases_all, std_binned_all = binning_functs.bin_heterogeneity_binned_phases(binned_press_mean['align_fa']['all'], phase_dict_tmp, act_press_mean_dict['all'])
+                        heterogeneity_act_press_phases_A, std_binned_A = binning_functs.bin_heterogeneity_binned_phases(binned_press_mean['align_fa']['A'], phase_dict_tmp, act_press_mean_dict['A'])
+                        heterogeneity_act_press_phases_B, std_binned_B = binning_functs.bin_heterogeneity_binned_phases(binned_press_mean['align_fa']['B'], phase_dict_tmp, act_press_mean_dict['B'])
+                        
+                        heterogeneity_act_press_bulk_all = np.append(heterogeneity_act_press_bulk_all, heterogeneity_act_press_phases_all['bulk']['norm'])
+                        heterogeneity_act_press_bulk_A = np.append(heterogeneity_act_press_bulk_A, heterogeneity_act_press_phases_A['bulk']['norm'])
+                        heterogeneity_act_press_bulk_B = np.append(heterogeneity_act_press_bulk_B, heterogeneity_act_press_phases_B['bulk']['norm'])
+
+                        heterogeneity_act_press_int_all = np.append(heterogeneity_act_press_int_all, heterogeneity_act_press_phases_all['int']['norm'])
+                        heterogeneity_act_press_int_A = np.append(heterogeneity_act_press_int_A, heterogeneity_act_press_phases_A['int']['norm'])
+                        heterogeneity_act_press_int_B = np.append(heterogeneity_act_press_int_B, heterogeneity_act_press_phases_B['int']['norm'])
+
+                        heterogeneity_act_press_gas_all = np.append(heterogeneity_act_press_gas_all, heterogeneity_act_press_phases_all['gas']['norm'])
+                        heterogeneity_act_press_gas_A = np.append(heterogeneity_act_press_gas_A, heterogeneity_act_press_phases_A['gas']['norm'])
+                        heterogeneity_act_press_gas_B = np.append(heterogeneity_act_press_gas_B, heterogeneity_act_press_phases_B['gas']['norm'])
+
+                        #heterogeneity_act_press_phases_all_system, std_binned_all_system = binning_functs.bin_heterogeneity_binned_phases_system(binned_press_mean['all'], phase_dict_tmp, act_press_mean_dict['all'])
+                        #heterogeneity_act_press_phases_A_system, std_binned_A_system = binning_functs.bin_heterogeneity_binned_phases_system(binned_press_mean['A'], phase_dict_tmp, act_press_mean_dict['A'])
+                        #heterogeneity_act_press_phases_B_system, std_binned_B_system = binning_functs.bin_heterogeneity_binned_phases_system(binned_press_mean['B'], phase_dict_tmp, act_press_mean_dict['B'])
+
+                        heterogeneity_act_press_bulk_all_system = np.append(heterogeneity_act_press_bulk_all_system, heterogeneity_act_press_phases_all['bulk']['sys_norm'])
+                        heterogeneity_act_press_bulk_A_system = np.append(heterogeneity_act_press_bulk_A_system, heterogeneity_act_press_phases_A['bulk']['sys_norm'])
+                        heterogeneity_act_press_bulk_B_system = np.append(heterogeneity_act_press_bulk_B_system, heterogeneity_act_press_phases_B['bulk']['sys_norm'])
+
+                        heterogeneity_act_press_int_all_system = np.append(heterogeneity_act_press_int_all_system, heterogeneity_act_press_phases_all['int']['sys_norm'])
+                        heterogeneity_act_press_int_A_system = np.append(heterogeneity_act_press_int_A_system, heterogeneity_act_press_phases_A['int']['sys_norm'])
+                        heterogeneity_act_press_int_B_system = np.append(heterogeneity_act_press_int_B_system, heterogeneity_act_press_phases_B['int']['sys_norm'])
+
+                        heterogeneity_act_press_gas_all_system = np.append(heterogeneity_act_press_gas_all_system, heterogeneity_act_press_phases_all['gas']['sys_norm'])
+                        heterogeneity_act_press_gas_A_system = np.append(heterogeneity_act_press_gas_A_system, heterogeneity_act_press_phases_A['gas']['sys_norm'])
+                        heterogeneity_act_press_gas_B_system = np.append(heterogeneity_act_press_gas_B_system, heterogeneity_act_press_phases_B['gas']['sys_norm'])
+
+                        heterogeneity_act_press_bulk_all_non_norm = np.append(heterogeneity_act_press_bulk_all_non_norm, heterogeneity_act_press_phases_all['bulk']['non_norm'])
+                        heterogeneity_act_press_bulk_A_non_norm = np.append(heterogeneity_act_press_bulk_A_non_norm, heterogeneity_act_press_phases_A['bulk']['non_norm'])
+                        heterogeneity_act_press_bulk_B_non_norm = np.append(heterogeneity_act_press_bulk_B_non_norm, heterogeneity_act_press_phases_B['bulk']['non_norm'])
+
+                        heterogeneity_act_press_int_all_non_norm = np.append(heterogeneity_act_press_int_all_non_norm, heterogeneity_act_press_phases_all['int']['non_norm'])
+                        heterogeneity_act_press_int_A_non_norm = np.append(heterogeneity_act_press_int_A_non_norm, heterogeneity_act_press_phases_A['int']['non_norm'])
+                        heterogeneity_act_press_int_B_non_norm = np.append(heterogeneity_act_press_int_B_non_norm, heterogeneity_act_press_phases_B['int']['non_norm'])
+
+                        heterogeneity_act_press_gas_all_non_norm = np.append(heterogeneity_act_press_gas_all_non_norm, heterogeneity_act_press_phases_all['gas']['non_norm'])
+                        heterogeneity_act_press_gas_A_non_norm = np.append(heterogeneity_act_press_gas_A_non_norm, heterogeneity_act_press_phases_A['gas']['non_norm'])
+                        heterogeneity_act_press_gas_B_non_norm = np.append(heterogeneity_act_press_gas_B_non_norm, heterogeneity_act_press_phases_B['gas']['non_norm'])
+
+                        heterogeneity_act_press_bulk_all_mean = np.append(heterogeneity_act_press_bulk_all_mean, heterogeneity_act_press_phases_all['bulk']['mean'])
+                        heterogeneity_act_press_bulk_A_mean = np.append(heterogeneity_act_press_bulk_A_mean, heterogeneity_act_press_phases_A['bulk']['mean'])
+                        heterogeneity_act_press_bulk_B_mean = np.append(heterogeneity_act_press_bulk_B_mean, heterogeneity_act_press_phases_B['bulk']['mean'])
+
+                        heterogeneity_act_press_int_all_mean = np.append(heterogeneity_act_press_int_all_mean, heterogeneity_act_press_phases_all['int']['mean'])
+                        heterogeneity_act_press_int_A_mean = np.append(heterogeneity_act_press_int_A_mean, heterogeneity_act_press_phases_A['int']['mean'])
+                        heterogeneity_act_press_int_B_mean = np.append(heterogeneity_act_press_int_B_mean, heterogeneity_act_press_phases_B['int']['mean'])
+
+                        heterogeneity_act_press_gas_all_mean = np.append(heterogeneity_act_press_gas_all_mean, heterogeneity_act_press_phases_all['gas']['mean'])
+                        heterogeneity_act_press_gas_A_mean = np.append(heterogeneity_act_press_gas_A_mean, heterogeneity_act_press_phases_A['gas']['mean'])
+                        heterogeneity_act_press_gas_B_mean = np.append(heterogeneity_act_press_gas_B_mean, heterogeneity_act_press_phases_B['gas']['mean'])
+
+                        heterogeneity_align_phases_all, std_binned_all_align = binning_functs.bin_heterogeneity_binned_phases(binned_press_mean['align']['all'], phase_dict_tmp, align_mean_dict['all'])
+                        heterogeneity_align_phases_A, std_binned_A_align = binning_functs.bin_heterogeneity_binned_phases(binned_press_mean['align']['A'], phase_dict_tmp, align_mean_dict['A'])
+                        heterogeneity_align_phases_B, std_binned_B_align = binning_functs.bin_heterogeneity_binned_phases(binned_press_mean['align']['B'], phase_dict_tmp, align_mean_dict['B'])
+
+                        heterogeneity_align_bulk_all = np.append(heterogeneity_align_bulk_all, heterogeneity_align_phases_all['bulk']['norm'])
+                        heterogeneity_align_bulk_A = np.append(heterogeneity_align_bulk_A, heterogeneity_align_phases_A['bulk']['norm'])
+                        heterogeneity_align_bulk_B = np.append(heterogeneity_align_bulk_B, heterogeneity_align_phases_B['bulk']['norm'])
+
+                        heterogeneity_align_int_all = np.append(heterogeneity_align_int_all, heterogeneity_align_phases_all['int']['norm'])
+                        heterogeneity_align_int_A = np.append(heterogeneity_align_int_A, heterogeneity_align_phases_A['int']['norm'])
+                        heterogeneity_align_int_B = np.append(heterogeneity_align_int_B, heterogeneity_align_phases_B['int']['norm'])
+
+                        heterogeneity_align_gas_all = np.append(heterogeneity_align_gas_all, heterogeneity_align_phases_all['gas']['norm'])
+                        heterogeneity_align_gas_A = np.append(heterogeneity_align_gas_A, heterogeneity_align_phases_A['gas']['norm'])
+                        heterogeneity_align_gas_B = np.append(heterogeneity_align_gas_B, heterogeneity_align_phases_B['gas']['norm'])
+
+                        #heterogeneity_act_press_phases_all_system, std_binned_all_system = binning_functs.bin_heterogeneity_binned_phases_system(binned_press_mean['all'], phase_dict_tmp, act_press_mean_dict['all'])
+                        #heterogeneity_act_press_phases_A_system, std_binned_A_system = binning_functs.bin_heterogeneity_binned_phases_system(binned_press_mean['A'], phase_dict_tmp, act_press_mean_dict['A'])
+                        #heterogeneity_act_press_phases_B_system, std_binned_B_system = binning_functs.bin_heterogeneity_binned_phases_system(binned_press_mean['B'], phase_dict_tmp, act_press_mean_dict['B'])
+
+                        heterogeneity_align_bulk_all_system = np.append(heterogeneity_align_bulk_all_system, heterogeneity_align_phases_all['bulk']['sys_norm'])
+                        heterogeneity_align_bulk_A_system = np.append(heterogeneity_align_bulk_A_system, heterogeneity_align_phases_A['bulk']['sys_norm'])
+                        heterogeneity_align_bulk_B_system = np.append(heterogeneity_align_bulk_B_system, heterogeneity_align_phases_B['bulk']['sys_norm'])
+
+                        heterogeneity_align_int_all_system = np.append(heterogeneity_align_int_all_system, heterogeneity_align_phases_all['int']['sys_norm'])
+                        heterogeneity_align_int_A_system = np.append(heterogeneity_align_int_A_system, heterogeneity_align_phases_A['int']['sys_norm'])
+                        heterogeneity_align_int_B_system = np.append(heterogeneity_align_int_B_system, heterogeneity_align_phases_B['int']['sys_norm'])
+
+                        heterogeneity_align_gas_all_system = np.append(heterogeneity_align_gas_all_system, heterogeneity_align_phases_all['gas']['sys_norm'])
+                        heterogeneity_align_gas_A_system = np.append(heterogeneity_align_gas_A_system, heterogeneity_align_phases_A['gas']['sys_norm'])
+                        heterogeneity_align_gas_B_system = np.append(heterogeneity_align_gas_B_system, heterogeneity_align_phases_B['gas']['sys_norm'])
+
+                        heterogeneity_align_bulk_all_non_norm = np.append(heterogeneity_align_bulk_all_non_norm, heterogeneity_align_phases_all['bulk']['non_norm'])
+                        heterogeneity_align_bulk_A_non_norm = np.append(heterogeneity_align_bulk_A_non_norm, heterogeneity_align_phases_A['bulk']['non_norm'])
+                        heterogeneity_align_bulk_B_non_norm = np.append(heterogeneity_align_bulk_B_non_norm, heterogeneity_align_phases_B['bulk']['non_norm'])
+
+                        heterogeneity_align_int_all_non_norm = np.append(heterogeneity_align_int_all_non_norm, heterogeneity_align_phases_all['int']['non_norm'])
+                        heterogeneity_align_int_A_non_norm = np.append(heterogeneity_align_int_A_non_norm, heterogeneity_align_phases_A['int']['non_norm'])
+                        heterogeneity_align_int_B_non_norm = np.append(heterogeneity_align_int_B_non_norm, heterogeneity_align_phases_B['int']['non_norm'])
+
+                        heterogeneity_align_gas_all_non_norm = np.append(heterogeneity_align_gas_all_non_norm, heterogeneity_align_phases_all['gas']['non_norm'])
+                        heterogeneity_align_gas_A_non_norm = np.append(heterogeneity_align_gas_A_non_norm, heterogeneity_align_phases_A['gas']['non_norm'])
+                        heterogeneity_align_gas_B_non_norm = np.append(heterogeneity_align_gas_B_non_norm, heterogeneity_align_phases_B['gas']['non_norm'])
+
+                        heterogeneity_align_bulk_all_mean = np.append(heterogeneity_align_bulk_all_mean, heterogeneity_align_phases_all['bulk']['mean'])
+                        heterogeneity_align_bulk_A_mean = np.append(heterogeneity_align_bulk_A_mean, heterogeneity_align_phases_A['bulk']['mean'])
+                        heterogeneity_align_bulk_B_mean = np.append(heterogeneity_align_bulk_B_mean, heterogeneity_align_phases_B['bulk']['mean'])
+
+                        heterogeneity_align_int_all_mean = np.append(heterogeneity_align_int_all_mean, heterogeneity_align_phases_all['int']['mean'])
+                        heterogeneity_align_int_A_mean = np.append(heterogeneity_align_int_A_mean, heterogeneity_align_phases_A['int']['mean'])
+                        heterogeneity_align_int_B_mean = np.append(heterogeneity_align_int_B_mean, heterogeneity_align_phases_B['int']['mean'])
+
+                        heterogeneity_align_gas_all_mean = np.append(heterogeneity_align_gas_all_mean, heterogeneity_align_phases_all['gas']['mean'])
+                        heterogeneity_align_gas_A_mean = np.append(heterogeneity_align_gas_A_mean, heterogeneity_align_phases_A['gas']['mean'])
+                        heterogeneity_align_gas_B_mean = np.append(heterogeneity_align_gas_B_mean, heterogeneity_align_phases_B['gas']['mean'])
+
+                        heterogeneity_num_dens_phases_all, std_binned_all_num_dens = binning_functs.bin_heterogeneity_binned_phases(binned_press_mean['num_dens']['all'], phase_dict_tmp, num_dens_mean_dict['all'])
+                        heterogeneity_num_dens_phases_A, std_binned_A_num_dens = binning_functs.bin_heterogeneity_binned_phases(binned_press_mean['num_dens']['A'], phase_dict_tmp, num_dens_mean_dict['A'])
+                        heterogeneity_num_dens_phases_B, std_binned_B_num_dens = binning_functs.bin_heterogeneity_binned_phases(binned_press_mean['num_dens']['B'], phase_dict_tmp, num_dens_mean_dict['B'])
+
+                        heterogeneity_num_dens_bulk_all = np.append(heterogeneity_num_dens_bulk_all, heterogeneity_num_dens_phases_all['bulk']['norm'])
+                        heterogeneity_num_dens_bulk_A = np.append(heterogeneity_num_dens_bulk_A, heterogeneity_num_dens_phases_A['bulk']['norm'])
+                        heterogeneity_num_dens_bulk_B = np.append(heterogeneity_num_dens_bulk_B, heterogeneity_num_dens_phases_B['bulk']['norm'])
+
+                        heterogeneity_num_dens_int_all = np.append(heterogeneity_num_dens_int_all, heterogeneity_num_dens_phases_all['int']['norm'])
+                        heterogeneity_num_dens_int_A = np.append(heterogeneity_num_dens_int_A, heterogeneity_num_dens_phases_A['int']['norm'])
+                        heterogeneity_num_dens_int_B = np.append(heterogeneity_num_dens_int_B, heterogeneity_num_dens_phases_B['int']['norm'])
+
+                        heterogeneity_num_dens_gas_all = np.append(heterogeneity_num_dens_gas_all, heterogeneity_num_dens_phases_all['gas']['norm'])
+                        heterogeneity_num_dens_gas_A = np.append(heterogeneity_num_dens_gas_A, heterogeneity_num_dens_phases_A['gas']['norm'])
+                        heterogeneity_num_dens_gas_B = np.append(heterogeneity_num_dens_gas_B, heterogeneity_num_dens_phases_B['gas']['norm'])
+
+                        #heterogeneity_act_press_phases_all_system, std_binned_all_system = binning_functs.bin_heterogeneity_binned_phases_system(binned_press_mean['all'], phase_dict_tmp, act_press_mean_dict['all'])
+                        #heterogeneity_act_press_phases_A_system, std_binned_A_system = binning_functs.bin_heterogeneity_binned_phases_system(binned_press_mean['A'], phase_dict_tmp, act_press_mean_dict['A'])
+                        #heterogeneity_act_press_phases_B_system, std_binned_B_system = binning_functs.bin_heterogeneity_binned_phases_system(binned_press_mean['B'], phase_dict_tmp, act_press_mean_dict['B'])
+
+                        heterogeneity_num_dens_bulk_all_system = np.append(heterogeneity_num_dens_bulk_all_system, heterogeneity_num_dens_phases_all['bulk']['sys_norm'])
+                        heterogeneity_num_dens_bulk_A_system = np.append(heterogeneity_num_dens_bulk_A_system, heterogeneity_num_dens_phases_A['bulk']['sys_norm'])
+                        heterogeneity_num_dens_bulk_B_system = np.append(heterogeneity_num_dens_bulk_B_system, heterogeneity_num_dens_phases_B['bulk']['sys_norm'])
+
+                        heterogeneity_num_dens_int_all_system = np.append(heterogeneity_num_dens_int_all_system, heterogeneity_num_dens_phases_all['int']['sys_norm'])
+                        heterogeneity_num_dens_int_A_system = np.append(heterogeneity_num_dens_int_A_system, heterogeneity_num_dens_phases_A['int']['sys_norm'])
+                        heterogeneity_num_dens_int_B_system = np.append(heterogeneity_num_dens_int_B_system, heterogeneity_num_dens_phases_B['int']['sys_norm'])
+
+                        heterogeneity_num_dens_gas_all_system = np.append(heterogeneity_num_dens_gas_all_system, heterogeneity_num_dens_phases_all['gas']['sys_norm'])
+                        heterogeneity_num_dens_gas_A_system = np.append(heterogeneity_num_dens_gas_A_system, heterogeneity_num_dens_phases_A['gas']['sys_norm'])
+                        heterogeneity_num_dens_gas_B_system = np.append(heterogeneity_num_dens_gas_B_system, heterogeneity_num_dens_phases_B['gas']['sys_norm'])
+
+                        heterogeneity_num_dens_bulk_all_non_norm = np.append(heterogeneity_num_dens_bulk_all_non_norm, heterogeneity_num_dens_phases_all['bulk']['non_norm'])
+                        heterogeneity_num_dens_bulk_A_non_norm = np.append(heterogeneity_num_dens_bulk_A_non_norm, heterogeneity_num_dens_phases_A['bulk']['non_norm'])
+                        heterogeneity_num_dens_bulk_B_non_norm = np.append(heterogeneity_num_dens_bulk_B_non_norm, heterogeneity_num_dens_phases_B['bulk']['non_norm'])
+
+                        heterogeneity_num_dens_int_all_non_norm = np.append(heterogeneity_num_dens_int_all_non_norm, heterogeneity_num_dens_phases_all['int']['non_norm'])
+                        heterogeneity_num_dens_int_A_non_norm = np.append(heterogeneity_num_dens_int_A_non_norm, heterogeneity_num_dens_phases_A['int']['non_norm'])
+                        heterogeneity_num_dens_int_B_non_norm = np.append(heterogeneity_num_dens_int_B_non_norm, heterogeneity_num_dens_phases_B['int']['non_norm'])
+
+                        heterogeneity_num_dens_gas_all_non_norm = np.append(heterogeneity_num_dens_gas_all_non_norm, heterogeneity_num_dens_phases_all['gas']['non_norm'])
+                        heterogeneity_num_dens_gas_A_non_norm = np.append(heterogeneity_num_dens_gas_A_non_norm, heterogeneity_num_dens_phases_A['gas']['non_norm'])
+                        heterogeneity_num_dens_gas_B_non_norm = np.append(heterogeneity_num_dens_gas_B_non_norm, heterogeneity_num_dens_phases_B['gas']['non_norm'])
+
+                        heterogeneity_num_dens_bulk_all_mean = np.append(heterogeneity_num_dens_bulk_all_mean, heterogeneity_num_dens_phases_all['bulk']['mean'])
+                        heterogeneity_num_dens_bulk_A_mean = np.append(heterogeneity_num_dens_bulk_A_mean, heterogeneity_num_dens_phases_A['bulk']['mean'])
+                        heterogeneity_num_dens_bulk_B_mean = np.append(heterogeneity_num_dens_bulk_B_mean, heterogeneity_num_dens_phases_B['bulk']['mean'])
+
+                        heterogeneity_num_dens_int_all_mean = np.append(heterogeneity_num_dens_int_all_mean, heterogeneity_num_dens_phases_all['int']['mean'])
+                        heterogeneity_num_dens_int_A_mean = np.append(heterogeneity_num_dens_int_A_mean, heterogeneity_num_dens_phases_A['int']['mean'])
+                        heterogeneity_num_dens_int_B_mean = np.append(heterogeneity_num_dens_int_B_mean, heterogeneity_num_dens_phases_B['int']['mean'])
+
+                        heterogeneity_num_dens_gas_all_mean = np.append(heterogeneity_num_dens_gas_all_mean, heterogeneity_num_dens_phases_all['gas']['mean'])
+                        heterogeneity_num_dens_gas_A_mean = np.append(heterogeneity_num_dens_gas_A_mean, heterogeneity_num_dens_phases_A['gas']['mean'])
+                        heterogeneity_num_dens_gas_B_mean = np.append(heterogeneity_num_dens_gas_B_mean, heterogeneity_num_dens_phases_B['gas']['mean'])
+                        
+                        #DO ALIGNMENT, ACTIVITY, AND NUMBER DENSITY HETEROGENEITY
+                        if q == 4:
+                            heterogeneity_plot_dict = {'x': pos_dict_tmp['bottom left']['x'], 'y': pos_dict_tmp['bottom left']['y'], 'all': std_binned_all, 'A': std_binned_A, 'B': std_binned_B}
+                            heterogeneity_plot_system_dict = {'x': pos_dict_tmp['bottom left']['x'], 'y': pos_dict_tmp['bottom left']['y'], 'all': std_binned_all, 'A': std_binned_A, 'B': std_binned_B}
+                    heterogeneity_act_press_dict = {'bin': bin_width_arr, 'bulk_press': {'all': heterogeneity_act_press_bulk_all.tolist(), 'A': heterogeneity_act_press_bulk_A.tolist(), 'B': heterogeneity_act_press_bulk_B.tolist()}, 'bulk_sys_press': {'all': heterogeneity_act_press_bulk_all_system.tolist(), 'A': heterogeneity_act_press_bulk_A_system.tolist(), 'B': heterogeneity_act_press_bulk_B_system.tolist()}, 'bulk_non_press': {'all': heterogeneity_act_press_bulk_all_non_norm.tolist(), 'A': heterogeneity_act_press_bulk_A_non_norm.tolist(), 'B': heterogeneity_act_press_bulk_B_non_norm.tolist()}, 'bulk_press_mean': {'all': heterogeneity_act_press_bulk_all_mean.tolist(), 'A': heterogeneity_act_press_bulk_A_mean.tolist(), 'B': heterogeneity_act_press_bulk_B_mean.tolist()}, 'int_press': {'all': heterogeneity_act_press_int_all.tolist(), 'A': heterogeneity_act_press_int_A.tolist(), 'B': heterogeneity_act_press_int_B.tolist()}, 'int_sys_press': {'all': heterogeneity_act_press_int_all_system.tolist(), 'A': heterogeneity_act_press_int_A_system.tolist(), 'B': heterogeneity_act_press_int_B_system.tolist()}, 'int_non_press': {'all': heterogeneity_act_press_int_all_non_norm.tolist(), 'A': heterogeneity_act_press_int_A_non_norm.tolist(), 'B': heterogeneity_act_press_int_B_non_norm.tolist()}, 'int_mean_press': {'all': heterogeneity_act_press_int_all_mean.tolist(), 'A': heterogeneity_act_press_int_A_mean.tolist(), 'B': heterogeneity_act_press_int_B_mean.tolist()}, 'gas_norm_press': {'all': heterogeneity_act_press_gas_all.tolist(), 'A': heterogeneity_act_press_gas_A.tolist(), 'B': heterogeneity_act_press_gas_B.tolist()}, 'gas_sys_press': {'all': heterogeneity_act_press_gas_all_system.tolist(), 'A': heterogeneity_act_press_gas_A_system.tolist(), 'B': heterogeneity_act_press_gas_B_system.tolist()}, 'gas_non_press': {'all': heterogeneity_act_press_gas_all_non_norm.tolist(), 'A': heterogeneity_act_press_gas_A_non_norm.tolist(), 'B': heterogeneity_act_press_gas_B_non_norm.tolist()}, 'gas_mean_press': {'all': heterogeneity_act_press_gas_all_mean.tolist(), 'A': heterogeneity_act_press_gas_A_mean.tolist(), 'B': heterogeneity_act_press_gas_B_mean.tolist()}, 'bulk_align': {'all': heterogeneity_align_bulk_all.tolist(), 'A': heterogeneity_align_bulk_A.tolist(), 'B': heterogeneity_align_bulk_B.tolist()}, 'bulk_sys_align': {'all': heterogeneity_align_bulk_all_system.tolist(), 'A': heterogeneity_align_bulk_A_system.tolist(), 'B': heterogeneity_align_bulk_B_system.tolist()}, 'bulk_non_align': {'all': heterogeneity_align_bulk_all_non_norm.tolist(), 'A': heterogeneity_align_bulk_A_non_norm.tolist(), 'B': heterogeneity_align_bulk_B_non_norm.tolist()}, 'bulk_align_mean': {'all': heterogeneity_align_bulk_all_mean.tolist(), 'A': heterogeneity_align_bulk_A_mean.tolist(), 'B': heterogeneity_align_bulk_B_mean.tolist()}, 'int_align': {'all': heterogeneity_align_int_all.tolist(), 'A': heterogeneity_align_int_A.tolist(), 'B': heterogeneity_align_int_B.tolist()}, 'int_sys_align': {'all': heterogeneity_align_int_all_system.tolist(), 'A': heterogeneity_align_int_A_system.tolist(), 'B': heterogeneity_align_int_B_system.tolist()}, 'int_non_align': {'all': heterogeneity_align_int_all_non_norm.tolist(), 'A': heterogeneity_align_int_A_non_norm.tolist(), 'B': heterogeneity_align_int_B_non_norm.tolist()}, 'int_mean_align': {'all': heterogeneity_align_int_all_mean.tolist(), 'A': heterogeneity_align_int_A_mean.tolist(), 'B': heterogeneity_align_int_B_mean.tolist()}, 'gas_norm_align': {'all': heterogeneity_align_gas_all.tolist(), 'A': heterogeneity_align_gas_A.tolist(), 'B': heterogeneity_align_gas_B.tolist()}, 'gas_sys_align': {'all': heterogeneity_align_gas_all_system.tolist(), 'A': heterogeneity_align_gas_A_system.tolist(), 'B': heterogeneity_align_gas_B_system.tolist()}, 'gas_non_align': {'all': heterogeneity_align_gas_all_non_norm.tolist(), 'A': heterogeneity_align_gas_A_non_norm.tolist(), 'B': heterogeneity_align_gas_B_non_norm.tolist()}, 'gas_mean_align': {'all': heterogeneity_align_gas_all_mean.tolist(), 'A': heterogeneity_align_gas_A_mean.tolist(), 'B': heterogeneity_align_gas_B_mean.tolist()}, 'bulk_dens': {'all': heterogeneity_num_dens_bulk_all.tolist(), 'A': heterogeneity_num_dens_bulk_A.tolist(), 'B': heterogeneity_num_dens_bulk_B.tolist()}, 'bulk_sys_dens': {'all': heterogeneity_num_dens_bulk_all_system.tolist(), 'A': heterogeneity_num_dens_bulk_A_system.tolist(), 'B': heterogeneity_num_dens_bulk_B_system.tolist()}, 'bulk_non_dens': {'all': heterogeneity_num_dens_bulk_all_non_norm.tolist(), 'A': heterogeneity_num_dens_bulk_A_non_norm.tolist(), 'B': heterogeneity_num_dens_bulk_B_non_norm.tolist()}, 'bulk_dens_mean': {'all': heterogeneity_num_dens_bulk_all_mean.tolist(), 'A': heterogeneity_num_dens_bulk_A_mean.tolist(), 'B': heterogeneity_num_dens_bulk_B_mean.tolist()}, 'int_dens': {'all': heterogeneity_num_dens_int_all.tolist(), 'A': heterogeneity_num_dens_int_A.tolist(), 'B': heterogeneity_num_dens_int_B.tolist()}, 'int_sys_dens': {'all': heterogeneity_num_dens_int_all_system.tolist(), 'A': heterogeneity_num_dens_int_A_system.tolist(), 'B': heterogeneity_num_dens_int_B_system.tolist()}, 'int_non_dens': {'all': heterogeneity_num_dens_int_all_non_norm.tolist(), 'A': heterogeneity_num_dens_int_A_non_norm.tolist(), 'B': heterogeneity_num_dens_int_B_non_norm.tolist()}, 'int_mean_dens': {'all': heterogeneity_num_dens_int_all_mean.tolist(), 'A': heterogeneity_num_dens_int_A_mean.tolist(), 'B': heterogeneity_num_dens_int_B_mean.tolist()}, 'gas_norm_dens': {'all': heterogeneity_num_dens_gas_all.tolist(), 'A': heterogeneity_num_dens_gas_A.tolist(), 'B': heterogeneity_num_dens_gas_B.tolist()}, 'gas_sys_dens': {'all': heterogeneity_num_dens_gas_all_system.tolist(), 'A': heterogeneity_num_dens_gas_A_system.tolist(), 'B': heterogeneity_num_dens_gas_B_system.tolist()}, 'gas_non_dens': {'all': heterogeneity_num_dens_gas_all_non_norm.tolist(), 'A': heterogeneity_num_dens_gas_A_non_norm.tolist(), 'B': heterogeneity_num_dens_gas_B_non_norm.tolist()}, 'gas_mean_dens': {'all': heterogeneity_num_dens_gas_all_mean.tolist(), 'A': heterogeneity_num_dens_gas_A_mean.tolist(), 'B': heterogeneity_num_dens_gas_B_mean.tolist()}}
+                    data_output_functs.write_to_txt(heterogeneity_act_press_dict, dataPath + 'heterogeneity_active_pressure_' + outfile + '.txt')
+                    #stop
+                    #plotting_functs.plot_normal_fa_heterogeneity_map(heterogeneity_plot_dict, type_m='phases', interface_id = interface_option, orientation_id = orientation_option)
+                    #plotting_functs.plot_normal_fa_heterogeneity_map(heterogeneity_plot_system_dict, type_m='system', interface_id = interface_option, orientation_id = orientation_option)
+
+
+                    
+
+                    #plt.contourf(pos_dict_tmp[])
+
+                    #stop
+
+
+
                     for m in range(0, len(sep_surface_dict)):
 
                         key = 'surface id ' + str(int(int_comp_dict['ids'][m]))
@@ -1463,6 +1888,14 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     act_press_dict = stress_and_pressure_functs.total_active_pressure_interface(com_radial_dict_fa, all_surface_measurements, int_comp_dict)
                     act_press_dict_bubble = stress_and_pressure_functs.total_active_pressure_bubble(com_radial_dict_fa, all_surface_measurements, int_comp_dict)
                     """
+                    #DONE!
+
+                    
+                    if plot == 'y':
+
+                        # Plot contour map of degree of alignment of particle's active forces with nearest normal to cluster surface
+                        plotting_functs.plot_alignment_force(method2_align_dict, all_surface_curves, int_comp_dict, pos, interface_id = interface_option, type='all', method='surface') 
+                
 
                 elif measurement_options[0] == 'density':
                     #DONE!
@@ -1489,7 +1922,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                         plotting_functs.plot_alignment(method1_align_dict, all_surface_curves, int_comp_dict, pos, interface_id = interface_option, type='A', method='com')
                         plotting_functs.plot_alignment(method1_align_dict, all_surface_curves, int_comp_dict, pos, interface_id = interface_option, type='B', method='com')
                         plotting_functs.plot_normal_fa_map(normal_fa_dict, all_surface_curves, int_comp_dict, active_fa_dict, type='all', interface_id = interface_option, orientation_id = orientation_option)
-                        
+                     
                 elif measurement_options[0] == 'surface-align':
                     #DONE!
                     if plot == 'y':
@@ -1805,6 +2238,12 @@ with hoomd.open(name=inFile, mode='rb') as t:
                         #plotting_functs.plot_clustering(clust_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, type='all', interface_id = interface_option, orientation_id = orientation_option)
                         #plotting_functs.plot_clustering(clust_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, type='A', interface_id = interface_option, orientation_id = orientation_option)
                         #plotting_functs.plot_clustering(clust_plot_dict, all_surface_curves, int_comp_dict, active_fa_dict, type='B', interface_id = interface_option, orientation_id = orientation_option)
+                elif measurement_options[0] == 'gas-tracer':
+                    #DONE
+                    if plot == 'y':
+
+                        # Plot partices and color-code by activity
+                        plotting_functs.plot_tracers(pos, part_id_dict, phase_dict, all_surface_curves, int_comp_dict, orient_dict2, interface_id = interface_option, orientation_id = orientation_option, presentation_id = presentation_option, tracer_ids = tracer_ids)
 
                 elif measurement_options[0] == 'local-gas-density':
 

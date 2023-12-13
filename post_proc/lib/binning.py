@@ -246,35 +246,174 @@ class binning:
         int_id = np.where(phase_dict['part']==1)[0]
         gas_id = np.where(phase_dict['part']==2)[0]
 
+        bulk_std_sum_sys = 0
+        int_std_sum_sys = 0
+        gas_std_sum_sys = 0
+
         bulk_std_sum = 0
         int_std_sum = 0
         gas_std_sum = 0
+        system_std_sum = 0
 
         gas_count = 0
         int_count = 0
         bulk_count = 0
+        system_count = 0
 
+        std_binned = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+
+        
         # Loop over all cluster IDs
         for ix in range(0, len(binned_arr)):
             for iy in range(0, len(binned_arr)):
                 if np.isnan(binned_arr[ix][iy])==0:
 
-                    if phase_dict['bin'][ix][iy]==0:
-                        bulk_std_sum += (binned_arr[ix][iy] - mean_dict['bulk'])**2
-                        bulk_count += 1
-                    elif phase_dict['bin'][ix][iy]==1:
-                        int_std_sum += (binned_arr[ix][iy] - mean_dict['int'])**2
-                        int_count += 1
-                    elif phase_dict['bin'][ix][iy]==2:
-                        gas_std_sum += (binned_arr[ix][iy] - mean_dict['gas'])**2
-                        gas_count += 1
+                        system_std_sum += (binned_arr[ix][iy] - mean_dict['system'])**2
+                        system_count += 1
 
-        bulk_q = bulk_std_sum / (bulk_count *  mean_dict['bulk'])
-        int_q = int_std_sum / (int_count *  mean_dict['int'])
-        gas_q = gas_std_sum / (gas_count *  mean_dict['gas'])
+                        if phase_dict['bin'][ix][iy]==0:
+                            bulk_std_sum += (binned_arr[ix][iy] - mean_dict['bulk'])**2
+                            bulk_std_sum_sys += (binned_arr[ix][iy] - mean_dict['system'])**2
+                            std_binned[ix][iy]=((binned_arr[ix][iy] - mean_dict['system'])**2)/(mean_dict['system']**2)
+                            bulk_count += 1
+                        elif phase_dict['bin'][ix][iy]==1:
+                            
+                            int_std_sum += (binned_arr[ix][iy] - mean_dict['int'])**2
+                            int_std_sum_sys += (binned_arr[ix][iy] - mean_dict['system'])**2
+                            std_binned[ix][iy]=((binned_arr[ix][iy] - mean_dict['system'])**2)/(mean_dict['system']**2)
+                            int_count += 1
+                        elif phase_dict['bin'][ix][iy]==2:
+                            gas_std_sum += (binned_arr[ix][iy] - mean_dict['gas'])**2
+                            gas_std_sum_sys += (binned_arr[ix][iy] - mean_dict['system'])**2
+                            std_binned[ix][iy]=((binned_arr[ix][iy] - mean_dict['system'])**2)/(mean_dict['system']**2)
+                            gas_count += 1
 
-        q_dict = {'bulk': bulk_q, 'int': int_q, 'gas': gas_q}
-        return q_dict
+        if (mean_dict['system']>0) & (system_count > 0):
+            system_q = system_std_sum / (system_count *  mean_dict['system']**2)
+            system_q_nonnorm = system_std_sum / (system_count)
+        else:
+            system_q = 0
+            system_q_nonnorm=0
+
+        if (mean_dict['int']>0) & (int_count > 0):
+            int_q_system = int_std_sum / (int_count *  mean_dict['system']**2)
+            int_q = int_std_sum / (int_count *  mean_dict['int']**2)
+            int_q_nonnorm = int_std_sum / (int_count)
+        else:
+            int_q = 0
+            int_q_nonnorm=0
+            int_q_system = 0
+
+        if (mean_dict['bulk']>0) & (bulk_count > 0):
+            bulk_q_system = bulk_std_sum / (bulk_count *  mean_dict['system']**2)
+            bulk_q = bulk_std_sum / (bulk_count *  mean_dict['bulk']**2)
+            bulk_q_nonnorm = bulk_std_sum / (bulk_count)
+        else:
+            bulk_q = 0
+            bulk_q_nonnorm=0
+            bulk_q_system = 0
+
+        if (mean_dict['gas']>0) & (gas_count > 0):
+            gas_q_nonnorm = gas_std_sum / (gas_count)
+            gas_q_system = gas_std_sum / (gas_count *  mean_dict['system']**2)
+            gas_q = gas_std_sum / (gas_count *  mean_dict['gas']**2)
+        else:
+            gas_q = 0
+            gas_q_nonnorm=0
+            gas_q_system = 0
+
+        q_dict = {'bulk': {'norm': bulk_q, 'sys_norm': bulk_q_system, 'non_norm': bulk_q_nonnorm, 'mean': mean_dict['bulk']}, 'int': {'norm': int_q, 'sys_norm': int_q_system, 'non_norm': int_q_nonnorm, 'mean': mean_dict['int']}, 'gas': {'norm': gas_q, 'sys_norm': gas_q_system, 'non_norm': gas_q_nonnorm, 'mean': mean_dict['gas']}, 'system': {'norm': system_q, 'non_norm': system_q_nonnorm, 'mean': mean_dict['system']}}
+        return q_dict, std_binned
+
+    def bin_heterogeneity_binned_phases_system(self, binned_arr, phase_dict, mean_dict):
+        '''
+        Purpose: Takes the number and size of bins to calculate an array of bin positions
+
+        Inputs:
+        pos: array (partNum) of positions (x,y,z) of each particle
+
+        ids: array (partNum) of cluster ids (int) that each particle is a part of
+
+        clust_size: array of cluster sizes (int) in terms of number of particles for each cluster id
+
+        Outputs:
+        part_dict: dictionary containing arrays (NBins_x, NBins_y) whose elements contains information
+        on whether each particle within the bin a) is part of a cluster ('occParts'), b) on which type
+        of particles are in the bin ('typ'), and c) on what each particle's id is ('id')
+        '''
+
+        bulk_id = np.where(phase_dict['part']==0)[0]
+        int_id = np.where(phase_dict['part']==1)[0]
+        gas_id = np.where(phase_dict['part']==2)[0]
+
+        bulk_std_sum = 0
+        int_std_sum = 0
+        gas_std_sum = 0
+        system_std_sum = 0
+
+        gas_count = 0
+        int_count = 0
+        bulk_count = 0
+        system_count = 0
+
+        std_binned = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+
+        
+        # Loop over all cluster IDs
+        for ix in range(0, len(binned_arr)):
+            for iy in range(0, len(binned_arr)):
+                if np.isnan(binned_arr[ix][iy])==0:
+                        system_std_sum += (binned_arr[ix][iy] - mean_dict['system'])**2
+                        system_count += 1
+                        if phase_dict['bin'][ix][iy]==0:
+                            bulk_std_sum += (binned_arr[ix][iy] - mean_dict['system'])**2
+                            std_binned[ix][iy]=((binned_arr[ix][iy] - mean_dict['system'])**2)/(mean_dict['system']**2)
+                            bulk_count += 1
+                        elif phase_dict['bin'][ix][iy]==1:
+                            
+                            int_std_sum += (binned_arr[ix][iy] - mean_dict['system'])**2
+                            std_binned[ix][iy]=((binned_arr[ix][iy] - mean_dict['system'])**2)/(mean_dict['system']**2)
+                            int_count += 1
+                        elif phase_dict['bin'][ix][iy]==2:
+                            gas_std_sum += (binned_arr[ix][iy] - mean_dict['system'])**2
+                            std_binned[ix][iy]=((binned_arr[ix][iy] - mean_dict['system'])**2)/(mean_dict['system']**2)
+                            gas_count += 1
+        if (mean_dict['system']>0) & (system_count > 0):
+            system_q = system_std_sum / (system_count *  mean_dict['system']**2)
+            system_q_nonnorm = system_std_sum / (system_count)
+        else:
+            system_q = 0
+            system_q_nonnorm=0
+
+        if (mean_dict['int']>0) & (int_count > 0):
+            int_q_system = int_std_sum / (int_count *  mean_dict['system']**2)
+            int_q = int_std_sum / (int_count *  mean_dict['int']**2)
+            int_q_nonnorm = int_std_sum / (int_count)
+        else:
+            int_q = 0
+            int_q_nonnorm=0
+            int_q_system = 0
+
+        if (mean_dict['bulk']>0) & (bulk_count > 0):
+            bulk_q_system = bulk_std_sum / (bulk_count *  mean_dict['system']**2)
+            bulk_q = bulk_std_sum / (bulk_count *  mean_dict['bulk']**2)
+            bulk_q_nonnorm = bulk_std_sum / (bulk_count)
+        else:
+            bulk_q = 0
+            bulk_q_nonnorm=0
+            bulk_q_system = 0
+
+        if (mean_dict['gas']>0) & (gas_count > 0):
+            gas_q_nonnorm = gas_std_sum / (gas_count)
+            gas_q_system = gas_std_sum / (gas_count *  mean_dict['system']**2)
+            gas_q = gas_std_sum / (gas_count *  mean_dict['gas']**2)
+        else:
+            gas_q = 0
+            gas_q_nonnorm=0
+            gas_q_system = 0
+
+        q_dict = {'bulk': {'norm': bulk_q, 'sys_norm': bulk_q_system, 'non_norm': bulk_q_nonnorm, 'mean': mean_dict['bulk']}, 'int': {'norm': int_q, 'sys_norm': int_q_system, 'non_norm': int_q_nonnorm, 'mean': mean_dict['int']}, 'gas': {'norm': gas_q, 'sys_norm': gas_q_system, 'non_norm': gas_q_nonnorm, 'mean': mean_dict['gas']}, 'system': {'norm': system_q, 'non_norm': system_q_nonnorm, 'mean': mean_dict['system']}}
+        return q_dict, std_binned
 
     def bin_heterogeneity_phases(self, binned_arr, part_binned_arr, phase_dict):
         '''
@@ -607,6 +746,108 @@ class binning:
         binned_measure_dict = {'all': all_system, 'A': A_system, 'B': B_system}
         binned_measure_mean_dict = {'all': all_system_mean, 'A': A_system_mean, 'B': B_system_mean}
         return binned_measure_dict, binned_measure_mean_dict
+    def bin_act_press_phases(self, binParts, measurement):
+        '''
+        Purpose: Takes the number and size of bins to calculate an array of bin positions
+
+        Inputs:
+        pos: array (partNum) of positions (x,y,z) of each particle
+
+        ids: array (partNum) of cluster ids (int) that each particle is a part of
+
+        clust_size: array of cluster sizes (int) in terms of number of particles for each cluster id
+
+        Outputs:
+        part_dict: dictionary containing arrays (NBins_x, NBins_y) whose elements contains information
+        on whether each particle within the bin a) is part of a cluster ('occParts'), b) on which type
+        of particles are in the bin ('typ'), and c) on what each particle's id is ('id')
+        '''
+
+        all_system = [[[] for b in range(len(binParts))] for a in range(len(binParts))]
+        A_system = [[[] for b in range(len(binParts))] for a in range(len(binParts))]
+        B_system = [[[] for b in range(len(binParts))] for a in range(len(binParts))]
+
+        all_system_mean = [[0 for b in range(len(binParts))] for a in range(len(binParts))]
+        A_system_mean = [[0 for b in range(len(binParts))] for a in range(len(binParts))]
+        B_system_mean = [[0 for b in range(len(binParts))] for a in range(len(binParts))]
+
+        all_system_align = [[[] for b in range(len(binParts))] for a in range(len(binParts))]
+        A_system_align = [[[] for b in range(len(binParts))] for a in range(len(binParts))]
+        B_system_align = [[[] for b in range(len(binParts))] for a in range(len(binParts))]
+
+        all_system_align_mean = [[0 for b in range(len(binParts))] for a in range(len(binParts))]
+        A_system_align_mean = [[0 for b in range(len(binParts))] for a in range(len(binParts))]
+        B_system_align_mean = [[0 for b in range(len(binParts))] for a in range(len(binParts))]
+
+        all_system_num_dens = [[0 for b in range(len(binParts))] for a in range(len(binParts))]
+        A_system_num_dens = [[0 for b in range(len(binParts))] for a in range(len(binParts))]
+        B_system_num_dens = [[0 for b in range(len(binParts))] for a in range(len(binParts))]
+
+        all_system_num_dens_mean = [[0 for b in range(len(binParts))] for a in range(len(binParts))]
+        A_system_num_dens_mean = [[0 for b in range(len(binParts))] for a in range(len(binParts))]
+        B_system_num_dens_mean = [[0 for b in range(len(binParts))] for a in range(len(binParts))]
+
+        # Loop over all cluster IDs
+        A_count = 0
+        all_count = 0
+        B_count = 0
+        
+        for ix in range(len(binParts)):
+            for iy in range(len(binParts)):
+
+                for h in range(0, len(binParts[ix][iy])):
+                    temp_id = np.where(measurement['id']==binParts[ix][iy][h])[0]
+                    
+                    if len(temp_id)>0:
+                        #print(measurement['align_fa'][temp_id][0])
+                        all_system[ix][iy].append(measurement['align_fa'][temp_id][0])
+                        all_system_align[ix][iy].append(measurement['align'][temp_id][0])
+                        all_system_num_dens[ix][iy] += 1
+                        all_count += 1
+                        if self.typ[binParts[ix][iy][h]]==0:
+                            A_system[ix][iy].append(measurement['align_fa'][temp_id][0])
+                            A_system_align[ix][iy].append(measurement['align'][temp_id][0])
+                            A_system_num_dens[ix][iy] += 1
+                            A_count += 1
+                        elif self.typ[binParts[ix][iy][h]]==1:
+                            B_system[ix][iy].append(measurement['align_fa'][temp_id][0])
+                            B_system_align[ix][iy].append(measurement['align'][temp_id][0])
+                            B_system_num_dens[ix][iy] += 1
+                            B_count += 1
+
+                if len(all_system[ix][iy])>0:
+                    #print('test')
+                    #print(ix)
+                    #print(iy)
+                    #print(A_system[ix][iy])
+                    #print(np.mean(A_system[ix][iy]))
+                    all_system_mean[ix][iy] = np.mean(all_system[ix][iy])
+                    all_system_align_mean[ix][iy] = np.mean(all_system_align[ix][iy])
+                    all_system_num_dens_mean[ix][iy] = all_system_num_dens[ix][iy] / (self.sizeBin_x * self.sizeBin_y)
+
+                    if len(A_system[ix][iy])>0:
+                        A_system_mean[ix][iy] = np.mean(A_system[ix][iy])
+                        A_system_align_mean[ix][iy] = np.mean(A_system_align[ix][iy])
+                        A_system_num_dens_mean[ix][iy] = A_system_num_dens[ix][iy] / (self.sizeBin_x * self.sizeBin_y)
+                    else:
+                        A_system_mean[ix][iy] = 0
+                        A_system_align_mean[ix][iy] = 0
+                        A_system_num_dens_mean[ix][iy] = 0
+
+                    if len(B_system[ix][iy])>0:
+                        B_system_mean[ix][iy] = np.mean(B_system[ix][iy])
+                        B_system_align_mean[ix][iy] = np.mean(B_system_align[ix][iy])
+                        B_system_num_dens_mean[ix][iy] = B_system_num_dens[ix][iy] / (self.sizeBin_x * self.sizeBin_y)
+                    else:
+                        B_system_mean[ix][iy] = 0
+                        B_system_align_mean[ix][iy] = 0
+                        B_system_num_dens_mean[ix][iy] = 0
+
+        #binned_measure_dict = {'system': {'all-all': allall_system, 'A-all': Aall_system, 'all-A': allA_system, 'B-all': Ball_system, 'all-B': allB_system, 'A-A': AA_system, 'A-B': AB_system, 'B-A': BA_system, 'B-B': BB_system}, 'dense': {'all-all': allall_dense, 'A-all': Aall_dense, 'all-A': allA_dense, 'B-all': Ball_dense, 'all-B': allB_dense, 'A-A': AA_dense, 'A-B': AB_dense, 'B-A': BA_dense, 'B-B': BB_dense}, 'bulk': {'all-all': allall_bulk, 'A-all': Aall_bulk, 'all-A': allA_bulk, 'B-all': Ball_bulk, 'all-B': allB_bulk, 'A-A': AA_bulk, 'A-B': AB_bulk, 'B-A': BA_bulk, 'B-B': BB_bulk}, 'int': {'all-all': allall_int, 'A-all': Aall_int, 'all-A': allA_int, 'B-all': Ball_int, 'all-B': allB_int, 'A-A': AA_int, 'A-B': AB_int, 'B-A': BA_int, 'B-B': BB_int}, 'gas': {'all-all': allall_gas, 'A-all': Aall_gas, 'all-A': allA_gas, 'B-all': Ball_gas, 'all-B': allB_gas, 'A-A': AA_gas, 'A-B': AB_gas, 'B-A': BA_gas, 'B-B': BB_gas} }
+        binned_measure_dict = {'align_fa': {'all': all_system, 'A': A_system, 'B': B_system}, 'align': {'all': all_system_align, 'A': A_system_align, 'B': B_system_align}, 'num_dens': {'all': all_system_num_dens, 'A': A_system_num_dens, 'B': B_system_num_dens}}
+        binned_measure_mean_dict = {'align_fa': {'all': all_system_mean, 'A': A_system_mean, 'B': B_system_mean}, 'align': {'all': all_system_align_mean, 'A': A_system_align_mean, 'B': B_system_align_mean}, 'num_dens': {'all': all_system_num_dens_mean, 'A': A_system_num_dens_mean, 'B': B_system_num_dens_mean}}
+        return binned_measure_dict, binned_measure_mean_dict
+        
     def bin_part_press_phases(self, binParts, measurement):
         '''
         Purpose: Takes the number and size of bins to calculate an array of bin positions

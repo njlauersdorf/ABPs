@@ -497,6 +497,59 @@ class particle_props:
         radial_fa_dict = {'all': {'r': r_dist_norm, 'fa': fa_norm, 'align': align_norm}, 'A': {'r': rA_dist_norm, 'fa': faA_norm, 'align': alignA_norm}, 'B': {'r': rB_dist_norm, 'fa': faB_norm, 'align': alignB_norm}}
 
         return radial_fa_dict
+    def heterogeneity_single_particles(self, body_force_dict, phase_dict, avg_body_force_dict, type_m='phases'):
+
+        bulk_id = np.where(phase_dict['part']==0)[0]
+        int_id = np.where(phase_dict['part']==1)[0]
+        gas_id = np.where(phase_dict['part']==2)[0]
+
+        bulk_A_id = np.where((phase_dict['part']==0) & (self.typ==0))[0]
+        bulk_B_id = np.where((phase_dict['part']==0) & (self.typ==1))[0]
+
+        int_A_id = np.where((phase_dict['part']==1) & (self.typ==0))[0]
+        int_B_id = np.where((phase_dict['part']==1) & (self.typ==1))[0]
+
+        gas_A_id = np.where((phase_dict['part']==2) & (self.typ==0))[0]
+        gas_B_id = np.where((phase_dict['part']==2) & (self.typ==1))[0]
+        #if (avg_body_force_dict['all']['bulk'])
+
+        if type_m == 'phases':
+            hetero_bulk_all = ((body_force_dict['align_fa'][bulk_id]-np.mean(body_force_dict['align_fa'][bulk_id]))**2)
+            hetero_bulk_A = ((body_force_dict['align_fa'][bulk_A_id]-np.mean(body_force_dict['align_fa'][bulk_A_id]))**2)
+            hetero_bulk_B = ((body_force_dict['align_fa'][bulk_B_id]-np.mean(body_force_dict['align_fa'][bulk_B_id]))**2)
+
+            hetero_int_all = ((body_force_dict['align_fa'][int_id]-np.mean(body_force_dict['align_fa'][int_id]))**2)
+            hetero_int_A = ((body_force_dict['align_fa'][int_A_id]-np.mean(body_force_dict['align_fa'][int_A_id]))**2)
+            hetero_int_B = ((body_force_dict['align_fa'][int_B_id]-np.mean(body_force_dict['align_fa'][int_B_id]))**2)
+
+            hetero_gas_all = ((body_force_dict['align_fa'][gas_id]-np.mean(body_force_dict['align_fa'][gas_id]))**2)
+            hetero_gas_A = ((body_force_dict['align_fa'][gas_A_id]-np.mean(body_force_dict['align_fa'][gas_A_id]))**2)
+            hetero_gas_B = ((body_force_dict['align_fa'][gas_B_id]-np.mean(body_force_dict['align_fa'][gas_B_id]))**2)
+        elif type_m == 'system':
+            hetero_bulk_all = ((body_force_dict['align_fa'][bulk_id]-np.mean(body_force_dict['align_fa']))**2)
+            hetero_bulk_A = ((body_force_dict['align_fa'][bulk_A_id]-np.mean(body_force_dict['align_fa']))**2)
+            hetero_bulk_B = ((body_force_dict['align_fa'][bulk_B_id]-np.mean(body_force_dict['align_fa']))**2)
+
+            hetero_int_all = ((body_force_dict['align_fa'][int_id]-np.mean(body_force_dict['align_fa']))**2)
+            hetero_int_A = ((body_force_dict['align_fa'][int_A_id]-np.mean(body_force_dict['align_fa']))**2)
+            hetero_int_B = ((body_force_dict['align_fa'][int_B_id]-np.mean(body_force_dict['align_fa']))**2)
+
+            hetero_gas_all = ((body_force_dict['align_fa'][gas_id]-np.mean(body_force_dict['align_fa']))**2)
+            hetero_gas_A = ((body_force_dict['align_fa'][gas_A_id]-np.mean(body_force_dict['align_fa']))**2)
+            hetero_gas_B = ((body_force_dict['align_fa'][gas_B_id]-np.mean(body_force_dict['align_fa']))**2)
+
+        hetero_dense_all = np.append(hetero_bulk_all, hetero_int_all)
+        hetero_system_all = np.append(hetero_dense_all, hetero_gas_all)
+
+        pos_dense_x = np.append(self.pos[bulk_id,0], self.pos[int_id,0])
+        pos_system_x = np.append(pos_dense_x, self.pos[gas_id,0])
+
+        pos_dense_y = np.append(self.pos[bulk_id,1], self.pos[int_id,1])
+        pos_system_y = np.append(pos_dense_y, self.pos[gas_id,1])
+
+        hetero_plot_dict = {'x': pos_system_x, 'y': pos_system_y, 'hetero': hetero_system_all}
+
+        return hetero_plot_dict
 
     def angular_velocity(self, ang_vel, phasePart):
         '''

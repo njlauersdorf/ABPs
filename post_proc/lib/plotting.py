@@ -411,6 +411,299 @@ class plotting:
         ax.set_facecolor('#F2f2f2')
         plt.savefig(self.outPath + 'phases_' + self.outFile + ".png", dpi=150, transparent=False, bbox_inches='tight')
         plt.close()  
+    
+    def plot_tracers(self, pos, phase_ids_dict, phase_dict, sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None, interface_id = False, orientation_id = False, presentation_id=False, tracer_ids = []):
+        #DONE!
+        """
+        This function plots each particle's position and color-codes each
+        particle by the phase it is a part of, i.e. bulk=green,
+        interface=purple, and gas=red.
+
+        Inputs:
+        pos: array (partNum, 3) of each particles x,y,z positions
+        phase_ids_dict: dictionary (output from various phase_identification
+        functions) containing information on the composition of each phase
+
+        phase_ids_dict: dictionary (output from phase_part_count() in
+        phase_identification.py) that contains the id of each particle specifying
+        the phase of bulk (0), interface (1), or gas (2).
+
+        sep_surface_dict (default value = None): dictionary (output from surface_curve_interp() in
+        interface.py) that contains the interpolated curve representing the
+        inner and outer surfaces of each interface.
+
+        int_comp_dict (default value = None): dictionary (output from int_sort2() in
+        phase_identification.py) that contains information on each
+        isolated/individual interface.
+
+        active_fa_dict (default value = None): dictionary (output from bin_active_fa() in binning.py)
+        that contains information on the binned average active force magnitude and orientation over
+        space
+
+        interface_id ( default value = False): True/False value that specifies whether
+        the interface interior and exterior surfaces should be plotted
+
+        orientation_id ( default value = False): True/False value that specifies whether
+        the average, binned orientation of particles should be plotted
+
+        Outputs:
+        .png file with each particle's position plotted and color coded by the
+        phase it's a part of and the interface surfaces plotted in black
+        """
+
+        import random
+
+        gray = ("#d9d9d9")
+
+        bulk_part_ids = phase_ids_dict['bulk']['all']
+        gas_part_ids = phase_ids_dict['gas']['all']
+        int_part_ids = phase_ids_dict['int']['all']
+        print(gas_part_ids)
+        print(type(gas_part_ids))
+        stop
+
+        if len(tracer_ids) == 0:
+            tracer_ids = random.sample(gas_part_ids, (len(gas_part_ids)/10))
+        
+        print(tracer_ids)
+        stop
+
+        # If box is rectangular with long dimension of x-axis
+        if self.lx_box > self.ly_box:
+
+            # Estimated area of dense phase
+            area_dense = (0.8 * self.partNum * (np.pi/4) / self.phiCP)
+
+            # Mid point of dense phase across longest box dimension (x)
+            dense_x_mid = np.mean(pos[:,0]+self.hx_box)
+
+            # estimated shortest dimension length of dense phase (y)
+            dense_x_width = (area_dense / self.ly_box)
+
+            # Set maximum dimension length (x) of simulation box to be 12 inches (plus 1 inch color bar)
+            scaling = 13.0
+
+            # X and Y-dimension lengths (in inches)
+            x_dim = int(scaling + 1.0)
+            y_dim = int(scaling/ (dense_x_width / self.ly_box))
+
+        # If box is rectangular with long dimension of y-axis
+        elif self.lx_box < self.ly_box:
+
+            # Estimated area of dense phase
+            area_dense = (0.8 * self.partNum * (np.pi/4) / self.phiCP)
+
+            # Mid point of dense phase across longest box dimension (y)
+            mid_point = np.mean(pos[:,1]+self.hy_box)
+
+            # estimated shorted dimension length of dense phase (x)
+            dense_x_width = (area_dense / self.lx_box)
+
+            # Set maximum dimension length (y) of simulation box to be 13 inches
+            scaling = 13.0
+
+            # X and Y-dimension lengths (in inches)
+            x_dim = int((scaling/(dense_x_width / self.lx_box)) + 1.0)
+            y_dim = int(scaling)
+
+        # If box is square
+        else:
+
+            # Minimum dimension length (in inches)
+            scaling =7.0
+
+            # X and Y-dimension lengths (in inches)
+            if presentation_id == True:
+                x_dim = scaling+0.18
+            else:
+                x_dim = int(scaling + 0.5)
+            y_dim = int(scaling)
+
+        # Generate figure of dimensions proportional to simulation box size (with added x-length for color bar)
+        fig = plt.figure(figsize=(x_dim,y_dim))
+        ax = fig.add_subplot(111)
+
+        # Set plotted particle size
+        sz = 0.755
+
+        # Plot position colored by phase
+        if len(bulk_part_ids)>0:
+            ells_bulk = [Ellipse(xy=np.array([pos[bulk_part_ids[i],0]+self.hx_box,pos[bulk_part_ids[i],1]+self.hy_box]),
+                width=sz, height=sz)
+        for i in range(0,len(bulk_part_ids))]
+            bulkGroup = mc.PatchCollection(ells_bulk, facecolor=green)
+            ax.add_collection(bulkGroup)
+
+        if len(gas_part_ids)>0:
+            ells_gas = [Ellipse(xy=np.array([pos[gas_part_ids[i],0]+self.hx_box,pos[gas_part_ids[i],1]+self.hy_box]),
+                width=sz, height=sz)
+        for i in range(0,len(gas_part_ids))]
+            gasGroup = mc.PatchCollection(ells_gas, facecolor=red)
+            ax.add_collection(gasGroup)
+
+        if len(int_part_ids)>0:
+            ells_int = [Ellipse(xy=np.array([pos[int_part_ids[i],0]+self.hx_box,pos[int_part_ids[i],1]+self.hy_box]),
+                width=sz, height=sz)
+        for i in range(0,len(int_part_ids))]
+
+            intGroup = mc.PatchCollection(ells_int, facecolor=yellow)
+            ax.add_collection(intGroup)
+
+        # Plot interpolated inner and outer interface surface curves
+        if interface_id == True:
+            try:
+
+                if sep_surface_dict!=None:
+                    
+                    for m in range(0, len(sep_surface_dict)):
+                        key = 'surface id ' + str(int(int_comp_dict['ids'][m]))
+                        print(key)
+
+                        try:
+                            pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
+                            pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
+                            plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_interior_surface_x + self.lx_box, pos_interior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_interior_surface_x - self.lx_box, pos_interior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_interior_surface_x, pos_interior_surface_y+self.ly_box, c='black', s=3.0)
+                            plt.scatter(pos_interior_surface_x, pos_interior_surface_y-self.ly_box, c='black', s=3.0)
+                        except:
+                            pass
+
+                        try:
+                            
+                            pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
+                            pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
+                            plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_exterior_surface_x + self.lx_box, pos_exterior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_exterior_surface_x - self.lx_box, pos_exterior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y+self.ly_box, c='black', s=3.0)
+                            plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y-self.ly_box, c='black', s=3.0) 
+                        except:
+                            pass
+            except:
+                pass
+        
+        #active_r = ( active_fa_dict['bin']['x'] ** 2 + active_fa_dict['bin']['y'] ** 2 ) ** 0.5
+        active_r = ( np.array(active_fa_dict['bin']['all']['x']) ** 2 + np.array(active_fa_dict['bin']['all']['y']) ** 2 ) ** 0.5
+        nonzero_id = np.nonzero(active_r)
+        
+        nonzero_x_id = nonzero_id[0]
+        nonzero_y_id = nonzero_id[1]
+        # Plot averaged, binned orientation of particles
+        """
+        if orientation_id == True:
+            try:
+                if active_fa_dict!=None:
+                    for i in range(0, len(nonzero_x_id)):
+                        #plt.quiver(self.pos_x[nonzero_x_id[i]][nonzero_y_id[i]]*3, self.pos_y[nonzero_x_id[i]][nonzero_y_id[i]]*3, active_fa_dict['bin']['x'][nonzero_x_id[i]][nonzero_y_id[i]], active_fa_dict['bin']['y'][nonzero_x_id[i]][nonzero_y_id[i]], scale=10.0, width=0.01, color='black', alpha=0.8)
+                        plt.quiver(self.pos_x[nonzero_x_id[i]][nonzero_y_id[i]]*3, self.pos_y[nonzero_x_id[i]][nonzero_y_id[i]]*3, active_fa_dict['bin']['all']['x'][nonzero_x_id[i]][nonzero_y_id[i]], active_fa_dict['bin']['all']['y'][nonzero_x_id[i]][nonzero_y_id[i]], scale=10.0, width=0.01, color='black', alpha=0.8)
+            except:
+                pass
+        
+        """
+        new_orient_dict_x = np.zeros(np.shape(active_fa_dict['bin']['all']['x']))
+        new_orient_dict_y = np.zeros(np.shape(active_fa_dict['bin']['all']['x']))
+
+        pos_x_new = np.zeros(np.shape(active_fa_dict['bin']['all']['x']))
+        pos_y_new = np.zeros(np.shape(active_fa_dict['bin']['all']['x']))
+
+        if orientation_id == True:
+            try:
+                if active_fa_dict!=None:
+                    for k in range(0, len(active_fa_dict['bin']['all']['x'])):
+                        for l in range(0, len(active_fa_dict['bin']['all']['x'])):
+                            count = 0
+                            noncount = 0
+                            for i in range(0, len(phase_dict['bin'])):
+                                for j in range(0, len(phase_dict['bin'])):
+                                    if (self.pos_x[i][j] <= self.pos_x[k+1][l] * 3) & (self.pos_x[i][j] >= self.pos_x[k][l] * 3) & (self.pos_y[i][j] <= self.pos_y[k][l+1] * 3) & (self.pos_y[i][j] >= self.pos_y[k][l] * 3):
+                                        if phase_dict['bin'][i][j]==1:
+                                            count += 1
+                                        else:
+                                            noncount += 1
+                            if count > 0:
+                                #print(k)
+                                #print(l)
+                                if (active_fa_dict['bin']['all']['x'][k][l] ** 2 + active_fa_dict['bin']['all']['y'][k][l] ** 2) ** 0.5 >=0.20:
+                                    new_orient_dict_x[k][l]=active_fa_dict['bin']['all']['x'][k][l]
+                                    new_orient_dict_y[k][l]=active_fa_dict['bin']['all']['y'][k][l]
+                                    pos_x_new[k][l] = self.pos_x[k][l]*3
+                                    pos_y_new[k][l] = self.pos_y[k][l]*3
+
+
+                    active_r = ( np.array(new_orient_dict_x) ** 2 + np.array(new_orient_dict_y) ** 2 ) ** 0.5
+
+                    nonzero_id = np.nonzero(active_r)
+                    
+                    nonzero_x_id = nonzero_id[0]
+                    nonzero_y_id = nonzero_id[1]
+                    
+                    for i in range(0, len(nonzero_x_id)):
+                        #plt.quiver(self.pos_x[nonzero_x_id[i]][nonzero_y_id[i]]*3, self.pos_y[nonzero_x_id[i]][nonzero_y_id[i]]*3, active_fa_dict['bin']['x'][nonzero_x_id[i]][nonzero_y_id[i]], active_fa_dict['bin']['y'][nonzero_x_id[i]][nonzero_y_id[i]], scale=10.0, width=0.01, color='black', alpha=0.8)
+                        plt.quiver(pos_x_new[nonzero_x_id[i]][nonzero_y_id[i]], pos_y_new[nonzero_x_id[i]][nonzero_y_id[i]], new_orient_dict_x[nonzero_x_id[i]][nonzero_y_id[i]], new_orient_dict_y[nonzero_x_id[i]][nonzero_y_id[i]], scale=10.0, width=0.01, color='black', alpha=0.8)
+                    
+            except:
+                pass
+        
+        plt.tick_params(axis='both', which='both',
+                        bottom=False, top=False, left=False, right=False,
+                        labelbottom=False, labeltop=False, labelleft=False, labelright=False)
+        
+        # Label simulation time
+        if presentation_id == True:
+            if self.lx_box == self.ly_box:
+                plt.text(0.647, 0.04, s=r'$\tau$' + ' = ' + '{:.1f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+                    fontsize=30, transform = ax.transAxes,
+                    bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+            elif self.lx_box > self.ly_box:
+                plt.text(0.85, 0.1, s=r'$\tau$' + ' = ' + '{:.1f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+                    fontsize=28, transform = ax.transAxes,
+                    bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+        else:
+            if self.lx_box == self.ly_box:
+                plt.text(0.68, 0.04, s=r'$\tau$' + ' = ' + '{:.1f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+                    fontsize=30, transform = ax.transAxes,
+                    bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+            elif self.lx_box > self.ly_box:
+                plt.text(0.85, 0.1, s=r'$\tau$' + ' = ' + '{:.1f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+                    fontsize=28, transform = ax.transAxes,
+                    bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+        
+
+        eps_leg=[]
+        mkSz = [0.1, 0.1, 0.15, 0.1, 0.1]
+        msz=40
+
+        # If rectangular box, reduce system size plotted
+        if self.lx_box > self.ly_box:
+            plt.xlim(dense_x_mid-(dense_x_width/2), dense_x_mid+(dense_x_width/2))
+            plt.ylim(0, self.ly_box)
+        elif self.lx_box < self.ly_box:
+            plt.ylim(dense_y_mid-(dense_y_width/2), dense_y_mid+(dense_y_width/2))
+            plt.xlim(0, self.lx_box)
+        # Plot entire system
+        else:
+            plt.ylim(0, self.ly_box)
+            plt.xlim(0, self.lx_box)
+
+        # Add legend of phases
+        
+        if presentation_id == True:
+            fast_leg = [Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=green, label='Bulk', markersize=32), Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=yellow, label='Interface', markersize=32), Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=red, label='Gas', markersize=32)]
+
+            one_leg = ax.legend(handles=fast_leg, loc='upper right', borderpad=0.2, labelspacing=0.4, handletextpad=-0.2, bbox_transform=ax.transAxes, bbox_to_anchor=[1.003, 1.025], handlelength=1.5, columnspacing=0.5, fontsize=36, ncol=3, facecolor='white', edgecolor='black', framealpha=0.6)
+            ax.add_artist(one_leg)
+        else:
+            fast_leg = [Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=green, label='Bulk', markersize=36), Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=yellow, label='Interface', markersize=36), Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=red, label='Gas', markersize=36)]
+
+            one_leg = ax.legend(handles=fast_leg, loc='upper right', borderpad=0.3, labelspacing=0.4, handletextpad=-0.2, bbox_transform=ax.transAxes, bbox_to_anchor=[1.06, 1.17], handlelength=1.5, columnspacing=0.5, fontsize=40, ncol=3, facecolor='None', edgecolor='None')
+            ax.add_artist(one_leg)
+        plt.tight_layout()
+        ax.set_facecolor('#F2f2f2')
+        plt.savefig(self.outPath + 'gas_tracers_' + self.outFile + ".png", dpi=150, transparent=False, bbox_inches='tight')
+        plt.close()  
+
     def plot_area_fraction(self, area_frac_dict, pos, sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None, type='all', interface_id = False, orientation_id = False):#, int_comp_dict):#sep_surface_dict, int_comp_dict):
         #DONE!
         """
@@ -854,6 +1147,225 @@ class plotting:
         plt.savefig(self.outPath + 'com_normal_fa_' + self.outFile + ".png", dpi=200, transparent=False, bbox_inches='tight')
         plt.close()
 
+    def plot_normal_fa_heterogeneity_map(self, normal_fa_dict, sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None, type='all', interface_id = False, orientation_id = False, type_m = 'phases'):
+        
+        """
+        This function plots the average alignment (toward cluster surface
+        normal) of particles of a given type per bin at each location in space.
+
+        Inputs:
+        align_dict: dictionary (output from various bin_align() in
+        binning.py) containing information on the average alignment of particles'
+        active force orientation with the surface normal, where a positive value
+        points more towards the surface and a negative value points more away
+        from a surface.
+
+        sep_surface_dict: dictionary (output from surface_curve_interp() in
+        interface.py) that contains the interpolated curve representing the
+        inner and outer surfaces of each interface.
+
+        int_comp_dict: dictionary (output from int_sort2() in
+        phase_identification.py) that contains information on each
+        isolated/individual interface.
+
+        pos (partNum, 3): array of (x,y,z) positions for each particle
+
+        interface_id ( default value = True): True/False value that specifies whether
+        the interface interior and exterior surfaces should be plotted
+
+        type (optional): string specifying whether the area fraction of all
+        (type='all'), type A (type='A'), type B (type='B'), or the difference
+        of types B and A ('dif') should be plotted.
+
+        Outputs:
+        .png file with binned average alignment of respective type at each
+        location in space plotted as a heat map with color bar and a quiver plot
+        showing the average direction (magnitude normalized) of orientation per
+        bin.
+        """
+
+        # Area fraction as specified by 'type' input
+        if type == 'all':
+            normal_fa = normal_fa_dict['all']
+        elif type == 'A':
+            normal_fa = normal_fa_dict['A']
+        elif type == 'B':
+            normal_fa = normal_fa_dict['B']
+
+        # If box is rectangular with long dimension of x-axis
+        if self.lx_box > self.ly_box:
+
+            # Estimated area of dense phase
+            area_dense = (0.8 * self.partNum * (np.pi/4) / self.phiCP)
+
+            # Mid point of dense phase across longest box dimension (x)
+            dense_x_mid = np.mean(pos[:,0]+self.hx_box)
+
+            # estimated shortest dimension length of dense phase (y)
+            dense_x_width = (area_dense / self.ly_box)
+
+            # Set maximum dimension length (x) of simulation box to be 12 inches (plus 1 inch color bar)
+            scaling = 13.0
+
+            # X and Y-dimension lengths (in inches)
+            x_dim = int(scaling + 1.0)
+            y_dim = int(scaling/ (dense_x_width / self.ly_box))
+
+        # If box is rectangular with long dimension of y-axis
+        elif self.lx_box < self.ly_box:
+
+            # Estimated area of dense phase
+            area_dense = (0.8 * self.partNum * (np.pi/4) / self.phiCP)
+
+            # Mid point of dense phase across longest box dimension (y)
+            mid_point = np.mean(pos[:,1]+self.hy_box)
+
+            # estimated shorted dimension length of dense phase (x)
+            dense_x_width = (area_dense / self.lx_box)
+
+            # Set maximum dimension length (y) of simulation box to be 13 inches
+            scaling = 13.0
+
+            # X and Y-dimension lengths (in inches)
+            x_dim = int((scaling/(dense_x_width / self.lx_box)) + 1.0)
+            y_dim = int(scaling)
+
+        # If box is square
+        else:
+
+            # Minimum dimension length (in inches)
+            scaling =7.0
+
+            # X and Y-dimension lengths (in inches)
+            x_dim = int(scaling + 2.25)
+            y_dim = int(scaling)
+
+        # Generate figure of dimensions proportional to simulation box size (with added x-length for color bar)
+        fig = plt.figure(figsize=(x_dim,y_dim))
+        ax = fig.add_subplot(111)
+
+        # Define colorbar limits
+        div_min = -3
+        min_n = np.min(normal_fa)
+        max_n = np.max(normal_fa)
+
+        # Define colorbar ticks
+        levels_text=40
+        level_boundaries = np.linspace(min_n, max_n, levels_text + 1)
+
+        # Plot normal force of given species
+        im = plt.contourf(normal_fa_dict['x'], normal_fa_dict['y'], normal_fa, level_boundaries, vmin=min_n, vmax=max_n, cmap='Reds', extend='both')
+        
+        # Set colorbar properties
+        norm= matplotlib.colors.Normalize(vmin=min_n, vmax=max_n)
+        sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
+        sm.set_array([])
+        tick_lev = np.arange(min_n, max_n+max_n/10, (max_n-min_n)/10)
+
+        # Plot colorbar 
+        clb = fig.colorbar(sm, ticks=tick_lev, boundaries=level_boundaries,
+        values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStrFormatter('%.2f'))
+
+        clb.ax.tick_params(labelsize=24)
+
+        # Label color bar based on particle type specified 
+        if type == 'all':
+            if self.lx_box == self.ly_box:
+                clb.set_label(r'$\langle F_\mathrm{all} \rangle$', labelpad=30, y=0.5, rotation=270, fontsize=30)
+            elif self.lx_box > self.ly_box:
+                clb.set_label(r'$\langle F_\mathrm{all} \rangle$', labelpad=30, y=0.5, rotation=270, fontsize=30)
+        elif type == 'A':
+            if self.lx_box == self.ly_box:
+                clb.set_label(r'$\langle F_\mathrm{A} \rangle$', labelpad=30, y=0.5, rotation=270, fontsize=30)
+            elif self.lx_box > self.ly_box:
+                clb.set_label(r'$\langle F_\mathrm{A} \rangle$', labelpad=30, y=0.5, rotation=270, fontsize=30)
+        elif type == 'B':
+            if self.lx_box == self.ly_box:
+                clb.set_label(r'$\langle F_\mathrm{B} \rangle$', labelpad=30, y=0.5, rotation=270, fontsize=30)
+            elif self.lx_box > self.ly_box:
+                clb.set_label(r'$\langle F_\mathrm{B} \rangle$', labelpad=30, y=0.5, rotation=270, fontsize=30)
+
+        # Remove plot ticks
+        plt.tick_params(axis='both', which='both',
+                        bottom=False, top=False, left=False, right=False,
+                        labelbottom=False, labeltop=False, labelleft=False, labelright=False)
+
+        # Plot interpolated inner and outer interface surface curves
+        if interface_id == True:
+            try:
+
+                if sep_surface_dict!=None:
+                    
+                    for m in range(0, len(sep_surface_dict)):
+                        key = 'surface id ' + str(int(int_comp_dict['ids'][m]))
+                        print(key)
+
+                        try:
+                            pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
+                            pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
+                            plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_interior_surface_x + self.lx_box, pos_interior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_interior_surface_x - self.lx_box, pos_interior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_interior_surface_x, pos_interior_surface_y+self.ly_box, c='black', s=3.0)
+                            plt.scatter(pos_interior_surface_x, pos_interior_surface_y-self.ly_box, c='black', s=3.0)
+                        except:
+                            pass
+
+                        try:
+                            
+                            pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
+                            pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
+                            plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_exterior_surface_x + self.lx_box, pos_exterior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_exterior_surface_x - self.lx_box, pos_exterior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y+self.ly_box, c='black', s=3.0)
+                            plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y-self.ly_box, c='black', s=3.0) 
+                        except:
+                            pass
+            except:
+                pass
+        
+        # Plot averaged, binned orientation of particles
+        if orientation_id == True:
+            try:
+                if active_fa_dict!=None:
+                    plt.quiver(self.pos_x, self.pos_y, active_fa_dict['bin']['x'], active_fa_dict['bin']['y'], scale=20.0, color='black', alpha=0.8)
+            except:
+                pass
+
+        # Label time step
+        if self.lx_box == self.ly_box:
+            #plt.text(0.69, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+            #    fontsize=24, transform = ax.transAxes,
+            #    bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+            plt.text(0.52, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+                fontsize=30, transform = ax.transAxes,
+                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+        elif self.lx_box > self.ly_box:
+            plt.text(0.85, 0.1, s=r'$\tau$' + ' = ' + '{:.4f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+                fontsize=18, transform = ax.transAxes,
+                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+
+       # If rectangular box, reduce system size plotted
+        if self.lx_box > self.ly_box:
+            plt.xlim(dense_x_mid-(dense_x_width/2), dense_x_mid+(dense_x_width/2))
+            plt.ylim(0, self.ly_box)
+        elif self.lx_box < self.ly_box:
+            plt.ylim(dense_y_mid-(dense_y_width/2), dense_y_mid+(dense_y_width/2))
+            plt.xlim(0, self.lx_box)
+        # Plot entire system
+        else:
+            plt.ylim(0, self.ly_box)
+            plt.xlim(0, self.lx_box)
+
+        ax.axis('off')
+        plt.tight_layout()
+        if type_m == 'phases':
+            plt.savefig(self.outPath + 'com_normal_fa_heterogeneity_' + self.outFile + ".png", dpi=200, transparent=False, bbox_inches='tight')
+        elif type_m == 'system':
+            plt.savefig(self.outPath + 'com_normal_fa_system_heterogeneity_' + self.outFile + ".png", dpi=200, transparent=False, bbox_inches='tight')
+        plt.close()
+
     def plot_particle_fraction(self, num_dens_dict, pos, sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None, type='A', interface_id = False, orientation_id = False):
         #DONE!
         """
@@ -1292,6 +1804,231 @@ class plotting:
             plt.savefig(self.outPath + 'com_alignment_' + type + '_' + self.outFile + ".png", dpi=200, transparent=False, bbox_inches='tight')
         else:
             plt.savefig(self.outPath + 'surface_alignment_' + type + '_' + self.outFile + ".png", dpi=200, transparent=False, bbox_inches='tight')
+        plt.close()
+    
+    def plot_alignment_force(self, align_dict, sep_surface_dict, int_comp_dict, pos, interface_id = True, type='all', method='com'):
+        #DONE!
+        """
+        This function plots the average alignment (toward cluster surface
+        normal) of particles of a given type per bin at each location in space.
+
+        Inputs:
+        align_dict: dictionary (output from various bin_align() in
+        binning.py) containing information on the average alignment of particles'
+        active force orientation with the surface normal, where a positive value
+        points more towards the surface and a negative value points more away
+        from a surface.
+
+        sep_surface_dict: dictionary (output from surface_curve_interp() in
+        interface.py) that contains the interpolated curve representing the
+        inner and outer surfaces of each interface.
+
+        int_comp_dict: dictionary (output from int_sort2() in
+        phase_identification.py) that contains information on each
+        isolated/individual interface.
+
+        pos (partNum, 3): array of (x,y,z) positions for each particle
+
+        interface_id ( default value = True): True/False value that specifies whether
+        the interface interior and exterior surfaces should be plotted
+
+        type (optional): string specifying whether the area fraction of all
+        (type='all'), type A (type='A'), type B (type='B'), or the difference
+        of types B and A ('dif') should be plotted.
+
+        method (optional): string specifying whether the alignment input is calculated
+        using the cluster's center of mass ('com') or the cluster's surface normal ('surface).
+
+        Outputs:
+        .png file with binned average alignment of respective type at each
+        location in space plotted as a heat map with color bar and a quiver plot
+        showing the average direction (magnitude normalized) of orientation per
+        bin.
+        """
+
+        # Assign alignment based on particle type specified
+        if type == 'all':
+            align = align_dict['bin']['all']['fa_mag']
+        elif type == 'A':
+            align = align_dict['bin']['A']['fa_mag']
+        elif type == 'B':
+            align = align_dict['bin']['B']['fa_mag']
+        elif type == 'dif':
+            align = align_dict['bin']['B']['fa_mag'] - align_dict['bin']['A']['fa_mag']
+
+        # If box is rectangular with long dimension of x-axis
+        if self.lx_box > self.ly_box:
+
+            # Estimated area of dense phase
+            area_dense = (0.8 * self.partNum * (np.pi/4) / self.phiCP)
+
+            # Mid point of dense phase across longest box dimension (x)
+            dense_x_mid = np.mean(pos[:,0]+self.hx_box)
+
+            # estimated shortest dimension length of dense phase (y)
+            dense_x_width = (area_dense / self.ly_box)
+
+            # Set maximum dimension length (x) of simulation box to be 12 inches (plus 1 inch color bar)
+            scaling = 13.0
+
+            # X and Y-dimension lengths (in inches)
+            x_dim = int(scaling + 1.0)
+            y_dim = int(scaling/ (dense_x_width / self.ly_box))
+
+        # If box is rectangular with long dimension of y-axis
+        elif self.lx_box < self.ly_box:
+
+            # Estimated area of dense phase
+            area_dense = (0.8 * self.partNum * (np.pi/4) / self.phiCP)
+
+            # Mid point of dense phase across longest box dimension (y)
+            mid_point = np.mean(pos[:,1]+self.hy_box)
+
+            # estimated shorted dimension length of dense phase (x)
+            dense_x_width = (area_dense / self.lx_box)
+
+            # Set maximum dimension length (y) of simulation box to be 13 inches
+            scaling = 13.0
+
+            # X and Y-dimension lengths (in inches)
+            x_dim = int((scaling/(dense_x_width / self.lx_box)) + 1.0)
+            y_dim = int(scaling)
+
+        # If box is square
+        else:
+
+            # Minimum dimension length (in inches)
+            scaling =7.0
+
+            # X and Y-dimension lengths (in inches)
+            x_dim = int(scaling + 2.0)
+            y_dim = int(scaling)
+
+        # Generate figure of dimensions proportional to simulation box size (with added x-length for color bar)
+        fig = plt.figure(figsize=(x_dim,y_dim))
+        ax = fig.add_subplot(111)
+
+        # Contour plot properties
+        if type == 'dif':
+            min_align = -np.amax(align_dif)
+            max_align = np.amax(align_dif)
+        else:
+            min_align = np.min(align)
+            max_align = np.max(align)
+
+        levels_text=40
+        level_boundaries = np.linspace(min_align, max_align, levels_text + 1)
+        print(level_boundaries)
+        print(min_align)
+        print(max_align)
+        # Plot particle binned properties
+        im = plt.contourf(self.pos_x, self.pos_y, align, level_boundaries, vmin=min_align, vmax=max_align, cmap='seismic', extend='both')
+        plt.quiver(self.pos_x, self.pos_y, self.orient_x, self.orient_y)
+
+        # Modify color bar properties
+        norm= matplotlib.colors.Normalize(vmin=min_align, vmax=max_align)
+        sm = plt.cm.ScalarMappable(norm=norm, cmap = im.cmap)
+        sm.set_array([])
+        tick_lev = np.arange(min_align, max_align+max_align/10, (max_align-min_align)/10)
+        clb = fig.colorbar(sm, ticks=tick_lev, boundaries=level_boundaries,
+        values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStrFormatter('%.2f'))
+        clb.ax.tick_params(labelsize=24)
+
+        # Label color bar based on particle type specified 
+        if type == 'all':
+            if self.lx_box == self.ly_box:
+                clb.set_label(r'$\alpha$', labelpad=30, y=0.5, rotation=270, fontsize=30)
+            elif self.lx_box > self.ly_box:
+                clb.set_label(r'$\alpha$', labelpad=30, y=0.5, rotation=270, fontsize=30)
+        elif type == 'A':
+            if self.lx_box == self.ly_box:
+                clb.set_label(r'$\alpha_\mathrm{A}$', labelpad=30, y=0.5, rotation=270, fontsize=30)
+            elif self.lx_box > self.ly_box:
+                clb.set_label(r'$\alpha_\mathrm{A}$', labelpad=30, y=0.5, rotation=270, fontsize=30)
+        elif type == 'B':
+            if self.lx_box == self.ly_box:
+                clb.set_label(r'$\alpha_\mathrm{B}$', labelpad=30, y=0.5, rotation=270, fontsize=30)
+            elif self.lx_box > self.ly_box:
+                clb.set_label(r'$\alpha_\mathrm{B}$', labelpad=30, y=0.5, rotation=270, fontsize=30)
+        elif type == 'dif':
+            if self.lx_box == self.ly_box:
+                clb.set_label(r'$\alpha_\mathrm{B}-\alpha_\mathrm{A}$', labelpad=30, y=0.5, rotation=270, fontsize=30)
+            elif self.lx_box > self.ly_box:
+                clb.set_label(r'$\alpha_\mathrm{B}-\alpha_\mathrm{A}$', labelpad=30, y=0.5, rotation=270, fontsize=30)
+                
+        # Plot cluster interior and exterior surface curves
+        if interface_id == True:
+            try:
+
+                if sep_surface_dict!=None:
+                    
+                    for m in range(0, len(sep_surface_dict)):
+                        key = 'surface id ' + str(int(int_comp_dict['ids'][m]))
+                        print(key)
+
+                        try:
+                            pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
+                            pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
+                            plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_interior_surface_x + self.lx_box, pos_interior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_interior_surface_x - self.lx_box, pos_interior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_interior_surface_x, pos_interior_surface_y+self.ly_box, c='black', s=3.0)
+                            plt.scatter(pos_interior_surface_x, pos_interior_surface_y-self.ly_box, c='black', s=3.0)
+                        except:
+                            pass
+
+                        try:
+                            
+                            pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
+                            pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
+                            plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_exterior_surface_x + self.lx_box, pos_exterior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_exterior_surface_x - self.lx_box, pos_exterior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y+self.ly_box, c='black', s=3.0)
+                            plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y-self.ly_box, c='black', s=3.0) 
+                        except:
+                            pass
+            except:
+                pass
+        
+
+        # Label simulation time
+        if self.lx_box == self.ly_box:
+            #plt.text(0.69, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+            #    fontsize=24, transform = ax.transAxes,
+            #    bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+            plt.text(0.62, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+                fontsize=30, transform = ax.transAxes,
+                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+        elif self.lx_box > self.ly_box:
+            plt.text(0.85, 0.1, s=r'$\tau$' + ' = ' + '{:.4f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+                fontsize=18, transform = ax.transAxes,
+                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+
+        # Modify plot parameters
+
+        # If rectangular box, reduce system size plotted
+        if self.lx_box > self.ly_box:
+            plt.xlim(dense_x_mid-(dense_x_width/2), dense_x_mid+(dense_x_width/2))
+            plt.ylim(0, self.ly_box)
+        elif self.lx_box < self.ly_box:
+            plt.ylim(dense_y_mid-(dense_y_width/2), dense_y_mid+(dense_y_width/2))
+            plt.xlim(0, self.lx_box)
+        # Plot entire system
+        else:
+            plt.ylim(0, self.ly_box)
+            plt.xlim(0, self.lx_box)
+
+        plt.tick_params(axis='both', which='both',
+                        bottom=False, top=False, left=False, right=False,
+                        labelbottom=False, labeltop=False, labelleft=False, labelright=False)
+
+        ax.axis('off')
+        plt.tight_layout()
+        if method == 'com':
+            plt.savefig(self.outPath + 'com_alignment_force_' + type + '_' + self.outFile + ".png", dpi=200, transparent=False, bbox_inches='tight')
+        else:
+            plt.savefig(self.outPath + 'surface_alignment_force_' + type + '_' + self.outFile + ".png", dpi=200, transparent=False, bbox_inches='tight')
         plt.close()
 
     def lat_histogram(self, lat_plot_dict):
@@ -3206,6 +3943,217 @@ class plotting:
         plt.tight_layout()
         plt.savefig(self.outPath + 'neigh_' + pair + '_' + self.outFile + ".png", dpi=150, transparent=False)
         plt.close()        
+    def plot_heterogeneity(self, hetero_plot_dict, sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None, mono_id=False, interface_id = False, orientation_id = False, zoom_id = False, type_m='phases'):
+        """
+        This function plots the number of neighbors of all dense phase particles
+        at each location in space.
+
+        Inputs:
+        neigh_plot_dict: dictionary (output from various nearest_neighbors() in
+        measurement.py) containing information on the nearest neighbors of each
+        respective type ('all', 'A', or 'B') within the potential
+        cut-off radius for reference particles of each respective
+        type ('all', 'A', or 'B') for the dense phase, labeled as specific activity
+        pairings, i.e. 'all-A' means all neighbors of A reference particles.
+
+        sep_surface_dict: dictionary (output from surface_curve_interp() in
+        interface.py) that contains the interpolated curve representing the
+        inner and outer surfaces of each interface.
+
+        int_comp_dict: dictionary (output from int_sort2() in
+        phase_identification.py) that contains information on each
+        isolated/individual interface.
+
+        pair (optional): string specifying whether the number of nearest neighbors
+        of reference particles of type all, A, or B should be plotted with the nearest
+        neighbors to be counted of type all, A, or B (i.e. pair='all-A' is all
+        neighbors of A reference particles are counted and averaged over the
+        number of A reference particles).
+
+        Outputs:
+        .png file with the position of each particle plotted and color coded
+        by the lattice spacing with color bar.
+        """
+        typ0ind = np.where(self.typ == 0)[0]
+        typ1ind = np.where(self.typ == 1)[0]
+
+        # If box is rectangular with long dimension of x-axis
+        if self.lx_box > self.ly_box:
+
+            # Estimated area of dense phase
+            area_dense = (1.0 * self.partNum * (np.pi/4) / self.phiCP)
+
+            # Mid point of dense phase across longest box dimension (x)
+            dense_x_mid = self.hx_box
+
+            # estimated shortest dimension length of dense phase (y)
+            dense_x_width = np.amax(neigh_plot_dict['all-all']['x'][typ0ind]) * 1.5 #(area_dense / self.ly_box)
+            #dense_x_width = 42.23 * 1.5
+            # Set maximum dimension length (x) of simulation box to be 12 inches (plus 1 inch color bar)
+            scaling = 13.0
+
+            # X and Y-dimension lengths (in inches)
+            x_dim = int(scaling)
+            y_dim = int(scaling/ (2*dense_x_width / self.ly_box))
+            #y_dim = y_dim# * 3
+        # If box is rectangular with long dimension of y-axis
+        elif self.lx_box < self.ly_box:
+
+            # Estimated area of dense phase
+            area_dense = (0.8 * self.partNum * (np.pi/4) / self.phiCP)
+
+            # Mid point of dense phase across longest box dimension (y)
+            mid_point = np.mean(neigh_plot_dict['all-all']['y']+self.hy_box)
+
+            # estimated shorted dimension length of dense phase (x)
+            dense_x_width = (area_dense / self.lx_box)
+
+            # Set maximum dimension length (y) of simulation box to be 13 inches
+            scaling = 13.0
+
+            # X and Y-dimension lengths (in inches)
+            x_dim = int((scaling/(dense_x_width / self.lx_box)) + 1.0)
+            y_dim = int(scaling)
+
+        # If box is square
+        else:
+
+            # Minimum dimension length (in inches)
+            scaling =7.0
+
+            # X and Y-dimension lengths (in inches)
+            x_dim = int(scaling + 2.0)
+            y_dim = int(scaling)
+
+        # Generate figure of dimensions proportional to simulation box size (with added x-length for color bar)
+        fig = plt.figure(figsize=(x_dim,y_dim))
+        ax = fig.add_subplot(111)
+
+        # Set plotted particle size
+        sz = 0.755
+
+        # Find min/max number of neighbors
+        min_neigh = np.min(hetero_plot_dict['hetero'])
+        max_neigh = np.max(hetero_plot_dict['hetero'])
+
+        # Generate list of ellipses for all particles to plot containing position (x,y) and point size that automatically scales with figure size
+        ells = [Ellipse(xy=np.array([hetero_plot_dict['x'][i]+self.hx_box,hetero_plot_dict['y'][i]+self.hy_box]),
+                width=sz, height=sz)
+        for i in range(0,len(hetero_plot_dict['x']))]
+
+        # Plot position colored by number of A neighbors
+        neighborGroup = mc.PatchCollection(ells, cmap='Reds')#facecolors=slowCol)
+        coll = ax.add_collection(neighborGroup)
+        coll.set_array(np.ravel(hetero_plot_dict['hetero']))
+
+        plt.title('All Reference Particles', fontsize=20)
+
+        
+        # Define color bar min and max
+        minClb = np.min(hetero_plot_dict['hetero'])
+        maxClb = np.max(hetero_plot_dict['hetero'])
+
+        # Set color bar range
+        coll.set_clim([minClb, maxClb])
+
+        # Set tick levels
+        tick_lev = np.linspace(minClb, maxClb, 6)
+
+        # Define boundaries of colors (such that ticks at midpoints)
+        level_boundaries = np.linspace(minClb, maxClb, 1000)
+        
+        # Define colorbar
+        clb = plt.colorbar(coll, ticks=tick_lev, orientation="vertical", format=tick.FormatStrFormatter('%.2f'), boundaries=level_boundaries)
+        clb.ax.tick_params(labelsize=24)
+
+        # Label respective reference and neighbor particle types
+
+        clb.set_label(r'$\langle \mathbf{\hat{p}}_\mathrm{ref} \cdot \mathbf{\hat{p}}_\mathrm{neigh} \rangle$', labelpad=30, y=0.5, rotation=270, fontsize=30)
+        
+        # Plot interpolated inner and outer interface surface curves
+        if interface_id == True:
+            try:
+
+                if sep_surface_dict!=None:
+                    
+                    for m in range(0, len(sep_surface_dict)):
+                        key = 'surface id ' + str(int(int_comp_dict['ids'][m]))
+                        print(key)
+
+                        try:
+                            pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
+                            pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
+                            plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_interior_surface_x + self.lx_box, pos_interior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_interior_surface_x - self.lx_box, pos_interior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_interior_surface_x, pos_interior_surface_y+self.ly_box, c='black', s=3.0)
+                            plt.scatter(pos_interior_surface_x, pos_interior_surface_y-self.ly_box, c='black', s=3.0)
+                        except:
+                            pass
+
+                        try:
+                            
+                            pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
+                            pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
+                            plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_exterior_surface_x + self.lx_box, pos_exterior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_exterior_surface_x - self.lx_box, pos_exterior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y+self.ly_box, c='black', s=3.0)
+                            plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y-self.ly_box, c='black', s=3.0) 
+                        except:
+                            pass
+            except:
+                pass
+        
+        # Plot averaged, binned orientation of particles
+        if orientation_id == True:
+            try:
+                if active_fa_dict!=None:
+                    plt.quiver(self.pos_x, self.pos_y, active_fa_dict['bin']['x'], active_fa_dict['bin']['y'], scale=20.0, color='black', alpha=0.8)
+            except:
+                pass
+
+        # Label time step
+        if self.lx_box == self.ly_box:
+            #plt.text(0.69, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+            #    fontsize=24, transform = ax.transAxes,
+            #    bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+            plt.text(0.62, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+                fontsize=30, transform = ax.transAxes,
+                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+        elif self.lx_box > self.ly_box:
+            plt.text(0.85, 0.1, s=r'$\tau$' + ' = ' + '{:.4f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+                fontsize=18, transform = ax.transAxes,
+                bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+
+       # If rectangular box, reduce system size plotted
+        if self.lx_box > self.ly_box:
+            plt.xlim(dense_x_mid-(dense_x_width/2), dense_x_mid+(dense_x_width/2))
+            plt.ylim(0, self.ly_box)
+        elif self.lx_box < self.ly_box:
+            plt.ylim(dense_y_mid-(dense_y_width/2), dense_y_mid+(dense_y_width/2))
+            plt.xlim(0, self.lx_box)
+        # Plot entire system
+        else:
+            plt.ylim(0, self.ly_box)
+            plt.xlim(0, self.lx_box)
+
+
+        
+
+        # Modify plot parameters
+        plt.tick_params(axis='both', which='both',
+                        bottom=False, top=False, left=False, right=False,
+                        labelbottom=False, labeltop=False, labelleft=False, labelright=False)
+        ax.axis('off')
+        plt.tight_layout()
+        if type_m=='phases':
+            plt.savefig(self.outPath + 'hetero_' + self.outFile + ".png", dpi=250, transparent=False)
+        elif type_m=='system':
+            plt.savefig(self.outPath + 'hetero_system_' + self.outFile + ".png", dpi=250, transparent=False)
+
+        plt.close() 
+
     def plot_neighbors_ori(self, neigh_plot_dict, ang, pos, sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None, pair='all', mono_id=False, interface_id = False, orientation_id = False, zoom_id = False):
         """
         This function plots the number of neighbors of all dense phase particles
@@ -9039,6 +9987,18 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
         sz = 0.755
 
+        pos[:,0]=pos[:,0]+50
+        test_id = np.where(pos[:,0]>self.hx_box)[0]
+        pos[test_id,0]=pos[test_id,0]-self.lx_box
+        test_id = np.where(pos[:,0]<-self.hx_box)[0]
+        pos[test_id,0]=pos[test_id,0]+self.lx_box
+
+        pos[:,1]=pos[:,1]-80
+        test_id = np.where(pos[:,1]>self.hy_box)[0]
+        pos[test_id,1]=pos[test_id,1]-self.ly_box
+        test_id = np.where(pos[:,1]<-self.hy_box)[0]
+        pos[test_id,1]=pos[test_id,1]+self.ly_box
+
         if mono==0:
 
             #Local each particle's positions
@@ -9226,6 +10186,8 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
             else:
                 plt.ylim(0, self.ly_box)
                 plt.xlim(0, self.lx_box)
+                plt.ylim(self.hy_box-100, self.hy_box+90)
+                plt.xlim(self.hx_box-90, self.hx_box+100)
         
         # Label simulation time
         if banner_id == False:
@@ -9251,6 +10213,421 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         #ax.set_facecolor('white')
         #ax.set_facecolor('#F4F4F4') .  # For website
         plt.tight_layout()
+        plt.savefig(self.outPath + 'part_activity_' + self.outFile + ".png", dpi=300, transparent=True, bbox_inches='tight')
+        #plt.savefig(self.outPath + 'part_activity_' + self.outFile + ".eps", format='eps', dpi=150, bbox_inches='tight')
+        plt.close()  
+
+    def plot_part_activity_zoom_seg(self, pos, sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None, mono_id=False, interface_id = False, orientation_id = False, zoom_id = False, banner_id = False, presentation_id = False):
+
+        """
+        This function plots the particle positions and color codes each particle with its intrinsic
+        activity at each location in space.
+
+        Inputs:
+
+        pos (partNum, 3): array of (x,y,z) positions for each particle
+
+        sep_surface_dict (default value = None): dictionary (output from surface_curve_interp() in
+        interface.py) that contains the interpolated curve representing the
+        inner and outer surfaces of each interface.
+
+        int_comp_dict (default value = None): dictionary (output from int_sort2() in
+        phase_identification.py) that contains information on each
+        isolated/individual interface.
+
+        active_fa_dict (default value = None): dictionary (output from bin_active_fa() in binning.py)
+        that contains information on the binned average active force magnitude and orientation over
+        space
+
+        mono_id (default value = False): True/False value that specifies whether system should be treated
+        as a monodisperse system (True) or binary system (False)
+
+        interface_id ( default value = False): True/False value that specifies whether
+        the interface interior and exterior surfaces should be plotted
+
+        orientation_id ( default value = False): True/False value that specifies whether
+        the average, binned orientation of particles should be plotted
+
+        zoom_id ( default value = False ): True/False value that specifies whether the bulk of the cluster
+        should be zoomed into for a close-up
+
+        banner_id ( default value = False ): True/False value that specifies whether the system should be
+        elongated along the x-axis when plotted
+
+        presentation_id ( default value = False ): True/False value that specifies whether the formatting should
+        be made for a PowerPoint presentation
+
+        Outputs:
+        .png file with each particle color-coded by intrinsic activity
+        """
+
+        typ0ind = np.where(self.typ == 0)[0]
+        typ1ind = np.where(self.typ == 1)[0]
+
+        # If box is rectangular with long dimension of x-axis
+        if self.lx_box > self.ly_box:
+
+            # Estimated area of dense phase
+            area_dense = (1.0 * self.partNum * (np.pi/4) / self.phiCP)
+
+            # Mid point of dense phase across longest box dimension (x)
+            dense_x_mid = self.hx_box
+
+            # estimated shortest dimension length of dense phase (y)
+            dense_x_width = dense_x_width = np.amax(pos[typ0ind,0]) * 1.5 #(area_dense / self.ly_box)
+            dense_x_width = 42.23 * 1.5
+            # Set maximum dimension length (x) of simulation box to be 12 inches (plus 1 inch color bar)
+            scaling = 13.0
+
+            # X and Y-dimension lengths (in inches)
+            x_dim = int(scaling)
+            y_dim = int(scaling/ (2*dense_x_width / self.ly_box))
+            y_dim = y_dim * 3
+
+        # If box is rectangular with long dimension of y-axis
+        elif self.lx_box < self.ly_box:
+
+            # Estimated area of dense phase
+            area_dense = (0.8 * self.partNum * (np.pi/4) / self.phiCP)
+
+            # Mid point of dense phase across longest box dimension (y)
+            mid_point = np.mean(pos[:,1]+self.hy_box)
+
+            # estimated shorted dimension length of dense phase (x)
+            dense_x_width = (area_dense / self.lx_box)
+
+            # Set maximum dimension length (y) of simulation box to be 13 inches
+            scaling = 13.0
+
+            # X and Y-dimension lengths (in inches)
+            x_dim = int((scaling/(dense_x_width / self.lx_box)) + 1.0)
+            y_dim = int(scaling)
+
+        # If box is square
+        else:
+
+            # Minimum dimension length (in inches)
+            scaling =7.0
+
+            # X and Y-dimension lengths (in inches)
+            x_dim = int(scaling + 1.0)
+            y_dim = int(scaling)
+
+        #Set plot colors
+        fastCol = '#e31a1c'
+        #slowCol = '#e31a1c'
+        fastCol = '#a50f15'
+        fastCol = '#b2182b'
+        #fastCol = '#d6604d'
+        slowCol = '#081d58'
+        slowCol = '#2b8cbe'
+        slowCol = '#2166ac'
+        slowCol = '#4393c3'
+
+        if banner_id == True:
+            y_dim = y_dim * (3/5)
+        
+        if (len(typ1ind)==0):
+            mono=1
+            mono_activity=self.peA
+            mono_type = 0
+        elif (len(typ0ind)==0):
+            mono = 1
+            mono_activity=self.peB
+            mono_type = 1
+        elif self.peA==self.peB:
+            
+            mono_activity=self.peA
+            mono_type = 2
+
+            if mono_id == False:
+                mono=0
+            else:
+                mono=1
+            #mono=1
+            #fastCol = '#081d58'
+            #slowCol = '#e31a1c'
+        else:
+            mono=0
+
+        # Generate figure of dimensions proportional to simulation box size (with added x-length for color bar)
+        fig = plt.figure(figsize=(x_dim,y_dim), facecolor='white')
+        ax = fig.add_subplot(111)
+
+        sz = 0.755
+
+        pos[:,0]=pos[:,0]+50
+        test_id = np.where(pos[:,0]>self.hx_box)[0]
+        pos[test_id,0]=pos[test_id,0]-self.lx_box
+        test_id = np.where(pos[:,0]<-self.hx_box)[0]
+        pos[test_id,0]=pos[test_id,0]+self.lx_box
+
+        pos[:,1]=pos[:,1]-80
+        test_id = np.where(pos[:,1]>self.hy_box)[0]
+        pos[test_id,1]=pos[test_id,1]-self.ly_box
+        test_id = np.where(pos[:,1]<-self.hy_box)[0]
+        pos[test_id,1]=pos[test_id,1]+self.ly_box
+
+        l, b, h, w = -0.02, .6, 0.6, .0
+        ax6 = fig.add_axes([l, b, w, h])
+
+        if mono==0:
+
+            #Local each particle's positions
+            pos0=pos[typ0ind]                               # Find positions of type 0 particles
+            pos1=pos[typ1ind]
+
+            #Assign type 0 particles to plot
+
+            ells0 = [Ellipse(xy=np.array([pos0[i,0]+self.hx_box, pos0[i,1]+self.hy_box]),
+                    width=sz, height=sz, label='PeA: '+str(self.peA))
+            for i in range(0,len(pos0))]
+
+            #Assign type 1 particles to plot
+            ells1 = [Ellipse(xy=np.array([pos1[i,0]+self.hx_box, pos1[i,1]+self.hy_box]),
+                    width=sz, height=sz, label='PeB: '+str(self.peB))
+            for i in range(0,len(pos1))]
+
+            # Plot position colored by neighbor number
+            if self.peA <= self.peB:
+                slowGroup = mc.PatchCollection(ells0, facecolors=slowCol)
+                fastGroup = mc.PatchCollection(ells1,facecolors=fastCol)
+            else:
+                slowGroup = mc.PatchCollection(ells1, facecolors=slowCol)
+                fastGroup = mc.PatchCollection(ells0,facecolors=fastCol)
+            ax.add_collection(slowGroup)
+            ax.add_collection(fastGroup)
+
+            ells0_2 = [Ellipse(xy=np.array([pos0[i,0]+self.hx_box, pos0[i,1]+self.hy_box]),
+                    width=sz, height=sz, label='PeA: '+str(self.peA))
+            for i in range(0,len(pos0))]
+
+            #Assign type 1 particles to plot
+            ells1_2 = [Ellipse(xy=np.array([pos1[i,0]+self.hx_box, pos1[i,1]+self.hy_box]),
+                    width=sz, height=sz, label='PeB: '+str(self.peB))
+            for i in range(0,len(pos1))]
+
+            # Plot position colored by neighbor number
+            if self.peA <= self.peB:
+                slowGroup_2 = mc.PatchCollection(ells0_2, facecolors=slowCol)
+                fastGroup_2 = mc.PatchCollection(ells1_2,facecolors=fastCol)
+            else:
+                slowGroup_2 = mc.PatchCollection(ells1_2, facecolors=slowCol)
+                fastGroup_2 = mc.PatchCollection(ells0_2,facecolors=fastCol)
+
+            ax6.add_collection(slowGroup_2)
+            ax6.add_collection(fastGroup_2)
+            
+            if presentation_id == True:
+                fast_leg = [Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=slowCol, label='Slow', markersize=36), Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=fastCol, label='Fast', markersize=36)]
+
+                one_leg = ax.legend(handles=fast_leg, borderpad=0.3, labelspacing=0.4, handletextpad=-0.2, bbox_transform=ax.transAxes, bbox_to_anchor=[0.83, 1.15], handlelength=1.5, columnspacing=1.0, fontsize=36, ncol=2, facecolor='None', edgecolor='None')
+                ax.add_artist(one_leg)
+            
+            elif banner_id == True:
+                fast_leg = [Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=slowCol, label='Slow', markersize=20), Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=fastCol, label='Fast', markersize=20)]
+
+                one_leg = ax.legend(handles=fast_leg, loc='upper right', borderpad=0.3, labelspacing=0.4, handletextpad=0.2, bbox_transform=ax.transAxes, bbox_to_anchor=[1.0, 1.0], handlelength=1.5, columnspacing=0.0, fontsize=20, ncol=1, fancybox=True, framealpha=0.5, facecolor='white', edgecolor='black')
+                ax.add_artist(one_leg)
+            else:
+                if self.peA <= self.peB:
+                    fast_leg = [Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=slowCol, label=r'$\mathrm{Pe}_\mathrm{S} = $'+str(int(self.peA)), markersize=32), Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=fastCol, label=r'$\mathrm{Pe}_\mathrm{F} = $'+str(int(self.peB)), markersize=32)]
+                else:
+                    fast_leg = [Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=slowCol, label=r'$\mathrm{Pe}_\mathrm{S} = $'+str(int(self.peB)), markersize=32), Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=fastCol, label=r'$\mathrm{Pe}_\mathrm{F} = $'+str(int(self.peA)), markersize=32)]
+                one_leg = ax.legend(handles=fast_leg, loc='upper right', borderpad=0.3, labelspacing=0.4, handletextpad=-0.2, bbox_transform=ax.transAxes, bbox_to_anchor=[0.99, 1.15], handlelength=1.5, columnspacing=0.4, fontsize=36, ncol=2, facecolor='none', edgecolor='none')
+                ax.add_artist(one_leg)
+
+            #plt.scatter(neigh_plot_dict['all-all']['x'][typ1ind]+self.hx_box, neigh_plot_dict['all-all']['y'][typ1ind]+self.hy_box, c='black', s=sz)
+            #plt.quiver(pos[typ1ind,0]+self.hx_box, pos[typ1ind,1]+self.hy_box, px, py, color='black', width=0.003)
+            #plt.quiver(pos[typ1ind,0]+self.hx_box, pos[typ1ind,1]+self.hy_box+self.ly_box, px, py, color='black', width=0.003)
+            #plt.quiver(pos[typ1ind,0]+self.hx_box, pos[typ1ind,1]+self.hy_box-self.ly_box, px, py, color='black', width=0.003)
+
+        elif mono == 1:
+
+            #if (self.peA==0):
+            #    slowCol = '#081d58'
+            #else:
+            #    slowCol = '#e31a1c'
+
+            if mono_type == 0:
+
+                #Local each particle's positions
+                pos0=pos[typ0ind]                               # Find positions of type 0 particles
+
+                #Assign type 0 particles to plot
+                ells0 = [Ellipse(xy=np.array([pos0[i,0]+self.hx_box, pos0[i,1]+self.hy_box]),
+                        width=sz, height=sz, label='Pe: '+str(self.peA))
+                for i in range(0,len(typ0ind))]
+
+                # Plot position colored by neighbor number
+                slowGroup = mc.PatchCollection(ells0, facecolors=slowCol)
+                ax.add_collection(slowGroup)
+
+                leg = ax.legend(handles=[ells0[0]], labels=[r'$\mathrm{Pe} = $'+str(int(self.peA))], loc='upper right', prop={'size': 15}, markerscale=8.0)
+                leg.legendHandles[0].set_color(slowCol)
+
+            elif mono_type == 1:
+
+                #Local each particle's positions
+                pos1=pos[typ1ind]                               # Find positions of type 0 particles
+
+                #Assign type 0 particles to plot
+                ells1 = [Ellipse(xy=np.array([pos1[i,0]+self.hx_box, pos1[i,1]+self.hy_box]),
+                        width=sz, height=sz, label='Pe: '+str(self.peB))
+                for i in range(0,len(typ1ind))]
+
+                # Plot position colored by neighbor number
+                slowGroup = mc.PatchCollection(ells1, facecolors=slowCol)
+                ax.add_collection(slowGroup)
+
+                leg = ax.legend(handles=[ells1[0]], labels=[r'$\mathrm{Pe} = $'+str(int(self.peB))], loc='upper right', prop={'size': 15}, markerscale=8.0)
+                leg.legendHandles[0].set_color(slowCol)
+
+            elif mono_type == 2:
+                #Local each particle's positions
+                pos0=pos[typ0ind]                               # Find positions of type 0 particles
+                pos1=pos[typ1ind]
+
+                #Assign type 0 particles to plot
+                ells0 = [Ellipse(xy=np.array([pos0[i,0]+self.hx_box, pos0[i,1]+self.hy_box]),
+                        width=sz, height=sz, label='Pe: '+str(self.peA))
+                for i in range(0,len(typ0ind))]
+                ells1 = [Ellipse(xy=np.array([pos1[i,0]+self.hx_box, pos1[i,1]+self.hy_box]),
+                        width=sz, height=sz, label='Pe: '+str(self.peB))
+                for i in range(0,len(typ1ind))]
+
+                # Plot position colored by neighbor number
+                slowGroup = mc.PatchCollection(ells0, facecolors=slowCol)
+                ax.add_collection(slowGroup)
+                fastGroup = mc.PatchCollection(ells1, facecolors=slowCol)
+                ax.add_collection(fastGroup)
+
+                fast_leg = []
+
+                fast_leg = [Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=slowCol, label=r'$\mathrm{Pe} = $'+str(int(self.peA)), markersize=32)]
+
+                one_leg = ax.legend(handles=fast_leg, loc='upper right', borderpad=0.3, handletextpad=-0.2, bbox_transform=ax.transAxes, bbox_to_anchor=[0.7, 1.13], handlelength=1.5, columnspacing=0.4, fontsize=32, ncol=2, facecolor='none', edgecolor='none')
+                ax.add_artist(one_leg)
+        if interface_id == True:
+            try:
+
+                if sep_surface_dict!=None:
+                    
+                    for m in range(0, len(sep_surface_dict)):
+                        key = 'surface id ' + str(int(int_comp_dict['ids'][m]))
+                        print(key)
+
+                        
+                        try:
+                            pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
+                            pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
+                            plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_interior_surface_x + self.lx_box, pos_interior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_interior_surface_x - self.lx_box, pos_interior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_interior_surface_x, pos_interior_surface_y+self.ly_box, c='black', s=3.0)
+                            plt.scatter(pos_interior_surface_x, pos_interior_surface_y-self.ly_box, c='black', s=3.0)
+                        except:
+                            pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
+                            pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
+                            plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_exterior_surface_x + self.lx_box, pos_exterior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_exterior_surface_x - self.lx_box, pos_exterior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y+self.ly_box, c='black', s=3.0)
+                            plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y-self.ly_box, c='black', s=3.0) 
+                        
+                        try:
+                            
+                            pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
+                            pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
+                            plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_exterior_surface_x + self.lx_box, pos_exterior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_exterior_surface_x - self.lx_box, pos_exterior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y+self.ly_box, c='black', s=3.0)
+                            plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y-self.ly_box, c='black', s=3.0) 
+                        except:
+                            pass
+                        
+            except:
+                pass
+        if orientation_id == True:
+            try:
+                if active_fa_dict!=None:
+                    plt.quiver(self.pos_x, self.pos_y, active_fa_dict['bin']['x'], active_fa_dict['bin']['y'], scale=20.0, color='black', alpha=0.8)
+            except:
+                pass
+
+        #Set axes parameters
+        # If rectangular box, reduce system size plotted
+        if self.lx_box > self.ly_box:
+            ax.set_xlim(-(0.5*dense_x_width)+self.hx_box, (0.5*dense_x_width)+self.hx_box)
+            ax.set_ylim(0.0, self.ly_box)
+        elif self.lx_box < self.ly_box:
+            ax.set_ylim(dense_y_mid-(dense_y_width), dense_y_mid+(dense_y_width))
+            ax.set_xlim(0.0, self.lx_box)
+        # Plot entire system            
+        else:
+
+            if zoom_id == True:
+                ax.set_ylim(self.hy_box-25-2, self.hy_box+25+2)
+                ax.set_xlim(self.hy_box-25-2, self.hy_box+25+2)
+
+                
+            elif banner_id == True: 
+                ax.set_ylim(1.5*self.ly_box/5, 3.5*self.ly_box/5)
+                ax.set_xlim(0, self.lx_box)
+            else:
+                ax.set_ylim(0, self.ly_box)
+                ax.set_xlim(0, self.lx_box)
+                ax.set_ylim(self.hy_box-130, self.hy_box+120)
+                ax.set_xlim(self.hx_box-120, self.hx_box+130)
+        
+        # Label simulation time
+        if banner_id == False:
+            if self.lx_box == self.ly_box:
+                #plt.text(0.69, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+                #    fontsize=24, transform = ax.transAxes,
+                #    bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+                ax.text(0.62, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+                    fontsize=30, transform = ax.transAxes,
+                    bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+            elif self.lx_box > self.ly_box:
+                ax.text(0.85, 0.1, s=r'$\tau$' + ' = ' + '{:.4f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+                    fontsize=18, transform = ax.transAxes,
+                    bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+        
+        ax.axes.set_xticks([])
+        ax.axes.set_yticks([])
+        ax.axes.set_xticklabels([])
+        ax.axes.set_yticks([])
+        ax.set_aspect('equal')
+
+        ax6.axes.set_xticks([])
+        ax6.axes.set_yticks([])
+        ax6.axes.set_xticklabels([])
+        ax6.axes.set_yticks([])
+        ax6.set_aspect('equal')
+
+
+        #im = plt.scatter((interpart_peA[where_else4])/interpart_peB[where_else4], interpart_press[where_else4] / , c=interpart_peB[where_else4], cmap='Reds', vmin=np.min(interpart_peB[where_else4]), vmax=np.max(interpart_peB[where_else4]), linewidth = 1.8*1.2, s=msz*55*0.7, label='Simulation')
+        #plt.plot([0.35,0.35], [-10000, 100000], color='black', linestyle='dotted')
+        import matplotlib
+        """
+        norm= matplotlib.colors.Normalize(vmin=0.0, vmax=500)
+        fig.subplots_adjust(right=0.88)
+        cbar_ax = fig.add_axes([0.9, 0.11, 0.04, 0.3725])
+        sm = plt.cm.ScalarMappable(norm=norm, cmap = 'binary')
+        sm.set_array([])
+        clb = fig.colorbar(sm, cax=cbar_ax)#ticks=[0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0], ax=ax2)
+        clb.ax.set_title(r'$\mathrm{Pe}_\mathrm{F}$', fontsize=23)
+        clb.ax.tick_params(labelsize=20)
+        """
+        ax6.set_xlim([0.15,0.45])
+        ax6.set_ylim([0.6, 1.4])
+  
+        # Create frame images
+        #ax.set_facecolor('white')
+        #ax.set_facecolor('#F4F4F4') .  # For website
+        #plt.tight_layout()
         plt.savefig(self.outPath + 'part_activity_' + self.outFile + ".png", dpi=300, transparent=True, bbox_inches='tight')
         #plt.savefig(self.outPath + 'part_activity_' + self.outFile + ".eps", format='eps', dpi=150, bbox_inches='tight')
         plt.close()  
