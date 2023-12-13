@@ -1426,6 +1426,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     # Calculate interparticle stresses and pressures
                     stress_stat_dict, press_stat_dict, press_stat_indiv_dict, press_plot_dict, stress_plot_dict, press_plot_indiv_dict, press_hetero_dict = lattice_structure_functs.interparticle_pressure_nlist()
 
+                    """
                     # Measure radial interparticle pressure
                     radial_int_press_dict = particle_prop_functs.radial_int_press(stress_plot_dict)
 
@@ -1453,7 +1454,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                     stress_and_pressure_functs = stress_and_pressure.stress_and_pressure(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, x_orient_arr, y_orient_arr, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
                     act_press_dict_bubble = stress_and_pressure_functs.total_active_pressure_bubble(com_radial_dict_fa_bubble, all_surface_measurements, int_comp_dict, all_surface_measurements)
-
+                    """
 
                     bin_width_arr = np.linspace(1, 10, 10, dtype=float)
 
@@ -1867,12 +1868,12 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     #stop
 
 
-
+                    """
                     for m in range(0, len(sep_surface_dict)):
 
                         key = 'surface id ' + str(int(int_comp_dict['ids'][m]))
                         data_output_functs.write_to_txt(act_press_dict_bubble[key], dataPath + 'bubble_com_active_pressure_' + outfile + '.txt')
-
+                    """
                     """
                     radial_fa_dict = particle_prop_functs.radial_surface_normal_fa(method2_align_dict)
 
