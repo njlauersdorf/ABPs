@@ -2943,9 +2943,6 @@ class interface:
                 #        stop
                 # If average alignment has not been calculated previously (gas)
                 if Surface_align_avg[ix][iy]==0:
-                    for h in range(0, len(self.binParts[ix][iy])):
-                        if self.binParts[ix][iy][h]==19584:
-                            stop
                     #Calculate reference bin position
                     xpos_ref = (ix+0.5)*self.sizeBin_x
                     ypos_ref = (iy+0.5)*self.sizeBin_y
