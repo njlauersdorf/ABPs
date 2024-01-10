@@ -320,9 +320,6 @@ with hoomd.open(name=inFile, mode='rb') as t:
             
             end_avg = int(dumps/time_step)-1
             start_avg = int(end_avg/4)
-            
-            start_avg = 950
-            end_avg = 951
 
             for p in range(start_avg, end_avg):
                 j=int(p*time_step)
