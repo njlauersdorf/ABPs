@@ -262,6 +262,9 @@ time_prob_num = 0
 
 neigh_dict = {}
 
+
+    
+
 with hoomd.open(name=inFile, mode='rb') as t:
     
     dumps = int(t.__len__())
@@ -308,6 +311,642 @@ with hoomd.open(name=inFile, mode='rb') as t:
     # Tracks if steady state occurs once
     steady_state_once = 'False'
 
+    if measurement_options[0] == 'radial-heterogeneity':
+        
+        outfile = 'pa'+str(int(peA))+'_pb'+str(int(peB))+'_xa'+str(int(parFrac))+'_eps'+str(eps)+'_phi'+str(phi)+'_pNum' + str(int(partNum)) + '_bin' + str(int(bin_width)) + '_time' + str(int(time_step))
+            
+        if os.path.isfile(dataPath + "radial_avgs_fa_" + outfile+ '.csv')==0:
+            sum_num = 0
+            
+            end_avg = int(dumps/time_step)-1
+            start_avg = int(end_avg/4)
+            
+            start_avg = 950
+            end_avg = 951
+
+            for p in range(start_avg, end_avg):
+                j=int(p*time_step)
+
+                print('j')
+                print(j)
+                
+                snap = t[j]                                 #Take current frame
+
+                #Arrays of particle data
+                pos = snap.particles.position               # current positions
+                pos[:,-1] = 0.0                             # 2D system
+                xy = np.delete(pos, 2, 1)
+
+                ori = snap.particles.orientation            #current orientation (quaternions)
+                ang = np.array(list(map(utility_functs.quatToAngle, ori))) # convert to [-pi, pi]
+                x_orient_arr = np.array(list(map(utility_functs.quatToXOrient, ori))) # convert to [-pi, pi]
+                y_orient_arr = np.array(list(map(utility_functs.quatToYOrient, ori))) # convert to [-pi, pi]
+
+                typ = snap.particles.typeid                 # Particle type
+                typ0ind=np.where(snap.particles.typeid==0)      # Calculate which particles are type 0
+                typ1ind=np.where(snap.particles.typeid==1)      # Calculate which particles are type 1
+
+                tst = snap.configuration.step               # timestep
+                tst -= first_tstep                          # normalize by first timestep
+                tst *= dtau                                 # convert to Brownian time
+                time_arr[j]=tst
+
+                #Compute cluster parameters using neighbor list of all particles within LJ cut-off distance
+                system_all = freud.AABBQuery(f_box, f_box.wrap(pos))
+                cl_all=freud.cluster.Cluster() 
+
+                cl_all.compute(system_all, neighbors={'r_max': 1.3})        # Calculate clusters given neighbor list, positions,
+                                                                        # and maximal radial interaction distance
+                clp_all = freud.cluster.ClusterProperties()                 #Define cluster properties
+                ids = cl_all.cluster_idx                                    # get id of each cluster
+                clp_all.compute(system_all, ids)                            # Calculate cluster properties given cluster IDs
+                clust_size = clp_all.sizes                                  # find cluster sizes
+
+                min_size=int(partNum/10)                                     #Minimum cluster size for measurements to happen
+                lcID = np.where(clust_size == np.amax(clust_size))[0][0]    #Identify largest cluster
+                large_clust_ind_all=np.where(clust_size>min_size)           #Identify all clusters larger than minimum size
+                clust_large = np.amax(clust_size)
+                
+
+                # Instantiate particle properties module
+                particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, eps, typ, pos, x_orient_arr, y_orient_arr)
+
+                # If elongated simulation box...
+                if lx_box != ly_box:
+
+                    clust_large = 0
+                
+                # Instantiate empty phase identification arrays
+                partTyp=np.zeros(partNum)
+                partPhase=np.zeros(partNum)
+                edgePhase=np.zeros(partNum)
+                bulkPhase=np.zeros(partNum)
+
+                # Calculate cluster CoM
+                com_dict = plotting_utility_functs.com_view(pos, clp_all)
+                
+                # If CoM option given, convert to CoM view
+                if com_option == True:
+                    pos = com_dict['pos']
+                #else:
+                #    pos[:,0] = pos[:,0]
+                #    out = np.where(pos[:,0]<-hx_box)[0]
+                #    pos[out,0] = pos[out,0] + lx_box
+
+
+                #Bin system to calculate orientation and alignment that will be used in vector plots
+                NBins_x = utility_functs.getNBins(lx_box, bin_width)
+                NBins_y = utility_functs.getNBins(ly_box, bin_width)
+
+                # Calculate size of bins
+                sizeBin_x = utility_functs.roundUp(((lx_box) / NBins_x), 6)
+                sizeBin_y = utility_functs.roundUp(((ly_box) / NBins_y), 6)
+
+                # Instantiate binning functions module
+                binning_functs = binning.binning(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, typ, eps)
+                
+                # Calculate bin positions
+                pos_dict = binning_functs.create_bins()
+
+                # Assign particles to bins
+                part_dict = binning_functs.bin_parts(pos, ids, clust_size)
+
+                # Calculate average orientation per bin
+                orient_dict = binning_functs.bin_orient(part_dict, pos, x_orient_arr, y_orient_arr, com_dict['com'])
+
+                # Calculate area fraction per bin
+                area_frac_dict = binning_functs.bin_area_frac(part_dict)
+
+                # Calculate average activity per bin
+                activ_dict = binning_functs.bin_activity(part_dict)
+
+                # Define output file name
+                outfile = 'pa'+str(int(peA))+'_pb'+str(int(peB))+'_xa'+str(int(parFrac))+'_eps'+str(eps)+'_phi'+str(phi)+'_pNum' + str(int(partNum)) + '_bin' + str(int(bin_width)) + '_time' + str(int(time_step))
+                out = outfile + "_frame_"
+                pad = str(j).zfill(5)
+                outFile = out + pad
+
+                
+
+                # If cluster sufficiently large
+                if clust_large >= min_size:
+                    
+                    # Instantiate empty binning arrays
+                    clust_size_arr = np.append(clust_size_arr, clust_large)
+                    fa_all_tot = [[0 for b in range(NBins_y)] for a in range(NBins_x)]
+                    fa_all_x_tot = [[0 for b in range(NBins_y)] for a in range(NBins_x)]
+                    fa_all_y_tot = [[0 for b in range(NBins_y)] for a in range(NBins_x)]
+                    fa_fast_tot = [[0 for b in range(NBins_y)] for a in range(NBins_x)]
+                    fa_slow_tot = [[0 for b in range(NBins_y)] for a in range(NBins_x)]
+
+                    fa_all_num = [[0 for b in range(NBins_y)] for a in range(NBins_x)]
+                    fa_fast_num = [[0 for b in range(NBins_y)] for a in range(NBins_x)]
+                    fa_slow_num = [[0 for b in range(NBins_y)] for a in range(NBins_x)]
+
+                    # Bin average alignment toward cluster's CoM
+                    align_dict = binning_functs.bin_align(orient_dict)
+
+                    
+
+                    #Time frame for plots
+                    pad = str(j).zfill(5)
+
+                    # Bin average aligned active force pressure
+                    press_dict = binning_functs.bin_active_press(align_dict, area_frac_dict)
+
+                    # Bin average active force normal to cluster CoM
+                    normal_fa_dict = binning_functs.bin_normal_active_fa(align_dict, area_frac_dict, activ_dict)
+
+                    # Find curl and divergence of binned average alignment toward cluster CoM
+                    align_grad_dict = binning_functs.curl_and_div(align_dict)
+
+                    # Instantiate plotting functions module
+                    plotting_functs = plotting.plotting(orient_dict, pos_dict, lx_box, ly_box, NBins_x, NBins_y, sizeBin_x, sizeBin_y, peA, peB, parFrac, eps, typ, tst, partNum, picPath, outFile)
+
+                    # Instantiate phase identification functions module
+                    phase_ident_functs = phase_identification.phase_identification(area_frac_dict, align_dict, part_dict, press_dict, lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, parFrac, eps, typ)
+
+                    # Identify phases of system
+                    phase_dict = phase_ident_functs.phase_ident()
+                    #phase_dict = phase_ident_functs.phase_ident_planar()
+
+                    # Find IDs of particles in each phase
+                    bulk_id = np.where(phase_dict['part']==0)[0]
+                    int_id = np.where(phase_dict['part']==1)[0]
+                    gas_id = np.where(phase_dict['part']==2)[0]
+                    
+                    # Blur phases to mitigate noise
+                    phase_dict = phase_ident_functs.phase_blur(phase_dict)
+
+                    # Update phases of each particle ID
+                    phase_dict = phase_ident_functs.update_phasePart(phase_dict)
+
+                    bulk_id = np.where(phase_dict['part']==0)[0]
+                    int_id = np.where(phase_dict['part']==1)[0]
+                    gas_id = np.where(phase_dict['part']==2)[0]
+                    
+                    # Count number of particles per phase
+                    count_dict = phase_ident_functs.phase_count(phase_dict)
+
+                    # Find CoM of bulk phase
+                    bulk_com_dict = phase_ident_functs.com_bulk(phase_dict, count_dict)
+
+                    # Separate non-connecting bulk phases
+                    bulk_dict = phase_ident_functs.separate_bulks(phase_dict, count_dict, bulk_com_dict)
+
+                    # Separate non-connecting interfaces
+                    phase_dict, bulk_dict, int_dict = phase_ident_functs.separate_ints(phase_dict, count_dict, bulk_dict)
+
+                    # Update phase identification array
+                    phase_dict = phase_ident_functs.update_phasePart(phase_dict)
+
+                    # Reduce mis-identification of gas
+                    phase_dict, bulk_dict, int_dict = phase_ident_functs.reduce_gas_noise(phase_dict, bulk_dict, int_dict)
+
+                    # Find interface composition
+                    phase_dict, bulk_dict, int_dict, int_comp_dict = phase_ident_functs.int_comp(part_dict, phase_dict, bulk_dict, int_dict)
+
+                    # Find bulk composition
+                    bulk_comp_dict = phase_ident_functs.bulk_comp(part_dict, phase_dict, bulk_dict)
+
+                    # Sort bulk by largest to smallest
+                    bulk_comp_dict = phase_ident_functs.phase_sort(bulk_comp_dict)
+
+                    # Sort interface by largest to smallest
+                    int_comp_dict = phase_ident_functs.phase_sort(int_comp_dict)
+
+                    # Instantiate interface functions module
+                    interface_functs = interface.interface(area_frac_dict, align_dict, part_dict, press_dict, lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, parFrac, eps, typ, x_orient_arr, y_orient_arr, pos)
+                    
+                    # Identify interior and exterior surface bin points
+                    surface_dict = interface_functs.det_surface_points(phase_dict, int_dict, int_comp_dict)
+
+                    #planar_surface_dict = interface_functs.det_planar_surface_points(phase_dict, int_dict, int_comp_dict)
+                    
+                    #Save positions of external and internal edges
+                    clust_true = 0
+
+                    # Sort surface points for both interior and exterior surfaces of each interface
+                    surface2_pos_dict = interface_functs.surface_sort(surface_dict['surface 2']['pos']['x'], surface_dict['surface 2']['pos']['y'])
+                    surface1_pos_dict = interface_functs.surface_sort(surface_dict['surface 1']['pos']['x'], surface_dict['surface 1']['pos']['y'])
+
+                    # Find CoM of each surface
+                    surface_com_dict = interface_functs.surface_com(int_dict, int_comp_dict, surface_dict)
+
+                    # Find radius of surface
+                    surface_radius_bin = interface_functs.surface_radius_bins(int_dict, int_comp_dict, surface_dict, surface_com_dict)
+
+                    # Count bins per phase
+                    bin_count_dict = phase_ident_functs.phase_bin_count(phase_dict, bulk_dict, int_dict, bulk_comp_dict, int_comp_dict)
+
+                    # Bin average active force
+                    active_fa_dict = binning_functs.bin_active_fa(orient_dict, part_dict, phase_dict['bin'])
+
+
+                    bin_width2 = 15
+                    #Bin system to calculate orientation and alignment that will be used in vector plots
+                    NBins_x2 = utility_functs.getNBins(lx_box, bin_width2)
+                    NBins_y2 = utility_functs.getNBins(ly_box, bin_width2)
+
+                    # Calculate size of bins
+                    sizeBin_x2 = utility_functs.roundUp(((lx_box) / NBins_x2), 6)
+                    sizeBin_y2 = utility_functs.roundUp(((ly_box) / NBins_y2), 6)
+
+                    # Instantiate binning functions module
+                    binning_functs2 = binning.binning(lx_box, ly_box, partNum, NBins_x2, NBins_y2, peA, peB, typ, eps)
+                        
+                    # Calculate bin positions
+                    pos_dict2 = binning_functs2.create_bins()
+
+                    # Assign particles to bins
+                    part_dict2 = binning_functs2.bin_parts(pos, ids, clust_size)
+
+                    # Calculate average orientation per bin
+                    orient_dict2 = binning_functs2.bin_orient(part_dict2, pos, x_orient_arr, y_orient_arr, com_dict['com'])
+
+                    #Slow/fast composition of bulk phase
+                    part_count_dict, part_id_dict = phase_ident_functs.phase_part_count(phase_dict, int_dict, int_comp_dict, bulk_dict, bulk_comp_dict, typ)
+
+                    # Instantiate data output functions module
+                    data_output_functs = data_output.data_output(lx_box, ly_box, sizeBin_x, sizeBin_y, tst, clust_large, dt_step)
+                    
+                    #Instantiate dictionaries to save data to
+                    all_surface_curves = {}
+                    all_surface_measurements = {}
+                    
+                    # Separate individual interfaces/surfaces
+                    sep_surface_dict = interface_functs.separate_surfaces(surface_dict, int_dict, int_comp_dict)
+
+                    # Loop over every surface
+                    for m in range(0, len(sep_surface_dict)):
+
+                        # Instantiate dictionaries to save data to
+                        averaged_data_arr = {}
+
+                        key = 'surface id ' + str(int(int_comp_dict['ids'][m]))
+                        
+                        all_surface_curves[key] = {}
+                        all_surface_measurements[key] = {}
+                        
+                        # Save composition data of interface
+                        if (int_comp_dict['ids'][m]!=999):
+                            averaged_data_arr['int_id'] = int(int_comp_dict['ids'][np.where(int_comp_dict['comp']['all']==np.max(int_comp_dict['comp']['all']))[0][0]])
+                            averaged_data_arr['bub_id'] = int(int_comp_dict['ids'][m])
+                            averaged_data_arr['Na'] = int(int_comp_dict['comp']['A'][m])
+                            averaged_data_arr['Nb'] = int(int_comp_dict['comp']['B'][m])
+                            averaged_data_arr['Nbin'] = int(bin_count_dict['ids']['int'][m])
+
+                        # If sufficient interior interface points, take measurements
+                        if sep_surface_dict[key]['interior']['num']>0:
+
+                            # Sort surface points to curve
+                            sort_interior_ids = interface_functs.sort_surface_points(sep_surface_dict[key]['interior'])
+
+                            # Prepare surface curve for interpolation
+                            sort_interior_ids = interface_functs.surface_curve_prep(sort_interior_ids, int_type = 'interior')
+
+                            # Interpolate surface curve
+                            all_surface_curves[key]['interior'] = interface_functs.surface_curve_interp(sort_interior_ids)
+
+                            # Find surface curve CoM
+                            com_pov_interior_pos = interface_functs.surface_com_pov(all_surface_curves[key]['interior']['pos'])
+                            
+                            # Measure average surface curve radius
+                            all_surface_measurements[key]['interior'] = interface_functs.surface_radius(com_pov_interior_pos['pos'])
+
+                            # Measure surface curve area
+                            all_surface_measurements[key]['interior']['surface area'] = interface_functs.surface_area(com_pov_interior_pos['pos'])
+
+                            # Save surface curve CoM 
+                            all_surface_measurements[key]['interior']['com'] = com_pov_interior_pos['com']
+
+                            # Perform Fourier analysis on surface curve
+                            #all_surface_measurements[key]['interior']['fourier'] = interface_functs.fourier_analysis(all_surface_measurements[key]['interior'])
+
+                            # Save radial measurements
+                            averaged_data_arr['int_mean_rad'] = all_surface_measurements[key]['interior']['mean radius']
+                            averaged_data_arr['int_std_rad'] = all_surface_measurements[key]['interior']['std radius']
+                            averaged_data_arr['int_sa'] = all_surface_measurements[key]['interior']['surface area']
+
+                        else:
+                            averaged_data_arr['int_mean_rad'] = 0
+                            averaged_data_arr['int_std_rad'] = 0
+                            averaged_data_arr['int_sa'] = 0
+
+                        # If sufficient exterior interface points, take measurements
+                        if sep_surface_dict[key]['exterior']['num']>0:
+
+                            # Sort surface points to curve
+                            sort_exterior_ids = interface_functs.sort_surface_points(sep_surface_dict[key]['exterior'])
+
+                            # Prepare surface curve for interpolation
+                            sort_exterior_ids = interface_functs.surface_curve_prep(sort_exterior_ids, int_type = 'exterior')
+                            
+                            # Interpolate surface curve
+                            all_surface_curves[key]['exterior'] = interface_functs.surface_curve_interp(sort_exterior_ids)
+
+                            # Find surface curve CoM
+                            com_pov_exterior_pos = interface_functs.surface_com_pov(all_surface_curves[key]['exterior']['pos'])
+                            
+                            # Measure average surface curve radius
+                            all_surface_measurements[key]['exterior'] = interface_functs.surface_radius(com_pov_exterior_pos['pos'])
+                            
+                            # Measure surface curve area
+                            all_surface_measurements[key]['exterior']['surface area'] = interface_functs.surface_area(com_pov_exterior_pos['pos'])
+                            
+                            # Save surface curve CoM 
+                            all_surface_measurements[key]['exterior']['com'] = com_pov_exterior_pos['com']
+                            
+                            # Perform Fourier analysis on surface curve
+                            #all_surface_measurements[key]['exterior']['fourier'] = interface_functs.fourier_analysis(all_surface_measurements[key]['exterior'])
+                            
+                            # Save radial measurements
+                            averaged_data_arr['ext_mean_rad'] = all_surface_measurements[key]['exterior']['mean radius']
+                            averaged_data_arr['ext_std_rad'] = all_surface_measurements[key]['exterior']['std radius']
+                            averaged_data_arr['ext_sa'] = all_surface_measurements[key]['exterior']['surface area']
+                        else:
+                            averaged_data_arr['ext_mean_rad'] = 0
+                            averaged_data_arr['ext_std_rad'] = 0
+                            averaged_data_arr['ext_sa'] = 0
+
+                        # If sufficient exterior and interior interface points, measure interface width
+                        if (sep_surface_dict[key]['exterior']['num']>0) & sep_surface_dict[key]['interior']['num']>0:
+                            all_surface_measurements[key]['exterior']['surface width'] = interface_functs.surface_width(all_surface_measurements[key]['interior']['mean radius'], all_surface_measurements[key]['exterior']['mean radius'])
+                            all_surface_measurements[key]['interior']['surface width'] = interface_functs.surface_width(all_surface_measurements[key]['interior']['mean radius'], all_surface_measurements[key]['exterior']['mean radius'])
+                            averaged_data_arr['width'] = all_surface_measurements[key]['exterior']['surface width']['width']
+                        else:
+                            averaged_data_arr['width'] = 0
+                        
+                        # If measurement method specified, save interface data
+                        if measurement_options[0] == 'interface-props':
+                            data_output_functs.write_to_txt(averaged_data_arr, dataPath + 'BubComp_' + outfile + '.txt')
+                    
+
+                    
+                    # If cluster has been initially formed, 
+                    if steady_state_once == 'False':
+
+                        # Instantiate array for saving largest cluster ID over time
+                        clust_id_time = np.where(ids==lcID)[0]
+                        in_clust_arr = np.zeros(partNum)
+                        in_clust_arr[clust_id_time]=1
+
+                        # Instantiate array for saving particle positions over time
+                        pos_x_arr_time = pos[:,0]
+                        pos_y_arr_time = pos[:,1]
+
+                        # Instantiate array for saving surface CoM over time
+                        try:
+                            com_x_arr_time = np.array([all_surface_measurements['surface id ' + str(int(int_comp_dict['ids'][0]))]['interior']['com']['x']-hx_box])
+                            com_y_arr_time = np.array([all_surface_measurements['surface id ' + str(int(int_comp_dict['ids'][0]))]['interior']['com']['y']-hy_box])
+                        except:
+                            com_x_arr_time = np.array([])
+                            com_y_arr_time = np.array([])
+                        try:
+                            com_x_arr_time = np.array([all_surface_measurements['surface id ' + str(int(int_comp_dict['ids'][0]))]['exterior']['com']['x']-hx_box])
+                            com_y_arr_time = np.array([all_surface_measurements['surface id ' + str(int(int_comp_dict['ids'][0]))]['exterior']['com']['y']-hy_box])
+                        except:
+                            com_x_arr_time = np.array([])
+                            com_y_arr_time = np.array([])
+                        # Instantiate array for saving cluster CoM over time
+                        com_x_parts_arr_time = np.array([com_dict['com']['x']])
+                        com_y_parts_arr_time = np.array([com_dict['com']['y']])
+
+                        # Instantiate array for saving phase information over time
+                        partPhase_time = phase_dict['part']
+
+                        time_entered_bulk = np.ones(partNum) * tst
+                        time_entered_gas = np.ones(partNum) * tst
+
+                        # Instantiate array for saving time step
+                        partPhase_time_arr = np.append(partPhase_time_arr, tst)
+
+                        # Change to True since steady state has been reached
+                        steady_state_once = 'True'
+
+                        start_dict = {'bulk': {'time': time_entered_bulk}, 'gas': {'time': time_entered_gas} }
+                        lifetime_dict = {}
+                        msd_bulk_dict = {}
+                        lifetime_stat_dict = {}
+
+                    # If cluster has been formed previously
+                    else:
+
+                        # Save largest cluster ID over time
+                        clust_id_time = np.where(ids==lcID)[0]
+                        in_clust_temp = np.zeros(partNum)
+                        in_clust_temp[clust_id_time]=1
+                        in_clust_arr = np.vstack((in_clust_arr, in_clust_temp))
+
+                        # Save particle positions over time
+                        pos_x_arr_time = np.vstack((pos_x_arr_time, pos[:,0]))
+                        pos_y_arr_time = np.vstack((pos_y_arr_time, pos[:,1]))
+                        partPhase_time_arr = np.append(partPhase_time_arr, tst)
+
+                        # Save phase information over time
+                        partPhase_time = np.vstack((partPhase_time, phase_dict['part']))
+
+                        # Save surface CoM over time
+                        try:
+                            com_x_arr_time = np.append(com_x_arr_time, all_surface_measurements['surface id ' + str(int(int_comp_dict['ids'][0]))]['exterior']['com']['x']-hx_box)
+                            com_y_arr_time = np.append(com_y_arr_time, all_surface_measurements['surface id ' + str(int(int_comp_dict['ids'][0]))]['exterior']['com']['y']-hy_box)
+                        except:
+                            com_x_arr_time = np.append(com_x_arr_time, all_surface_measurements['surface id ' + str(int(int_comp_dict['ids'][0]))]['interior']['com']['x']-hx_box)
+                            com_y_arr_time = np.append(com_y_arr_time, all_surface_measurements['surface id ' + str(int(int_comp_dict['ids'][0]))]['interior']['com']['y']-hy_box)
+
+                        # Save cluster CoM over time
+                        com_x_parts_arr_time = np.append(com_x_parts_arr_time, com_dict['com']['x'])
+                        com_y_parts_arr_time = np.append(com_y_parts_arr_time, com_dict['com']['y'])
+
+                    # Calculate alignment of interface with nearest surface normal
+                    method1_align_dict, method2_align_dict = interface_functs.surface_alignment(all_surface_measurements, all_surface_curves, sep_surface_dict, int_dict, int_comp_dict)
+                    
+                    # Calculate alignment of bulk with nearest surface normal
+                    method1_align_dict, method2_align_dict = interface_functs.bulk_alignment(method1_align_dict, method2_align_dict, all_surface_measurements, all_surface_curves, sep_surface_dict, bulk_dict, bulk_comp_dict, int_comp_dict)
+
+                    # Calculate alignment of gas with nearest surface normal
+                    method1_align_dict, method2_align_dict = interface_functs.gas_alignment(method1_align_dict, method2_align_dict, all_surface_measurements, all_surface_curves, sep_surface_dict, int_comp_dict)
+
+                    particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, eps, typ, pos, x_orient_arr, y_orient_arr)
+                        
+                    single_time_dict = particle_prop_functs.radial_heterogeneity_avgs(method2_align_dict, all_surface_curves, int_comp_dict, all_surface_measurements, int_dict, phase_dict)
+
+                    try:
+                        sum_fa_r += single_time_dict['fa']['all']
+                    except: 
+                        sum_fa_r = single_time_dict['fa']['all']
+                    try:  
+                        sum_faA_r = sum_faA_r + single_time_dict['fa']['A']
+                    except: 
+                        sum_faA_r = single_time_dict['fa']['A']
+                    try:
+                        sum_faB_r = sum_faB_r + single_time_dict['fa']['B']
+                    except: 
+                        sum_faB_r = single_time_dict['fa']['B']
+                    try:
+                        sum_align_r = sum_align_r + single_time_dict['align']['all']
+                        print('test 1')
+                    except: 
+                        sum_align_r = single_time_dict['align']['all']
+                        print('test 2')
+                    try:
+                        sum_alignA_r = sum_alignA_r + single_time_dict['align']['A']
+                    except: 
+                        sum_alignA_r = single_time_dict['align']['A']
+                    try:
+                        sum_alignB_r = sum_alignB_r + single_time_dict['align']['B']
+                    except: 
+                        sum_alignB_r = single_time_dict['align']['B']
+                    try:
+                        sum_num_dens_r = sum_num_dens_r + single_time_dict['num_dens']['all']
+                    except: 
+                        sum_num_dens_r = single_time_dict['num_dens']['all']
+                    try:
+                        sum_num_densA_r = sum_num_densA_r + single_time_dict['num_dens']['A']
+                    except: 
+                        sum_num_densA_r = single_time_dict['num_dens']['A']
+                    try:
+                        sum_num_densB_r = sum_num_densB_r + single_time_dict['num_dens']['B']
+                    except: 
+                        sum_num_densB_r = single_time_dict['num_dens']['B']
+                    try:
+                        sum_num_r = sum_num_r + single_time_dict['num']['all']
+                    except: 
+                        sum_num_r = single_time_dict['num']['all']
+                    try:
+                        sum_numA_r = sum_numA_r + single_time_dict['num']['A']
+                    except: 
+                        sum_numA_r = single_time_dict['num']['A']
+                    try:
+                        sum_numB_r = sum_numB_r + single_time_dict['num']['B']
+                    except: 
+                        sum_numB_r = single_time_dict['num']['B']
+                    try:
+                        sum_rad = sum_rad + single_time_dict['radius']
+                    except: 
+                        sum_rad = single_time_dict['radius']
+                    try:
+                        sum_com_x = sum_com_x + single_time_dict['com']['x']
+                    except: 
+                        sum_com_x = single_time_dict['com']['x']
+                    try:
+                        sum_com_y = sum_com_y + single_time_dict['com']['y']
+                    except:
+                        sum_com_y = single_time_dict['com']['y']
+
+                    sum_num += 1
+                
+            avg_fa_r = sum_fa_r / sum_num
+            avg_faA_r = sum_faA_r / sum_num
+            avg_faB_r = sum_faB_r / sum_num
+
+            avg_align_r = sum_align_r / sum_num
+            avg_alignA_r = sum_alignA_r / sum_num
+            avg_alignB_r = sum_alignB_r / sum_num
+
+            avg_num_dens_r = sum_num_dens_r / sum_num
+            avg_num_densA_r = sum_num_densA_r / sum_num
+            avg_num_densB_r = sum_num_densB_r / sum_num
+
+            avg_num_r = sum_num_r / sum_num
+            avg_numA_r = sum_numA_r / sum_num
+            avg_numB_r = sum_numB_r / sum_num
+
+            avg_rad_val = sum_rad / sum_num
+            avg_com_x = sum_com_x / sum_num
+            avg_com_y = sum_com_y / sum_num
+
+            
+                    
+            avg_rad_dict = {'rad': single_time_dict['rad'], 'theta': single_time_dict['theta'], 'radius': avg_rad_val, 'com': {'x': avg_com_x, 'y': avg_com_y}, 'fa': {'all': avg_fa_r, 'A': avg_faA_r, 'B': avg_faB_r}, 'align': {'all': avg_align_r, 'A': avg_alignA_r, 'B': avg_alignB_r}, 'num': {'all': avg_num_r, 'A': avg_numA_r, 'B': avg_numB_r}, 'num_dens': {'all': avg_num_dens_r, 'A': avg_num_densA_r, 'B': avg_num_densB_r}}
+            
+            if plot == 'y':
+                plotting_functs.plot_avg_radial_heterogeneity(avg_rad_dict, all_surface_curves, int_comp_dict, active_fa_dict, mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option, banner_id = banner_option, presentation_id = presentation_option, measure='num_dens', types='all')                
+                
+            np.savetxt(dataPath + "radial_avgs_fa_" + outfile+ '.csv', avg_fa_r, delimiter=",")
+            np.savetxt(dataPath + "radial_avgs_faA_" + outfile+ '.csv', avg_faA_r, delimiter=",")
+            np.savetxt(dataPath + "radial_avgs_faB_" + outfile+ '.csv', avg_faB_r, delimiter=",")
+            
+            np.savetxt(dataPath + "radial_avgs_align_" + outfile+ '.csv', avg_align_r, delimiter=",")
+            np.savetxt(dataPath + "radial_avgs_alignA_" + outfile+ '.csv', avg_alignA_r, delimiter=",")
+            np.savetxt(dataPath + "radial_avgs_alignB_" + outfile+ '.csv', avg_alignB_r, delimiter=",")
+
+            np.savetxt(dataPath + "radial_avgs_num_" + outfile+ '.csv', avg_num_r, delimiter=",")
+            np.savetxt(dataPath + "radial_avgs_numA_" + outfile+ '.csv', avg_numA_r, delimiter=",")
+            np.savetxt(dataPath + "radial_avgs_numB_" + outfile+ '.csv', avg_numB_r, delimiter=",")
+
+            np.savetxt(dataPath + "radial_avgs_num_dens_" + outfile+ '.csv', avg_num_dens_r, delimiter=",")
+            np.savetxt(dataPath + "radial_avgs_num_densA_" + outfile+ '.csv', avg_num_densA_r, delimiter=",")
+            np.savetxt(dataPath + "radial_avgs_num_densB_" + outfile+ '.csv', avg_num_densB_r, delimiter=",")
+
+            import csv
+            field_names = ['com_x', 'com_y', 'radius']
+            indiv_vals = {'com_x': avg_com_x, 'com_y': avg_com_y, 'radius': avg_rad_val}
+            
+            with open(dataPath + "radial_avgs_indiv_vals_" + outfile+ '.csv', 'w') as csvfile:  
+                writer = csv.writer(csvfile)
+                for key, value in indiv_vals.items():
+                    writer.writerow([key, value])
+
+            np.savetxt(dataPath + "radial_avgs_rad_" + outfile+ '.csv', single_time_dict['rad'], delimiter=",")
+            np.savetxt(dataPath + "radial_avgs_theta_" + outfile+ '.csv', single_time_dict['theta'], delimiter=",")
+
+            load_save = 0
+        else:
+            import csv
+
+            with open(dataPath + "radial_avgs_fa_" + outfile+ '.csv', newline='') as csvfile:
+                avg_fa_r = np.array(list(csv.reader(csvfile)))
+            with open(dataPath + "radial_avgs_faA_" + outfile+ '.csv', newline='') as csvfile:
+                avg_faA_r = np.array(list(csv.reader(csvfile)))
+            with open(dataPath + "radial_avgs_faB_" + outfile+ '.csv', newline='') as csvfile:
+                avg_faB_r = np.array(list(csv.reader(csvfile)))
+
+            with open(dataPath + "radial_avgs_align_" + outfile+ '.csv', newline='') as csvfile:
+                avg_align_r = np.array(list(csv.reader(csvfile)))
+            with open(dataPath + "radial_avgs_alignA_" + outfile+ '.csv', newline='') as csvfile:
+                avg_alignA_r = np.array(list(csv.reader(csvfile)))
+            with open(dataPath + "radial_avgs_alignB_" + outfile+ '.csv', newline='') as csvfile:
+                avg_alignB_r = np.array(list(csv.reader(csvfile)))
+
+            with open(dataPath + "radial_avgs_num_dens_" + outfile+ '.csv', newline='') as csvfile:
+                avg_num_dens_r = np.array(list(csv.reader(csvfile)))
+            with open(dataPath + "radial_avgs_num_densA_" + outfile+ '.csv', newline='') as csvfile:
+                avg_num_densA_r = np.array(list(csv.reader(csvfile)))
+            with open(dataPath + "radial_avgs_num_densB_" + outfile+ '.csv', newline='') as csvfile:
+                avg_num_densB_r = np.array(list(csv.reader(csvfile)))
+            
+            with open(dataPath + "radial_avgs_num_" + outfile+ '.csv', newline='') as csvfile:
+                avg_num_r = np.array(list(csv.reader(csvfile)))
+            with open(dataPath + "radial_avgs_numA_" + outfile+ '.csv', newline='') as csvfile:
+                avg_numA_r = np.array(list(csv.reader(csvfile)))
+            with open(dataPath + "radial_avgs_numB_" + outfile+ '.csv', newline='') as csvfile:
+                avg_numB_r = np.array(list(csv.reader(csvfile)))
+
+            with open(dataPath + "radial_avgs_num_" + outfile+ '.csv', newline='') as csvfile:
+                avg_num_r = np.array(list(csv.reader(csvfile)))
+            with open(dataPath + "radial_avgs_numA_" + outfile+ '.csv', newline='') as csvfile:
+                avg_numA_r = np.array(list(csv.reader(csvfile)))
+            with open(dataPath + "radial_avgs_numB_" + outfile+ '.csv', newline='') as csvfile:
+                avg_numB_r = np.array(list(csv.reader(csvfile)))
+    
+            with open(dataPath + "radial_avgs_indiv_vals_" + outfile+ '.csv', newline='') as csvfile:
+                reader = csv.reader(csvfile)
+                avg_indiv_vals = dict(reader)
+            avg_rad_val = avg_indiv_vals['radius']
+            avg_com_x = avg_indiv_vals['com_x']
+            avg_com_y = avg_indiv_vals['com_y']
+            
+
+            with open(dataPath + "radial_avgs_rad_" + outfile+ '.csv', newline='') as csvfile:
+                avg_rad = np.array(list(csv.reader(csvfile)))
+            with open(dataPath + "radial_avgs_theta_" + outfile+ '.csv', newline='') as csvfile:
+                avg_theta = np.array(list(csv.reader(csvfile)))
+
+            avg_rad_dict = {'rad': avg_rad, 'theta': avg_theta, 'radius': avg_rad_val, 'com': {'x': avg_com_x, 'y': avg_com_y}, 'fa': {'all': avg_fa_r, 'A': avg_faA_r, 'B': avg_faB_r}, 'align': {'all': avg_align_r, 'A': avg_alignA_r, 'B': avg_alignB_r}, 'num': {'all': avg_num_r, 'A': avg_numA_r, 'B': avg_numB_r}, 'num_dens': {'all': avg_num_dens_r, 'A': avg_num_densA_r, 'B': avg_num_densB_r}}
+
+            load_save = 1
+            
     for p in range(start, end):
         j=int(p*time_step)
 
@@ -338,6 +977,36 @@ with hoomd.open(name=inFile, mode='rb') as t:
         #Compute cluster parameters using neighbor list of all particles within LJ cut-off distance
         system_all = freud.AABBQuery(f_box, f_box.wrap(pos))
         cl_all=freud.cluster.Cluster()                              #Define cluster
+        """
+        if clustering_method == 'k-means':
+            particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, eps, typ, pos, x_orient_arr, y_orient_arr)
+            points_n = 100
+            clusters_n = 2
+            
+            points = tf.constant(np.random.uniform(0, 10, (points_n, 2)))
+
+            #points = np.linspace(0, partNum, partNum)
+            centroids = tf.Variable(tf.slice(tf.random_shuffle(points), [0, 0], [clusters_n, -1]))
+
+            distances = tf.reduce_sum(tf.square(tf.subtract(points_expanded, centroids_expanded)), 2)
+            assignments = tf.argmin(distances, 0)
+
+            means = []
+            for c in range(clusters_n):
+                means.append(tf.reduce_mean(tf.gather(points, tf.reshape(tf.where(tf.equal(assignments, c)),[1,-1])),reduction_indices=[1]))
+                new_centroids = tf.concat(means, 0)
+                update_centroids = tf.assign(centroids, new_centroids)
+
+            with tf.Session() as sess:
+                sess.run(init)
+                for step in xrange(iteration_n):
+                    [_, centroid_values, points_values, assignment_values] = sess.run([update_centroids, centroids, points, assignments])
+
+            print("centroids", centroid_values)
+            plt.scatter(points_values[:, 0], points_values[:, 1], c=assignment_values, s=50, alpha=0.5)
+            plt.plot(centroid_values[:, 0], centroid_values[:, 1], 'kx', markersize=15)
+            plt.show()
+        """
         cl_all.compute(system_all, neighbors={'r_max': 1.3})        # Calculate clusters given neighbor list, positions,
                                                                     # and maximal radial interaction distance
         clp_all = freud.cluster.ClusterProperties()                 #Define cluster properties
@@ -1361,7 +2030,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                         
                         # Plot particles color-coded by activity
                         
-                        plotting_functs.plot_part_activity_zoom_seg(pos, all_surface_curves, int_comp_dict, active_fa_dict, mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option, banner_id = banner_option, presentation_id = presentation_option)
+                        plotting_functs.plot_part_activity_zoom_seg(pos, x_orient_arr, y_orient_arr, all_surface_curves, int_comp_dict, active_fa_dict, mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option, banner_id = banner_option, presentation_id = presentation_option)
                 elif (measurement_options[0] == 'activity-wide-adsorb'):
                     #DONE!
                     if plot == 'y':
@@ -1409,6 +2078,45 @@ with hoomd.open(name=inFile, mode='rb') as t:
                         #active_fa_dict2
                         plotting_functs.plot_phases(pos, part_id_dict, phase_dict, all_surface_curves, int_comp_dict, orient_dict2, interface_id = interface_option, orientation_id = orientation_option, presentation_id = presentation_option)
                 
+                elif measurement_options[0] == 'radial-heterogeneity':
+                    particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, eps, typ, pos, x_orient_arr, y_orient_arr)
+                    
+                    from csv import writer
+                    radial_heterogeneity_dict = particle_prop_functs.radial_heterogeneity(method2_align_dict, avg_rad_dict, all_surface_curves, int_comp_dict, all_surface_measurements, int_dict, phase_dict, load_save=load_save)
+
+                    with open('/Volumes/EXTERNAL2/n100000test/pa100_pb500/document.csv','a+') as fd:
+
+                        rad_arr = radial_heterogeneity_dict['rad'].flatten()
+                        theta_arr = radial_heterogeneity_dict['theta'].flatten()
+
+                        radius_arr = np.ones(len(theta_arr)) * radial_heterogeneity_dict['radius']
+                        com_x_arr = np.ones(len(theta_arr)) * radial_heterogeneity_dict['com']['x']
+                        com_y_arr = np.ones(len(theta_arr)) * radial_heterogeneity_dict['com']['y']
+
+                        fa_arr = radial_heterogeneity_dict['fa']['all'].flatten()
+                        faA_arr = radial_heterogeneity_dict['fa']['A'].flatten()
+                        faB_arr = radial_heterogeneity_dict['fa']['B'].flatten()
+
+                        align_arr = radial_heterogeneity_dict['align']['all'].flatten()
+                        alignA_arr = radial_heterogeneity_dict['align']['A'].flatten()
+                        alignB_arr = radial_heterogeneity_dict['align']['B'].flatten()
+
+                        num_arr = radial_heterogeneity_dict['num']['all'].flatten()
+                        numA_arr = radial_heterogeneity_dict['num']['A'].flatten()
+                        numB_arr = radial_heterogeneity_dict['num']['B'].flatten()
+
+                        num_dens_arr = radial_heterogeneity_dict['num_dens']['all'].flatten()
+                        num_densA_arr = radial_heterogeneity_dict['num_dens']['A'].flatten()
+                        num_densB_arr = radial_heterogeneity_dict['num_dens']['B'].flatten()
+                        
+                        for m in range(0, len(rad_arr)):
+                            rad_arr = np.ones(len(theta_arr)) * radial_heterogeneity_dict['rad'][m]
+                            radial_heterogeneity_save_dict = {'rad': rad_arr.tolist(), 'theta': theta_arr.tolist(), 'radius': radius_arr.tolist(), 'com_x': com_x_arr.tolist(), 'com_y': com_y_arr.tolist(), 'fa': {'all': radial_heterogeneity_dict['fa']['all'][m,:].tolist(), 'A': radial_heterogeneity_dict['fa']['A'][m,:].tolist(), 'B': radial_heterogeneity_dict['fa']['B'][m,:].tolist()}, 'align': {'all': radial_heterogeneity_dict['align']['all'][m,:].tolist(), 'A': radial_heterogeneity_dict['align']['A'][m,:].tolist(), 'B': radial_heterogeneity_dict['align']['B'][m,:].tolist()}, 'num': {'all': radial_heterogeneity_dict['num']['all'][m,:].tolist(), 'A': radial_heterogeneity_dict['num']['A'][m,:].tolist(), 'B': radial_heterogeneity_dict['num']['B'][m,:].tolist()}, 'num_dens': {'all': radial_heterogeneity_dict['num_dens']['all'][m,:].tolist(), 'A': radial_heterogeneity_dict['num_dens']['A'][m,:].tolist(), 'B': radial_heterogeneity_dict['num_dens']['B'][m,:].tolist()}} 
+                            data_output_functs.write_to_txt(radial_heterogeneity_save_dict, dataPath + 'Radial_heterogeneity_' + outfile + '.txt')
+
+                    if plot == 'y':
+                        plotting_functs.plot_radial_heterogeneity(pos, radial_heterogeneity_dict, all_surface_curves, int_comp_dict, active_fa_dict, mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option, banner_id = banner_option, presentation_id = presentation_option, measure='num_dens', types='all')                
+               
                 elif measurement_options[0]== 'bubble-body-forces':
 
                     
@@ -1456,8 +2164,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     act_press_dict_bubble = stress_and_pressure_functs.total_active_pressure_bubble(com_radial_dict_fa_bubble, all_surface_measurements, int_comp_dict, all_surface_measurements)
                     """
 
-                    bin_width_arr = np.linspace(1, 10, 10, dtype=float)
-
+                    bin_width_arr = np.linspace(1, 6, 6, dtype=float)
+                    
                     # Heterogeneity
                     bulk_id = np.where(phase_dict['part']==0)[0]
                     bulk_A_id = np.where((phase_dict['part']==0) & (typ==0))[0]
@@ -1473,6 +2181,14 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                     A_id = np.where((typ==0))[0]
                     B_id = np.where((typ==1))[0]
+
+                    #print(np.mean(method2_align_dict['part']['align_fa'][int_id]))
+                    #print(np.mean(method2_align_dict['part']['align_fa'][int_A_id]))
+                    #print(np.mean(method2_align_dict['part']['align_fa'][int_B_id]))
+
+                    #print(np.mean(method2_align_dict['part']['align'][int_id]))
+                    #print(np.mean(method2_align_dict['part']['align'][int_A_id]))
+                    #print(np.mean(method2_align_dict['part']['align'][int_B_id]))
                     
                     act_press_mean_dict = {'all': {'bulk': np.mean(method2_align_dict['part']['align_fa'][bulk_id]), 'int': np.mean(method2_align_dict['part']['align_fa'][int_id]), 'gas': np.mean(method2_align_dict['part']['align_fa'][gas_id]), 'system': np.mean(method2_align_dict['part']['align_fa'])}, 'A': {'bulk': np.mean(method2_align_dict['part']['align_fa'][bulk_A_id]), 'int': np.mean(method2_align_dict['part']['align_fa'][int_A_id]), 'gas': np.mean(method2_align_dict['part']['align_fa'][gas_A_id]), 'system': np.mean(method2_align_dict['part']['align_fa'][A_id]) }, 'B': {'bulk': np.mean(method2_align_dict['part']['align_fa'][bulk_B_id]), 'int': np.mean(method2_align_dict['part']['align_fa'][int_B_id]), 'gas': np.mean(method2_align_dict['part']['align_fa'][gas_B_id]), 'system': np.mean(method2_align_dict['part']['align_fa'][B_id]) } }
                     
@@ -1633,7 +2349,23 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     heterogeneity_num_dens_gas_A_mean = np.array([])
                     heterogeneity_num_dens_gas_B_mean = np.array([])
 
+                    radial_fa_dict = particle_prop_functs.radial_surface_normal_fa_bubble2(method2_align_dict, all_surface_curves, int_comp_dict, all_surface_measurements, int_dict)
+                    
+                    particle_prop_functs.radial_heterogeneity(method2_align_dict, all_surface_curves, int_comp_dict, all_surface_measurements, int_dict, phase_dict)
 
+                    
+
+                    
+
+
+                    
+                    stop
+                    print(all_surface_curves[key]['exterior']['pos'])
+                    print(all_surface_measurements[key]['exterior']['com'])
+                    stop
+                    com_radial_dict_fa_bubble = particle_prop_functs.radial_ang_active_measurements(radial_fa_dict, surface_dict, all_surface_curves, int_comp_dict, all_surface_measurements, averaged_data_arr, int_dict)
+
+                    stop
 
                     #hetero_plot_dict = particle_prop_functs.heterogeneity_single_particles(method2_align_dict['part'], phase_dict, act_press_mean_dict, type_m='phases')   
                     #hetero_plot_system_dict = particle_prop_functs.heterogeneity_single_particles(method2_align_dict['part'], phase_dict, act_press_mean_dict, type_m='system')                       
@@ -1641,7 +2373,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     #plotting_functs.plot_heterogeneity(hetero_plot_dict, type_m='phases', interface_id = interface_option, orientation_id = orientation_option)
                     #plotting_functs.plot_heterogeneity(hetero_plot_dict, type_m='system', interface_id = interface_option, orientation_id = orientation_option)
                     # I NEED TO MAKE A FUNCTION THAT IDENTIFIES PHASE OF BIN BASED ON NUMBER OF PARTICLES IN IT!
-                    for q in range(0, len(bin_width_arr)):
+                    for q in range(4, len(bin_width_arr)):
                         
                         #Bin system to calculate orientation and alignment that will be used in vector plots
                         NBins_x_tmp = utility_functs.getNBins(lx_box, bin_width_arr[q])
@@ -1867,7 +2599,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                     #stop
 
-
+                    
                     """
                     for m in range(0, len(sep_surface_dict)):
 

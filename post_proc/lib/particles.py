@@ -3671,6 +3671,857 @@ class particle_props:
 
             com_radial_dict_fa[key] = {'int_id': int_id, 'current_id': int(int_comp_dict['ids'][m]), 'ext_rad': exterior_radius, 'int_rad': interior_radius, 'r': r[1:].tolist(), 'area': area_r.tolist(), 'com_x': com_x, 'com_y': com_y, 'int_press': {'all': avg_int_press_r.tolist(), 'A': avg_int_pressA_r.tolist(), 'B': avg_int_pressB_r.tolist()}, 'fa_press': {'all': avg_act_press_r.tolist(), 'A': avg_act_pressA_r.tolist(), 'B': avg_act_pressB_r.tolist()}, 'fa': {'all': avg_act_fa_r.tolist(), 'A': avg_act_faA_r.tolist(), 'B': avg_act_faB_r.tolist()}, 'align': {'all': avg_align_r.tolist(), 'A': avg_alignA_r.tolist(), 'B': avg_alignB_r.tolist()}, 'num_dens': {'all': avg_num_dens_r.tolist(), 'A': avg_num_densA_r.tolist(), 'B': avg_num_densB_r.tolist()}, 'num': {'all': avg_num_r.tolist(), 'A': avg_numA_r.tolist(), 'B': avg_numB_r.tolist()}}
         return com_radial_dict_fa
+
+    def radial_heterogeneity_avgs(self, method2_align_dict, surface_dict, int_comp_dict, all_surface_measurements, int_dict, phase_dict):
+        
+        bulk_id = np.where(phase_dict['part']==0)[0]
+        bulk_A_id = np.where((phase_dict['part']==0) & (self.typ==0))[0]
+        bulk_B_id = np.where((phase_dict['part']==0) & (self.typ==1))[0]
+
+        int_id = np.where(phase_dict['part']==1)[0]
+        int_A_id = np.where((phase_dict['part']==1) & (self.typ==0))[0]
+        int_B_id = np.where((phase_dict['part']==1) & (self.typ==1))[0]
+
+        gas_id = np.where(phase_dict['part']==2)[0]
+        gas_A_id = np.where((phase_dict['part']==2) & (self.typ==0))[0]
+        gas_B_id = np.where((phase_dict['part']==2) & (self.typ==1))[0]
+
+        A_id = np.where((self.typ==0))[0]
+        B_id = np.where((self.typ==1))[0]
+
+        interface_id = int(np.where(int_comp_dict['comp']==np.max(int_comp_dict['comp']))[0])
+        key = 'surface id ' + str(int(int_comp_dict['ids'][interface_id]))
+        ext_rad = (surface_dict[key]['exterior']['pos']['x']**2 + surface_dict[key]['exterior']['pos']['y']**2)**0.5
+
+        
+
+        difx_ext_surface = (surface_dict[key]['exterior']['pos']['x'] - all_surface_measurements[key]['exterior']['com']['x'])
+        dify_ext_surface = (surface_dict[key]['exterior']['pos']['y'] - all_surface_measurements[key]['exterior']['com']['y'])
+        difr_ext_surface = (difx_ext_surface ** 2 + dify_ext_surface ** 2) ** 0.5
+
+        ang_ext_surface = np.arctan2(dify_ext_surface, difx_ext_surface)*(180/np.pi)
+        neg_ang = np.where(ang_ext_surface<=0)[0]
+        if len(neg_ang)>0:
+            ang_ext_surface[neg_ang] = 180 + (180+ang_ext_surface[neg_ang])
+        
+        pos_wrap_x = self.pos[int_id,0] + self.hx_box
+        test_id = np.where(pos_wrap_x>self.lx_box)[0]
+        if len(test_id)>0:
+            pos_wrap_x[test_id] = pos_wrap_x[test_id]-self.lx_box
+        test_id = np.where(pos_wrap_x<0)[0]
+        if len(test_id)>0:
+            pos_wrap_x[test_id] = pos_wrap_x[test_id]+self.lx_box
+
+        pos_wrap_y = self.pos[int_id,1] + self.hy_box
+        test_id = np.where(pos_wrap_y>self.ly_box)[0]
+        if len(test_id)>0:
+            pos_wrap_y[test_id] = pos_wrap_y[test_id]-self.ly_box
+        test_id = np.where(pos_wrap_y<0)[0]
+        if len(test_id)>0:
+            pos_wrap_y[test_id] = pos_wrap_y[test_id]+self.ly_box
+
+        difx_parts = (pos_wrap_x - all_surface_measurements[key]['exterior']['com']['x'])
+        dify_parts = (pos_wrap_y - all_surface_measurements[key]['exterior']['com']['y'])
+        difr_parts = (difx_parts ** 2 + dify_parts ** 2) ** 0.5
+
+        ang_parts = np.arctan2(dify_parts, difx_parts)*(180/np.pi)
+        neg_ang = np.where(ang_parts<=0)[0]
+        if len(neg_ang)>0:
+            ang_parts[neg_ang] = 180 + (180+ang_parts[neg_ang])
+
+        difr_parts_norm = np.zeros(len(difr_parts))
+
+        # Instantiate empty array (partNum) containing the average active force alignment
+        # with the nearest interface surface normal
+        part_align = method2_align_dict['part']['align']
+
+        # Instantiate empty array (partNum) containing the average active force magnitude
+        # toward the nearest interface surface normal
+        fa_norm = np.array([])
+        faA_norm = np.array([])
+        faB_norm = np.array([])
+
+        # Instantiate empty array (partNum) containing the distance from the nearest interface surface
+        r_dist_norm = np.array([])
+        rA_dist_norm = np.array([])
+        rB_dist_norm = np.array([])
+
+        align_norm = np.array([])
+        alignA_norm = np.array([])
+        alignB_norm = np.array([])
+
+        theta_dist_norm = np.array([])
+        thetaA_dist_norm = np.array([])
+        thetaB_dist_norm = np.array([])
+
+        r_dist = np.array([])
+        rA_dist = np.array([])
+        rB_dist = np.array([])
+        
+        
+
+        for m in range(0, len(pos_wrap_x)):
+
+            near_surfaces = np.where( (ang_ext_surface>= ang_parts[m]-0.5)& (ang_ext_surface<= ang_parts[m]+0.5) )[0]
+
+            difx_surface_part = (surface_dict[key]['exterior']['pos']['x'][near_surfaces] - pos_wrap_x[m])
+            dify_surface_part  = (surface_dict[key]['exterior']['pos']['y'][near_surfaces] - pos_wrap_y[m])
+            difr_surface_part  = np.mean((difx_surface_part ** 2 + dify_surface_part ** 2) ** 0.5)
+
+            avg_rad = np.mean(difr_ext_surface[near_surfaces])
+            difr_parts_norm[m] = difr_parts[m]/avg_rad
+
+            # Save active force magnitude toward the nearest interface surface normal
+            if self.typ[m] == 0:
+                fa_norm=np.append(fa_norm, part_align[int_id[m]]*self.peA)
+                faA_norm=np.append(faA_norm, part_align[int_id[m]]*self.peA)
+                rA_dist_norm = np.append(rA_dist_norm, difr_parts[m]/avg_rad)
+                alignA_norm=np.append(alignA_norm, part_align[int_id[m]])
+                thetaA_dist_norm = np.append(thetaA_dist_norm, ang_parts[m])
+                rB_dist = np.append(rB_dist, avg_rad)
+            else:
+                fa_norm=np.append(fa_norm, part_align[int_id[m]]*self.peB)
+                faB_norm=np.append(faB_norm, part_align[int_id[m]]*self.peB)
+                alignB_norm=np.append(alignB_norm, part_align[int_id[m]])
+                rB_dist_norm = np.append(rB_dist_norm, difr_parts[m]/avg_rad)
+                thetaB_dist_norm = np.append(thetaB_dist_norm, ang_parts[m])
+                rB_dist = np.append(rB_dist, avg_rad)
+
+            # Save separation distance from the nearest interface surface
+            r_dist_norm = np.append(r_dist_norm, difr_parts[m]/avg_rad)
+            r_dist = np.append(r_dist, avg_rad)
+            align_norm=np.append(align_norm, part_align[int_id[m]])
+
+            
+            theta_dist_norm = np.append(theta_dist_norm, ang_parts[m])
+        """
+        plt.scatter(pos_wrap_x, pos_wrap_y, s=0.9, c=fa_norm)
+        plt.xlim([0, self.lx_box])
+        plt.ylim([0, self.ly_box])
+        plt.show()
+        """
+        
+
+        import math
+
+
+        def round_decimals_down(number:float, decimals:int=2):
+            """
+            Returns a value rounded down to a specific number of decimal places.
+            """
+            if not isinstance(decimals, int):
+                raise TypeError("decimal places must be an integer")
+            elif decimals < 0:
+                raise ValueError("decimal places has to be 0 or more")
+            elif decimals == 0:
+                return math.floor(number)
+
+            factor = 10 ** decimals
+            return math.floor(number * factor) / factor
+
+        def round_decimals_up(number:float, decimals:int=2):
+            """
+            Returns a value rounded up to a specific number of decimal places.
+            """
+            if not isinstance(decimals, int):
+                raise TypeError("decimal places must be an integer")
+            elif decimals < 0:
+                raise ValueError("decimal places has to be 0 or more")
+            elif decimals == 0:
+                return math.ceil(number)
+
+            factor = 10 ** decimals
+            return math.ceil(number * factor) / factor
+
+        theta_bins = np.round(np.linspace(0, 360, 91),0)
+
+        min_rad = round_decimals_down(np.min(r_dist_norm))
+        max_rad = round_decimals_up(np.max(r_dist_norm))
+
+        max_rad_str = repr(max_rad)
+        if len(max_rad_str)<4:
+            max_rad_str = max_rad_str + '0'
+
+        signif_digits, fract_digits = max_rad_str.split('.')
+        fract_lastdigit = int(fract_digits[-1])
+
+        if fract_lastdigit % 2 == 1:
+            max_rad += 0.01
+
+        min_rad_str = repr(min_rad)
+        if len(min_rad_str)<4:
+            min_rad_str = min_rad_str + '0'
+            
+        signif_digits, fract_digits = min_rad_str.split('.')
+        fract_lastdigit = int(fract_digits[-1])
+
+        if fract_lastdigit % 2 == 1:
+            min_rad -= 0.01
+
+        #rad_bins = np.round(np.linspace(min_rad, max_rad, int(round(max_rad - min_rad,2)/0.02)+1),2)
+
+        rad_final_bins = np.round(np.linspace(0.02, 1.5, int((1.48)/0.02)+1),2)
+
+        theta_final_bins = np.round(np.linspace(4, 360, 90),0)
+
+        min_id = np.where(rad_final_bins==min_rad)[0]
+        max_id = np.where(rad_final_bins==max_rad)[0]
+
+        if len(max_id)==1:
+            max_id = int(max_id)
+            if len(min_id)==1:
+                min_id = int(min_id)
+                rad_bins = rad_final_bins[min_id:max_id+1]
+            else:
+                rad_bins = rad_final_bins[0:max_id+1]
+        else:
+            if len(min_id)==1:
+                min_id = int(min_id)
+                rad_bins = rad_final_bins[min_id:]
+            else:
+                rad_bins = rad_final_bins[0:]
+        
+        fa_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
+        faA_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
+        faB_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
+
+        align_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
+        alignA_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
+        alignB_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
+
+        num_dens_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
+        num_densA_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
+        num_densB_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
+
+        num_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
+        numA_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
+        numB_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
+        
+
+        avg_rad_theta = np.mean(difr_ext_surface)
+        sum_id = 0
+        for n_theta in range(1, len(theta_bins)):
+            for n_rad in range(1, len(rad_bins)):
+                
+                bin_ids = np.where((theta_dist_norm <theta_bins[n_theta]) & (theta_dist_norm >= theta_bins[n_theta-1]) & (r_dist_norm < rad_bins[n_rad]) & (r_dist_norm >= rad_bins[n_rad-1]))[0]
+                binA_ids = np.where((thetaA_dist_norm <theta_bins[n_theta]) & (thetaA_dist_norm >= theta_bins[n_theta-1]) & (rA_dist_norm < rad_bins[n_rad]) & (rA_dist_norm >= rad_bins[n_rad-1]))[0]
+                binB_ids = np.where((thetaB_dist_norm <theta_bins[n_theta]) & (thetaB_dist_norm >= theta_bins[n_theta-1]) & (rB_dist_norm < rad_bins[n_rad]) & (rB_dist_norm >= rad_bins[n_rad-1]))[0]
+                
+                if len(bin_ids)>0:
+
+                    
+                    rad_final_id = np.where(rad_final_bins==rad_bins[n_rad])[0]
+                    theta_final_id = np.where(theta_final_bins==theta_bins[n_theta])[0]
+
+                    area_radial_slice = np.pi * ((rad_bins[n_rad]*avg_rad_theta)**2 - (rad_bins[n_rad-1]*avg_rad_theta)**2) * ((theta_bins[n_theta]-theta_bins[n_theta-1])/360)
+
+                    fa_final_binned[rad_final_id, theta_final_id] = np.mean(fa_norm[bin_ids])
+                    faA_final_binned[rad_final_id, theta_final_id] = np.mean(faA_norm[binA_ids])
+                    faB_final_binned[rad_final_id, theta_final_id] = np.mean(faB_norm[binB_ids])
+
+                    align_final_binned[rad_final_id, theta_final_id] = np.mean(align_norm[bin_ids])
+                    alignA_final_binned[rad_final_id, theta_final_id] = np.mean(alignA_norm[binA_ids])
+                    alignB_final_binned[rad_final_id, theta_final_id] = np.mean(alignB_norm[binB_ids])
+
+                    num_dens_final_binned[rad_final_id, theta_final_id] = len(bin_ids) / area_radial_slice
+                    num_densA_final_binned[rad_final_id, theta_final_id] = len(binA_ids) / area_radial_slice
+                    num_densB_final_binned[rad_final_id, theta_final_id] = len(binB_ids) / area_radial_slice
+
+                    num_final_binned[rad_final_id, theta_final_id] = len(bin_ids)
+                    numA_final_binned[rad_final_id, theta_final_id] = len(binA_ids)
+                    numB_final_binned[rad_final_id, theta_final_id] = len(binB_ids)
+
+                    sum_id += 1
+
+        x_coords = all_surface_measurements[key]['exterior']['com']['x'] + np.einsum('i,j', rad_final_bins * np.mean(r_dist), np.cos(theta_final_bins*(np.pi/180)))
+        y_coords = all_surface_measurements[key]['exterior']['com']['y'] + np.einsum('i,j', rad_final_bins * np.mean(r_dist), np.sin(theta_final_bins*(np.pi/180)))
+        
+        x_coords = x_coords.flatten()
+        y_coords = y_coords.flatten()
+        
+        vals = num_final_binned.flatten()
+        """
+        plt.tricontourf(x_coords, y_coords, vals, cmap='Reds')
+        plt.colorbar()
+        plt.xlim(0, self.lx_box)
+        plt.ylim(0, self.ly_box)
+        plt.show()
+
+        plt.scatter(x_coords, y_coords, c=vals, cmap='Reds')
+        plt.xlim(0, self.lx_box)
+        plt.ylim(0, self.ly_box)
+        plt.colorbar()
+        plt.show()
+        """
+        
+        single_time_dict = {'rad': rad_final_bins, 'theta': theta_final_bins, 'radius': np.mean(r_dist), 'com': {'x': all_surface_measurements[key]['exterior']['com']['x'], 'y': all_surface_measurements[key]['exterior']['com']['y']}, 'fa': {'all': fa_final_binned, 'A': faA_final_binned, 'B': faB_final_binned}, 'align': {'all': align_final_binned, 'A': alignA_final_binned, 'B': alignB_final_binned}, 'num': {'all': num_final_binned, 'A': numA_final_binned, 'B': numB_final_binned}, 'num_dens': {'all': num_dens_final_binned, 'A': num_densA_final_binned, 'B': num_densB_final_binned}}
+
+        return single_time_dict
+
+    def radial_heterogeneity(self, method2_align_dict, avg_rad_dict, surface_dict, int_comp_dict, all_surface_measurements, int_dict, phase_dict, load_save = 0):
+        
+        bulk_id = np.where(phase_dict['part']==0)[0]
+        bulk_A_id = np.where((phase_dict['part']==0) & (self.typ==0))[0]
+        bulk_B_id = np.where((phase_dict['part']==0) & (self.typ==1))[0]
+
+        int_id = np.where(phase_dict['part']==1)[0]
+        int_A_id = np.where((phase_dict['part']==1) & (self.typ==0))[0]
+        int_B_id = np.where((phase_dict['part']==1) & (self.typ==1))[0]
+
+        gas_id = np.where(phase_dict['part']==2)[0]
+        gas_A_id = np.where((phase_dict['part']==2) & (self.typ==0))[0]
+        gas_B_id = np.where((phase_dict['part']==2) & (self.typ==1))[0]
+
+        A_id = np.where((self.typ==0))[0]
+        B_id = np.where((self.typ==1))[0]
+
+        interface_id = int(np.where(int_comp_dict['comp']==np.max(int_comp_dict['comp']))[0])
+        key = 'surface id ' + str(int(int_comp_dict['ids'][interface_id]))
+        ext_rad = (surface_dict[key]['exterior']['pos']['x']**2 + surface_dict[key]['exterior']['pos']['y']**2)**0.5
+
+        difx_ext_surface = (surface_dict[key]['exterior']['pos']['x'] - all_surface_measurements[key]['exterior']['com']['x'])
+        dify_ext_surface = (surface_dict[key]['exterior']['pos']['y'] - all_surface_measurements[key]['exterior']['com']['y'])
+        difr_ext_surface = (difx_ext_surface ** 2 + dify_ext_surface ** 2) ** 0.5
+
+        ang_ext_surface = np.arctan2(dify_ext_surface, difx_ext_surface)*(180/np.pi)
+        neg_ang = np.where(ang_ext_surface<=0)[0]
+        if len(neg_ang)>0:
+            ang_ext_surface[neg_ang] = 180 + (180+ang_ext_surface[neg_ang])
+        
+        pos_wrap_x = self.pos[int_id,0] + self.hx_box
+        test_id = np.where(pos_wrap_x>self.lx_box)[0]
+        if len(test_id)>0:
+            pos_wrap_x[test_id] = pos_wrap_x[test_id]-self.lx_box
+        test_id = np.where(pos_wrap_x<0)[0]
+        if len(test_id)>0:
+            pos_wrap_x[test_id] = pos_wrap_x[test_id]+self.lx_box
+
+        pos_wrap_y = self.pos[int_id,1] + self.hy_box
+        test_id = np.where(pos_wrap_y>self.ly_box)[0]
+        if len(test_id)>0:
+            pos_wrap_y[test_id] = pos_wrap_y[test_id]-self.ly_box
+        test_id = np.where(pos_wrap_y<0)[0]
+        if len(test_id)>0:
+            pos_wrap_y[test_id] = pos_wrap_y[test_id]+self.ly_box
+
+        difx_parts = (pos_wrap_x - all_surface_measurements[key]['exterior']['com']['x'])
+        dify_parts = (pos_wrap_y - all_surface_measurements[key]['exterior']['com']['y'])
+        difr_parts = (difx_parts ** 2 + dify_parts ** 2) ** 0.5
+
+        ang_parts = np.arctan2(dify_parts, difx_parts)*(180/np.pi)
+        neg_ang = np.where(ang_parts<=0)[0]
+        if len(neg_ang)>0:
+            ang_parts[neg_ang] = 180 + (180+ang_parts[neg_ang])
+
+        difr_parts_norm = np.zeros(len(difr_parts))
+
+        # Instantiate empty array (partNum) containing the average active force alignment
+        # with the nearest interface surface normal
+        part_align = method2_align_dict['part']['align']
+
+        # Instantiate empty array (partNum) containing the average active force magnitude
+        # toward the nearest interface surface normal
+        fa_norm = np.array([])
+        faA_norm = np.array([])
+        faB_norm = np.array([])
+
+        # Instantiate empty array (partNum) containing the distance from the nearest interface surface
+        r_dist_norm = np.array([])
+        rA_dist_norm = np.array([])
+        rB_dist_norm = np.array([])
+
+        align_norm = np.array([])
+        alignA_norm = np.array([])
+        alignB_norm = np.array([])
+
+        theta_dist_norm = np.array([])
+        thetaA_dist_norm = np.array([])
+        thetaB_dist_norm = np.array([])
+
+        r_dist = np.array([])
+
+        for m in range(0, len(pos_wrap_x)):
+
+            near_surfaces = np.where( (ang_ext_surface>= ang_parts[m]-0.5)& (ang_ext_surface<= ang_parts[m]+0.5) )[0]
+
+            difx_surface_part = (surface_dict[key]['exterior']['pos']['x'][near_surfaces] - pos_wrap_x[m])
+            dify_surface_part  = (surface_dict[key]['exterior']['pos']['y'][near_surfaces] - pos_wrap_y[m])
+            difr_surface_part  = np.mean((difx_surface_part ** 2 + dify_surface_part ** 2) ** 0.5)
+
+            avg_rad = np.mean(difr_ext_surface[near_surfaces])
+            difr_parts_norm[m] = difr_parts[m]/avg_rad
+
+            # Save active force magnitude toward the nearest interface surface normal
+            if self.typ[m] == 0:
+                fa_norm=np.append(fa_norm, part_align[int_id[m]]*self.peA)
+                faA_norm=np.append(faA_norm, part_align[int_id[m]]*self.peA)
+                rA_dist_norm = np.append(rA_dist_norm, difr_parts[m]/avg_rad)
+                alignA_norm=np.append(alignA_norm, part_align[int_id[m]])
+                thetaA_dist_norm = np.append(thetaA_dist_norm, ang_parts[m])
+            else:
+                fa_norm=np.append(fa_norm, part_align[int_id[m]]*self.peB)
+                faB_norm=np.append(faB_norm, part_align[int_id[m]]*self.peB)
+                alignB_norm=np.append(alignB_norm, part_align[int_id[m]])
+                rB_dist_norm = np.append(rB_dist_norm, difr_parts[m]/avg_rad)
+                thetaB_dist_norm = np.append(thetaB_dist_norm, ang_parts[m])
+
+            # Save separation distance from the nearest interface surface
+            r_dist_norm = np.append(r_dist_norm, difr_parts[m]/avg_rad)
+            r_dist = np.append(r_dist, avg_rad)
+            align_norm=np.append(align_norm, part_align[int_id[m]])
+            theta_dist_norm = np.append(theta_dist_norm, ang_parts[m])
+        import math
+
+
+        def round_decimals_down(number:float, decimals:int=2):
+            """
+            Returns a value rounded down to a specific number of decimal places.
+            """
+            if not isinstance(decimals, int):
+                raise TypeError("decimal places must be an integer")
+            elif decimals < 0:
+                raise ValueError("decimal places has to be 0 or more")
+            elif decimals == 0:
+                return math.floor(number)
+
+            factor = 10 ** decimals
+            return math.floor(number * factor) / factor
+
+        def round_decimals_up(number:float, decimals:int=2):
+            """
+            Returns a value rounded up to a specific number of decimal places.
+            """
+            if not isinstance(decimals, int):
+                raise TypeError("decimal places must be an integer")
+            elif decimals < 0:
+                raise ValueError("decimal places has to be 0 or more")
+            elif decimals == 0:
+                return math.ceil(number)
+
+            factor = 10 ** decimals
+            return math.ceil(number * factor) / factor
+
+        theta_bins = np.round(np.linspace(0, 360, 91),0)
+
+        min_rad = round_decimals_down(np.min(r_dist_norm))
+        max_rad = round_decimals_up(np.max(r_dist_norm))
+
+        max_rad_str = repr(max_rad)
+        if len(max_rad_str)<4:
+            max_rad_str = max_rad_str + '0'
+        signif_digits, fract_digits = max_rad_str.split('.')
+        fract_lastdigit = int(fract_digits[-1])
+
+        if fract_lastdigit % 2 == 1:
+            max_rad += 0.01
+        
+        max_rad = round(max_rad,2)
+
+        
+
+        
+        min_rad_str = repr(min_rad)
+        if len(min_rad_str)<4:
+            min_rad_str = min_rad_str + '0'
+        signif_digits, fract_digits = min_rad_str.split('.')
+        fract_lastdigit = int(fract_digits[-1])
+
+        if fract_lastdigit % 2 == 1:
+            min_rad -= 0.01
+        min_rad = round(min_rad,2)
+        
+        #rad_bins = np.round(np.linspace(min_rad, max_rad, int((max_rad - min_rad)/0.02)+1),2)
+
+        
+        rad_final_bins = np.round(np.linspace(0.02, 1.5, int((1.48)/0.02)+1),2)
+
+        theta_final_bins = np.round(np.linspace(4, 360, 90),0)
+
+        min_id = np.where(rad_final_bins==min_rad)[0]
+        max_id = np.where(rad_final_bins==max_rad)[0]
+
+        if len(max_id)==1:
+            max_id = int(max_id)
+            if len(min_id)==1:
+                min_id = int(min_id)
+                rad_bins = rad_final_bins[min_id:max_id+1]
+            else:
+                rad_bins = rad_final_bins[0:max_id+1]
+        else:
+            if len(min_id)==1:
+                min_id = int(min_id)
+                rad_bins = rad_final_bins[min_id:]
+            else:
+                rad_bins = rad_final_bins[0:]
+        fa_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
+        faA_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
+        faB_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
+
+        align_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
+        alignA_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
+        alignB_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
+
+        num_dens_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
+        num_densA_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
+        num_densB_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
+
+        num_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
+        numA_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
+        numB_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
+
+        avg_rad_theta = np.mean(difr_ext_surface)
+        for n_theta in range(1, len(theta_bins)):
+            for n_rad in range(1, len(rad_bins)):
+                bin_ids = np.where((theta_dist_norm <theta_bins[n_theta]) & (theta_dist_norm >= theta_bins[n_theta-1]) & (r_dist_norm < rad_bins[n_rad]) & (r_dist_norm >= rad_bins[n_rad-1]))[0]
+                binA_ids = np.where((thetaA_dist_norm <theta_bins[n_theta]) & (thetaA_dist_norm >= theta_bins[n_theta-1]) & (rA_dist_norm < rad_bins[n_rad]) & (rA_dist_norm >= rad_bins[n_rad-1]))[0]
+                binB_ids = np.where((thetaB_dist_norm <theta_bins[n_theta]) & (thetaB_dist_norm >= theta_bins[n_theta-1]) & (rB_dist_norm < rad_bins[n_rad]) & (rB_dist_norm >= rad_bins[n_rad-1]))[0]
+                
+                if len(bin_ids)>0:
+                    """
+                    rad_final_id = np.where(rad_final_bins==rad_bins[n_rad])[0]
+                    theta_final_id = np.where(theta_final_bins==theta_bins[n_theta])[0]
+
+                    area_radial_slice = np.pi * ((rad_bins[n_rad]*avg_rad_theta)**2 - (rad_bins[n_rad-1]*avg_rad_theta)**2) * ((theta_bins[n_theta]-theta_bins[n_theta-1])/360)
+
+                    fa_final_binned[rad_final_id, theta_final_id] = np.mean(fa_norm[bin_ids])
+                    faA_final_binned[rad_final_id, theta_final_id] = np.mean(faA_norm[binA_ids])
+                    faB_final_binned[rad_final_id, theta_final_id] = np.mean(faB_norm[binB_ids])
+
+                    align_final_binned[rad_final_id, theta_final_id] = np.mean(align_norm[bin_ids])
+                    alignA_final_binned[rad_final_id, theta_final_id] = np.mean(alignA_norm[binA_ids])
+                    alignB_final_binned[rad_final_id, theta_final_id] = np.mean(alignB_norm[binB_ids])
+
+                    num_dens_final_binned[rad_final_id, theta_final_id] = len(bin_ids) / area_radial_slice
+                    num_densA_final_binned[rad_final_id, theta_final_id] = len(binA_ids) / area_radial_slice
+                    num_densB_final_binned[rad_final_id, theta_final_id] = len(binB_ids) / area_radial_slice
+
+                    num_final_binned[rad_final_id, theta_final_id] = len(bin_ids)
+                    numA_final_binned[rad_final_id, theta_final_id] = len(binA_ids)
+                    numB_final_binned[rad_final_id, theta_final_id] = len(binB_ids)
+                    """
+                    
+                    rad_final_id = np.where(rad_final_bins==rad_bins[n_rad])[0]
+                    theta_final_id = np.where(theta_final_bins==theta_bins[n_theta])[0]
+
+                    area_radial_slice = np.pi * ((rad_bins[n_rad]*avg_rad_theta)**2 - (rad_bins[n_rad-1]*avg_rad_theta)**2) * ((theta_bins[n_theta]-theta_bins[n_theta-1])/360)
+                    
+                    if load_save == 1:
+                        if float(avg_rad_dict['fa']['all'][rad_final_id, theta_final_id][0])>0:
+                            fa_final_binned[rad_final_id, theta_final_id] = (np.mean(fa_norm[bin_ids]) - float(avg_rad_dict['fa']['all'][rad_final_id, theta_final_id][0]))**2/(float(avg_rad_dict['fa']['all'][rad_final_id, theta_final_id][0])**2)
+                        if float(avg_rad_dict['fa']['A'][rad_final_id, theta_final_id][0])>0:
+                            faA_final_binned[rad_final_id, theta_final_id] = (np.mean(faA_norm[binA_ids]) - float(avg_rad_dict['fa']['A'][rad_final_id, theta_final_id][0]))**2/(float(avg_rad_dict['fa']['A'][rad_final_id, theta_final_id][0])**2)
+                        if float(avg_rad_dict['fa']['B'][rad_final_id, theta_final_id][0])>0:
+                            faB_final_binned[rad_final_id, theta_final_id] = (np.mean(faB_norm[binB_ids]) - float(avg_rad_dict['fa']['B'][rad_final_id, theta_final_id][0]))**2/(float(avg_rad_dict['fa']['B'][rad_final_id, theta_final_id][0])**2)
+
+                        if float(avg_rad_dict['align']['all'][rad_final_id, theta_final_id][0])>0:
+                            align_final_binned[rad_final_id, theta_final_id] = (np.mean(align_norm[bin_ids]) - float(avg_rad_dict['align']['all'][rad_final_id, theta_final_id][0]))**2/(float(avg_rad_dict['align']['all'][rad_final_id, theta_final_id][0])**2)
+                        if float(avg_rad_dict['align']['A'][rad_final_id, theta_final_id][0])>0:
+                            alignA_final_binned[rad_final_id, theta_final_id] = (np.mean(alignA_norm[binA_ids]) - float(avg_rad_dict['align']['A'][rad_final_id, theta_final_id][0]))**2/(float(avg_rad_dict['align']['A'][rad_final_id, theta_final_id][0])**2)
+                        if float(avg_rad_dict['align']['B'][rad_final_id, theta_final_id][0])>0:
+                            alignB_final_binned[rad_final_id, theta_final_id] = (np.mean(alignB_norm[binB_ids]) - float(avg_rad_dict['align']['B'][rad_final_id, theta_final_id][0]))**2/(float(avg_rad_dict['align']['B'][rad_final_id, theta_final_id][0])**2)
+
+                        if float(avg_rad_dict['num_dens']['all'][rad_final_id, theta_final_id][0])>0:
+                            num_dens_final_binned[rad_final_id, theta_final_id] = ((len(bin_ids) / area_radial_slice) - float(avg_rad_dict['num_dens']['all'][rad_final_id, theta_final_id][0]))**2/(float(avg_rad_dict['num_dens']['all'][rad_final_id, theta_final_id][0])**2)
+                        if float(avg_rad_dict['num_dens']['A'][rad_final_id, theta_final_id][0])>0:
+                            num_densA_final_binned[rad_final_id, theta_final_id] = ((len(binA_ids) / area_radial_slice) - float(avg_rad_dict['num_dens']['A'][rad_final_id, theta_final_id][0]))**2/(float(avg_rad_dict['num_dens']['A'][rad_final_id, theta_final_id][0])**2)
+                        if float(avg_rad_dict['num_dens']['B'][rad_final_id, theta_final_id][0])>0:
+                            num_densB_final_binned[rad_final_id, theta_final_id] = ((len(binB_ids) / area_radial_slice) - float(avg_rad_dict['num_dens']['B'][rad_final_id, theta_final_id][0]))**2/(float(avg_rad_dict['num_dens']['B'][rad_final_id, theta_final_id][0])**2)
+                        
+                        if float(avg_rad_dict['num']['all'][rad_final_id, theta_final_id][0])>0:
+                            num_final_binned[rad_final_id, theta_final_id] = ((len(bin_ids)) - float(avg_rad_dict['num']['all'][rad_final_id, theta_final_id][0]))**2/(float(avg_rad_dict['num']['all'][rad_final_id, theta_final_id][0])**2)
+                        if float(avg_rad_dict['num']['A'][rad_final_id, theta_final_id][0])>0:
+                            numA_final_binned[rad_final_id, theta_final_id] = ((len(binA_ids)) - float(avg_rad_dict['num']['A'][rad_final_id, theta_final_id][0]))**2/(float(avg_rad_dict['num']['A'][rad_final_id, theta_final_id][0])**2)
+                        if float(avg_rad_dict['num']['B'][rad_final_id, theta_final_id][0])>0:
+                            numB_final_binned[rad_final_id, theta_final_id] = ((len(binB_ids)) - float(avg_rad_dict['num']['B'][rad_final_id, theta_final_id][0]))**2/(float(avg_rad_dict['num']['B'][rad_final_id, theta_final_id][0])**2)
+                        
+
+                    else:
+                        if avg_rad_dict['fa']['all'][rad_final_id, theta_final_id]>0:
+                            fa_final_binned[rad_final_id, theta_final_id] = (np.mean(fa_norm[bin_ids]) - avg_rad_dict['fa']['all'][rad_final_id, theta_final_id])**2/(avg_rad_dict['fa']['all'][rad_final_id, theta_final_id]**2)
+                        if avg_rad_dict['fa']['A'][rad_final_id, theta_final_id]>0:
+                            faA_final_binned[rad_final_id, theta_final_id] = (np.mean(faA_norm[binA_ids]) - avg_rad_dict['fa']['A'][rad_final_id, theta_final_id])**2/(avg_rad_dict['fa']['A'][rad_final_id, theta_final_id]**2)
+                        if avg_rad_dict['fa']['B'][rad_final_id, theta_final_id]>0:
+                            faB_final_binned[rad_final_id, theta_final_id] = (np.mean(faB_norm[binB_ids]) - avg_rad_dict['fa']['B'][rad_final_id, theta_final_id])**2/(avg_rad_dict['fa']['B'][rad_final_id, theta_final_id]**2)
+
+                        if avg_rad_dict['align']['all'][rad_final_id, theta_final_id]>0:
+                            align_final_binned[rad_final_id, theta_final_id] = (np.mean(align_norm[bin_ids]) - avg_rad_dict['align']['all'][rad_final_id, theta_final_id])**2/(avg_rad_dict['align']['all'][rad_final_id, theta_final_id]**2)
+                        if avg_rad_dict['align']['A'][rad_final_id, theta_final_id]>0:
+                            alignA_final_binned[rad_final_id, theta_final_id] = (np.mean(alignA_norm[binA_ids]) - avg_rad_dict['align']['A'][rad_final_id, theta_final_id])**2/(avg_rad_dict['align']['A'][rad_final_id, theta_final_id]**2)
+                        if avg_rad_dict['align']['B'][rad_final_id, theta_final_id]>0:
+                            alignB_final_binned[rad_final_id, theta_final_id] = (np.mean(alignB_norm[binB_ids]) - avg_rad_dict['align']['B'][rad_final_id, theta_final_id])**2/(avg_rad_dict['align']['B'][rad_final_id, theta_final_id]**2)
+
+                        if avg_rad_dict['num_dens']['all'][rad_final_id, theta_final_id]>0:
+                            num_dens_final_binned[rad_final_id, theta_final_id] = ((len(bin_ids) / area_radial_slice) - avg_rad_dict['num_dens']['all'][rad_final_id, theta_final_id])**2/(avg_rad_dict['num_dens']['all'][rad_final_id, theta_final_id]**2)
+                        if avg_rad_dict['num_dens']['A'][rad_final_id, theta_final_id]>0:
+                            num_densA_final_binned[rad_final_id, theta_final_id] = ((len(binA_ids) / area_radial_slice) - avg_rad_dict['num_dens']['A'][rad_final_id, theta_final_id])**2/(avg_rad_dict['num_dens']['A'][rad_final_id, theta_final_id]**2)
+                        if avg_rad_dict['num_dens']['B'][rad_final_id, theta_final_id]>0:
+                            num_densB_final_binned[rad_final_id, theta_final_id] = ((len(binB_ids) / area_radial_slice) - avg_rad_dict['num_dens']['B'][rad_final_id, theta_final_id])**2/(avg_rad_dict['num_dens']['B'][rad_final_id, theta_final_id]**2)
+                        
+                        if avg_rad_dict['num']['all'][rad_final_id, theta_final_id]>0:
+                            num_final_binned[rad_final_id, theta_final_id] = ((len(bin_ids)) - avg_rad_dict['num']['all'][rad_final_id, theta_final_id])**2/(avg_rad_dict['num']['all'][rad_final_id, theta_final_id]**2)
+                        if avg_rad_dict['num']['A'][rad_final_id, theta_final_id]>0:
+                            numA_final_binned[rad_final_id, theta_final_id] = ((len(binA_ids)) - avg_rad_dict['num']['A'][rad_final_id, theta_final_id])**2/(avg_rad_dict['num']['A'][rad_final_id, theta_final_id]**2)
+                        if avg_rad_dict['num']['B'][rad_final_id, theta_final_id]>0:
+                            numB_final_binned[rad_final_id, theta_final_id] = ((len(binB_ids)) - avg_rad_dict['num']['B'][rad_final_id, theta_final_id])**2/(avg_rad_dict['num']['B'][rad_final_id, theta_final_id]**2)
+                        
+        radial_heterogeneity_dict = {'rad': rad_final_bins, 'theta': theta_final_bins, 'radius': np.mean(r_dist), 'com': {'x': all_surface_measurements[key]['exterior']['com']['x'], 'y': all_surface_measurements[key]['exterior']['com']['y']}, 'fa': {'all': fa_final_binned, 'A': faA_final_binned, 'B': faB_final_binned}, 'align': {'all': align_final_binned, 'A': alignA_final_binned, 'B': alignB_final_binned}, 'num': {'all': num_final_binned, 'A': numA_final_binned, 'B': numB_final_binned}, 'num_dens': {'all': num_dens_final_binned, 'A': num_densA_final_binned, 'B': num_densB_final_binned}}
+
+        return radial_heterogeneity_dict
+
+    def radial_ang_active_measurements(self, radial_fa_dict, surface_dict, sep_surface_dict, int_comp_dict, all_surface_measurements, averaged_data_arr, int_dict):
+        int_id = averaged_data_arr['int_id']
+        com_radial_dict_fa = {}
+        int_ids = int_dict['bin']
+        for m in range(0, len(sep_surface_dict)):
+            key = 'surface id ' + str(int(int_comp_dict['ids'][m]))
+            key2 = 'surface ' + str(int(int_comp_dict['ids'][m]))
+
+
+            try: 
+                surface_x = sep_surface_dict[key]['exterior']['pos']['x']
+                surface_y = sep_surface_dict[key]['exterior']['pos']['y']
+                com_x = all_surface_measurements[key]['exterior']['com']['x']
+                com_y = all_surface_measurements[key]['exterior']['com']['y']
+            except:
+                surface_x = sep_surface_dict[key]['interior']['pos']['x']
+                surface_y = sep_surface_dict[key]['interior']['pos']['y']
+                com_x = all_surface_measurements[key]['interior']['com']['x']
+                com_y = all_surface_measurements[key]['interior']['com']['y']
+
+            try: 
+                exterior_radius = all_surface_measurements[key]['exterior']['mean radius']
+                exterior = 1
+            except:
+                exterior = 0
+                exterior_radius = 0
+
+            try:
+                interior_radius = all_surface_measurements[key]['interior']['mean radius']
+                interior = 1
+            except:
+                interior = 0
+                interior_radius = 0
+                
+            if exterior_radius >= interior_radius:
+                radius = exterior_radius
+            else:
+                radius = interior_radius
+                
+            theta_all = ((radial_fa_dict[key]['all']['theta'] + 360 ) % 360)
+            theta_A = ((radial_fa_dict[key]['A']['theta'] + 360 ) % 360)
+            theta_B = ((radial_fa_dict[key]['B']['theta'] + 360 ) % 360)
+            
+            difx = surface_x - (com_x)
+            dify = surface_y - (com_y)
+
+            difr= ( (difx )**2 + (dify)**2)**0.5
+            thetar = np.arctan2(dify, difx)*(180/np.pi)
+            
+            thetar_ang = ((thetar + 360 ) % 360)
+
+            #r = np.linspace(np.min(radial_fa_dict[key]['all']['r']), np.max(radial_fa_dict[key]['all']['r']), num=int((np.ceil(np.max(radial_fa_dict[key]['all']['r']) - np.min(radial_fa_dict[key]['all']['r']))+1)/2))
+            
+            
+            r = np.linspace(0, 1.5, num=75)
+            theta = np.linspace(0, 360, num=45)
+
+            #Pressure integrand components for each value of X
+            act_press_r = np.zeros((len(r)-1))
+            int_press_r = np.zeros((len(r)-1))
+            act_fa_r = np.zeros((len(r)-1))
+            align_r = np.zeros((len(r)-1))
+            num_dens_r = np.zeros((len(r)-1))
+            num_r = np.zeros((len(r)-1))
+            area_r = np.zeros((len(r)-1))
+
+            act_pressA_r = np.zeros((len(r)-1))
+            int_pressA_r = np.zeros((len(r)-1))
+            act_faA_r = np.zeros((len(r)-1))
+            alignA_r = np.zeros((len(r)-1))
+            num_densA_r = np.zeros((len(r)-1))
+            numA_r = np.zeros((len(r)-1))
+
+            act_pressB_r = np.zeros((len(r)-1))
+            int_pressB_r = np.zeros((len(r)-1))
+            act_faB_r = np.zeros((len(r)-1))
+            alignB_r = np.zeros((len(r)-1))
+            num_densB_r = np.zeros((len(r)-1))
+            numB_r = np.zeros((len(r)-1))
+
+            rad_arr = np.zeros((len(r)-1))
+
+            sum_act_press_r = np.zeros((len(r)-1)) 
+            sum_int_press_r = np.zeros((len(r)-1)) 
+            sum_act_fa_r = np.zeros((len(r)-1))
+            sum_align_r = np.zeros((len(r)-1))
+            sum_num_dens_r = np.zeros((len(r)-1))
+            sum_num_r = np.zeros((len(r)-1))
+            sum_area_r = np.zeros((len(r)-1))
+
+            sum_act_pressA_r = np.zeros((len(r)-1))
+            sum_int_pressA_r = np.zeros((len(r)-1))
+            sum_act_faA_r = np.zeros((len(r)-1))
+            sum_alignA_r = np.zeros((len(r)-1))
+            sum_num_densA_r = np.zeros((len(r)-1))
+            sum_numA_r = np.zeros((len(r)-1))
+
+            sum_act_pressB_r = np.zeros((len(r)-1))
+            sum_int_pressB_r = np.zeros((len(r)-1))
+            sum_act_faB_r = np.zeros((len(r)-1))
+            sum_alignB_r = np.zeros((len(r)-1))
+            sum_num_densB_r = np.zeros((len(r)-1))
+            sum_numB_r = np.zeros((len(r)-1))
+
+            num_theta = 0
+            
+            #If exterior and interior surfaces defined, continue...
+        
+            #For each step across interface, calculate pressure in that step's area (averaged over angle from CoM)
+            num_theta = 0
+            for j in range(1, len(theta)):
+
+                total_area_prev = 0
+                total_area_prev_slice = 0
+
+                min_theta = theta[j-1]
+                max_theta = theta[j]
+
+                dif_theta = (max_theta - min_theta)/360
+
+                surface_inrange = np.where((min_theta<=thetar_ang) & (thetar_ang<=max_theta))[0]
+                radius_temp = np.mean(difr[surface_inrange])
+
+                for i in range(1, len(r)):
+
+                    #Min and max location across interface of current step
+                    min_r = r[i-1]
+                    max_r = r[i]
+
+                    #Calculate area of rectangle for current step
+                    total_area = (np.pi * ((max_r*radius_temp) ** 2) - total_area_prev)
+                    total_area_slice = total_area * dif_theta
+
+                    #Save total area of previous step sizes
+                    total_area_prev = np.pi * ((max_r*radius_temp) ** 2)
+                    total_area_prev_slice = total_area_prev * dif_theta
+
+                    if r[i] * radius_temp <= self.hx_box:
+
+                        #Find particles that are housed within current slice
+                        parts_inrange_fa = np.where((min_r<=(radial_fa_dict[key]['all']['r']/radius_temp)) & ((radial_fa_dict[key]['all']['r']/radius_temp)<=max_r) & (min_theta<=theta_all) & (theta_all<=max_theta))[0]
+                        partsA_inrange_fa = np.where((min_r<=(radial_fa_dict[key]['A']['r']/radius_temp)) & ((radial_fa_dict[key]['A']['r']/radius_temp)<=max_r) & (min_theta<=theta_A) & (theta_A<=max_theta))[0]
+                        partsB_inrange_fa = np.where((min_r<=(radial_fa_dict[key]['B']['r']/radius_temp)) & ((radial_fa_dict[key]['B']['r']/radius_temp)<=max_r) & (min_theta<=theta_B) & (theta_B<=max_theta))[0]
+
+                        #If at least 1 particle in slice, continue...
+                        if len(parts_inrange_fa)>0:
+
+                            #If the force is defined, continue...
+                            parts_defined = np.logical_not(np.isnan(radial_fa_dict[key]['all']['fa'][parts_inrange_fa]))
+
+                            if len(parts_defined)>0:
+                                #Calculate total active force normal to interface in slice
+                                act_press_r[i-1] = np.sum(radial_fa_dict[key]['all']['fa'][parts_inrange_fa][parts_defined])
+                                act_fa_r[i-1] = np.mean(radial_fa_dict[key]['all']['fa'][parts_inrange_fa][parts_defined])
+                                align_r[i-1] = np.mean(radial_fa_dict[key]['all']['align'][parts_inrange_fa][parts_defined])
+                                num_dens_r[i-1] = len(parts_defined)
+                                num_r[i-1] = len(parts_defined)
+                                area_r[i-1] = total_area_slice
+                                #If area of slice is non-zero, calculate the pressure [F/A]
+                                if total_area_slice > 0:
+                                    act_press_r[i-1] = act_press_r[i-1]/total_area_slice
+                                    num_dens_r[i-1] = num_dens_r[i-1]/total_area_slice
+
+                                partsA_defined = np.logical_not(np.isnan(radial_fa_dict[key]['A']['fa'][partsA_inrange_fa]))
+                                if len(partsA_defined)>0:
+                                    act_pressA_r[i-1] = np.sum(radial_fa_dict[key]['A']['fa'][partsA_inrange_fa][partsA_defined])
+                                    act_faA_r[i-1] = np.mean(radial_fa_dict[key]['A']['fa'][partsA_inrange_fa][partsA_defined])
+                                    alignA_r[i-1] = np.mean(radial_fa_dict[key]['A']['align'][partsA_inrange_fa][partsA_defined])
+                                    num_densA_r[i-1] = len(partsA_defined)
+                                    numA_r[i-1] = len(partsA_defined)
+                                    #If area of slice is non-zero, calculate the pressure [F/A]
+                                    if total_area_slice > 0:
+                                        act_pressA_r[i-1] = act_pressA_r[i-1]/total_area_slice
+                                        num_densA_r[i-1] = num_densA_r[i-1]/total_area_slice
+
+                                partsB_defined = np.logical_not(np.isnan(radial_fa_dict[key]['B']['fa'][partsB_inrange_fa]))
+                                if len(partsB_defined)>0:
+                                    act_pressB_r[i-1] = np.sum(radial_fa_dict[key]['B']['fa'][partsB_inrange_fa][partsB_defined])
+                                    act_faB_r[i-1] = np.mean(radial_fa_dict[key]['B']['fa'][partsB_inrange_fa][partsB_defined])
+                                    alignB_r[i-1] = np.mean(radial_fa_dict[key]['B']['align'][partsB_inrange_fa][partsB_defined])
+                                    #Calculate density
+                                    num_densB_r[i-1] = len(partsB_defined)
+                                    numB_r[i-1] = len(partsB_defined)
+                                    #If area of slice is non-zero, calculate the pressure [F/A]
+                                    if total_area_slice > 0:
+                                        act_pressB_r[i-1] = act_pressB_r[i-1]/total_area_slice
+                                        num_densB_r[i-1] = num_densB_r[i-1]/total_area_slice
+                            
+                                
+                                
+                    
+                    else:
+
+                        act_press_r[i-1] = 0
+                        act_fa_r[i-1] = 0
+                        align_r[i-1] = 0
+                        num_dens_r[i-1] = 0
+                        num_r[i-1] = 0
+
+                        act_pressA_r[i-1] = 0
+                        act_faA_r[i-1] = 0
+                        alignA_r[i-1] = 0
+                        num_densA_r[i-1] = 0
+                        numA_r[i-1] = 0
+
+                        act_pressB_r[i-1] = 0
+                        act_faB_r[i-1] = 0
+                        alignB_r[i-1] = 0
+                        num_densB_r[i-1] = 0
+                        numB_r[i-1] = 0
+
+                #save this theta's measurement
+                sum_act_press_r += act_press_r
+                sum_act_fa_r += act_fa_r
+                sum_align_r += align_r
+                sum_num_dens_r += num_dens_r
+                sum_num_r += num_r
+
+                sum_act_pressA_r += act_pressA_r
+                sum_act_faA_r += act_faA_r
+                sum_alignA_r += alignA_r
+                sum_num_densA_r += num_densA_r
+                sum_numA_r += numA_r
+
+                sum_act_pressB_r += act_pressB_r
+                sum_act_faB_r += act_faB_r
+                sum_alignB_r += alignB_r
+                sum_num_densB_r += num_densB_r
+                sum_numB_r += numB_r
+
+                num_theta += 1
+
+            avg_act_press_r = sum_act_press_r / num_theta
+            avg_act_fa_r = sum_act_fa_r / num_theta
+            avg_align_r = sum_align_r / num_theta
+            avg_num_dens_r = sum_num_dens_r / num_theta
+            avg_num_r = sum_num_r / num_theta
+
+            avg_act_pressA_r = sum_act_pressA_r / num_theta
+            avg_act_faA_r = sum_act_faA_r / num_theta
+            avg_alignA_r = sum_alignA_r / num_theta
+            avg_num_densA_r = sum_num_densA_r / num_theta
+            avg_numA_r = sum_numA_r / num_theta
+
+            avg_act_pressB_r = sum_act_pressB_r / num_theta
+            avg_act_faB_r = sum_act_faB_r / num_theta
+            avg_alignB_r = sum_alignB_r / num_theta
+            avg_num_densB_r = sum_num_densB_r / num_theta
+            avg_numB_r = sum_numB_r / num_theta
+
+
+            com_radial_dict_fa[key] = {'int_id': int_id, 'current_id': int(int_comp_dict['ids'][m]), 'ext_rad': exterior_radius, 'int_rad': interior_radius, 'r': r[1:].tolist(), 'area': area_r.tolist(), 'com_x': com_x, 'com_y': com_y, 'fa_press': {'all': avg_act_press_r.tolist(), 'A': avg_act_pressA_r.tolist(), 'B': avg_act_pressB_r.tolist()}, 'fa': {'all': avg_act_fa_r.tolist(), 'A': avg_act_faA_r.tolist(), 'B': avg_act_faB_r.tolist()}, 'align': {'all': avg_align_r.tolist(), 'A': avg_alignA_r.tolist(), 'B': avg_alignB_r.tolist()}, 'num_dens': {'all': avg_num_dens_r.tolist(), 'A': avg_num_densA_r.tolist(), 'B': avg_num_densB_r.tolist()}, 'num': {'all': avg_num_r.tolist(), 'A': avg_numA_r.tolist(), 'B': avg_numB_r.tolist()}}
+        return com_radial_dict_fa
+
     def radial_measurements3(self, radial_fa_dict, surface_dict, sep_surface_dict, int_comp_dict, all_surface_measurements, averaged_data_arr, int_dict):
         int_id = averaged_data_arr['int_id']
         com_radial_dict_fa = {}
@@ -3895,9 +4746,106 @@ class particle_props:
         
         cluster_velocity_dict = {'displace': {'x': difx_cluster, 'y': dify_cluster, 'r': difr_cluster, 'theta': orient}, 'velocity': {'x': vx_cluster, 'y': vy_cluster, 'r': vr_cluster, 'theta': orient / dt_step} }
         return cluster_velocity_dict
+    def radial_active_measurements(self, radial_fa_dict):
+
+        #X locations across interface for integration
+        if self.hx_box<self.hy_box:
+            r = np.linspace(0, self.hx_box, num=int((np.ceil(self.hx_box)+1)/3))
+        elif self.hy_box<self.hx_box:
+            r = np.linspace(0, self.hy_box, num=int((np.ceil(self.hy_box)+1)/3))
+        else:
+            r = np.linspace(0, self.hx_box, num=int((np.ceil(self.hx_box)+1)/3))
+
+        #If exterior and interior surfaces defined, continue...
+
+        area_prev = 0
+
+        #Pressure integrand components for each value of X
+        act_press_r = np.zeros((len(r)-1))
+        act_fa_r = np.zeros((len(r)-1))
+        align_r = np.zeros((len(r)-1))
+        num_dens_r = np.zeros((len(r)-1))
+
+        act_pressA_r = np.zeros((len(r)-1))
+        act_faA_r = np.zeros((len(r)-1))
+        alignA_r = np.zeros((len(r)-1))
+        num_densA_r = np.zeros((len(r)-1))
+
+        act_pressB_r = np.zeros((len(r)-1))
+        act_faB_r = np.zeros((len(r)-1))
+        alignB_r = np.zeros((len(r)-1))
+        num_densB_r = np.zeros((len(r)-1))
+
+        rad_arr = np.zeros((len(r)-1))
+        #If exterior and interior surfaces defined, continue...
+        
+        #For each step across interface, calculate pressure in that step's area (averaged over angle from CoM)
+        for i in range(1, len(r)):
+
+            #Min and max location across interface of current step
+            min_r = r[i-1]
+            max_r = r[i]
+
+            #Calculate area of rectangle for current step
+            area = np.pi * (max_r ** 2) - area_prev
+
+            #Save total area of previous step sizes
+            area_prev = np.pi * (max_r ** 2)
+
+            #Find particles that are housed within current slice
+            parts_inrange_fa = np.where((min_r<=radial_fa_dict['all']['r']) & (radial_fa_dict['all']['r']<=max_r))[0]
+            partsA_inrange_fa = np.where((min_r<=radial_fa_dict['A']['r']) & (radial_fa_dict['A']['r']<=max_r))[0]
+            partsB_inrange_fa = np.where((min_r<=radial_fa_dict['B']['r']) & (radial_fa_dict['B']['r']<=max_r))[0]
+
+
+            #If at least 1 particle in slice, continue...
+            if len(parts_inrange_fa)>0:
+
+                #If the force is defined, continue...
+                parts_defined = np.logical_not(np.isnan(radial_fa_dict['all']['fa'][parts_inrange_fa]))
+
+                if len(parts_defined)>0:
+                    #Calculate total active force normal to interface in slice
+                    act_press_r[i-1] = np.sum(radial_fa_dict['all']['fa'][parts_inrange_fa][parts_defined])
+                    act_fa_r[i-1] = np.mean(radial_fa_dict['all']['fa'][parts_inrange_fa][parts_defined])
+                    align_r[i-1] = np.mean(radial_fa_dict['all']['align'][parts_inrange_fa][parts_defined])
+                    num_dens_r[i-1] = len(parts_defined)
+                    #If area of slice is non-zero, calculate the pressure [F/A]
+                    if area > 0:
+                        act_press_r[i-1] = act_press_r[i-1]/area
+                        num_dens_r[i-1] = num_dens_r[i-1]/area
+
+                    partsA_defined = np.logical_not(np.isnan(radial_fa_dict['A']['fa'][partsA_inrange_fa]))
+                    if len(partsA_defined)>0:
+                        act_pressA_r[i-1] = np.sum(radial_fa_dict['A']['fa'][partsA_inrange_fa][partsA_defined])
+                        act_faA_r[i-1] = np.mean(radial_fa_dict['A']['fa'][partsA_inrange_fa][partsA_defined])
+                        alignA_r[i-1] = np.mean(radial_fa_dict['A']['align'][partsA_inrange_fa][partsA_defined])
+                        num_densA_r[i-1] = len(partsA_defined)
+                        #If area of slice is non-zero, calculate the pressure [F/A]
+                        if area > 0:
+                            act_pressA_r[i-1] = act_pressA_r[i-1]/area
+                            num_densA_r[i-1] = num_densA_r[i-1]/area
+
+                    partsB_defined = np.logical_not(np.isnan(radial_fa_dict['B']['fa'][partsB_inrange_fa]))
+                    if len(partsB_defined)>0:
+                        act_pressB_r[i-1] = np.sum(radial_fa_dict['B']['fa'][partsB_inrange_fa][partsB_defined])
+                        act_faB_r[i-1] = np.mean(radial_fa_dict['B']['fa'][partsB_inrange_fa][partsB_defined])
+                        alignB_r[i-1] = np.mean(radial_fa_dict['B']['align'][partsB_inrange_fa][partsB_defined])
+                        #Calculate density
+                        num_densB_r[i-1] = len(partsB_defined)
+                        #If area of slice is non-zero, calculate the pressure [F/A]
+                        if area > 0:
+                            act_pressB_r[i-1] = act_pressB_r[i-1]/area
+                            num_densB_r[i-1] = num_densB_r[i-1]/area
+
+
+
+        com_radial_dict_fa = {'r': r[1:].tolist(), 'fa_press': {'all': act_press_r.tolist(), 'A': act_pressA_r.tolist(), 'B': act_pressB_r.tolist()}, 'fa': {'all': act_fa_r.tolist(), 'A': act_faA_r.tolist(), 'B': act_faB_r.tolist()}, 'align': {'all': align_r.tolist(), 'A': alignA_r.tolist(), 'B': alignB_r.tolist()}, 'num_dens': {'all': num_dens_r.tolist(), 'A': num_densA_r.tolist(), 'B': num_densB_r.tolist()}}
+        return com_radial_dict_fa
+
+
     def radial_measurements(self, radial_stress_dict, radial_fa_dict):
 
-        stop
         #X locations across interface for integration
         if self.hx_box<self.hy_box:
             r = np.linspace(0, self.hx_box, num=int((np.ceil(self.hx_box)+1)/3))

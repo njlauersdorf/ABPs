@@ -277,7 +277,9 @@ class binning:
                             std_binned[ix][iy]=((binned_arr[ix][iy] - mean_dict['system'])**2)/(mean_dict['system']**2)
                             bulk_count += 1
                         elif phase_dict['bin'][ix][iy]==1:
-                            
+                            print(binned_arr[ix][iy])
+                            print(mean_dict['int'])
+                            stop
                             int_std_sum += (binned_arr[ix][iy] - mean_dict['int'])**2
                             int_std_sum_sys += (binned_arr[ix][iy] - mean_dict['system'])**2
                             std_binned[ix][iy]=((binned_arr[ix][iy] - mean_dict['system'])**2)/(mean_dict['system']**2)
@@ -324,6 +326,111 @@ class binning:
 
         q_dict = {'bulk': {'norm': bulk_q, 'sys_norm': bulk_q_system, 'non_norm': bulk_q_nonnorm, 'mean': mean_dict['bulk']}, 'int': {'norm': int_q, 'sys_norm': int_q_system, 'non_norm': int_q_nonnorm, 'mean': mean_dict['int']}, 'gas': {'norm': gas_q, 'sys_norm': gas_q_system, 'non_norm': gas_q_nonnorm, 'mean': mean_dict['gas']}, 'system': {'norm': system_q, 'non_norm': system_q_nonnorm, 'mean': mean_dict['system']}}
         return q_dict, std_binned
+
+
+    def bin_heterogeneity_binned_phases(self, binned_arr, phase_dict, mean_dict):
+        '''
+        Purpose: Takes the number and size of bins to calculate an array of bin positions
+
+        Inputs:
+        pos: array (partNum) of positions (x,y,z) of each particle
+
+        ids: array (partNum) of cluster ids (int) that each particle is a part of
+
+        clust_size: array of cluster sizes (int) in terms of number of particles for each cluster id
+
+        Outputs:
+        part_dict: dictionary containing arrays (NBins_x, NBins_y) whose elements contains information
+        on whether each particle within the bin a) is part of a cluster ('occParts'), b) on which type
+        of particles are in the bin ('typ'), and c) on what each particle's id is ('id')
+        '''
+
+        bulk_id = np.where(phase_dict['part']==0)[0]
+        int_id = np.where(phase_dict['part']==1)[0]
+        gas_id = np.where(phase_dict['part']==2)[0]
+
+        bulk_std_sum_sys = 0
+        int_std_sum_sys = 0
+        gas_std_sum_sys = 0
+
+        bulk_std_sum = 0
+        int_std_sum = 0
+        gas_std_sum = 0
+        system_std_sum = 0
+
+        gas_count = 0
+        int_count = 0
+        bulk_count = 0
+        system_count = 0
+
+        std_binned = [[0 for b in range(self.NBins_y)] for a in range(self.NBins_x)]
+
+        
+        # Loop over all cluster IDs
+        for ix in range(0, len(binned_arr)):
+            for iy in range(0, len(binned_arr)):
+                if np.isnan(binned_arr[ix][iy])==0:
+
+                        system_std_sum += (binned_arr[ix][iy] - mean_dict['system'])**2
+                        system_count += 1
+
+                        if phase_dict['bin'][ix][iy]==0:
+                            bulk_std_sum += (binned_arr[ix][iy] - mean_dict['bulk'])**2
+                            bulk_std_sum_sys += (binned_arr[ix][iy] - mean_dict['system'])**2
+                            std_binned[ix][iy]=((binned_arr[ix][iy] - mean_dict['system'])**2)/(mean_dict['system']**2)
+                            bulk_count += 1
+                        elif phase_dict['bin'][ix][iy]==1:
+                            print(binned_arr[ix][iy])
+                            print(mean_dict['int'])
+                            stop
+                            int_std_sum += (binned_arr[ix][iy] - mean_dict['int'])**2
+                            int_std_sum_sys += (binned_arr[ix][iy] - mean_dict['system'])**2
+                            std_binned[ix][iy]=((binned_arr[ix][iy] - mean_dict['system'])**2)/(mean_dict['system']**2)
+                            int_count += 1
+                        elif phase_dict['bin'][ix][iy]==2:
+                            gas_std_sum += (binned_arr[ix][iy] - mean_dict['gas'])**2
+                            gas_std_sum_sys += (binned_arr[ix][iy] - mean_dict['system'])**2
+                            std_binned[ix][iy]=((binned_arr[ix][iy] - mean_dict['system'])**2)/(mean_dict['system']**2)
+                            gas_count += 1
+
+        if (mean_dict['system']>0) & (system_count > 0):
+            system_q = system_std_sum / (system_count *  mean_dict['system']**2)
+            system_q_nonnorm = system_std_sum / (system_count)
+        else:
+            system_q = 0
+            system_q_nonnorm=0
+
+        if (mean_dict['int']>0) & (int_count > 0):
+            int_q_system = int_std_sum / (int_count *  mean_dict['system']**2)
+            int_q = int_std_sum / (int_count *  mean_dict['int']**2)
+            int_q_nonnorm = int_std_sum / (int_count)
+        else:
+            int_q = 0
+            int_q_nonnorm=0
+            int_q_system = 0
+
+        if (mean_dict['bulk']>0) & (bulk_count > 0):
+            bulk_q_system = bulk_std_sum / (bulk_count *  mean_dict['system']**2)
+            bulk_q = bulk_std_sum / (bulk_count *  mean_dict['bulk']**2)
+            bulk_q_nonnorm = bulk_std_sum / (bulk_count)
+        else:
+            bulk_q = 0
+            bulk_q_nonnorm=0
+            bulk_q_system = 0
+
+        if (mean_dict['gas']>0) & (gas_count > 0):
+            gas_q_nonnorm = gas_std_sum / (gas_count)
+            gas_q_system = gas_std_sum / (gas_count *  mean_dict['system']**2)
+            gas_q = gas_std_sum / (gas_count *  mean_dict['gas']**2)
+        else:
+            gas_q = 0
+            gas_q_nonnorm=0
+            gas_q_system = 0
+
+        q_dict = {'bulk': {'norm': bulk_q, 'sys_norm': bulk_q_system, 'non_norm': bulk_q_nonnorm, 'mean': mean_dict['bulk']}, 'int': {'norm': int_q, 'sys_norm': int_q_system, 'non_norm': int_q_nonnorm, 'mean': mean_dict['int']}, 'gas': {'norm': gas_q, 'sys_norm': gas_q_system, 'non_norm': gas_q_nonnorm, 'mean': mean_dict['gas']}, 'system': {'norm': system_q, 'non_norm': system_q_nonnorm, 'mean': mean_dict['system']}}
+        return q_dict, std_binned
+
+        
 
     def bin_heterogeneity_binned_phases_system(self, binned_arr, phase_dict, mean_dict):
         '''
