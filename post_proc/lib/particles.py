@@ -3700,6 +3700,7 @@ class particle_props:
         difr_ext_surface = (difx_ext_surface ** 2 + dify_ext_surface ** 2) ** 0.5
 
         ang_ext_surface = np.arctan2(dify_ext_surface, difx_ext_surface)*(180/np.pi)
+        
         neg_ang = np.where(ang_ext_surface<=0)[0]
         if len(neg_ang)>0:
             ang_ext_surface[neg_ang] = 180 + (180+ang_ext_surface[neg_ang])
@@ -3764,36 +3765,37 @@ class particle_props:
 
             near_surfaces = np.where( (ang_ext_surface>= ang_parts[m]-0.5)& (ang_ext_surface<= ang_parts[m]+0.5) )[0]
 
-            difx_surface_part = (surface_dict[key]['exterior']['pos']['x'][near_surfaces] - pos_wrap_x[m])
-            dify_surface_part  = (surface_dict[key]['exterior']['pos']['y'][near_surfaces] - pos_wrap_y[m])
-            difr_surface_part  = np.mean((difx_surface_part ** 2 + dify_surface_part ** 2) ** 0.5)
+            if len(near_surfaces) > 0:
+                difx_surface_part = (surface_dict[key]['exterior']['pos']['x'][near_surfaces] - pos_wrap_x[m])
+                dify_surface_part  = (surface_dict[key]['exterior']['pos']['y'][near_surfaces] - pos_wrap_y[m])
+                difr_surface_part  = np.mean((difx_surface_part ** 2 + dify_surface_part ** 2) ** 0.5)
+                avg_rad = np.mean(difr_ext_surface[near_surfaces])
+                difr_parts_norm[m] = difr_parts[m]/avg_rad
 
-            avg_rad = np.mean(difr_ext_surface[near_surfaces])
-            difr_parts_norm[m] = difr_parts[m]/avg_rad
+                # Save active force magnitude toward the nearest interface surface normal
+                if self.typ[m] == 0:
+                    fa_norm=np.append(fa_norm, part_align[int_id[m]]*self.peA)
+                    faA_norm=np.append(faA_norm, part_align[int_id[m]]*self.peA)
+                    rA_dist_norm = np.append(rA_dist_norm, difr_parts[m]/avg_rad)
+                    alignA_norm=np.append(alignA_norm, part_align[int_id[m]])
+                    thetaA_dist_norm = np.append(thetaA_dist_norm, ang_parts[m])
+                    rB_dist = np.append(rB_dist, avg_rad)
+                else:
+                    fa_norm=np.append(fa_norm, part_align[int_id[m]]*self.peB)
+                    faB_norm=np.append(faB_norm, part_align[int_id[m]]*self.peB)
+                    alignB_norm=np.append(alignB_norm, part_align[int_id[m]])
+                    rB_dist_norm = np.append(rB_dist_norm, difr_parts[m]/avg_rad)
+                    thetaB_dist_norm = np.append(thetaB_dist_norm, ang_parts[m])
+                    rB_dist = np.append(rB_dist, avg_rad)
 
-            # Save active force magnitude toward the nearest interface surface normal
-            if self.typ[m] == 0:
-                fa_norm=np.append(fa_norm, part_align[int_id[m]]*self.peA)
-                faA_norm=np.append(faA_norm, part_align[int_id[m]]*self.peA)
-                rA_dist_norm = np.append(rA_dist_norm, difr_parts[m]/avg_rad)
-                alignA_norm=np.append(alignA_norm, part_align[int_id[m]])
-                thetaA_dist_norm = np.append(thetaA_dist_norm, ang_parts[m])
-                rB_dist = np.append(rB_dist, avg_rad)
-            else:
-                fa_norm=np.append(fa_norm, part_align[int_id[m]]*self.peB)
-                faB_norm=np.append(faB_norm, part_align[int_id[m]]*self.peB)
-                alignB_norm=np.append(alignB_norm, part_align[int_id[m]])
-                rB_dist_norm = np.append(rB_dist_norm, difr_parts[m]/avg_rad)
-                thetaB_dist_norm = np.append(thetaB_dist_norm, ang_parts[m])
-                rB_dist = np.append(rB_dist, avg_rad)
+                # Save separation distance from the nearest interface surface
+                #print(avg_rad)
+                r_dist_norm = np.append(r_dist_norm, difr_parts[m]/avg_rad)
+                r_dist = np.append(r_dist, avg_rad)
+                align_norm=np.append(align_norm, part_align[int_id[m]])
 
-            # Save separation distance from the nearest interface surface
-            r_dist_norm = np.append(r_dist_norm, difr_parts[m]/avg_rad)
-            r_dist = np.append(r_dist, avg_rad)
-            align_norm=np.append(align_norm, part_align[int_id[m]])
-
-            
-            theta_dist_norm = np.append(theta_dist_norm, ang_parts[m])
+                
+                theta_dist_norm = np.append(theta_dist_norm, ang_parts[m])
         """
         plt.scatter(pos_wrap_x, pos_wrap_y, s=0.9, c=fa_norm)
         plt.xlim([0, self.lx_box])
@@ -4043,33 +4045,33 @@ class particle_props:
         for m in range(0, len(pos_wrap_x)):
 
             near_surfaces = np.where( (ang_ext_surface>= ang_parts[m]-0.5)& (ang_ext_surface<= ang_parts[m]+0.5) )[0]
+            if len(near_surfaces) > 0:
+                difx_surface_part = (surface_dict[key]['exterior']['pos']['x'][near_surfaces] - pos_wrap_x[m])
+                dify_surface_part  = (surface_dict[key]['exterior']['pos']['y'][near_surfaces] - pos_wrap_y[m])
+                difr_surface_part  = np.mean((difx_surface_part ** 2 + dify_surface_part ** 2) ** 0.5)
 
-            difx_surface_part = (surface_dict[key]['exterior']['pos']['x'][near_surfaces] - pos_wrap_x[m])
-            dify_surface_part  = (surface_dict[key]['exterior']['pos']['y'][near_surfaces] - pos_wrap_y[m])
-            difr_surface_part  = np.mean((difx_surface_part ** 2 + dify_surface_part ** 2) ** 0.5)
+                avg_rad = np.mean(difr_ext_surface[near_surfaces])
+                difr_parts_norm[m] = difr_parts[m]/avg_rad
 
-            avg_rad = np.mean(difr_ext_surface[near_surfaces])
-            difr_parts_norm[m] = difr_parts[m]/avg_rad
+                # Save active force magnitude toward the nearest interface surface normal
+                if self.typ[m] == 0:
+                    fa_norm=np.append(fa_norm, part_align[int_id[m]]*self.peA)
+                    faA_norm=np.append(faA_norm, part_align[int_id[m]]*self.peA)
+                    rA_dist_norm = np.append(rA_dist_norm, difr_parts[m]/avg_rad)
+                    alignA_norm=np.append(alignA_norm, part_align[int_id[m]])
+                    thetaA_dist_norm = np.append(thetaA_dist_norm, ang_parts[m])
+                else:
+                    fa_norm=np.append(fa_norm, part_align[int_id[m]]*self.peB)
+                    faB_norm=np.append(faB_norm, part_align[int_id[m]]*self.peB)
+                    alignB_norm=np.append(alignB_norm, part_align[int_id[m]])
+                    rB_dist_norm = np.append(rB_dist_norm, difr_parts[m]/avg_rad)
+                    thetaB_dist_norm = np.append(thetaB_dist_norm, ang_parts[m])
 
-            # Save active force magnitude toward the nearest interface surface normal
-            if self.typ[m] == 0:
-                fa_norm=np.append(fa_norm, part_align[int_id[m]]*self.peA)
-                faA_norm=np.append(faA_norm, part_align[int_id[m]]*self.peA)
-                rA_dist_norm = np.append(rA_dist_norm, difr_parts[m]/avg_rad)
-                alignA_norm=np.append(alignA_norm, part_align[int_id[m]])
-                thetaA_dist_norm = np.append(thetaA_dist_norm, ang_parts[m])
-            else:
-                fa_norm=np.append(fa_norm, part_align[int_id[m]]*self.peB)
-                faB_norm=np.append(faB_norm, part_align[int_id[m]]*self.peB)
-                alignB_norm=np.append(alignB_norm, part_align[int_id[m]])
-                rB_dist_norm = np.append(rB_dist_norm, difr_parts[m]/avg_rad)
-                thetaB_dist_norm = np.append(thetaB_dist_norm, ang_parts[m])
-
-            # Save separation distance from the nearest interface surface
-            r_dist_norm = np.append(r_dist_norm, difr_parts[m]/avg_rad)
-            r_dist = np.append(r_dist, avg_rad)
-            align_norm=np.append(align_norm, part_align[int_id[m]])
-            theta_dist_norm = np.append(theta_dist_norm, ang_parts[m])
+                # Save separation distance from the nearest interface surface
+                r_dist_norm = np.append(r_dist_norm, difr_parts[m]/avg_rad)
+                r_dist = np.append(r_dist, avg_rad)
+                align_norm=np.append(align_norm, part_align[int_id[m]])
+                theta_dist_norm = np.append(theta_dist_norm, ang_parts[m])
         import math
 
 

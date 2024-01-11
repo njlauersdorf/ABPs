@@ -320,6 +320,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
             
             end_avg = int(dumps/time_step)-1
             start_avg = int(end_avg/4)
+            start_avg = 522
 
             for p in range(start_avg, end_avg):
                 j=int(p*time_step)
@@ -782,10 +783,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                         sum_faB_r = single_time_dict['fa']['B']
                     try:
                         sum_align_r = sum_align_r + single_time_dict['align']['all']
-                        print('test 1')
                     except: 
                         sum_align_r = single_time_dict['align']['all']
-                        print('test 2')
                     try:
                         sum_alignA_r = sum_alignA_r + single_time_dict['align']['A']
                     except: 
