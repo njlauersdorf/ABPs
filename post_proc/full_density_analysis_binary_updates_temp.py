@@ -197,6 +197,7 @@ out = outfile + "_frame_"
 
 dataPath = outPath + '_txt_files/'
 picPath = outPath + '_pic_files/'
+averagesPath = outPath[:-8] + 'averages/'
 
 # Instantiate empty outputs for time-looped functions
 partPhase_time = np.array([])
@@ -315,7 +316,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
         
         outfile = 'pa'+str(int(peA))+'_pb'+str(int(peB))+'_xa'+str(int(parFrac))+'_eps'+str(eps)+'_phi'+str(phi)+'_pNum' + str(int(partNum)) + '_bin' + str(int(bin_width)) + '_time' + str(int(time_step))
             
-        if os.path.isfile(dataPath + "radial_avgs_fa_" + outfile+ '.csv')==0:
+        if os.path.isfile(averagesPath + "radial_avgs_fa_" + outfile+ '.csv')==0:
             sum_num = 0
             
             end_avg = int(dumps/time_step)-1
@@ -2079,7 +2080,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     from csv import writer
                     radial_heterogeneity_dict = particle_prop_functs.radial_heterogeneity(method2_align_dict, avg_rad_dict, all_surface_curves, int_comp_dict, all_surface_measurements, int_dict, phase_dict, load_save=load_save)
 
-                    with open('/Volumes/EXTERNAL2/n100000test/pa100_pb500/document.csv','a+') as fd:
+                    with open(dataPath + "radial_avgs_fa_" + outfile+ '.csv','a+') as fd:
 
                         rad_arr = radial_heterogeneity_dict['rad'].flatten()
                         theta_arr = radial_heterogeneity_dict['theta'].flatten()
