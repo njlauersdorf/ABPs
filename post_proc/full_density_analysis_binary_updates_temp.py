@@ -859,74 +859,74 @@ with hoomd.open(name=inFile, mode='rb') as t:
             if plot == 'y':
                 plotting_functs.plot_avg_radial_heterogeneity(avg_rad_dict, all_surface_curves, int_comp_dict, active_fa_dict, mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option, banner_id = banner_option, presentation_id = presentation_option, measure='num_dens', types='all')                
                 
-            np.savetxt(dataPath + "radial_avgs_fa_" + outfile+ '.csv', avg_fa_r, delimiter=",")
-            np.savetxt(dataPath + "radial_avgs_faA_" + outfile+ '.csv', avg_faA_r, delimiter=",")
-            np.savetxt(dataPath + "radial_avgs_faB_" + outfile+ '.csv', avg_faB_r, delimiter=",")
+            np.savetxt(averagesPath + "radial_avgs_fa_" + outfile+ '.csv', avg_fa_r, delimiter=",")
+            np.savetxt(averagesPath + "radial_avgs_faA_" + outfile+ '.csv', avg_faA_r, delimiter=",")
+            np.savetxt(averagesPath + "radial_avgs_faB_" + outfile+ '.csv', avg_faB_r, delimiter=",")
             
-            np.savetxt(dataPath + "radial_avgs_align_" + outfile+ '.csv', avg_align_r, delimiter=",")
-            np.savetxt(dataPath + "radial_avgs_alignA_" + outfile+ '.csv', avg_alignA_r, delimiter=",")
-            np.savetxt(dataPath + "radial_avgs_alignB_" + outfile+ '.csv', avg_alignB_r, delimiter=",")
+            np.savetxt(averagesPath + "radial_avgs_align_" + outfile+ '.csv', avg_align_r, delimiter=",")
+            np.savetxt(averagesPath + "radial_avgs_alignA_" + outfile+ '.csv', avg_alignA_r, delimiter=",")
+            np.savetxt(averagesPath + "radial_avgs_alignB_" + outfile+ '.csv', avg_alignB_r, delimiter=",")
 
-            np.savetxt(dataPath + "radial_avgs_num_" + outfile+ '.csv', avg_num_r, delimiter=",")
-            np.savetxt(dataPath + "radial_avgs_numA_" + outfile+ '.csv', avg_numA_r, delimiter=",")
-            np.savetxt(dataPath + "radial_avgs_numB_" + outfile+ '.csv', avg_numB_r, delimiter=",")
+            np.savetxt(averagesPath + "radial_avgs_num_" + outfile+ '.csv', avg_num_r, delimiter=",")
+            np.savetxt(averagesPath + "radial_avgs_numA_" + outfile+ '.csv', avg_numA_r, delimiter=",")
+            np.savetxt(averagesPath + "radial_avgs_numB_" + outfile+ '.csv', avg_numB_r, delimiter=",")
 
-            np.savetxt(dataPath + "radial_avgs_num_dens_" + outfile+ '.csv', avg_num_dens_r, delimiter=",")
-            np.savetxt(dataPath + "radial_avgs_num_densA_" + outfile+ '.csv', avg_num_densA_r, delimiter=",")
-            np.savetxt(dataPath + "radial_avgs_num_densB_" + outfile+ '.csv', avg_num_densB_r, delimiter=",")
+            np.savetxt(averagesPath + "radial_avgs_num_dens_" + outfile+ '.csv', avg_num_dens_r, delimiter=",")
+            np.savetxt(averagesPath + "radial_avgs_num_densA_" + outfile+ '.csv', avg_num_densA_r, delimiter=",")
+            np.savetxt(averagesPath + "radial_avgs_num_densB_" + outfile+ '.csv', avg_num_densB_r, delimiter=",")
 
             import csv
             field_names = ['com_x', 'com_y', 'radius']
             indiv_vals = {'com_x': avg_com_x, 'com_y': avg_com_y, 'radius': avg_rad_val}
             
-            with open(dataPath + "radial_avgs_indiv_vals_" + outfile+ '.csv', 'w') as csvfile:  
+            with open(averagesPath + "radial_avgs_indiv_vals_" + outfile+ '.csv', 'w') as csvfile:  
                 writer = csv.writer(csvfile)
                 for key, value in indiv_vals.items():
                     writer.writerow([key, value])
 
-            np.savetxt(dataPath + "radial_avgs_rad_" + outfile+ '.csv', single_time_dict['rad'], delimiter=",")
-            np.savetxt(dataPath + "radial_avgs_theta_" + outfile+ '.csv', single_time_dict['theta'], delimiter=",")
+            np.savetxt(averagesPath + "radial_avgs_rad_" + outfile+ '.csv', single_time_dict['rad'], delimiter=",")
+            np.savetxt(averagesPath + "radial_avgs_theta_" + outfile+ '.csv', single_time_dict['theta'], delimiter=",")
 
             load_save = 0
         else:
             import csv
 
-            with open(dataPath + "radial_avgs_fa_" + outfile+ '.csv', newline='') as csvfile:
+            with open(averagesPath + "radial_avgs_fa_" + outfile+ '.csv', newline='') as csvfile:
                 avg_fa_r = np.array(list(csv.reader(csvfile)))
-            with open(dataPath + "radial_avgs_faA_" + outfile+ '.csv', newline='') as csvfile:
+            with open(averagesPath + "radial_avgs_faA_" + outfile+ '.csv', newline='') as csvfile:
                 avg_faA_r = np.array(list(csv.reader(csvfile)))
-            with open(dataPath + "radial_avgs_faB_" + outfile+ '.csv', newline='') as csvfile:
+            with open(averagesPath + "radial_avgs_faB_" + outfile+ '.csv', newline='') as csvfile:
                 avg_faB_r = np.array(list(csv.reader(csvfile)))
 
-            with open(dataPath + "radial_avgs_align_" + outfile+ '.csv', newline='') as csvfile:
+            with open(averagesPath + "radial_avgs_align_" + outfile+ '.csv', newline='') as csvfile:
                 avg_align_r = np.array(list(csv.reader(csvfile)))
-            with open(dataPath + "radial_avgs_alignA_" + outfile+ '.csv', newline='') as csvfile:
+            with open(averagesPath + "radial_avgs_alignA_" + outfile+ '.csv', newline='') as csvfile:
                 avg_alignA_r = np.array(list(csv.reader(csvfile)))
-            with open(dataPath + "radial_avgs_alignB_" + outfile+ '.csv', newline='') as csvfile:
+            with open(averagesPath + "radial_avgs_alignB_" + outfile+ '.csv', newline='') as csvfile:
                 avg_alignB_r = np.array(list(csv.reader(csvfile)))
 
-            with open(dataPath + "radial_avgs_num_dens_" + outfile+ '.csv', newline='') as csvfile:
+            with open(averagesPath + "radial_avgs_num_dens_" + outfile+ '.csv', newline='') as csvfile:
                 avg_num_dens_r = np.array(list(csv.reader(csvfile)))
-            with open(dataPath + "radial_avgs_num_densA_" + outfile+ '.csv', newline='') as csvfile:
+            with open(averagesPath + "radial_avgs_num_densA_" + outfile+ '.csv', newline='') as csvfile:
                 avg_num_densA_r = np.array(list(csv.reader(csvfile)))
-            with open(dataPath + "radial_avgs_num_densB_" + outfile+ '.csv', newline='') as csvfile:
+            with open(averagesPath + "radial_avgs_num_densB_" + outfile+ '.csv', newline='') as csvfile:
                 avg_num_densB_r = np.array(list(csv.reader(csvfile)))
             
-            with open(dataPath + "radial_avgs_num_" + outfile+ '.csv', newline='') as csvfile:
+            with open(averagesPath + "radial_avgs_num_" + outfile+ '.csv', newline='') as csvfile:
                 avg_num_r = np.array(list(csv.reader(csvfile)))
-            with open(dataPath + "radial_avgs_numA_" + outfile+ '.csv', newline='') as csvfile:
+            with open(averagesPath + "radial_avgs_numA_" + outfile+ '.csv', newline='') as csvfile:
                 avg_numA_r = np.array(list(csv.reader(csvfile)))
-            with open(dataPath + "radial_avgs_numB_" + outfile+ '.csv', newline='') as csvfile:
+            with open(averagesPath + "radial_avgs_numB_" + outfile+ '.csv', newline='') as csvfile:
                 avg_numB_r = np.array(list(csv.reader(csvfile)))
 
-            with open(dataPath + "radial_avgs_num_" + outfile+ '.csv', newline='') as csvfile:
+            with open(averagesPath + "radial_avgs_num_" + outfile+ '.csv', newline='') as csvfile:
                 avg_num_r = np.array(list(csv.reader(csvfile)))
-            with open(dataPath + "radial_avgs_numA_" + outfile+ '.csv', newline='') as csvfile:
+            with open(averagesPath + "radial_avgs_numA_" + outfile+ '.csv', newline='') as csvfile:
                 avg_numA_r = np.array(list(csv.reader(csvfile)))
-            with open(dataPath + "radial_avgs_numB_" + outfile+ '.csv', newline='') as csvfile:
+            with open(averagesPath + "radial_avgs_numB_" + outfile+ '.csv', newline='') as csvfile:
                 avg_numB_r = np.array(list(csv.reader(csvfile)))
     
-            with open(dataPath + "radial_avgs_indiv_vals_" + outfile+ '.csv', newline='') as csvfile:
+            with open(averagesPath + "radial_avgs_indiv_vals_" + outfile+ '.csv', newline='') as csvfile:
                 reader = csv.reader(csvfile)
                 avg_indiv_vals = dict(reader)
             avg_rad_val = avg_indiv_vals['radius']
@@ -934,9 +934,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
             avg_com_y = avg_indiv_vals['com_y']
             
 
-            with open(dataPath + "radial_avgs_rad_" + outfile+ '.csv', newline='') as csvfile:
+            with open(averagesPath + "radial_avgs_rad_" + outfile+ '.csv', newline='') as csvfile:
                 avg_rad = np.array(list(csv.reader(csvfile)))
-            with open(dataPath + "radial_avgs_theta_" + outfile+ '.csv', newline='') as csvfile:
+            with open(averagesPath + "radial_avgs_theta_" + outfile+ '.csv', newline='') as csvfile:
                 avg_theta = np.array(list(csv.reader(csvfile)))
 
             avg_rad_dict = {'rad': avg_rad, 'theta': avg_theta, 'radius': avg_rad_val, 'com': {'x': avg_com_x, 'y': avg_com_y}, 'fa': {'all': avg_fa_r, 'A': avg_faA_r, 'B': avg_faB_r}, 'align': {'all': avg_align_r, 'A': avg_alignA_r, 'B': avg_alignB_r}, 'num': {'all': avg_num_r, 'A': avg_numA_r, 'B': avg_numB_r}, 'num_dens': {'all': avg_num_dens_r, 'A': avg_num_densA_r, 'B': avg_num_densB_r}}

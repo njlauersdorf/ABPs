@@ -35,6 +35,7 @@ fi
 current=$( date "+%m_%d_%y" )
 this_path="$( pwd )"
 
+mkdir averages
 mkdir ${current}_txt_files
 mkdir ${current}_pic_files
 mkdir ${current}_vid_files
