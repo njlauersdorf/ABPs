@@ -198,7 +198,7 @@ out = outfile + "_frame_"
 dataPath = outPath + '_txt_files/'
 picPath = outPath + '_pic_files/'
 averagesPath = outPath[:-8] + 'averages/'
-
+timePath = outPath[:-8] + 'heterogeneity_time/'
 # Instantiate empty outputs for time-looped functions
 partPhase_time = np.array([])
 partPhase_time_arr = np.array([])
@@ -311,12 +311,14 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
     # Tracks if steady state occurs once
     steady_state_once = 'False'
-
+    if measurement_options[0] == 'radial-heterogeneity-average':
+        utility_functs.average_radial_heterogeneity(timePath)
+        stop
     if measurement_options[0] == 'radial-heterogeneity':
         
         outfile = 'pa'+str(int(peA))+'_pb'+str(int(peB))+'_xa'+str(int(parFrac))+'_eps'+str(eps)+'_phi'+str(phi)+'_pNum' + str(int(partNum)) + '_bin' + str(int(bin_width)) + '_time' + str(int(time_step))
             
-        if os.path.isfile(averagesPath + "radial_avgs_fa_" + outfile+ '.csv')==0:
+        if os.path.isfile(averagesPath + "radial_avgs_fa_avg_" + outfile+ '.csv')==0:
             sum_num = 0
             
             end_avg = int(dumps/time_step)-1
@@ -767,64 +769,78 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                     particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, eps, typ, pos, x_orient_arr, y_orient_arr)
                         
-                    single_time_dict = particle_prop_functs.radial_heterogeneity_avgs(method2_align_dict, all_surface_curves, int_comp_dict, all_surface_measurements, int_dict, phase_dict)
+                    single_time_dict, plot_dict, plot_bin_dict = particle_prop_functs.radial_heterogeneity_avgs(method2_align_dict, all_surface_curves, int_comp_dict, all_surface_measurements, int_dict, phase_dict)
+                    #print(sum_fa_r)                    
+                    try:
+                        sum_fa_avg_r += single_time_dict['fa_avg']['all']
+                    except: 
+                        sum_fa_avg_r = single_time_dict['fa_avg']['all']
+
+                    try:  
+                        sum_faA_avg_r = sum_faA_r + single_time_dict['fa_avg']['A']
+                    except: 
+                        sum_faA_avg_r = single_time_dict['fa_avg']['A']
 
                     try:
-                        sum_fa_r += single_time_dict['fa']['all']
+                        sum_faB_avg_r = sum_faB_r + single_time_dict['fa_avg']['B']
                     except: 
-                        sum_fa_r = single_time_dict['fa']['all']
-                    try:  
-                        sum_faA_r = sum_faA_r + single_time_dict['fa']['A']
-                    except: 
-                        sum_faA_r = single_time_dict['fa']['A']
+                        sum_faB_avg_r = single_time_dict['fa_avg']['B']
+
                     try:
-                        sum_faB_r = sum_faB_r + single_time_dict['fa']['B']
+                        sum_fa_dens_r += single_time_dict['fa_dens']['all']
                     except: 
-                        sum_faB_r = single_time_dict['fa']['B']
+                        sum_fa_dens_r = single_time_dict['fa_dens']['all']
+
+                    try:  
+                        sum_faA_dens_r = sum_faA_r + single_time_dict['fa_dens']['A']
+                    except: 
+                        sum_faA_dens_r = single_time_dict['fa_dens']['A']
+
+                    try:
+                        sum_faB_dens_r = sum_faB_r + single_time_dict['fa_dens']['B']
+                    except: 
+                        sum_faB_dens_r = single_time_dict['fa_dens']['B']
+
                     try:
                         sum_align_r = sum_align_r + single_time_dict['align']['all']
                     except: 
                         sum_align_r = single_time_dict['align']['all']
+
                     try:
                         sum_alignA_r = sum_alignA_r + single_time_dict['align']['A']
                     except: 
                         sum_alignA_r = single_time_dict['align']['A']
+
                     try:
                         sum_alignB_r = sum_alignB_r + single_time_dict['align']['B']
                     except: 
                         sum_alignB_r = single_time_dict['align']['B']
+
                     try:
                         sum_num_dens_r = sum_num_dens_r + single_time_dict['num_dens']['all']
                     except: 
                         sum_num_dens_r = single_time_dict['num_dens']['all']
+
                     try:
                         sum_num_densA_r = sum_num_densA_r + single_time_dict['num_dens']['A']
                     except: 
                         sum_num_densA_r = single_time_dict['num_dens']['A']
+
                     try:
                         sum_num_densB_r = sum_num_densB_r + single_time_dict['num_dens']['B']
                     except: 
                         sum_num_densB_r = single_time_dict['num_dens']['B']
-                    try:
-                        sum_num_r = sum_num_r + single_time_dict['num']['all']
-                    except: 
-                        sum_num_r = single_time_dict['num']['all']
-                    try:
-                        sum_numA_r = sum_numA_r + single_time_dict['num']['A']
-                    except: 
-                        sum_numA_r = single_time_dict['num']['A']
-                    try:
-                        sum_numB_r = sum_numB_r + single_time_dict['num']['B']
-                    except: 
-                        sum_numB_r = single_time_dict['num']['B']
+
                     try:
                         sum_rad = sum_rad + single_time_dict['radius']
                     except: 
                         sum_rad = single_time_dict['radius']
+
                     try:
                         sum_com_x = sum_com_x + single_time_dict['com']['x']
                     except: 
                         sum_com_x = single_time_dict['com']['x']
+                        
                     try:
                         sum_com_y = sum_com_y + single_time_dict['com']['y']
                     except:
@@ -832,9 +848,13 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                     sum_num += 1
                 
-            avg_fa_r = sum_fa_r / sum_num
-            avg_faA_r = sum_faA_r / sum_num
-            avg_faB_r = sum_faB_r / sum_num
+            avg_fa_avg_r = sum_fa_avg_r / sum_num
+            avg_faA_avg_r = sum_faA_avg_r / sum_num
+            avg_faB_avg_r = sum_faB_avg_r / sum_num
+
+            avg_fa_dens_r = sum_fa_dens_r / sum_num
+            avg_faA_dens_r = sum_faA_dens_r / sum_num
+            avg_faB_dens_r = sum_faB_dens_r / sum_num
 
             avg_align_r = sum_align_r / sum_num
             avg_alignA_r = sum_alignA_r / sum_num
@@ -844,32 +864,26 @@ with hoomd.open(name=inFile, mode='rb') as t:
             avg_num_densA_r = sum_num_densA_r / sum_num
             avg_num_densB_r = sum_num_densB_r / sum_num
 
-            avg_num_r = sum_num_r / sum_num
-            avg_numA_r = sum_numA_r / sum_num
-            avg_numB_r = sum_numB_r / sum_num
-
             avg_rad_val = sum_rad / sum_num
             avg_com_x = sum_com_x / sum_num
             avg_com_y = sum_com_y / sum_num
-
-            
-                    
-            avg_rad_dict = {'rad': single_time_dict['rad'], 'theta': single_time_dict['theta'], 'radius': avg_rad_val, 'com': {'x': avg_com_x, 'y': avg_com_y}, 'fa': {'all': avg_fa_r, 'A': avg_faA_r, 'B': avg_faB_r}, 'align': {'all': avg_align_r, 'A': avg_alignA_r, 'B': avg_alignB_r}, 'num': {'all': avg_num_r, 'A': avg_numA_r, 'B': avg_numB_r}, 'num_dens': {'all': avg_num_dens_r, 'A': avg_num_densA_r, 'B': avg_num_densB_r}}
+  
+            avg_rad_dict = {'rad': single_time_dict['rad'], 'theta': single_time_dict['theta'], 'radius': avg_rad_val, 'com': {'x': avg_com_x, 'y': avg_com_y}, 'fa_avg': {'all': avg_fa_avg_r, 'A': avg_faA_avg_r, 'B': avg_faB_avg_r}, 'fa_dens': {'all': avg_fa_dens_r, 'A': avg_faA_dens_r, 'B': avg_faB_dens_r}, 'align': {'all': avg_align_r, 'A': avg_alignA_r, 'B': avg_alignB_r}, 'num_dens': {'all': avg_num_dens_r, 'A': avg_num_densA_r, 'B': avg_num_densB_r}}
             
             if plot == 'y':
                 plotting_functs.plot_avg_radial_heterogeneity(avg_rad_dict, all_surface_curves, int_comp_dict, active_fa_dict, mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option, banner_id = banner_option, presentation_id = presentation_option, measure='num_dens', types='all')                
                 
-            np.savetxt(averagesPath + "radial_avgs_fa_" + outfile+ '.csv', avg_fa_r, delimiter=",")
-            np.savetxt(averagesPath + "radial_avgs_faA_" + outfile+ '.csv', avg_faA_r, delimiter=",")
-            np.savetxt(averagesPath + "radial_avgs_faB_" + outfile+ '.csv', avg_faB_r, delimiter=",")
+            np.savetxt(averagesPath + "radial_avgs_fa_avg_" + outfile+ '.csv', avg_fa_avg_r, delimiter=",")
+            np.savetxt(averagesPath + "radial_avgs_faA_avg_" + outfile+ '.csv', avg_faA_avg_r, delimiter=",")
+            np.savetxt(averagesPath + "radial_avgs_faB_avg_" + outfile+ '.csv', avg_faB_avg_r, delimiter=",")
+
+            np.savetxt(averagesPath + "radial_avgs_fa_dens_" + outfile+ '.csv', avg_fa_dens_r, delimiter=",")
+            np.savetxt(averagesPath + "radial_avgs_faA_dens_" + outfile+ '.csv', avg_faA_dens_r, delimiter=",")
+            np.savetxt(averagesPath + "radial_avgs_faB_dens_" + outfile+ '.csv', avg_faB_dens_r, delimiter=",")
             
             np.savetxt(averagesPath + "radial_avgs_align_" + outfile+ '.csv', avg_align_r, delimiter=",")
             np.savetxt(averagesPath + "radial_avgs_alignA_" + outfile+ '.csv', avg_alignA_r, delimiter=",")
             np.savetxt(averagesPath + "radial_avgs_alignB_" + outfile+ '.csv', avg_alignB_r, delimiter=",")
-
-            np.savetxt(averagesPath + "radial_avgs_num_" + outfile+ '.csv', avg_num_r, delimiter=",")
-            np.savetxt(averagesPath + "radial_avgs_numA_" + outfile+ '.csv', avg_numA_r, delimiter=",")
-            np.savetxt(averagesPath + "radial_avgs_numB_" + outfile+ '.csv', avg_numB_r, delimiter=",")
 
             np.savetxt(averagesPath + "radial_avgs_num_dens_" + outfile+ '.csv', avg_num_dens_r, delimiter=",")
             np.savetxt(averagesPath + "radial_avgs_num_densA_" + outfile+ '.csv', avg_num_densA_r, delimiter=",")
@@ -891,12 +905,19 @@ with hoomd.open(name=inFile, mode='rb') as t:
         else:
             import csv
 
-            with open(averagesPath + "radial_avgs_fa_" + outfile+ '.csv', newline='') as csvfile:
-                avg_fa_r = np.array(list(csv.reader(csvfile)))
-            with open(averagesPath + "radial_avgs_faA_" + outfile+ '.csv', newline='') as csvfile:
-                avg_faA_r = np.array(list(csv.reader(csvfile)))
-            with open(averagesPath + "radial_avgs_faB_" + outfile+ '.csv', newline='') as csvfile:
-                avg_faB_r = np.array(list(csv.reader(csvfile)))
+            with open(averagesPath + "radial_avgs_fa_avg_" + outfile+ '.csv', newline='') as csvfile:
+                avg_fa_avg_r = np.array(list(csv.reader(csvfile)))
+            with open(averagesPath + "radial_avgs_faA_avg_" + outfile+ '.csv', newline='') as csvfile:
+                avg_faA_avg_r = np.array(list(csv.reader(csvfile)))
+            with open(averagesPath + "radial_avgs_faB_avg_" + outfile+ '.csv', newline='') as csvfile:
+                avg_faB_avg_r = np.array(list(csv.reader(csvfile)))
+            
+            with open(averagesPath + "radial_avgs_fa_dens_" + outfile+ '.csv', newline='') as csvfile:
+                avg_fa_dens_r = np.array(list(csv.reader(csvfile)))
+            with open(averagesPath + "radial_avgs_faA_dens_" + outfile+ '.csv', newline='') as csvfile:
+                avg_faA_dens_r = np.array(list(csv.reader(csvfile)))
+            with open(averagesPath + "radial_avgs_faB_dens_" + outfile+ '.csv', newline='') as csvfile:
+                avg_faB_dens_r = np.array(list(csv.reader(csvfile)))
 
             with open(averagesPath + "radial_avgs_align_" + outfile+ '.csv', newline='') as csvfile:
                 avg_align_r = np.array(list(csv.reader(csvfile)))
@@ -911,21 +932,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 avg_num_densA_r = np.array(list(csv.reader(csvfile)))
             with open(averagesPath + "radial_avgs_num_densB_" + outfile+ '.csv', newline='') as csvfile:
                 avg_num_densB_r = np.array(list(csv.reader(csvfile)))
-            
-            with open(averagesPath + "radial_avgs_num_" + outfile+ '.csv', newline='') as csvfile:
-                avg_num_r = np.array(list(csv.reader(csvfile)))
-            with open(averagesPath + "radial_avgs_numA_" + outfile+ '.csv', newline='') as csvfile:
-                avg_numA_r = np.array(list(csv.reader(csvfile)))
-            with open(averagesPath + "radial_avgs_numB_" + outfile+ '.csv', newline='') as csvfile:
-                avg_numB_r = np.array(list(csv.reader(csvfile)))
 
-            with open(averagesPath + "radial_avgs_num_" + outfile+ '.csv', newline='') as csvfile:
-                avg_num_r = np.array(list(csv.reader(csvfile)))
-            with open(averagesPath + "radial_avgs_numA_" + outfile+ '.csv', newline='') as csvfile:
-                avg_numA_r = np.array(list(csv.reader(csvfile)))
-            with open(averagesPath + "radial_avgs_numB_" + outfile+ '.csv', newline='') as csvfile:
-                avg_numB_r = np.array(list(csv.reader(csvfile)))
-    
             with open(averagesPath + "radial_avgs_indiv_vals_" + outfile+ '.csv', newline='') as csvfile:
                 reader = csv.reader(csvfile)
                 avg_indiv_vals = dict(reader)
@@ -939,7 +946,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
             with open(averagesPath + "radial_avgs_theta_" + outfile+ '.csv', newline='') as csvfile:
                 avg_theta = np.array(list(csv.reader(csvfile)))
 
-            avg_rad_dict = {'rad': avg_rad, 'theta': avg_theta, 'radius': avg_rad_val, 'com': {'x': avg_com_x, 'y': avg_com_y}, 'fa': {'all': avg_fa_r, 'A': avg_faA_r, 'B': avg_faB_r}, 'align': {'all': avg_align_r, 'A': avg_alignA_r, 'B': avg_alignB_r}, 'num': {'all': avg_num_r, 'A': avg_numA_r, 'B': avg_numB_r}, 'num_dens': {'all': avg_num_dens_r, 'A': avg_num_densA_r, 'B': avg_num_densB_r}}
+            avg_rad_dict = {'rad': avg_rad, 'theta': avg_theta, 'radius': avg_rad_val, 'com': {'x': avg_com_x, 'y': avg_com_y}, 'fa_avg': {'all': avg_fa_avg_r, 'A': avg_faA_avg_r, 'B': avg_faB_avg_r}, 'fa_dens': {'all': avg_fa_dens_r, 'A': avg_faA_dens_r, 'B': avg_faB_dens_r}, 'align': {'all': avg_align_r, 'A': avg_alignA_r, 'B': avg_alignB_r}, 'num_dens': {'all': avg_num_dens_r, 'A': avg_num_densA_r, 'B': avg_num_densB_r}}
 
             load_save = 1
             
@@ -2078,41 +2085,47 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, eps, typ, pos, x_orient_arr, y_orient_arr)
                     
                     from csv import writer
-                    radial_heterogeneity_dict = particle_prop_functs.radial_heterogeneity(method2_align_dict, avg_rad_dict, all_surface_curves, int_comp_dict, all_surface_measurements, int_dict, phase_dict, load_save=load_save)
+                    radial_heterogeneity_dict, plot_heterogeneity_dict, plot_bin_dict = particle_prop_functs.radial_heterogeneity(method2_align_dict, avg_rad_dict, all_surface_curves, int_comp_dict, all_surface_measurements, int_dict, phase_dict, load_save=load_save)
 
-                    with open(dataPath + "radial_avgs_fa_" + outfile+ '.csv','a+') as fd:
+                    rad_arr = radial_heterogeneity_dict['rad'].flatten()
+                    theta_arr = radial_heterogeneity_dict['theta'].flatten()
 
-                        rad_arr = radial_heterogeneity_dict['rad'].flatten()
-                        theta_arr = radial_heterogeneity_dict['theta'].flatten()
+                    radius_arr = np.ones(len(theta_arr)) * radial_heterogeneity_dict['radius']
+                    com_x_arr = np.ones(len(theta_arr)) * radial_heterogeneity_dict['com']['x']
+                    com_y_arr = np.ones(len(theta_arr)) * radial_heterogeneity_dict['com']['y']
 
-                        radius_arr = np.ones(len(theta_arr)) * radial_heterogeneity_dict['radius']
-                        com_x_arr = np.ones(len(theta_arr)) * radial_heterogeneity_dict['com']['x']
-                        com_y_arr = np.ones(len(theta_arr)) * radial_heterogeneity_dict['com']['y']
+                    fa_avg_arr = radial_heterogeneity_dict['fa_avg']['all'].flatten()
+                    faA_avg_arr = radial_heterogeneity_dict['fa_avg']['A'].flatten()
+                    faB_avg_arr = radial_heterogeneity_dict['fa_avg']['B'].flatten()
 
-                        fa_arr = radial_heterogeneity_dict['fa']['all'].flatten()
-                        faA_arr = radial_heterogeneity_dict['fa']['A'].flatten()
-                        faB_arr = radial_heterogeneity_dict['fa']['B'].flatten()
+                    fa_dens_arr = radial_heterogeneity_dict['fa_dens']['all'].flatten()
+                    faA_dens_arr = radial_heterogeneity_dict['fa_dens']['A'].flatten()
+                    faB_dens_arr = radial_heterogeneity_dict['fa_dens']['B'].flatten()
 
-                        align_arr = radial_heterogeneity_dict['align']['all'].flatten()
-                        alignA_arr = radial_heterogeneity_dict['align']['A'].flatten()
-                        alignB_arr = radial_heterogeneity_dict['align']['B'].flatten()
+                    align_arr = radial_heterogeneity_dict['align']['all'].flatten()
+                    alignA_arr = radial_heterogeneity_dict['align']['A'].flatten()
+                    alignB_arr = radial_heterogeneity_dict['align']['B'].flatten()
 
-                        num_arr = radial_heterogeneity_dict['num']['all'].flatten()
-                        numA_arr = radial_heterogeneity_dict['num']['A'].flatten()
-                        numB_arr = radial_heterogeneity_dict['num']['B'].flatten()
-
-                        num_dens_arr = radial_heterogeneity_dict['num_dens']['all'].flatten()
-                        num_densA_arr = radial_heterogeneity_dict['num_dens']['A'].flatten()
-                        num_densB_arr = radial_heterogeneity_dict['num_dens']['B'].flatten()
-                        
-                        for m in range(0, len(rad_arr)):
-                            rad_arr = np.ones(len(theta_arr)) * radial_heterogeneity_dict['rad'][m]
-                            radial_heterogeneity_save_dict = {'rad': rad_arr.tolist(), 'theta': theta_arr.tolist(), 'radius': radius_arr.tolist(), 'com_x': com_x_arr.tolist(), 'com_y': com_y_arr.tolist(), 'fa': {'all': radial_heterogeneity_dict['fa']['all'][m,:].tolist(), 'A': radial_heterogeneity_dict['fa']['A'][m,:].tolist(), 'B': radial_heterogeneity_dict['fa']['B'][m,:].tolist()}, 'align': {'all': radial_heterogeneity_dict['align']['all'][m,:].tolist(), 'A': radial_heterogeneity_dict['align']['A'][m,:].tolist(), 'B': radial_heterogeneity_dict['align']['B'][m,:].tolist()}, 'num': {'all': radial_heterogeneity_dict['num']['all'][m,:].tolist(), 'A': radial_heterogeneity_dict['num']['A'][m,:].tolist(), 'B': radial_heterogeneity_dict['num']['B'][m,:].tolist()}, 'num_dens': {'all': radial_heterogeneity_dict['num_dens']['all'][m,:].tolist(), 'A': radial_heterogeneity_dict['num_dens']['A'][m,:].tolist(), 'B': radial_heterogeneity_dict['num_dens']['B'][m,:].tolist()}} 
-                            data_output_functs.write_to_txt(radial_heterogeneity_save_dict, dataPath + 'Radial_heterogeneity_' + outfile + '.txt')
+                    num_dens_arr = radial_heterogeneity_dict['num_dens']['all'].flatten()
+                    num_densA_arr = radial_heterogeneity_dict['num_dens']['A'].flatten()
+                    num_densB_arr = radial_heterogeneity_dict['num_dens']['B'].flatten()
+                    
+                    for m in range(0, len(rad_arr)):
+                        rad_arr = np.ones(len(theta_arr)) * radial_heterogeneity_dict['rad'][m]
+                        radial_heterogeneity_save_dict = {'rad': rad_arr.tolist(), 'theta': theta_arr.tolist(), 'radius': radius_arr.tolist(), 'com_x': com_x_arr.tolist(), 'com_y': com_y_arr.tolist(), 'fa_avg': {'all': radial_heterogeneity_dict['fa_avg']['all'][m,:].tolist(), 'A': radial_heterogeneity_dict['fa_avg']['A'][m,:].tolist(), 'B': radial_heterogeneity_dict['fa_avg']['B'][m,:].tolist()}, 'fa_dens': {'all': radial_heterogeneity_dict['fa_dens']['all'][m,:].tolist(), 'A': radial_heterogeneity_dict['fa_dens']['A'][m,:].tolist(), 'B': radial_heterogeneity_dict['fa_dens']['B'][m,:].tolist()}, 'align': {'all': radial_heterogeneity_dict['align']['all'][m,:].tolist(), 'A': radial_heterogeneity_dict['align']['A'][m,:].tolist(), 'B': radial_heterogeneity_dict['align']['B'][m,:].tolist()}, 'num_dens': {'all': radial_heterogeneity_dict['num_dens']['all'][m,:].tolist(), 'A': radial_heterogeneity_dict['num_dens']['A'][m,:].tolist(), 'B': radial_heterogeneity_dict['num_dens']['B'][m,:].tolist()}} 
+                        data_output_functs.write_to_txt(radial_heterogeneity_save_dict, dataPath + 'Radial_heterogeneity_' + outfile + '.txt')
 
                     if plot == 'y':
-                        plotting_functs.plot_radial_heterogeneity(pos, radial_heterogeneity_dict, all_surface_curves, int_comp_dict, active_fa_dict, mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option, banner_id = banner_option, presentation_id = presentation_option, measure='num_dens', types='all')                
-               
+                        plotting_functs.plot_radial_heterogeneity(pos, radial_heterogeneity_dict, plot_bin_dict, plot_heterogeneity_dict, all_surface_curves, int_comp_dict, active_fa_dict, mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option, banner_id = banner_option, presentation_id = presentation_option, measure='fa_dens', types='all')      
+                        plotting_functs.plot_radial_heterogeneity(pos, radial_heterogeneity_dict, plot_bin_dict, plot_heterogeneity_dict, all_surface_curves, int_comp_dict, active_fa_dict, mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option, banner_id = banner_option, presentation_id = presentation_option, measure='fa_dens', types='A')      
+                        plotting_functs.plot_radial_heterogeneity(pos, radial_heterogeneity_dict, plot_bin_dict, plot_heterogeneity_dict, all_surface_curves, int_comp_dict, active_fa_dict, mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option, banner_id = banner_option, presentation_id = presentation_option, measure='fa_dens', types='B')      
+                        plotting_functs.plot_radial_heterogeneity(pos, radial_heterogeneity_dict, plot_bin_dict, plot_heterogeneity_dict, all_surface_curves, int_comp_dict, active_fa_dict, mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option, banner_id = banner_option, presentation_id = presentation_option, measure='fa_avg', types='all')      
+                        plotting_functs.plot_radial_heterogeneity(pos, radial_heterogeneity_dict, plot_bin_dict, plot_heterogeneity_dict, all_surface_curves, int_comp_dict, active_fa_dict, mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option, banner_id = banner_option, presentation_id = presentation_option, measure='num_dens', types='all')      
+                        plotting_functs.plot_radial_heterogeneity(pos, radial_heterogeneity_dict, plot_bin_dict, plot_heterogeneity_dict, all_surface_curves, int_comp_dict, active_fa_dict, mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option, banner_id = banner_option, presentation_id = presentation_option, measure='num_dens', types='A')      
+                        plotting_functs.plot_radial_heterogeneity(pos, radial_heterogeneity_dict, plot_bin_dict, plot_heterogeneity_dict, all_surface_curves, int_comp_dict, active_fa_dict, mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option, banner_id = banner_option, presentation_id = presentation_option, measure='num_dens', types='B')      
+                        plotting_functs.plot_radial_heterogeneity(pos, radial_heterogeneity_dict, plot_bin_dict, plot_heterogeneity_dict, all_surface_curves, int_comp_dict, active_fa_dict, mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option, banner_id = banner_option, presentation_id = presentation_option, measure='align', types='all')      
+                        plotting_functs.plot_radial_heterogeneity(pos, radial_heterogeneity_dict, plot_bin_dict, plot_heterogeneity_dict, all_surface_curves, int_comp_dict, active_fa_dict, mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option, banner_id = banner_option, presentation_id = presentation_option, measure='align', types='A')      
+                        plotting_functs.plot_radial_heterogeneity(pos, radial_heterogeneity_dict, plot_bin_dict, plot_heterogeneity_dict, all_surface_curves, int_comp_dict, active_fa_dict, mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option, banner_id = banner_option, presentation_id = presentation_option, measure='align', types='B')      
                 elif measurement_options[0]== 'bubble-body-forces':
 
                     

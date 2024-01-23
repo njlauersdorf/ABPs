@@ -115,6 +115,349 @@ class plotting:
         # Initialize theory functions for call back later
         self.theory_functs = theory.theory()
 
+    def plot_phases_heterogeneity(self, pos, plot_heterogeneity_dict, phase_ids_dict, phase_dict, sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None, interface_id = False, orientation_id = False, presentation_id=False):
+        #DONE!
+        """
+        This function plots each particle's position and color-codes each
+        particle by the phase it is a part of, i.e. bulk=green,
+        interface=purple, and gas=red.
+
+        Inputs:
+        pos: array (partNum, 3) of each particles x,y,z positions
+        phase_ids_dict: dictionary (output from various phase_identification
+        functions) containing information on the composition of each phase
+
+        phase_ids_dict: dictionary (output from phase_part_count() in
+        phase_identification.py) that contains the id of each particle specifying
+        the phase of bulk (0), interface (1), or gas (2).
+
+        sep_surface_dict (default value = None): dictionary (output from surface_curve_interp() in
+        interface.py) that contains the interpolated curve representing the
+        inner and outer surfaces of each interface.
+
+        int_comp_dict (default value = None): dictionary (output from int_sort2() in
+        phase_identification.py) that contains information on each
+        isolated/individual interface.
+
+        active_fa_dict (default value = None): dictionary (output from bin_active_fa() in binning.py)
+        that contains information on the binned average active force magnitude and orientation over
+        space
+
+        interface_id ( default value = False): True/False value that specifies whether
+        the interface interior and exterior surfaces should be plotted
+
+        orientation_id ( default value = False): True/False value that specifies whether
+        the average, binned orientation of particles should be plotted
+
+        Outputs:
+        .png file with each particle's position plotted and color coded by the
+        phase it's a part of and the interface surfaces plotted in black
+        """
+
+        yellow = ("#7570b3")
+        yellow = ("#ffd700")
+        red = ("#fd8d3c")
+        red = ("#dd571c")
+        red = ("#ff7700")
+        red = ("#cc5500")
+        red = ("#f66e8d")
+        green = ("#77dd77")
+        green = ("#4a3728")
+        green = ("#3c4142")
+        green = ("#878787")
+        green = ("#71797E")
+
+        green = ("#cc5500")
+        #green = ("#b3de69")
+        #red = ("#ff6961")
+        #red = ("#000000")
+
+        bulk_part_ids = phase_ids_dict['bulk']['all']
+        gas_part_ids = phase_ids_dict['gas']['all']
+        int_part_ids = phase_ids_dict['int']['all']
+
+        # If box is rectangular with long dimension of x-axis
+        if self.lx_box > self.ly_box:
+
+            # Estimated area of dense phase
+            area_dense = (0.8 * self.partNum * (np.pi/4) / self.phiCP)
+
+            # Mid point of dense phase across longest box dimension (x)
+            dense_x_mid = np.mean(pos[:,0]+self.hx_box)
+
+            # estimated shortest dimension length of dense phase (y)
+            dense_x_width = (area_dense / self.ly_box)
+
+            # Set maximum dimension length (x) of simulation box to be 12 inches (plus 1 inch color bar)
+            scaling = 13.0
+
+            # X and Y-dimension lengths (in inches)
+            x_dim = int(scaling + 1.0)
+            y_dim = int(scaling/ (dense_x_width / self.ly_box))
+
+        # If box is rectangular with long dimension of y-axis
+        elif self.lx_box < self.ly_box:
+
+            # Estimated area of dense phase
+            area_dense = (0.8 * self.partNum * (np.pi/4) / self.phiCP)
+
+            # Mid point of dense phase across longest box dimension (y)
+            mid_point = np.mean(pos[:,1]+self.hy_box)
+
+            # estimated shorted dimension length of dense phase (x)
+            dense_x_width = (area_dense / self.lx_box)
+
+            # Set maximum dimension length (y) of simulation box to be 13 inches
+            scaling = 13.0
+
+            # X and Y-dimension lengths (in inches)
+            x_dim = int((scaling/(dense_x_width / self.lx_box)) + 1.0)
+            y_dim = int(scaling)
+
+        # If box is square
+        else:
+
+            # Minimum dimension length (in inches)
+            scaling =7.0
+
+            # X and Y-dimension lengths (in inches)
+            if presentation_id == True:
+                x_dim = scaling+0.18
+            else:
+                x_dim = int(scaling + 0.5)
+            y_dim = int(scaling)
+
+        # Generate figure of dimensions proportional to simulation box size (with added x-length for color bar)
+        fig = plt.figure(figsize=(x_dim,y_dim))
+        ax = fig.add_subplot(111)
+
+        average_theta_path = '/Volumes/External/n100000test/pa0_pb500/averages/radial_avgs_theta_pa0_pb500_xa50_eps1.0_phi60.0_pNum50000_bin5_time1.csv'
+        average_rad_path = '/Volumes/External/n100000test/pa0_pb500/averages/radial_avgs_rad_pa0_pb500_xa50_eps1.0_phi60.0_pNum50000_bin5_time1.csv'
+
+        import csv 
+
+        averages_file =  open(average_theta_path, newline='')
+        avg_theta_r = np.array(list(csv.reader(averages_file)))
+
+        avg_theta_r_flatten = (avg_theta_r.flatten()).astype(np.float) 
+        avg_theta_r_flatten = np.append(avg_theta_r_flatten, avg_theta_r_flatten[0])
+        averages_file =  open(average_rad_path, newline='')
+        avg_rad_r = np.array(list(csv.reader(averages_file)))
+
+        avg_rad_r_flatten = (avg_rad_r.flatten()).astype(np.float) 
+        
+        average_indiv_vals_path = '/Volumes/External/n100000test/pa0_pb500/averages/radial_avgs_indiv_vals_pa0_pb500_xa50_eps1.0_phi60.0_pNum50000_bin5_time1.csv'
+
+        averages_file =  open(average_indiv_vals_path, newline='')
+        reader = csv.reader(averages_file)
+        avg_indiv_vals = dict(reader)
+        avg_radius_r_flatten= float(avg_indiv_vals['radius'])
+
+        
+        for i in range(0, len(avg_theta_r_flatten)-1):   
+            x_coords = self.hx_box + avg_rad_r_flatten * avg_radius_r_flatten * np.cos(avg_theta_r_flatten[i]*(np.pi/180))
+            y_coords = self.hy_box + avg_rad_r_flatten * avg_radius_r_flatten * np.sin(avg_theta_r_flatten[i]*(np.pi/180))
+            plt.plot(x_coords, y_coords, c='black', linewidth=0.5, alpha=0.65)
+
+        for i in range(0, len(avg_rad_r_flatten)):   
+            x_coords = self.hx_box + avg_rad_r_flatten[i] * avg_radius_r_flatten * np.cos(avg_theta_r_flatten*(np.pi/180))
+            y_coords = self.hy_box + avg_rad_r_flatten[i] * avg_radius_r_flatten * np.sin(avg_theta_r_flatten*(np.pi/180))
+            plt.plot(x_coords, y_coords, c='black', linewidth=0.5, alpha=0.65)
+        
+
+
+        # Set plotted particle size
+        sz = 0.755
+        """
+        # Plot position colored by phase
+        if len(bulk_part_ids)>0:
+            ells_bulk = [Ellipse(xy=np.array([pos[bulk_part_ids[i],0]+self.hx_box,pos[bulk_part_ids[i],1]+self.hy_box]),
+                width=sz, height=sz)
+        for i in range(0,len(bulk_part_ids))]
+            bulkGroup = mc.PatchCollection(ells_bulk, facecolor=green)
+            ax.add_collection(bulkGroup)
+        
+        if len(gas_part_ids)>0:
+            ells_gas = [Ellipse(xy=np.array([pos[gas_part_ids[i],0]+self.hx_box,pos[gas_part_ids[i],1]+self.hy_box]),
+                width=sz, height=sz)
+        for i in range(0,len(gas_part_ids))]
+            gasGroup = mc.PatchCollection(ells_gas, facecolor=red)
+            ax.add_collection(gasGroup)
+        """
+
+        x_coords = self.hx_box + plot_heterogeneity_dict['rad']['all'] * avg_radius_r_flatten * np.cos(plot_heterogeneity_dict['theta']['all']*(np.pi/180))
+        y_coords = self.hy_box + plot_heterogeneity_dict['rad']['all'] * avg_radius_r_flatten * np.sin(plot_heterogeneity_dict['theta']['all']*(np.pi/180))
+        
+        if len(x_coords)>0:
+            ells_int = [Ellipse(xy=np.array([x_coords[i],y_coords[i]]),
+                width=sz, height=sz)
+        for i in range(0,len(x_coords))]
+
+            intGroup = mc.PatchCollection(ells_int, facecolor=yellow)
+            ax.add_collection(intGroup)
+        """
+        # Plot interpolated inner and outer interface surface curves
+        if interface_id == True:
+            try:
+
+                if sep_surface_dict!=None:
+                    
+                    for m in range(0, len(sep_surface_dict)):
+                        key = 'surface id ' + str(int(int_comp_dict['ids'][m]))
+                        print(key)
+
+                        try:
+                            pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
+                            pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
+                            plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_interior_surface_x + self.lx_box, pos_interior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_interior_surface_x - self.lx_box, pos_interior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_interior_surface_x, pos_interior_surface_y+self.ly_box, c='black', s=3.0)
+                            plt.scatter(pos_interior_surface_x, pos_interior_surface_y-self.ly_box, c='black', s=3.0)
+                        except:
+                            pass
+
+                        try:
+                            
+                            pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
+                            pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
+                            plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_exterior_surface_x + self.lx_box, pos_exterior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_exterior_surface_x - self.lx_box, pos_exterior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y+self.ly_box, c='black', s=3.0)
+                            plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y-self.ly_box, c='black', s=3.0) 
+                        except:
+                            pass
+            except:
+                pass
+        """
+        x_coords = self.hx_box + 1.0 * avg_radius_r_flatten * np.cos(avg_theta_r_flatten*(np.pi/180))
+        y_coords = self.hy_box + 1.0 * avg_radius_r_flatten * np.sin(avg_theta_r_flatten*(np.pi/180))
+    
+        plt.plot(x_coords, y_coords, c='black', linewidth=3.0) 
+        #active_r = ( active_fa_dict['bin']['x'] ** 2 + active_fa_dict['bin']['y'] ** 2 ) ** 0.5
+        active_r = ( np.array(active_fa_dict['bin']['all']['x']) ** 2 + np.array(active_fa_dict['bin']['all']['y']) ** 2 ) ** 0.5
+        nonzero_id = np.nonzero(active_r)
+        
+        nonzero_x_id = nonzero_id[0]
+        nonzero_y_id = nonzero_id[1]
+        # Plot averaged, binned orientation of particles
+        """
+        if orientation_id == True:
+            try:
+                if active_fa_dict!=None:
+                    for i in range(0, len(nonzero_x_id)):
+                        #plt.quiver(self.pos_x[nonzero_x_id[i]][nonzero_y_id[i]]*3, self.pos_y[nonzero_x_id[i]][nonzero_y_id[i]]*3, active_fa_dict['bin']['x'][nonzero_x_id[i]][nonzero_y_id[i]], active_fa_dict['bin']['y'][nonzero_x_id[i]][nonzero_y_id[i]], scale=10.0, width=0.01, color='black', alpha=0.8)
+                        plt.quiver(self.pos_x[nonzero_x_id[i]][nonzero_y_id[i]]*3, self.pos_y[nonzero_x_id[i]][nonzero_y_id[i]]*3, active_fa_dict['bin']['all']['x'][nonzero_x_id[i]][nonzero_y_id[i]], active_fa_dict['bin']['all']['y'][nonzero_x_id[i]][nonzero_y_id[i]], scale=10.0, width=0.01, color='black', alpha=0.8)
+            except:
+                pass
+        
+        """
+        new_orient_dict_x = np.zeros(np.shape(active_fa_dict['bin']['all']['x']))
+        new_orient_dict_y = np.zeros(np.shape(active_fa_dict['bin']['all']['x']))
+
+        pos_x_new = np.zeros(np.shape(active_fa_dict['bin']['all']['x']))
+        pos_y_new = np.zeros(np.shape(active_fa_dict['bin']['all']['x']))
+
+        if orientation_id == True:
+            try:
+                if active_fa_dict!=None:
+                    for k in range(0, len(active_fa_dict['bin']['all']['x'])):
+                        for l in range(0, len(active_fa_dict['bin']['all']['x'])):
+                            count = 0
+                            noncount = 0
+                            for i in range(0, len(phase_dict['bin'])):
+                                for j in range(0, len(phase_dict['bin'])):
+                                    if (self.pos_x[i][j] <= self.pos_x[k+1][l] * 3) & (self.pos_x[i][j] >= self.pos_x[k][l] * 3) & (self.pos_y[i][j] <= self.pos_y[k][l+1] * 3) & (self.pos_y[i][j] >= self.pos_y[k][l] * 3):
+                                        if phase_dict['bin'][i][j]==1:
+                                            count += 1
+                                        else:
+                                            noncount += 1
+                            if count > 0:
+                                #print(k)
+                                #print(l)
+                                if (active_fa_dict['bin']['all']['x'][k][l] ** 2 + active_fa_dict['bin']['all']['y'][k][l] ** 2) ** 0.5 >=0.20:
+                                    new_orient_dict_x[k][l]=active_fa_dict['bin']['all']['x'][k][l]
+                                    new_orient_dict_y[k][l]=active_fa_dict['bin']['all']['y'][k][l]
+                                    pos_x_new[k][l] = self.pos_x[k][l]*3
+                                    pos_y_new[k][l] = self.pos_y[k][l]*3
+
+
+                    active_r = ( np.array(new_orient_dict_x) ** 2 + np.array(new_orient_dict_y) ** 2 ) ** 0.5
+
+                    nonzero_id = np.nonzero(active_r)
+                    
+                    nonzero_x_id = nonzero_id[0]
+                    nonzero_y_id = nonzero_id[1]
+                    
+                    for i in range(0, len(nonzero_x_id)):
+                        #plt.quiver(self.pos_x[nonzero_x_id[i]][nonzero_y_id[i]]*3, self.pos_y[nonzero_x_id[i]][nonzero_y_id[i]]*3, active_fa_dict['bin']['x'][nonzero_x_id[i]][nonzero_y_id[i]], active_fa_dict['bin']['y'][nonzero_x_id[i]][nonzero_y_id[i]], scale=10.0, width=0.01, color='black', alpha=0.8)
+                        plt.quiver(pos_x_new[nonzero_x_id[i]][nonzero_y_id[i]], pos_y_new[nonzero_x_id[i]][nonzero_y_id[i]], new_orient_dict_x[nonzero_x_id[i]][nonzero_y_id[i]], new_orient_dict_y[nonzero_x_id[i]][nonzero_y_id[i]], scale=10.0, width=0.01, color='black', alpha=0.8)
+                    
+            except:
+                pass
+        
+        plt.tick_params(axis='both', which='both',
+                        bottom=False, top=False, left=False, right=False,
+                        labelbottom=False, labeltop=False, labelleft=False, labelright=False)
+        
+        # Label simulation time
+        if presentation_id == True:
+            if self.lx_box == self.ly_box:
+                plt.text(0.647, 0.04, s=r'$\tau$' + ' = ' + '{:.1f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+                    fontsize=30, transform = ax.transAxes,
+                    bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+            elif self.lx_box > self.ly_box:
+                plt.text(0.85, 0.1, s=r'$\tau$' + ' = ' + '{:.1f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+                    fontsize=28, transform = ax.transAxes,
+                    bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+        else:
+            if self.lx_box == self.ly_box:
+                plt.text(0.68, 0.04, s=r'$\tau$' + ' = ' + '{:.1f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+                    fontsize=30, transform = ax.transAxes,
+                    bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+            elif self.lx_box > self.ly_box:
+                plt.text(0.85, 0.1, s=r'$\tau$' + ' = ' + '{:.1f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+                    fontsize=28, transform = ax.transAxes,
+                    bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+        
+
+        eps_leg=[]
+        mkSz = [0.1, 0.1, 0.15, 0.1, 0.1]
+        msz=40
+
+        # If rectangular box, reduce system size plotted
+        if self.lx_box > self.ly_box:
+            plt.xlim(dense_x_mid-(dense_x_width/2), dense_x_mid+(dense_x_width/2))
+            plt.ylim(0, self.ly_box)
+        elif self.lx_box < self.ly_box:
+            plt.ylim(dense_y_mid-(dense_y_width/2), dense_y_mid+(dense_y_width/2))
+            plt.xlim(0, self.lx_box)
+        # Plot entire system
+        else:
+            plt.ylim(0, self.ly_box)
+            plt.xlim(0, self.lx_box)
+        plt.xlim(25, self.lx_box-25)
+        plt.ylim(25, self.ly_box-25)
+        plt.scatter(self.hx_box, self.hy_box, c='black', s=70)
+
+        # Add legend of phases
+        
+        if presentation_id == True:
+            fast_leg = [Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=green, label='Bulk', markersize=32), Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=yellow, label='Interface', markersize=32), Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=red, label='Gas', markersize=32)]
+
+            one_leg = ax.legend(handles=fast_leg, loc='upper right', borderpad=0.2, labelspacing=0.4, handletextpad=-0.2, bbox_transform=ax.transAxes, bbox_to_anchor=[1.003, 1.025], handlelength=1.5, columnspacing=0.5, fontsize=36, ncol=3, facecolor='white', edgecolor='black', framealpha=0.6)
+            ax.add_artist(one_leg)
+        else:
+            fast_leg = [Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=green, label='Bulk', markersize=36), Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=yellow, label='Interface', markersize=36), Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=red, label='Gas', markersize=36)]
+
+            one_leg = ax.legend(handles=fast_leg, loc='upper right', borderpad=0.3, labelspacing=0.4, handletextpad=-0.2, bbox_transform=ax.transAxes, bbox_to_anchor=[1.06, 1.17], handlelength=1.5, columnspacing=0.5, fontsize=40, ncol=3, facecolor='None', edgecolor='None')
+            ax.add_artist(one_leg)
+        plt.tight_layout()
+        ax.set_facecolor('#F2f2f2')
+        plt.savefig(self.outPath + 'phases_heterogeneity_' + self.outFile + ".png", dpi=150, transparent=False, bbox_inches='tight')
+        plt.close()  
+
     def plot_phases(self, pos, phase_ids_dict, phase_dict, sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None, interface_id = False, orientation_id = False, presentation_id=False):
         #DONE!
         """
@@ -231,9 +574,43 @@ class plotting:
         fig = plt.figure(figsize=(x_dim,y_dim))
         ax = fig.add_subplot(111)
 
+        average_theta_path = '/Volumes/External/n100000test/pa0_pb500/averages/radial_avgs_theta_pa0_pb500_xa50_eps1.0_phi60.0_pNum50000_bin5_time1.csv'
+        average_rad_path = '/Volumes/External/n100000test/pa0_pb500/averages/radial_avgs_rad_pa0_pb500_xa50_eps1.0_phi60.0_pNum50000_bin5_time1.csv'
+
+        import csv 
+
+        averages_file =  open(average_theta_path, newline='')
+        avg_theta_r = np.array(list(csv.reader(averages_file)))
+
+        avg_theta_r_flatten = (avg_theta_r.flatten()).astype(np.float) 
+        avg_theta_r_flatten = np.append(avg_theta_r_flatten, avg_theta_r_flatten[0])
+        averages_file =  open(average_rad_path, newline='')
+        avg_rad_r = np.array(list(csv.reader(averages_file)))
+
+        avg_rad_r_flatten = (avg_rad_r.flatten()).astype(np.float) 
+        
+        average_indiv_vals_path = '/Volumes/External/n100000test/pa0_pb500/averages/radial_avgs_indiv_vals_pa0_pb500_xa50_eps1.0_phi60.0_pNum50000_bin5_time1.csv'
+
+        averages_file =  open(average_indiv_vals_path, newline='')
+        reader = csv.reader(averages_file)
+        avg_indiv_vals = dict(reader)
+        avg_radius_r_flatten= float(avg_indiv_vals['radius'])
+
+
+        for i in range(0, len(avg_theta_r_flatten)):   
+            x_coords = self.hx_box + avg_rad_r_flatten * avg_radius_r_flatten * np.cos(avg_theta_r_flatten[i]*(np.pi/180))
+            y_coords = self.hy_box + avg_rad_r_flatten * avg_radius_r_flatten * np.sin(avg_theta_r_flatten[i]*(np.pi/180))
+            plt.plot(x_coords, y_coords, c='black', linewidth=1.0)
+
+        for i in range(0, len(avg_rad_r_flatten)):   
+            x_coords = self.hx_box + avg_rad_r_flatten[i] * avg_radius_r_flatten * np.cos(avg_theta_r_flatten*(np.pi/180))
+            y_coords = self.hy_box + avg_rad_r_flatten[i] * avg_radius_r_flatten * np.sin(avg_theta_r_flatten*(np.pi/180))
+            plt.plot(x_coords, y_coords, c='black', linewidth=1.0)
+
+
         # Set plotted particle size
         sz = 0.755
-
+        """
         # Plot position colored by phase
         if len(bulk_part_ids)>0:
             ells_bulk = [Ellipse(xy=np.array([pos[bulk_part_ids[i],0]+self.hx_box,pos[bulk_part_ids[i],1]+self.hy_box]),
@@ -241,14 +618,14 @@ class plotting:
         for i in range(0,len(bulk_part_ids))]
             bulkGroup = mc.PatchCollection(ells_bulk, facecolor=green)
             ax.add_collection(bulkGroup)
-
+        
         if len(gas_part_ids)>0:
             ells_gas = [Ellipse(xy=np.array([pos[gas_part_ids[i],0]+self.hx_box,pos[gas_part_ids[i],1]+self.hy_box]),
                 width=sz, height=sz)
         for i in range(0,len(gas_part_ids))]
             gasGroup = mc.PatchCollection(ells_gas, facecolor=red)
             ax.add_collection(gasGroup)
-
+        """
         if len(int_part_ids)>0:
             ells_int = [Ellipse(xy=np.array([pos[int_part_ids[i],0]+self.hx_box,pos[int_part_ids[i],1]+self.hy_box]),
                 width=sz, height=sz)
@@ -394,6 +771,8 @@ class plotting:
         else:
             plt.ylim(0, self.ly_box)
             plt.xlim(0, self.lx_box)
+        
+        plt.scatter(self.hx_box, self.hy_box, c='black', s=70)
 
         # Add legend of phases
         
@@ -9986,7 +10365,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         ax = fig.add_subplot(111)
 
         sz = 0.755
-
+        """
         pos[:,0]=pos[:,0]+50
         test_id = np.where(pos[:,0]>self.hx_box)[0]
         pos[test_id,0]=pos[test_id,0]-self.lx_box
@@ -9998,7 +10377,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         pos[test_id,1]=pos[test_id,1]-self.ly_box
         test_id = np.where(pos[:,1]<-self.hy_box)[0]
         pos[test_id,1]=pos[test_id,1]+self.ly_box
-
+        """
         if mono==0:
 
             #Local each particle's positions
@@ -10186,8 +10565,8 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
             else:
                 plt.ylim(0, self.ly_box)
                 plt.xlim(0, self.lx_box)
-                plt.ylim(self.hy_box-100, self.hy_box+90)
-                plt.xlim(self.hx_box-90, self.hx_box+100)
+                #plt.ylim(self.hy_box-100, self.hy_box+90)
+                #plt.xlim(self.hx_box-90, self.hx_box+100)
         
         # Label simulation time
         if banner_id == False:
@@ -10457,7 +10836,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         #plt.savefig(self.outPath + 'part_activity_' + self.outFile + ".eps", format='eps', dpi=150, bbox_inches='tight')
         plt.close() 
 
-    def plot_radial_heterogeneity(self, pos, single_time_dict, sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None, mono_id=False, interface_id = False, orientation_id = False, zoom_id = False, banner_id = False, presentation_id = False, measure="fa", types="all"):
+    def plot_radial_heterogeneity(self, pos, single_time_dict, plot_bin_dict, plot_dict, sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None, mono_id=False, interface_id = False, orientation_id = False, zoom_id = False, banner_id = False, presentation_id = False, measure="fa", types="all"):
 
         """
         This function plots the particle positions and color codes each particle with its intrinsic
@@ -10501,6 +10880,9 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         .png file with each particle color-coded by intrinsic activity
         """
 
+        typ0ind = np.where(self.typ == 0)[0]
+        typ1ind = np.where(self.typ == 1)[0]
+        
         #Set plot colors
         fastCol = '#e31a1c'
         #slowCol = '#e31a1c'
@@ -10524,24 +10906,12 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         #ax = fig.add_subplot(111)
 
         sz = 0.755
-        
-        x_coords = single_time_dict['com']['x'] + np.einsum('i,j', single_time_dict['rad'] * single_time_dict['radius'], np.cos(single_time_dict['theta']*(np.pi/180)))
-        y_coords = single_time_dict['com']['y'] + np.einsum('i,j', single_time_dict['rad'] * single_time_dict['radius'], np.sin(single_time_dict['theta']*(np.pi/180)))
-        
-        x_coords = x_coords.flatten()
-        y_coords = y_coords.flatten()
-        
-        vals = single_time_dict[measure][types].flatten()
-        test_id = np.where(vals<2.0)[0]
-        vals[test_id]=2.0
 
-        typ0ind = np.where(self.typ == 0)[0]
-        typ1ind = np.where(self.typ == 1)[0]
 
         #Local each particle's positions
         pos0=pos[typ0ind]                               # Find positions of type 0 particles
         pos1=pos[typ1ind]
-
+        """
         #Assign type 0 particles to plot
 
         ells0 = [Ellipse(xy=np.array([pos0[i,0]+self.hx_box, pos0[i,1]+self.hy_box]),
@@ -10562,21 +10932,126 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
             fastGroup = mc.PatchCollection(ells0,facecolors=fastCol)
         ax.add_collection(slowGroup)
         ax.add_collection(fastGroup)
+        """
+        average_theta_path = '/Volumes/External/n100000test/pa0_pb500/averages/radial_avgs_theta_pa0_pb500_xa50_eps1.0_phi60.0_pNum50000_bin5_time1.csv'
+        average_rad_path = '/Volumes/External/n100000test/pa0_pb500/averages/radial_avgs_rad_pa0_pb500_xa50_eps1.0_phi60.0_pNum50000_bin5_time1.csv'
 
+        import csv 
 
-        plt.tricontourf(x_coords, y_coords, vals, cmap='Greys', alpha=0.65)
+        averages_file =  open(average_theta_path, newline='')
+        avg_theta_r = np.array(list(csv.reader(averages_file)))
+
+        avg_theta_r_flatten = (avg_theta_r.flatten()).astype(np.float) 
+        avg_theta_r_flatten = np.append(avg_theta_r_flatten, avg_theta_r_flatten[0])
+        averages_file =  open(average_rad_path, newline='')
+        avg_rad_r = np.array(list(csv.reader(averages_file)))
+
+        avg_rad_r_flatten = (avg_rad_r.flatten()).astype(np.float) 
         
+        average_indiv_vals_path = '/Volumes/External/n100000test/pa0_pb500/averages/radial_avgs_indiv_vals_pa0_pb500_xa50_eps1.0_phi60.0_pNum50000_bin5_time1.csv'
 
-        #norm= matplotlib.colors.Normalize(vmin=0.0, vmax=30)
-        #sm = plt.cm.ScalarMappable(norm=norm, cmap = 'Reds')
-        #sm.set_array([])
-        #clb = fig.colorbar(sm)#ticks=[0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0], ax=ax2)
-        #clb.ax.set_title(r'$\mathrm{Pe}_\mathrm{F}$', fontsize=23)
-        #clb.ax.tick_params(labelsize=20)
-        plt.colorbar()
+        averages_file =  open(average_indiv_vals_path, newline='')
+        reader = csv.reader(averages_file)
+        avg_indiv_vals = dict(reader)
+        avg_radius_r_flatten= float(avg_indiv_vals['radius'])
+
+
+        avg_theta_r_new = np.zeros(np.shape(single_time_dict[measure][types]))
+        for i in range(0, len(single_time_dict['rad'])):
+            avg_theta_r_new[i,:] = single_time_dict['theta']
+
+        avg_rad_r_new = np.zeros(np.shape(single_time_dict[measure][types]))
+        for i in range(0, len(single_time_dict['theta'])):
+            avg_rad_r_new[:,i] = single_time_dict['rad']
+
+        avg_rad_r_flatten = avg_rad_r_new.flatten()
+        avg_theta_r_flatten = avg_theta_r_new.flatten()
+
+        avg_radius_r_flatten_new = (plot_bin_dict['rad_bin']['all'].flatten()).astype(np.float)
+
+        x_coords = single_time_dict['com']['x'] + avg_rad_r_flatten * avg_radius_r_flatten_new * np.cos(avg_theta_r_flatten*(np.pi/180))
+        y_coords = single_time_dict['com']['y'] + avg_rad_r_flatten * avg_radius_r_flatten_new * np.sin(avg_theta_r_flatten*(np.pi/180))
+        
+        #x_coords = x_coords.flatten()
+        #y_coords = y_coords.flatten()
+
+
 
         
+        average_theta_path = '/Volumes/External/n100000test/pa0_pb500/averages/radial_avgs_theta_pa0_pb500_xa50_eps1.0_phi60.0_pNum50000_bin5_time1.csv'
+        average_rad_path = '/Volumes/External/n100000test/pa0_pb500/averages/radial_avgs_rad_pa0_pb500_xa50_eps1.0_phi60.0_pNum50000_bin5_time1.csv'
 
+        if measure == 'fa_avg':
+            average_val_path = '/Volumes/External/n100000test/pa0_pb500/averages/radial_avgs_fa_avg_pa0_pb500_xa50_eps1.0_phi60.0_pNum50000_bin5_time1.csv'
+            average_valA_path = '/Volumes/External/n100000test/pa0_pb500/averages/radial_avgs_faA_avg_pa0_pb500_xa50_eps1.0_phi60.0_pNum50000_bin5_time1.csv'
+            average_valB_path = '/Volumes/External/n100000test/pa0_pb500/averages/radial_avgs_faB_avg_pa0_pb500_xa50_eps1.0_phi60.0_pNum50000_bin5_time1.csv'
+        elif measure == 'fa_dens':
+            average_val_path = '/Volumes/External/n100000test/pa0_pb500/averages/radial_avgs_fa_dens_pa0_pb500_xa50_eps1.0_phi60.0_pNum50000_bin5_time1.csv'
+            average_valA_path = '/Volumes/External/n100000test/pa0_pb500/averages/radial_avgs_faA_dens_pa0_pb500_xa50_eps1.0_phi60.0_pNum50000_bin5_time1.csv'
+            average_valB_path = '/Volumes/External/n100000test/pa0_pb500/averages/radial_avgs_faB_dens_pa0_pb500_xa50_eps1.0_phi60.0_pNum50000_bin5_time1.csv'
+        elif measure == 'dens':
+            average_val_path = '/Volumes/External/n100000test/pa0_pb500/averages/radial_avgs_num_dens_pa0_pb500_xa50_eps1.0_phi60.0_pNum50000_bin5_time1.csv'
+            average_valA_path = '/Volumes/External/n100000test/pa0_pb500/averages/radial_avgs_num_densA_pa0_pb500_xa50_eps1.0_phi60.0_pNum50000_bin5_time1.csv'
+            average_valB_path = '/Volumes/External/n100000test/pa0_pb500/averages/radial_avgs_num_densB_pa0_pb500_xa50_eps1.0_phi60.0_pNum50000_bin5_time1.csv'
+        elif measure == 'align':
+            average_val_path = '/Volumes/External/n100000test/pa0_pb500/averages/radial_avgs_align_pa0_pb500_xa50_eps1.0_phi60.0_pNum50000_bin5_time1.csv'
+            average_valA_path = '/Volumes/External/n100000test/pa0_pb500/averages/radial_avgs_alignA_pa0_pb500_xa50_eps1.0_phi60.0_pNum50000_bin5_time1.csv'
+            average_valB_path = '/Volumes/External/n100000test/pa0_pb500/averages/radial_avgs_alignB_pa0_pb500_xa50_eps1.0_phi60.0_pNum50000_bin5_time1.csv'
+
+        average_indiv_vals_path = '/Volumes/External/n100000test/pa0_pb500/averages/radial_avgs_indiv_vals_pa0_pb500_xa50_eps1.0_phi60.0_pNum50000_bin5_time1.csv'
+
+        import csv 
+
+        averages_file =  open(average_val_path, newline='')
+        avg_val_r = np.array(list(csv.reader(averages_file)))
+
+        avg_val_r_flatten = (avg_val_r.flatten()).astype(np.float) 
+
+        averages_file =  open(average_valA_path, newline='')
+        avg_valA_r = np.array(list(csv.reader(averages_file)))
+
+        avg_valA_r_flatten = (avg_valA_r.flatten()).astype(np.float) 
+
+        averages_file =  open(average_valB_path, newline='')
+        avg_valB_r = np.array(list(csv.reader(averages_file)))
+
+        avg_valB_r_flatten = (avg_valB_r.flatten()).astype(np.float) 
+
+        averages_file =  open(average_indiv_vals_path, newline='')
+        reader = csv.reader(averages_file)
+        avg_indiv_vals = dict(reader)
+        avg_radius_r_flatten= float(avg_indiv_vals['radius'])
+
+        avg_com_x_r_flatten = float(avg_indiv_vals['com_x'])
+        avg_com_y_r_flatten = float(avg_indiv_vals['com_y'])
+
+
+
+        
+        #vals = avg_num_dens_r_flatten#single_time_dict[measure][types].flatten()
+        #vals = (single_time_dict[measure][types].flatten()*(avg_num_dens_r_flatten**2))**0.5+avg_num_dens_r_flatten
+        vals = ((plot_bin_dict[measure][types].flatten() - avg_val_r_flatten))#/ avg_num_dens_r_flatten**2
+        #test_id = np.where(avg_num_dens_r_flatten>0)[0]
+        #vals[test_id] = vals[test_id] / avg_num_dens_r_flatten[test_id]**2
+        #test_id = np.where(vals>3.0)[0]
+        #vals[test_id]=3.0
+
+        limit_vals = np.amax(vals)
+
+        im = plt.tricontourf(x_coords, y_coords, vals, cmap='seismic', vmin=-limit_vals, vmax=limit_vals)#, norm=matplotlib.colors.LogNorm())#, vmin=-2.5, vmax=2.5, cmap='seismic')#,alpha=0.65, norm=matplotlib.colors.LogNorm())
+        
+        x_coords = self.hx_box + 1.0 * avg_radius_r_flatten * np.cos(avg_theta_r_flatten*(np.pi/180))
+        y_coords = self.hy_box + 1.0 * avg_radius_r_flatten * np.sin(avg_theta_r_flatten*(np.pi/180))
+    
+        #plt.plot(x_coords, y_coords, c='black', linewidth=3.0) 
+
+        sm = plt.cm.ScalarMappable(norm=im.norm, cmap = im.cmap)
+        sm.set_array([])
+        clb = fig.colorbar(sm)#, ticks=[-2.5, -1.5, -0.5, 0.5, 1.5, 2.5])#, ax=ax2)
+        clb.ax.set_title(r'$\mathrm{Pe}_\mathrm{F}$', fontsize=23)
+        clb.ax.tick_params(labelsize=20)
+        
+        
         if interface_id == True:
             try:
 
@@ -10624,7 +11099,20 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                     plt.quiver(self.pos_x, self.pos_y, active_fa_dict['bin']['x'], active_fa_dict['bin']['y'], scale=20.0, color='black', alpha=0.8)
             except:
                 pass
+        """
         
+
+        
+        for i in range(0, len(avg_theta_r_flatten)-1):   
+            x_coords = self.hx_box + avg_rad_r_flatten * avg_radius_r_flatten * np.cos(avg_theta_r_flatten[i]*(np.pi/180))
+            y_coords = self.hy_box + avg_rad_r_flatten * avg_radius_r_flatten * np.sin(avg_theta_r_flatten[i]*(np.pi/180))
+            plt.plot(x_coords, y_coords, c='black', linewidth=0.5, alpha=0.5)
+
+        for i in range(0, len(avg_rad_r_flatten)):   
+            x_coords = self.hx_box + avg_rad_r_flatten[i] * avg_radius_r_flatten * np.cos(avg_theta_r_flatten*(np.pi/180))
+            y_coords = self.hy_box + avg_rad_r_flatten[i] * avg_radius_r_flatten * np.sin(avg_theta_r_flatten*(np.pi/180))
+            plt.plot(x_coords, y_coords, c='black', linewidth=0.5, alpha=0.5)
+        """
         #Set axes parameters
         # If rectangular box, reduce system size plotted
         if self.lx_box > self.ly_box:
@@ -10638,6 +11126,8 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
             ax.set_ylim(0, self.ly_box)
             ax.set_xlim(0, self.lx_box)
+            ax.set_ylim(25, self.ly_box-25)
+            ax.set_xlim(25, self.lx_box-25)
         
         
         # Label simulation time
@@ -10663,7 +11153,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         # Create frame images
         #ax.set_facecolor('white')
         #ax.set_facecolor('#F4F4F4') .  # For website
-        plt.savefig(self.outPath + 'radial_heterogeneity_' + self.outFile + ".png", dpi=900, transparent=False, bbox_inches='tight')
+        plt.savefig(self.outPath + 'radial_heterogeneity_' + measure + '_' + types +'_' + self.outFile + ".png", dpi=900, transparent=False, bbox_inches='tight')
         #plt.savefig(self.outPath + 'part_activity_' + self.outFile + ".eps", format='eps', dpi=150, bbox_inches='tight')
         plt.close() 
 
@@ -10804,14 +11294,33 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         fig, ax = plt.subplots(figsize=(x_dim,y_dim), facecolor='white')
         #ax = fig.add_subplot(111)
 
-        sz = 0.755
-        sz=0.77
+        import math
+
+        def rotate(x,y): 
+            #rotate x,y around xo,yo by theta (rad)
+            theta=0
+            xr=math.cos(theta)*(x)-math.sin(theta)*(y)
+            yr=math.sin(theta)*(x)+math.cos(theta)*(y)
+            return xr,yr
+
         if (self.tst==279.3):
             pos[:,0]=pos[:,0]+45
         if (self.tst==274.8):
             pos[:,0]=pos[:,0]+38
         if (self.tst==282.9) | (self.tst==283.2) | (self.tst==283.5) | (self.tst==283.8):
             pos[:,0]=pos[:,0]+22
+        if (self.tst==521.1):
+            pos[:,0]=pos[:,0]+0
+        if (self.tst==523.5):
+            pos[:,0]=pos[:,0]+0
+        if (round(self.tst,1)==106.2):
+            pos[:,0]=pos[:,0]-75
+        if (round(self.tst,1)==115.2):
+            pos[:,0]=pos[:,0]+20
+        if (round(self.tst,1)==127.2):
+            pos[:,0]=pos[:,0]+63
+        if (round(self.tst,1)>=124.8) & (round(self.tst,1)<=126):
+            pos[:,0]=pos[:,0]+70
 
         test_id = np.where(pos[:,0]>self.hx_box)[0]
         pos[test_id,0]=pos[test_id,0]-self.lx_box
@@ -10825,12 +11334,48 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
             pos[:,1]=pos[:,1]-30
         if (self.tst==282.9) | (self.tst==283.2) | (self.tst==283.5) | (self.tst==283.8):
             pos[:,1]=pos[:,1]-30
+        if (self.tst==521.1):
+            pos[:,1]=pos[:,1]-100
+        if (self.tst==528):
+            pos[:,1]=pos[:,1]-100
+        if (round(self.tst,1)==106.2):
+            pos[:,1]=pos[:,1]-50
+        if (round(self.tst,1)==115.2):
+            pos[:,1]=pos[:,1]-95
+        if (round(self.tst,1)==127.2):
+            pos[:,1]=pos[:,1]-55
+        if (round(self.tst,1)>=124.8) & (round(self.tst,1)<=126):
+            pos[:,1]=pos[:,1]-52
         #if (self.tst==283.2):
         #    pos[:,1]=pos[:,1]-30
+        
         test_id = np.where(pos[:,1]>self.hy_box)[0]
         pos[test_id,1]=pos[test_id,1]-self.ly_box
         test_id = np.where(pos[:,1]<-self.hy_box)[0]
         pos[test_id,1]=pos[test_id,1]+self.ly_box
+
+        #plt.scatter(pos[:,0], pos[:,1], s=0.7)
+        #plt.scatter(0, 0, s=8.0, c='red')
+        #plt.show()
+        #stop
+
+        pos_x_rot, pos_y_rot = rotate(pos[:,0], pos[:,1])
+
+        pos[:,0] = pos_x_rot + self.hx_box
+        pos[:,1] = pos_y_rot + self.hy_box
+        #test_id = np.where(pos_x_rot>self.hx_box)[0]
+        #pos_x_rot[test_id]=pos_x_rot[test_id]-self.lx_box
+        #test_id = np.where(pos_x_rot<-self.hx_box)[0]
+        #pos_x_rot[test_id]=pos_x_rot[test_id]+self.lx_box
+
+        #test_id = np.where(pos_y_rot>self.hy_box)[0]
+        #pos_y_rot[test_id]=pos_y_rot[test_id]-self.ly_box
+        #test_id = np.where(pos_y_rot<-self.hy_box)[0]
+        #pos_y_rot[test_id]=pos_y_rot[test_id]+self.ly_box
+
+        sz = 0.755
+        sz=0.77
+        
         from mpl_toolkits.axes_grid1.inset_locator import inset_axes
         l, b, h, w = 0.4, 0.4, 0.6, 0.2
         #ax6 = fig.add_axes(matplotlib.transforms.Bbox(np.array([[0.3,0.5],[1.15,0.87]])))
@@ -10843,12 +11388,12 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
             #Assign type 0 particles to plot
 
-            ells0 = [Ellipse(xy=np.array([pos0[i,0]+self.hx_box, pos0[i,1]+self.hy_box]),
+            ells0 = [Ellipse(xy=np.array([pos0[i,0], pos0[i,1]]),
                     width=sz, height=sz, label='PeA: '+str(self.peA))
             for i in range(0,len(pos0))]
 
             #Assign type 1 particles to plot
-            ells1 = [Ellipse(xy=np.array([pos1[i,0]+self.hx_box, pos1[i,1]+self.hy_box]),
+            ells1 = [Ellipse(xy=np.array([pos1[i,0], pos1[i,1]]),
                     width=sz, height=sz, label='PeB: '+str(self.peB))
             for i in range(0,len(pos1))]
 
@@ -10861,14 +11406,15 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                 fastGroup = mc.PatchCollection(ells0,facecolors=fastCol)
             ax.add_collection(slowGroup)
             ax.add_collection(fastGroup)
+            
             #if (self.tst==274.8):
             #    sz = 1.0
-            ells0_2 = [Ellipse(xy=np.array([pos0[i,0]+self.hx_box, pos0[i,1]+self.hy_box]),
+            ells0_2 = [Ellipse(xy=np.array([pos0[i,0], pos0[i,1]]),
                     width=sz, height=sz, label='PeA: '+str(self.peA))
             for i in range(0,len(pos0))]
 
             #Assign type 1 particles to plot
-            ells1_2 = [Ellipse(xy=np.array([pos1[i,0]+self.hx_box, pos1[i,1]+self.hy_box]),
+            ells1_2 = [Ellipse(xy=np.array([pos1[i,0], pos1[i,1]]),
                     width=sz, height=sz, label='PeB: '+str(self.peB))
             for i in range(0,len(pos1))]
 
@@ -11062,12 +11608,69 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
             x_max = self.hx_box-15
             y_min = self.hy_box-10
             y_max = self.hy_box+12
-
+        if (self.tst==521.1):
+            x_min = self.hx_box-25
+            x_max = self.hx_box+25
+            y_min = self.hy_box-25
+            y_max = self.hy_box+25
+        if (self.tst==528):
+            x_min = self.hx_box-25
+            x_max = self.hx_box+25
+            y_min = self.hy_box-25
+            y_max = self.hy_box+25
             #x_min = self.hx_box-10
             #x_max = self.hx_box+12
             #y_min = self.hy_box-52
             #y_max = self.hy_box-30
-            
+        if (round(self.tst,1)==127.2):
+            x_min = self.hx_box-25
+            x_max = self.hx_box+25
+            y_min = self.hy_box-25
+            y_max = self.hy_box+25
+            x_min = 0
+            x_max = self.lx_box
+            y_min = 0
+            y_max = self.ly_box
+            #x_min = self.hx_box-10
+            #x_max = self.hx_box+12
+            #y_min = self.hy_box-52
+            #y_max = self.hy_box-30
+        if (round(self.tst,1)==106.2):
+            x_min = self.hx_box-25
+            x_max = self.hx_box+25
+            y_min = self.hy_box-25
+            y_max = self.hy_box+25
+            x_min = 0
+            x_max = self.lx_box
+            y_min = 0
+            y_max = self.ly_box
+            #x_min = self.hx_box-10
+            #x_max = self.hx_box+12
+            #y_min = self.hy_box-52
+            #y_max = self.hy_box-30
+        if (round(self.tst,1)==115.2):
+            x_min = self.hx_box-25
+            x_max = self.hx_box+25
+            y_min = self.hy_box-25
+            y_max = self.hy_box+25
+            x_min = 0
+            x_max = self.lx_box
+            y_min = 0
+            y_max = self.ly_box
+            #x_min = self.hx_box-10
+            #x_max = self.hx_box+12
+            #y_min = self.hy_box-52
+            #y_max = self.hy_box-30
+        if (round(self.tst,1)>=124.8) & (round(self.tst,1)<=126):
+            x_min = self.hx_box-25
+            x_max = self.hx_box+25
+            y_min = self.hy_box-25
+            y_max = self.hy_box+25
+            x_min = 0
+            x_max = self.lx_box
+            y_min = 0
+            y_max = self.ly_box
+        
 
         ax6.set_ylim(y_min, y_max)
         ax6.set_xlim(x_min, x_max)

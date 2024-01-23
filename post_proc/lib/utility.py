@@ -188,6 +188,7 @@ class utility:
                 return nBins
             else:
                 nBins -= 1
+    
     def quaternion_rotation_matrix(Q):
         """
         Covert a quaternion into a full three-dimensional rotation matrix.
