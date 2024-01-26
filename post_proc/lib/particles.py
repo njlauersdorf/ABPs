@@ -3842,6 +3842,7 @@ class particle_props:
             factor = 10 ** decimals
             return math.ceil(number * factor) / factor
 
+        theta_bins = np.round(np.linspace(0, 360, 121),0)
         theta_bins = np.round(np.linspace(0, 360, 181),0)
 
         min_rad = round_decimals_down(np.min(r_dist_norm))
@@ -3872,6 +3873,7 @@ class particle_props:
         rad_final_bins = np.round(np.linspace(0.04, 1.5, int((1.46)/0.04)+1),2)
         #rad_final_bins = np.round(np.linspace(0.02, 1.5, int((1.48)/0.02)+1),2)
 
+        theta_final_bins = np.round(np.linspace(3, 360, 120),0)
         theta_final_bins = np.round(np.linspace(2, 360, 180),0)
 
         min_id = np.where(rad_final_bins==min_rad)[0]
@@ -3953,24 +3955,34 @@ class particle_props:
                     area_radial_slice = np.pi * ((rad_bins[n_rad]*np.mean(nearest_surface_arr[bin_ids]))**2 - (rad_bins[n_rad-1]*np.mean(nearest_surface_arr[bin_ids]))**2) * ((theta_bins[n_theta]-theta_bins[n_theta-1])/360)
 
                     fa_avg_final_binned[rad_final_id, theta_final_id] = np.mean(fa_norm[bin_ids])
-                    faA_avg_final_binned[rad_final_id, theta_final_id] = np.mean(faA_norm[binA_ids])
-                    faB_avg_final_binned[rad_final_id, theta_final_id] = np.mean(faB_norm[binB_ids])
+                    if len(binA_ids)>0:
+                        faA_avg_final_binned[rad_final_id, theta_final_id] = np.mean(faA_norm[binA_ids])
+                    if len(binB_ids)>0:
+                        faB_avg_final_binned[rad_final_id, theta_final_id] = np.mean(faB_norm[binB_ids])
 
                     fa_dens_final_binned[rad_final_id, theta_final_id] = np.sum(fa_norm[bin_ids]) / area_radial_slice
-                    faA_dens_final_binned[rad_final_id, theta_final_id] = np.sum(faA_norm[binA_ids]) / area_radial_slice
-                    faB_dens_final_binned[rad_final_id, theta_final_id] = np.sum(faB_norm[binB_ids]) / area_radial_slice
+                    if len(binA_ids)>0:
+                        faA_dens_final_binned[rad_final_id, theta_final_id] = np.sum(faA_norm[binA_ids]) / area_radial_slice
+                    if len(binB_ids)>0:
+                        faB_dens_final_binned[rad_final_id, theta_final_id] = np.sum(faB_norm[binB_ids]) / area_radial_slice
 
                     align_final_binned[rad_final_id, theta_final_id] = np.mean(align_norm[bin_ids])
-                    alignA_final_binned[rad_final_id, theta_final_id] = np.mean(alignA_norm[binA_ids])
-                    alignB_final_binned[rad_final_id, theta_final_id] = np.mean(alignB_norm[binB_ids])
+                    if len(binA_ids)>0:
+                        alignA_final_binned[rad_final_id, theta_final_id] = np.mean(alignA_norm[binA_ids])
+                    if len(binB_ids)>0:
+                        alignB_final_binned[rad_final_id, theta_final_id] = np.mean(alignB_norm[binB_ids])
 
                     num_dens_final_binned[rad_final_id, theta_final_id] = len(bin_ids) / area_radial_slice
-                    num_densA_final_binned[rad_final_id, theta_final_id] = len(binA_ids) / area_radial_slice
-                    num_densB_final_binned[rad_final_id, theta_final_id] = len(binB_ids) / area_radial_slice
+                    if len(binA_ids)>0:
+                        num_densA_final_binned[rad_final_id, theta_final_id] = len(binA_ids) / area_radial_slice
+                    if len(binB_ids)>0:
+                        num_densB_final_binned[rad_final_id, theta_final_id] = len(binB_ids) / area_radial_slice
 
                     num_final_binned[rad_final_id, theta_final_id] = len(bin_ids)
-                    numA_final_binned[rad_final_id, theta_final_id] = len(binA_ids)
-                    numB_final_binned[rad_final_id, theta_final_id] = len(binB_ids)
+                    if len(binA_ids)>0:
+                        numA_final_binned[rad_final_id, theta_final_id] = len(binA_ids)
+                    if len(binB_ids)>0:
+                        numB_final_binned[rad_final_id, theta_final_id] = len(binB_ids)
 
                     sum_id += 1
         
@@ -4135,6 +4147,7 @@ class particle_props:
             factor = 10 ** decimals
             return math.ceil(number * factor) / factor
 
+        theta_bins = np.round(np.linspace(0, 360, 121),0)
         theta_bins = np.round(np.linspace(0, 360, 181),0)
 
         min_rad = round_decimals_down(np.min(r_dist_norm))
@@ -4169,6 +4182,7 @@ class particle_props:
         
         rad_final_bins = np.round(np.linspace(0.04, 1.5, int((1.46)/0.04)+1),2)
 
+        theta_final_bins = np.round(np.linspace(3, 360, 120),0)
         theta_final_bins = np.round(np.linspace(2, 360, 180),0)
 
         min_id = np.where(rad_final_bins==min_rad)[0]
@@ -4266,8 +4280,9 @@ class particle_props:
                     theta_final_id = np.where(theta_final_bins==theta_bins[n_theta])[0]
 
                     area_radial_slice = np.pi * ((rad_bins[n_rad]*np.mean(nearest_surface_arr[bin_ids]))**2 - (rad_bins[n_rad-1]*np.mean(nearest_surface_arr[bin_ids]))**2) * ((theta_bins[n_theta]-theta_bins[n_theta-1])/360)
-                    
+
                     if load_save == 1:
+                        
                         if float(avg_rad_dict['fa_dens']['all'][rad_final_id, theta_final_id][0])>0:
                             fa_dens_final_binned[rad_final_id, theta_final_id] = ((np.sum(fa_norm[bin_ids]) / area_radial_slice) - float(avg_rad_dict['fa_dens']['all'][rad_final_id, theta_final_id][0]))
                             fa_dens_final_binned_val[rad_final_id, theta_final_id] = np.sum(fa_norm[bin_ids])/ area_radial_slice
@@ -4314,6 +4329,7 @@ class particle_props:
                             num_densB_final_binned_val[rad_final_id, theta_final_id] = (len(binB_ids) / area_radial_slice)
 
                     else:
+                        
                         if avg_rad_dict['fa_avg']['all'][rad_final_id, theta_final_id]>0:
                             fa_avg_final_binned[rad_final_id, theta_final_id] = (np.mean(fa_norm[bin_ids]) - avg_rad_dict['fa_avg']['all'][rad_final_id, theta_final_id])
                             fa_avg_final_binned_val[rad_final_id, theta_final_id] = np.mean(fa_norm[bin_ids])

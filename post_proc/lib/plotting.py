@@ -58,7 +58,7 @@ plt.rcParams['text.latex.preview'] = True
 
 
 class plotting:
-    def __init__(self, orient_dict, pos_dict, lx_box, ly_box, NBins_x, NBins_y, sizeBin_x, sizeBin_y, peA, peB, parFrac, eps, typ, tst, partNum, outPath, outFile):
+    def __init__(self, orient_dict, pos_dict, lx_box, ly_box, NBins_x, NBins_y, sizeBin_x, sizeBin_y, peA, peB, parFrac, eps, typ, tst, partNum, outPath, outFile, phi):
 
         # Values from theory
         self.phiCP = np.pi / (2. * np.sqrt(3.))                                     # critical packing fraction of HCP lattice
@@ -78,6 +78,7 @@ class plotting:
         self.peNet=peA*(parFrac/100)+peB*(1-(parFrac/100))                          # Net (average) activity of system
         self.parFrac = parFrac                                                      # Slow particle fraction
         self.eps = eps                                                              # Potential magnitude (softness, units of kT)
+        self.phi = phi
 
         # Binning properties
         try:
@@ -10836,7 +10837,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         #plt.savefig(self.outPath + 'part_activity_' + self.outFile + ".eps", format='eps', dpi=150, bbox_inches='tight')
         plt.close() 
 
-    def plot_radial_heterogeneity(self, pos, single_time_dict, plot_bin_dict, plot_dict, sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None, mono_id=False, interface_id = False, orientation_id = False, zoom_id = False, banner_id = False, presentation_id = False, measure="fa", types="all"):
+    def plot_radial_heterogeneity(self, averagesPath, inFile, pos, single_time_dict, plot_bin_dict, plot_dict, sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None, mono_id=False, interface_id = False, orientation_id = False, zoom_id = False, banner_id = False, presentation_id = False, measure="fa", types="all", circle_opt=0, component = 'dif'):
 
         """
         This function plots the particle positions and color codes each particle with its intrinsic
@@ -10933,8 +10934,9 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         ax.add_collection(slowGroup)
         ax.add_collection(fastGroup)
         """
-        average_theta_path = '/Volumes/External/n100000test/pa0_pb500/averages/radial_avgs_theta_pa0_pb500_xa50_eps1.0_phi60.0_pNum50000_bin5_time1.csv'
-        average_rad_path = '/Volumes/External/n100000test/pa0_pb500/averages/radial_avgs_rad_pa0_pb500_xa50_eps1.0_phi60.0_pNum50000_bin5_time1.csv'
+
+        average_theta_path = averagesPath + 'radial_avgs_theta_pa' + str(int(self.peA)) + '_pb' + str(int(self.peB))  + '_xa' + str(int(self.parFrac)) + '_eps' + str(self.eps) + '_phi' + str(float(self.phi)) + '_pNum' + str(self.partNum) +  '_bin5_time1.csv'
+        average_rad_path = averagesPath + 'radial_avgs_rad_pa' + str(int(self.peA)) + '_pb' + str(int(self.peB))  + '_xa' + str(int(self.parFrac)) + '_eps' + str(self.eps) + '_phi' + str(float(self.phi)) + '_pNum' + str(self.partNum) +  '_bin5_time1.csv'
 
         import csv 
 
@@ -10948,29 +10950,57 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
         avg_rad_r_flatten = (avg_rad_r.flatten()).astype(np.float) 
         
-        average_indiv_vals_path = '/Volumes/External/n100000test/pa0_pb500/averages/radial_avgs_indiv_vals_pa0_pb500_xa50_eps1.0_phi60.0_pNum50000_bin5_time1.csv'
+        average_indiv_vals_path = averagesPath + 'radial_avgs_indiv_vals_pa' + str(int(self.peA)) + '_pb' + str(int(self.peB))  + '_xa' + str(int(self.parFrac)) + '_eps' + str(self.eps) + '_phi' + str(float(self.phi)) + '_pNum' + str(self.partNum) +  '_bin5_time1.csv'
 
         averages_file =  open(average_indiv_vals_path, newline='')
         reader = csv.reader(averages_file)
         avg_indiv_vals = dict(reader)
         avg_radius_r_flatten= float(avg_indiv_vals['radius'])
 
+        if component != 'avg':
+            avg_theta_r_new = np.zeros(np.shape(single_time_dict[measure][types]))
+            print('test1')
+            print(np.shape(avg_theta_r_new))
+            print(avg_theta_r_flatten)
 
-        avg_theta_r_new = np.zeros(np.shape(single_time_dict[measure][types]))
-        for i in range(0, len(single_time_dict['rad'])):
-            avg_theta_r_new[i,:] = single_time_dict['theta']
+            for i in range(0, len(single_time_dict['rad'])):
+                avg_theta_r_new[i,:] = single_time_dict['theta']
 
-        avg_rad_r_new = np.zeros(np.shape(single_time_dict[measure][types]))
-        for i in range(0, len(single_time_dict['theta'])):
-            avg_rad_r_new[:,i] = single_time_dict['rad']
+            avg_rad_r_new = np.zeros(np.shape(single_time_dict[measure][types]))
 
-        avg_rad_r_flatten = avg_rad_r_new.flatten()
-        avg_theta_r_flatten = avg_theta_r_new.flatten()
+            for i in range(0, len(single_time_dict['theta'])):
+                avg_rad_r_new[:,i] = single_time_dict['rad']
+
+            avg_rad_r_flatten = avg_rad_r_new.flatten()
+            avg_theta_r_flatten = avg_theta_r_new.flatten()
+        else:
+            print('test')
+            avg_theta_r_new = np.zeros((len(avg_rad_r_flatten), len(avg_theta_r_flatten)-1))
+            for i in range(0, len(avg_rad_r_flatten)):
+                avg_theta_r_new[i,:] = avg_theta_r_flatten[:-1]
+
+            avg_rad_r_new = np.zeros((len(avg_rad_r_flatten), len(avg_theta_r_flatten)-1))
+
+            for i in range(0, len(avg_theta_r_flatten)-1):
+                avg_rad_r_new[:,i] = avg_rad_r_flatten
+
+            avg_rad_r_flatten = avg_rad_r_new.flatten()
+            avg_theta_r_flatten = avg_theta_r_new.flatten()
 
         avg_radius_r_flatten_new = (plot_bin_dict['rad_bin']['all'].flatten()).astype(np.float)
+        
+        if circle_opt == 1:
+            x_coords = self.hx_box + avg_rad_r_flatten * avg_radius_r_flatten * np.cos(avg_theta_r_flatten*(np.pi/180))
+            y_coords = self.hy_box + avg_rad_r_flatten * avg_radius_r_flatten * np.sin(avg_theta_r_flatten*(np.pi/180))
+        else:
+            
+            if component == 'avg':
+                x_coords = float(avg_indiv_vals['com_x']) + avg_rad_r_flatten * avg_radius_r_flatten_new * np.cos(avg_theta_r_flatten*(np.pi/180))
+                y_coords = float(avg_indiv_vals['com_y']) + avg_rad_r_flatten * avg_radius_r_flatten_new * np.sin(avg_theta_r_flatten*(np.pi/180))
+            else:
+                x_coords = float(single_time_dict['com']['x']) + avg_rad_r_flatten * avg_radius_r_flatten_new * np.cos(avg_theta_r_flatten*(np.pi/180))
+                y_coords = float(single_time_dict['com']['y']) + avg_rad_r_flatten * avg_radius_r_flatten_new * np.sin(avg_theta_r_flatten*(np.pi/180))
 
-        x_coords = single_time_dict['com']['x'] + avg_rad_r_flatten * avg_radius_r_flatten_new * np.cos(avg_theta_r_flatten*(np.pi/180))
-        y_coords = single_time_dict['com']['y'] + avg_rad_r_flatten * avg_radius_r_flatten_new * np.sin(avg_theta_r_flatten*(np.pi/180))
         
         #x_coords = x_coords.flatten()
         #y_coords = y_coords.flatten()
@@ -10978,27 +11008,27 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
 
         
-        average_theta_path = '/Volumes/External/n100000test/pa0_pb500/averages/radial_avgs_theta_pa0_pb500_xa50_eps1.0_phi60.0_pNum50000_bin5_time1.csv'
-        average_rad_path = '/Volumes/External/n100000test/pa0_pb500/averages/radial_avgs_rad_pa0_pb500_xa50_eps1.0_phi60.0_pNum50000_bin5_time1.csv'
+        average_theta_path = averagesPath + 'radial_avgs_theta_pa' + str(int(self.peA)) + '_pb' + str(int(self.peB))  + '_xa' + str(int(self.parFrac)) + '_eps' + str(self.eps) + '_phi' + str(float(self.phi)) + '_pNum' + str(self.partNum) +  '_bin5_time1.csv'
+        average_rad_path = averagesPath + 'radial_avgs_rad_pa' + str(int(self.peA)) + '_pb' + str(int(self.peB))  + '_xa' + str(int(self.parFrac)) + '_eps' + str(self.eps) + '_phi' + str(float(self.phi)) + '_pNum' + str(self.partNum) +  '_bin5_time1.csv'
 
         if measure == 'fa_avg':
-            average_val_path = '/Volumes/External/n100000test/pa0_pb500/averages/radial_avgs_fa_avg_pa0_pb500_xa50_eps1.0_phi60.0_pNum50000_bin5_time1.csv'
-            average_valA_path = '/Volumes/External/n100000test/pa0_pb500/averages/radial_avgs_faA_avg_pa0_pb500_xa50_eps1.0_phi60.0_pNum50000_bin5_time1.csv'
-            average_valB_path = '/Volumes/External/n100000test/pa0_pb500/averages/radial_avgs_faB_avg_pa0_pb500_xa50_eps1.0_phi60.0_pNum50000_bin5_time1.csv'
+            average_val_path = averagesPath + 'radial_avgs_fa_avg_pa' + str(int(self.peA)) + '_pb' + str(int(self.peB))  + '_xa' + str(int(self.parFrac)) + '_eps' + str(self.eps) + '_phi' + str(float(self.phi)) + '_pNum' + str(self.partNum) +  '_bin5_time1.csv'
+            average_valA_path = averagesPath + 'radial_avgs_faA_avg_pa' + str(int(self.peA)) + '_pb' + str(int(self.peB))  + '_xa' + str(int(self.parFrac)) + '_eps' + str(self.eps) + '_phi' + str(float(self.phi)) + '_pNum' + str(self.partNum) +  '_bin5_time1.csv'
+            average_valB_path = averagesPath + 'radial_avgs_faB_avg_pa' + str(int(self.peA)) + '_pb' + str(int(self.peB))  + '_xa' + str(int(self.parFrac)) + '_eps' + str(self.eps) + '_phi' + str(float(self.phi)) + '_pNum' + str(self.partNum) +  '_bin5_time1.csv'
         elif measure == 'fa_dens':
-            average_val_path = '/Volumes/External/n100000test/pa0_pb500/averages/radial_avgs_fa_dens_pa0_pb500_xa50_eps1.0_phi60.0_pNum50000_bin5_time1.csv'
-            average_valA_path = '/Volumes/External/n100000test/pa0_pb500/averages/radial_avgs_faA_dens_pa0_pb500_xa50_eps1.0_phi60.0_pNum50000_bin5_time1.csv'
-            average_valB_path = '/Volumes/External/n100000test/pa0_pb500/averages/radial_avgs_faB_dens_pa0_pb500_xa50_eps1.0_phi60.0_pNum50000_bin5_time1.csv'
-        elif measure == 'dens':
-            average_val_path = '/Volumes/External/n100000test/pa0_pb500/averages/radial_avgs_num_dens_pa0_pb500_xa50_eps1.0_phi60.0_pNum50000_bin5_time1.csv'
-            average_valA_path = '/Volumes/External/n100000test/pa0_pb500/averages/radial_avgs_num_densA_pa0_pb500_xa50_eps1.0_phi60.0_pNum50000_bin5_time1.csv'
-            average_valB_path = '/Volumes/External/n100000test/pa0_pb500/averages/radial_avgs_num_densB_pa0_pb500_xa50_eps1.0_phi60.0_pNum50000_bin5_time1.csv'
+            average_val_path = averagesPath + 'radial_avgs_fa_dens_pa' + str(int(self.peA)) + '_pb' + str(int(self.peB))  + '_xa' + str(int(self.parFrac)) + '_eps' + str(self.eps) + '_phi' + str(float(self.phi)) + '_pNum' + str(self.partNum) +  '_bin5_time1.csv'
+            average_valA_path = averagesPath + 'radial_avgs_faA_dens_pa' + str(int(self.peA)) + '_pb' + str(int(self.peB))  + '_xa' + str(int(self.parFrac)) + '_eps' + str(self.eps) + '_phi' + str(float(self.phi)) + '_pNum' + str(self.partNum) +  '_bin5_time1.csv'
+            average_valB_path = averagesPath + 'radial_avgs_faB_dens_pa' + str(int(self.peA)) + '_pb' + str(int(self.peB))  + '_xa' + str(int(self.parFrac)) + '_eps' + str(self.eps) + '_phi' + str(float(self.phi)) + '_pNum' + str(self.partNum) +  '_bin5_time1.csv'
+        elif measure == 'num_dens':
+            average_val_path = averagesPath + 'radial_avgs_num_dens_pa' + str(int(self.peA)) + '_pb' + str(int(self.peB))  + '_xa' + str(int(self.parFrac)) + '_eps' + str(self.eps) + '_phi' + str(float(self.phi)) + '_pNum' + str(self.partNum) +  '_bin5_time1.csv'
+            average_valA_path = averagesPath + 'radial_avgs_num_densA_pa' + str(int(self.peA)) + '_pb' + str(int(self.peB))  + '_xa' + str(int(self.parFrac)) + '_eps' + str(self.eps) + '_phi' + str(float(self.phi)) + '_pNum' + str(self.partNum) +  '_bin5_time1.csv'
+            average_valB_path = averagesPath + 'radial_avgs_num_densB_pa' + str(int(self.peA)) + '_pb' + str(int(self.peB))  + '_xa' + str(int(self.parFrac)) + '_eps' + str(self.eps) + '_phi' + str(float(self.phi)) + '_pNum' + str(self.partNum) +  '_bin5_time1.csv'
         elif measure == 'align':
-            average_val_path = '/Volumes/External/n100000test/pa0_pb500/averages/radial_avgs_align_pa0_pb500_xa50_eps1.0_phi60.0_pNum50000_bin5_time1.csv'
-            average_valA_path = '/Volumes/External/n100000test/pa0_pb500/averages/radial_avgs_alignA_pa0_pb500_xa50_eps1.0_phi60.0_pNum50000_bin5_time1.csv'
-            average_valB_path = '/Volumes/External/n100000test/pa0_pb500/averages/radial_avgs_alignB_pa0_pb500_xa50_eps1.0_phi60.0_pNum50000_bin5_time1.csv'
+            average_val_path = averagesPath + 'radial_avgs_align_pa' + str(int(self.peA)) + '_pb' + str(int(self.peB))  + '_xa' + str(int(self.parFrac)) + '_eps' + str(self.eps) + '_phi' + str(float(self.phi)) + '_pNum' + str(self.partNum) +  '_bin5_time1.csv'
+            average_valA_path = averagesPath + 'radial_avgs_alignA_pa' + str(int(self.peA)) + '_pb' + str(int(self.peB))  + '_xa' + str(int(self.parFrac)) + '_eps' + str(self.eps) + '_phi' + str(float(self.phi)) + '_pNum' + str(self.partNum) +  '_bin5_time1.csv'
+            average_valB_path = averagesPath + 'radial_avgs_alignB_pa' + str(int(self.peA)) + '_pb' + str(int(self.peB))  + '_xa' + str(int(self.parFrac)) + '_eps' + str(self.eps) + '_phi' + str(float(self.phi)) + '_pNum' + str(self.partNum) +  '_bin5_time1.csv'
 
-        average_indiv_vals_path = '/Volumes/External/n100000test/pa0_pb500/averages/radial_avgs_indiv_vals_pa0_pb500_xa50_eps1.0_phi60.0_pNum50000_bin5_time1.csv'
+        average_indiv_vals_path = averagesPath + 'radial_avgs_indiv_vals_pa' + str(int(self.peA)) + '_pb' + str(int(self.peB))  + '_xa' + str(int(self.parFrac)) + '_eps' + str(self.eps) + '_phi' + str(float(self.phi)) + '_pNum' + str(self.partNum) +  '_bin5_time1.csv'
 
         import csv 
 
@@ -11030,7 +11060,28 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         
         #vals = avg_num_dens_r_flatten#single_time_dict[measure][types].flatten()
         #vals = (single_time_dict[measure][types].flatten()*(avg_num_dens_r_flatten**2))**0.5+avg_num_dens_r_flatten
-        vals = ((plot_bin_dict[measure][types].flatten() - avg_val_r_flatten))#/ avg_num_dens_r_flatten**2
+        
+        if component == 'dif':
+            if types == 'all':
+                vals = plot_bin_dict[measure][types].flatten() - avg_val_r_flatten #/ avg_num_dens_r_flatten**2
+            elif types == 'A':
+                vals = plot_bin_dict[measure][types].flatten() - avg_valA_r_flatten# 
+            elif types == 'B':
+                vals = plot_bin_dict[measure][types].flatten() - avg_valB_r_flatten #
+        elif component == 'current':
+            if types == 'all':
+                vals = plot_bin_dict[measure][types].flatten()
+            elif types == 'A':
+                vals = plot_bin_dict[measure][types].flatten()
+            elif types == 'B':
+                vals = plot_bin_dict[measure][types].flatten()
+        elif component == 'avg':
+            if types == 'all':
+                vals = avg_val_r_flatten #/ avg_num_dens_r_flatten**2
+            elif types == 'A':
+                vals = avg_valA_r_flatten# 
+            elif types == 'B':
+                vals = avg_valB_r_flatten #
         #test_id = np.where(avg_num_dens_r_flatten>0)[0]
         #vals[test_id] = vals[test_id] / avg_num_dens_r_flatten[test_id]**2
         #test_id = np.where(vals>3.0)[0]
@@ -11038,12 +11089,61 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
         limit_vals = np.amax(vals)
 
+        print(len(x_coords))
+        print(len(y_coords))
+        print(len(vals))
+
         im = plt.tricontourf(x_coords, y_coords, vals, cmap='seismic', vmin=-limit_vals, vmax=limit_vals)#, norm=matplotlib.colors.LogNorm())#, vmin=-2.5, vmax=2.5, cmap='seismic')#,alpha=0.65, norm=matplotlib.colors.LogNorm())
+        if circle_opt == 1:
+            x_coords = self.hx_box + 1.0 * avg_radius_r_flatten * np.cos(avg_theta_r_flatten*(np.pi/180))
+            y_coords = self.hy_box + 1.0 * avg_radius_r_flatten * np.sin(avg_theta_r_flatten*(np.pi/180))
+
+            plt.plot(x_coords, y_coords, c='black', linewidth=3.0) 
+
+        else:
+            
+            if interface_id == True:
+                try:
+
+                    if sep_surface_dict!=None:
+                        
+                        for m in range(0, len(sep_surface_dict)):
+                            key = 'surface id ' + str(int(int_comp_dict['ids'][m]))
+                            print(key)
+
+                            
+                            try:
+                                pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
+                                pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
+                                plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
+                                plt.scatter(pos_interior_surface_x + self.lx_box, pos_interior_surface_y, c='black', s=3.0)
+                                plt.scatter(pos_interior_surface_x - self.lx_box, pos_interior_surface_y, c='black', s=3.0)
+                                plt.scatter(pos_interior_surface_x, pos_interior_surface_y+self.ly_box, c='black', s=3.0)
+                                plt.scatter(pos_interior_surface_x, pos_interior_surface_y-self.ly_box, c='black', s=3.0)
+                            except:
+                                pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
+                                pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
+                                plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
+                                plt.scatter(pos_exterior_surface_x + self.lx_box, pos_exterior_surface_y, c='black', s=3.0)
+                                plt.scatter(pos_exterior_surface_x - self.lx_box, pos_exterior_surface_y, c='black', s=3.0)
+                                plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y+self.ly_box, c='black', s=3.0)
+                                plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y-self.ly_box, c='black', s=3.0) 
+                            
+                            try:
+                                
+                                pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
+                                pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
+                                plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
+                                plt.scatter(pos_exterior_surface_x + self.lx_box, pos_exterior_surface_y, c='black', s=3.0)
+                                plt.scatter(pos_exterior_surface_x - self.lx_box, pos_exterior_surface_y, c='black', s=3.0)
+                                plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y+self.ly_box, c='black', s=3.0)
+                                plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y-self.ly_box, c='black', s=3.0) 
+                            except:
+                                pass
+                            
+                except:
+                    pass
         
-        x_coords = self.hx_box + 1.0 * avg_radius_r_flatten * np.cos(avg_theta_r_flatten*(np.pi/180))
-        y_coords = self.hy_box + 1.0 * avg_radius_r_flatten * np.sin(avg_theta_r_flatten*(np.pi/180))
-    
-        #plt.plot(x_coords, y_coords, c='black', linewidth=3.0) 
 
         sm = plt.cm.ScalarMappable(norm=im.norm, cmap = im.cmap)
         sm.set_array([])
@@ -11052,47 +11152,6 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         clb.ax.tick_params(labelsize=20)
         
         
-        if interface_id == True:
-            try:
-
-                if sep_surface_dict!=None:
-                    
-                    for m in range(0, len(sep_surface_dict)):
-                        key = 'surface id ' + str(int(int_comp_dict['ids'][m]))
-                        print(key)
-
-                        
-                        try:
-                            pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
-                            pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
-                            plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
-                            plt.scatter(pos_interior_surface_x + self.lx_box, pos_interior_surface_y, c='black', s=3.0)
-                            plt.scatter(pos_interior_surface_x - self.lx_box, pos_interior_surface_y, c='black', s=3.0)
-                            plt.scatter(pos_interior_surface_x, pos_interior_surface_y+self.ly_box, c='black', s=3.0)
-                            plt.scatter(pos_interior_surface_x, pos_interior_surface_y-self.ly_box, c='black', s=3.0)
-                        except:
-                            pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
-                            pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
-                            plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
-                            plt.scatter(pos_exterior_surface_x + self.lx_box, pos_exterior_surface_y, c='black', s=3.0)
-                            plt.scatter(pos_exterior_surface_x - self.lx_box, pos_exterior_surface_y, c='black', s=3.0)
-                            plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y+self.ly_box, c='black', s=3.0)
-                            plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y-self.ly_box, c='black', s=3.0) 
-                        
-                        try:
-                            
-                            pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
-                            pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
-                            plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
-                            plt.scatter(pos_exterior_surface_x + self.lx_box, pos_exterior_surface_y, c='black', s=3.0)
-                            plt.scatter(pos_exterior_surface_x - self.lx_box, pos_exterior_surface_y, c='black', s=3.0)
-                            plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y+self.ly_box, c='black', s=3.0)
-                            plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y-self.ly_box, c='black', s=3.0) 
-                        except:
-                            pass
-                        
-            except:
-                pass
         if orientation_id == True:
             try:
                 if active_fa_dict!=None:
@@ -11153,7 +11212,21 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         # Create frame images
         #ax.set_facecolor('white')
         #ax.set_facecolor('#F4F4F4') .  # For website
-        plt.savefig(self.outPath + 'radial_heterogeneity_' + measure + '_' + types +'_' + self.outFile + ".png", dpi=900, transparent=False, bbox_inches='tight')
+        if component == 'dif':
+            if circle_opt == 1:
+                plt.savefig(self.outPath + 'dif_circle_radial_heterogeneity_' + measure + '_' + types +'_' + self.outFile + ".png", dpi=200, transparent=False, bbox_inches='tight')
+            else:
+                plt.savefig(self.outPath + 'dif_noncircle_radial_heterogeneity_' + measure + '_' + types +'_' + self.outFile + ".png", dpi=200, transparent=False, bbox_inches='tight')
+        elif component == 'current':
+            if circle_opt == 1:
+                plt.savefig(self.outPath + 'current_circle_radial_heterogeneity_' + measure + '_' + types +'_' + self.outFile + ".png", dpi=200, transparent=False, bbox_inches='tight')
+            else:
+                plt.savefig(self.outPath + 'current_noncircle_radial_heterogeneity_' + measure + '_' + types +'_' + self.outFile + ".png", dpi=200, transparent=False, bbox_inches='tight')
+        elif component == 'avg':
+            if circle_opt == 1:
+                plt.savefig(self.outPath + 'avg_circle_radial_heterogeneity_' + measure + '_' + types +'_' + self.outFile + ".png", dpi=200, transparent=False, bbox_inches='tight')
+            else:
+                plt.savefig(self.outPath + 'avg_noncircle_radial_heterogeneity_' + measure + '_' + types +'_' + self.outFile + ".png", dpi=200, transparent=False, bbox_inches='tight')
         #plt.savefig(self.outPath + 'part_activity_' + self.outFile + ".eps", format='eps', dpi=150, bbox_inches='tight')
         plt.close() 
 

@@ -5134,6 +5134,10 @@ class measurement:
         #Identify largest A or B domain
         lcID_A = np.where(clust_size_A >= 1)[0]    
         lcID_B = np.where(clust_size_B >= 1)[0]
+
+        #Identify largest A or B domain
+        lcID_A2 = np.where(clust_size_A >= 2)[0]    
+        lcID_B2 = np.where(clust_size_B >= 2)[0]
         
         #Identify smallest A or B domain
         lcID_A_smallest = len(np.where(clust_size_A == 1)[0])
@@ -5224,7 +5228,7 @@ class measurement:
         fifth_max_clust_B = np.max(clust_B_fourth_temp)
         
         # Create output dictionary for statistical information on various domains sizes for type A and B particles in bulk
-        domain_stat_dict = {'A': {'pop': len(pos_A_dense), 'avg_size': np.mean(clust_size_A[lcID_A]), 'std_size': np.std(clust_size_A[lcID_A]), 'num': len(clust_size_A[lcID_A]), 'first_size': first_max_clust_A, 'second_size': second_max_clust_A, 'third_size': third_max_clust_A, 'fourth_size': fourth_max_clust_A, 'fifth_size': fifth_max_clust_A, 'one_num': lcID_A_smallest, 'two_num': lcID_A_second_smallest, 'three_num': lcID_A_third_smallest, 'fourth_num': lcID_A_fourth_smallest}, 'B': {'pop': len(pos_B_dense), 'avg_size': np.mean(clust_size_B[lcID_B]), 'std_size': np.std(clust_size_B[lcID_B]), 'num': len(clust_size_B[lcID_B]), 'first': first_max_clust_B, 'second': second_max_clust_B, 'third': third_max_clust_B, 'fourth': fourth_max_clust_B, 'fifth': fifth_max_clust_B, 'one_num': lcID_B_smallest, 'two_num': lcID_B_second_smallest, 'three_num': lcID_B_third_smallest, 'fourth_num': lcID_B_fourth_smallest}}
+        domain_stat_dict = {'A': {'pop': len(pos_A_dense), 'avg_size': np.mean(clust_size_A[lcID_A]), 'std_size': np.std(clust_size_A[lcID_A]), 'num': len(clust_size_A[lcID_A]), 'avg_size2': np.mean(clust_size_A[lcID_A2]), 'std_size2': np.std(clust_size_A[lcID_A2]), 'num2': len(clust_size_A[lcID_A2]), 'first_size': first_max_clust_A, 'second_size': second_max_clust_A, 'third_size': third_max_clust_A, 'fourth_size': fourth_max_clust_A, 'fifth_size': fifth_max_clust_A, 'one_num': lcID_A_smallest, 'two_num': lcID_A_second_smallest, 'three_num': lcID_A_third_smallest, 'fourth_num': lcID_A_fourth_smallest}, 'B': {'pop': len(pos_B_dense), 'avg_size': np.mean(clust_size_B[lcID_B]), 'std_size': np.std(clust_size_B[lcID_B]), 'num': len(clust_size_B[lcID_B]), 'avg_size2': np.mean(clust_size_B[lcID_B2]), 'std_size2': np.std(clust_size_B[lcID_B2]), 'num2': len(clust_size_B[lcID_B2]), 'first': first_max_clust_B, 'second': second_max_clust_B, 'third': third_max_clust_B, 'fourth': fourth_max_clust_B, 'fifth': fifth_max_clust_B, 'one_num': lcID_B_smallest, 'two_num': lcID_B_second_smallest, 'three_num': lcID_B_third_smallest, 'fourth_num': lcID_B_fourth_smallest}}
         
         return domain_stat_dict
 
