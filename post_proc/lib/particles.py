@@ -3742,6 +3742,8 @@ class particle_props:
         faA_norm = np.array([])
         faB_norm = np.array([])
 
+        fa_avg = np.array([])
+
         # Instantiate empty array (partNum) containing the distance from the nearest interface surface
         r_dist_norm = np.array([])
         rA_dist_norm = np.array([])
@@ -3777,8 +3779,9 @@ class particle_props:
                 nearest_surface_arr = np.append(nearest_surface_arr, avg_rad)
 
                 # Save active force magnitude toward the nearest interface surface normal
-                if self.typ[m] == 0:
+                if self.typ[int_id[m]] == 0:
                     fa_norm=np.append(fa_norm, part_align[int_id[m]]*self.peA)
+                    fa_avg=np.append(fa_avg, self.peA)
                     faA_norm=np.append(faA_norm, part_align[int_id[m]]*self.peA)
                     rA_dist_norm = np.append(rA_dist_norm, difr_parts[m]/avg_rad)
                     alignA_norm=np.append(alignA_norm, part_align[int_id[m]])
@@ -3787,6 +3790,7 @@ class particle_props:
                     nearest_surfaceA_arr = np.append(nearest_surfaceA_arr, avg_rad)
                 else:
                     fa_norm=np.append(fa_norm, part_align[int_id[m]]*self.peB)
+                    fa_avg=np.append(fa_avg, self.peB)
                     faB_norm=np.append(faB_norm, part_align[int_id[m]]*self.peB)
                     alignB_norm=np.append(alignB_norm, part_align[int_id[m]])
                     rB_dist_norm = np.append(rB_dist_norm, difr_parts[m]/avg_rad)
@@ -3896,6 +3900,8 @@ class particle_props:
         fa_avg_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
         faA_avg_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
         faB_avg_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
+
+        fa_avg_real_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
         
         fa_dens_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
         faA_dens_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
@@ -3922,6 +3928,7 @@ class particle_props:
         faA_dens_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))
         faB_dens_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))
 
+        fa_avg_real_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))
 
         align_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))
         alignA_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))
@@ -3953,6 +3960,8 @@ class particle_props:
                     theta_final_id = np.where(theta_final_bins==theta_bins[n_theta])[0]
 
                     area_radial_slice = np.pi * ((rad_bins[n_rad]*np.mean(nearest_surface_arr[bin_ids]))**2 - (rad_bins[n_rad-1]*np.mean(nearest_surface_arr[bin_ids]))**2) * ((theta_bins[n_theta]-theta_bins[n_theta-1])/360)
+
+                    fa_avg_real_final_binned[rad_final_id, theta_final_id] = np.mean(fa_avg[bin_ids])
 
                     fa_avg_final_binned[rad_final_id, theta_final_id] = np.mean(fa_norm[bin_ids])
                     if len(binA_ids)>0:
@@ -3986,7 +3995,7 @@ class particle_props:
 
                     sum_id += 1
         
-        radial_heterogeneity_dict = {'rad': rad_final_bins, 'theta': theta_final_bins, 'radius': np.mean(r_dist), 'com': {'x': all_surface_measurements[key]['exterior']['com']['x'], 'y': all_surface_measurements[key]['exterior']['com']['y']}, 'fa_avg': {'all': fa_avg_final_binned, 'A': faA_avg_final_binned, 'B': faB_avg_final_binned}, 'fa_dens': {'all': fa_dens_final_binned, 'A': faA_dens_final_binned, 'B': faB_dens_final_binned}, 'align': {'all': align_final_binned, 'A': alignA_final_binned, 'B': alignB_final_binned}, 'num_dens': {'all': num_dens_final_binned, 'A': num_densA_final_binned, 'B': num_densB_final_binned}}
+        radial_heterogeneity_dict = {'rad': rad_final_bins, 'theta': theta_final_bins, 'radius': np.mean(r_dist), 'com': {'x': all_surface_measurements[key]['exterior']['com']['x'], 'y': all_surface_measurements[key]['exterior']['com']['y']}, 'fa_avg_real': {'all': fa_avg_real_final_binned}, 'fa_avg': {'all': fa_avg_final_binned, 'A': faA_avg_final_binned, 'B': faB_avg_final_binned}, 'fa_dens': {'all': fa_dens_final_binned, 'A': faA_dens_final_binned, 'B': faB_dens_final_binned}, 'align': {'all': align_final_binned, 'A': alignA_final_binned, 'B': alignB_final_binned}, 'num_dens': {'all': num_dens_final_binned, 'A': num_densA_final_binned, 'B': num_densB_final_binned}}
         plot_bin_dict = {'rad': rad_final_bins, 'theta': theta_final_bins, 'radius': np.mean(r_dist), 'com': {'x': all_surface_measurements[key]['exterior']['com']['x'], 'y': all_surface_measurements[key]['exterior']['com']['y']}, 'fa_avg': {'all': fa_avg_final_binned_val, 'A': faA_avg_final_binned_val, 'B': faB_avg_final_binned_val}, 'fa_dens': {'all': fa_dens_final_binned_val, 'A': faA_dens_final_binned_val, 'B': faB_dens_final_binned_val}, 'align': {'all': align_final_binned_val, 'A': alignA_final_binned_val, 'B': alignB_final_binned_val}, 'num': {'all': num_final_binned_val, 'A': numA_final_binned_val, 'B': numB_final_binned_val}, 'num_dens': {'all': num_dens_final_binned_val, 'A': num_densA_final_binned_val, 'B': num_densB_final_binned_val}}
 
         return radial_heterogeneity_dict, plot_dict, plot_bin_dict
@@ -4058,6 +4067,8 @@ class particle_props:
         faA_norm = np.array([])
         faB_norm = np.array([])
 
+        fa_avg = np.array([])
+
         # Instantiate empty array (partNum) containing the distance from the nearest interface surface
         r_dist_norm = np.array([])
         rA_dist_norm = np.array([])
@@ -4091,8 +4102,9 @@ class particle_props:
                 difr_parts_norm[m] = difr_parts[m]/avg_rad
 
                 # Save active force magnitude toward the nearest interface surface normal
-                if self.typ[m] == 0:
+                if self.typ[int_id[m]] == 0:
                     fa_norm=np.append(fa_norm, part_align[int_id[m]]*self.peA)
+                    fa_avg=np.append(fa_avg, self.peA)
                     faA_norm=np.append(faA_norm, part_align[int_id[m]]*self.peA)
                     rA_dist_norm = np.append(rA_dist_norm, difr_parts[m]/avg_rad)
                     rA_dist = np.append(rA_dist, avg_rad)
@@ -4101,6 +4113,7 @@ class particle_props:
                     nearest_surfaceA_arr = np.append(nearest_surfaceA_arr, avg_rad)
                 else:
                     fa_norm=np.append(fa_norm, part_align[int_id[m]]*self.peB)
+                    fa_avg=np.append(fa_avg, self.peB)
                     faB_norm=np.append(faB_norm, part_align[int_id[m]]*self.peB)
                     rB_dist = np.append(rB_dist, avg_rad)
 
@@ -4205,6 +4218,8 @@ class particle_props:
         faA_avg_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
         faB_avg_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
 
+        fa_avg_real_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
+
         fa_dens_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
         faA_dens_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
         faB_dens_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
@@ -4224,6 +4239,8 @@ class particle_props:
         fa_avg_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))
         faA_avg_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))
         faB_avg_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))
+
+        fa_avg_real_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))
 
         fa_dens_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))
         faA_dens_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))
@@ -4278,103 +4295,113 @@ class particle_props:
                     
                     rad_final_id = np.where(rad_final_bins==rad_bins[n_rad])[0]
                     theta_final_id = np.where(theta_final_bins==theta_bins[n_theta])[0]
-
+                    #print(np.where(np.isnan(alignB_norm)==True)[0])
+                    #print(np.where(np.isnan(np.array(avg_rad_dict['align']['B'].flatten()))==True)[0])
+                    #stop
                     area_radial_slice = np.pi * ((rad_bins[n_rad]*np.mean(nearest_surface_arr[bin_ids]))**2 - (rad_bins[n_rad-1]*np.mean(nearest_surface_arr[bin_ids]))**2) * ((theta_bins[n_theta]-theta_bins[n_theta-1])/360)
+                    if area_radial_slice > 0:
+                        if load_save == 1:
+                            
+                            if (float(avg_rad_dict['fa_avg_real']['all'][rad_final_id, theta_final_id][0])>0):
+                                fa_avg_real_final_binned[rad_final_id, theta_final_id] = ((np.mean(fa_avg[bin_ids])) - float(avg_rad_dict['fa_avg_real']['all'][rad_final_id, theta_final_id][0]))
+                                fa_avg_real_final_binned_val[rad_final_id, theta_final_id] = np.mean(fa_avg[bin_ids])
 
-                    if load_save == 1:
-                        
-                        if float(avg_rad_dict['fa_dens']['all'][rad_final_id, theta_final_id][0])>0:
-                            fa_dens_final_binned[rad_final_id, theta_final_id] = ((np.sum(fa_norm[bin_ids]) / area_radial_slice) - float(avg_rad_dict['fa_dens']['all'][rad_final_id, theta_final_id][0]))
-                            fa_dens_final_binned_val[rad_final_id, theta_final_id] = np.sum(fa_norm[bin_ids])/ area_radial_slice
-                        if float(avg_rad_dict['fa_dens']['A'][rad_final_id, theta_final_id][0])>0:
-                            faA_dens_final_binned[rad_final_id, theta_final_id] = ((np.sum(faA_norm[binA_ids]) / area_radial_slice) - float(avg_rad_dict['fa_dens']['A'][rad_final_id, theta_final_id][0]))
-                            faA_dens_final_binned_val[rad_final_id, theta_final_id] = np.sum(faA_norm[binA_ids])/ area_radial_slice
-                        if float(avg_rad_dict['fa_dens']['B'][rad_final_id, theta_final_id][0])>0:
-                            faB_dens_final_binned[rad_final_id, theta_final_id] = ((np.sum(faB_norm[binB_ids]) / area_radial_slice) - float(avg_rad_dict['fa_dens']['B'][rad_final_id, theta_final_id][0]))
-                            faB_dens_final_binned_val[rad_final_id, theta_final_id] = np.sum(faB_norm[binB_ids])/ area_radial_slice
+                            if float(avg_rad_dict['fa_dens']['all'][rad_final_id, theta_final_id][0])>0:
+                                fa_dens_final_binned[rad_final_id, theta_final_id] = ((np.sum(fa_norm[bin_ids]) / area_radial_slice) - float(avg_rad_dict['fa_dens']['all'][rad_final_id, theta_final_id][0]))
+                                fa_dens_final_binned_val[rad_final_id, theta_final_id] = np.sum(fa_norm[bin_ids])/ area_radial_slice
+                            if (float(avg_rad_dict['fa_dens']['A'][rad_final_id, theta_final_id][0])>0) & (len(binA_ids)>0):
+                                faA_dens_final_binned[rad_final_id, theta_final_id] = ((np.sum(faA_norm[binA_ids]) / area_radial_slice) - float(avg_rad_dict['fa_dens']['A'][rad_final_id, theta_final_id][0]))
+                                faA_dens_final_binned_val[rad_final_id, theta_final_id] = np.sum(faA_norm[binA_ids])/ area_radial_slice
+                            if (float(avg_rad_dict['fa_dens']['B'][rad_final_id, theta_final_id][0])>0) & (len(binB_ids)>0):
+                                faB_dens_final_binned[rad_final_id, theta_final_id] = ((np.sum(faB_norm[binB_ids]) / area_radial_slice) - float(avg_rad_dict['fa_dens']['B'][rad_final_id, theta_final_id][0]))
+                                faB_dens_final_binned_val[rad_final_id, theta_final_id] = np.sum(faB_norm[binB_ids])/ area_radial_slice
 
-                        if float(avg_rad_dict['fa_avg']['all'][rad_final_id, theta_final_id][0])>0:
-                            fa_avg_final_binned[rad_final_id, theta_final_id] = (np.mean(fa_norm[bin_ids]) - float(avg_rad_dict['fa_avg']['all'][rad_final_id, theta_final_id][0]))
-                            fa_avg_final_binned_val[rad_final_id, theta_final_id] = np.mean(fa_norm[bin_ids])
-                        if float(avg_rad_dict['fa_avg']['A'][rad_final_id, theta_final_id][0])>0:
-                            faA_avg_final_binned[rad_final_id, theta_final_id] = (np.mean(faA_norm[binA_ids]) - float(avg_rad_dict['fa_avg']['A'][rad_final_id, theta_final_id][0]))
-                            faA_avg_final_binned_val[rad_final_id, theta_final_id] = np.mean(faA_norm[binA_ids])
-                        if float(avg_rad_dict['fa_avg']['B'][rad_final_id, theta_final_id][0])>0:
-                            faB_avg_final_binned[rad_final_id, theta_final_id] = (np.mean(faB_norm[binB_ids]) - float(avg_rad_dict['fa_avg']['B'][rad_final_id, theta_final_id][0]))
-                            faB_avg_final_binned_val[rad_final_id, theta_final_id] = np.mean(faB_norm[binB_ids])
+                            if (float(avg_rad_dict['fa_avg']['all'][rad_final_id, theta_final_id][0])>0):
+                                fa_avg_final_binned[rad_final_id, theta_final_id] = (np.mean(fa_norm[bin_ids]) - float(avg_rad_dict['fa_avg']['all'][rad_final_id, theta_final_id][0]))
+                                fa_avg_final_binned_val[rad_final_id, theta_final_id] = np.mean(fa_norm[bin_ids])
+                            if (float(avg_rad_dict['fa_avg']['A'][rad_final_id, theta_final_id][0])>0) & (len(binA_ids)>0):
+                                faA_avg_final_binned[rad_final_id, theta_final_id] = (np.mean(faA_norm[binA_ids]) - float(avg_rad_dict['fa_avg']['A'][rad_final_id, theta_final_id][0]))
+                                faA_avg_final_binned_val[rad_final_id, theta_final_id] = np.mean(faA_norm[binA_ids])
+                            if (float(avg_rad_dict['fa_avg']['B'][rad_final_id, theta_final_id][0])>0) & (len(binB_ids)>0):
+                                faB_avg_final_binned[rad_final_id, theta_final_id] = (np.mean(faB_norm[binB_ids]) - float(avg_rad_dict['fa_avg']['B'][rad_final_id, theta_final_id][0]))
+                                faB_avg_final_binned_val[rad_final_id, theta_final_id] = np.mean(faB_norm[binB_ids])
 
-                        if float(avg_rad_dict['align']['all'][rad_final_id, theta_final_id][0])>0:
-                            align_final_binned[rad_final_id, theta_final_id] = (np.mean(align_norm[bin_ids]) - float(avg_rad_dict['align']['all'][rad_final_id, theta_final_id][0]))
-                            align_final_binned_val[rad_final_id, theta_final_id] = np.mean(align_norm[bin_ids])
-                        if float(avg_rad_dict['align']['A'][rad_final_id, theta_final_id][0])>0:
-                            alignA_final_binned[rad_final_id, theta_final_id] = (np.mean(alignA_norm[binA_ids]) - float(avg_rad_dict['align']['A'][rad_final_id, theta_final_id][0]))
-                            alignA_final_binned_val[rad_final_id, theta_final_id] = np.mean(alignA_norm[binA_ids])
-                        if float(avg_rad_dict['align']['B'][rad_final_id, theta_final_id][0])>0:
-                            alignB_final_binned[rad_final_id, theta_final_id] = (np.mean(alignB_norm[binB_ids]) - float(avg_rad_dict['align']['B'][rad_final_id, theta_final_id][0]))
-                            alignB_final_binned_val[rad_final_id, theta_final_id] = np.mean(alignB_norm[binB_ids])
+                            if float(avg_rad_dict['align']['all'][rad_final_id, theta_final_id][0])>0:
+                                align_final_binned[rad_final_id, theta_final_id] = (np.mean(align_norm[bin_ids]) - float(avg_rad_dict['align']['all'][rad_final_id, theta_final_id][0]))
+                                align_final_binned_val[rad_final_id, theta_final_id] = np.mean(align_norm[bin_ids])
+                            if (float(avg_rad_dict['align']['A'][rad_final_id, theta_final_id][0])>0) & (len(binA_ids)>0):
+                                alignA_final_binned[rad_final_id, theta_final_id] = (np.mean(alignA_norm[binA_ids]) - float(avg_rad_dict['align']['A'][rad_final_id, theta_final_id][0]))
+                                alignA_final_binned_val[rad_final_id, theta_final_id] = np.mean(alignA_norm[binA_ids])
+                            if (float(avg_rad_dict['align']['B'][rad_final_id, theta_final_id][0])>0) & (len(binB_ids)>0):
+                                alignB_final_binned[rad_final_id, theta_final_id] = (np.mean(alignB_norm[binB_ids]) - float(avg_rad_dict['align']['B'][rad_final_id, theta_final_id][0]))
+                                alignB_final_binned_val[rad_final_id, theta_final_id] = np.mean(alignB_norm[binB_ids])
 
-                        radius_final_binned[rad_final_id, theta_final_id] = (np.mean(r_dist[bin_ids]))
-                        radiusA_final_binned[rad_final_id, theta_final_id] = (np.mean(rA_dist[binA_ids]))
-                        radiusB_final_binned[rad_final_id, theta_final_id] = (np.mean(rB_dist[binB_ids]))
+                            radius_final_binned[rad_final_id, theta_final_id] = (np.mean(r_dist[bin_ids]))
+                            radiusA_final_binned[rad_final_id, theta_final_id] = (np.mean(rA_dist[binA_ids]))
+                            radiusB_final_binned[rad_final_id, theta_final_id] = (np.mean(rB_dist[binB_ids]))
 
 
-                        if float(avg_rad_dict['num_dens']['all'][rad_final_id, theta_final_id][0])>0:
-                            num_dens_final_binned[rad_final_id, theta_final_id] = ((len(bin_ids) / area_radial_slice) - float(avg_rad_dict['num_dens']['all'][rad_final_id, theta_final_id][0]))
-                            num_dens_final_binned_val[rad_final_id, theta_final_id] = (len(bin_ids) / area_radial_slice)
-                        if float(avg_rad_dict['num_dens']['A'][rad_final_id, theta_final_id][0])>0:
-                            num_densA_final_binned[rad_final_id, theta_final_id] = ((len(binA_ids) / area_radial_slice) - float(avg_rad_dict['num_dens']['A'][rad_final_id, theta_final_id][0]))
-                            num_densA_final_binned_val[rad_final_id, theta_final_id] = (len(binA_ids) / area_radial_slice)
-                        if float(avg_rad_dict['num_dens']['B'][rad_final_id, theta_final_id][0])>0:
-                            num_densB_final_binned[rad_final_id, theta_final_id] = ((len(binB_ids) / area_radial_slice) - float(avg_rad_dict['num_dens']['B'][rad_final_id, theta_final_id][0]))
-                            num_densB_final_binned_val[rad_final_id, theta_final_id] = (len(binB_ids) / area_radial_slice)
+                            if float(avg_rad_dict['num_dens']['all'][rad_final_id, theta_final_id][0])>0:
+                                num_dens_final_binned[rad_final_id, theta_final_id] = ((len(bin_ids) / area_radial_slice) - float(avg_rad_dict['num_dens']['all'][rad_final_id, theta_final_id][0]))
+                                num_dens_final_binned_val[rad_final_id, theta_final_id] = (len(bin_ids) / area_radial_slice)
+                            if (float(avg_rad_dict['num_dens']['A'][rad_final_id, theta_final_id][0])>0) & (len(binA_ids)>0):
+                                num_densA_final_binned[rad_final_id, theta_final_id] = ((len(binA_ids) / area_radial_slice) - float(avg_rad_dict['num_dens']['A'][rad_final_id, theta_final_id][0]))
+                                num_densA_final_binned_val[rad_final_id, theta_final_id] = (len(binA_ids) / area_radial_slice)
+                            if (float(avg_rad_dict['num_dens']['B'][rad_final_id, theta_final_id][0])>0) & (len(binB_ids)>0):
+                                num_densB_final_binned[rad_final_id, theta_final_id] = ((len(binB_ids) / area_radial_slice) - float(avg_rad_dict['num_dens']['B'][rad_final_id, theta_final_id][0]))
+                                num_densB_final_binned_val[rad_final_id, theta_final_id] = (len(binB_ids) / area_radial_slice)
 
-                    else:
-                        
-                        if avg_rad_dict['fa_avg']['all'][rad_final_id, theta_final_id]>0:
-                            fa_avg_final_binned[rad_final_id, theta_final_id] = (np.mean(fa_norm[bin_ids]) - avg_rad_dict['fa_avg']['all'][rad_final_id, theta_final_id])
-                            fa_avg_final_binned_val[rad_final_id, theta_final_id] = np.mean(fa_norm[bin_ids])
-                        if avg_rad_dict['fa_avg']['A'][rad_final_id, theta_final_id]>0:
-                            faA_avg_final_binned[rad_final_id, theta_final_id] = (np.mean(faA_norm[binA_ids]) - avg_rad_dict['fa_avg']['A'][rad_final_id, theta_final_id])
-                            faA_avg_final_binned_val[rad_final_id, theta_final_id] = np.mean(faA_norm[binA_ids])
-                        if avg_rad_dict['fa_avg']['B'][rad_final_id, theta_final_id]>0:
-                            faB_avg_final_binned[rad_final_id, theta_final_id] = (np.mean(faB_norm[binB_ids]) - avg_rad_dict['fa_avg']['B'][rad_final_id, theta_final_id])
-                            faB_avg_final_binned_val[rad_final_id, theta_final_id] = np.mean(faB_norm[binB_ids])
+                        else:
+                            
+                            if float(avg_rad_dict['fa_avg_real']['all'][rad_final_id, theta_final_id][0])>0:
+                                fa_avg_real_final_binned[rad_final_id, theta_final_id] = ((np.mean(fa_avg[bin_ids])) - float(avg_rad_dict['fa_avg_real']['all'][rad_final_id, theta_final_id][0]))
+                                fa_avg_real_final_binned_val[rad_final_id, theta_final_id] = np.mean(fa_avg[bin_ids])
 
-                        if avg_rad_dict['fa_dens']['all'][rad_final_id, theta_final_id][0]>0:
-                            fa_dens_final_binned[rad_final_id, theta_final_id] = ((np.sum(fa_norm[bin_ids]) / area_radial_slice) - avg_rad_dict['fa_dens']['all'][rad_final_id, theta_final_id][0])
-                            fa_dens_final_binned_val[rad_final_id, theta_final_id] = np.sum(fa_norm[bin_ids])/ area_radial_slice
-                        if avg_rad_dict['fa_dens']['A'][rad_final_id, theta_final_id][0]>0:
-                            faA_dens_final_binned[rad_final_id, theta_final_id] = ((np.sum(faA_norm[binA_ids]) / area_radial_slice) - avg_rad_dict['fa_dens']['A'][rad_final_id, theta_final_id][0])
-                            faA_dens_final_binned_val[rad_final_id, theta_final_id] = np.sum(faA_norm[binA_ids])/ area_radial_slice
-                        if avg_rad_dict['fa_dens']['B'][rad_final_id, theta_final_id][0]>0:
-                            faB_dens_final_binned[rad_final_id, theta_final_id] = ((np.sum(faB_norm[binB_ids]) / area_radial_slice) - avg_rad_dict['fa_dens']['B'][rad_final_id, theta_final_id][0])
-                            faB_dens_final_binned_val[rad_final_id, theta_final_id] = np.sum(faB_norm[binB_ids])/ area_radial_slice
+                            if avg_rad_dict['fa_avg']['all'][rad_final_id, theta_final_id]>0:
+                                fa_avg_final_binned[rad_final_id, theta_final_id] = (np.mean(fa_norm[bin_ids]) - avg_rad_dict['fa_avg']['all'][rad_final_id, theta_final_id])
+                                fa_avg_final_binned_val[rad_final_id, theta_final_id] = np.mean(fa_norm[bin_ids])
+                            if (avg_rad_dict['fa_avg']['A'][rad_final_id, theta_final_id]>0) & (len(binA_ids)>0):
+                                faA_avg_final_binned[rad_final_id, theta_final_id] = (np.mean(faA_norm[binA_ids]) - avg_rad_dict['fa_avg']['A'][rad_final_id, theta_final_id])
+                                faA_avg_final_binned_val[rad_final_id, theta_final_id] = np.mean(faA_norm[binA_ids])
+                            if (avg_rad_dict['fa_avg']['B'][rad_final_id, theta_final_id]>0) & (len(binB_ids)>0):
+                                faB_avg_final_binned[rad_final_id, theta_final_id] = (np.mean(faB_norm[binB_ids]) - avg_rad_dict['fa_avg']['B'][rad_final_id, theta_final_id])
+                                faB_avg_final_binned_val[rad_final_id, theta_final_id] = np.mean(faB_norm[binB_ids])
 
-                        if avg_rad_dict['align']['all'][rad_final_id, theta_final_id]>0:
-                            align_final_binned[rad_final_id, theta_final_id] = (np.mean(align_norm[bin_ids]) - avg_rad_dict['align']['all'][rad_final_id, theta_final_id])
-                            align_final_binned_val[rad_final_id, theta_final_id] = np.mean(align_norm[bin_ids])
-                        if avg_rad_dict['align']['A'][rad_final_id, theta_final_id]>0:
-                            alignA_final_binned[rad_final_id, theta_final_id] = (np.mean(alignA_norm[binA_ids]) - avg_rad_dict['align']['A'][rad_final_id, theta_final_id])
-                            alignA_final_binned_val[rad_final_id, theta_final_id] = np.mean(alignA_norm[binA_ids])
-                        if avg_rad_dict['align']['B'][rad_final_id, theta_final_id]>0:
-                            alignB_final_binned[rad_final_id, theta_final_id] = (np.mean(alignB_norm[binB_ids]) - avg_rad_dict['align']['B'][rad_final_id, theta_final_id])
-                            alignB_final_binned_val[rad_final_id, theta_final_id] = np.mean(alignB_norm[binB_ids])
+                            if avg_rad_dict['fa_dens']['all'][rad_final_id, theta_final_id][0]>0:
+                                fa_dens_final_binned[rad_final_id, theta_final_id] = ((np.sum(fa_norm[bin_ids]) / area_radial_slice) - avg_rad_dict['fa_dens']['all'][rad_final_id, theta_final_id][0])
+                                fa_dens_final_binned_val[rad_final_id, theta_final_id] = np.sum(fa_norm[bin_ids])/ area_radial_slice
+                            if (avg_rad_dict['fa_dens']['A'][rad_final_id, theta_final_id][0]>0) & (len(binA_ids)>0):
+                                faA_dens_final_binned[rad_final_id, theta_final_id] = ((np.sum(faA_norm[binA_ids]) / area_radial_slice) - avg_rad_dict['fa_dens']['A'][rad_final_id, theta_final_id][0])
+                                faA_dens_final_binned_val[rad_final_id, theta_final_id] = np.sum(faA_norm[binA_ids])/ area_radial_slice
+                            if (avg_rad_dict['fa_dens']['B'][rad_final_id, theta_final_id][0]>0) & (len(binB_ids)>0):
+                                faB_dens_final_binned[rad_final_id, theta_final_id] = ((np.sum(faB_norm[binB_ids]) / area_radial_slice) - avg_rad_dict['fa_dens']['B'][rad_final_id, theta_final_id][0])
+                                faB_dens_final_binned_val[rad_final_id, theta_final_id] = np.sum(faB_norm[binB_ids])/ area_radial_slice
 
-                        radius_final_binned[rad_final_id, theta_final_id] = (np.mean(r_dist[bin_ids]))
-                        radiusA_final_binned[rad_final_id, theta_final_id] = (np.mean(rA_dist[binA_ids]))
-                        radiusB_final_binned[rad_final_id, theta_final_id] = (np.mean(rB_dist[binB_ids]))
+                            if avg_rad_dict['align']['all'][rad_final_id, theta_final_id]>0:
+                                align_final_binned[rad_final_id, theta_final_id] = (np.mean(align_norm[bin_ids]) - avg_rad_dict['align']['all'][rad_final_id, theta_final_id])
+                                align_final_binned_val[rad_final_id, theta_final_id] = np.mean(align_norm[bin_ids])
+                            if (avg_rad_dict['align']['A'][rad_final_id, theta_final_id]>0) & (len(binA_ids)>0):
+                                alignA_final_binned[rad_final_id, theta_final_id] = (np.mean(alignA_norm[binA_ids]) - avg_rad_dict['align']['A'][rad_final_id, theta_final_id])
+                                alignA_final_binned_val[rad_final_id, theta_final_id] = np.mean(alignA_norm[binA_ids])
+                            if (avg_rad_dict['align']['B'][rad_final_id, theta_final_id]>0) & (len(binB_ids)>0):
+                                alignB_final_binned[rad_final_id, theta_final_id] = (np.mean(alignB_norm[binB_ids]) - avg_rad_dict['align']['B'][rad_final_id, theta_final_id])
+                                alignB_final_binned_val[rad_final_id, theta_final_id] = np.mean(alignB_norm[binB_ids])
 
-                        if avg_rad_dict['num_dens']['all'][rad_final_id, theta_final_id]>0:
-                            num_dens_final_binned[rad_final_id, theta_final_id] = ((len(bin_ids) / area_radial_slice) - avg_rad_dict['num_dens']['all'][rad_final_id, theta_final_id])
-                            num_dens_final_binned_val[rad_final_id, theta_final_id] = (len(bin_ids) / area_radial_slice)
-                        if avg_rad_dict['num_dens']['A'][rad_final_id, theta_final_id]>0:
-                            num_densA_final_binned[rad_final_id, theta_final_id] = ((len(binA_ids) / area_radial_slice) - avg_rad_dict['num_dens']['A'][rad_final_id, theta_final_id])
-                            num_densA_final_binned_val[rad_final_id, theta_final_id] = (len(binA_ids) / area_radial_slice)
-                        if avg_rad_dict['num_dens']['B'][rad_final_id, theta_final_id]>0:
-                            num_densB_final_binned[rad_final_id, theta_final_id] = ((len(binB_ids) / area_radial_slice) - avg_rad_dict['num_dens']['B'][rad_final_id, theta_final_id])
-                            num_densB_final_binned_val[rad_final_id, theta_final_id] = (len(binB_ids) / area_radial_slice)
+                            radius_final_binned[rad_final_id, theta_final_id] = (np.mean(r_dist[bin_ids]))
+                            radiusA_final_binned[rad_final_id, theta_final_id] = (np.mean(rA_dist[binA_ids]))
+                            radiusB_final_binned[rad_final_id, theta_final_id] = (np.mean(rB_dist[binB_ids]))
 
-        radial_heterogeneity_dict = {'rad': rad_final_bins, 'theta': theta_final_bins, 'radius': np.mean(r_dist), 'com': {'x': all_surface_measurements[key]['exterior']['com']['x'], 'y': all_surface_measurements[key]['exterior']['com']['y']}, 'fa_avg': {'all': fa_avg_final_binned, 'A': faA_avg_final_binned, 'B': faB_avg_final_binned}, 'fa_dens': {'all': fa_dens_final_binned, 'A': faA_dens_final_binned, 'B': faB_dens_final_binned}, 'align': {'all': align_final_binned, 'A': alignA_final_binned, 'B': alignB_final_binned}, 'num_dens': {'all': num_dens_final_binned, 'A': num_densA_final_binned, 'B': num_densB_final_binned}}
+                            if avg_rad_dict['num_dens']['all'][rad_final_id, theta_final_id]>0:
+                                num_dens_final_binned[rad_final_id, theta_final_id] = ((len(bin_ids) / area_radial_slice) - avg_rad_dict['num_dens']['all'][rad_final_id, theta_final_id])
+                                num_dens_final_binned_val[rad_final_id, theta_final_id] = (len(bin_ids) / area_radial_slice)
+                            if (avg_rad_dict['num_dens']['A'][rad_final_id, theta_final_id]>0) & (len(binA_ids)>0):
+                                num_densA_final_binned[rad_final_id, theta_final_id] = ((len(binA_ids) / area_radial_slice) - avg_rad_dict['num_dens']['A'][rad_final_id, theta_final_id])
+                                num_densA_final_binned_val[rad_final_id, theta_final_id] = (len(binA_ids) / area_radial_slice)
+                            if (avg_rad_dict['num_dens']['B'][rad_final_id, theta_final_id]>0) & (len(binB_ids)>0):
+                                num_densB_final_binned[rad_final_id, theta_final_id] = ((len(binB_ids) / area_radial_slice) - avg_rad_dict['num_dens']['B'][rad_final_id, theta_final_id])
+                                num_densB_final_binned_val[rad_final_id, theta_final_id] = (len(binB_ids) / area_radial_slice)
+
+        radial_heterogeneity_dict = {'rad': rad_final_bins, 'theta': theta_final_bins, 'radius': np.mean(r_dist), 'com': {'x': all_surface_measurements[key]['exterior']['com']['x'], 'y': all_surface_measurements[key]['exterior']['com']['y']}, 'fa_avg_real': {'all': fa_avg_real_final_binned}, 'fa_avg': {'all': fa_avg_final_binned, 'A': faA_avg_final_binned, 'B': faB_avg_final_binned}, 'fa_dens': {'all': fa_dens_final_binned, 'A': faA_dens_final_binned, 'B': faB_dens_final_binned}, 'align': {'all': align_final_binned, 'A': alignA_final_binned, 'B': alignB_final_binned}, 'num_dens': {'all': num_dens_final_binned, 'A': num_densA_final_binned, 'B': num_densB_final_binned}}
         plot_bin_dict = {'rad': rad_final_bins, 'theta': theta_final_bins, 'radius': np.mean(r_dist), 'com': {'x': all_surface_measurements[key]['exterior']['com']['x'], 'y': all_surface_measurements[key]['exterior']['com']['y']}, 'fa_avg': {'all': fa_avg_final_binned_val, 'A': faA_avg_final_binned_val, 'B': faB_avg_final_binned_val}, 'fa_dens': {'all': fa_dens_final_binned_val, 'A': faA_dens_final_binned_val, 'B': faB_dens_final_binned_val}, 'align': {'all': align_final_binned_val, 'A': alignA_final_binned_val, 'B': alignB_final_binned_val}, 'num': {'all': num_final_binned_val, 'A': numA_final_binned_val, 'B': numB_final_binned_val}, 'num_dens': {'all': num_dens_final_binned_val, 'A': num_densA_final_binned_val, 'B': num_densB_final_binned_val}, 'rad_bin': {'all': radius_final_binned, 'A': radiusA_final_binned, 'B': radiusB_final_binned}}
 
         return radial_heterogeneity_dict, plot_dict, plot_bin_dict
