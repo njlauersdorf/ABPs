@@ -2713,16 +2713,7 @@ class particle_props:
 
         for m in range(0, len(sep_surface_dict)):
             key = 'surface id ' + str(int(int_comp_dict['ids'][m]))
-            try:
-                print(all_surface_measurements[key]['exterior'])
-            except:
-                print(all_surface_measurements[key]['interior'])
-            stop
-            try:
-                print(sep_surface_dict[key]['exterior'])
-            except:
-                print(sep_surface_dict[key]['interior'])
-            stop
+
             try:
                 
                 pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
@@ -3690,7 +3681,11 @@ class particle_props:
         B_id = np.where((self.typ==1))[0]
 
         interface_id = int(np.where(int_comp_dict['comp']==np.max(int_comp_dict['comp']))[0])
-        key = 'surface id ' + str(int(int_comp_dict['ids'][interface_id]))
+
+        int_id = np.where(int_dict['part']==int_dict['largest ids'][0])[0]
+
+        key = 'surface id ' + str(int(int_dict['largest ids'][0]))
+
         ext_rad = (surface_dict[key]['exterior']['pos']['x']**2 + surface_dict[key]['exterior']['pos']['y']**2)**0.5
 
         
@@ -4018,7 +4013,10 @@ class particle_props:
         B_id = np.where((self.typ==1))[0]
 
         interface_id = int(np.where(int_comp_dict['comp']==np.max(int_comp_dict['comp']))[0])
-        key = 'surface id ' + str(int(int_comp_dict['ids'][interface_id]))
+
+        int_id = np.where(int_dict['part']==int_dict['largest ids'][0])[0]
+
+        key = 'surface id ' + str(int(int_dict['largest ids'][0]))
         ext_rad = (surface_dict[key]['exterior']['pos']['x']**2 + surface_dict[key]['exterior']['pos']['y']**2)**0.5
 
         difx_ext_surface = (surface_dict[key]['exterior']['pos']['x'] - all_surface_measurements[key]['exterior']['com']['x'])
@@ -4031,6 +4029,7 @@ class particle_props:
             ang_ext_surface[neg_ang] = 180 + (180+ang_ext_surface[neg_ang])
         
         pos_wrap_x = self.pos[int_id,0] + self.hx_box
+        
         test_id = np.where(pos_wrap_x>self.lx_box)[0]
         if len(test_id)>0:
             pos_wrap_x[test_id] = pos_wrap_x[test_id]-self.lx_box
@@ -4402,7 +4401,7 @@ class particle_props:
                                 num_densB_final_binned_val[rad_final_id, theta_final_id] = (len(binB_ids) / area_radial_slice)
 
         radial_heterogeneity_dict = {'rad': rad_final_bins, 'theta': theta_final_bins, 'radius': np.mean(r_dist), 'com': {'x': all_surface_measurements[key]['exterior']['com']['x'], 'y': all_surface_measurements[key]['exterior']['com']['y']}, 'fa_avg_real': {'all': fa_avg_real_final_binned}, 'fa_avg': {'all': fa_avg_final_binned, 'A': faA_avg_final_binned, 'B': faB_avg_final_binned}, 'fa_dens': {'all': fa_dens_final_binned, 'A': faA_dens_final_binned, 'B': faB_dens_final_binned}, 'align': {'all': align_final_binned, 'A': alignA_final_binned, 'B': alignB_final_binned}, 'num_dens': {'all': num_dens_final_binned, 'A': num_densA_final_binned, 'B': num_densB_final_binned}}
-        plot_bin_dict = {'rad': rad_final_bins, 'theta': theta_final_bins, 'radius': np.mean(r_dist), 'com': {'x': all_surface_measurements[key]['exterior']['com']['x'], 'y': all_surface_measurements[key]['exterior']['com']['y']}, 'fa_avg': {'all': fa_avg_final_binned_val, 'A': faA_avg_final_binned_val, 'B': faB_avg_final_binned_val}, 'fa_dens': {'all': fa_dens_final_binned_val, 'A': faA_dens_final_binned_val, 'B': faB_dens_final_binned_val}, 'align': {'all': align_final_binned_val, 'A': alignA_final_binned_val, 'B': alignB_final_binned_val}, 'num': {'all': num_final_binned_val, 'A': numA_final_binned_val, 'B': numB_final_binned_val}, 'num_dens': {'all': num_dens_final_binned_val, 'A': num_densA_final_binned_val, 'B': num_densB_final_binned_val}, 'rad_bin': {'all': radius_final_binned, 'A': radiusA_final_binned, 'B': radiusB_final_binned}}
+        plot_bin_dict = {'rad': rad_final_bins, 'theta': theta_final_bins, 'radius': np.mean(r_dist), 'com': {'x': all_surface_measurements[key]['exterior']['com']['x'], 'y': all_surface_measurements[key]['exterior']['com']['y']}, 'fa_avg_real': {'all': fa_avg_real_final_binned_val}, 'fa_avg': {'all': fa_avg_final_binned_val, 'A': faA_avg_final_binned_val, 'B': faB_avg_final_binned_val}, 'fa_dens': {'all': fa_dens_final_binned_val, 'A': faA_dens_final_binned_val, 'B': faB_dens_final_binned_val}, 'align': {'all': align_final_binned_val, 'A': alignA_final_binned_val, 'B': alignB_final_binned_val}, 'num': {'all': num_final_binned_val, 'A': numA_final_binned_val, 'B': numB_final_binned_val}, 'num_dens': {'all': num_dens_final_binned_val, 'A': num_densA_final_binned_val, 'B': num_densB_final_binned_val}, 'rad_bin': {'all': radius_final_binned, 'A': radiusA_final_binned, 'B': radiusB_final_binned}}
 
         return radial_heterogeneity_dict, plot_dict, plot_bin_dict
 
