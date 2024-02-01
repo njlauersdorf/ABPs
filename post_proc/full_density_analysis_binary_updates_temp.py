@@ -322,7 +322,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
             sum_num = 0
             
             end_avg = int(dumps/time_step)-1
-            start_avg = int(end_avg/2)
+            start_avg = int(end_avg/3)
 
             for p in range(start_avg, end_avg):
                 j=int(p*time_step)
