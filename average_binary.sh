@@ -35,6 +35,8 @@ fi
 current=$( date "+%m_%d_%y" )
 this_path="$( pwd )"
 
+mkdir output_files
+
 outpath="$this_path"/
 
 echo "|----------------------------------------------------------------------|"

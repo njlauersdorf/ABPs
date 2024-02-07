@@ -575,43 +575,9 @@ class plotting:
         fig = plt.figure(figsize=(x_dim,y_dim))
         ax = fig.add_subplot(111)
 
-        average_theta_path = '/Volumes/External/n100000test/pa0_pb500/averages/radial_avgs_theta_pa0_pb500_xa50_eps1.0_phi60.0_pNum50000_bin5_time1.csv'
-        average_rad_path = '/Volumes/External/n100000test/pa0_pb500/averages/radial_avgs_rad_pa0_pb500_xa50_eps1.0_phi60.0_pNum50000_bin5_time1.csv'
-
-        import csv 
-
-        averages_file =  open(average_theta_path, newline='')
-        avg_theta_r = np.array(list(csv.reader(averages_file)))
-
-        avg_theta_r_flatten = (avg_theta_r.flatten()).astype(np.float) 
-        avg_theta_r_flatten = np.append(avg_theta_r_flatten, avg_theta_r_flatten[0])
-        averages_file =  open(average_rad_path, newline='')
-        avg_rad_r = np.array(list(csv.reader(averages_file)))
-
-        avg_rad_r_flatten = (avg_rad_r.flatten()).astype(np.float) 
-        
-        average_indiv_vals_path = '/Volumes/External/n100000test/pa0_pb500/averages/radial_avgs_indiv_vals_pa0_pb500_xa50_eps1.0_phi60.0_pNum50000_bin5_time1.csv'
-
-        averages_file =  open(average_indiv_vals_path, newline='')
-        reader = csv.reader(averages_file)
-        avg_indiv_vals = dict(reader)
-        avg_radius_r_flatten= float(avg_indiv_vals['radius'])
-
-
-        for i in range(0, len(avg_theta_r_flatten)):   
-            x_coords = self.hx_box + avg_rad_r_flatten * avg_radius_r_flatten * np.cos(avg_theta_r_flatten[i]*(np.pi/180))
-            y_coords = self.hy_box + avg_rad_r_flatten * avg_radius_r_flatten * np.sin(avg_theta_r_flatten[i]*(np.pi/180))
-            plt.plot(x_coords, y_coords, c='black', linewidth=1.0)
-
-        for i in range(0, len(avg_rad_r_flatten)):   
-            x_coords = self.hx_box + avg_rad_r_flatten[i] * avg_radius_r_flatten * np.cos(avg_theta_r_flatten*(np.pi/180))
-            y_coords = self.hy_box + avg_rad_r_flatten[i] * avg_radius_r_flatten * np.sin(avg_theta_r_flatten*(np.pi/180))
-            plt.plot(x_coords, y_coords, c='black', linewidth=1.0)
-
-
         # Set plotted particle size
         sz = 0.755
-        """
+        
         # Plot position colored by phase
         if len(bulk_part_ids)>0:
             ells_bulk = [Ellipse(xy=np.array([pos[bulk_part_ids[i],0]+self.hx_box,pos[bulk_part_ids[i],1]+self.hy_box]),
@@ -626,7 +592,7 @@ class plotting:
         for i in range(0,len(gas_part_ids))]
             gasGroup = mc.PatchCollection(ells_gas, facecolor=red)
             ax.add_collection(gasGroup)
-        """
+        
         if len(int_part_ids)>0:
             ells_int = [Ellipse(xy=np.array([pos[int_part_ids[i],0]+self.hx_box,pos[int_part_ids[i],1]+self.hy_box]),
                 width=sz, height=sz)
@@ -11214,6 +11180,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         """
         if component == 'dif':
             im = plt.tricontourf(x_coords, y_coords, vals, cmap='seismic', vmin=-limit_vals, vmax=limit_vals)#, norm=matplotlib.colors.LogNorm())#, vmin=-2.5, vmax=2.5, cmap='seismic')#,alpha=0.65, norm=matplotlib.colors.LogNorm())
+        
         else:
             if (measure == 'num_dens') | (measure == 'fa_avg_real'):
                 im = plt.tricontourf(x_coords, y_coords, vals, cmap='Greens', vmin=0, vmax=limit_vals)#, norm=matplotlib.colors.LogNorm())#, vmin=-2.5, vmax=2.5, cmap='seismic')#,alpha=0.65, norm=matplotlib.colors.LogNorm())
