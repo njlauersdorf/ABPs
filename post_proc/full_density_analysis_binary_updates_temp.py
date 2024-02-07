@@ -768,91 +768,95 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     method1_align_dict, method2_align_dict = interface_functs.gas_alignment(method1_align_dict, method2_align_dict, all_surface_measurements, all_surface_curves, sep_surface_dict, int_comp_dict)
 
                     particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, eps, typ, pos, x_orient_arr, y_orient_arr)
-                        
-                    single_time_dict, plot_dict, plot_bin_dict = particle_prop_functs.radial_heterogeneity_avgs(method2_align_dict, all_surface_curves, int_comp_dict, all_surface_measurements, int_dict, phase_dict)
-                    #print(sum_fa_r)  
-
+                    
                     try:
-                        sum_fa_avg_real_r += single_time_dict['fa_avg_real']['all']
-                    except: 
-                        sum_fa_avg_real_r = single_time_dict['fa_avg_real']['all']
 
-                    try:
-                        sum_fa_avg_r += single_time_dict['fa_avg']['all']
-                    except: 
-                        sum_fa_avg_r = single_time_dict['fa_avg']['all']
+                        single_time_dict, plot_dict, plot_bin_dict = particle_prop_functs.radial_heterogeneity_avgs(method2_align_dict, all_surface_curves, int_comp_dict, all_surface_measurements, int_dict, phase_dict)
+                        #print(sum_fa_r)  
 
-                    try:  
-                        sum_faA_avg_r = sum_faA_r + single_time_dict['fa_avg']['A']
-                    except: 
-                        sum_faA_avg_r = single_time_dict['fa_avg']['A']
+                        try:
+                            sum_fa_avg_real_r += single_time_dict['fa_avg_real']['all']
+                        except: 
+                            sum_fa_avg_real_r = single_time_dict['fa_avg_real']['all']
 
-                    try:
-                        sum_faB_avg_r = sum_faB_r + single_time_dict['fa_avg']['B']
-                    except: 
-                        sum_faB_avg_r = single_time_dict['fa_avg']['B']
+                        try:
+                            sum_fa_avg_r += single_time_dict['fa_avg']['all']
+                        except: 
+                            sum_fa_avg_r = single_time_dict['fa_avg']['all']
 
-                    try:
-                        sum_fa_dens_r += single_time_dict['fa_dens']['all']
-                    except: 
-                        sum_fa_dens_r = single_time_dict['fa_dens']['all']
+                        try:  
+                            sum_faA_avg_r = sum_faA_r + single_time_dict['fa_avg']['A']
+                        except: 
+                            sum_faA_avg_r = single_time_dict['fa_avg']['A']
 
-                    try:  
-                        sum_faA_dens_r = sum_faA_r + single_time_dict['fa_dens']['A']
-                    except: 
-                        sum_faA_dens_r = single_time_dict['fa_dens']['A']
+                        try:
+                            sum_faB_avg_r = sum_faB_r + single_time_dict['fa_avg']['B']
+                        except: 
+                            sum_faB_avg_r = single_time_dict['fa_avg']['B']
 
-                    try:
-                        sum_faB_dens_r = sum_faB_r + single_time_dict['fa_dens']['B']
-                    except: 
-                        sum_faB_dens_r = single_time_dict['fa_dens']['B']
+                        try:
+                            sum_fa_dens_r += single_time_dict['fa_dens']['all']
+                        except: 
+                            sum_fa_dens_r = single_time_dict['fa_dens']['all']
 
-                    try:
-                        sum_align_r = sum_align_r + single_time_dict['align']['all']
-                    except: 
-                        sum_align_r = single_time_dict['align']['all']
+                        try:  
+                            sum_faA_dens_r = sum_faA_r + single_time_dict['fa_dens']['A']
+                        except: 
+                            sum_faA_dens_r = single_time_dict['fa_dens']['A']
 
-                    try:
-                        sum_alignA_r = sum_alignA_r + single_time_dict['align']['A']
-                    except: 
-                        sum_alignA_r = single_time_dict['align']['A']
+                        try:
+                            sum_faB_dens_r = sum_faB_r + single_time_dict['fa_dens']['B']
+                        except: 
+                            sum_faB_dens_r = single_time_dict['fa_dens']['B']
 
-                    try:
-                        sum_alignB_r = sum_alignB_r + single_time_dict['align']['B']
-                    except: 
-                        sum_alignB_r = single_time_dict['align']['B']
+                        try:
+                            sum_align_r = sum_align_r + single_time_dict['align']['all']
+                        except: 
+                            sum_align_r = single_time_dict['align']['all']
 
-                    try:
-                        sum_num_dens_r = sum_num_dens_r + single_time_dict['num_dens']['all']
-                    except: 
-                        sum_num_dens_r = single_time_dict['num_dens']['all']
+                        try:
+                            sum_alignA_r = sum_alignA_r + single_time_dict['align']['A']
+                        except: 
+                            sum_alignA_r = single_time_dict['align']['A']
 
-                    try:
-                        sum_num_densA_r = sum_num_densA_r + single_time_dict['num_dens']['A']
-                    except: 
-                        sum_num_densA_r = single_time_dict['num_dens']['A']
+                        try:
+                            sum_alignB_r = sum_alignB_r + single_time_dict['align']['B']
+                        except: 
+                            sum_alignB_r = single_time_dict['align']['B']
 
-                    try:
-                        sum_num_densB_r = sum_num_densB_r + single_time_dict['num_dens']['B']
-                    except: 
-                        sum_num_densB_r = single_time_dict['num_dens']['B']
+                        try:
+                            sum_num_dens_r = sum_num_dens_r + single_time_dict['num_dens']['all']
+                        except: 
+                            sum_num_dens_r = single_time_dict['num_dens']['all']
 
-                    try:
-                        sum_rad = sum_rad + single_time_dict['radius']
-                    except: 
-                        sum_rad = single_time_dict['radius']
+                        try:
+                            sum_num_densA_r = sum_num_densA_r + single_time_dict['num_dens']['A']
+                        except: 
+                            sum_num_densA_r = single_time_dict['num_dens']['A']
 
-                    try:
-                        sum_com_x = sum_com_x + single_time_dict['com']['x']
-                    except: 
-                        sum_com_x = single_time_dict['com']['x']
-                        
-                    try:
-                        sum_com_y = sum_com_y + single_time_dict['com']['y']
+                        try:
+                            sum_num_densB_r = sum_num_densB_r + single_time_dict['num_dens']['B']
+                        except: 
+                            sum_num_densB_r = single_time_dict['num_dens']['B']
+
+                        try:
+                            sum_rad = sum_rad + single_time_dict['radius']
+                        except: 
+                            sum_rad = single_time_dict['radius']
+
+                        try:
+                            sum_com_x = sum_com_x + single_time_dict['com']['x']
+                        except: 
+                            sum_com_x = single_time_dict['com']['x']
+                            
+                        try:
+                            sum_com_y = sum_com_y + single_time_dict['com']['y']
+                        except:
+                            sum_com_y = single_time_dict['com']['y']
+
+                        sum_num += 1
                     except:
-                        sum_com_y = single_time_dict['com']['y']
-
-                    sum_num += 1
+                        pass
                 
             avg_fa_avg_r = sum_fa_avg_r / sum_num
             avg_faA_avg_r = sum_faA_avg_r / sum_num
@@ -2098,38 +2102,40 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, eps, typ, pos, x_orient_arr, y_orient_arr)
                     
                     from csv import writer
-                    radial_heterogeneity_dict, plot_heterogeneity_dict, plot_bin_dict = particle_prop_functs.radial_heterogeneity(method2_align_dict, avg_rad_dict, all_surface_curves, int_comp_dict, all_surface_measurements, int_dict, phase_dict, load_save=load_save)
+                    try:
+                        radial_heterogeneity_dict, plot_heterogeneity_dict, plot_bin_dict = particle_prop_functs.radial_heterogeneity(method2_align_dict, avg_rad_dict, all_surface_curves, int_comp_dict, all_surface_measurements, int_dict, phase_dict, load_save=load_save)
 
-                    rad_arr = radial_heterogeneity_dict['rad'].flatten()
-                    theta_arr = radial_heterogeneity_dict['theta'].flatten()
+                        rad_arr = radial_heterogeneity_dict['rad'].flatten()
+                        theta_arr = radial_heterogeneity_dict['theta'].flatten()
 
-                    radius_arr = np.ones(len(theta_arr)) * radial_heterogeneity_dict['radius']
-                    com_x_arr = np.ones(len(theta_arr)) * radial_heterogeneity_dict['com']['x']
-                    com_y_arr = np.ones(len(theta_arr)) * radial_heterogeneity_dict['com']['y']
+                        radius_arr = np.ones(len(theta_arr)) * radial_heterogeneity_dict['radius']
+                        com_x_arr = np.ones(len(theta_arr)) * radial_heterogeneity_dict['com']['x']
+                        com_y_arr = np.ones(len(theta_arr)) * radial_heterogeneity_dict['com']['y']
 
-                    fa_avg_real_arr = radial_heterogeneity_dict['fa_avg_real']['all'].flatten()
+                        fa_avg_real_arr = radial_heterogeneity_dict['fa_avg_real']['all'].flatten()
 
-                    fa_avg_arr = radial_heterogeneity_dict['fa_avg']['all'].flatten()
-                    faA_avg_arr = radial_heterogeneity_dict['fa_avg']['A'].flatten()
-                    faB_avg_arr = radial_heterogeneity_dict['fa_avg']['B'].flatten()
+                        fa_avg_arr = radial_heterogeneity_dict['fa_avg']['all'].flatten()
+                        faA_avg_arr = radial_heterogeneity_dict['fa_avg']['A'].flatten()
+                        faB_avg_arr = radial_heterogeneity_dict['fa_avg']['B'].flatten()
 
-                    fa_dens_arr = radial_heterogeneity_dict['fa_dens']['all'].flatten()
-                    faA_dens_arr = radial_heterogeneity_dict['fa_dens']['A'].flatten()
-                    faB_dens_arr = radial_heterogeneity_dict['fa_dens']['B'].flatten()
+                        fa_dens_arr = radial_heterogeneity_dict['fa_dens']['all'].flatten()
+                        faA_dens_arr = radial_heterogeneity_dict['fa_dens']['A'].flatten()
+                        faB_dens_arr = radial_heterogeneity_dict['fa_dens']['B'].flatten()
 
-                    align_arr = radial_heterogeneity_dict['align']['all'].flatten()
-                    alignA_arr = radial_heterogeneity_dict['align']['A'].flatten()
-                    alignB_arr = radial_heterogeneity_dict['align']['B'].flatten()
+                        align_arr = radial_heterogeneity_dict['align']['all'].flatten()
+                        alignA_arr = radial_heterogeneity_dict['align']['A'].flatten()
+                        alignB_arr = radial_heterogeneity_dict['align']['B'].flatten()
 
-                    num_dens_arr = radial_heterogeneity_dict['num_dens']['all'].flatten()
-                    num_densA_arr = radial_heterogeneity_dict['num_dens']['A'].flatten()
-                    num_densB_arr = radial_heterogeneity_dict['num_dens']['B'].flatten()
-                    
-                    for m in range(0, len(rad_arr)):
-                        rad_arr = np.ones(len(theta_arr)) * radial_heterogeneity_dict['rad'][m]
-                        radial_heterogeneity_save_dict = {'rad': rad_arr.tolist(), 'theta': theta_arr.tolist(), 'radius': radius_arr.tolist(), 'com_x': com_x_arr.tolist(), 'com_y': com_y_arr.tolist(), 'fa_avg_real': {'all': radial_heterogeneity_dict['fa_avg_real']['all'][m,:].tolist()}, 'fa_avg': {'all': radial_heterogeneity_dict['fa_avg']['all'][m,:].tolist(), 'A': radial_heterogeneity_dict['fa_avg']['A'][m,:].tolist(), 'B': radial_heterogeneity_dict['fa_avg']['B'][m,:].tolist()}, 'fa_dens': {'all': radial_heterogeneity_dict['fa_dens']['all'][m,:].tolist(), 'A': radial_heterogeneity_dict['fa_dens']['A'][m,:].tolist(), 'B': radial_heterogeneity_dict['fa_dens']['B'][m,:].tolist()}, 'align': {'all': radial_heterogeneity_dict['align']['all'][m,:].tolist(), 'A': radial_heterogeneity_dict['align']['A'][m,:].tolist(), 'B': radial_heterogeneity_dict['align']['B'][m,:].tolist()}, 'num_dens': {'all': radial_heterogeneity_dict['num_dens']['all'][m,:].tolist(), 'A': radial_heterogeneity_dict['num_dens']['A'][m,:].tolist(), 'B': radial_heterogeneity_dict['num_dens']['B'][m,:].tolist()}} 
-                        data_output_functs.write_to_txt(radial_heterogeneity_save_dict, dataPath + 'Radial_heterogeneity_' + outfile + '.txt')
-
+                        num_dens_arr = radial_heterogeneity_dict['num_dens']['all'].flatten()
+                        num_densA_arr = radial_heterogeneity_dict['num_dens']['A'].flatten()
+                        num_densB_arr = radial_heterogeneity_dict['num_dens']['B'].flatten()
+                        
+                        for m in range(0, len(rad_arr)):
+                            rad_arr = np.ones(len(theta_arr)) * radial_heterogeneity_dict['rad'][m]
+                            radial_heterogeneity_save_dict = {'rad': rad_arr.tolist(), 'theta': theta_arr.tolist(), 'radius': radius_arr.tolist(), 'com_x': com_x_arr.tolist(), 'com_y': com_y_arr.tolist(), 'fa_avg_real': {'all': radial_heterogeneity_dict['fa_avg_real']['all'][m,:].tolist()}, 'fa_avg': {'all': radial_heterogeneity_dict['fa_avg']['all'][m,:].tolist(), 'A': radial_heterogeneity_dict['fa_avg']['A'][m,:].tolist(), 'B': radial_heterogeneity_dict['fa_avg']['B'][m,:].tolist()}, 'fa_dens': {'all': radial_heterogeneity_dict['fa_dens']['all'][m,:].tolist(), 'A': radial_heterogeneity_dict['fa_dens']['A'][m,:].tolist(), 'B': radial_heterogeneity_dict['fa_dens']['B'][m,:].tolist()}, 'align': {'all': radial_heterogeneity_dict['align']['all'][m,:].tolist(), 'A': radial_heterogeneity_dict['align']['A'][m,:].tolist(), 'B': radial_heterogeneity_dict['align']['B'][m,:].tolist()}, 'num_dens': {'all': radial_heterogeneity_dict['num_dens']['all'][m,:].tolist(), 'A': radial_heterogeneity_dict['num_dens']['A'][m,:].tolist(), 'B': radial_heterogeneity_dict['num_dens']['B'][m,:].tolist()}} 
+                            data_output_functs.write_to_txt(radial_heterogeneity_save_dict, dataPath + 'Radial_heterogeneity_' + outfile + '.txt')
+                    except:
+                        pass
                     if plot == 'y':
                         plotting_functs.plot_radial_heterogeneity(averagesPath, inFile, pos, radial_heterogeneity_dict, plot_bin_dict, plot_heterogeneity_dict, all_surface_curves, int_comp_dict, active_fa_dict, mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option, banner_id = banner_option, presentation_id = presentation_option, measure='fa_dens', types='all', circle_opt = 1, component = 'dif')      
                         plotting_functs.plot_radial_heterogeneity(averagesPath, inFile, pos, radial_heterogeneity_dict, plot_bin_dict, plot_heterogeneity_dict, all_surface_curves, int_comp_dict, active_fa_dict, mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option, banner_id = banner_option, presentation_id = presentation_option, measure='fa_dens', types='A', circle_opt = 1, component = 'dif')      

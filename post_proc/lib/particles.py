@@ -3683,9 +3683,8 @@ class particle_props:
         interface_id = int(np.where(int_comp_dict['comp']==np.max(int_comp_dict['comp']))[0])
 
         int_id = np.where(int_dict['part']==int_dict['largest ids'][0])[0]
-
         key = 'surface id ' + str(int(int_dict['largest ids'][0]))
-
+    
         ext_rad = (surface_dict[key]['exterior']['pos']['x']**2 + surface_dict[key]['exterior']['pos']['y']**2)**0.5
 
         
@@ -3992,7 +3991,7 @@ class particle_props:
         
         radial_heterogeneity_dict = {'rad': rad_final_bins, 'theta': theta_final_bins, 'radius': np.mean(r_dist), 'com': {'x': all_surface_measurements[key]['exterior']['com']['x'], 'y': all_surface_measurements[key]['exterior']['com']['y']}, 'fa_avg_real': {'all': fa_avg_real_final_binned}, 'fa_avg': {'all': fa_avg_final_binned, 'A': faA_avg_final_binned, 'B': faB_avg_final_binned}, 'fa_dens': {'all': fa_dens_final_binned, 'A': faA_dens_final_binned, 'B': faB_dens_final_binned}, 'align': {'all': align_final_binned, 'A': alignA_final_binned, 'B': alignB_final_binned}, 'num_dens': {'all': num_dens_final_binned, 'A': num_densA_final_binned, 'B': num_densB_final_binned}}
         plot_bin_dict = {'rad': rad_final_bins, 'theta': theta_final_bins, 'radius': np.mean(r_dist), 'com': {'x': all_surface_measurements[key]['exterior']['com']['x'], 'y': all_surface_measurements[key]['exterior']['com']['y']}, 'fa_avg': {'all': fa_avg_final_binned_val, 'A': faA_avg_final_binned_val, 'B': faB_avg_final_binned_val}, 'fa_dens': {'all': fa_dens_final_binned_val, 'A': faA_dens_final_binned_val, 'B': faB_dens_final_binned_val}, 'align': {'all': align_final_binned_val, 'A': alignA_final_binned_val, 'B': alignB_final_binned_val}, 'num': {'all': num_final_binned_val, 'A': numA_final_binned_val, 'B': numB_final_binned_val}, 'num_dens': {'all': num_dens_final_binned_val, 'A': num_densA_final_binned_val, 'B': num_densB_final_binned_val}}
-
+            
         return radial_heterogeneity_dict, plot_dict, plot_bin_dict
 
     def radial_heterogeneity(self, method2_align_dict, avg_rad_dict, surface_dict, int_comp_dict, all_surface_measurements, int_dict, phase_dict, load_save = 0):

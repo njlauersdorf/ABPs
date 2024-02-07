@@ -568,8 +568,8 @@ class plotting:
             if presentation_id == True:
                 x_dim = scaling+0.18
             else:
-                x_dim = int(scaling + 0.5)
-            y_dim = int(scaling)
+                x_dim = scaling + 0.3
+            y_dim = scaling
 
         # Generate figure of dimensions proportional to simulation box size (with added x-length for color bar)
         fig = plt.figure(figsize=(x_dim,y_dim))
@@ -664,9 +664,10 @@ class plotting:
             try:
                 if active_fa_dict!=None:
                     for k in range(0, len(active_fa_dict['bin']['all']['x'])):
-                        for l in range(0, len(active_fa_dict['bin']['all']['x'])):
+                        for l in range(0, len(active_fa_dict['bin']['all']['y'])):
                             count = 0
                             noncount = 0
+                            """
                             for i in range(0, len(phase_dict['bin'])):
                                 for j in range(0, len(phase_dict['bin'])):
                                     if (self.pos_x[i][j] <= self.pos_x[k+1][l] * 3) & (self.pos_x[i][j] >= self.pos_x[k][l] * 3) & (self.pos_y[i][j] <= self.pos_y[k][l+1] * 3) & (self.pos_y[i][j] >= self.pos_y[k][l] * 3):
@@ -674,14 +675,15 @@ class plotting:
                                             count += 1
                                         else:
                                             noncount += 1
-                            if count > 0:
+                            """
+                            #if count > noncount/4:
                                 #print(k)
                                 #print(l)
-                                if (active_fa_dict['bin']['all']['x'][k][l] ** 2 + active_fa_dict['bin']['all']['y'][k][l] ** 2) ** 0.5 >=0.20:
-                                    new_orient_dict_x[k][l]=active_fa_dict['bin']['all']['x'][k][l]
-                                    new_orient_dict_y[k][l]=active_fa_dict['bin']['all']['y'][k][l]
-                                    pos_x_new[k][l] = self.pos_x[k][l]*3
-                                    pos_y_new[k][l] = self.pos_y[k][l]*3
+                                #if ((active_fa_dict['bin']['all']['x'][k][l] ** 2 + active_fa_dict['bin']['all']['y'][k][l] ** 2) ** 0.5 >=0.20) | (count > noncount):
+                            new_orient_dict_x[k][l]=active_fa_dict['bin']['all']['x'][k][l]
+                            new_orient_dict_y[k][l]=active_fa_dict['bin']['all']['y'][k][l]
+                            pos_x_new[k][l] = self.pos_x[k][l]*3
+                            pos_y_new[k][l] = self.pos_y[k][l]*3
 
 
                     active_r = ( np.array(new_orient_dict_x) ** 2 + np.array(new_orient_dict_y) ** 2 ) ** 0.5
@@ -714,7 +716,7 @@ class plotting:
                     bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
         else:
             if self.lx_box == self.ly_box:
-                plt.text(0.68, 0.04, s=r'$\tau$' + ' = ' + '{:.1f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+                plt.text(0.66, 0.04, s=r'$\tau$' + ' = ' + '{:.1f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
                     fontsize=30, transform = ax.transAxes,
                     bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
             elif self.lx_box > self.ly_box:
@@ -739,10 +741,10 @@ class plotting:
             plt.ylim(0, self.ly_box)
             plt.xlim(0, self.lx_box)
         
-        plt.scatter(self.hx_box, self.hy_box, c='black', s=70)
+        #plt.scatter(self.hx_box, self.hy_box, c='black', s=70)
 
         # Add legend of phases
-        
+        """
         if presentation_id == True:
             fast_leg = [Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=green, label='Bulk', markersize=32), Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=yellow, label='Interface', markersize=32), Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=red, label='Gas', markersize=32)]
 
@@ -753,6 +755,7 @@ class plotting:
 
             one_leg = ax.legend(handles=fast_leg, loc='upper right', borderpad=0.3, labelspacing=0.4, handletextpad=-0.2, bbox_transform=ax.transAxes, bbox_to_anchor=[1.06, 1.17], handlelength=1.5, columnspacing=0.5, fontsize=40, ncol=3, facecolor='None', edgecolor='None')
             ax.add_artist(one_leg)
+        """
         plt.tight_layout()
         ax.set_facecolor('#F2f2f2')
         plt.savefig(self.outPath + 'phases_' + self.outFile + ".png", dpi=150, transparent=False, bbox_inches='tight')
