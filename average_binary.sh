@@ -59,7 +59,4 @@ if [ $os != "mac" ] &&  [ $os != "windows" ] && [ $os != "linux" ]; then
     exit 0 
 fi
 
-for file in $(ls *txt)
-do
-    $submit $script_path/analyze_average_binary.sh $hoomd_path $script_path $os
-done
+$submit $script_path/analyze_average_binary.sh $hoomd_path $script_path $os
