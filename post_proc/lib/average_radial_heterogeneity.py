@@ -29,753 +29,605 @@ import sys
 import os
 import matplotlib.pyplot as plt
 # Path to hoomd and output data
-hoomdPath=str(sys.argv[2])
-outPath = str(sys.argv[3])
+import csv 
 
+
+current_files = os.listdir()
+
+current_path = os.getcwd()
+
+outPath = current_path + '/output_files/'
 
 # Import modules
 import pandas as pd
 import numpy as np
 
-# Add path to post-processing library
-sys.path.append(os.path.join(os.path.dirname(__file__), 'lib'))
+for i in range(0, len(current_files)):
+    if current_files[i][0:6] == 'Radial':
 
-# Get infile and open
-inFile = str(sys.argv[1])
+        current_file = current_files[i]
+        inFile = current_file[20:-4]
 
-print(inFile[20:-4])
-average_theta_path = outPath + 'averages/radial_avgs_theta' + inFile[20:-4] + '.csv'
-average_rad_path = outPath + 'averages/radial_avgs_rad' + inFile[20:-4] + '.csv'
+        average_theta_path = current_path + '/averages/radial_avgs_theta' + inFile + '.csv'
+        average_rad_path = current_path + '/averages/radial_avgs_rad' + inFile + '.csv'
 
 
-average_fa_dens_path = outPath + 'averages/radial_avgs_fa_dens' + inFile[20:-4] + '.csv'
-average_faA_dens_path = outPath + 'averages/radial_avgs_faA_dens' + inFile[20:-4] + '.csv'
-average_faB_dens_path = outPath + 'averages/radial_avgs_faB_dens' + inFile[20:-4] + '.csv'
+        average_fa_dens_path = current_path + '/averages/radial_avgs_fa_dens' + inFile + '.csv'
+        average_faA_dens_path = current_path + '/averages/radial_avgs_faA_dens' + inFile + '.csv'
+        average_faB_dens_path = current_path + '/averages/radial_avgs_faB_dens' + inFile + '.csv'
 
-average_fa_avg_path = outPath + 'averages/radial_avgs_fa_avg' + inFile[20:-4] + '.csv'
-average_faA_avg_path = outPath + 'averages/radial_avgs_faA_avg' + inFile[20:-4] + '.csv'
-average_faB_avg_path = outPath + 'averages/radial_avgs_faB_avg' + inFile[20:-4] + '.csv'
+        average_fa_avg_path = current_path + '/averages/radial_avgs_fa_avg' + inFile + '.csv'
+        average_faA_avg_path = current_path + '/averages/radial_avgs_faA_avg' + inFile + '.csv'
+        average_faB_avg_path = current_path + '/averages/radial_avgs_faB_avg' + inFile + '.csv'
 
-average_fa_avg_real_path = outPath + 'averages/radial_avgs_fa_avg_real' + inFile[20:-4] + '.csv'
+        average_fa_avg_real_path = current_path + '/averages/radial_avgs_fa_avg_real' + inFile + '.csv'
 
-average_align_path = outPath + 'averages/radial_avgs_align' + inFile[20:-4] + '.csv'
-average_alignA_path = outPath + 'averages/radial_avgs_alignA' + inFile[20:-4] + '.csv'
-average_alignB_path = outPath + 'averages/radial_avgs_alignB' + inFile[20:-4] + '.csv'
+        average_align_path = current_path + '/averages/radial_avgs_align' + inFile + '.csv'
+        average_alignA_path = current_path + '/averages/radial_avgs_alignA' + inFile + '.csv'
+        average_alignB_path = current_path + '/averages/radial_avgs_alignB' + inFile + '.csv'
 
-average_num_dens_path = outPath + 'averages/radial_avgs_num_dens' + inFile[20:-4] + '.csv'
-average_num_densA_path = outPath + 'averages/radial_avgs_num_densA' + inFile[20:-4] + '.csv'
-average_num_densB_path = outPath + 'averages/radial_avgs_num_densB' + inFile[20:-4] + '.csv'
+        average_num_dens_path = current_path + '/averages/radial_avgs_num_dens' + inFile + '.csv'
+        average_num_densA_path = current_path + '/averages/radial_avgs_num_densA' + inFile + '.csv'
+        average_num_densB_path = current_path + '/averages/radial_avgs_num_densB' + inFile + '.csv'
 
-average_indiv_vals_path = outPath + 'averages/radial_avgs_indiv_vals' + inFile[20:-4] + '.csv'
+        average_indiv_vals_path = current_path + '/averages/radial_avgs_indiv_vals' + inFile + '.csv'
 
-file_path = outPath + inFile
+        file_path = current_path + '/' + current_file
 
-#Read input file
-start_val = 0
-df = pd.read_csv(file_path, sep='\s+', header=0)
+        #Read input file
+        start_val = 0
+        df = pd.read_csv(file_path, sep='\s+', header=0)
 
-import csv 
+        averages_file =  open(average_theta_path, newline='')
+        avg_theta_r = np.array(list(csv.reader(averages_file)))
 
-averages_file =  open(average_theta_path, newline='')
-avg_theta_r = np.array(list(csv.reader(averages_file)))
+        avg_theta_r_flatten = (avg_theta_r.flatten()).astype(np.float) 
 
-avg_theta_r_flatten = (avg_theta_r.flatten()).astype(np.float) 
+        averages_file =  open(average_rad_path, newline='')
+        avg_rad_r = np.array(list(csv.reader(averages_file)))
 
-averages_file =  open(average_rad_path, newline='')
-avg_rad_r = np.array(list(csv.reader(averages_file)))
+        avg_rad_r_flatten = (avg_rad_r.flatten()).astype(np.float) 
 
-avg_rad_r_flatten = (avg_rad_r.flatten()).astype(np.float) 
+        averages_file =  open(average_fa_dens_path, newline='')
+        avg_fa_dens_r = np.array(list(csv.reader(averages_file)))
 
-averages_file =  open(average_fa_dens_path, newline='')
-avg_fa_dens_r = np.array(list(csv.reader(averages_file)))
+        avg_fa_dens_r_flatten = (avg_fa_dens_r.flatten()).astype(np.float) 
 
-avg_fa_dens_r_flatten = (avg_fa_dens_r.flatten()).astype(np.float) 
+        averages_file =  open(average_faA_dens_path, newline='')
+        avg_faA_dens_r = np.array(list(csv.reader(averages_file)))
 
-averages_file =  open(average_faA_dens_path, newline='')
-avg_faA_dens_r = np.array(list(csv.reader(averages_file)))
+        avg_faA_dens_r_flatten = (avg_faA_dens_r.flatten()).astype(np.float) 
 
-avg_faA_dens_r_flatten = (avg_faA_dens_r.flatten()).astype(np.float) 
+        averages_file =  open(average_faB_dens_path, newline='')
+        avg_faB_dens_r = np.array(list(csv.reader(averages_file)))
 
-averages_file =  open(average_faB_dens_path, newline='')
-avg_faB_dens_r = np.array(list(csv.reader(averages_file)))
+        avg_faB_dens_r_flatten = (avg_faB_dens_r.flatten()).astype(np.float) 
 
-avg_faB_dens_r_flatten = (avg_faB_dens_r.flatten()).astype(np.float) 
+        averages_file =  open(average_fa_avg_path, newline='')
+        avg_fa_avg_r = np.array(list(csv.reader(averages_file)))
 
-averages_file =  open(average_fa_avg_path, newline='')
-avg_fa_avg_r = np.array(list(csv.reader(averages_file)))
+        avg_fa_avg_r_flatten = (avg_fa_avg_r.flatten()).astype(np.float) 
 
-avg_fa_avg_r_flatten = (avg_fa_avg_r.flatten()).astype(np.float) 
+        averages_file =  open(average_faA_avg_path, newline='')
+        avg_faA_avg_r = np.array(list(csv.reader(averages_file)))
 
-averages_file =  open(average_faA_avg_path, newline='')
-avg_faA_avg_r = np.array(list(csv.reader(averages_file)))
+        avg_faA_avg_r_flatten = (avg_faA_avg_r.flatten()).astype(np.float) 
 
-avg_faA_avg_r_flatten = (avg_faA_avg_r.flatten()).astype(np.float) 
+        averages_file =  open(average_faB_avg_path, newline='')
+        avg_faB_avg_r = np.array(list(csv.reader(averages_file)))
 
-averages_file =  open(average_faB_avg_path, newline='')
-avg_faB_avg_r = np.array(list(csv.reader(averages_file)))
+        avg_faB_avg_r_flatten = (avg_faB_avg_r.flatten()).astype(np.float) 
 
-avg_faB_avg_r_flatten = (avg_faB_avg_r.flatten()).astype(np.float) 
+        averages_file =  open(average_fa_avg_real_path, newline='')
+        avg_fa_avg_real_r = np.array(list(csv.reader(averages_file)))
 
-averages_file =  open(average_fa_avg_real_path, newline='')
-avg_fa_avg_real_r = np.array(list(csv.reader(averages_file)))
+        avg_fa_avg_real_r_flatten = (avg_fa_avg_real_r.flatten()).astype(np.float) 
 
-avg_fa_avg_real_r_flatten = (avg_fa_avg_real_r.flatten()).astype(np.float) 
+        averages_file =  open(average_num_dens_path, newline='')
+        avg_num_dens_r = np.array(list(csv.reader(averages_file)))
 
-averages_file =  open(average_num_dens_path, newline='')
-avg_num_dens_r = np.array(list(csv.reader(averages_file)))
+        avg_num_dens_r_flatten = (avg_num_dens_r.flatten()).astype(np.float) 
 
-avg_num_dens_r_flatten = (avg_num_dens_r.flatten()).astype(np.float) 
+        averages_file =  open(average_num_densA_path, newline='')
+        avg_num_densA_r = np.array(list(csv.reader(averages_file)))
 
-averages_file =  open(average_num_densA_path, newline='')
-avg_num_densA_r = np.array(list(csv.reader(averages_file)))
+        avg_num_densA_r_flatten = (avg_num_densA_r.flatten()).astype(np.float) 
 
-avg_num_densA_r_flatten = (avg_num_densA_r.flatten()).astype(np.float) 
+        averages_file =  open(average_num_densB_path, newline='')
+        avg_num_densB_r = np.array(list(csv.reader(averages_file)))
 
-averages_file =  open(average_num_densB_path, newline='')
-avg_num_densB_r = np.array(list(csv.reader(averages_file)))
+        avg_num_densB_r_flatten = (avg_num_densB_r.flatten()).astype(np.float) 
 
-avg_num_densB_r_flatten = (avg_num_densB_r.flatten()).astype(np.float) 
+        averages_file =  open(average_align_path, newline='')
+        avg_align_r = np.array(list(csv.reader(averages_file)))
 
-averages_file =  open(average_align_path, newline='')
-avg_align_r = np.array(list(csv.reader(averages_file)))
+        avg_align_r_flatten = (avg_align_r.flatten()).astype(np.float) 
 
-avg_align_r_flatten = (avg_align_r.flatten()).astype(np.float) 
+        averages_file =  open(average_alignA_path, newline='')
+        avg_alignA_r = np.array(list(csv.reader(averages_file)))
 
-averages_file =  open(average_alignA_path, newline='')
-avg_alignA_r = np.array(list(csv.reader(averages_file)))
+        avg_alignA_r_flatten = (avg_alignA_r.flatten()).astype(np.float) 
 
-avg_alignA_r_flatten = (avg_alignA_r.flatten()).astype(np.float) 
+        averages_file =  open(average_alignB_path, newline='')
+        avg_alignB_r = np.array(list(csv.reader(averages_file)))
 
-averages_file =  open(average_alignB_path, newline='')
-avg_alignB_r = np.array(list(csv.reader(averages_file)))
+        avg_alignB_r_flatten = (avg_alignB_r.flatten()).astype(np.float) 
 
-avg_alignB_r_flatten = (avg_alignB_r.flatten()).astype(np.float) 
+        averages_file =  open(average_indiv_vals_path, newline='')
+        reader = csv.reader(averages_file)
+        avg_indiv_vals = dict(reader)
+        avg_radius_r_flatten= float(avg_indiv_vals['radius'])
 
-averages_file =  open(average_indiv_vals_path, newline='')
-reader = csv.reader(averages_file)
-avg_indiv_vals = dict(reader)
-avg_radius_r_flatten= float(avg_indiv_vals['radius'])
+        avg_com_x_r_flatten = float(avg_indiv_vals['com_x'])
+        avg_com_y_r_flatten = float(avg_indiv_vals['com_y'])
 
-avg_com_x_r_flatten = float(avg_indiv_vals['com_x'])
-avg_com_y_r_flatten = float(avg_indiv_vals['com_y'])
+        avg_theta_r_new = np.zeros(np.shape(avg_fa_dens_r))
 
-avg_theta_r_new = np.zeros(np.shape(avg_fa_dens_r))
+        for j in range(0, len(avg_rad_r_flatten)):
+            avg_theta_r_new[j,:] = avg_theta_r_flatten
 
-for i in range(0, len(avg_rad_r_flatten)):
-    avg_theta_r_new[i,:] = avg_theta_r_flatten
+        avg_rad_r_new = np.zeros(np.shape(avg_fa_dens_r))
+        for j in range(0, len(avg_theta_r_flatten)):
+            avg_rad_r_new[:,j] = avg_rad_r_flatten
 
-avg_rad_r_new = np.zeros(np.shape(avg_fa_dens_r))
-for i in range(0, len(avg_theta_r_flatten)):
-    avg_rad_r_new[:,i] = avg_rad_r_flatten
+        avg_rad_r_flatten = avg_rad_r_new.flatten()
+        avg_theta_r_flatten = avg_theta_r_new.flatten()
 
-avg_rad_r_flatten = avg_rad_r_new.flatten()
-avg_theta_r_flatten = avg_theta_r_new.flatten()
+        x_coords = avg_com_x_r_flatten + avg_rad_r_flatten * avg_radius_r_flatten * np.cos(avg_theta_r_flatten*(np.pi/180))
+        y_coords = avg_com_y_r_flatten + avg_rad_r_flatten * avg_radius_r_flatten * np.sin(avg_theta_r_flatten*(np.pi/180))
 
-x_coords = avg_com_x_r_flatten + avg_rad_r_flatten * avg_radius_r_flatten * np.cos(avg_theta_r_flatten*(np.pi/180))
-y_coords = avg_com_y_r_flatten + avg_rad_r_flatten * avg_radius_r_flatten * np.sin(avg_theta_r_flatten*(np.pi/180))
+        headers = df.columns.tolist()
 
-# Minimum dimension length (in inches)
-scaling =7.0
+        num_lines = len(df['tauB'].values)
+        num_time_steps = len(np.unique(df['tauB'].values))
+        num_data = int(num_lines/num_time_steps)
 
-# X and Y-dimension lengths (in inches)
-x_dim = int(scaling + 1.0)
-y_dim = int(scaling)
-"""
-import matplotlib
-# Generate figure of dimensions proportional to simulation box size (with added x-length for color bar)
-fig, ax = plt.subplots(figsize=(x_dim,y_dim), facecolor='white')
-#ax = fig.add_subplot(111)
+        time_sum = np.zeros(num_data)
+        rad_sum = np.zeros(num_data)
+        theta_sum = np.zeros(num_data)
 
-vals = avg_num_dens_r_flatten
+        fa_dens_sum = np.zeros(num_data)
+        faA_dens_sum = np.zeros(num_data)
+        faB_dens_sum = np.zeros(num_data)
 
-im = plt.tricontourf(x_coords, y_coords, vals, cmap='Greys')#, norm=matplotlib.colors.LogNorm())
+        fa_avg_real_sum = np.zeros(num_data)
 
-sm = plt.cm.ScalarMappable(norm=im.norm, cmap = im.cmap)
-sm.set_array([])
-clb = fig.colorbar(sm)#ticks=[0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0], ax=ax2)
-clb.ax.set_title(r'$n$', fontsize=23)
-clb.ax.tick_params(labelsize=20)
+        fa_avg_sum = np.zeros(num_data)
+        faA_avg_sum = np.zeros(num_data)
+        faB_avg_sum = np.zeros(num_data)
 
-ax.set_ylim(0, 250)
-ax.set_xlim(0, 250)
+        align_sum = np.zeros(num_data)
+        alignA_sum = np.zeros(num_data)
+        alignB_sum = np.zeros(num_data)
 
-ax.axes.set_xticks([])
-ax.axes.set_yticks([])
-ax.axes.set_xticklabels([])
-ax.axes.set_yticks([])
-ax.set_aspect('equal')
+        num_sum = np.zeros(num_data)
+        numA_sum = np.zeros(num_data)
+        numB_sum = np.zeros(num_data)
 
-# Create frame images
-#ax.set_facecolor('white')
-#ax.set_facecolor('#F4F4F4') .  # For website
-plt.show()
-#plt.savefig
-"""
+        num_dens_sum = np.zeros(num_data)
+        num_densA_sum = np.zeros(num_data)
+        num_densB_sum = np.zeros(num_data)
 
+        radius_sum = np.zeros(num_data)
+        com_x_sum = np.zeros(num_data)
+        com_y_sum = np.zeros(num_data)
+        count = 0
 
-"""
-with open(average_faA_path, newline='') as csvfile:
-    avg_faA_r = np.array(list(csv.reader(csvfile)))
+        for j in range(0, num_time_steps):
+            if df['tauB'].values[start_val]>=150:
+                time_sum += (df['tauB'].values[start_val:num_data+start_val])
+                rad_sum += (df['rad'].values[start_val:num_data+start_val])
+                theta_sum += (df['theta'].values[start_val:num_data+start_val])
 
-with open(average_faB_path, newline='') as csvfile:
-    avg_faB_r = np.array(list(csv.reader(csvfile)))
+                fa_dens_sum += (df['fa_dens_all'].values[start_val:num_data+start_val])**2#*avg_fa_r_flatten**2)**0.5+*avg_fa_r_flatten#temp[test_id] / avg_fa_r_flatten[test_id]**2
+                faA_dens_sum += (df['fa_dens_A'].values[start_val:num_data+start_val])**2
+                faB_dens_sum += (df['fa_dens_B'].values[start_val:num_data+start_val])**2
 
-with open(average_align_path, newline='') as csvfile:
-    avg_align_r = np.array(list(csv.reader(csvfile)))
+                fa_avg_real_sum += (df['fa_avg_real_all'].values[start_val:num_data+start_val])**2#*avg_fa_r_flatten**2)**0.5+*avg_fa_r_flatten#temp[test_id] / avg_fa_r_flatten[test_id]**2
 
-with open(average_alignA_path, newline='') as csvfile:
-    avg_alignA_r = np.array(list(csv.reader(csvfile)))
+                fa_avg_sum += (df['fa_avg_all'].values[start_val:num_data+start_val])**2#*avg_fa_r_flatten**2)**0.5+*avg_fa_r_flatten#temp[test_id] / avg_fa_r_flatten[test_id]**2
+                faA_avg_sum += (df['fa_avg_A'].values[start_val:num_data+start_val])**2
+                faB_avg_sum += (df['fa_avg_B'].values[start_val:num_data+start_val])**2
 
-with open(average_alignB_path, newline='') as csvfile:
-    avg_alignB_r = np.array(list(csv.reader(csvfile)))
+                align_sum += (df['align_all'].values[start_val:num_data+start_val])**2
+                alignA_sum += (df['align_A'].values[start_val:num_data+start_val])**2
+                alignB_sum += (df['align_B'].values[start_val:num_data+start_val])**2
 
-with open(average_num_path, newline='') as csvfile:
-    avg_num_r = np.array(list(csv.reader(csvfile)))
+                num_dens_sum += (df['num_dens_all'].values[start_val:num_data+start_val])**2#+avg_num_dens_r_flatten#*avg_num_dens_r_flatten**2)
+                num_densA_sum += (df['num_dens_A'].values[start_val:num_data+start_val])**2#*avg_num_densA_r_flatten**2)
+                num_densB_sum += (df['num_dens_B'].values[start_val:num_data+start_val])**2#*avg_num_densB_r_flatten**2)
 
-with open(average_numA_path, newline='') as csvfile:
-    avg_numA_r = np.array(list(csv.reader(csvfile)))
+                radius_sum += (df['radius'].values[start_val:num_data+start_val])
+                com_x_sum += (df['com_x'].values[start_val:num_data+start_val])
+                com_y_sum += (df['com_y'].values[start_val:num_data+start_val])
+                count += 1
+            start_val += num_data
 
-with open(average_numB_path, newline='') as csvfile:
-    avg_numB_r = np.array(list(csv.reader(csvfile)))
+        time_time_avg = time_sum / count
+        rad_time_avg = rad_sum / count
+        theta_time_avg = theta_sum / count
 
-with open(average_num_dens_path, newline='') as csvfile:
-    avg_num_dens_r = np.array(list(csv.reader(csvfile)))
+        fa_dens_time_avg = fa_dens_sum / count
+        faA_dens_time_avg = faA_dens_sum / count
+        faB_dens_time_avg = faB_dens_sum / count
 
-with open(average_num_densA_path, newline='') as csvfile:
-    avg_num_densA_r = np.array(list(csv.reader(csvfile)))
+        fa_avg_time_avg = fa_avg_sum / count
+        faA_avg_time_avg = faA_avg_sum / count
+        faB_avg_time_avg = faB_avg_sum / count
 
-with open(average_num_densB_path, newline='') as csvfile:
-    avg_num_densB_r = np.array(list(csv.reader(csvfile)))
-"""
+        fa_avg_real_time_avg = fa_avg_real_sum / count
 
-headers = df.columns.tolist()
+        align_time_avg = align_sum / count
+        alignA_time_avg = alignA_sum / count
+        alignB_time_avg = alignB_sum / count
 
-num_lines = len(df['tauB'].values)
-num_time_steps = len(np.unique(df['tauB'].values))
-num_data = int(num_lines/num_time_steps)
+        num_dens_time_avg = num_dens_sum / count
+        num_densA_time_avg = num_densA_sum / count
+        num_densB_time_avg = num_densB_sum / count
 
-time_sum = np.zeros(num_data)
-rad_sum = np.zeros(num_data)
-theta_sum = np.zeros(num_data)
+        radius_time_avg = radius_sum / count
+        com_x_time_avg = com_x_sum / count
+        com_y_time_avg = com_y_sum / count
 
-fa_dens_sum = np.zeros(num_data)
-faA_dens_sum = np.zeros(num_data)
-faB_dens_sum = np.zeros(num_data)
 
-fa_avg_real_sum = np.zeros(num_data)
+        norm_fa_dens_time_avg = np.zeros(len(fa_dens_time_avg))
+        norm_faA_dens_time_avg = np.zeros(len(fa_dens_time_avg))
+        norm_faB_dens_time_avg = np.zeros(len(fa_dens_time_avg))
 
-fa_avg_sum = np.zeros(num_data)
-faA_avg_sum = np.zeros(num_data)
-faB_avg_sum = np.zeros(num_data)
+        norm_fa_avg_real_time_avg = np.zeros(len(fa_dens_time_avg))
 
-align_sum = np.zeros(num_data)
-alignA_sum = np.zeros(num_data)
-alignB_sum = np.zeros(num_data)
+        norm_fa_avg_time_avg = np.zeros(len(fa_dens_time_avg))
+        norm_faA_avg_time_avg = np.zeros(len(fa_dens_time_avg))
+        norm_faB_avg_time_avg = np.zeros(len(fa_dens_time_avg))
 
-num_sum = np.zeros(num_data)
-numA_sum = np.zeros(num_data)
-numB_sum = np.zeros(num_data)
+        norm_align_time_avg = np.zeros(len(fa_dens_time_avg))
+        norm_alignA_time_avg = np.zeros(len(fa_dens_time_avg))
+        norm_alignB_time_avg = np.zeros(len(fa_dens_time_avg))
 
-num_dens_sum = np.zeros(num_data)
-num_densA_sum = np.zeros(num_data)
-num_densB_sum = np.zeros(num_data)
+        norm_num_dens_time_avg = np.zeros(len(fa_dens_time_avg))
+        norm_num_densA_time_avg = np.zeros(len(fa_dens_time_avg))
+        norm_num_densB_time_avg = np.zeros(len(fa_dens_time_avg))
+        """
+        for i in range(0, len(fa_dens_time_avg)):
 
-radius_sum = np.zeros(num_data)
-com_x_sum = np.zeros(num_data)
-com_y_sum = np.zeros(num_data)
-count = 0
+            if np.abs(avg_fa_dens_r_flatten[i]) >0.01 :
+                norm_fa_dens_time_avg[i] = fa_dens_time_avg[i] / avg_fa_dens_r_flatten[i]**2
+            if np.abs(avg_faA_dens_r_flatten[i]) >0.01 :
+                norm_faA_dens_time_avg[i] = faA_dens_time_avg[i] / avg_faA_dens_r_flatten[i]**2
+            if np.abs(avg_faB_dens_r_flatten[i]) >0.01 :
+                norm_faB_dens_time_avg[i] = faB_dens_time_avg[i] / avg_faB_dens_r_flatten[i]**2
 
-print(headers)
-for i in range(0, num_time_steps):
-    if df['tauB'].values[start_val]>=150:
-        time_sum += (df['tauB'].values[start_val:num_data+start_val])
-        rad_sum += (df['rad'].values[start_val:num_data+start_val])
-        theta_sum += (df['theta'].values[start_val:num_data+start_val])
+            if avg_fa_avg_real_r_flatten[i] >0.01 :
+                norm_fa_avg_real_time_avg[i] = fa_avg_real_time_avg[i] / avg_fa_avg_real_r_flatten[i]**2
 
-        #temp = (df['fa_all'].values[start_val:num_data+start_val]*avg_fa_r_flatten**2)
-        #test_id = np.where(avg_fa_r_flatten>0.5)[0]
-        #print(len(temp))
-        #print(len(avg_fa_r))
-        #print(len(test_id))
-        #print(len(temp[test_id]))
-        #print(len(avg_fa_r_flatten[test_id]))
-        fa_dens_sum += (df['fa_dens_all'].values[start_val:num_data+start_val])**2#*avg_fa_r_flatten**2)**0.5+*avg_fa_r_flatten#temp[test_id] / avg_fa_r_flatten[test_id]**2
-        faA_dens_sum += (df['fa_dens_A'].values[start_val:num_data+start_val])**2
-        faB_dens_sum += (df['fa_dens_B'].values[start_val:num_data+start_val])**2
+            if np.abs(avg_fa_avg_r_flatten[i]) >0.01 :
+                norm_fa_avg_time_avg[i] = fa_avg_time_avg[i] / avg_fa_avg_r_flatten[i]**2
+            if np.abs(avg_faA_avg_r_flatten[i]) >0.01 :
+                norm_faA_avg_time_avg[i] = faA_avg_time_avg[i] / avg_faA_avg_r_flatten[i]**2
+            if np.abs(avg_faB_avg_r_flatten[i]) >0.01 :
+                norm_faB_avg_time_avg[i] = faB_avg_time_avg[i] / avg_faB_avg_r_flatten[i]**2
 
-        fa_avg_real_sum += (df['fa_avg_real_all'].values[start_val:num_data+start_val])**2#*avg_fa_r_flatten**2)**0.5+*avg_fa_r_flatten#temp[test_id] / avg_fa_r_flatten[test_id]**2
+            if np.abs(avg_align_r_flatten[i]) >0.01 :
+                norm_align_time_avg[i] = align_time_avg[i] / avg_align_r_flatten[i]**2
+            if np.abs(avg_alignA_r_flatten[i]) >0.01 :
+                norm_alignA_time_avg[i] = alignA_time_avg[i] / avg_alignA_r_flatten[i]**2
+            if np.abs(avg_alignB_r_flatten[i]) >0.01 :
+                norm_alignB_time_avg[i] = alignB_time_avg[i] / avg_alignB_r_flatten[i]**2
 
-        fa_avg_sum += (df['fa_avg_all'].values[start_val:num_data+start_val])**2#*avg_fa_r_flatten**2)**0.5+*avg_fa_r_flatten#temp[test_id] / avg_fa_r_flatten[test_id]**2
-        faA_avg_sum += (df['fa_avg_A'].values[start_val:num_data+start_val])**2
-        faB_avg_sum += (df['fa_avg_B'].values[start_val:num_data+start_val])**2
+            if avg_num_dens_r_flatten[i] >0.01 :
+                norm_num_dens_time_avg[i] = num_dens_time_avg[i] / avg_num_dens_r_flatten[i]**2
+            if avg_num_densA_r_flatten[i] >0.01 :
+                norm_num_densA_time_avg[i] = num_densA_time_avg[i] / avg_num_densA_r_flatten[i]**2
+            if avg_num_densB_r_flatten[i] >0.01 :
+                norm_num_densB_time_avg[i] = num_densB_time_avg[i] / avg_num_densB_r_flatten[i]**2
+        """
 
-        align_sum += (df['align_all'].values[start_val:num_data+start_val])**2
-        alignA_sum += (df['align_A'].values[start_val:num_data+start_val])**2
-        alignB_sum += (df['align_B'].values[start_val:num_data+start_val])**2
+        for j in range(0, len(fa_dens_time_avg)):
 
-        num_dens_sum += (df['num_dens_all'].values[start_val:num_data+start_val])**2#+avg_num_dens_r_flatten#*avg_num_dens_r_flatten**2)
-        num_densA_sum += (df['num_dens_A'].values[start_val:num_data+start_val])**2#*avg_num_densA_r_flatten**2)
-        num_densB_sum += (df['num_dens_B'].values[start_val:num_data+start_val])**2#*avg_num_densB_r_flatten**2)
+            norm_fa_dens_time_avg[j] = fa_dens_time_avg[j]
+            norm_faA_dens_time_avg[j] = faA_dens_time_avg[j]
+            norm_faB_dens_time_avg[j] = faB_dens_time_avg[j]
 
-        radius_sum += (df['radius'].values[start_val:num_data+start_val])
-        com_x_sum += (df['com_x'].values[start_val:num_data+start_val])
-        com_y_sum += (df['com_y'].values[start_val:num_data+start_val])
-        count += 1
-    start_val += num_data
+            norm_fa_avg_real_time_avg[j] = fa_avg_real_time_avg[j]
 
-time_time_avg = time_sum / count
-rad_time_avg = rad_sum / count
-theta_time_avg = theta_sum / count
+            norm_fa_avg_time_avg[j] = fa_avg_time_avg[j]
+            norm_faA_avg_time_avg[j] = faA_avg_time_avg[j]
+            norm_faB_avg_time_avg[j] = faB_avg_time_avg[j]
 
-fa_dens_time_avg = fa_dens_sum / count
-faA_dens_time_avg = faA_dens_sum / count
-faB_dens_time_avg = faB_dens_sum / count
+            norm_align_time_avg[j] = align_time_avg[j]
+            norm_alignA_time_avg[j] = alignA_time_avg[j]
+            norm_alignB_time_avg[j] = alignB_time_avg[j]
 
-fa_avg_time_avg = fa_avg_sum / count
-faA_avg_time_avg = faA_avg_sum / count
-faB_avg_time_avg = faB_avg_sum / count
+            norm_num_dens_time_avg[j] = num_dens_time_avg[j]
+            norm_num_densA_time_avg[j] = num_densA_time_avg[j]
+            norm_num_densB_time_avg[j] = num_densB_time_avg[j]
 
-fa_avg_real_time_avg = fa_avg_real_sum / count
+        unique_rad = np.unique(rad_time_avg)
+        unique_theta = np.unique(theta_time_avg)
 
-align_time_avg = align_sum / count
-alignA_time_avg = alignA_sum / count
-alignB_time_avg = alignB_sum / count
+        int_fa_dens_time_theta_avg = np.zeros(len(unique_theta))
+        int_faA_dens_time_theta_avg = np.zeros(len(unique_theta))
+        int_faB_dens_time_theta_avg = np.zeros(len(unique_theta))
 
-num_dens_time_avg = num_dens_sum / count
-num_densA_time_avg = num_densA_sum / count
-num_densB_time_avg = num_densB_sum / count
+        int_fa_avg_real_time_theta_avg = np.zeros(len(unique_theta))
 
-radius_time_avg = radius_sum / count
-com_x_time_avg = com_x_sum / count
-com_y_time_avg = com_y_sum / count
+        int_fa_avg_time_theta_avg = np.zeros(len(unique_theta))
+        int_faA_avg_time_theta_avg = np.zeros(len(unique_theta))
+        int_faB_avg_time_theta_avg = np.zeros(len(unique_theta))
 
+        int_align_time_theta_avg = np.zeros(len(unique_theta))
+        int_alignA_time_theta_avg = np.zeros(len(unique_theta))
+        int_alignB_time_theta_avg = np.zeros(len(unique_theta))
 
-norm_fa_dens_time_avg = np.zeros(len(fa_dens_time_avg))
-norm_faA_dens_time_avg = np.zeros(len(fa_dens_time_avg))
-norm_faB_dens_time_avg = np.zeros(len(fa_dens_time_avg))
+        int_num_dens_time_theta_avg = np.zeros(len(unique_theta))
+        int_num_densA_time_theta_avg = np.zeros(len(unique_theta))
+        int_num_densB_time_theta_avg = np.zeros(len(unique_theta))
 
-norm_fa_avg_real_time_avg = np.zeros(len(fa_dens_time_avg))
+        avg_int_fa_dens_time_theta_avg = np.zeros(len(unique_theta))
+        avg_int_faA_dens_time_theta_avg = np.zeros(len(unique_theta))
+        avg_int_faB_dens_time_theta_avg = np.zeros(len(unique_theta))
 
-norm_fa_avg_time_avg = np.zeros(len(fa_dens_time_avg))
-norm_faA_avg_time_avg = np.zeros(len(fa_dens_time_avg))
-norm_faB_avg_time_avg = np.zeros(len(fa_dens_time_avg))
+        avg_int_fa_avg_real_time_theta_avg = np.zeros(len(unique_theta))
 
-norm_align_time_avg = np.zeros(len(fa_dens_time_avg))
-norm_alignA_time_avg = np.zeros(len(fa_dens_time_avg))
-norm_alignB_time_avg = np.zeros(len(fa_dens_time_avg))
+        avg_int_fa_avg_time_theta_avg = np.zeros(len(unique_theta))
+        avg_int_faA_avg_time_theta_avg = np.zeros(len(unique_theta))
+        avg_int_faB_avg_time_theta_avg = np.zeros(len(unique_theta))
 
-norm_num_dens_time_avg = np.zeros(len(fa_dens_time_avg))
-norm_num_densA_time_avg = np.zeros(len(fa_dens_time_avg))
-norm_num_densB_time_avg = np.zeros(len(fa_dens_time_avg))
-"""
-for i in range(0, len(fa_dens_time_avg)):
+        avg_int_num_dens_time_theta_avg = np.zeros(len(unique_theta))
+        avg_int_num_densA_time_theta_avg = np.zeros(len(unique_theta))
+        avg_int_num_densB_time_theta_avg = np.zeros(len(unique_theta))
 
-    if np.abs(avg_fa_dens_r_flatten[i]) >0.01 :
-        norm_fa_dens_time_avg[i] = fa_dens_time_avg[i] / avg_fa_dens_r_flatten[i]**2
-    if np.abs(avg_faA_dens_r_flatten[i]) >0.01 :
-        norm_faA_dens_time_avg[i] = faA_dens_time_avg[i] / avg_faA_dens_r_flatten[i]**2
-    if np.abs(avg_faB_dens_r_flatten[i]) >0.01 :
-        norm_faB_dens_time_avg[i] = faB_dens_time_avg[i] / avg_faB_dens_r_flatten[i]**2
+        avg_int_align_time_theta_avg = np.zeros(len(unique_theta))
+        avg_int_alignA_time_theta_avg = np.zeros(len(unique_theta))
+        avg_int_alignB_time_theta_avg = np.zeros(len(unique_theta))
 
-    if avg_fa_avg_real_r_flatten[i] >0.01 :
-        norm_fa_avg_real_time_avg[i] = fa_avg_real_time_avg[i] / avg_fa_avg_real_r_flatten[i]**2
+        for j in range(0, len(unique_rad)):
+            if (unique_rad[j]>=0.7) & (unique_rad[j]<=1.1):
+                
+                temp_id = np.where(rad_time_avg == unique_rad[j])[0]
+                if len(temp_id)>0:
+                    int_fa_dens_time_theta_avg += (norm_fa_dens_time_avg[temp_id])
+                    int_faA_dens_time_theta_avg += (norm_faA_dens_time_avg[temp_id])
+                    int_faB_dens_time_theta_avg += (norm_faB_dens_time_avg[temp_id])
 
-    if np.abs(avg_fa_avg_r_flatten[i]) >0.01 :
-        norm_fa_avg_time_avg[i] = fa_avg_time_avg[i] / avg_fa_avg_r_flatten[i]**2
-    if np.abs(avg_faA_avg_r_flatten[i]) >0.01 :
-        norm_faA_avg_time_avg[i] = faA_avg_time_avg[i] / avg_faA_avg_r_flatten[i]**2
-    if np.abs(avg_faB_avg_r_flatten[i]) >0.01 :
-        norm_faB_avg_time_avg[i] = faB_avg_time_avg[i] / avg_faB_avg_r_flatten[i]**2
+                    int_fa_avg_real_time_theta_avg += (norm_fa_avg_real_time_avg[temp_id])
 
-    if np.abs(avg_align_r_flatten[i]) >0.01 :
-        norm_align_time_avg[i] = align_time_avg[i] / avg_align_r_flatten[i]**2
-    if np.abs(avg_alignA_r_flatten[i]) >0.01 :
-        norm_alignA_time_avg[i] = alignA_time_avg[i] / avg_alignA_r_flatten[i]**2
-    if np.abs(avg_alignB_r_flatten[i]) >0.01 :
-        norm_alignB_time_avg[i] = alignB_time_avg[i] / avg_alignB_r_flatten[i]**2
+                    int_fa_avg_time_theta_avg += (norm_fa_avg_time_avg[temp_id])
+                    int_faA_avg_time_theta_avg += (norm_faA_avg_time_avg[temp_id])
+                    int_faB_avg_time_theta_avg += (norm_faB_avg_time_avg[temp_id])
 
-    if avg_num_dens_r_flatten[i] >0.01 :
-        norm_num_dens_time_avg[i] = num_dens_time_avg[i] / avg_num_dens_r_flatten[i]**2
-    if avg_num_densA_r_flatten[i] >0.01 :
-        norm_num_densA_time_avg[i] = num_densA_time_avg[i] / avg_num_densA_r_flatten[i]**2
-    if avg_num_densB_r_flatten[i] >0.01 :
-        norm_num_densB_time_avg[i] = num_densB_time_avg[i] / avg_num_densB_r_flatten[i]**2
-"""
+                    int_num_dens_time_theta_avg += (norm_num_dens_time_avg[temp_id])
+                    int_num_densA_time_theta_avg += (norm_num_densA_time_avg[temp_id])
+                    int_num_densB_time_theta_avg += (norm_num_densB_time_avg[temp_id])
 
-for i in range(0, len(fa_dens_time_avg)):
+                    int_align_time_theta_avg += (norm_align_time_avg[temp_id])
+                    int_alignA_time_theta_avg += (norm_alignA_time_avg[temp_id])
+                    int_alignB_time_theta_avg += (norm_alignB_time_avg[temp_id])
 
-    norm_fa_dens_time_avg[i] = fa_dens_time_avg[i]
-    norm_faA_dens_time_avg[i] = faA_dens_time_avg[i]
-    norm_faB_dens_time_avg[i] = faB_dens_time_avg[i]
+                    avg_int_fa_dens_time_theta_avg += (avg_fa_dens_r_flatten[temp_id])
+                    avg_int_faA_dens_time_theta_avg += (avg_faA_dens_r_flatten[temp_id])
+                    avg_int_faB_dens_time_theta_avg += (avg_faB_dens_r_flatten[temp_id])
 
-    norm_fa_avg_real_time_avg[i] = fa_avg_real_time_avg[i]
+                    avg_int_fa_avg_real_time_theta_avg += (avg_fa_avg_real_r_flatten[temp_id])
 
-    norm_fa_avg_time_avg[i] = fa_avg_time_avg[i]
-    norm_faA_avg_time_avg[i] = faA_avg_time_avg[i]
-    norm_faB_avg_time_avg[i] = faB_avg_time_avg[i]
+                    avg_int_fa_avg_time_theta_avg += (avg_fa_avg_r_flatten[temp_id])
+                    avg_int_faA_avg_time_theta_avg += (avg_faA_avg_r_flatten[temp_id])
+                    avg_int_faB_avg_time_theta_avg += (avg_faB_avg_r_flatten[temp_id])
 
-    norm_align_time_avg[i] = align_time_avg[i]
-    norm_alignA_time_avg[i] = alignA_time_avg[i]
-    norm_alignB_time_avg[i] = alignB_time_avg[i]
+                    avg_int_num_dens_time_theta_avg += (avg_num_dens_r_flatten[temp_id])
+                    avg_int_num_densA_time_theta_avg += (avg_num_densA_r_flatten[temp_id])
+                    avg_int_num_densB_time_theta_avg += (avg_num_densB_r_flatten[temp_id])
 
-    norm_num_dens_time_avg[i] = num_dens_time_avg[i]
-    norm_num_densA_time_avg[i] = num_densA_time_avg[i]
-    norm_num_densB_time_avg[i] = num_densB_time_avg[i]
+                    avg_int_align_time_theta_avg += (avg_align_r_flatten[temp_id])
+                    avg_int_alignA_time_theta_avg += (avg_alignA_r_flatten[temp_id])
+                    avg_int_alignB_time_theta_avg += (avg_alignB_r_flatten[temp_id])
 
+        int_fa_dens_time_theta_avg = int_fa_dens_time_theta_avg / avg_int_fa_dens_time_theta_avg
+        int_faA_dens_time_theta_avg = int_faA_dens_time_theta_avg / avg_int_fa_dens_time_theta_avg
+        int_faB_dens_time_theta_avg = int_faB_dens_time_theta_avg / avg_int_fa_dens_time_theta_avg
 
-# X and Y-dimension lengths (in inches)
-x_dim = int(scaling + 1.0)
-y_dim = int(scaling)
-"""
-import matplotlib
-# Generate figure of dimensions proportional to simulation box size (with added x-length for color bar)
-fig, ax = plt.subplots(figsize=(x_dim,y_dim), facecolor='white')
-#ax = fig.add_subplot(111)
+        int_fa_avg_real_time_theta_avg = int_fa_avg_real_time_theta_avg / avg_int_fa_avg_real_time_theta_avg
 
-vals = num_dens_time_avg.flatten()
+        int_fa_avg_time_theta_avg = int_fa_avg_time_theta_avg / avg_int_fa_avg_time_theta_avg
 
-test_id = np.where(avg_num_dens_r_flatten>0)[0]
-vals[test_id] = vals[test_id]/avg_num_dens_r_flatten[test_id]**2
+        int_faA_avg_time_theta_avg = int_faA_avg_time_theta_avg / avg_int_faA_avg_time_theta_avg
+        int_faB_avg_time_theta_avg = int_faB_avg_time_theta_avg / avg_int_faB_avg_time_theta_avg
 
-test_id = np.where(avg_num_dens_r_flatten==0)[0]
-vals[test_id] = 0
+        int_num_dens_time_theta_avg = int_num_dens_time_theta_avg / avg_int_num_dens_time_theta_avg
+        int_num_densA_time_theta_avg = int_num_densA_time_theta_avg / avg_int_num_densA_time_theta_avg
+        int_num_densB_time_theta_avg = int_num_densB_time_theta_avg / avg_int_num_densB_time_theta_avg
 
-im = plt.tricontourf(x_coords, y_coords, vals, cmap='Greys')#, norm=matplotlib.colors.LogNorm())
+        int_align_time_theta_avg = int_align_time_theta_avg / avg_int_align_time_theta_avg
+        int_alignA_time_theta_avg = int_alignA_time_theta_avg / avg_int_alignA_time_theta_avg
+        int_alignB_time_theta_avg = int_alignB_time_theta_avg / avg_int_alignB_time_theta_avg
 
-sm = plt.cm.ScalarMappable(norm=im.norm, cmap = im.cmap)
-sm.set_array([])
-clb = fig.colorbar(sm)#ticks=[0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0], ax=ax2)
-clb.ax.set_title(r'$n$', fontsize=23)
-clb.ax.tick_params(labelsize=20)
+        time_time_theta_avg = np.array([])
+        rad_time_theta_avg = np.array([])
+        theta_time_theta_avg = np.array([])
 
-ax.set_ylim(0, 250)
-ax.set_xlim(0, 250)
+        fa_dens_time_theta_avg = np.array([])
+        faA_dens_time_theta_avg = np.array([])
+        faB_dens_time_theta_avg = np.array([])
 
-ax.axes.set_xticks([])
-ax.axes.set_yticks([])
-ax.axes.set_xticklabels([])
-ax.axes.set_yticks([])
-ax.set_aspect('equal')
+        fa_avg_time_theta_avg = np.array([])
+        faA_avg_time_theta_avg = np.array([])
+        faB_avg_time_theta_avg = np.array([])
 
-# Create frame images
-#ax.set_facecolor('white')
-#ax.set_facecolor('#F4F4F4') .  # For website
-plt.show()
-#plt.savefig
-"""
-unique_rad = np.unique(rad_time_avg)
-unique_theta = np.unique(theta_time_avg)
+        fa_avg_real_time_theta_avg = np.array([])
 
-int_fa_dens_time_theta_avg = np.zeros(len(unique_theta))
-int_faA_dens_time_theta_avg = np.zeros(len(unique_theta))
-int_faB_dens_time_theta_avg = np.zeros(len(unique_theta))
+        align_time_theta_avg = np.array([])
+        alignA_time_theta_avg = np.array([])
+        alignB_time_theta_avg = np.array([])
 
-int_fa_avg_real_time_theta_avg = np.zeros(len(unique_theta))
+        num_time_theta_avg = np.array([])
+        numA_time_theta_avg = np.array([])
+        numB_time_theta_avg = np.array([])
 
-int_fa_avg_time_theta_avg = np.zeros(len(unique_theta))
-int_faA_avg_time_theta_avg = np.zeros(len(unique_theta))
-int_faB_avg_time_theta_avg = np.zeros(len(unique_theta))
+        num_dens_time_theta_avg = np.array([])
+        num_densA_time_theta_avg = np.array([])
+        num_densB_time_theta_avg = np.array([])
 
-int_align_time_theta_avg = np.zeros(len(unique_theta))
-int_alignA_time_theta_avg = np.zeros(len(unique_theta))
-int_alignB_time_theta_avg = np.zeros(len(unique_theta))
+        radius_time_theta_avg = np.array([])
+        com_x_time_theta_avg = np.array([])
+        com_y_time_theta_avg = np.array([])
 
-int_num_dens_time_theta_avg = np.zeros(len(unique_theta))
-int_num_densA_time_theta_avg = np.zeros(len(unique_theta))
-int_num_densB_time_theta_avg = np.zeros(len(unique_theta))
 
-avg_int_fa_dens_time_theta_avg = np.zeros(len(unique_theta))
-avg_int_faA_dens_time_theta_avg = np.zeros(len(unique_theta))
-avg_int_faB_dens_time_theta_avg = np.zeros(len(unique_theta))
+        time_time_theta_avg = np.mean(time_time_avg)
+        rad_time_theta_avg = np.mean(rad_time_avg)
+        theta_time_theta_avg = np.mean(theta_time_avg)
 
-avg_int_fa_avg_real_time_theta_avg = np.zeros(len(unique_theta))
+        fa_dens_time_theta_avg = np.mean(int_fa_dens_time_theta_avg)
+        faA_dens_time_theta_avg = np.mean(int_faA_dens_time_theta_avg)
+        faB_dens_time_theta_avg = np.mean(int_faB_dens_time_theta_avg)
 
-avg_int_fa_avg_time_theta_avg = np.zeros(len(unique_theta))
-avg_int_faA_avg_time_theta_avg = np.zeros(len(unique_theta))
-avg_int_faB_avg_time_theta_avg = np.zeros(len(unique_theta))
+        fa_avg_real_time_theta_avg = np.mean(int_fa_avg_real_time_theta_avg)
 
-avg_int_num_dens_time_theta_avg = np.zeros(len(unique_theta))
-avg_int_num_densA_time_theta_avg = np.zeros(len(unique_theta))
-avg_int_num_densB_time_theta_avg = np.zeros(len(unique_theta))
+        fa_avg_time_theta_avg = np.mean(int_fa_avg_time_theta_avg)
+        faA_avg_time_theta_avg = np.mean(int_faA_avg_time_theta_avg)
+        faB_avg_time_theta_avg = np.mean(int_faB_avg_time_theta_avg)
 
-avg_int_align_time_theta_avg = np.zeros(len(unique_theta))
-avg_int_alignA_time_theta_avg = np.zeros(len(unique_theta))
-avg_int_alignB_time_theta_avg = np.zeros(len(unique_theta))
+        align_time_theta_avg = np.mean(int_align_time_theta_avg)
+        alignA_time_theta_avg = np.mean(int_alignA_time_theta_avg)
+        alignB_time_theta_avg = np.mean(int_alignB_time_theta_avg)
 
-for i in range(0, len(unique_rad)):
-    if (unique_rad[i]>=0.7) & (unique_rad[i]<=1.1):
-        
-        temp_id = np.where(rad_time_avg == unique_rad[i])[0]
+        num_dens_time_theta_avg = np.mean(int_num_dens_time_theta_avg)
+        num_densA_time_theta_avg = np.mean(int_num_densA_time_theta_avg)
+        num_densB_time_theta_avg = np.mean(int_num_densB_time_theta_avg)
 
-        int_fa_dens_time_theta_avg += (norm_fa_dens_time_avg[temp_id])
-        int_faA_dens_time_theta_avg += (norm_faA_dens_time_avg[temp_id])
-        int_faB_dens_time_theta_avg += (norm_faB_dens_time_avg[temp_id])
+        radius_time_theta_avg = np.mean(radius_time_avg)
+        com_x_time_theta_avg = np.mean(com_x_time_avg)
+        com_y_time_theta_avg = np.mean(com_y_time_avg)
 
-        int_fa_avg_real_time_theta_avg += (norm_fa_avg_real_time_avg[temp_id])
+        pa_id = inFile.find('pa')
+        pb_id = inFile.find('pb')
+        xa_id = inFile.find('xa')
 
-        int_fa_avg_time_theta_avg += (norm_fa_avg_time_avg[temp_id])
-        int_faA_avg_time_theta_avg += (norm_faA_avg_time_avg[temp_id])
-        int_faB_avg_time_theta_avg += (norm_faB_avg_time_avg[temp_id])
+        averaged_data_arr = {'fa_dens': {'all': fa_dens_time_theta_avg, 'A': faA_dens_time_theta_avg, 'B': faB_dens_time_theta_avg}, 'fa_avg_real': {'all': fa_avg_real_time_theta_avg}, 'fa_avg': {'all': fa_avg_time_theta_avg, 'A': faA_avg_time_theta_avg, 'B': faB_avg_time_theta_avg}, 'num_dens': {'all': num_dens_time_theta_avg, 'A': num_densA_time_theta_avg, 'B': num_densB_time_theta_avg}, 'align': {'all': align_time_theta_avg, 'A': alignA_time_theta_avg, 'B': alignB_time_theta_avg}}
 
-        int_num_dens_time_theta_avg += (norm_num_dens_time_avg[temp_id])
-        int_num_densA_time_theta_avg += (norm_num_densA_time_avg[temp_id])
-        int_num_densB_time_theta_avg += (norm_num_densB_time_avg[temp_id])
+        def write_to_txt(input_dict, outPath):
 
-        int_align_time_theta_avg += (norm_align_time_avg[temp_id])
-        int_alignA_time_theta_avg += (norm_alignA_time_avg[temp_id])
-        int_alignB_time_theta_avg += (norm_alignB_time_avg[temp_id])
+            #Output values for radial measurements from CoM
+            headers = ['pa', 'pb']
+            data = [inFile[pa_id+2:pb_id-1], inFile[pb_id+2:xa_id-1]]
 
+            is_file = os.path.isfile(outPath)
+            for key, value in input_dict.items():
+                if isinstance(value, dict):
+                    for key2, value2 in value.items():
 
+                        if isinstance(value2, dict):
+                            for key3, value3 in value2.items():
+                                key_new = key + '_' + key2 + '_' + key3
+                                headers.append(key_new)
+                                data.append(value3)
 
-
-
-        avg_int_fa_dens_time_theta_avg += (avg_fa_dens_r_flatten[temp_id])
-        avg_int_faA_dens_time_theta_avg += (avg_faA_dens_r_flatten[temp_id])
-        avg_int_faB_dens_time_theta_avg += (avg_faB_dens_r_flatten[temp_id])
-
-        avg_int_fa_avg_real_time_theta_avg += (avg_fa_avg_real_r_flatten[temp_id])
-
-        avg_int_fa_avg_time_theta_avg += (avg_fa_avg_r_flatten[temp_id])
-        avg_int_faA_avg_time_theta_avg += (avg_faA_avg_r_flatten[temp_id])
-        avg_int_faB_avg_time_theta_avg += (avg_faB_avg_r_flatten[temp_id])
-
-        avg_int_num_dens_time_theta_avg += (avg_num_dens_r_flatten[temp_id])
-        avg_int_num_densA_time_theta_avg += (avg_num_densA_r_flatten[temp_id])
-        avg_int_num_densB_time_theta_avg += (avg_num_densB_r_flatten[temp_id])
-
-        avg_int_align_time_theta_avg += (avg_align_r_flatten[temp_id])
-        avg_int_alignA_time_theta_avg += (avg_alignA_r_flatten[temp_id])
-        avg_int_alignB_time_theta_avg += (avg_alignB_r_flatten[temp_id])
-
-
-int_fa_dens_time_theta_avg = int_fa_dens_time_theta_avg / avg_int_fa_dens_time_theta_avg
-int_faA_dens_time_theta_avg = int_faA_dens_time_theta_avg / avg_int_fa_dens_time_theta_avg
-int_faB_dens_time_theta_avg = int_faB_dens_time_theta_avg / avg_int_fa_dens_time_theta_avg
-
-int_fa_avg_real_time_theta_avg = int_fa_avg_real_time_theta_avg / avg_int_fa_avg_real_time_theta_avg
-
-int_fa_avg_time_theta_avg = int_fa_avg_time_theta_avg / avg_int_fa_avg_time_theta_avg
-int_faA_avg_time_theta_avg = int_faA_avg_time_theta_avg / avg_int_faA_avg_time_theta_avg
-int_faB_avg_time_theta_avg = int_faB_avg_time_theta_avg / avg_int_faB_avg_time_theta_avg
-
-int_num_dens_time_theta_avg = int_num_dens_time_theta_avg / avg_int_num_dens_time_theta_avg
-int_num_densA_time_theta_avg = int_num_densA_time_theta_avg / avg_int_num_densA_time_theta_avg
-int_num_densB_time_theta_avg = int_num_densB_time_theta_avg / avg_int_num_densB_time_theta_avg
-
-int_align_time_theta_avg = int_align_time_theta_avg / avg_int_align_time_theta_avg
-int_alignA_time_theta_avg = int_alignA_time_theta_avg / avg_int_alignA_time_theta_avg
-int_alignB_time_theta_avg = int_alignB_time_theta_avg / avg_int_alignB_time_theta_avg
-
-time_time_theta_avg = np.array([])
-rad_time_theta_avg = np.array([])
-theta_time_theta_avg = np.array([])
-
-fa_dens_time_theta_avg = np.array([])
-faA_dens_time_theta_avg = np.array([])
-faB_dens_time_theta_avg = np.array([])
-
-fa_avg_time_theta_avg = np.array([])
-faA_avg_time_theta_avg = np.array([])
-faB_avg_time_theta_avg = np.array([])
-
-fa_avg_real_time_theta_avg = np.array([])
-
-align_time_theta_avg = np.array([])
-alignA_time_theta_avg = np.array([])
-alignB_time_theta_avg = np.array([])
-
-num_time_theta_avg = np.array([])
-numA_time_theta_avg = np.array([])
-numB_time_theta_avg = np.array([])
-
-num_dens_time_theta_avg = np.array([])
-num_densA_time_theta_avg = np.array([])
-num_densB_time_theta_avg = np.array([])
-
-radius_time_theta_avg = np.array([])
-com_x_time_theta_avg = np.array([])
-com_y_time_theta_avg = np.array([])
-
-
-time_time_theta_avg = np.mean(time_time_avg)
-rad_time_theta_avg = np.mean(rad_time_avg)
-theta_time_theta_avg = np.mean(theta_time_avg)
-
-fa_dens_time_theta_avg = np.mean(int_fa_dens_time_theta_avg)
-faA_dens_time_theta_avg = np.mean(int_faA_dens_time_theta_avg)
-faB_dens_time_theta_avg = np.mean(int_faB_dens_time_theta_avg)
-
-fa_avg_real_time_theta_avg = np.mean(int_fa_avg_real_time_theta_avg)
-
-fa_avg_time_theta_avg = np.mean(int_fa_avg_time_theta_avg)
-faA_avg_time_theta_avg = np.mean(int_faA_avg_time_theta_avg)
-faB_avg_time_theta_avg = np.mean(int_faB_avg_time_theta_avg)
-
-align_time_theta_avg = np.mean(int_align_time_theta_avg)
-alignA_time_theta_avg = np.mean(int_alignA_time_theta_avg)
-alignB_time_theta_avg = np.mean(int_alignB_time_theta_avg)
-
-num_dens_time_theta_avg = np.mean(int_num_dens_time_theta_avg)
-num_densA_time_theta_avg = np.mean(int_num_densA_time_theta_avg)
-num_densB_time_theta_avg = np.mean(int_num_densB_time_theta_avg)
-
-radius_time_theta_avg = np.mean(radius_time_avg)
-com_x_time_theta_avg = np.mean(com_x_time_avg)
-com_y_time_theta_avg = np.mean(com_y_time_avg)
-
-
-"""
-plt.plot(rad_time_theta_avg, fa_avg_time_theta_avg)
-plt.ylabel('active force heterogeneity')
-plt.xlabel('distance from CoM')
-plt.show()
-
-plt.plot(rad_time_theta_avg, fa_dens_time_theta_avg)
-plt.ylabel('active force heterogeneity')
-plt.xlabel('distance from CoM')
-plt.show()
-
-plt.plot(rad_time_theta_avg, num_dens_time_theta_avg, c='black')
-plt.plot(rad_time_theta_avg, num_densA_time_theta_avg, c='blue')
-plt.plot(rad_time_theta_avg, num_densB_time_theta_avg, c='red')
-plt.ylabel('num dens heterogeneity')
-plt.xlabel('distance from CoM')
-plt.show()
-"""
-
-
-pa_id = inFile.find('pa', 20, -4)
-pb_id = inFile.find('pb', 20, -4)
-xa_id = inFile.find('xa', 20, -4)
-
-averaged_data_arr = {'fa_dens': {'all': fa_dens_time_theta_avg, 'A': faA_dens_time_theta_avg, 'B': faB_dens_time_theta_avg}, 'fa_avg_real': {'all': fa_avg_real_time_theta_avg}, 'fa_avg': {'all': fa_avg_time_theta_avg, 'A': faA_avg_time_theta_avg, 'B': faB_avg_time_theta_avg}, 'num_dens': {'all': num_dens_time_theta_avg, 'A': num_densA_time_theta_avg, 'B': num_densB_time_theta_avg}, 'align': {'all': align_time_theta_avg, 'A': alignA_time_theta_avg, 'B': alignB_time_theta_avg}}
-
-def write_to_txt(input_dict, outPath):
-
-    #Output values for radial measurements from CoM
-    headers = ['pa', 'pb']
-    data = [inFile[pa_id+2:pb_id-1], inFile[pb_id+2:xa_id-1]]
-
-    is_file = os.path.isfile(outPath)
-    for key, value in input_dict.items():
-        if isinstance(value, dict):
-            for key2, value2 in value.items():
-
-                if isinstance(value2, dict):
-                    for key3, value3 in value2.items():
-                        key_new = key + '_' + key2 + '_' + key3
-                        headers.append(key_new)
-                        data.append(value3)
-
+                        else:
+                            key_new = key + '_' + key2
+                            headers.append(key_new)
+                            data.append(value2)
                 else:
-                    key_new = key + '_' + key2
-                    headers.append(key_new)
-                    data.append(value2)
-        else:
-            headers.append(key)
-            data.append(value)
-    
-    if is_file == 0:
-        header_string = ''
-        with open(outPath, 'w+') as f:
-            for i in range(0, len(headers)):
-                if i == len(headers)-1:
-                    header_string += headers[i].center(20) + '\n'
-                else:
-                    header_string += headers[i].center(20) + ' '
-            f.write(header_string)
+                    headers.append(key)
+                    data.append(value)
+            
+            if is_file == 0:
+                header_string = ''
+                with open(outPath, 'w+') as f:
+                    for i in range(0, len(headers)):
+                        if i == len(headers)-1:
+                            header_string += headers[i].center(20) + '\n'
+                        else:
+                            header_string += headers[i].center(20) + ' '
+                    f.write(header_string)
 
-        arr_ind = 0
-        arr_len = 1
+                arr_ind = 0
+                arr_len = 1
 
-        for i in range(0, len(data)):
-            if type(data[i])==list:
-                arr_len_temp = len(data[i])
-                if arr_len_temp > arr_len:
-                    arr_len = arr_len_temp
-        
-        with open(outPath, 'a') as f:
-            while arr_ind < arr_len:
-                #print(arr_ind)
                 for i in range(0, len(data)):
-                    if i == len(data)-1:
-                        if type(data[i])==list:
-                            f.write('{0:.9f}'.format(data[i][arr_ind]).center(20) + '\n')
-                            arr_ind += 1
-                        elif (type(data[i])==int) | (type(data[i])==np.uint32):
-                            f.write('{0:.0f}'.format(data[i]).center(20) + '\n')
-                            arr_ind += 1
-                        elif (type(data[i])==float) | (type(data[i])==np.float64) | (type(data[i])==np.float32):
-                            f.write('{0:.9f}'.format(data[i]).center(20) + '\n')
-                            arr_ind += 1
-                        elif type(data[i])==str:
-                            f.write('{}'.format(data[i]).center(20) + '\n')
-                            arr_ind += 1
-                        else:
-                            f.write('{0:.9f}'.format(data[i][arr_ind]).center(20) + '\n')
-                            arr_ind += 1
+                    if type(data[i])==list:
+                        arr_len_temp = len(data[i])
+                        if arr_len_temp > arr_len:
+                            arr_len = arr_len_temp
+                
+                with open(outPath, 'a') as f:
+                    while arr_ind < arr_len:
+                        for i in range(0, len(data)):
+                            if i == len(data)-1:
+                                if type(data[i])==list:
+                                    f.write('{0:.9f}'.format(data[i][arr_ind]).center(20) + '\n')
+                                    arr_ind += 1
+                                elif (type(data[i])==int) | (type(data[i])==np.uint32):
+                                    f.write('{0:.0f}'.format(data[i]).center(20) + '\n')
+                                    arr_ind += 1
+                                elif (type(data[i])==float) | (type(data[i])==np.float64) | (type(data[i])==np.float32):
+                                    f.write('{0:.9f}'.format(data[i]).center(20) + '\n')
+                                    arr_ind += 1
+                                elif type(data[i])==str:
+                                    f.write('{}'.format(data[i]).center(20) + '\n')
+                                    arr_ind += 1
+                                else:
+                                    f.write('{0:.9f}'.format(data[i][arr_ind]).center(20) + '\n')
+                                    arr_ind += 1
 
-                    else:
-                        if type(data[i])==list:
-                            f.write('{0:.9f}'.format(data[i][arr_ind]).center(20) + ' ')
-                        elif (type(data[i])==int) | (type(data[i])==np.uint32):
-                            f.write('{0:.0f}'.format(data[i]).center(20) + ' ')
-                        elif (type(data[i])==float) | (type(data[i])==np.float64) | (type(data[i])==np.float32):
-                            f.write('{0:.9f}'.format(data[i]).center(20) + ' ')
-                        elif type(data[i])==str:
-                            f.write('{}'.format(data[i]).center(20) + ' ')
-                        else:
-                            f.write('{0:.6f}'.format(data[i][arr_ind]).center(20) + ' ')
+                            else:
+                                if type(data[i])==list:
+                                    f.write('{0:.9f}'.format(data[i][arr_ind]).center(20) + ' ')
+                                elif (type(data[i])==int) | (type(data[i])==np.uint32):
+                                    f.write('{0:.0f}'.format(data[i]).center(20) + ' ')
+                                elif (type(data[i])==float) | (type(data[i])==np.float64) | (type(data[i])==np.float32):
+                                    f.write('{0:.9f}'.format(data[i]).center(20) + ' ')
+                                elif type(data[i])==str:
+                                    f.write('{}'.format(data[i]).center(20) + ' ')
+                                else:
+                                    f.write('{0:.6f}'.format(data[i][arr_ind]).center(20) + ' ')
 
 
-    else:
+            else:
 
-        arr_ind = 0
-        arr_len = 1
+                arr_ind = 0
+                arr_len = 1
 
-        for i in range(0, len(data)):
-            if type(data[i])==list:
-                arr_len_temp = len(data[i])
-                if arr_len_temp > arr_len:
-                    arr_len = arr_len_temp
-
-        with open(outPath, 'a') as f:
-            while arr_ind < arr_len:
                 for i in range(0, len(data)):
-                    
-                    if i == len(data)-1:
-                        
-                        if type(data[i])==list:
-                            f.write('{0:.9f}'.format(data[i][arr_ind]).center(20) + '\n')
-                            arr_ind += 1
-                        elif (type(data[i])==int) | (type(data[i])==np.uint32):
-                            f.write('{0:.0f}'.format(data[i]).center(20) + '\n')
-                            arr_ind += 1
-                        elif (type(data[i])==float) | (type(data[i])==np.float64) | (type(data[i])==np.float32):
-                            f.write('{0:.9f}'.format(data[i]).center(20) + '\n')
-                            arr_ind += 1
-                        elif type(data[i])==str:
-                            f.write('{}'.format(data[i]).center(20) + '\n')
-                            arr_ind += 1
-                        else:
-                            f.write('{0:.9f}'.format(data[i][arr_ind]).center(20) + '\n')
-                            arr_ind += 1
+                    if type(data[i])==list:
+                        arr_len_temp = len(data[i])
+                        if arr_len_temp > arr_len:
+                            arr_len = arr_len_temp
 
-                    else:
-                        if type(data[i])==list:
-                            f.write('{0:.9f}'.format(data[i][arr_ind]).center(20) + ' ')
-                        elif (type(data[i])==int) | (type(data[i])==np.uint32):
-                            f.write('{0:.0f}'.format(data[i]).center(20) + ' ')
-                        elif (type(data[i])==float) | (type(data[i])==np.float64) | (type(data[i])==np.float32):
-                            f.write('{0:.9f}'.format(data[i]).center(20) + ' ')
-                        elif type(data[i])==str:
-                            f.write('{}'.format(data[i]).center(20) + ' ')
-                        else:
-                            f.write('{0:.9f}'.format(data[i][arr_ind]).center(20) + ' ')
+                with open(outPath, 'a') as f:
+                    while arr_ind < arr_len:
+                        for i in range(0, len(data)):
+                            
+                            if i == len(data)-1:
+                                
+                                if type(data[i])==list:
+                                    f.write('{0:.9f}'.format(data[i][arr_ind]).center(20) + '\n')
+                                    arr_ind += 1
+                                elif (type(data[i])==int) | (type(data[i])==np.uint32):
+                                    f.write('{0:.0f}'.format(data[i]).center(20) + '\n')
+                                    arr_ind += 1
+                                elif (type(data[i])==float) | (type(data[i])==np.float64) | (type(data[i])==np.float32):
+                                    f.write('{0:.9f}'.format(data[i]).center(20) + '\n')
+                                    arr_ind += 1
+                                elif type(data[i])==str:
+                                    f.write('{}'.format(data[i]).center(20) + '\n')
+                                    arr_ind += 1
+                                else:
+                                    f.write('{0:.9f}'.format(data[i][arr_ind]).center(20) + '\n')
+                                    arr_ind += 1
 
-write_to_txt(averaged_data_arr, outPath + 'output_files/compiled_heterogeneity.txt')
-stop
+                            else:
+                                if type(data[i])==list:
+                                    f.write('{0:.9f}'.format(data[i][arr_ind]).center(20) + ' ')
+                                elif (type(data[i])==int) | (type(data[i])==np.uint32):
+                                    f.write('{0:.0f}'.format(data[i]).center(20) + ' ')
+                                elif (type(data[i])==float) | (type(data[i])==np.float64) | (type(data[i])==np.float32):
+                                    f.write('{0:.9f}'.format(data[i]).center(20) + ' ')
+                                elif type(data[i])==str:
+                                    f.write('{}'.format(data[i]).center(20) + ' ')
+                                else:
+                                    f.write('{0:.9f}'.format(data[i][arr_ind]).center(20) + ' ')
 
+        write_to_txt(averaged_data_arr, outPath + 'compiled_heterogeneity.txt')
+"""
 time_time_rad_avg = np.zeros(len(unique_theta))
 rad_time_rad_avg = np.zeros(len(unique_theta))
 theta_time_rad_avg = np.zeros(len(unique_theta))
@@ -851,3 +703,4 @@ plt.show()
 stop
 
 stop
+"""
