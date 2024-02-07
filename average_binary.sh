@@ -61,5 +61,5 @@ fi
 
 for file in $(ls *txt)
 do
-    $submit $script_path/analyze_average_binary.sh $hoomd_path $outpath $script_path $file $os
+    $submit $script_path/analyze_average_binary.sh $hoomd_path $script_path $os
 done
