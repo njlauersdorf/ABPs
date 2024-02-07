@@ -76,82 +76,113 @@ for i in range(0, len(current_files)):
 
         #Read input file
         start_val = 0
-        df = pd.read_csv(file_path, sep='\s+', header=0)
+        
 
         averages_file =  open(average_theta_path, newline='')
         avg_theta_r = np.array(list(csv.reader(averages_file)))
 
         avg_theta_r_flatten = (avg_theta_r.flatten()).astype(np.float) 
 
+        averages_file.close()
+
         averages_file =  open(average_rad_path, newline='')
         avg_rad_r = np.array(list(csv.reader(averages_file)))
 
         avg_rad_r_flatten = (avg_rad_r.flatten()).astype(np.float) 
+
+        averages_file.close()
 
         averages_file =  open(average_fa_dens_path, newline='')
         avg_fa_dens_r = np.array(list(csv.reader(averages_file)))
 
         avg_fa_dens_r_flatten = (avg_fa_dens_r.flatten()).astype(np.float) 
 
+        averages_file.close()
+
         averages_file =  open(average_faA_dens_path, newline='')
         avg_faA_dens_r = np.array(list(csv.reader(averages_file)))
 
         avg_faA_dens_r_flatten = (avg_faA_dens_r.flatten()).astype(np.float) 
+
+        averages_file.close()
 
         averages_file =  open(average_faB_dens_path, newline='')
         avg_faB_dens_r = np.array(list(csv.reader(averages_file)))
 
         avg_faB_dens_r_flatten = (avg_faB_dens_r.flatten()).astype(np.float) 
 
+        averages_file.close()
+
         averages_file =  open(average_fa_avg_path, newline='')
         avg_fa_avg_r = np.array(list(csv.reader(averages_file)))
 
         avg_fa_avg_r_flatten = (avg_fa_avg_r.flatten()).astype(np.float) 
+
+        averages_file.close()
 
         averages_file =  open(average_faA_avg_path, newline='')
         avg_faA_avg_r = np.array(list(csv.reader(averages_file)))
 
         avg_faA_avg_r_flatten = (avg_faA_avg_r.flatten()).astype(np.float) 
 
+        averages_file.close()
+
         averages_file =  open(average_faB_avg_path, newline='')
         avg_faB_avg_r = np.array(list(csv.reader(averages_file)))
 
         avg_faB_avg_r_flatten = (avg_faB_avg_r.flatten()).astype(np.float) 
+
+        averages_file.close()
 
         averages_file =  open(average_fa_avg_real_path, newline='')
         avg_fa_avg_real_r = np.array(list(csv.reader(averages_file)))
 
         avg_fa_avg_real_r_flatten = (avg_fa_avg_real_r.flatten()).astype(np.float) 
 
+        averages_file.close()
+
         averages_file =  open(average_num_dens_path, newline='')
         avg_num_dens_r = np.array(list(csv.reader(averages_file)))
 
         avg_num_dens_r_flatten = (avg_num_dens_r.flatten()).astype(np.float) 
+
+        averages_file.close()
 
         averages_file =  open(average_num_densA_path, newline='')
         avg_num_densA_r = np.array(list(csv.reader(averages_file)))
 
         avg_num_densA_r_flatten = (avg_num_densA_r.flatten()).astype(np.float) 
 
+        averages_file.close()
+
         averages_file =  open(average_num_densB_path, newline='')
         avg_num_densB_r = np.array(list(csv.reader(averages_file)))
 
         avg_num_densB_r_flatten = (avg_num_densB_r.flatten()).astype(np.float) 
 
+        averages_file.close()
+
         averages_file =  open(average_align_path, newline='')
+
         avg_align_r = np.array(list(csv.reader(averages_file)))
 
         avg_align_r_flatten = (avg_align_r.flatten()).astype(np.float) 
+
+        averages_file.close()
 
         averages_file =  open(average_alignA_path, newline='')
         avg_alignA_r = np.array(list(csv.reader(averages_file)))
 
         avg_alignA_r_flatten = (avg_alignA_r.flatten()).astype(np.float) 
 
+        averages_file.close()
+
         averages_file =  open(average_alignB_path, newline='')
         avg_alignB_r = np.array(list(csv.reader(averages_file)))
 
         avg_alignB_r_flatten = (avg_alignB_r.flatten()).astype(np.float) 
+
+        averages_file.close()
 
         averages_file =  open(average_indiv_vals_path, newline='')
         reader = csv.reader(averages_file)
@@ -160,6 +191,8 @@ for i in range(0, len(current_files)):
 
         avg_com_x_r_flatten = float(avg_indiv_vals['com_x'])
         avg_com_y_r_flatten = float(avg_indiv_vals['com_y'])
+
+        averages_file.close()
 
         avg_theta_r_new = np.zeros(np.shape(avg_fa_dens_r))
 
@@ -175,7 +208,8 @@ for i in range(0, len(current_files)):
 
         x_coords = avg_com_x_r_flatten + avg_rad_r_flatten * avg_radius_r_flatten * np.cos(avg_theta_r_flatten*(np.pi/180))
         y_coords = avg_com_y_r_flatten + avg_rad_r_flatten * avg_radius_r_flatten * np.sin(avg_theta_r_flatten*(np.pi/180))
-
+        #with pd.read_csv(file_path, sep='\s+', header=0) as df:
+        df = pd.read_csv(file_path, sep='\s+', header=0)
         headers = df.columns.tolist()
 
         num_lines = len(df['tauB'].values)
