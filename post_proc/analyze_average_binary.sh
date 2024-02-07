@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH -p general                          # partition to run on
 #SBATCH -n 1                                # number of cores
-#SBATCH -t 11-00:00                          # time (D-HH:MM)
-#SBATCH --mem=10g
+#SBATCH -t 1-00:00                          # time (D-HH:MM)
+#SBATCH --mem=100g
 # Command to increase memory allocated --mem=100g
 
 #This is the path to hoomd
