@@ -438,23 +438,23 @@ for i in range(0, len(current_files)):
                     int_alignA_time_theta_avg += (norm_alignA_time_avg[temp_id])
                     int_alignB_time_theta_avg += (norm_alignB_time_avg[temp_id])
 
-                    avg_int_fa_dens_time_theta_avg += (avg_fa_dens_r_flatten[temp_id])
-                    avg_int_faA_dens_time_theta_avg += (avg_faA_dens_r_flatten[temp_id])
-                    avg_int_faB_dens_time_theta_avg += (avg_faB_dens_r_flatten[temp_id])
+                    avg_int_fa_dens_time_theta_avg += (avg_fa_dens_r_flatten[temp_id])**2
+                    avg_int_faA_dens_time_theta_avg += (avg_faA_dens_r_flatten[temp_id])**2
+                    avg_int_faB_dens_time_theta_avg += (avg_faB_dens_r_flatten[temp_id])**2
 
-                    avg_int_fa_avg_real_time_theta_avg += (avg_fa_avg_real_r_flatten[temp_id])
+                    avg_int_fa_avg_real_time_theta_avg += (avg_fa_avg_real_r_flatten[temp_id])**2
 
-                    avg_int_fa_avg_time_theta_avg += (avg_fa_avg_r_flatten[temp_id])
-                    avg_int_faA_avg_time_theta_avg += (avg_faA_avg_r_flatten[temp_id])
-                    avg_int_faB_avg_time_theta_avg += (avg_faB_avg_r_flatten[temp_id])
+                    avg_int_fa_avg_time_theta_avg += (avg_fa_avg_r_flatten[temp_id])**2
+                    avg_int_faA_avg_time_theta_avg += (avg_faA_avg_r_flatten[temp_id])**2
+                    avg_int_faB_avg_time_theta_avg += (avg_faB_avg_r_flatten[temp_id])**2
 
-                    avg_int_num_dens_time_theta_avg += (avg_num_dens_r_flatten[temp_id])
-                    avg_int_num_densA_time_theta_avg += (avg_num_densA_r_flatten[temp_id])
-                    avg_int_num_densB_time_theta_avg += (avg_num_densB_r_flatten[temp_id])
+                    avg_int_num_dens_time_theta_avg += (avg_num_dens_r_flatten[temp_id])**2
+                    avg_int_num_densA_time_theta_avg += (avg_num_densA_r_flatten[temp_id])**2
+                    avg_int_num_densB_time_theta_avg += (avg_num_densB_r_flatten[temp_id])**2
 
-                    avg_int_align_time_theta_avg += (avg_align_r_flatten[temp_id])
-                    avg_int_alignA_time_theta_avg += (avg_alignA_r_flatten[temp_id])
-                    avg_int_alignB_time_theta_avg += (avg_alignB_r_flatten[temp_id])
+                    avg_int_align_time_theta_avg += (avg_align_r_flatten[temp_id])**2
+                    avg_int_alignA_time_theta_avg += (avg_alignA_r_flatten[temp_id])**2
+                    avg_int_alignB_time_theta_avg += (avg_alignB_r_flatten[temp_id])**2
 
         int_fa_dens_time_theta_avg = int_fa_dens_time_theta_avg / avg_int_fa_dens_time_theta_avg
         int_faA_dens_time_theta_avg = int_faA_dens_time_theta_avg / avg_int_fa_dens_time_theta_avg
