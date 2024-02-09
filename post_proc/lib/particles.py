@@ -3996,39 +3996,48 @@ class particle_props:
 
     def radial_heterogeneity(self, method2_align_dict, avg_rad_dict, surface_dict, int_comp_dict, all_surface_measurements, int_dict, phase_dict, load_save = 0):
         
+        # Bulk particle IDs for all, A, and B particles
         bulk_id = np.where(phase_dict['part']==0)[0]
         bulk_A_id = np.where((phase_dict['part']==0) & (self.typ==0))[0]
         bulk_B_id = np.where((phase_dict['part']==0) & (self.typ==1))[0]
 
+        # Interface particle IDs for all, A, and B particles
         int_id = np.where(phase_dict['part']==1)[0]
         int_A_id = np.where((phase_dict['part']==1) & (self.typ==0))[0]
         int_B_id = np.where((phase_dict['part']==1) & (self.typ==1))[0]
 
+        # Gas particle IDs for all, A, and B particles
         gas_id = np.where(phase_dict['part']==2)[0]
         gas_A_id = np.where((phase_dict['part']==2) & (self.typ==0))[0]
         gas_B_id = np.where((phase_dict['part']==2) & (self.typ==1))[0]
 
+        # Particle IDs for A and B particles
         A_id = np.where((self.typ==0))[0]
         B_id = np.where((self.typ==1))[0]
 
-        interface_id = int(np.where(int_comp_dict['comp']==np.max(int_comp_dict['comp']))[0])
-
+        # Largest interface IDs for all, A, and B particles
         int_id = np.where(int_dict['part']==int_dict['largest ids'][0])[0]
 
+        # Largest interface key for dictionary
         key = 'surface id ' + str(int(int_dict['largest ids'][0]))
-        ext_rad = (surface_dict[key]['exterior']['pos']['x']**2 + surface_dict[key]['exterior']['pos']['y']**2)**0.5
 
+        # Exterior cluster surface radii of surface points
         difx_ext_surface = (surface_dict[key]['exterior']['pos']['x'] - all_surface_measurements[key]['exterior']['com']['x'])
         dify_ext_surface = (surface_dict[key]['exterior']['pos']['y'] - all_surface_measurements[key]['exterior']['com']['y'])
         difr_ext_surface = (difx_ext_surface ** 2 + dify_ext_surface ** 2) ** 0.5
 
+        # Angular location of surface points
         ang_ext_surface = np.arctan2(dify_ext_surface, difx_ext_surface)*(180/np.pi)
+
+        # Convert angles from -180, 180 to 0, 360 degrees
         neg_ang = np.where(ang_ext_surface<=0)[0]
         if len(neg_ang)>0:
             ang_ext_surface[neg_ang] = 180 + (180+ang_ext_surface[neg_ang])
         
+        # Shift x-positions of particles from -h_box, h_box to 0, l_box
         pos_wrap_x = self.pos[int_id,0] + self.hx_box
-        
+
+        # Enforce periodic boundary conditions 
         test_id = np.where(pos_wrap_x>self.lx_box)[0]
         if len(test_id)>0:
             pos_wrap_x[test_id] = pos_wrap_x[test_id]-self.lx_box
@@ -4036,7 +4045,10 @@ class particle_props:
         if len(test_id)>0:
             pos_wrap_x[test_id] = pos_wrap_x[test_id]+self.lx_box
 
+        # Shift y-positions of particles from -h_box, h_box to 0, l_box
         pos_wrap_y = self.pos[int_id,1] + self.hy_box
+
+        # Enforce periodic boundary conditions 
         test_id = np.where(pos_wrap_y>self.ly_box)[0]
         if len(test_id)>0:
             pos_wrap_y[test_id] = pos_wrap_y[test_id]-self.ly_box
@@ -4044,30 +4056,33 @@ class particle_props:
         if len(test_id)>0:
             pos_wrap_y[test_id] = pos_wrap_y[test_id]+self.ly_box
 
+        # Calculate radial distance of particles from cluster's center of mass
         difx_parts = (pos_wrap_x - all_surface_measurements[key]['exterior']['com']['x'])
         dify_parts = (pos_wrap_y - all_surface_measurements[key]['exterior']['com']['y'])
         difr_parts = (difx_parts ** 2 + dify_parts ** 2) ** 0.5
 
+        # Angular location of particles
         ang_parts = np.arctan2(dify_parts, difx_parts)*(180/np.pi)
+
+        # Convert angles from -180, 180 to 0, 360 degrees
         neg_ang = np.where(ang_parts<=0)[0]
         if len(neg_ang)>0:
             ang_parts[neg_ang] = 180 + (180+ang_parts[neg_ang])
 
+        # Instantiate empty array for normalized separation distance of particles from cluster's center of mass
         difr_parts_norm = np.zeros(len(difr_parts))
 
         # Instantiate empty array (partNum) containing the average active force alignment
         # with the nearest interface surface normal
         part_align = method2_align_dict['part']['align']
 
-        # Instantiate empty array (partNum) containing the average active force magnitude
-        # toward the nearest interface surface normal
+        # Instantiate empty arrays
         fa_norm = np.array([])
         faA_norm = np.array([])
         faB_norm = np.array([])
 
         fa_avg = np.array([])
 
-        # Instantiate empty array (partNum) containing the distance from the nearest interface surface
         r_dist_norm = np.array([])
         rA_dist_norm = np.array([])
         rB_dist_norm = np.array([])
@@ -4083,50 +4098,100 @@ class particle_props:
         r_dist = np.array([])
         rA_dist = np.array([])
         rB_dist = np.array([])
+
         nearest_surface_arr = np.array([])
         nearest_surfaceA_arr = np.array([])
         nearest_surfaceB_arr = np.array([])
 
+        # Loop over particles
         for m in range(0, len(pos_wrap_x)):
-
+            
+            # Find nearest surfaces within +/- 1 degree of particle angular position
             near_surfaces = np.where( (ang_ext_surface>= ang_parts[m]-1.0)& (ang_ext_surface<= ang_parts[m]+1.0) )[0]
+            
+            # If nearest surfaces, then calculate properties
             if len(near_surfaces) > 0:
+
+                # Calculate x, y, and r separation distance from nearest surfaces
                 difx_surface_part = (surface_dict[key]['exterior']['pos']['x'][near_surfaces] - pos_wrap_x[m])
                 dify_surface_part  = (surface_dict[key]['exterior']['pos']['y'][near_surfaces] - pos_wrap_y[m])
                 difr_surface_part  = np.mean((difx_surface_part ** 2 + dify_surface_part ** 2) ** 0.5)
 
+                # Calculate and save average custer radius of nearest surfaces
                 avg_rad = np.mean(difr_ext_surface[near_surfaces])
                 nearest_surface_arr = np.append(nearest_surface_arr, avg_rad)
+
+                # Calculate particle's distance from cluster center of mass normalized by nearest cluster radius
                 difr_parts_norm[m] = difr_parts[m]/avg_rad
 
-                # Save active force magnitude toward the nearest interface surface normal
+                # Save particle properties if A particle
                 if self.typ[int_id[m]] == 0:
+
+                    # Aligned active force magnitude for all particles
                     fa_norm=np.append(fa_norm, part_align[int_id[m]]*self.peA)
+
+                    # Active force magnitude for all particles
                     fa_avg=np.append(fa_avg, self.peA)
+
+                    # Aligned active force magnitude for A particles
                     faA_norm=np.append(faA_norm, part_align[int_id[m]]*self.peA)
+
+                    # A particle's distance from cluster center of mass normalized by nearest cluster radius
                     rA_dist_norm = np.append(rA_dist_norm, difr_parts[m]/avg_rad)
+
+                    # Cluster radius of nearest surfaces for A particles
                     rA_dist = np.append(rA_dist, avg_rad)
+
+                    # Alignment of A particles
                     alignA_norm=np.append(alignA_norm, part_align[int_id[m]])
+
+                    # Angular position of A particles
                     thetaA_dist_norm = np.append(thetaA_dist_norm, ang_parts[m])
+
+                    # Cluster radius of nearest surfaces for A particles
                     nearest_surfaceA_arr = np.append(nearest_surfaceA_arr, avg_rad)
+
+                # Save particle properties if B particle
                 else:
+
+                    # Aligned active force magnitude for all particles
                     fa_norm=np.append(fa_norm, part_align[int_id[m]]*self.peB)
+
+                    # Active force magnitude for all particles
                     fa_avg=np.append(fa_avg, self.peB)
+
+                    # Aligned active force magnitude for B particles
                     faB_norm=np.append(faB_norm, part_align[int_id[m]]*self.peB)
+
+                    # Cluster radius of nearest surfaces for B particles
                     rB_dist = np.append(rB_dist, avg_rad)
 
+                    # Alignment of B particles
                     alignB_norm=np.append(alignB_norm, part_align[int_id[m]])
+
+                    # B particle's distance from cluster center of mass normalized by nearest cluster radius
                     rB_dist_norm = np.append(rB_dist_norm, difr_parts[m]/avg_rad)
+
+                    # Angular position of B particles
                     thetaB_dist_norm = np.append(thetaB_dist_norm, ang_parts[m])
+
+                    # Cluster radius of nearest surfaces for B particles
                     nearest_surfaceB_arr = np.append(nearest_surfaceB_arr, avg_rad)
 
-                # Save separation distance from the nearest interface surface
+                # All particle's distance from cluster center of mass normalized by nearest cluster radius
                 r_dist_norm = np.append(r_dist_norm, difr_parts[m]/avg_rad)
+
+                # Cluster radius of nearest surfaces for all particles
                 r_dist = np.append(r_dist, avg_rad)
+
+                # Alignment of all particles
                 align_norm=np.append(align_norm, part_align[int_id[m]])
+
+                # Angular position of all particles
                 theta_dist_norm = np.append(theta_dist_norm, ang_parts[m])
         import math
-
+        
+        # Define dictionary for plotting radial heterogeneity
         plot_dict = {'rad': {'all': r_dist_norm, 'A': rA_dist_norm, 'B': rB_dist_norm}, 'theta': {'all': theta_dist_norm, 'A': thetaA_dist_norm, 'B': thetaB_dist_norm}, 'radius': {'all': nearest_surface_arr, 'A': nearest_surfaceA_arr, 'B': nearest_surfaceB_arr}}
 
 
@@ -4158,60 +4223,71 @@ class particle_props:
             factor = 10 ** decimals
             return math.ceil(number * factor) / factor
 
-        theta_bins = np.round(np.linspace(0, 360, 121),0)
+        # Define angular bins for this time step 
         theta_bins = np.round(np.linspace(0, 360, 181),0)
 
+        # Find min and max particle distances cluster center of mass normalized by cluster radius
         min_rad = round_decimals_down(np.min(r_dist_norm))
         max_rad = round_decimals_up(np.max(r_dist_norm))
 
+        # Convert maximum position to a string to make uniform length to other time steps
         max_rad_str = repr(max_rad)
         if len(max_rad_str)<4:
             max_rad_str = max_rad_str + '0'
         signif_digits, fract_digits = max_rad_str.split('.')
         fract_lastdigit = int(fract_digits[-1])
 
+        # If odd decimal, make even decimal
         if fract_lastdigit % 2 == 1:
             max_rad += 0.01
         
+        # Round to nearest 2nd decimal place
         max_rad = round(max_rad,2)
 
-        
-
-        
+        # Convert minimum position to a string to make uniform length to other time steps
         min_rad_str = repr(min_rad)
         if len(min_rad_str)<4:
             min_rad_str = min_rad_str + '0'
         signif_digits, fract_digits = min_rad_str.split('.')
         fract_lastdigit = int(fract_digits[-1])
 
+        # If odd decimal, make even decimal
         if fract_lastdigit % 2 == 1:
             min_rad -= 0.01
+
+        # Round to nearest 2nd decimal place
         min_rad = round(min_rad,2)
         
-        #rad_bins = np.round(np.linspace(min_rad, max_rad, int((max_rad - min_rad)/0.02)+1),2)
-
-        
+        # Define radial bins for this time step 
         rad_final_bins = np.round(np.linspace(0.04, 1.5, int((1.46)/0.04)+1),2)
-
-        theta_final_bins = np.round(np.linspace(3, 360, 120),0)
+        
+        # Define angular bins to be same as in time-averaged case
         theta_final_bins = np.round(np.linspace(2, 360, 180),0)
 
+        # Find ID of min and maximum radial locations
         min_id = np.where(rad_final_bins==min_rad)[0]
         max_id = np.where(rad_final_bins==max_rad)[0]
 
+        # Defines select array from the time-averaged radial position array to look at based on current min and max positions
+        # If maximum ID exists, only look at time-averaged bins less than it
         if len(max_id)==1:
             max_id = int(max_id)
+
+            # If minimum ID exists, only look at time-averaged bins larger than it
             if len(min_id)==1:
                 min_id = int(min_id)
                 rad_bins = rad_final_bins[min_id:max_id+1]
             else:
                 rad_bins = rad_final_bins[0:max_id+1]
         else:
+            # If minimum ID exists, only look at time-averaged bins larger than it
             if len(min_id)==1:
                 min_id = int(min_id)
                 rad_bins = rad_final_bins[min_id:]
             else:
                 rad_bins = rad_final_bins[0:]
+
+        # Define empty arrays for binned data given radial and angular bins
         fa_avg_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
         faA_avg_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
         faB_avg_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
@@ -4260,13 +4336,21 @@ class particle_props:
         radiusA_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
         radiusB_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
 
+        # 
         avg_rad_theta = np.mean(difr_ext_surface)
+
+        # Loop over select time-averaged angular bins within current min and max angles
         for n_theta in range(1, len(theta_bins)):
+
+            # Loop over select time-averaged radial bins within current min and max radii
             for n_rad in range(1, len(rad_bins)):
+
+                # Find all, A, and B particle IDs currently within time-averaged bin
                 bin_ids = np.where((theta_dist_norm <theta_bins[n_theta]) & (theta_dist_norm >= theta_bins[n_theta-1]) & (r_dist_norm < rad_bins[n_rad]) & (r_dist_norm >= rad_bins[n_rad-1]))[0]
                 binA_ids = np.where((thetaA_dist_norm <theta_bins[n_theta]) & (thetaA_dist_norm >= theta_bins[n_theta-1]) & (rA_dist_norm < rad_bins[n_rad]) & (rA_dist_norm >= rad_bins[n_rad-1]))[0]
                 binB_ids = np.where((thetaB_dist_norm <theta_bins[n_theta]) & (thetaB_dist_norm >= theta_bins[n_theta-1]) & (rB_dist_norm < rad_bins[n_rad]) & (rB_dist_norm >= rad_bins[n_rad-1]))[0]
                 
+                # If particles within bin, calculate property
                 if len(bin_ids)>0:
                     """
                     rad_final_id = np.where(rad_final_bins==rad_bins[n_rad])[0]
@@ -4291,13 +4375,17 @@ class particle_props:
                     numB_final_binned[rad_final_id, theta_final_id] = len(binB_ids)
                     """
                     
+                    # Find ID of time-averaged bin arrays
                     rad_final_id = np.where(rad_final_bins==rad_bins[n_rad])[0]
                     theta_final_id = np.where(theta_final_bins==theta_bins[n_theta])[0]
-                    #print(np.where(np.isnan(alignB_norm)==True)[0])
-                    #print(np.where(np.isnan(np.array(avg_rad_dict['align']['B'].flatten()))==True)[0])
-                    #stop
+                    
+                    # Current area of radial slice
                     area_radial_slice = np.pi * ((rad_bins[n_rad]*np.mean(nearest_surface_arr[bin_ids]))**2 - (rad_bins[n_rad-1]*np.mean(nearest_surface_arr[bin_ids]))**2) * ((theta_bins[n_theta]-theta_bins[n_theta-1])/360)
+                    
+                    # If non-zero, continue...
                     if area_radial_slice > 0:
+
+                        # If load saved file for averages...
                         if load_save == 1:
                             
                             if (float(avg_rad_dict['fa_avg_real']['all'][rad_final_id, theta_final_id][0])>0):
