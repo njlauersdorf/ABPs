@@ -32,6 +32,7 @@ start_frame=${12}
 # This is the end frame for analysis
 end_frame=${13}
 
+# Activate environment if on windows, otherwise, activate yourself or later if longleaf
 if [ $os == "windows" ]; then
     source ~/.profile
     conda activate rekt
@@ -61,8 +62,10 @@ echo end_frame
 echo $end_frame
 
 
+# Check what system you're using for running analysis
 first_letter=$(printf %.5s "$hoomd_path")
 
+#Obtain simulation inputs from .gsd file names
 if [ $first_letter == '/User' ]; then
     vars="$(python3 ${script_path}/get_parameters.py ${fname})"
 fi
@@ -127,6 +130,7 @@ echo 'xa'
 echo $xa
 
 
+# Verify particle fraction is integer
 if (( ${xa%.*} == 0 )); then
     result=$(echo "100*$xa" | bc )
     declare -i xa2=0
@@ -138,7 +142,7 @@ fi
 echo $xa2
 
 
-
+#Label slow activity properly to non-zero input
 declare -i pa2=0
 
 if [ $os == "windows" ]; then
@@ -157,6 +161,7 @@ fi
 
 echo $pa2
 
+# Runs analysis for whatever method you specified
 if [ $analyze == "y" ]; then
     if [ $os == "mac" ]; then
         python3 $script_path/full_density_analysis_binary_updates_temp.py $fname $hoomd_path $outpath $pa2 $pb $xa2 $ep $phi $dtau $bin $step $method $plot $start_frame $end_frame
@@ -165,6 +170,7 @@ if [ $analyze == "y" ]; then
     fi
 fi
 
+# Makes integers of simulation inputs for file naming
 pe=${pe%%.*}
 pa=${pa%%.*}
 pb=${pb%.*}
@@ -172,6 +178,7 @@ eps=${ep}
 phi=${phi}
 pNum=${pNum%.*}
 
+# Creates videos for whatever method you specified
 if [ $vid == "y" ]; then
     if [ $method == "activity" ]; then
         if [ $os == "mac" ]; then

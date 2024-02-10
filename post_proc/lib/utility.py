@@ -30,8 +30,14 @@ class utility:
 
     def crop_sim(self, start, end):
         import gsd.hoomd
+
+        # Open old .gsd file
         pre_crop = gsd.hoomd.open("file_name", mode='r')
+
+        # Name new .gsd file
         post_crop = "new_file_name"
+
+        # Crop old .gsd file in time and save to new .gsd file
         with gsd.hoomd.open(post_crop, mode='wb') as f:
             for i in range(start, end):
                 f.append(pre_crop[i])
@@ -49,7 +55,11 @@ class utility:
         Output:
         difr: separation distance in x-direction
         '''
+
+        # Total separation distance in x (with periodic boundary errors)
         dif = pos1 - pos2
+
+        # Enforce periodic boundary conditions in x
         dif_abs = np.abs(dif)
         if dif_abs>=self.hx_box:
             if dif < -self.hx_box:
@@ -57,6 +67,7 @@ class utility:
             else:
                 dif -= self.lx_box
 
+        # Return separation distance in x
         return dif
 
     def sep_dist_y(self, pos1, pos2):
@@ -72,7 +83,11 @@ class utility:
         Output:
         difr: separation distance in y-direction
         '''
+
+        # Total separation distance in y (with periodic boundary errors)
         dif = pos1 - pos2
+
+        # Enforce periodic boundary conditions in y
         dif_abs = np.abs(dif)
         if dif_abs>=self.hy_box:
             if dif < -self.hy_box:
@@ -80,6 +95,7 @@ class utility:
             else:
                 dif -= self.ly_box
 
+        # Return separation distance in y
         return dif
 
     def sep_dist_arr(self, pos1, pos2, difxy=False):
@@ -102,22 +118,27 @@ class utility:
         dify (optional): array of separation distances in y direction
         '''
 
+        # Separation distance in x and y (with periodic boundary errors)
         difr = (pos1 - pos2)
 
+        # Enforce periodic boundary conditions in x
         difx_out = np.where(difr[:,0]>self.hx_box)[0]
         difr[difx_out,0] = difr[difx_out,0]-self.lx_box
 
         difx_out = np.where(difr[:,0]<-self.hx_box)[0]
         difr[difx_out,0] = difr[difx_out,0]+self.lx_box
 
+        #Enforce periodic boundary conditions in y
         dify_out = np.where(difr[:,1]>self.hy_box)[0]
         difr[dify_out,1] = difr[dify_out,1]-self.ly_box
 
         dify_out = np.where(difr[:,1]<-self.hy_box)[0]
         difr[dify_out,1] = difr[dify_out,1]+self.ly_box
 
+        # Total actual separation distance
         difr_mag = (difr[:,0]**2 + difr[:,1]**2)**0.5
 
+        # If you want both x, y, and r returned or just r
         if difxy == True:
             return difr[:,0], difr[:,1], difr_mag
         else:
@@ -138,19 +159,23 @@ class utility:
         from some origin (i.e. reference particle) in terms of radians [-pi, pi]
         '''
 
+        # Find particles in each quadrant of graph
         quad1 = np.where((difx > 0) & (dify >= 0))[0]
         quad2 = np.where((difx <= 0) & (dify > 0))[0]
         quad3 = np.where((difx < 0) & (dify <= 0))[0]
         quad4 = np.where((difx >= 0) & (dify < 0))[0]
-
+        
+        # Initialize empty array
         ang_loc = np.zeros(len(difx))
 
+        #Calculate each particle's angular location around particle given interparticle separation distances and quadrant
         ang_loc[quad1] = np.arctan(dify[quad1]/difx[quad1])
         ang_loc[quad2] = (np.pi/2) + np.arctan(-difx[quad2]/dify[quad2])
         ang_loc[quad3] = (np.pi) + np.arctan(dify[quad3]/difx[quad3])
         ang_loc[quad4] = (3*np.pi/2) + np.arctan(-difx[quad4]/dify[quad4])
 
         return ang_loc
+
     def roundUp(self, n, decimals=0):
         '''
         Purpose: Round up number of bins to account for floating point inaccuracy
@@ -164,8 +189,10 @@ class utility:
         num_bins: number of bins along respective box length rounded up
         '''
 
+        # Round up number of bins to nearest integer
         multiplier = 10 ** decimals
         num_bins = math.ceil(n * multiplier) / multiplier
+
         return num_bins
 
     def getNBins(self, length, minSz=(2**(1./6.))):
@@ -180,9 +207,11 @@ class utility:
         Output: number of bins along respective box length rounded up
         '''
 
+        # Initial number of bins in one dimension you want
         initGuess = int(length) + 1
         nBins = initGuess
-        # This loop only exits on function return
+
+        # This loop only exits on function return and checks if number of bins correct to return correct bin number 
         while True:
             if length / nBins > minSz:
                 return nBins
@@ -237,59 +266,60 @@ class utility:
         quat: Quaternion orientation vector of particle
 
         Output:
-        rad: angle between [-pi, pi]
+        theta: angle between [-pi, pi]
         '''
-
+        
         r = quat[0]         #magnitude
         x = quat[1]         #x-direction
         y = quat[2]         #y-direction
         z = quat[3]         #z-direction
 
+        # Define rotation matrix
         rot_matrix = utility.quaternion_rotation_matrix(quat)
+        
+        # Define axis to rotate around
         z_axis = np.array([0,0,1])
         z_axis = np.reshape(z_axis, (3,1))
 
+        # Find orientation vector through matrix multiplication
         orientation_vector = np.matmul(rot_matrix, z_axis)
         
+        # Define orientation in radians
         rad = math.atan2(y, x)
         rad2 = math.atan2(r, np.sqrt(x**2+y**2+z**2))
+
+        # Define some terms used to calculate orientation
         alpha = 2*np.arccos(r)
         beta_x = np.arccos(x/np.sin(alpha/2))
         beta_y = np.arccos(y/np.sin(alpha/2))
         beta_z = np.arccos(z/np.sin(alpha/2))
+
+        # Calculate different rotation angles around axes 
         phi = np.arctan2(2*(r*x + y*z),1-2*(x**2+y**2))
         theta = -np.pi/2 + 2*np.arctan2(np.sqrt(1+2*(r*y-x*z)), np.sqrt(1-2*(r*y-x*z)))
         psi = np.arctan2(2*(r*z + x*y),1-2*(y**2+z**2))
         
+        # Define x and y orientation
         x_vect = orientation_vector[0][0]
         y_vect = orientation_vector[1][0]
-        #sto
-        
-        
-        #print(rad)
-        ##print(alpha)
-        #print(beta_x)
-        #print(beta_y)
-        #print(beta_z)
-        theta = np.arctan2(orientation_vector[1][0], orientation_vector[0][0])
-        #print((orientation_vector[1]**2 + orientation_vector[0]**2)**0.5 * np.cos(np.arctan2(orientation_vector[1], orientation_vector[0])))
-        #stop
-        
 
+        # Define orientation in terms of angle from x-axis
+        theta = np.arctan2(orientation_vector[1][0], orientation_vector[0][0])
+ 
         return theta#rad
 
     def quatToXOrient(self, quat):
         '''
         Purpose: Take quaternion orientation vector of particle as given by hoomd-blue
-        simulations and output angle between [-pi, pi]
+        simulations and output x direction unit vector
 
         Inputs:
         quat: Quaternion orientation vector of particle
 
         Output:
-        rad: angle between [-pi, pi]
+        x_vect: x-orientation unit vector
         '''
-
+    
         r = quat[0]         #magnitude
         x = quat[1]         #x-direction
         y = quat[2]         #y-direction
@@ -309,14 +339,14 @@ class utility:
 
     def quatToYOrient(self, quat):
         '''
-        Purpose: Take quaternion orientation vector of particle as given by hoomd-blue
-        simulations and output angle between [-pi, pi]
+        Purpose: Take quaternion orientation quaternion of particle as given by hoomd-blue
+        simulations and output y direction unit vector
 
         Inputs:
         quat: Quaternion orientation vector of particle
 
         Output:
-        rad: angle between [-pi, pi]
+        y_vect: y-orientation unit vector
         '''
 
         r = quat[0]         #magnitude
@@ -324,16 +354,20 @@ class utility:
         y = quat[2]         #y-direction
         z = quat[3]         #z-direction
 
+        # Define rotation matrix
         rot_matrix = utility.quaternion_rotation_matrix(quat)
+        
+        # Define axis to rotate around
         z_axis = np.array([0,0,1])
         z_axis = np.reshape(z_axis, (3,1))
 
+        # Find orientation vector through matrix multiplication
         orientation_vector = np.matmul(rot_matrix, z_axis)
 
+        # Define x and y orientation
         x_vect = orientation_vector[0][0]
         y_vect = orientation_vector[1][0]
         
-
         return y_vect
 
     def symlog(self, x):
