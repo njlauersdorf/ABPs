@@ -88,6 +88,53 @@ if ! [[ "$time_step" =~ ^[+-]?[0-9]+\.?[0-9]*$ ]]; then
     exit 0 
 fi
 
+echo "Do you want to perform a measurement? (y/n)"
+read analyze
+
+if [ -z "$analyze" ]; then 
+    echo 'Inputs cannot be blank please try again!' 
+    exit 0 
+fi 
+
+if [ $analyze != "y" ] &&  [ $analyze != "n" ]; then
+    echo 'Input must correspond to given options!' 
+    exit 0 
+fi
+
+if [ $analyze == "y" ]; then
+    echo "Do you want to generate plots? (y/n)"
+    read plot
+
+    if [ -z "$plot" ]; then 
+    echo 'Inputs cannot be blank please try again!' 
+    exit 0 
+    fi 
+
+    if [ $plot != "y" ] &&  [ $plot != "n" ]; then
+        echo 'Input must correspond to given options!' 
+        exit 0 
+    fi
+fi
+
+
+echo "Do you want to generate videos? (y/n)"
+read vid
+
+if [ -z "$vid" ]; then 
+    echo 'Inputs cannot be blank please try again!' 
+    exit 0 
+fi 
+
+if [ $vid != "y" ] &&  [ $vid != "n" ]; then
+    echo 'Input must correspond to given options!' 
+    exit 0 
+fi
+
+if [ $vid == "n" ] && [ $plot == "n" ] && [ $analyze == "n" ]; then
+    echo 'You must specify either performing measurement or video creation as true to run code!' 
+    exit 0 
+fi
+
 echo "|----------------------------------------------------------------------|"
 echo "|      Possible simulation options and corresponding user inputs       |"
 echo "|          **************************************************          |"
@@ -143,7 +190,7 @@ echo "| surface-body-forces: interface pressure using surface normal         |"
 echo "| bubble-body-forces: separate interface pressures using surface norm  |"
 echo "|----------------------------------------------------------------------|"
 
-echo "What do you want to analyze?"
+echo "What do you want to analyze or create plots/videos for?"
 read method
 
 if [ -z "$method" ]; then 
@@ -169,20 +216,6 @@ if [ -z "$end_step" ]; then
     end_step="default"
 fi 
 
-echo "Do you want to generate plots? (y/n)"
-read plot
-
-if [ -z "$plot" ]; then 
-    echo 'Inputs cannot be blank please try again!' 
-    exit 0 
-fi 
-
-if [ $plot != "y" ] &&  [ $plot != "n" ]; then
-    echo 'Input must correspond to given options!' 
-    exit 0 
-fi
-
-
 if [ $method == "lattice_spacing" ]; then
   echo "Do you want to use parallel processing, namely for lattice spacing (y/n)?"
   read parallel
@@ -193,9 +226,9 @@ fi
 for file in $(ls *gsd)
 do
     if [ "$parallel" = "y" ]; then
-        $submit $script_path/analyze_binary_parallel.sh $hoomd_path $outpath $script_path $file $bin_size $time_step $method $plot $os
+        $submit $script_path/analyze_binary_parallel.sh $hoomd_path $outpath $script_path $file $bin_size $time_step $method $analyze $plot $vid $os $start_step $end_step
     elif [ "$parallel" = "n" ]; then
-        $submit $script_path/analyze_binary.sh $hoomd_path $outpath $script_path $file $bin_size $time_step $method $plot $os $start_step $end_step
+        $submit $script_path/analyze_binary.sh $hoomd_path $outpath $script_path $file $bin_size $time_step $method $analyze $plot $vid $os $start_step $end_step
     else
         echo "did not recognize response to parallel processing"
     fi

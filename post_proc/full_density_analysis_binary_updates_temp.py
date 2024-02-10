@@ -42,7 +42,7 @@ from scipy import stats
 import matplotlib
 
 # If running on Longleaf, use matplotlib from desktop
-if hoomdPath == '/nas/longleaf/home/njlauers/hoomd-blue/build':
+if hoomdPath[:4] == '/nas':
     matplotlib.use('Agg')
 else:
     pass
@@ -777,7 +777,36 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     method1_align_dict, method2_align_dict = interface_functs.gas_alignment(method1_align_dict, method2_align_dict, all_surface_measurements, all_surface_curves, sep_surface_dict, int_comp_dict)
 
                     particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, eps, typ, pos, x_orient_arr, y_orient_arr)
-                    
+                    """
+                    try:
+                        unique_rad = np.unique(single_time_dict['rad'])
+                        unique_theta = np.unique(single_time_dict['theta'])
+                        
+                        for j in range(0, len(unique_rad)):
+                            if (unique_rad[j]>=0.7) & (unique_rad[j]<=1.1):
+                                
+                                temp_id = np.where(single_time_dict['rad'] == unique_rad[j])[0]
+                                if len(temp_id)>0:
+                                    int_fa_dens_time_theta_avg += (single_time_dict['fa_dens']['all'][temp_id])
+                                    int_faA_dens_time_theta_avg += (single_time_dict['fa_dens']['A'][temp_id])
+                                    int_faB_dens_time_theta_avg += (single_time_dict['fa_dens']['B'][temp_id])
+
+                                    int_fa_avg_real_time_theta_avg += (single_time_dict['fa_avg_real']['all'][temp_id])
+
+                                    int_fa_avg_time_theta_avg += (single_time_dict['fa_avg']['all'][temp_id])
+                                    int_faA_avg_time_theta_avg += (single_time_dict['fa_avg']['A'][temp_id])
+                                    int_faB_avg_time_theta_avg += (single_time_dict['fa_avg']['B'][temp_id])
+
+                                    int_num_dens_time_theta_avg += (single_time_dict['num_dens']['all'][temp_id])
+                                    int_num_densA_time_theta_avg += (single_time_dict['num_dens']['A'][temp_id])
+                                    int_num_densB_time_theta_avg += (single_time_dict['num_dens']['B'][temp_id])
+
+                                    int_align_time_theta_avg += (single_time_dict['align']['all'][temp_id])
+                                    int_alignA_time_theta_avg += (single_time_dict['align']['A'][temp_id])
+                                    int_alignB_time_theta_avg += (single_time_dict['align']['B'][temp_id])
+
+                    except:
+
                     # If largest surface properly defined, then calculate average binned interface properties...
                     try:
 
@@ -884,7 +913,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                         sum_num += 1
                     except:
                         pass
-            
+                    """
             # Calculate time-averaged aligned active force magnitude for all, A, and B particles
             avg_fa_avg_r = sum_fa_avg_r / sum_num
             avg_faA_avg_r = sum_faA_avg_r / sum_num
@@ -951,6 +980,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
             # Save position bins (theta, r/r_c) to separate files
             np.savetxt(averagesPath + "radial_avgs_rad_" + outfile+ '.csv', single_time_dict['rad'], delimiter=",")
             np.savetxt(averagesPath + "radial_avgs_theta_" + outfile+ '.csv', single_time_dict['theta'], delimiter=",")
+
+
+            
 
             # if calculated this run, say we don't need to load the files in
             load_save = 0
@@ -2091,7 +2123,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                         
                         # Plot particles color-coded by activity
                         #plotting_functs.plot_part_activity(pos, all_surface_curves, int_comp_dict, active_fa_dict, mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option, banner_id = banner_option, presentation_id = presentation_option)
-                        plotting_functs.plot_part_activity_paper(pos, all_surface_curves, int_comp_dict, active_fa_dict, mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option, banner_id = banner_option, presentation_id = presentation_option)
+                        plotting_functs.plot_part_activity(pos, all_surface_curves, int_comp_dict, active_fa_dict, mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option, banner_id = banner_option, presentation_id = presentation_option)
                 elif (measurement_options[0] == 'activity-seg'):
                     #DONE!
                     if plot == 'y':
