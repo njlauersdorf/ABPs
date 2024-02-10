@@ -486,17 +486,37 @@ class phase_identification:
         count_dict = {'bulk': bulk_num, 'int': int_num, 'gas': gas_num}
 
         return count_dict
-    def rebin_phases(self, part_dict, phase_dict):
 
+    def rebin_phases(self, part_dict, phase_dict):
+        
+        '''
+        Purpose: Takes the phase ids of each bin and counts the number of bins of each phase
+
+        Inputs:
+        part_dict: dictionary of arrays containing bin information of each particle
+
+        phase_dict: dictionary of arrays labeling phase of each bin and particle
+
+        Outputs:
+        phase_dict: phase_dict updated with array of phases of bins from array of phases of particles
+        '''
+
+        # Instantiate empty array
         new_phase_dict = np.zeros((len(part_dict['id']), len(part_dict['id'])))
 
+        # Loop over bin IDs
         for ix in range(0, len(part_dict['id'])):
             for iy in range(0, len(part_dict['id'])):
+
+                # If particles in bin
                 if len(part_dict['id'][ix][iy])>0:
+
+                    # Count number of particles from each phase in bin
                     bulk_count = len(np.where(phase_dict['part'][part_dict['id'][ix][iy]]==0 )[0])
                     int_count = len(np.where(phase_dict['part'][part_dict['id'][ix][iy]]==1 )[0])
                     gas_count = len(np.where(phase_dict['part'][part_dict['id'][ix][iy]]==2 )[0])
                     
+                    # Whatever is majority, label bin as that phase
                     if (bulk_count >= int_count) & (bulk_count >= gas_count):
                         new_phase_dict[ix][iy] = 0
                     elif (int_count >= bulk_count) & (int_count >= gas_count):
@@ -504,9 +524,13 @@ class phase_identification:
                     elif (gas_count >= int_count) & (gas_count >= bulk_count):
                         new_phase_dict[ix][iy] = 2
         
+        # Loop over bin IDs
         for ix in range(0, len(part_dict)):
             for iy in range(0, len(part_dict)):
+
+                # If no particles in bin
                 if len(part_dict['id'])==0:
+
                     #Identify neighboring bin indices in x-direction
                     if (ix + 1) == self.NBins_x:
                         lookx = [ix-1, ix, 0]
@@ -542,13 +566,18 @@ class phase_identification:
                                     int_count+=1
                                 else:
                                     gas_count+=1
+
+                            # Whatever is majority of neighbor bins, label current bin as such
                             if (bulk_count >= int_count) & (bulk_count >= gas_count):
                                 new_phase_dict[ix][iy] = 0
                             elif (int_count >= bulk_count) & (int_count >= gas_count):
                                 new_phase_dict[ix][iy] = 1
                             elif (gas_count >= int_count) & (gas_count >= bulk_count):
                                 new_phase_dict[ix][iy] = 2
+        
+        # Update old phase dictionary
         phase_dict['bin'] = new_phase_dict
+
         return phase_dict
 
     def com_bulk(self, phase_dict, count_dict):
