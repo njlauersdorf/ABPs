@@ -144,6 +144,7 @@ class phase_identification:
         self.typ = typ
 
     def phase_ident_planar(self):
+        # NOTE THIS IS IN PROGRESS AND HAS NOT BEEN VERIFIED FOR ACCURACY!
         '''
         Purpose: Takes the average orientation, area fraction, and pressure of each bin
         and determines whether the bins and belong to the bulk (0), interface (1), or gas (2)
