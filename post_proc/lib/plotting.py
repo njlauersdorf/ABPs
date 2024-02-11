@@ -58,6 +58,10 @@ plt.rcParams['text.latex.preview'] = True
 
 
 class plotting:
+    """
+    Purpose: 
+    This class contains a series of basic functions for visualizing properties calculated in other classes through scatter plots, heat maps, and histograms 
+    """
     def __init__(self, orient_dict, pos_dict, lx_box, ly_box, NBins_x, NBins_y, sizeBin_x, sizeBin_y, peA, peB, parFrac, eps, typ, tst, partNum, outPath, outFile, phi):
 
         # Values from theory

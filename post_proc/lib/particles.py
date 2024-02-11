@@ -29,7 +29,12 @@ import theory, utility, plotting_utility
 
 # Class of individual particle property measurements
 class particle_props:
-
+    """
+    Purpose: 
+    This class contains a series of basic functions for analyzing properties of systems 
+    without the need for differentiating phases, including lattice spacing, order parameters,
+    and neighbor information.
+    """
     def __init__(self, lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, eps, typ, pos, px, py):
 
         # Initialize theory functions for call back later
@@ -262,25 +267,31 @@ class particle_props:
             part_difr[h] = difr
 
         return part_difr
+
     def radial_int_press(self, stress_plot_dict):
         '''
-        Purpose: Takes the orientation, position, and active force of each particle
-        to calculate the active force magnitude toward, alignment toward, and separation
-        distance from largest cluster's CoM
+        Purpose: Takes the stress of each particle and bins particles in terms of separation distance
+        and angle around cluster CoM to calculate total stress in each bin
 
+        Input:
+        stress_plot_dict: dictionary containing stresses in each direction acting on each particle of each type in each phase
+        
         Output:
-        radial_fa_dict: dictionary containing each particle's alignment and aligned active force toward
-        largest cluster's CoM as a function of separation distance from largest custer's CoM
+        radial_stress_dict: dictionary containing each particle's stress in each direction acting on each particle as a 
+        function of separation distance and angle around cluster's CoM
         '''
 
+        # Stress in each direction of all particles
         stress_xx = np.append(stress_plot_dict['dense']['all-all']['XX'], stress_plot_dict['gas']['all-all']['XX'])
         stress_yy = np.append(stress_plot_dict['dense']['all-all']['YY'], stress_plot_dict['gas']['all-all']['YY'])
         stress_xy = np.append(stress_plot_dict['dense']['all-all']['XY'], stress_plot_dict['gas']['all-all']['XY'])
         stress_yx = np.append(stress_plot_dict['dense']['all-all']['YX'], stress_plot_dict['gas']['all-all']['YX'])
 
+        # X- and Y- Positions of each particle in same order as above
         pos_x = np.append(stress_plot_dict['dense']['pos']['all']['x'], stress_plot_dict['gas']['pos']['all']['x'])
         pos_y = np.append(stress_plot_dict['dense']['pos']['all']['y'], stress_plot_dict['gas']['pos']['all']['y'])
         
+        # Particle type in same order as above
         typ = np.append(stress_plot_dict['dense']['typ'], stress_plot_dict['gas']['typ'])
 
         # Instantiate empty array (partNum) containing the average active force magnitude
@@ -318,16 +329,17 @@ class particle_props:
 
             difr= ( (difx )**2 + (dify)**2)**0.5
 
-            thetar = np.arctan2(dify, difx)*(180/np.pi)
+            # Angle around cluster's CoM
+            thetar = np.arctan2(dify, difx)*(180/np.pi)            
             
-            #r = np.linspace(np.min(radial_fa_dict[key]['all']['r']), np.max(radial_fa_dict[key]['all']['r']), num=int((np.ceil(np.max(radial_fa_dict[key]['all']['r']) - np.min(radial_fa_dict[key]['all']['r']))+1)/2))
-            
-            
+            # Distance from cluster CoM (normalized by cluster radius) to bin particles by
             r = np.linspace(0, 1.5, num=75)
+
+            # Angle around cluster CoM to bin particles by
             theta = np.linspace(0, 360, num=45)
 
 
-            # Save active force magnitude toward largest cluster's CoM
+            # Save stress of each particle in each direction to array in addition to separation and angle around CoM by type
             if typ[h] == 0:
                 stress_xx_A_arr =np.append(stress_xx_A_arr, stress_xx[h])
                 stress_yy_A_arr =np.append(stress_yy_A_arr, stress_yy[h])
@@ -343,18 +355,15 @@ class particle_props:
                 rB_dist_norm = np.append(rB_dist_norm, difr)
                 thetaB_dist_norm = np.append(thetaB_dist_norm, thetar)
             
+            # Save stress of each particle in each direction to array in addition to separation and angle around CoM for all types
             stress_xx_arr =np.append(stress_xx_arr, stress_xx[h])
             stress_yy_arr =np.append(stress_yy_arr, stress_yy[h])
             stress_xy_arr =np.append(stress_xy_arr, stress_xy[h])
             stress_yx_arr =np.append(stress_yx_arr, stress_yx[h])
-
-            
-            # Save separation distance from largest cluster's CoM
             r_dist_norm = np.append(r_dist_norm, difr)
             theta_dist_norm = np.append(theta_dist_norm, thetar)
-        # Dictionary containing each particle's alignment and aligned active force toward
-        # largest cluster's CoM as a function of separation distance from largest custer's CoM
 
+        # Dictionary containing each particle's stress in each direction and separation and angle around cluster CoM
         radial_stress_dict = {'all': {'XX': stress_xx_arr, 'YY': stress_yy_arr, 'XY': stress_xy_arr, 'YX': stress_yx_arr, 'r': r_dist_norm, 'theta': theta_dist_norm}, 'A': {'XX': stress_xx_A_arr, 'YY': stress_yy_A_arr, 'XY': stress_xy_A_arr, 'YX': stress_yx_A_arr, 'r': rA_dist_norm, 'theta': thetaA_dist_norm}, 'B': {'XX': stress_xx_B_arr, 'YY': stress_yy_B_arr, 'XY': stress_xy_B_arr, 'YX': stress_yx_B_arr, 'r': rB_dist_norm, 'theta': thetaB_dist_norm}, 'typ': typ}
 
         return radial_stress_dict
@@ -475,21 +484,21 @@ class particle_props:
 
             difr= ( (difx )**2 + (dify)**2)**0.5
 
-            # Save active force magnitude toward the nearest interface surface normal
+            # Save particle properties as function of distance from cluster's CoM
             if self.typ[h] == 0:
-                fa_norm=np.append(fa_norm, part_align[h]*self.peA)
-                faA_norm=np.append(faA_norm, part_align[h]*self.peA)
-                rA_dist_norm = np.append(rA_dist_norm, difr)
-                alignA_norm=np.append(alignA_norm, part_align[h])
+                fa_norm=np.append(fa_norm, part_align[h]*self.peA)  # Aligned active force magnitude of all particles
+                faA_norm=np.append(faA_norm, part_align[h]*self.peA)  # Aligned active force magnitude of particle type A
+                rA_dist_norm = np.append(rA_dist_norm, difr)  #Distance from custer CoM of particle type A
+                alignA_norm=np.append(alignA_norm, part_align[h])  # Alignment of particle type A
             else:
-                fa_norm=np.append(fa_norm, part_align[h]*self.peB)
-                faB_norm=np.append(faB_norm, part_align[h]*self.peB)
-                alignB_norm=np.append(alignB_norm, part_align[h])
-                rB_dist_norm = np.append(rB_dist_norm, difr)
+                fa_norm=np.append(fa_norm, part_align[h]*self.peB)  # Aligned active force magnitude of all particles
+                faB_norm=np.append(faB_norm, part_align[h]*self.peB)  # Aligned active force magnitude of particle type B
+                alignB_norm=np.append(alignB_norm, part_align[h])  # Alignment of particle type B
+                rB_dist_norm = np.append(rB_dist_norm, difr)  #Distance from custer CoM of particle type B
 
             # Save separation distance from the nearest interface surface
-            r_dist_norm = np.append(r_dist_norm, difr)
-            align_norm=np.append(align_norm, part_align[h])
+            r_dist_norm = np.append(r_dist_norm, difr)  #Distance from custer CoM of all particles
+            align_norm=np.append(align_norm, part_align[h])  # Alignment of all particles
 
         # Dictionary containing each particle's alignment and aligned active force toward
         # the nearest interface surface normal as a function of separation distance from
@@ -497,8 +506,9 @@ class particle_props:
         radial_fa_dict = {'all': {'r': r_dist_norm, 'fa': fa_norm, 'align': align_norm}, 'A': {'r': rA_dist_norm, 'fa': faA_norm, 'align': alignA_norm}, 'B': {'r': rB_dist_norm, 'fa': faB_norm, 'align': alignB_norm}}
 
         return radial_fa_dict
-    def heterogeneity_single_particles(self, body_force_dict, phase_dict, avg_body_force_dict, type_m='phases'):
 
+    def heterogeneity_single_particles(self, body_force_dict, phase_dict, avg_body_force_dict, type_m='phases'):
+        
         bulk_id = np.where(phase_dict['part']==0)[0]
         int_id = np.where(phase_dict['part']==1)[0]
         gas_id = np.where(phase_dict['part']==2)[0]
@@ -822,6 +832,9 @@ class particle_props:
         Output:
         vel_phase_dict: dictionary containing the average and standard deviation of velocity
         of each phase and each respective type ('all', 'A', or 'B')
+
+        vel_phase_plot_dict: dictionary containing the velocity and position
+        of each particle for each phase and each respective type ('all', 'A', or 'B')
         '''
 
         # Total velocity of bulk particles of respective type ('all', 'A', or 'B')
@@ -1062,6 +1075,7 @@ class particle_props:
         # of each phase and each respective type ('all', 'A', or 'B')
         vel_phase_dict = {'bulk': {'all': {'avg': bulk_vel_avg, 'std': bulk_vel_std}, 'A': {'avg': bulk_A_vel_avg, 'std': bulk_A_vel_std}, 'B': {'avg': bulk_B_vel_avg, 'std': bulk_B_vel_std} }, 'int': {'all': {'avg': int_vel_avg, 'std': int_vel_std}, 'A': {'avg': int_A_vel_avg, 'std': int_A_vel_std}, 'B': {'avg': int_B_vel_avg, 'std': int_B_vel_std}}, 'gas': {'all': {'avg': gas_vel_avg, 'std': gas_vel_std}, 'A': {'avg': gas_A_vel_avg, 'std': gas_A_vel_std}, 'B': {'avg': gas_B_vel_avg, 'std': gas_B_vel_std}}}
 
+        # Particle IDs of all, A, or B gas particles
         gas_id = np.where(phasePart == 2 )[0]
         gasA_id = np.where( (self.typ == 0 ) & ( phasePart == 2 ) )[0]
         gasB_id = np.where( (self.typ == 1 ) & ( phasePart == 2 ) )[0]
@@ -1157,6 +1171,11 @@ class particle_props:
         Output:
         vel_phase_dict: dictionary containing the average and standard deviation of velocity
         of each phase and each respective type ('all', 'A', or 'B')
+
+        vel_plot_dict: dictionary containing the velocity
+        of each respective type ('all', 'A', or 'B')
+
+        corr_dict: dictionary containing the correlation of particle velocity with active force orientation
         '''
         
         # Calculate displacement
@@ -1249,16 +1268,19 @@ class particle_props:
             return vel_plot_dict, corr_dict, vel_stat_dict
             
     def adsorption(self):
+        #IN PROGRESS
         '''
         Purpose: Calculates the rate of adsorption to and desorption from the cluster
 
         Output:
-        vel_phase_dict: dictionary containing the average and standard deviation of velocity
-        of each phase and each respective type ('all', 'A', or 'B')
+        mem_min: 
         '''
+
+        # Particle IDs of each type
         typ0ind = np.where(self.typ==0)[0]
         typ1ind = np.where(self.typ==1)[0]
 
+        # Calculate minimum and maximum membrane position
         if self.lx_box >= self.ly_box:
             mem_max = np.max(self.pos[typ0ind,0])
             mem_min = np.min(self.pos[typ0ind,0])
@@ -1266,11 +1288,14 @@ class particle_props:
             mem_max = np.max(self.pos[typ0ind,1])
             mem_min = np.min(self.pos[typ0ind,1])
 
+        # Calculate number of particles adsorbing from gas to membrane on either side
         right_ads = np.where((self.pos[typ1ind,0]<(mem_max + 10.0)) & (self.pos[typ1ind,0]>0))
         left_ads = np.where((self.pos[typ1ind,0]>(mem_min - 10.0)) & (self.pos[typ1ind,0]<0))
 
         return mem_min
+
     def adsorption3(partPhase_time, clust_time):
+        # IN PROGRESS
         start_part_phase = partPhase_time[:,0]
         start_bulk_id = np.where(partPhase_time[0,:]==0)[0]
         start_gas_id = np.where(partPhase_time[0,:]==2)[0]
@@ -1551,11 +1576,34 @@ class particle_props:
     def collision_rate(self, vel_plot_dict, prev_neigh_dict):
         '''
         Purpose: Calculates the rate of collision between particles in the gas phase
+        
+        Input:
+        vel_plot_dict: dictionary containing velocities of particles from previous time step to current
+
+        prev_neigh_dict: dictionary containing neighbor information from previous time step
 
         Output:
-        collision_dict: dictionary containing the total number of colisions
+
+        collision_stat_dict: dictionary containing the mean, median, mode, and standard deviation of number of colisions
         in gas for each respective type ('all', 'A', or 'B')
+
+        collision_plot_dict: dictionary containing the number of colisions
+        in gas for each respective type ('all', 'A', or 'B') for all particles
+
+        neigh_dict: dictionary containing neighbor lists of each respective type in gas ('all', 'A', or 'B')
         '''
+
+        # Dictionary containing statistics of rates of collisions
+        if len(BB_rel_vel_stay)==0:
+            collision_stat_dict = {'rel_vel_stay': {'AA': 0, 'AB': 0, 'BA': 0, 'BB': 0}, 'rel_vel_new':{'AA': 0, 'AB': 0, 'BA': 0, 'BB': 0}, 'rel_vel_all':{'AA': np.mean(AA_rel_vel_all), 'AB': np.mean(AB_rel_vel_all), 'BA': np.mean(BA_rel_vel_all), 'BB': np.mean(BB_rel_vel_all)}, 'num':{'AA': AA_collision_num, 'AB': AB_collision_num, 'BA': BA_collision_num, 'BB': BB_collision_num}, 'new_num':{'AA': AA_collision_num_unique, 'AB': AB_collision_num_unique, 'BA': BA_collision_num_unique, 'BB': BB_collision_num_unique}, 'size': {'all': {'large': clust_all_large, 'mean': clust_all_mean, 'mode': clust_all_mode, 'median': clust_all_median, 'std': clust_all_std}, 'A': {'large': clust_A_large, 'mean': clust_A_mean, 'mode': clust_A_mode, 'median': clust_A_median, 'std': clust_A_std}, 'B': {'large': clust_B_large, 'mean': clust_B_mean, 'mode': clust_B_mode, 'median': clust_B_median, 'std': clust_B_std}}}
+        else:
+            collision_stat_dict = {'rel_vel_stay': {'AA': np.mean(AA_rel_vel_stay), 'AB': np.mean(AB_rel_vel_stay), 'BA': np.mean(BA_rel_vel_stay), 'BB': np.mean(BB_rel_vel_stay)}, 'rel_vel_new':{'AA': np.mean(AA_rel_vel_new), 'AB': np.mean(AB_rel_vel_new), 'BA': np.mean(BA_rel_vel_new), 'BB': np.mean(BB_rel_vel_new)}, 'rel_vel_all':{'AA': np.mean(AA_rel_vel_all), 'AB': np.mean(AB_rel_vel_all), 'BA': np.mean(BA_rel_vel_all), 'BB': np.mean(BB_rel_vel_all)}, 'num':{'AA': AA_collision_num, 'AB': AB_collision_num, 'BA': BA_collision_num, 'BB': BB_collision_num}, 'new_num':{'AA': AA_collision_num_unique, 'AB': AB_collision_num_unique, 'BA': BA_collision_num_unique, 'BB': BB_collision_num_unique}, 'size': {'all': {'large': clust_all_large, 'mean': clust_all_mean, 'mode': clust_all_mode, 'median': clust_all_median, 'std': clust_all_std}, 'A': {'large': clust_A_large, 'mean': clust_A_mean, 'mode': clust_A_mode, 'median': clust_A_median, 'std': clust_A_std}, 'B': {'large': clust_B_large, 'mean': clust_B_mean, 'mode': clust_B_mode, 'median': clust_B_median, 'std': clust_B_std}}}
+        
+        # Dictionary containing cluster sizes
+        collision_plot_dict = {'all': clust_all_size, 'A': clust_A_size, 'B': clust_B_size}
+        
+        # Dictionary containing neighbor lists
+        neigh_dict = {'AA': AA_nlist, 'AB': AB_nlist, 'BA': BA_nlist, 'BB': BB_nlist}
 
         from statistics import mode
 
@@ -1563,17 +1611,17 @@ class particle_props:
         slow_ids = np.where( (self.typ==0) )[0]
         fast_ids = np.where( (self.typ==1) )[0]
 
-        vel_A = vel_plot_dict['A']
-        pos_A=self.pos[slow_ids]                               # Find positions of type 0 particles
+        vel_A = vel_plot_dict['A']                             # Velocities of slow particles
+        pos_A=self.pos[slow_ids]                               # Find positions of slow particles
 
-        vel_B = vel_plot_dict['B']
-        pos_B=self.pos[fast_ids]                               # Find positions of type 0 particles
+        vel_B = vel_plot_dict['B']                             # Velocities of fast particles
+        pos_B=self.pos[fast_ids]                               # Find positions of fast particles
 
         
         # Neighbor list query arguments to find interacting particles
         query_args = dict(mode='ball', r_min = 0.1, r_max=self.r_cut)
 
-        #Compute cluster parameters using system_all neighbor list
+        #Define reference particle list of all, slow (A), and fast (B) particles
         system_all = freud.AABBQuery(self.f_box, self.f_box.wrap(self.pos))
         system_B = freud.AABBQuery(self.f_box, self.f_box.wrap(self.pos[fast_ids]))
         system_A = freud.AABBQuery(self.f_box, self.f_box.wrap(self.pos[slow_ids]))
@@ -1584,7 +1632,7 @@ class particle_props:
         # Find Fast-fast number of collisions
         BB_collision_num = len(BB_nlist) / 2.0
 
-        #Initiate empty arrays for finding nearest A neighboring dense particles surrounding type A bulk particles
+        #Initiate empty arrays for finding nearest B neighboring dense particles surrounding type B bulk particles
         BB_neigh_ind = np.array([], dtype=int)
         BB_num_neigh = np.array([])
         BB_dot = np.array([])
@@ -1595,7 +1643,10 @@ class particle_props:
         #Loop over neighbor pairings of A-A neighbor pairs to calculate number of nearest neighbors
         for i in range(0, len(pos_B)):
             if i in BB_nlist.query_point_indices:
+
+                # If particle hadn't been considered before...
                 if i not in BB_neigh_ind:
+
                     # Find neighbors list IDs where i is reference particle
                     loc = np.where(BB_nlist.query_point_indices==i)[0]
                     
@@ -1603,41 +1654,59 @@ class particle_props:
 
                         neigh_num_temp = 0
 
+                        # Find where reference particle in previous neighbor dictionary
                         loc_prev = np.where(prev_neigh_dict['BB'].query_point_indices==i)[0]
 
+                        # Loop over neighboring particles
                         for j in range(0, len(loc)):
+
+                            # Find where neighbor in previous neighbor dictionary
                             prev_neigh = np.where( prev_neigh_dict['BB'].point_indices[loc_prev]==BB_nlist.point_indices[loc[j]])[0]
 
+                            # If not a previous neighbor
                             if len(prev_neigh)==0:
+
+                                # Add to number of neighbors
                                 neigh_num_temp += 1
 
+                                # Calculate relative velocity
                                 if (vel_B['mag'][i]>0) & ( vel_B['mag'][BB_nlist.point_indices[loc[j]]]>0):
                                     ang_rel = (vel_B['x'][i] * vel_B['x'][BB_nlist.point_indices[loc[j]]] + vel_B['y'][i] * vel_B['y'][BB_nlist.point_indices[loc[j]]])/(vel_B['mag'][i] * vel_B['mag'][BB_nlist.point_indices[loc[j]]])
                                 else:
                                     ang_rel = 0
 
+                                # Save relative velocity of new neighbors
                                 BB_rel_vel_new = np.append(BB_rel_vel_new, np.sqrt(vel_B['mag'][i]**2 + vel_B['mag'][BB_nlist.point_indices[loc[j]]]**2 - 2 * vel_B['mag'][i] * vel_B['mag'][BB_nlist.point_indices[loc[j]]]*ang_rel) )
 
                             else:
+
+                                # Calculate relative velocity
                                 if (vel_B['mag'][i]>0) & ( vel_B['mag'][BB_nlist.point_indices[loc[j]]]>0):
                                     ang_rel = (vel_B['x'][i] * vel_B['x'][BB_nlist.point_indices[loc[j]]] + vel_B['y'][i] * vel_B['y'][BB_nlist.point_indices[loc[j]]])/(vel_B['mag'][i] * vel_B['mag'][BB_nlist.point_indices[loc[j]]])
                                 else:
                                     ang_rel = 0
-                                BB_rel_vel_stay = np.append(BB_rel_vel_stay, np.sqrt(vel_B['mag'][i]**2 + vel_B['mag'][BB_nlist.point_indices[loc[j]]]**2 - 2 * vel_B['mag'][i] * vel_B['mag'][BB_nlist.point_indices[loc[j]]]*ang_rel) )
 
+                                # Save relative velocity of previous neighbors
+                                BB_rel_vel_stay = np.append(BB_rel_vel_stay, np.sqrt(vel_B['mag'][i]**2 + vel_B['mag'][BB_nlist.point_indices[loc[j]]]**2 - 2 * vel_B['mag'][i] * vel_B['mag'][BB_nlist.point_indices[loc[j]]]*ang_rel) )
+                        
+                        # Save number of current neighbors
                         BB_num_neigh = np.append(BB_num_neigh, neigh_num_temp)
 
                     except:
 
-                        #Save nearest neighbor information to array
+                        #Save number of current neighbors
                         BB_num_neigh = np.append(BB_num_neigh, len(loc))
 
+                    # Save reference particle ID
                     BB_neigh_ind = np.append(BB_neigh_ind, int(i))
                     
+                    # Calculate dot product of orientations of neighboring particles
                     BB_dot = np.append(BB_dot, np.sum((px_B[i]*px_B[BB_nlist.point_indices[loc]]+py_A[i]*py_B[BB_nlist.point_indices[loc]])/(((px_B[i]**2+py_B[i]**2)**0.5)*((px_B[BB_nlist.point_indices[loc]]**2+py_B[BB_nlist.point_indices[loc]]**2)**0.5))))
 
+                    # Calculate relative velocity
                     ang_rel = (vel_B['x'][i] * vel_B['x'][BB_nlist.point_indices[loc]] + vel_B['y'][i] * vel_B['y'][BB_nlist.point_indices[loc]])/(vel_B['mag'][i] * vel_B['mag'][BB_nlist.point_indices[loc]])
-
+                    
+                    # Calculate relative velocity of both current and previous neighbors
                     BB_rel_vel_all = np.append(BB_rel_vel_all, np.sqrt(vel_B['mag'][i]**2 + vel_B['mag'][BB_nlist.point_indices[loc]]**2 - 2 * vel_B['mag'][i] * vel_B['mag'][BB_nlist.point_indices[loc]]*ang_rel) )
 
             else:
@@ -1646,6 +1715,7 @@ class particle_props:
                 BB_neigh_ind = np.append(BB_neigh_ind, int(i))
                 BB_dot = np.append(BB_dot, 0)
         
+        # Calculate number of unique collisions between two fast particles
         BB_collision_num_unique = np.sum(BB_num_neigh)/2
 
         # Find Slow-Fast neighbor list
@@ -1654,7 +1724,7 @@ class particle_props:
         # Find Slow-fast number of collisions
         AB_collision_num = len(AB_nlist)
 
-        #Initiate empty arrays for finding nearest A neighboring dense particles surrounding type A bulk particles
+        #Initiate empty arrays for finding nearest A neighboring dense particles surrounding type B bulk particles
         AB_neigh_ind = np.array([], dtype=int)
         AB_num_neigh = np.array([])
         AB_dot = np.array([])
@@ -1665,7 +1735,10 @@ class particle_props:
         #Loop over neighbor pairings of A-B neighbor pairs to calculate number of nearest neighbors
         for i in range(0, len(pos_B)):
             if i in AB_nlist.query_point_indices:
+
+                # If particle hadn't been considered before...
                 if i not in AB_neigh_ind:
+
                     # Find neighbors list IDs where i is reference particle
                     loc = np.where(AB_nlist.query_point_indices==i)[0]
                     
@@ -1673,31 +1746,42 @@ class particle_props:
 
                         neigh_num_temp = 0
 
+                        # Find where reference particle in previous neighbor dictionary
                         loc_prev = np.where(prev_neigh_dict['AB'].query_point_indices==i)[0]
 
+                        # Loop over neighboring particles
                         for j in range(0, len(loc)):
+
+                            # Find where neighbor in previous neighbor dictionary
                             prev_neigh = np.where( prev_neigh_dict['AB'].point_indices[loc_prev]==AB_nlist.point_indices[loc[j]])[0]
 
+                            # If not a previous neighbor
                             if len(prev_neigh)==0:
+
+                                # Add to number of neighbors
                                 neigh_num_temp += 1
 
+                                # Calculate relative velocity
                                 if (vel_B['mag'][i]>0) & ( vel_A['mag'][AB_nlist.point_indices[loc[j]]]>0):
                                     ang_rel = (vel_B['x'][i] * vel_A['x'][AB_nlist.point_indices[loc[j]]] + vel_B['y'][i] * vel_A['y'][AB_nlist.point_indices[loc[j]]])/(vel_B['mag'][i] * vel_A['mag'][AB_nlist.point_indices[loc[j]]])
                                 else:
                                     ang_rel = 0
 
-
+                                # Save relative velocity of new neighbors
                                 AB_rel_vel_new = np.append(AB_rel_vel_new, np.sqrt(vel_B['mag'][i]**2 + vel_A['mag'][AB_nlist.point_indices[loc[j]]]**2 - 2 * vel_B['mag'][i] * vel_A['mag'][AB_nlist.point_indices[loc[j]]]*ang_rel) )
-
                         
                             else:
-                                if (vel_B['mag'][i]>0) & ( vel_A['mag'][AB_nlist.point_indices[loc[j]]]>0):
 
+                                # Calculate relative velocity
+                                if (vel_B['mag'][i]>0) & ( vel_A['mag'][AB_nlist.point_indices[loc[j]]]>0):
                                     ang_rel = (vel_B['x'][i] * vel_A['x'][AB_nlist.point_indices[loc[j]]] + vel_B['y'][i] * vel_A['y'][AB_nlist.point_indices[loc[j]]])/(vel_B['mag'][i] * vel_A['mag'][AB_nlist.point_indices[loc[j]]])
                                 else:
                                     ang_rel = 0
 
+                                # Save relative velocity of previous neighbors
                                 AB_rel_vel_stay = np.append(AB_rel_vel_stay, np.sqrt(vel_B['mag'][i]**2 + vel_A['mag'][AB_nlist.point_indices[loc[j]]]**2 - 2 * vel_B['mag'][i] * vel_A['mag'][AB_nlist.point_indices[loc[j]]]*ang_rel) )
+                        
+                        # Save number of current neighbors
                         AB_num_neigh = np.append(AB_num_neigh, neigh_num_temp)
 
                     except:
@@ -1705,12 +1789,16 @@ class particle_props:
                         #Save nearest neighbor information to array
                         AB_num_neigh = np.append(AB_num_neigh, len(loc))
 
+                    # Save reference particle ID
                     AB_neigh_ind = np.append(AB_neigh_ind, int(i))
 
+                    # Calculate dot product of orientations of neighboring particles
                     AB_dot = np.append(AB_dot, np.sum((px_B[i]*px_A[AB_nlist.point_indices[loc]]+py_B[i]*py_A[AB_nlist.point_indices[loc]])/(((px_B[i]**2+py_B[i]**2)**0.5)*((px_A[AB_nlist.point_indices[loc]]**2+py_A[AB_nlist.point_indices[loc]]**2)**0.5))))
 
+                    # Calculate relative velocity
                     ang_rel = (vel_B['x'][i] * vel_A['x'][AB_nlist.point_indices[loc]] + vel_B['y'][i] * vel_A['y'][AB_nlist.point_indices[loc]])/(vel_B['mag'][i] * vel_A['mag'][AB_nlist.point_indices[loc]])
 
+                    # Calculate relative velocity of both current and previous neighbors
                     AB_rel_vel_all = np.append(AB_rel_vel_all, np.sqrt(vel_B['mag'][i]**2 + vel_A['mag'][AB_nlist.point_indices[loc]]**2 - 2 * vel_B['mag'][i] * vel_A['mag'][AB_nlist.point_indices[loc]]*ang_rel) )
 
             else:
@@ -1719,6 +1807,7 @@ class particle_props:
                 AB_neigh_ind = np.append(AB_neigh_ind, int(i))
                 AB_dot = np.append(AB_dot, 0)
         
+        # Calculate number of unique collisions between slow and fast particles
         AB_collision_num_unique = np.sum(AB_num_neigh)
 
         # Find Fast-Slow neighbor list
@@ -1727,7 +1816,7 @@ class particle_props:
         # Find Fast-Slow number of collisions
         BA_collision_num = len(BA_nlist)
 
-        #Initiate empty arrays for finding nearest A neighboring dense particles surrounding type A bulk particles
+        #Initiate empty arrays for finding nearest B neighboring dense particles surrounding type A bulk particles
         BA_neigh_ind = np.array([], dtype=int)
         BA_num_neigh = np.array([])
         BA_dot = np.array([])
@@ -1738,7 +1827,10 @@ class particle_props:
         #Loop over neighbor pairings of A-B neighbor pairs to calculate number of nearest neighbors
         for i in range(0, len(pos_A)):
             if i in BA_nlist.query_point_indices:
+
+                # If particle hadn't been considered before...
                 if i not in BA_neigh_ind:
+
                     # Find neighbors list IDs where i is reference particle
                     loc = np.where(BA_nlist.query_point_indices==i)[0]
                     
@@ -1746,28 +1838,43 @@ class particle_props:
 
                         neigh_num_temp = 0
 
+                        # Find where reference particle in previous neighbor dictionary
                         loc_prev = np.where(prev_neigh_dict['BA'].query_point_indices==i)[0]
 
+                        # Loop over neighboring particles
                         for j in range(0, len(loc)):
+
+                            # Find where neighbor in previous neighbor dictionary
                             prev_neigh = np.where( prev_neigh_dict['BA'].point_indices[loc_prev]==BA_nlist.point_indices[loc[j]])[0]
 
+                            # If not a previous neighbor
                             if len(prev_neigh)==0:
+
+                                # Add to number of neighbors
                                 neigh_num_temp += 1
 
+                                # Calculate relative velocity
                                 if (vel_A['mag'][i]>0) & ( vel_B['mag'][BA_nlist.point_indices[loc[j]]]>0):
                                     ang_rel = (vel_A['x'][i] * vel_B['x'][BA_nlist.point_indices[loc[j]]] + vel_A['y'][i] * vel_B['y'][BA_nlist.point_indices[loc[j]]])/(vel_A['mag'][i] * vel_B['mag'][BA_nlist.point_indices[loc[j]]])
                                 else:
                                     ang_rel = 0
+
+                                # Save relative velocity of new neighbors
                                 BA_rel_vel_new = np.append(BA_rel_vel_new, np.sqrt(vel_A['mag'][i]**2 + vel_B['mag'][BA_nlist.point_indices[loc[j]]]**2 - 2 * vel_A['mag'][i] * vel_B['mag'][BA_nlist.point_indices[loc[j]]]*ang_rel) )
 
                             else:
+
+                                # Calculate relative velocity
                                 if (vel_A['mag'][i]>0) & ( vel_B['mag'][BA_nlist.point_indices[loc[j]]]>0):
 
                                     ang_rel = (vel_A['x'][i] * vel_B['x'][BA_nlist.point_indices[loc[j]]] + vel_A['y'][i] * vel_B['y'][BA_nlist.point_indices[loc[j]]])/(vel_A['mag'][i] * vel_B['mag'][BA_nlist.point_indices[loc[j]]])
                                 else:
                                     ang_rel = 0
+
+                                # Save relative velocity of previous neighbors
                                 BA_rel_vel_stay = np.append(BA_rel_vel_stay, np.sqrt(vel_A['mag'][i]**2 + vel_B['mag'][BA_nlist.point_indices[loc[j]]]**2 - 2 * vel_A['mag'][i] * vel_B['mag'][BA_nlist.point_indices[loc[j]]]*ang_rel) )
 
+                        # Save number of current neighbors
                         BA_num_neigh = np.append(BA_num_neigh, neigh_num_temp)
 
                     except:
@@ -1775,12 +1882,16 @@ class particle_props:
                         #Save nearest neighbor information to array
                         BA_num_neigh = np.append(BA_num_neigh, len(loc))
 
+                    # Calculate relative velocity
                     ang_rel = (vel_A['x'][i] * vel_B['x'][BA_nlist.point_indices[loc]] + vel_A['y'][i] * vel_B['y'][BA_nlist.point_indices[loc]])/(vel_A['mag'][i] * vel_B['mag'][BA_nlist.point_indices[loc]])
 
+                    # Calculate relative velocity of both current and previous neighbors
                     BA_rel_vel_all = np.append(BA_rel_vel_all, np.sqrt(vel_A['mag'][i]**2 + vel_B['mag'][BA_nlist.point_indices[loc]]**2 - 2 * vel_A['mag'][i] * vel_B['mag'][BA_nlist.point_indices[loc]]*ang_rel) )
 
+                    # Save reference particle ID
                     BA_neigh_ind = np.append(BA_neigh_ind, int(i))
 
+                    # Calculate dot product of orientations of neighboring particles
                     BA_dot = np.append(BA_dot, np.sum((px_A[i]*px_B[BA_nlist.point_indices[loc]]+py_A[i]*py_B[BA_nlist.point_indices[loc]])/(((px_A[i]**2+py_A[i]**2)**0.5)*((px_B[BA_nlist.point_indices[loc]]**2+py_B[BA_nlist.point_indices[loc]]**2)**0.5))))
 
             else:
@@ -1789,6 +1900,7 @@ class particle_props:
                 BA_neigh_ind = np.append(BA_neigh_ind, int(i))
                 BA_dot = np.append(BA_dot, 0)
         
+        # Calculate number of unique collisions between fast and slow particles
         BA_collision_num_unique = np.sum(BA_num_neigh)
 
         # Find Slow-Slow neighbor list
@@ -1808,7 +1920,10 @@ class particle_props:
         #Loop over neighbor pairings of A-B neighbor pairs to calculate number of nearest neighbors
         for i in range(0, len(pos_A)):
             if i in AA_nlist.query_point_indices:
+
+                # If particle hadn't been considered before...
                 if i not in AA_neigh_ind:
+
                     # Find neighbors list IDs where i is reference particle
                     loc = np.where(AA_nlist.query_point_indices==i)[0]
                     
@@ -1816,32 +1931,44 @@ class particle_props:
 
                         neigh_num_temp = 0
 
+                        # Find where reference particle in previous neighbor dictionary
                         loc_prev = np.where(prev_neigh_dict['AA'].query_point_indices==i)[0]
 
+                        # Loop over neighboring particles
                         for j in range(0, len(loc)):
+
+                            # Find where neighbor in previous neighbor dictionary
                             prev_neigh = np.where( prev_neigh_dict['AA'].point_indices[loc_prev]==AA_nlist.point_indices[loc[j]])[0]
 
+                            # If not a previous neighbor
                             if len(prev_neigh)==0:
+
+                                # Add to number of neighbors
                                 neigh_num_temp += 1
 
+                                # Calculate relative velocity
                                 if (vel_A['mag'][i]>0) & ( vel_A['mag'][AA_nlist.point_indices[loc[j]]]>0):
 
                                     ang_rel = (vel_A['x'][i] * vel_A['x'][AA_nlist.point_indices[loc[j]]] + vel_A['y'][i] * vel_A['y'][AA_nlist.point_indices[loc[j]]])/(vel_A['mag'][i] * vel_A['mag'][AA_nlist.point_indices[loc[j]]])
                                 else:
                                     ang_rel = 0
-                                    
+
+                                # Save relative velocity of new neighbors
                                 AA_rel_vel_new = np.append(AA_rel_vel_new, np.sqrt(vel_A['mag'][i]**2 + vel_A['mag'][AA_nlist.point_indices[loc[j]]]**2 - 2 * vel_A['mag'][i] * vel_A['mag'][AA_nlist.point_indices[loc[j]]]*ang_rel) )
 
                             else:
 
+                                # Calculate relative velocity
                                 if (vel_A['mag'][i]>0) & ( vel_A['mag'][AA_nlist.point_indices[loc[j]]]>0):
 
                                     ang_rel = (vel_A['x'][i] * vel_A['x'][AA_nlist.point_indices[loc[j]]] + vel_A['y'][i] * vel_A['y'][AA_nlist.point_indices[loc[j]]])/(vel_A['mag'][i] * vel_A['mag'][AA_nlist.point_indices[loc[j]]])
                                 else:
                                     ang_rel = 0
+
+                                # Save relative velocity of previous neighbors
                                 AA_rel_vel_stay = np.append(AA_rel_vel_stay, np.sqrt(vel_A['mag'][i]**2 + vel_A['mag'][AA_nlist.point_indices[loc[j]]]**2 - 2 * vel_A['mag'][i] * vel_A['mag'][AA_nlist.point_indices[loc[j]]]*ang_rel) )
 
-                        
+                        #Save nearest neighbor information to array
                         AA_num_neigh = np.append(AA_num_neigh, neigh_num_temp)
 
                     except:
@@ -1849,19 +1976,25 @@ class particle_props:
                         #Save nearest neighbor information to array
                         AA_num_neigh = np.append(AA_num_neigh, len(loc))
 
+                    # Save reference particle ID
                     AA_neigh_ind = np.append(AA_neigh_ind, int(i))
 
+                    # Calculate dot product of orientations of neighboring particles
                     AA_dot = np.append(AA_dot, np.sum((px_A[i]*px_A[AA_nlist.point_indices[loc]]+py_A[i]*py_A[AA_nlist.point_indices[loc]])/(((px_A[i]**2+py_A[i]**2)**0.5)*((px_A[AA_nlist.point_indices[loc]]**2+py_A[AA_nlist.point_indices[loc]]**2)**0.5))))
 
+                    # Calculate relative velocity
                     ang_rel = (vel_A['x'][i] * vel_A['x'][AA_nlist.point_indices[loc]] + vel_A['y'][i] * vel_A['y'][AA_nlist.point_indices[loc]])/(vel_A['mag'][i] * vel_A['mag'][AA_nlist.point_indices[loc]])
 
+                    # Calculate relative velocity of both current and previous neighbors
                     AA_rel_vel_all = np.append(AA_rel_vel_all, np.sqrt(vel_A['mag'][i]**2 + vel_A['mag'][AA_nlist.point_indices[loc]]**2 - 2 * vel_A['mag'][i] * vel_A['mag'][AA_nlist.point_indices[loc]]*ang_rel) )
 
             else:
                 #Save nearest neighbor information to array
                 AA_num_neigh = np.append(AA_num_neigh, 0)
                 AA_neigh_ind = np.append(AA_neigh_ind, int(i))
+                AA_dot = np.append(AA_dot, 0)
 
+        # Calculate number of unique collisions between slow particles
         AA_collision_num_unique = np.sum(AA_num_neigh)/2
 
         #Compute cluster parameters using neighbor list of all particles within LJ cut-off distance
@@ -1891,37 +2024,46 @@ class particle_props:
         clp_B.compute(system_B, ids)                            # Calculate cluster properties given cluster IDs
         clust_B_size = clp_B.sizes        
 
+        # Define maximum cluster size of all, A, and B particles
         clust_all_large = np.amax(clust_all_size)
         clust_A_large = np.amax(clust_A_size)
         clust_B_large = np.amax(clust_B_size)
 
+        # Find clusters of all, A, and B particles larger than 1 particle
         lcID_all = np.where(clust_all_size >= 1)[0]    
         lcID_A = np.where(clust_A_size >= 1)[0]    
         lcID_B = np.where(clust_B_size >= 1)[0]
 
+        # Find mean size of clusters of all, A, and B particles larger than 1 particle
         clust_all_mean = np.mean(clust_all_size[lcID_all])
         clust_A_mean = np.mean(clust_A_size[lcID_A])
         clust_B_mean = np.mean(clust_B_size[lcID_B])
 
+        # Find mode size of clusters of all, A, and B particles larger than 1 particle
         clust_all_mode = mode(clust_all_size[lcID_all])
         clust_A_mode = mode(clust_A_size[lcID_A])
         clust_B_mode = mode(clust_B_size[lcID_B])
 
+        # Find standard deviation size of clusters of all, A, and B particles larger than 1 particle
         clust_all_std = np.std(clust_all_size[lcID_all])
         clust_A_std = np.std(clust_A_size[lcID_A])
         clust_B_std = np.std(clust_B_size[lcID_B])
 
+        # Find median size of clusters of all, A, and B particles larger than 1 particle
         clust_all_median = np.median(clust_all_size[lcID_all])
         clust_A_median = np.median(clust_A_size[lcID_A])
         clust_B_median = np.median(clust_B_size[lcID_B])
         
+        # Dictionary containing statistics of rates of collisions
         if len(BB_rel_vel_stay)==0:
             collision_stat_dict = {'rel_vel_stay': {'AA': 0, 'AB': 0, 'BA': 0, 'BB': 0}, 'rel_vel_new':{'AA': 0, 'AB': 0, 'BA': 0, 'BB': 0}, 'rel_vel_all':{'AA': np.mean(AA_rel_vel_all), 'AB': np.mean(AB_rel_vel_all), 'BA': np.mean(BA_rel_vel_all), 'BB': np.mean(BB_rel_vel_all)}, 'num':{'AA': AA_collision_num, 'AB': AB_collision_num, 'BA': BA_collision_num, 'BB': BB_collision_num}, 'new_num':{'AA': AA_collision_num_unique, 'AB': AB_collision_num_unique, 'BA': BA_collision_num_unique, 'BB': BB_collision_num_unique}, 'size': {'all': {'large': clust_all_large, 'mean': clust_all_mean, 'mode': clust_all_mode, 'median': clust_all_median, 'std': clust_all_std}, 'A': {'large': clust_A_large, 'mean': clust_A_mean, 'mode': clust_A_mode, 'median': clust_A_median, 'std': clust_A_std}, 'B': {'large': clust_B_large, 'mean': clust_B_mean, 'mode': clust_B_mode, 'median': clust_B_median, 'std': clust_B_std}}}
         else:
             collision_stat_dict = {'rel_vel_stay': {'AA': np.mean(AA_rel_vel_stay), 'AB': np.mean(AB_rel_vel_stay), 'BA': np.mean(BA_rel_vel_stay), 'BB': np.mean(BB_rel_vel_stay)}, 'rel_vel_new':{'AA': np.mean(AA_rel_vel_new), 'AB': np.mean(AB_rel_vel_new), 'BA': np.mean(BA_rel_vel_new), 'BB': np.mean(BB_rel_vel_new)}, 'rel_vel_all':{'AA': np.mean(AA_rel_vel_all), 'AB': np.mean(AB_rel_vel_all), 'BA': np.mean(BA_rel_vel_all), 'BB': np.mean(BB_rel_vel_all)}, 'num':{'AA': AA_collision_num, 'AB': AB_collision_num, 'BA': BA_collision_num, 'BB': BB_collision_num}, 'new_num':{'AA': AA_collision_num_unique, 'AB': AB_collision_num_unique, 'BA': BA_collision_num_unique, 'BB': BB_collision_num_unique}, 'size': {'all': {'large': clust_all_large, 'mean': clust_all_mean, 'mode': clust_all_mode, 'median': clust_all_median, 'std': clust_all_std}, 'A': {'large': clust_A_large, 'mean': clust_A_mean, 'mode': clust_A_mode, 'median': clust_A_median, 'std': clust_A_std}, 'B': {'large': clust_B_large, 'mean': clust_B_mean, 'mode': clust_B_mode, 'median': clust_B_median, 'std': clust_B_std}}}
         
-        # Dictionary containing rates of collisions
+        # Dictionary containing cluster sizes
         collision_plot_dict = {'all': clust_all_size, 'A': clust_A_size, 'B': clust_B_size}
+        
+        # Dictionary containing neighbor lists
         neigh_dict = {'AA': AA_nlist, 'AB': AB_nlist, 'BA': BA_nlist, 'BB': BB_nlist}
 
         return collision_stat_dict, collision_plot_dict, neigh_dict
@@ -2215,22 +2357,26 @@ class particle_props:
         '''
         Purpose: Takes the composition of each phase and uses neighbor lists to find the
         nearest, interacting neighbors and calculates the local density for various search
-        distances of each type for each particle and averaged over all particles of each phase.
+        distances of each type for each particle and averaged over all particles in system.
 
         Outputs:
         local_dens_stat_dict: dictionary containing the local density for various search
-        distances of of each type ('all', 'A', or 'B') for a reference particle of a given 
-        type ('all', 'A', or 'B'), averaged over all particles in each phase.
+        distances of each type ('all', 'A', or 'B') for a reference particle of a given 
+        type ('all', 'A', or 'B'), averaged over all particles in system.
+
+        local_homo_stat_dict: dictionary containing fluctuations in the local density from the
+        steady-state mean for various search distances of each type ('all', 'A', or 'B') for a reference
+        particle of a given type ('all', 'A', or 'B'), averaged over all particles in system
         '''
         
         # Calculate area of system
         system_area = self.lx_box * self.ly_box
 
-        # Position and orientation arrays of type A particles in respective phase
+        # Position and orientation arrays of type A particles in system
         typ0ind = np.where(self.typ==0)[0]
         pos_A=self.pos[typ0ind]                               # Find positions of type 0 particles
 
-        # Position and orientation arrays of type B particles in respective phase
+        # Position and orientation arrays of type B particles in system
         typ1ind = np.where(self.typ==1)[0]
         pos_B=self.pos[typ1ind]
 
@@ -2297,16 +2443,16 @@ class particle_props:
         BB_inhomog_mean_arr = []
         BB_inhomog_std_arr = []
 
-        #Initiate empty arrays for finding nearest A neighboring dense particles surrounding type A bulk particles
+        #Initiate empty arrays for finding nearest A neighboring particles surrounding type A particles
         AA_num_neigh = np.zeros(len(pos_A))
 
-        #Initiate empty arrays for finding nearest A neighboring dense particles surrounding type B bulk particles
+        #Initiate empty arrays for finding nearest A neighboring particles surrounding type B particles
         AB_num_neigh = np.zeros(len(pos_B))
 
-        #Initiate empty arrays for finding nearest B neighboring dense particles surrounding type A bulk particles
+        #Initiate empty arrays for finding nearest B neighboring particles surrounding type A particles
         BA_num_neigh = np.zeros(len(pos_A))
 
-        #Initiate empty arrays for finding nearest B neighboring dense particles surrounding type B bulk particles
+        #Initiate empty arrays for finding nearest B neighboring particles surrounding type B particles
         BB_num_neigh = np.zeros(len(pos_B))
 
         # Search distance for neighbors in local density calculation
@@ -2315,26 +2461,26 @@ class particle_props:
         # Loop over search distances
         for j in range(1, len(rad_dist)):
 
-            #Initiate empty arrays for finding nearest A neighboring dense particles surrounding type A bulk particles
+            #Initiate empty arrays for finding nearest A neighboring particles surrounding type A particles
             AA_neigh_ind = np.zeros(len(pos_A))
 
-            #Initiate empty arrays for finding nearest A neighboring dense particles surrounding type B bulk particles
+            #Initiate empty arrays for finding nearest A neighboring particles surrounding type B particles
             AB_neigh_ind = np.zeros(len(pos_B))
 
-            #Initiate empty arrays for finding nearest B neighboring dense particles surrounding type A bulk particles
+            #Initiate empty arrays for finding nearest B neighboring particles surrounding type A particles
             BA_neigh_ind = np.zeros(len(pos_A))
 
-            #Initiate empty arrays for finding nearest B neighboring dense particles surrounding type B bulk particles
+            #Initiate empty arrays for finding nearest B neighboring particles surrounding type B particles
             BB_neigh_ind = np.zeros(len(pos_B))
 
             # List of query arguments for neighbor list caculation
             query_args = dict(mode='ball', r_min = rad_dist[j-1]+0.001, r_max = rad_dist[j])#r_max=self.theory_functs.conForRClust(peNet_int-45., self.eps) * 1.0)
 
-            # Locate potential neighbor particles by type in the dense phase
+            # Locate potential neighbor particles by type in the phase
             system_A = freud.AABBQuery(self.f_box, self.f_box.wrap(pos_A))
             system_B = freud.AABBQuery(self.f_box, self.f_box.wrap(pos_B))
             
-            # Generate neighbor list of dense phase particles (per query args) of respective type (A or B) neighboring bulk phase reference particles of respective type (A or B)
+            # Generate neighbor list of phase particles (per query args) of respective type (A or B) neighboring phase reference particles of respective type (A or B)
             AA_nlist = system_A.query(self.f_box.wrap(pos_A), query_args).toNeighborList()
             AB_nlist = system_A.query(self.f_box.wrap(pos_B), query_args).toNeighborList()
             BA_nlist = system_B.query(self.f_box.wrap(pos_A), query_args).toNeighborList()
@@ -2397,38 +2543,38 @@ class particle_props:
                         BB_neigh_ind = np.append(BB_neigh_ind, int(i))
 
             slice_area = (np.pi*rad_dist[j]**2)
-            # Local density of A neighbor particles around A reference particles in bulk
+            # Local density of A neighbor particles around A reference particles
             AA_local_dens = AA_num_neigh / slice_area
 
-            # Local density of A neighbor particles around B reference particles in bulk
+            # Local density of A neighbor particles around B reference particles
             AB_local_dens = AB_num_neigh / slice_area
 
-            # Local density of B neighbor particles around A reference particles in bulk
+            # Local density of B neighbor particles around A reference particles
             BA_local_dens = BA_num_neigh / slice_area
 
-            # Local density of B neighbor particles around B reference particles in bulk
+            # Local density of B neighbor particles around B reference particles
             BB_local_dens = BB_num_neigh / slice_area
             
-            # Save neighbor and local orientational order to arrays for all B reference particles of the respective phase with all nearest neighbors
+            # Save neighbor and local orientational order to arrays for all B reference particles with all nearest neighbors
             Ball_local_dens= np.append(BA_local_dens, BB_local_dens)
 
-            # Save neighbor and local orientational order to arrays for all A reference particles of the respective phase with all nearest neighbors
+            # Save neighbor and local orientational order to arrays for all A reference particles with all nearest neighbors
             Aall_local_dens = np.append(AA_local_dens, AB_local_dens)
 
-            # Save neighbor and local orientational order to arrays for all reference particles of the respective phase with B nearest neighbors
+            # Save neighbor and local orientational order to arrays for all reference particles with B nearest neighbors
             allB_num_neigh = AB_num_neigh + BB_num_neigh
             allB_local_dens = allB_num_neigh / slice_area
 
-            # Save neighbor and local orientational order to arrays for all reference particles of the respective phase with A nearest neighbors
+            # Save neighbor and local orientational order to arrays for all reference particles with A nearest neighbors
             allA_num_neigh = AA_num_neigh + BA_num_neigh
             allA_local_dens = allA_num_neigh / slice_area
 
-            # Save neighbor, local orientational order, and position to arrays for all bulk reference particles with all nearest neighbors
+            # Save neighbor, local orientational order, and position to arrays for all reference particles with all nearest neighbors
             allall_num_neigh = np.append(allA_num_neigh, allB_num_neigh)
             allall_local_dens = allall_num_neigh / slice_area
 
             # Calculate mean and standard deviation of local density of A neighbor particles 
-            # around A reference particles in dense phase
+            # around A reference particles
             AA_local_dens_mean_arr.append(np.mean(AA_local_dens))
             AA_local_dens_std_arr.append(np.std(AA_local_dens))
             AA_local_dens_inhomog = (AA_local_dens - AA_local_dens_mean_arr[-1])**2
@@ -2436,7 +2582,7 @@ class particle_props:
             AA_inhomog_std_arr.append(np.std(AA_local_dens_inhomog))
 
             # Calculate mean and standard deviation of local density of A neighbor particles 
-            # around B reference particles in dense phase
+            # around B reference particles
             AB_local_dens_mean_arr.append(np.mean(AB_local_dens))
             AB_local_dens_std_arr.append(np.std(AB_local_dens))
             AB_local_dens_inhomog = (AB_local_dens - AB_local_dens_mean_arr[-1])**2
@@ -2444,7 +2590,7 @@ class particle_props:
             AB_inhomog_std_arr.append(np.std(AB_local_dens_inhomog))
 
             # Calculate mean and standard deviation of local density of B neighbor particles 
-            # around A reference particles in dense phase
+            # around A reference particles
             BA_local_dens_mean_arr.append(np.mean(BA_local_dens))
             BA_local_dens_std_arr.append(np.std(BA_local_dens))
             BA_local_dens_inhomog = (BA_local_dens - BA_local_dens_mean_arr[-1])**2
@@ -2452,7 +2598,7 @@ class particle_props:
             BA_inhomog_std_arr.append(np.std(BA_local_dens_inhomog))
 
             # Calculate mean and standard deviation of local density of B neighbor particles 
-            # around B reference particles in dense phase
+            # around B reference particles
             BB_local_dens_mean_arr.append(np.mean(BB_local_dens))
             BB_local_dens_std_arr.append(np.std(BB_local_dens))
             BB_local_dens_inhomog = (BB_local_dens - BB_local_dens_mean_arr[-1])**2
@@ -2460,7 +2606,7 @@ class particle_props:
             BB_inhomog_std_arr.append(np.std(BB_local_dens_inhomog))
 
             # Calculate mean and standard deviation of local density of all neighbor particles 
-            # around A reference particles in dense phase
+            # around A reference particles
             allA_local_dens_mean_arr.append(np.mean(allA_local_dens))
             allA_local_dens_std_arr.append(np.std(allA_local_dens))
             allA_local_dens_inhomog = (allA_local_dens - allA_local_dens_mean_arr[-1])**2
@@ -2468,7 +2614,7 @@ class particle_props:
             allA_inhomog_std_arr.append(np.std(allA_local_dens_inhomog))
 
             # Calculate mean and standard deviation of local density of all neighbor particles 
-            # around B reference particles in dense phase
+            # around B reference particles
             allB_local_dens_mean_arr.append(np.mean(allB_local_dens))
             allB_local_dens_std_arr.append(np.std(allB_local_dens))
             allB_local_dens_inhomog = (allB_local_dens - allB_local_dens_mean_arr[-1])**2
@@ -2476,7 +2622,7 @@ class particle_props:
             allB_inhomog_std_arr.append(np.std(allB_local_dens_inhomog))
 
             # Calculate mean and standard deviation of local density of all neighbor particles 
-            # around A reference particles in dense phase
+            # around A reference particles
             Aall_local_dens_mean_arr.append(np.mean(Aall_local_dens))
             Aall_local_dens_std_arr.append(np.std(Aall_local_dens))
             Aall_local_dens_inhomog = (Aall_local_dens - Aall_local_dens_mean_arr[-1])**2
@@ -2484,7 +2630,7 @@ class particle_props:
             Aall_inhomog_std_arr.append(np.std(Aall_local_dens_inhomog))
 
             # Calculate mean and standard deviation of local density of all neighbor particles 
-            # around B reference particles in dense phase
+            # around B reference particles
             Ball_local_dens_mean_arr.append(np.mean(Ball_local_dens))
             Ball_local_dens_std_arr.append(np.std(Ball_local_dens))
             Ball_local_dens_inhomog = (Ball_local_dens - Ball_local_dens_mean_arr[-1])**2
@@ -2492,7 +2638,7 @@ class particle_props:
             Ball_inhomog_std_arr.append(np.std(Ball_local_dens_inhomog))
 
             # Calculate mean and standard deviation of local density of all neighbor particles 
-            # around all reference particles in dense phase
+            # around all reference particles
             allall_local_dens_mean_arr.append(np.mean(allall_local_dens))
             allall_local_dens_std_arr.append(np.std(allall_local_dens))
             allall_local_dens_inhomog = (allall_local_dens - allall_local_dens_mean_arr[-1])**2
@@ -2502,30 +2648,30 @@ class particle_props:
             # If search distance given, then prepare data for plotting!
             if rad_dist[j]==2*self.r_cut:
 
-                # Save neighbor, local orientational order, and position to arrays for all bulk reference particles with all nearest neighbors
+                # Save neighbor, local orientational order, and position to arrays for all reference particles with all nearest neighbors
                 allall_pos_x = np.append(pos_A[:,0], pos_B[:,0])
                 allall_pos_y = np.append(pos_A[:,1], pos_B[:,1])
 
-                # Save neighbor, local orientational order, and position to arrays for A dense phase reference particles with all nearest neighbors
+                # Save neighbor, local orientational order, and position to arrays for A reference particles with all nearest neighbors
                 Aall_pos_x = np.append(pos_A[:,0], pos_B[:,0])
                 Aall_pos_y = np.append(pos_A[:,1], pos_B[:,1])
 
-                # Save neighbor, local orientational order, and position to arrays for B dense phase reference particles with all nearest neighbors
+                # Save neighbor, local orientational order, and position to arrays for B reference particles with all nearest neighbors
                 Ball_pos_x = np.append(pos_A[:,0], pos_B[:,0])
                 Ball_pos_y = np.append(pos_A[:,1], pos_B[:,1])
 
-                # Save neighbor, local orientational order, and position to arrays for all dense phase reference particles with A nearest neighbors
+                # Save neighbor, local orientational order, and position to arrays for all reference particles with A nearest neighbors
                 allA_pos_x = pos_A[:,0]
                 allA_pos_y = pos_A[:,1]
 
-                # Save neighbor, local orientational order, and position to arrays for all dense phase reference particles with B nearest neighbors
+                # Save neighbor, local orientational order, and position to arrays for all reference particles with B nearest neighbors
                 allB_pos_x = pos_B[:,0]
                 allB_pos_y = pos_B[:,1]
 
-                # Create output dictionary for single particle values of local density per phase/activity pairing for plotting
+                # Create output dictionary for single particle values of local density per activity pairing for plotting
                 local_dens_plot_dict = {'all-all': {'dens': allall_local_dens, 'homo': allall_local_dens_inhomog, 'pos_x': allall_pos_x, 'pos_y': allall_pos_y}, 'all-A': {'dens': allA_local_dens, 'homo': allA_local_dens_inhomog, 'pos_x': allA_pos_x, 'pos_y': allA_pos_y}, 'all-B': {'dens': allB_local_dens, 'homo': allB_local_dens_inhomog, 'pos_x': allB_pos_x, 'pos_y': allB_pos_y}, 'A-all': {'dens': Aall_local_dens, 'homo': Aall_local_dens_inhomog, 'pos_x': Aall_pos_x, 'pos_y': Aall_pos_y}, 'B-all': {'dens': Ball_local_dens, 'homo': Ball_local_dens_inhomog, 'pos_x': Ball_pos_x, 'pos_y': Ball_pos_y}, 'A-A': {'dens': AA_local_dens, 'homo': AA_local_dens_inhomog, 'pos_x': allB_pos_x, 'pos_y': allB_pos_y}, 'A-B': {'dens': AB_local_dens, 'homo': AB_local_dens_inhomog, 'pos_x': allB_pos_x, 'pos_y': allB_pos_y}, 'B-A': {'dens': BA_local_dens, 'homo': BA_local_dens_inhomog, 'pos_x': allA_pos_x, 'pos_y': allA_pos_y}, 'B-B': {'dens': BB_local_dens, 'homo': BB_local_dens_inhomog, 'pos_x': allB_pos_x, 'pos_y': allB_pos_y}}
 
-        # Create output dictionary for statistical averages of local density per phase/activity pairing
+        # Create output dictionary for statistical averages of local density per activity pairing
         local_dens_stat_dict = {'radius': rad_dist[1:], 'allall_mean': allall_local_dens_mean_arr, 'allall_std': allall_local_dens_std_arr, 'allA_mean': allA_local_dens_mean_arr, 'allA_std': allA_local_dens_std_arr, 'allB_mean': allB_local_dens_mean_arr, 'allB_std': allB_local_dens_std_arr, 'AA_mean': AA_local_dens_mean_arr, 'AA_std': AA_local_dens_std_arr, 'AB_mean': AB_local_dens_mean_arr, 'AB_std': AB_local_dens_std_arr, 'BA_mean': BA_local_dens_mean_arr, 'BA_std': BA_local_dens_std_arr, 'BB_mean': BB_local_dens_mean_arr, 'BB_std': BB_local_dens_std_arr}
         local_homo_stat_dict = {'radius': rad_dist[1:], 'allall_mean': allall_inhomog_mean_arr, 'allall_std': allall_inhomog_std_arr, 'allA_mean': allA_inhomog_mean_arr, 'allA_std': allA_inhomog_std_arr, 'allB_mean': allB_inhomog_mean_arr, 'allB_std': allB_inhomog_std_arr, 'AA_mean': AA_inhomog_mean_arr, 'AA_std': AA_inhomog_std_arr, 'AB_mean': AB_inhomog_mean_arr, 'AB_std': AB_inhomog_std_arr, 'BA_mean': BA_inhomog_mean_arr, 'BA_std': BA_inhomog_std_arr, 'BB_mean': BB_inhomog_mean_arr, 'BB_std': BB_inhomog_std_arr}
 
@@ -2592,9 +2738,9 @@ class particle_props:
         return cluster_msd_dict
 
     def particle_msd(self, msd_arr, prev_pos):
-        
+        # IN PROGRESS
         '''
-        Purpose: Calculates the mean squared displacement of the cluster
+        Purpose: Calculates the mean squared displacement of individual particles
 
         Inputs:
         msd_arr: total men squared displacement from initial time point for each particle
@@ -2648,6 +2794,14 @@ class particle_props:
         return cluster_msd_dict
 
     def adsorption_nlist(self):
+        '''
+        Purpose: Calculates the rate of adsorption and desorption from the cluster's surface using
+        Freud's cluster algorithm without consideration of bulk vs. interface
+
+        Output:
+        kinetics_dict: dictionary containing the total adsorption and desorption rate of particles of 
+        each type ('all', 'A', or 'B')
+        '''
 
         #Compute cluster parameters using system_all neighbor list
         system_all = freud.AABBQuery(self.f_box, self.f_box.wrap(self.pos))
@@ -2660,32 +2814,18 @@ class particle_props:
         clp_all.compute(system_all, ids)                            # Calculate cluster properties given cluster IDs
         clust_size = clp_all.sizes                                  # find cluster sizes
 
-        in_clust = np.where(clust_size == np.amax(clust_size) )[0][0]
-        not_in_clust = np.where(clust_size != np.amax(clust_size) )[0][0]
+        in_clust = np.where(clust_size == np.amax(clust_size) )[0][0]       # Particle IDs in cluster
+        not_in_clust = np.where(clust_size != np.amax(clust_size) )[0][0]   # Particle IDs not in cluster
 
-        slow_clust_ids = np.where( (ids==in_clust) & (self.typ==0) )[0]
-        fast_clust_ids = np.where( (ids==in_clust) & (self.typ==1) )[0]
-        slow_not_clust_ids = np.where( (ids!=in_clust) & (self.typ==0) )[0]
-        fast_not_clust_ids = np.where( (ids!=in_clust) & (self.typ==1) )[0]
+        slow_clust_ids = np.where( (ids==in_clust) & (self.typ==0) )[0]     # Number of slow particles in cluster
+        fast_clust_ids = np.where( (ids==in_clust) & (self.typ==1) )[0]     # Number of fast particles in cluster
+        slow_not_clust_ids = np.where( (ids!=in_clust) & (self.typ==0) )[0] # Number of slow particles not in cluster
+        fast_not_clust_ids = np.where( (ids!=in_clust) & (self.typ==1) )[0] # Number of fast particles not in cluster
 
-
-        #if self.lx_box >= self.ly_box:
-        #    mem_max = np.max(self.pos[typ0ind,0])
-        #    mem_min = np.min(self.pos[typ0ind,0])
-        #else:
-        #    mem_max = np.max(self.pos[typ0ind,1])
-        #    mem_min = np.min(self.pos[typ0ind,1])
-
-        #print(mem_min)
-        #print(mem_max)
-
-        #right_ads = np.where((self.pos[typ1ind,0]<(mem_max + 10.0)) & (self.pos[typ1ind,0]>0))
-        #left_ads = np.where((self.pos[typ1ind,0]>(mem_min - 10.0)) & (self.pos[typ1ind,0]<0))
-        
         kinetics_dict = {'in_clust': {'all': len(slow_clust_ids) + len(fast_clust_ids), 'A': len(slow_clust_ids), 'B': len(fast_clust_ids)}, 'out_clust': {'all': len(slow_not_clust_ids) + len(fast_not_clust_ids), 'A': len(slow_not_clust_ids), 'B': len(fast_not_clust_ids)}}
         
         return kinetics_dict
-
+    """
     def radial_int_press_bubble(self, stress_plot_dict, sep_surface_dict, int_comp_dict, all_surface_measurements):
         '''
         Purpose: Takes the orientation, position, and active force of each particle
@@ -2704,11 +2844,12 @@ class particle_props:
         phase_identification.py) that contains information on each
         isolated/individual interface.
 
-        all_surface_measurements:
+        all_surface_measurements: dictionary that contains information on measured properties
+        of each identified interface surface
 
         Output:
-        radial_fa_dict: dictionary containing each particle's alignment and aligned active force toward
-        largest cluster's CoM as a function of separation distance from largest custer's CoM
+        radial_stress_dict: dictionary containing each particle's stress in each direction
+        as a function of separation distance from largest custer's CoM
         '''
 
         for m in range(0, len(sep_surface_dict)):
@@ -2727,21 +2868,21 @@ class particle_props:
 
                 com_x = np.mean(pos_interior_surface_x)
                 com_y = np.mean(pos_interior_surface_y)
-            plt.scatter((com_x-self.hx_box), (com_y-self.hy_box), color='black', s=5.0)
 
-        
+        # Stress in all directions of all particles in order of dense first then gas particles
         stress_xx = np.append(stress_plot_dict['dense']['all-all']['XX'], stress_plot_dict['gas']['all-all']['XX'])
         stress_yy = np.append(stress_plot_dict['dense']['all-all']['YY'], stress_plot_dict['gas']['all-all']['YY'])
         stress_xy = np.append(stress_plot_dict['dense']['all-all']['XY'], stress_plot_dict['gas']['all-all']['XY'])
         stress_yx = np.append(stress_plot_dict['dense']['all-all']['YX'], stress_plot_dict['gas']['all-all']['YX'])
 
+        # All particle positions in same order as above
         pos_x = np.append(stress_plot_dict['dense']['pos']['all']['x'], stress_plot_dict['gas']['pos']['all']['x'])
         pos_y = np.append(stress_plot_dict['dense']['pos']['all']['y'], stress_plot_dict['gas']['pos']['all']['y'])
         
+        # All particle types in same order as above
         typ = np.append(stress_plot_dict['dense']['typ'], stress_plot_dict['gas']['typ'])
 
-        # Instantiate empty array (partNum) containing the average active force magnitude
-        # towards the largest cluster's CoM
+        # Instantiate empty array (partNum) containing the stress in each direction that particles experience
         stress_xx_arr = np.array([])
         stress_yy_arr = np.array([])
         stress_xy_arr = np.array([])
@@ -2762,33 +2903,37 @@ class particle_props:
         rA_dist_norm = np.array([])
         rB_dist_norm = np.array([])
         
-        
-        plt.scatter(pos_x, pos_y, color='red', s=1.0)
-        plt.show()
-        
         # Loop over all particles
         for h in range(0, len(pos_x)):
 
             # Separation distance from largest custer's CoM (middle of box)
             difx = pos_x[h] - (com_x-self.hx_box)
             dify = pos_y[h] - (com_y-self.hy_box)
-
+            
             difr= ( (difx )**2 + (dify)**2)**0.5
 
-            # Save active force magnitude toward largest cluster's CoM
             if typ[h] == 0:
+
+                # Save stress in each direction for A particles
                 stress_xx_A_arr =np.append(stress_xx_A_arr, stress_xx[h])
                 stress_yy_A_arr =np.append(stress_yy_A_arr, stress_yy[h])
                 stress_xy_A_arr =np.append(stress_xy_A_arr, stress_xy[h])
                 stress_yx_A_arr =np.append(stress_yx_A_arr, stress_yx[h])
+
+                # Save separation distance from largest cluster's CoM for A particles
                 rA_dist_norm = np.append(rA_dist_norm, difr)
             else:
+
+                # Save stress in each direction for B particles
                 stress_xx_B_arr =np.append(stress_xx_B_arr, stress_xx[h])
                 stress_yy_B_arr =np.append(stress_yy_B_arr, stress_yy[h])
                 stress_xy_B_arr =np.append(stress_xy_B_arr, stress_xy[h])
                 stress_yx_B_arr =np.append(stress_yx_B_arr, stress_yx[h])
+
+                # Save separation distance from largest cluster's CoM for B particles
                 rB_dist_norm = np.append(rB_dist_norm, difr)
             
+            # Save stress in each direction for all particles
             stress_xx_arr =np.append(stress_xx_arr, stress_xx[h])
             stress_yy_arr =np.append(stress_yy_arr, stress_yy[h])
             stress_xy_arr =np.append(stress_xy_arr, stress_xy[h])
@@ -2798,12 +2943,13 @@ class particle_props:
             # Save separation distance from largest cluster's CoM
             r_dist_norm = np.append(r_dist_norm, difr)
 
-        # Dictionary containing each particle's alignment and aligned active force toward
-        # largest cluster's CoM as a function of separation distance from largest custer's CoM
+        # Dictionary containing each particle's stress in each direction
+        # as a function of separation distance from largest custer's CoM
 
         radial_stress_dict = {'all': {'XX': stress_xx_arr, 'YY': stress_yy_arr, 'XY': stress_xy_arr, 'YX': stress_yx_arr, 'r': r_dist_norm}, 'A': {'XX': stress_xx_A_arr, 'YY': stress_yy_A_arr, 'XY': stress_xy_A_arr, 'YX': stress_yx_A_arr, 'r': rA_dist_norm}, 'B': {'XX': stress_xx_B_arr, 'YY': stress_yy_B_arr, 'XY': stress_xy_B_arr, 'YX': stress_yx_B_arr, 'r': rB_dist_norm}, 'typ': typ}
 
         return radial_stress_dict
+    """
     
     def radial_int_press_bubble2(self, stress_plot_dict, sep_surface_dict, int_comp_dict, all_surface_measurements):
         '''
@@ -2811,23 +2957,46 @@ class particle_props:
         to calculate the active force magnitude toward, alignment toward, and separation
         distance from largest cluster's CoM
 
+        stress_plot_dict: dictionary (output from various interparticle_pressure_nlist() in
+        measurement.py) containing information on the stress and positions of all,
+        type A, and type B particles.
+
+        sep_surface_dict: dictionary (output from surface_curve_interp() in
+        interface.py) that contains the interpolated curve representing the
+        inner and outer surfaces of each interface.
+
+        int_comp_dict: dictionary (output from int_sort2() in
+        phase_identification.py) that contains information on each
+        isolated/individual interface.
+
+        all_surface_measurements: dictionary that contains information on measured properties
+        of each identified interface surface
+
         Output:
-        radial_fa_dict: dictionary containing each particle's alignment and aligned active force toward
-        largest cluster's CoM as a function of separation distance from largest custer's CoM
+        radial_stress_dict: dictionary containing each particle's stress in each direction
+        as a function of separation distance from each interface's CoM
         '''
+
+        # Stress in all directions of all particles in order of dense first then gas particles
         stress_xx = np.append(stress_plot_dict['dense']['all-all']['XX'], stress_plot_dict['gas']['all-all']['XX'])
         stress_yy = np.append(stress_plot_dict['dense']['all-all']['YY'], stress_plot_dict['gas']['all-all']['YY'])
         stress_xy = np.append(stress_plot_dict['dense']['all-all']['XY'], stress_plot_dict['gas']['all-all']['XY'])
         stress_yx = np.append(stress_plot_dict['dense']['all-all']['YX'], stress_plot_dict['gas']['all-all']['YX'])
 
+        # All particle positions in same order as above
         pos_x = np.append(stress_plot_dict['dense']['pos']['all']['x'], stress_plot_dict['gas']['pos']['all']['x'])
         pos_y = np.append(stress_plot_dict['dense']['pos']['all']['y'], stress_plot_dict['gas']['pos']['all']['y'])
         
+        # All particle types in same order as above
         typ = np.append(stress_plot_dict['dense']['typ'], stress_plot_dict['gas']['typ'])
 
         radial_stress_dict = {}
+
+        # Loop over all interface surfaces
         for m in range(0, len(sep_surface_dict)):
             key = 'surface id ' + str(int(int_comp_dict['ids'][m]))
+
+            # Current interface's CoM
             try:
                 
                 com_x = all_surface_measurements[key]['exterior']['com']['x']
@@ -2837,8 +3006,7 @@ class particle_props:
                 com_x = all_surface_measurements[key]['interior']['com']['x']
                 com_y = all_surface_measurements[key]['interior']['com']['y']
         
-            # Instantiate empty array (partNum) containing the average active force magnitude
-            # towards the largest cluster's CoM
+            # Instantiate empty array (partNum) containing the stress in each direction for particles of each type ('all', 'A', or 'B)
             stress_xx_arr = np.array([])
             stress_yy_arr = np.array([])
             stress_xy_arr = np.array([])
@@ -2854,7 +3022,7 @@ class particle_props:
             stress_xy_B_arr = np.array([])
             stress_yx_B_arr = np.array([])
 
-            # Instantiate empty array (partNum) containing the distance from largest cluster's CoM
+            # Instantiate empty array (partNum) containing the distance from current interface's CoM
             r_dist_norm = np.array([])
             rA_dist_norm = np.array([])
             rB_dist_norm = np.array([])
@@ -2862,42 +3030,50 @@ class particle_props:
             # Loop over all particles
             for h in range(0, len(pos_x)):
 
-                # Separation distance from largest custer's CoM (middle of box)
+                # Separation distance from current interface's CoM (shifted from middle of box)
                 difx = pos_x[h] - (com_x-self.hx_box)
                 dify = pos_y[h] - (com_y-self.hy_box)
 
                 difr= ( (difx )**2 + (dify)**2)**0.5
 
-                # Save active force magnitude toward largest cluster's CoM
                 if typ[h] == 0:
+
+                    # Save stress of each A particle in each direction
                     stress_xx_A_arr =np.append(stress_xx_A_arr, stress_xx[h])
                     stress_yy_A_arr =np.append(stress_yy_A_arr, stress_yy[h])
                     stress_xy_A_arr =np.append(stress_xy_A_arr, stress_xy[h])
                     stress_yx_A_arr =np.append(stress_yx_A_arr, stress_yx[h])
+
+                    # Save separation distance of each A particle from current interface's CoM
                     rA_dist_norm = np.append(rA_dist_norm, difr)
                 else:
+
+                    # Save stress of each B particle in each direction
                     stress_xx_B_arr =np.append(stress_xx_B_arr, stress_xx[h])
                     stress_yy_B_arr =np.append(stress_yy_B_arr, stress_yy[h])
                     stress_xy_B_arr =np.append(stress_xy_B_arr, stress_xy[h])
                     stress_yx_B_arr =np.append(stress_yx_B_arr, stress_yx[h])
+                    
+                    # Save separation distance of each B particle from current interface's CoM
                     rB_dist_norm = np.append(rB_dist_norm, difr)
                 
+                # Save stress of each particle in each direction
                 stress_xx_arr =np.append(stress_xx_arr, stress_xx[h])
                 stress_yy_arr =np.append(stress_yy_arr, stress_yy[h])
                 stress_xy_arr =np.append(stress_xy_arr, stress_xy[h])
                 stress_yx_arr =np.append(stress_yx_arr, stress_yx[h])
 
                 
-                # Save separation distance from largest cluster's CoM
+                # Save separation distance of each particle from current interface's CoM
                 r_dist_norm = np.append(r_dist_norm, difr)
 
-            # Dictionary containing each particle's alignment and aligned active force toward
-            # largest cluster's CoM as a function of separation distance from largest custer's CoM
+            # Dictionary containing each particle's stress in each direction for all particle types ('all', 'A', or 'B')
+            # as a function of separation distance from each interface's CoM
 
             radial_stress_dict[key] = {'all': {'XX': stress_xx_arr, 'YY': stress_yy_arr, 'XY': stress_xy_arr, 'YX': stress_yx_arr, 'r': r_dist_norm}, 'A': {'XX': stress_xx_A_arr, 'YY': stress_yy_A_arr, 'XY': stress_xy_A_arr, 'YX': stress_yx_A_arr, 'r': rA_dist_norm}, 'B': {'XX': stress_xx_B_arr, 'YY': stress_yy_B_arr, 'XY': stress_xy_B_arr, 'YX': stress_yx_B_arr, 'r': rB_dist_norm}, 'typ': typ}
 
         return radial_stress_dict
-
+    """
     def radial_surface_normal_fa_bubble(self, method2_align_dict, sep_surface_dict, int_comp_dict, all_surface_measurements):
         '''
         Purpose: Takes the orientation, position, and active force of each particle
@@ -2973,7 +3149,7 @@ class particle_props:
         radial_fa_dict = {'all': {'r': r_dist_norm, 'fa': fa_norm, 'align': align_norm}, 'A': {'r': rA_dist_norm, 'fa': faA_norm, 'align': alignA_norm}, 'B': {'r': rB_dist_norm, 'fa': faB_norm, 'align': alignB_norm}}
 
         return radial_fa_dict
-    
+    """ 
     def radial_surface_normal_fa_bubble2(self, method2_align_dict, sep_surface_dict, int_comp_dict, all_surface_measurements, int_dict):
         '''
         Purpose: Takes the orientation, position, and active force of each particle

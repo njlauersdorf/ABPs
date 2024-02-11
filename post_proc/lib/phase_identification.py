@@ -42,6 +42,11 @@ import utility
 
 # Class of phase identification functions
 class phase_identification:
+    """
+    Purpose: 
+    This class contains a series of customized functions for identifying the liquid, gas, or interface
+    of a phase separated MIPS system in hoomd-blue.
+    """
     def __init__(self, area_frac_dict, align_dict, part_dict, press_dict, lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, parFrac, eps, typ):
 
         # Array (NBins_x, NBins_y) of average alignment of all particles per bin in either direction ('x', 'y', or 'mag'nitude)

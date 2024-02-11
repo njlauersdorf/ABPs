@@ -12,12 +12,16 @@ from scipy import ndimage
 
 import numpy as np
 
-#from symfit import parameters, variables, sin, cos, Fit
-
 from scipy.optimize import curve_fit
 
 
 class utility:
+    """
+    Purpose: 
+    This class contains a series of basic functions for making analysis of hoomd files easier, including
+    cropping of simulation files, calculating separation distances, finding ideal bin size/number,
+    and converting quaternions to x- and y-unit vector orientations or angles from the x-axis
+    """
     def __init__(self, lx_box, ly_box):
 
         # Total x-length of box
