@@ -268,178 +268,6 @@ class particle_props:
 
         return part_difr
 
-    def radial_int_press(self, stress_plot_dict):
-        '''
-        Purpose: Takes the stress of each particle and bins particles in terms of separation distance
-        and angle around cluster CoM to calculate total stress in each bin
-
-        Input:
-        stress_plot_dict: dictionary containing stresses in each direction acting on each particle of each type in each phase
-        
-        Output:
-        radial_stress_dict: dictionary containing each particle's stress in each direction acting on each particle as a 
-        function of separation distance and angle around cluster's CoM
-        '''
-
-        # Stress in each direction of all particles
-        stress_xx = np.append(stress_plot_dict['dense']['all-all']['XX'], stress_plot_dict['gas']['all-all']['XX'])
-        stress_yy = np.append(stress_plot_dict['dense']['all-all']['YY'], stress_plot_dict['gas']['all-all']['YY'])
-        stress_xy = np.append(stress_plot_dict['dense']['all-all']['XY'], stress_plot_dict['gas']['all-all']['XY'])
-        stress_yx = np.append(stress_plot_dict['dense']['all-all']['YX'], stress_plot_dict['gas']['all-all']['YX'])
-
-        # X- and Y- Positions of each particle in same order as above
-        pos_x = np.append(stress_plot_dict['dense']['pos']['all']['x'], stress_plot_dict['gas']['pos']['all']['x'])
-        pos_y = np.append(stress_plot_dict['dense']['pos']['all']['y'], stress_plot_dict['gas']['pos']['all']['y'])
-        
-        # Particle type in same order as above
-        typ = np.append(stress_plot_dict['dense']['typ'], stress_plot_dict['gas']['typ'])
-
-        # Instantiate empty array (partNum) containing the average active force magnitude
-        # towards the largest cluster's CoM
-        stress_xx_arr = np.array([])
-        stress_yy_arr = np.array([])
-        stress_xy_arr = np.array([])
-        stress_yx_arr = np.array([])
-
-        stress_xx_A_arr = np.array([])
-        stress_yy_A_arr = np.array([])
-        stress_xy_A_arr = np.array([])
-        stress_yx_A_arr = np.array([])
-
-        stress_xx_B_arr = np.array([])
-        stress_yy_B_arr = np.array([])
-        stress_xy_B_arr = np.array([])
-        stress_yx_B_arr = np.array([])
-
-        # Instantiate empty array (partNum) containing the distance from largest cluster's CoM
-        r_dist_norm = np.array([])
-        rA_dist_norm = np.array([])
-        rB_dist_norm = np.array([])
-
-        theta_dist_norm = np.array([])
-        thetaA_dist_norm = np.array([])
-        thetaB_dist_norm = np.array([])
-
-        # Loop over all particles
-        for h in range(0, len(pos_x)):
-
-            # Separation distance from largest custer's CoM (middle of box)
-            difx = pos_x[h] - 0
-            dify = pos_y[h] - 0
-
-            difr= ( (difx )**2 + (dify)**2)**0.5
-
-            # Angle around cluster's CoM
-            thetar = np.arctan2(dify, difx)*(180/np.pi)            
-            
-            # Distance from cluster CoM (normalized by cluster radius) to bin particles by
-            r = np.linspace(0, 1.5, num=75)
-
-            # Angle around cluster CoM to bin particles by
-            theta = np.linspace(0, 360, num=45)
-
-
-            # Save stress of each particle in each direction to array in addition to separation and angle around CoM by type
-            if typ[h] == 0:
-                stress_xx_A_arr =np.append(stress_xx_A_arr, stress_xx[h])
-                stress_yy_A_arr =np.append(stress_yy_A_arr, stress_yy[h])
-                stress_xy_A_arr =np.append(stress_xy_A_arr, stress_xy[h])
-                stress_yx_A_arr =np.append(stress_yx_A_arr, stress_yx[h])
-                rA_dist_norm = np.append(rA_dist_norm, difr)
-                thetaA_dist_norm = np.append(thetaA_dist_norm, thetar)
-            else:
-                stress_xx_B_arr =np.append(stress_xx_B_arr, stress_xx[h])
-                stress_yy_B_arr =np.append(stress_yy_B_arr, stress_yy[h])
-                stress_xy_B_arr =np.append(stress_xy_B_arr, stress_xy[h])
-                stress_yx_B_arr =np.append(stress_yx_B_arr, stress_yx[h])
-                rB_dist_norm = np.append(rB_dist_norm, difr)
-                thetaB_dist_norm = np.append(thetaB_dist_norm, thetar)
-            
-            # Save stress of each particle in each direction to array in addition to separation and angle around CoM for all types
-            stress_xx_arr =np.append(stress_xx_arr, stress_xx[h])
-            stress_yy_arr =np.append(stress_yy_arr, stress_yy[h])
-            stress_xy_arr =np.append(stress_xy_arr, stress_xy[h])
-            stress_yx_arr =np.append(stress_yx_arr, stress_yx[h])
-            r_dist_norm = np.append(r_dist_norm, difr)
-            theta_dist_norm = np.append(theta_dist_norm, thetar)
-
-        # Dictionary containing each particle's stress in each direction and separation and angle around cluster CoM
-        radial_stress_dict = {'all': {'XX': stress_xx_arr, 'YY': stress_yy_arr, 'XY': stress_xy_arr, 'YX': stress_yx_arr, 'r': r_dist_norm, 'theta': theta_dist_norm}, 'A': {'XX': stress_xx_A_arr, 'YY': stress_yy_A_arr, 'XY': stress_xy_A_arr, 'YX': stress_yx_A_arr, 'r': rA_dist_norm, 'theta': thetaA_dist_norm}, 'B': {'XX': stress_xx_B_arr, 'YY': stress_yy_B_arr, 'XY': stress_xy_B_arr, 'YX': stress_yx_B_arr, 'r': rB_dist_norm, 'theta': thetaB_dist_norm}, 'typ': typ}
-
-        return radial_stress_dict
-
-    def radial_normal_fa(self):
-        '''
-        Purpose: Takes the orientation, position, and active force of each particle
-        to calculate the active force magnitude toward, alignment toward, and separation
-        distance from largest cluster's CoM
-
-        Output:
-        radial_fa_dict: dictionary containing each particle's alignment and aligned active force toward
-        largest cluster's CoM as a function of separation distance from largest custer's CoM
-        '''
-
-        # Instantiate empty array (partNum) containing the average active force alignment
-        # towards the largest cluster's CoM
-        align_norm = np.array([])
-        alignA_norm = np.array([])
-        alignB_norm = np.array([])
-
-        # Instantiate empty array (partNum) containing the average active force magnitude
-        # towards the largest cluster's CoM
-        fa_norm = np.array([])
-        faA_norm = np.array([])
-        faB_norm = np.array([])
-
-        # Instantiate empty array (partNum) containing the distance from largest cluster's CoM
-        r_dist_norm = np.array([])
-        rA_dist_norm = np.array([])
-        rB_dist_norm = np.array([])
-
-        # Loop over all particles
-        for h in range(0, len(self.pos)):
-
-            # Separation distance from largest custer's CoM (middle of box)
-            difx = self.pos[h,0] - 0
-            dify = self.pos[h,1] - 0
-
-            difr= ( (difx )**2 + (dify)**2)**0.5
-
-            # Normalize x- and y- separation distance to make unit vectors
-            x_norm_unitv = (difx) / difr
-            y_norm_unitv = (dify) / difr
-
-            #Calculate x and y orientation of active force
-            px = self.px[h]
-            py = self.py[h]
-
-            #Calculate alignment towards CoM
-            r_dot_p = (-x_norm_unitv * px) + (-y_norm_unitv * py)
-
-            # Save alignment with largest cluster's CoM
-            align_norm=np.append(align_norm, r_dot_p)
-
-            # Save active force magnitude toward largest cluster's CoM
-            if self.typ[h] == 0:
-                fa_norm=np.append(fa_norm, r_dot_p*self.peA)
-                faA_norm=np.append(faA_norm, r_dot_p*self.peA)
-                alignA_norm=np.append(alignA_norm, r_dot_p)
-                rA_dist_norm = np.append(rA_dist_norm, difr)
-            else:
-                fa_norm=np.append(fa_norm, r_dot_p*self.peB)
-                faB_norm=np.append(faB_norm, r_dot_p*self.peB)
-                alignB_norm=np.append(alignB_norm, r_dot_p)
-                rB_dist_norm = np.append(rB_dist_norm, difr)
-
-            # Save separation distance from largest cluster's CoM
-            r_dist_norm = np.append(r_dist_norm, difr)
-
-        # Dictionary containing each particle's alignment and aligned active force toward
-        # largest cluster's CoM as a function of separation distance from largest custer's CoM
-        radial_fa_dict = {'all': {'r': r_dist_norm, 'fa': fa_norm, 'align': align_norm}, 'A': {'r': rA_dist_norm, 'fa': faA_norm, 'align': alignA_norm}, 'B': {'r': rB_dist_norm, 'fa': faB_norm, 'align': alignB_norm}}
-
-        return radial_fa_dict
-
     def radial_surface_normal_fa(self, method2_align_dict):
         '''
         Purpose: Takes the orientation, position, and active force of each particle
@@ -1266,7 +1094,7 @@ class particle_props:
             vel_stat_dict = {'A': {'mag': typ0_avg}, 'B': {'mag': typ1_avg} }
 
             return vel_plot_dict, corr_dict, vel_stat_dict
-            
+    """         
     def adsorption(self):
         #IN PROGRESS
         '''
@@ -1573,6 +1401,7 @@ class particle_props:
             start_int_id_with_int = np.append(start_int_id_with_int, now_in_int_comb)
             start_gas_id_with_int = np.append(start_gas_id_with_int, now_in_gas_comb)
             start_bulk_id_with_int = np.append(start_bulk_id_with_int, now_in_bulk_comb)
+    """
     def collision_rate(self, vel_plot_dict, prev_neigh_dict):
         '''
         Purpose: Calculates the rate of collision between particles in the gas phase
@@ -2793,38 +2622,7 @@ class particle_props:
 
         return cluster_msd_dict
 
-    def adsorption_nlist(self):
-        '''
-        Purpose: Calculates the rate of adsorption and desorption from the cluster's surface using
-        Freud's cluster algorithm without consideration of bulk vs. interface
-
-        Output:
-        kinetics_dict: dictionary containing the total adsorption and desorption rate of particles of 
-        each type ('all', 'A', or 'B')
-        '''
-
-        #Compute cluster parameters using system_all neighbor list
-        system_all = freud.AABBQuery(self.f_box, self.f_box.wrap(self.pos))
-        cl_all=freud.cluster.Cluster()                              #Define cluster
-        cl_all.compute(system_all, neighbors={'r_max': self.r_cut})        # Calculate clusters given neighbor list, positions,
-                                                                    # and maximal radial interaction distance
-        clp_all = freud.cluster.ClusterProperties()                 #Define cluster properties
-        ids = cl_all.cluster_idx                                    # get id of each cluster
-
-        clp_all.compute(system_all, ids)                            # Calculate cluster properties given cluster IDs
-        clust_size = clp_all.sizes                                  # find cluster sizes
-
-        in_clust = np.where(clust_size == np.amax(clust_size) )[0][0]       # Particle IDs in cluster
-        not_in_clust = np.where(clust_size != np.amax(clust_size) )[0][0]   # Particle IDs not in cluster
-
-        slow_clust_ids = np.where( (ids==in_clust) & (self.typ==0) )[0]     # Number of slow particles in cluster
-        fast_clust_ids = np.where( (ids==in_clust) & (self.typ==1) )[0]     # Number of fast particles in cluster
-        slow_not_clust_ids = np.where( (ids!=in_clust) & (self.typ==0) )[0] # Number of slow particles not in cluster
-        fast_not_clust_ids = np.where( (ids!=in_clust) & (self.typ==1) )[0] # Number of fast particles not in cluster
-
-        kinetics_dict = {'in_clust': {'all': len(slow_clust_ids) + len(fast_clust_ids), 'A': len(slow_clust_ids), 'B': len(fast_clust_ids)}, 'out_clust': {'all': len(slow_not_clust_ids) + len(fast_not_clust_ids), 'A': len(slow_not_clust_ids), 'B': len(fast_not_clust_ids)}}
-        
-        return kinetics_dict
+    
     """
     def radial_int_press_bubble(self, stress_plot_dict, sep_surface_dict, int_comp_dict, all_surface_measurements):
         '''
@@ -2951,128 +2749,7 @@ class particle_props:
         return radial_stress_dict
     """
     
-    def radial_int_press_bubble2(self, stress_plot_dict, sep_surface_dict, int_comp_dict, all_surface_measurements):
-        '''
-        Purpose: Takes the orientation, position, and active force of each particle
-        to calculate the active force magnitude toward, alignment toward, and separation
-        distance from largest cluster's CoM
-
-        stress_plot_dict: dictionary (output from various interparticle_pressure_nlist() in
-        measurement.py) containing information on the stress and positions of all,
-        type A, and type B particles.
-
-        sep_surface_dict: dictionary (output from surface_curve_interp() in
-        interface.py) that contains the interpolated curve representing the
-        inner and outer surfaces of each interface.
-
-        int_comp_dict: dictionary (output from int_sort2() in
-        phase_identification.py) that contains information on each
-        isolated/individual interface.
-
-        all_surface_measurements: dictionary that contains information on measured properties
-        of each identified interface surface
-
-        Output:
-        radial_stress_dict: dictionary containing each particle's stress in each direction
-        as a function of separation distance from each interface's CoM
-        '''
-
-        # Stress in all directions of all particles in order of dense first then gas particles
-        stress_xx = np.append(stress_plot_dict['dense']['all-all']['XX'], stress_plot_dict['gas']['all-all']['XX'])
-        stress_yy = np.append(stress_plot_dict['dense']['all-all']['YY'], stress_plot_dict['gas']['all-all']['YY'])
-        stress_xy = np.append(stress_plot_dict['dense']['all-all']['XY'], stress_plot_dict['gas']['all-all']['XY'])
-        stress_yx = np.append(stress_plot_dict['dense']['all-all']['YX'], stress_plot_dict['gas']['all-all']['YX'])
-
-        # All particle positions in same order as above
-        pos_x = np.append(stress_plot_dict['dense']['pos']['all']['x'], stress_plot_dict['gas']['pos']['all']['x'])
-        pos_y = np.append(stress_plot_dict['dense']['pos']['all']['y'], stress_plot_dict['gas']['pos']['all']['y'])
-        
-        # All particle types in same order as above
-        typ = np.append(stress_plot_dict['dense']['typ'], stress_plot_dict['gas']['typ'])
-
-        radial_stress_dict = {}
-
-        # Loop over all interface surfaces
-        for m in range(0, len(sep_surface_dict)):
-            key = 'surface id ' + str(int(int_comp_dict['ids'][m]))
-
-            # Current interface's CoM
-            try:
-                
-                com_x = all_surface_measurements[key]['exterior']['com']['x']
-                com_y = all_surface_measurements[key]['exterior']['com']['y']
-
-            except:
-                com_x = all_surface_measurements[key]['interior']['com']['x']
-                com_y = all_surface_measurements[key]['interior']['com']['y']
-        
-            # Instantiate empty array (partNum) containing the stress in each direction for particles of each type ('all', 'A', or 'B)
-            stress_xx_arr = np.array([])
-            stress_yy_arr = np.array([])
-            stress_xy_arr = np.array([])
-            stress_yx_arr = np.array([])
-
-            stress_xx_A_arr = np.array([])
-            stress_yy_A_arr = np.array([])
-            stress_xy_A_arr = np.array([])
-            stress_yx_A_arr = np.array([])
-
-            stress_xx_B_arr = np.array([])
-            stress_yy_B_arr = np.array([])
-            stress_xy_B_arr = np.array([])
-            stress_yx_B_arr = np.array([])
-
-            # Instantiate empty array (partNum) containing the distance from current interface's CoM
-            r_dist_norm = np.array([])
-            rA_dist_norm = np.array([])
-            rB_dist_norm = np.array([])
-        
-            # Loop over all particles
-            for h in range(0, len(pos_x)):
-
-                # Separation distance from current interface's CoM (shifted from middle of box)
-                difx = pos_x[h] - (com_x-self.hx_box)
-                dify = pos_y[h] - (com_y-self.hy_box)
-
-                difr= ( (difx )**2 + (dify)**2)**0.5
-
-                if typ[h] == 0:
-
-                    # Save stress of each A particle in each direction
-                    stress_xx_A_arr =np.append(stress_xx_A_arr, stress_xx[h])
-                    stress_yy_A_arr =np.append(stress_yy_A_arr, stress_yy[h])
-                    stress_xy_A_arr =np.append(stress_xy_A_arr, stress_xy[h])
-                    stress_yx_A_arr =np.append(stress_yx_A_arr, stress_yx[h])
-
-                    # Save separation distance of each A particle from current interface's CoM
-                    rA_dist_norm = np.append(rA_dist_norm, difr)
-                else:
-
-                    # Save stress of each B particle in each direction
-                    stress_xx_B_arr =np.append(stress_xx_B_arr, stress_xx[h])
-                    stress_yy_B_arr =np.append(stress_yy_B_arr, stress_yy[h])
-                    stress_xy_B_arr =np.append(stress_xy_B_arr, stress_xy[h])
-                    stress_yx_B_arr =np.append(stress_yx_B_arr, stress_yx[h])
-                    
-                    # Save separation distance of each B particle from current interface's CoM
-                    rB_dist_norm = np.append(rB_dist_norm, difr)
-                
-                # Save stress of each particle in each direction
-                stress_xx_arr =np.append(stress_xx_arr, stress_xx[h])
-                stress_yy_arr =np.append(stress_yy_arr, stress_yy[h])
-                stress_xy_arr =np.append(stress_xy_arr, stress_xy[h])
-                stress_yx_arr =np.append(stress_yx_arr, stress_yx[h])
-
-                
-                # Save separation distance of each particle from current interface's CoM
-                r_dist_norm = np.append(r_dist_norm, difr)
-
-            # Dictionary containing each particle's stress in each direction for all particle types ('all', 'A', or 'B')
-            # as a function of separation distance from each interface's CoM
-
-            radial_stress_dict[key] = {'all': {'XX': stress_xx_arr, 'YY': stress_yy_arr, 'XY': stress_xy_arr, 'YX': stress_yx_arr, 'r': r_dist_norm}, 'A': {'XX': stress_xx_A_arr, 'YY': stress_yy_A_arr, 'XY': stress_xy_A_arr, 'YX': stress_yx_A_arr, 'r': rA_dist_norm}, 'B': {'XX': stress_xx_B_arr, 'YY': stress_yy_B_arr, 'XY': stress_xy_B_arr, 'YX': stress_yx_B_arr, 'r': rB_dist_norm}, 'typ': typ}
-
-        return radial_stress_dict
+    
     """
     def radial_surface_normal_fa_bubble(self, method2_align_dict, sep_surface_dict, int_comp_dict, all_surface_measurements):
         '''
@@ -4071,6 +3748,10 @@ class particle_props:
         faA_avg_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
         faB_avg_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
 
+        fa_sum_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
+        faA_sum_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
+        faB_sum_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
+
         fa_avg_real_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
         
         fa_dens_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
@@ -4089,6 +3770,10 @@ class particle_props:
         num_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
         numA_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
         numB_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
+
+        fa_sum_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))
+        faA_sum_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))
+        faB_sum_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))
 
         fa_avg_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))
         faA_avg_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))
@@ -4111,12 +3796,124 @@ class particle_props:
         num_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))
         numA_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))
         numB_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))
+
+
+        
+
+
+        fa_sum_final_binned_theta = np.zeros(len(theta_final_bins))
+        faA_sum_final_binned_theta = np.zeros(len(theta_final_bins))
+        faB_sum_final_binned_theta = np.zeros(len(theta_final_bins))
+
+
+        fa_avg_final_binned_theta = np.zeros(len(theta_final_bins))
+        faA_avg_final_binned_theta = np.zeros(len(theta_final_bins))
+        faB_avg_final_binned_theta = np.zeros(len(theta_final_bins))
+
+        fa_avg_real_final_binned_theta = np.zeros(len(theta_final_bins))
+        
+        fa_dens_final_binned_theta = np.zeros(len(theta_final_bins))
+        faA_dens_final_binned_theta = np.zeros(len(theta_final_bins))
+        faB_dens_final_binned_theta = np.zeros(len(theta_final_bins))
+
+
+        align_final_binned_theta = np.zeros(len(theta_final_bins))
+        alignA_final_binned_theta = np.zeros(len(theta_final_bins))
+        alignB_final_binned_theta = np.zeros(len(theta_final_bins))
+
+        num_dens_final_binned_theta = np.zeros(len(theta_final_bins))
+        num_densA_final_binned_theta = np.zeros(len(theta_final_bins))
+        num_densB_final_binned_theta = np.zeros(len(theta_final_bins))
+
+        num_final_binned_theta = np.zeros(len(theta_final_bins))
+        numA_final_binned_theta = np.zeros(len(theta_final_bins))
+        numB_final_binned_theta = np.zeros(len(theta_final_bins))
+
+        fa_avg_final_binned_val_theta = np.zeros(len(theta_final_bins))
+        faA_avg_final_binned_val_theta = np.zeros(len(theta_final_bins))
+        faB_avg_final_binned_val_theta = np.zeros(len(theta_final_bins))
+        
+        fa_dens_final_binned_val_theta = np.zeros(len(theta_final_bins))
+        faA_dens_final_binned_val_theta = np.zeros(len(theta_final_bins))
+        faB_dens_final_binned_val_theta = np.zeros(len(theta_final_bins))
+
+        fa_avg_real_final_binned_val_theta = np.zeros(len(theta_final_bins))
+
+        align_final_binned_val_theta = np.zeros(len(theta_final_bins))
+        alignA_final_binned_val_theta = np.zeros(len(theta_final_bins))
+        alignB_final_binned_val_theta = np.zeros(len(theta_final_bins))
+
+        num_dens_final_binned_val_theta = np.zeros(len(theta_final_bins))
+        num_densA_final_binned_val_theta = np.zeros(len(theta_final_bins))
+        num_densB_final_binned_val_theta = np.zeros(len(theta_final_bins))
+
+        num_final_binned_val_theta = np.zeros(len(theta_final_bins))
+        numA_final_binned_val_theta = np.zeros(len(theta_final_bins))
+        numB_final_binned_val_theta = np.zeros(len(theta_final_bins))
+
+        radius_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))        
+        radiusA_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
+        radiusB_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
+
         
 
         avg_rad_theta = np.mean(difr_ext_surface)
 
         sum_id = 0
+        sum_id_theta = 0
         for n_theta in range(1, len(theta_bins)):
+
+            bin_ids_theta = np.where((theta_dist_norm <theta_bins[n_theta]) & (theta_dist_norm >= theta_bins[n_theta-1]) & (r_dist_norm < 1.1) & (r_dist_norm >= 0.3))[0]
+            binA_ids_theta = np.where((thetaA_dist_norm <theta_bins[n_theta]) & (thetaA_dist_norm >= theta_bins[n_theta-1]) & (rA_dist_norm < 1.1) & (rA_dist_norm >= 0.3))[0]
+            binB_ids_theta = np.where((thetaB_dist_norm <theta_bins[n_theta]) & (thetaB_dist_norm >= theta_bins[n_theta-1]) & (rB_dist_norm < 1.1) & (rB_dist_norm >= 0.3))[0]
+            
+            if len(bin_ids_theta)>0:
+
+                theta_final_id = np.where(theta_final_bins==theta_bins[n_theta])[0]
+                """
+                area_radial_slice = np.pi * ((1.1*np.mean(nearest_surface_arr[bin_ids_theta]))**2 - (0.3*np.mean(nearest_surface_arr[bin_ids_theta]))**2) * ((theta_bins[n_theta]-theta_bins[n_theta-1])/360)
+
+                fa_avg_real_final_binned_theta[theta_final_id] = np.mean(fa_avg[bin_ids_theta])
+
+                fa_avg_final_binned_theta[theta_final_id] = np.mean(fa_norm[bin_ids_theta])
+                fa_sum_final_binned_theta[theta_final_id] = np.sum(fa_norm[bin_ids_theta])
+
+                if len(binA_ids_theta)>0:
+                    faA_sum_final_binned_theta[theta_final_id] = np.sum(faA_norm[binA_ids_theta])
+                if len(binB_ids_theta)>0:
+                    faB_sum_final_binned_theta[theta_final_id] = np.sum(faB_norm[binB_ids_theta])
+
+                if len(binA_ids_theta)>0:
+                    faA_avg_final_binned_theta[theta_final_id] = np.mean(faA_norm[binA_ids_theta])
+                if len(binB_ids_theta)>0:
+                    faB_avg_final_binned_theta[theta_final_id] = np.mean(faB_norm[binB_ids_theta])
+
+                fa_dens_final_binned_theta[theta_final_id] = np.sum(fa_norm[bin_ids_theta]) / area_radial_slice
+                if len(binA_ids_theta)>0:
+                    faA_dens_final_binned_theta[theta_final_id] = np.sum(faA_norm[binA_ids_theta]) / area_radial_slice
+                if len(binB_ids_theta)>0:
+                    faB_dens_final_binned_theta[theta_final_id] = np.sum(faB_norm[binB_ids_theta]) / area_radial_slice
+
+                align_final_binned_theta[theta_final_id] = np.mean(align_norm[bin_ids_theta])
+                if len(binA_ids_theta)>0:
+                    alignA_final_binned_theta[theta_final_id] = np.mean(alignA_norm[binA_ids_theta])
+                if len(binB_ids_theta)>0:
+                    alignB_final_binned_theta[theta_final_id] = np.mean(alignB_norm[binB_ids_theta])
+
+                num_dens_final_binned_theta[theta_final_id] = len(bin_ids_theta) / area_radial_slice
+                if len(binA_ids_theta)>0:
+                    num_densA_final_binned_theta[theta_final_id] = len(binA_ids_theta) / area_radial_slice
+                if len(binB_ids_theta)>0:
+                    num_densB_final_binned_theta[theta_final_id] = len(binB_ids_theta) / area_radial_slice
+
+                num_final_binned_theta[theta_final_id] = len(bin_ids_theta)
+                if len(binA_ids_theta)>0:
+                    numA_final_binned_theta[theta_final_id] = len(binA_ids_theta)
+                if len(binB_ids_theta)>0:
+                    numB_final_binned_theta[theta_final_id] = len(binB_ids_theta)
+                """
+                sum_id_theta += 1
+
             for n_rad in range(1, len(rad_bins)):
                 
                 bin_ids = np.where((theta_dist_norm <theta_bins[n_theta]) & (theta_dist_norm >= theta_bins[n_theta-1]) & (r_dist_norm < rad_bins[n_rad]) & (r_dist_norm >= rad_bins[n_rad-1]))[0]
@@ -4132,8 +3929,14 @@ class particle_props:
                     area_radial_slice = np.pi * ((rad_bins[n_rad]*np.mean(nearest_surface_arr[bin_ids]))**2 - (rad_bins[n_rad-1]*np.mean(nearest_surface_arr[bin_ids]))**2) * ((theta_bins[n_theta]-theta_bins[n_theta-1])/360)
 
                     fa_avg_real_final_binned[rad_final_id, theta_final_id] = np.mean(fa_avg[bin_ids])
-
+                    fa_sum_final_binned[rad_final_id, theta_final_id] = np.sum(fa_norm[bin_ids])
                     fa_avg_final_binned[rad_final_id, theta_final_id] = np.mean(fa_norm[bin_ids])
+
+                    if len(binA_ids)>0:
+                        faA_sum_final_binned[rad_final_id, theta_final_id] = np.sum(faA_norm[binA_ids])
+                    if len(binB_ids)>0:
+                        faB_sum_final_binned[rad_final_id, theta_final_id] = np.sum(faB_norm[binB_ids])
+
                     if len(binA_ids)>0:
                         faA_avg_final_binned[rad_final_id, theta_final_id] = np.mean(faA_norm[binA_ids])
                     if len(binB_ids)>0:
@@ -4163,14 +3966,86 @@ class particle_props:
                     if len(binB_ids)>0:
                         numB_final_binned[rad_final_id, theta_final_id] = len(binB_ids)
 
+                    # Average nearest cluster radius for all, A, or B particles at given (r/r_c, theta) bin
+                    radius_final_binned[rad_final_id, theta_final_id] = (np.mean(r_dist[bin_ids]))
+                    radiusA_final_binned[rad_final_id, theta_final_id] = (np.mean(rA_dist[binA_ids]))
+                    radiusB_final_binned[rad_final_id, theta_final_id] = (np.mean(rB_dist[binB_ids]))
+
+
                     sum_id += 1
         
-        radial_heterogeneity_dict = {'rad': rad_final_bins, 'theta': theta_final_bins, 'radius': np.mean(r_dist), 'com': {'x': all_surface_measurements[key]['exterior']['com']['x'], 'y': all_surface_measurements[key]['exterior']['com']['y']}, 'fa_avg_real': {'all': fa_avg_real_final_binned}, 'fa_avg': {'all': fa_avg_final_binned, 'A': faA_avg_final_binned, 'B': faB_avg_final_binned}, 'fa_dens': {'all': fa_dens_final_binned, 'A': faA_dens_final_binned, 'B': faB_dens_final_binned}, 'align': {'all': align_final_binned, 'A': alignA_final_binned, 'B': alignB_final_binned}, 'num_dens': {'all': num_dens_final_binned, 'A': num_densA_final_binned, 'B': num_densB_final_binned}}
-        plot_bin_dict = {'rad': rad_final_bins, 'theta': theta_final_bins, 'radius': np.mean(r_dist), 'com': {'x': all_surface_measurements[key]['exterior']['com']['x'], 'y': all_surface_measurements[key]['exterior']['com']['y']}, 'fa_avg': {'all': fa_avg_final_binned_val, 'A': faA_avg_final_binned_val, 'B': faB_avg_final_binned_val}, 'fa_dens': {'all': fa_dens_final_binned_val, 'A': faA_dens_final_binned_val, 'B': faB_dens_final_binned_val}, 'align': {'all': align_final_binned_val, 'A': alignA_final_binned_val, 'B': alignB_final_binned_val}, 'num': {'all': num_final_binned_val, 'A': numA_final_binned_val, 'B': numB_final_binned_val}, 'num_dens': {'all': num_dens_final_binned_val, 'A': num_densA_final_binned_val, 'B': num_densB_final_binned_val}}
-            
-        return radial_heterogeneity_dict, plot_dict, plot_bin_dict
 
-    def radial_heterogeneity(self, method2_align_dict, avg_rad_dict, surface_dict, int_comp_dict, all_surface_measurements, int_dict, phase_dict, load_save = 0):
+
+        unique_rad = np.unique(rad_final_bins)
+        unique_theta = np.unique(theta_final_bins)
+
+        int_fa_dens_time_theta = np.zeros(len(unique_theta))
+        int_faA_dens_time_theta = np.zeros(len(unique_theta))
+        int_faB_dens_time_theta = np.zeros(len(unique_theta))
+
+        int_fa_avg_real_time_theta = np.zeros(len(unique_theta))
+
+        int_fa_avg_time_theta = np.zeros(len(unique_theta))
+        int_faA_avg_time_theta = np.zeros(len(unique_theta))
+        int_faB_avg_time_theta = np.zeros(len(unique_theta))
+
+        int_fa_sum_time_theta = np.zeros(len(unique_theta))
+        int_faA_sum_time_theta = np.zeros(len(unique_theta))
+        int_faB_sum_time_theta = np.zeros(len(unique_theta))
+
+        int_num_dens_time_theta = np.zeros(len(unique_theta))
+        int_num_densA_time_theta = np.zeros(len(unique_theta))
+        int_num_densB_time_theta = np.zeros(len(unique_theta))
+
+        int_align_time_theta = np.zeros(len(unique_theta))
+        int_alignA_time_theta = np.zeros(len(unique_theta))
+        int_alignB_time_theta = np.zeros(len(unique_theta))
+
+        int_rad_avg_time_theta = np.zeros(len(unique_theta))
+
+        temp_id_new = np.where((unique_rad>=0.3) & (unique_rad<=1.1))[0]
+        int_num = 0
+        for j in range(1, len(temp_id_new)):
+            test_id = np.where(rad_final_bins==unique_rad[temp_id_new[j]])[0]
+            if len(test_id)>0:
+
+                rad_step = (unique_rad[temp_id_new[j]]-unique_rad[temp_id_new[j-1]])*radius_final_binned[temp_id_new[j],:]
+
+                int_fa_dens_time_theta += (rad_step/2) * (fa_dens_final_binned[temp_id_new[j],:]+fa_dens_final_binned[temp_id_new[j-1],:])
+                int_faA_dens_time_theta += (rad_step/2) * (faA_dens_final_binned[temp_id_new[j],:]+faA_dens_final_binned[temp_id_new[j-1],:])
+                int_faB_dens_time_theta += (rad_step/2) * (faB_dens_final_binned[temp_id_new[j],:]+faB_dens_final_binned[temp_id_new[j-1],:])
+
+                int_fa_avg_real_time_theta += (rad_step/2) * (fa_avg_real_final_binned[temp_id_new[j],:]+fa_avg_real_final_binned[temp_id_new[j-1],:])
+
+                int_fa_avg_time_theta += (rad_step/2) * (fa_avg_final_binned[temp_id_new[j],:]+fa_avg_final_binned[temp_id_new[j-1],:])
+                int_faA_avg_time_theta += (rad_step/2) * (faA_avg_final_binned[temp_id_new[j],:]+faA_avg_final_binned[temp_id_new[j-1],:])
+                int_faB_avg_time_theta += (rad_step/2) * (faB_avg_final_binned[temp_id_new[j],:]+faB_avg_final_binned[temp_id_new[j-1],:])
+
+                int_fa_sum_time_theta += (rad_step/2) * (fa_sum_final_binned[temp_id_new[j],:]+fa_sum_final_binned[temp_id_new[j-1],:])
+                int_faA_sum_time_theta += (rad_step/2) * (faA_sum_final_binned[temp_id_new[j],:]+faA_sum_final_binned[temp_id_new[j-1],:])
+                int_faB_sum_time_theta += (rad_step/2) * (faB_sum_final_binned[temp_id_new[j],:]+faB_sum_final_binned[temp_id_new[j-1],:])
+
+                int_rad_avg_time_theta += radius_final_binned[temp_id_new[j],:]
+                int_num += 1
+
+                int_num_dens_time_theta += (rad_step/2) * (num_dens_final_binned[temp_id_new[j],:]+num_dens_final_binned[temp_id_new[j-1],:])
+                int_num_densA_time_theta += (rad_step/2) * (num_densA_final_binned[temp_id_new[j],:]+num_densA_final_binned[temp_id_new[j-1],:])
+                int_num_densB_time_theta += (rad_step/2) * (num_densB_final_binned[temp_id_new[j],:]+num_densB_final_binned[temp_id_new[j-1],:])
+
+                int_align_time_theta += (rad_step/2) * (align_final_binned[temp_id_new[j],:]+align_final_binned[temp_id_new[j-1],:])
+                int_alignA_time_theta += (rad_step/2) * (alignA_final_binned[temp_id_new[j],:]+alignA_final_binned[temp_id_new[j-1],:])
+                int_alignB_time_theta += (rad_step/2) * (alignB_final_binned[temp_id_new[j],:]+alignB_final_binned[temp_id_new[j-1],:])
+
+        avg_clust_rad_theta = int_rad_avg_time_theta / int_num
+
+        radial_heterogeneity_dict = {'rad': rad_final_bins, 'theta': theta_final_bins, 'radius': np.mean(r_dist), 'com': {'x': all_surface_measurements[key]['exterior']['com']['x'], 'y': all_surface_measurements[key]['exterior']['com']['y']}, 'fa_avg_real': {'all': fa_avg_real_final_binned}, 'fa_sum': {'all': fa_sum_final_binned, 'A': faA_sum_final_binned, 'B': faB_sum_final_binned}, 'fa_avg': {'all': fa_avg_final_binned, 'A': faA_avg_final_binned, 'B': faB_avg_final_binned}, 'fa_dens': {'all': fa_dens_final_binned, 'A': faA_dens_final_binned, 'B': faB_dens_final_binned}, 'align': {'all': align_final_binned, 'A': alignA_final_binned, 'B': alignB_final_binned}, 'num_dens': {'all': num_dens_final_binned, 'A': num_densA_final_binned, 'B': num_densB_final_binned}}
+        int_radial_heterogeneity_dict = {'theta': theta_final_bins, 'radius': avg_clust_rad_theta, 'fa_avg_real': {'all': int_fa_avg_real_time_theta}, 'fa_sum': {'all': int_fa_sum_time_theta, 'A': int_faA_sum_time_theta, 'B': int_faB_sum_time_theta}, 'fa_avg': {'all': int_fa_avg_time_theta, 'A': int_faA_avg_time_theta, 'B': int_faB_avg_time_theta}, 'fa_dens': {'all': int_fa_dens_time_theta, 'A': int_faA_dens_time_theta, 'B': int_faB_dens_time_theta}, 'align': {'all': int_align_time_theta, 'A': int_alignA_time_theta, 'B': int_alignB_time_theta}, 'num_dens': {'all': int_num_dens_time_theta, 'A': int_num_densA_time_theta, 'B': int_num_densB_time_theta}}
+        #radial_heterogeneity_dict_theta = {'theta': theta_final_bins, 'fa_avg_real': {'all': fa_avg_real_final_binned_theta}, 'fa_sum': {'all': fa_sum_final_binned_theta, 'A': faA_sum_final_binned_theta, 'B': faB_sum_final_binned_theta}, 'fa_avg': {'all': fa_avg_final_binned_theta, 'A': faA_avg_final_binned_theta, 'B': faB_avg_final_binned_theta}, 'fa_dens': {'all': fa_dens_final_binned_theta, 'A': faA_dens_final_binned_theta, 'B': faB_dens_final_binned_theta}, 'align': {'all': align_final_binned_theta, 'A': alignA_final_binned_theta, 'B': alignB_final_binned_theta}, 'num_dens': {'all': num_dens_final_binned_theta, 'A': num_densA_final_binned_theta, 'B': num_densB_final_binned_theta}}
+        plot_bin_dict = {'rad': rad_final_bins, 'theta': theta_final_bins, 'radius': np.mean(r_dist), 'com': {'x': all_surface_measurements[key]['exterior']['com']['x'], 'y': all_surface_measurements[key]['exterior']['com']['y']}, 'fa_sum': {'all': fa_sum_final_binned_val, 'A': faA_sum_final_binned_val, 'B': faB_sum_final_binned_val}, 'fa_avg': {'all': fa_avg_final_binned_val, 'A': faA_avg_final_binned_val, 'B': faB_avg_final_binned_val}, 'fa_dens': {'all': fa_dens_final_binned_val, 'A': faA_dens_final_binned_val, 'B': faB_dens_final_binned_val}, 'align': {'all': align_final_binned_val, 'A': alignA_final_binned_val, 'B': alignB_final_binned_val}, 'num': {'all': num_final_binned_val, 'A': numA_final_binned_val, 'B': numB_final_binned_val}, 'num_dens': {'all': num_dens_final_binned_val, 'A': num_densA_final_binned_val, 'B': num_densB_final_binned_val}}
+            
+        return radial_heterogeneity_dict, int_radial_heterogeneity_dict, plot_dict, plot_bin_dict
+
+    def radial_heterogeneity(self, method2_align_dict, avg_rad_dict, integrated_avg_rad_dict, surface_dict, int_comp_dict, all_surface_measurements, int_dict, phase_dict, load_save = 0):
         
         # Bulk particle IDs for all, A, and B particles
         bulk_id = np.where(phase_dict['part']==0)[0]
@@ -4253,33 +4128,33 @@ class particle_props:
         part_align = method2_align_dict['part']['align']
 
         # Instantiate empty arrays
-        fa_norm = np.array([])
-        faA_norm = np.array([])
-        faB_norm = np.array([])
+        fa_norm = np.array([])          #Aligned body force magnitude for all particles
+        faA_norm = np.array([])         #Aligned body force magnitude for A particles
+        faB_norm = np.array([])         #Aligned body force magnitude for B particles
 
-        fa_avg = np.array([])
+        fa_avg = np.array([])           #Body force magnitude for all particles
 
-        r_dist_norm = np.array([])
-        rA_dist_norm = np.array([])
-        rB_dist_norm = np.array([])
+        r_dist_norm = np.array([])      #All particle distance from cluster CoM normalized by nearest cluster radius
+        rA_dist_norm = np.array([])     #A particle distance from cluster CoM normalized by nearest cluster radius
+        rB_dist_norm = np.array([])     #B particle distance from cluster CoM normalized by nearest cluster radius
 
-        align_norm = np.array([])
-        alignA_norm = np.array([])
-        alignB_norm = np.array([])
+        align_norm = np.array([])       #All particle alignment
+        alignA_norm = np.array([])      #A particle alignment
+        alignB_norm = np.array([])      #B particle alignment
 
-        theta_dist_norm = np.array([])
-        thetaA_dist_norm = np.array([])
-        thetaB_dist_norm = np.array([])
+        theta_dist_norm = np.array([])  # Angle around CoM for all particles
+        thetaA_dist_norm = np.array([]) # Angle around CoM for A particles
+        thetaB_dist_norm = np.array([]) # Angle around CoM for B particles
 
-        r_dist = np.array([])
-        rA_dist = np.array([])
-        rB_dist = np.array([])
+        r_dist = np.array([])           # Cluster radius of nearest surface for all particles
+        rA_dist = np.array([])          # Cluster radius of nearest surface for A particles
+        rB_dist = np.array([])          # Cluster radius of nearest surface for B particles
 
-        nearest_surface_arr = np.array([])
-        nearest_surfaceA_arr = np.array([])
-        nearest_surfaceB_arr = np.array([])
+        nearest_surface_arr = np.array([])      # Cluster radius of nearest surface for all particles
+        nearest_surfaceA_arr = np.array([])     # Cluster radius of nearest surface for A particles
+        nearest_surfaceB_arr = np.array([])     # Cluster radius of nearest surface for B particles
 
-        # Loop over particles
+        # Loop over particles to calculate each of their alignment, number density, and active forces
         for m in range(0, len(pos_wrap_x)):
             
             # Find nearest surfaces within +/- 1 degree of particle angular position
@@ -4464,59 +4339,219 @@ class particle_props:
                 rad_bins = rad_final_bins[0:]
 
         # Define empty arrays for binned data given radial and angular bins
-        fa_avg_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
-        faA_avg_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
-        faB_avg_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
+        fa_avg_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))        # Deviation of Averaged aligned body force magnitude for all particles in (r/r_c, theta) bins from steady-state
+        faA_avg_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))       # Deviation of Averaged aligned body force magnitude for A particles in (r/r_c, theta) bins from steady-state
+        faB_avg_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))       # Deviation of Averaged aligned body force magnitude for B particles in (r/r_c, theta) bins from steady-state
 
-        fa_avg_real_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
+        fa_sum_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))        # Deviation of Total aligned body force magnitude for all particles in (r/r_c, theta) bins from steady-state
+        faA_sum_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))       # Deviation of Total aligned body force magnitude for A particles in (r/r_c, theta) bins from steady-state
+        faB_sum_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))       # Deviation of Total aligned body force magnitude for B particles in (r/r_c, theta) bins from steady-state
 
-        fa_dens_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
-        faA_dens_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
-        faB_dens_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
+        fa_avg_real_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))   # Deviation of Average body force magnitude for all particles in (r/r_c, theta) bins from steady-state
 
-        align_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
-        alignA_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
-        alignB_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
+        fa_dens_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))       # Deviation of Averaged aligned body force density for all particles in (r/r_c, theta) bins from steady-state
+        faA_dens_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))      # Deviation of Averaged aligned body force density for A particles in (r/r_c, theta) bins from steady-state
+        faB_dens_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))      # Deviation of Averaged aligned body force density for B particles in (r/r_c, theta) bins from steady-state
 
-        num_dens_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
-        num_densA_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
-        num_densB_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
+        align_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))         # Deviation of Averaged alignment for all particles in (r/r_c, theta) bins from steady-state
+        alignA_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))        # Deviation of Averaged alignment for A particles in (r/r_c, theta) bins from steady-state
+        alignB_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))        # Deviation of Averaged alignment for B particles in (r/r_c, theta) bins from steady-state
 
-        num_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
-        numA_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
-        numB_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
+        num_dens_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))      # Deviation of Averaged number density for all particles in (r/r_c, theta) bins from steady-state
+        num_densA_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))     # Deviation of Averaged number density for A particles in (r/r_c, theta) bins from steady-state
+        num_densB_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))     # Deviation of Averaged number density for B particles in (r/r_c, theta) bins from steady-state
 
-        fa_avg_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))
-        faA_avg_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))
-        faB_avg_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))
+        num_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))           # Deviation of Total number of all particles in (r/r_c, theta) bins from steady-state
+        numA_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))          # Deviation of Total number of A particles in (r/r_c, theta) bins from steady-state
+        numB_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))          # Deviation of Total number of B particles in (r/r_c, theta) bins from steady-state
 
-        fa_avg_real_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))
+        fa_avg_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))    # Averaged aligned body force magnitude for all particles in (r/r_c, theta) bins for current time step
+        faA_avg_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))   # Averaged aligned body force magnitude for A particles in (r/r_c, theta) bins for current time step
+        faB_avg_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))   # Averaged aligned body force magnitude for B particles in (r/r_c, theta) bins for current time step
 
-        fa_dens_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))
-        faA_dens_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))
-        faB_dens_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))
+        fa_sum_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))    # Total aligned body force magnitude for all particles in (r/r_c, theta) bins for current time step
+        faA_sum_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))   # Total aligned body force magnitude for A particles in (r/r_c, theta) bins for current time step
+        faB_sum_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))   # Total aligned body force magnitude for B particles in (r/r_c, theta) bins for current time step
 
-        align_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))
-        alignA_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))
-        alignB_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))
+        fa_avg_real_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))# Average body force magnitude for all particles in (r/r_c, theta) bins for current time step
 
-        num_dens_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))
-        num_densA_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))
-        num_densB_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))
+        fa_dens_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))   # Averaged aligned body force density for all particles in (r/r_c, theta) bins for current time step
+        faA_dens_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))  # Averaged aligned body force density for A particles in (r/r_c, theta) bins for current time step
+        faB_dens_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))  # Averaged aligned body force density for B particles in (r/r_c, theta) bins for current time step
 
-        num_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))
-        numA_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))
-        numB_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))
+        align_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))     # Averaged alignment for all particles in (r/r_c, theta) bins for current time step
+        alignA_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))    # Averaged alignment for A particles in (r/r_c, theta) bins for current time step
+        alignB_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))    # Averaged alignment for B particles in (r/r_c, theta) bins for current time step
 
-        radius_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
+        num_dens_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))  # Averaged number density for all particles in (r/r_c, theta) bins for current time step
+        num_densA_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins))) # Averaged number density for A particles in (r/r_c, theta) bins for current time step
+        num_densB_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins))) # Averaged number density for B particles in (r/r_c, theta) bins for current time step
+
+        num_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))       # Total number all particles in (r/r_c, theta) bins for current time step
+        numA_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))      # Total number A particles in (r/r_c, theta) bins for current time step
+        numB_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))      # Total number B particles in (r/r_c, theta) bins for current time step
+
+        radius_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))        
         radiusA_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
         radiusB_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
 
-        # 
+        
+        fa_sum_final_binned_theta = np.zeros(len(theta_final_bins))             # Deviation of Total aligned body force magnitude for all particles in (theta) bins averaged over (r/r_c) from steady-state
+        faA_sum_final_binned_theta = np.zeros(len(theta_final_bins))            # Deviation of Total aligned body force magnitude for A particles in (theta) bins averaged over (r/r_c) from steady-state
+        faB_sum_final_binned_theta = np.zeros(len(theta_final_bins))            # Deviation of Total aligned body force magnitude for B particles in (theta) bins averaged over (r/r_c) from steady-state
+
+
+        fa_avg_final_binned_theta = np.zeros(len(theta_final_bins))             # Deviation of Average aligned body force magnitude for all particles in (theta) bins averaged over (r/r_c) from steady-state
+        faA_avg_final_binned_theta = np.zeros(len(theta_final_bins))            # Deviation of Average aligned body force magnitude for A particles in (theta) bins averaged over (r/r_c) from steady-state
+        faB_avg_final_binned_theta = np.zeros(len(theta_final_bins))            # Deviation of Average aligned body force magnitude for B particles in (theta) bins averaged over (r/r_c) from steady-state
+
+        fa_avg_real_final_binned_theta = np.zeros(len(theta_final_bins))        # Deviation of Average body force magnitude for all particles in (theta) bins averaged over (r/r_c) from steady-state
+        
+        fa_dens_final_binned_theta = np.zeros(len(theta_final_bins))            # Deviation of Average aligned body force density for all particles in (theta) bins averaged over (r/r_c) from steady-state
+        faA_dens_final_binned_theta = np.zeros(len(theta_final_bins))           # Deviation of Average aligned body force density for A particles in (theta) bins averaged over (r/r_c) from steady-state
+        faB_dens_final_binned_theta = np.zeros(len(theta_final_bins))           # Deviation of Average aligned body force density for B particles in (theta) bins averaged over (r/r_c) from steady-state
+
+
+        align_final_binned_theta = np.zeros(len(theta_final_bins))              # Deviation of Average alignment for all particles in (theta) bins averaged over (r/r_c) from steady-state
+        alignA_final_binned_theta = np.zeros(len(theta_final_bins))             # Deviation of Average alignment for A particles in (theta) bins averaged over (r/r_c) from steady-state
+        alignB_final_binned_theta = np.zeros(len(theta_final_bins))             # Deviation of Average alignment for B particles in (theta) bins averaged over (r/r_c) from steady-state
+
+        num_dens_final_binned_theta = np.zeros(len(theta_final_bins))           # Deviation of Average number density for all particles in (theta) bins averaged over (r/r_c) from steady-state
+        num_densA_final_binned_theta = np.zeros(len(theta_final_bins))          # Deviation of Average number density for A particles in (theta) bins averaged over (r/r_c) from steady-state
+        num_densB_final_binned_theta = np.zeros(len(theta_final_bins))          # Deviation of Average number density for B particles in (theta) bins averaged over (r/r_c) from steady-state
+
+        num_final_binned_theta = np.zeros(len(theta_final_bins))                # Deviation of Total number of all particles in (theta) bins averaged over (r/r_c) from steady-state
+        numA_final_binned_theta = np.zeros(len(theta_final_bins))               # Deviation of Total number of A particles in (theta) bins averaged over (r/r_c) from steady-state
+        numB_final_binned_theta = np.zeros(len(theta_final_bins))               # Deviation of Total number of B particles in (theta) bins averaged over (r/r_c) from steady-state
+
+        fa_avg_final_binned_val_theta = np.zeros(len(theta_final_bins))         # Average aligned body force magnitude for all particles in (theta) bins averaged over (r/r_c) for current time step
+        faA_avg_final_binned_val_theta = np.zeros(len(theta_final_bins))        # Average aligned body force magnitude for A particles in (theta) bins averaged over (r/r_c) for current time step
+        faB_avg_final_binned_val_theta = np.zeros(len(theta_final_bins))        # Average aligned body force magnitude for B particles in (theta) bins averaged over (r/r_c) for current time step
+
+        fa_sum_final_binned_val_theta = np.zeros(len(theta_final_bins))         # Total aligned body force magnitude for all particles in (theta) bins averaged over (r/r_c) for current time step
+        faA_sum_final_binned_val_theta = np.zeros(len(theta_final_bins))        # Total aligned body force magnitude for A particles in (theta) bins averaged over (r/r_c) for current time step
+        faB_sum_final_binned_val_theta = np.zeros(len(theta_final_bins))        # Total aligned body force magnitude for B particles in (theta) bins averaged over (r/r_c) for current time step
+        
+        fa_dens_final_binned_val_theta = np.zeros(len(theta_final_bins))        # Average aligned body force density for all particles in (theta) bins averaged over (r/r_c) for current time step
+        faA_dens_final_binned_val_theta = np.zeros(len(theta_final_bins))       # Average aligned body force density for A particles in (theta) bins averaged over (r/r_c) for current time step
+        faB_dens_final_binned_val_theta = np.zeros(len(theta_final_bins))       # Average aligned body force density for B particles in (theta) bins averaged over (r/r_c) for current time step
+
+        fa_avg_real_final_binned_val_theta = np.zeros(len(theta_final_bins))    # Average body force magnitude for all particles in (theta) bins averaged over (r/r_c) for current time step
+
+        align_final_binned_val_theta = np.zeros(len(theta_final_bins))          # Average alignment for all particles in (theta) bins averaged over (r/r_c) for current time step
+        alignA_final_binned_val_theta = np.zeros(len(theta_final_bins))         # Average alignment for A particles in (theta) bins averaged over (r/r_c) for current time step
+        alignB_final_binned_val_theta = np.zeros(len(theta_final_bins))         # Average alignment for B particles in (theta) bins averaged over (r/r_c) for current time step
+
+        num_dens_final_binned_val_theta = np.zeros(len(theta_final_bins))       # Average number density for all particles in (theta) bins averaged over (r/r_c) for current time step
+        num_densA_final_binned_val_theta = np.zeros(len(theta_final_bins))      # Average number density for A particles in (theta) bins averaged over (r/r_c) for current time step
+        num_densB_final_binned_val_theta = np.zeros(len(theta_final_bins))      # Average number density for B particles in (theta) bins averaged over (r/r_c) for current time step
+
+        num_final_binned_val_theta = np.zeros(len(theta_final_bins))            # Total number all particles in (theta) bins averaged over (r/r_c) for current time step
+        numA_final_binned_val_theta = np.zeros(len(theta_final_bins))           # Total number A particles in (theta) bins averaged over (r/r_c) for current time step
+        numB_final_binned_val_theta = np.zeros(len(theta_final_bins))           # Total number B particles in (theta) bins averaged over (r/r_c) for current time step
+
+        radius_final_binned_theta_new = np.zeros(len(theta_final_bins))         # Average cluster radius in (theta) bins averaged over (r/r_c) for current time step
+
         avg_rad_theta = np.mean(difr_ext_surface)
+
+        sum_id = 0
+        sum_id_theta = 0
 
         # Loop over select time-averaged angular bins within current min and max angles
         for n_theta in range(1, len(theta_bins)):
+            
+            # All, A, or B particles within current and previous theta (2 deg) and defined limits for interface (0.3 and 1.1 of cluster radius) to reduce influence of misidentified interface
+            bin_ids_theta = np.where((theta_dist_norm <theta_bins[n_theta]) & (theta_dist_norm >= theta_bins[n_theta-1]) & (r_dist_norm < 1.1) & (r_dist_norm >= 0.3))[0]
+            binA_ids_theta = np.where((thetaA_dist_norm <theta_bins[n_theta]) & (thetaA_dist_norm >= theta_bins[n_theta-1]) & (rA_dist_norm < 1.1) & (rA_dist_norm >= 0.3))[0]
+            binB_ids_theta = np.where((thetaB_dist_norm <theta_bins[n_theta]) & (thetaB_dist_norm >= theta_bins[n_theta-1]) & (rB_dist_norm < 1.1) & (rB_dist_norm >= 0.3))[0]
+            
+            # If particle exist within range, calculate statistics of them
+            if len(bin_ids_theta)>0:
+                
+                # Output theta index for statistics data
+                theta_final_id = np.where(theta_final_bins==theta_bins[n_theta])[0]
+                """
+                # Area of current angular and radial slice
+                area_radial_slice = np.pi * ((1.1*np.mean(nearest_surface_arr[bin_ids_theta]))**2 - (0.3*np.mean(nearest_surface_arr[bin_ids_theta]))**2) * ((theta_bins[n_theta]-theta_bins[n_theta-1])/360)
+                
+                # If denominator is non-zero, calculate deviation from steady-state of average body force magnitude for all particles at given (theta) bin
+                if (float(avg_rad_dict_theta['fa_avg_real']['all'][theta_final_id][0])>0):
+                    fa_avg_real_final_binned_theta[theta_final_id] = np.mean(fa_avg[bin_ids_theta]) - float(avg_rad_dict_theta['fa_avg_real']['all'][theta_final_id])
+
+                # If denominator is non-zero, calculate deviation from steady-state of average aligned body force magnitude for all particles at given (theta) bin
+                if (float(avg_rad_dict_theta['fa_avg']['all'][theta_final_id][0])>0):
+                    fa_avg_final_binned_theta[theta_final_id] = np.mean(fa_norm[bin_ids_theta]) - float(avg_rad_dict_theta['fa_avg']['all'][theta_final_id])
+
+                # If denominator is non-zero, calculate deviation from steady-state of total aligned body force magnitude for all particles at given (theta) bin
+                if (float(avg_rad_dict_theta['fa_sum']['all'][theta_final_id][0])>0):
+                    fa_sum_final_binned_theta[theta_final_id] = np.sum(fa_norm[bin_ids_theta]) - float(avg_rad_dict_theta['fa_sum']['all'][theta_final_id])
+                
+                # If denominator is non-zero, calculate deviation from steady-state of total aligned body force magnitude for A particles at given (theta) bin
+                if (float(avg_rad_dict_theta['fa_sum']['A'][theta_final_id][0])>0):
+                    if len(binA_ids_theta)>0:
+                        faA_sum_final_binned_theta[theta_final_id] = np.sum(faA_norm[binA_ids_theta]) - float(avg_rad_dict_theta['fa_sum']['A'][theta_final_id])
+                
+                # If denominator is non-zero, calculate deviation from steady-state of total aligned body force magnitude for B particles at given (theta) bin
+                if (float(avg_rad_dict_theta['fa_sum']['B'][theta_final_id][0])>0):
+                    if len(binB_ids_theta)>0:
+                        faB_sum_final_binned_theta[theta_final_id] = np.sum(faB_norm[binB_ids_theta]) - float(avg_rad_dict_theta['fa_sum']['B'][theta_final_id])
+                
+                # If denominator is non-zero, calculate deviation from steady-state of averaged aligned body force magnitude for A particles at given (theta) bin
+                if (float(avg_rad_dict_theta['fa_avg']['A'][theta_final_id][0])>0):
+                    if len(binA_ids_theta)>0:
+                        faA_avg_final_binned_theta[theta_final_id] = np.mean(faA_norm[binA_ids_theta]) - float(avg_rad_dict_theta['fa_avg']['A'][theta_final_id])
+                
+                # If denominator is non-zero, calculate deviation from steady-state of averaged aligned body force magnitude for B particles at given (theta) bin
+                if (float(avg_rad_dict_theta['fa_avg']['B'][theta_final_id][0])>0):   
+                    if len(binB_ids_theta)>0:
+                        faB_avg_final_binned_theta[theta_final_id] = np.mean(faB_norm[binB_ids_theta]) - float(avg_rad_dict_theta['fa_avg']['B'][theta_final_id])
+                
+                # If denominator is non-zero, calculate deviation from steady-state of averaged aligned body force density for all particles at given (theta) bin
+                if (float(avg_rad_dict_theta['fa_dens']['all'][theta_final_id][0])>0):
+                    fa_dens_final_binned_theta[theta_final_id] = (np.sum(fa_norm[bin_ids_theta]) / area_radial_slice) - float(avg_rad_dict_theta['fa_dens']['all'][theta_final_id])
+                
+                # If denominator is non-zero, calculate deviation from steady-state of averaged aligned body force density for A particles at given (theta) bin
+                if (float(avg_rad_dict_theta['fa_dens']['A'][theta_final_id][0])>0):    
+                    if len(binA_ids_theta)>0:
+                        faA_dens_final_binned_theta[theta_final_id] = (np.sum(faA_norm[binA_ids_theta]) / area_radial_slice) - float(avg_rad_dict_theta['fa_dens']['A'][theta_final_id])
+                
+                # If denominator is non-zero, calculate deviation from steady-state of averaged aligned body force density for B particles at given (theta) bin
+                if (float(avg_rad_dict_theta['fa_dens']['B'][theta_final_id][0])>0):    
+                    if len(binB_ids_theta)>0:
+                        faB_dens_final_binned_theta[theta_final_id] = (np.sum(faB_norm[binB_ids_theta]) / area_radial_slice) - float(avg_rad_dict_theta['fa_dens']['B'][theta_final_id])
+                
+                # If denominator is non-zero, calculate deviation from steady-state of averaged alignment for all particles at given (theta) bin
+                if (float(avg_rad_dict_theta['align']['all'][theta_final_id][0])>0):
+                    align_final_binned_theta[theta_final_id] = np.mean(align_norm[bin_ids_theta]) - float(avg_rad_dict_theta['align']['all'][theta_final_id])
+                
+                # If denominator is non-zero, calculate deviation from steady-state of averaged alignment for A particles at given (theta) bin
+                if (float(avg_rad_dict_theta['align']['A'][theta_final_id][0])>0):    
+                    if len(binA_ids_theta)>0:
+                        alignA_final_binned_theta[theta_final_id] = np.mean(alignA_norm[binA_ids_theta]) - float(avg_rad_dict_theta['align']['A'][theta_final_id])
+                
+                # If denominator is non-zero, calculate deviation from steady-state of averaged alignment for B particles at given (theta) bin
+                if (float(avg_rad_dict_theta['align']['B'][theta_final_id][0])>0):    
+                    if len(binB_ids_theta)>0:
+                        alignB_final_binned_theta[theta_final_id] = np.mean(alignB_norm[binB_ids_theta]) - float(avg_rad_dict_theta['align']['B'][theta_final_id])
+                
+                # If denominator is non-zero, calculate deviation from steady-state of averaged number density for all particles at given (theta) bin
+                if (float(avg_rad_dict_theta['num_dens']['all'][theta_final_id][0])>0):
+                    num_dens_final_binned_theta[theta_final_id] = (len(bin_ids_theta) / area_radial_slice) - float(avg_rad_dict_theta['num_dens']['all'][theta_final_id])
+                
+                # If denominator is non-zero, calculate deviation from steady-state of averaged number density for A particles at given (theta) bin
+                if (float(avg_rad_dict_theta['num_dens']['A'][theta_final_id][0])>0):    
+                    if len(binA_ids_theta)>0:
+                        num_densA_final_binned_theta[theta_final_id] = (len(binA_ids_theta) / area_radial_slice) - float(avg_rad_dict_theta['num_dens']['A'][theta_final_id])
+                
+                # If denominator is non-zero, calculate deviation from steady-state of averaged number density for B particles at given (theta) bin
+                if (float(avg_rad_dict_theta['num_dens']['B'][theta_final_id][0])>0):    
+                    if len(binB_ids_theta)>0:
+                        num_densB_final_binned_theta[theta_final_id] = (len(binB_ids_theta) / area_radial_slice) - float(avg_rad_dict_theta['num_dens']['B'][theta_final_id])
+                        
+                """
+                radius_final_binned_theta_new[theta_final_id] = np.mean(r_dist[bin_ids_theta])
+                sum_id_theta += 1
+                
 
             # Loop over select time-averaged radial bins within current min and max radii
             for n_rad in range(1, len(rad_bins)):
@@ -4564,109 +4599,296 @@ class particle_props:
                         # If load saved file for averages...
                         if load_save == 1:
                             
+                            # If denominator is non-zero, calculate deviation from steady-state of average body force magnitude for all particles at given (r/r_c, theta) bin
                             if (float(avg_rad_dict['fa_avg_real']['all'][rad_final_id, theta_final_id][0])>0):
                                 fa_avg_real_final_binned[rad_final_id, theta_final_id] = ((np.mean(fa_avg[bin_ids])) - float(avg_rad_dict['fa_avg_real']['all'][rad_final_id, theta_final_id][0]))
                                 fa_avg_real_final_binned_val[rad_final_id, theta_final_id] = np.mean(fa_avg[bin_ids])
 
+                            # If denominator is non-zero, calculate deviation from steady-state of average aligned body force density for all particles at given (r/r_c, theta) bin
                             if float(avg_rad_dict['fa_dens']['all'][rad_final_id, theta_final_id][0])>0:
                                 fa_dens_final_binned[rad_final_id, theta_final_id] = ((np.sum(fa_norm[bin_ids]) / area_radial_slice) - float(avg_rad_dict['fa_dens']['all'][rad_final_id, theta_final_id][0]))
                                 fa_dens_final_binned_val[rad_final_id, theta_final_id] = np.sum(fa_norm[bin_ids])/ area_radial_slice
+                            
+                            # If denominator is non-zero, calculate deviation from steady-state of average aligned body force density for A particles at given (r/r_c, theta) bin
                             if (float(avg_rad_dict['fa_dens']['A'][rad_final_id, theta_final_id][0])>0) & (len(binA_ids)>0):
                                 faA_dens_final_binned[rad_final_id, theta_final_id] = ((np.sum(faA_norm[binA_ids]) / area_radial_slice) - float(avg_rad_dict['fa_dens']['A'][rad_final_id, theta_final_id][0]))
                                 faA_dens_final_binned_val[rad_final_id, theta_final_id] = np.sum(faA_norm[binA_ids])/ area_radial_slice
+                            
+                            # If denominator is non-zero, calculate deviation from steady-state of average aligned body force density for B particles at given (r/r_c, theta) bin
                             if (float(avg_rad_dict['fa_dens']['B'][rad_final_id, theta_final_id][0])>0) & (len(binB_ids)>0):
                                 faB_dens_final_binned[rad_final_id, theta_final_id] = ((np.sum(faB_norm[binB_ids]) / area_radial_slice) - float(avg_rad_dict['fa_dens']['B'][rad_final_id, theta_final_id][0]))
                                 faB_dens_final_binned_val[rad_final_id, theta_final_id] = np.sum(faB_norm[binB_ids])/ area_radial_slice
 
+                            # If denominator is non-zero, calculate deviation from steady-state of total aligned body force magnitude for all particles at given (r/r_c, theta) bin
+                            if (float(avg_rad_dict['fa_sum']['all'][rad_final_id, theta_final_id][0])>0):
+                                fa_sum_final_binned[rad_final_id, theta_final_id] = (np.sum(fa_norm[bin_ids]) - float(avg_rad_dict['fa_sum']['all'][rad_final_id, theta_final_id][0]))
+                                fa_sum_final_binned_val[rad_final_id, theta_final_id] = np.sum(fa_norm[bin_ids])
+                            
+                            # If denominator is non-zero, calculate deviation from steady-state of total aligned body force magnitude for A particles at given (r/r_c, theta) bin
+                            if (float(avg_rad_dict['fa_sum']['A'][rad_final_id, theta_final_id][0])>0) & (len(binA_ids)>0):
+                                faA_sum_final_binned[rad_final_id, theta_final_id] = (np.sum(faA_norm[binA_ids]) - float(avg_rad_dict['fa_sum']['A'][rad_final_id, theta_final_id][0]))
+                                faA_sum_final_binned_val[rad_final_id, theta_final_id] = np.sum(faA_norm[binA_ids])
+                            
+                            # If denominator is non-zero, calculate deviation from steady-state of total aligned body force magnitude for B particles at given (r/r_c, theta) bin
+                            if (float(avg_rad_dict['fa_sum']['B'][rad_final_id, theta_final_id][0])>0) & (len(binB_ids)>0):
+                                faB_sum_final_binned[rad_final_id, theta_final_id] = (np.sum(faB_norm[binB_ids]) - float(avg_rad_dict['fa_sum']['B'][rad_final_id, theta_final_id][0]))
+                                faB_sum_final_binned_val[rad_final_id, theta_final_id] = np.sum(faB_norm[binB_ids])
+
+                            # If denominator is non-zero, calculate deviation from steady-state of averaged aligned body force magnitude for all particles at given (r/r_c, theta) bin
                             if (float(avg_rad_dict['fa_avg']['all'][rad_final_id, theta_final_id][0])>0):
                                 fa_avg_final_binned[rad_final_id, theta_final_id] = (np.mean(fa_norm[bin_ids]) - float(avg_rad_dict['fa_avg']['all'][rad_final_id, theta_final_id][0]))
                                 fa_avg_final_binned_val[rad_final_id, theta_final_id] = np.mean(fa_norm[bin_ids])
+                            
+                            # If denominator is non-zero, calculate deviation from steady-state of averaged aligned body force magnitude for A particles at given (r/r_c, theta) bin
                             if (float(avg_rad_dict['fa_avg']['A'][rad_final_id, theta_final_id][0])>0) & (len(binA_ids)>0):
                                 faA_avg_final_binned[rad_final_id, theta_final_id] = (np.mean(faA_norm[binA_ids]) - float(avg_rad_dict['fa_avg']['A'][rad_final_id, theta_final_id][0]))
                                 faA_avg_final_binned_val[rad_final_id, theta_final_id] = np.mean(faA_norm[binA_ids])
+                            
+                            # If denominator is non-zero, calculate deviation from steady-state of averaged aligned body force magnitude for B particles at given (r/r_c, theta) bin
                             if (float(avg_rad_dict['fa_avg']['B'][rad_final_id, theta_final_id][0])>0) & (len(binB_ids)>0):
                                 faB_avg_final_binned[rad_final_id, theta_final_id] = (np.mean(faB_norm[binB_ids]) - float(avg_rad_dict['fa_avg']['B'][rad_final_id, theta_final_id][0]))
                                 faB_avg_final_binned_val[rad_final_id, theta_final_id] = np.mean(faB_norm[binB_ids])
 
+                            # If denominator is non-zero, calculate deviation from steady-state of averaged alignment for all particles at given (r/r_c, theta) bin
                             if float(avg_rad_dict['align']['all'][rad_final_id, theta_final_id][0])>0:
                                 align_final_binned[rad_final_id, theta_final_id] = (np.mean(align_norm[bin_ids]) - float(avg_rad_dict['align']['all'][rad_final_id, theta_final_id][0]))
                                 align_final_binned_val[rad_final_id, theta_final_id] = np.mean(align_norm[bin_ids])
+                            
+                            # If denominator is non-zero, calculate deviation from steady-state of averaged alignment for A particles at given (r/r_c, theta) bin
                             if (float(avg_rad_dict['align']['A'][rad_final_id, theta_final_id][0])>0) & (len(binA_ids)>0):
                                 alignA_final_binned[rad_final_id, theta_final_id] = (np.mean(alignA_norm[binA_ids]) - float(avg_rad_dict['align']['A'][rad_final_id, theta_final_id][0]))
                                 alignA_final_binned_val[rad_final_id, theta_final_id] = np.mean(alignA_norm[binA_ids])
+                            
+                            # If denominator is non-zero, calculate deviation from steady-state of averaged alignment for B particles at given (r/r_c, theta) bin
                             if (float(avg_rad_dict['align']['B'][rad_final_id, theta_final_id][0])>0) & (len(binB_ids)>0):
                                 alignB_final_binned[rad_final_id, theta_final_id] = (np.mean(alignB_norm[binB_ids]) - float(avg_rad_dict['align']['B'][rad_final_id, theta_final_id][0]))
                                 alignB_final_binned_val[rad_final_id, theta_final_id] = np.mean(alignB_norm[binB_ids])
 
+                            # Average nearest cluster radius for all, A, or B particles at given (r/r_c, theta) bin
                             radius_final_binned[rad_final_id, theta_final_id] = (np.mean(r_dist[bin_ids]))
                             radiusA_final_binned[rad_final_id, theta_final_id] = (np.mean(rA_dist[binA_ids]))
                             radiusB_final_binned[rad_final_id, theta_final_id] = (np.mean(rB_dist[binB_ids]))
 
 
+                            # If denominator is non-zero, calculate deviation from steady-state of averaged number density for all particles at given (r/r_c, theta) bin
                             if float(avg_rad_dict['num_dens']['all'][rad_final_id, theta_final_id][0])>0:
                                 num_dens_final_binned[rad_final_id, theta_final_id] = ((len(bin_ids) / area_radial_slice) - float(avg_rad_dict['num_dens']['all'][rad_final_id, theta_final_id][0]))
                                 num_dens_final_binned_val[rad_final_id, theta_final_id] = (len(bin_ids) / area_radial_slice)
+                            
+                            # If denominator is non-zero, calculate deviation from steady-state of averaged number density for A particles at given (r/r_c, theta) bin
                             if (float(avg_rad_dict['num_dens']['A'][rad_final_id, theta_final_id][0])>0) & (len(binA_ids)>0):
                                 num_densA_final_binned[rad_final_id, theta_final_id] = ((len(binA_ids) / area_radial_slice) - float(avg_rad_dict['num_dens']['A'][rad_final_id, theta_final_id][0]))
                                 num_densA_final_binned_val[rad_final_id, theta_final_id] = (len(binA_ids) / area_radial_slice)
+                            
+                            # If denominator is non-zero, calculate deviation from steady-state of averaged number density for B particles at given (r/r_c, theta) bin
                             if (float(avg_rad_dict['num_dens']['B'][rad_final_id, theta_final_id][0])>0) & (len(binB_ids)>0):
                                 num_densB_final_binned[rad_final_id, theta_final_id] = ((len(binB_ids) / area_radial_slice) - float(avg_rad_dict['num_dens']['B'][rad_final_id, theta_final_id][0]))
                                 num_densB_final_binned_val[rad_final_id, theta_final_id] = (len(binB_ids) / area_radial_slice)
 
+                        # If did not load save file for averages
                         else:
                             
+                            # If denominator is non-zero, calculate deviation from steady-state of average body force magnitude for all particles at given (r/r_c, theta) bin
                             if float(avg_rad_dict['fa_avg_real']['all'][rad_final_id, theta_final_id][0])>0:
                                 fa_avg_real_final_binned[rad_final_id, theta_final_id] = ((np.mean(fa_avg[bin_ids])) - float(avg_rad_dict['fa_avg_real']['all'][rad_final_id, theta_final_id][0]))
                                 fa_avg_real_final_binned_val[rad_final_id, theta_final_id] = np.mean(fa_avg[bin_ids])
 
+                            # If denominator is non-zero, calculate deviation from steady-state of average aligned body force magnitude for all particles at given (r/r_c, theta) bin
                             if avg_rad_dict['fa_avg']['all'][rad_final_id, theta_final_id]>0:
                                 fa_avg_final_binned[rad_final_id, theta_final_id] = (np.mean(fa_norm[bin_ids]) - avg_rad_dict['fa_avg']['all'][rad_final_id, theta_final_id])
                                 fa_avg_final_binned_val[rad_final_id, theta_final_id] = np.mean(fa_norm[bin_ids])
+                            
+                            # If denominator is non-zero, calculate deviation from steady-state of average aligned body force magnitude for A particles at given (r/r_c, theta) bin
                             if (avg_rad_dict['fa_avg']['A'][rad_final_id, theta_final_id]>0) & (len(binA_ids)>0):
                                 faA_avg_final_binned[rad_final_id, theta_final_id] = (np.mean(faA_norm[binA_ids]) - avg_rad_dict['fa_avg']['A'][rad_final_id, theta_final_id])
                                 faA_avg_final_binned_val[rad_final_id, theta_final_id] = np.mean(faA_norm[binA_ids])
+                            
+                            # If denominator is non-zero, calculate deviation from steady-state of average aligned body force magnitude for B particles at given (r/r_c, theta) bin
                             if (avg_rad_dict['fa_avg']['B'][rad_final_id, theta_final_id]>0) & (len(binB_ids)>0):
                                 faB_avg_final_binned[rad_final_id, theta_final_id] = (np.mean(faB_norm[binB_ids]) - avg_rad_dict['fa_avg']['B'][rad_final_id, theta_final_id])
                                 faB_avg_final_binned_val[rad_final_id, theta_final_id] = np.mean(faB_norm[binB_ids])
 
+                            # If denominator is non-zero, calculate deviation from steady-state of total aligned body force magnitude for all particles at given (r/r_c, theta) bin
+                            if avg_rad_dict['fa_sum']['all'][rad_final_id, theta_final_id]>0:
+                                fa_sum_final_binned[rad_final_id, theta_final_id] = (np.sum(fa_norm[bin_ids]) - avg_rad_dict['fa_sum']['all'][rad_final_id, theta_final_id])
+                                fa_sum_final_binned_val[rad_final_id, theta_final_id] = np.sum(fa_norm[bin_ids])
+                            
+                            # If denominator is non-zero, calculate deviation from steady-state of total aligned body force magnitude for A particles at given (r/r_c, theta) bin
+                            if (avg_rad_dict['fa_sum']['A'][rad_final_id, theta_final_id]>0) & (len(binA_ids)>0):
+                                faA_sum_final_binned[rad_final_id, theta_final_id] = (np.sum(faA_norm[binA_ids]) - avg_rad_dict['fa_sum']['A'][rad_final_id, theta_final_id])
+                                faA_sum_final_binned_val[rad_final_id, theta_final_id] = np.sum(faA_norm[binA_ids])
+                            
+                            # If denominator is non-zero, calculate deviation from steady-state of total aligned body force magnitude for B particles at given (r/r_c, theta) bin
+                            if (avg_rad_dict['fa_sum']['B'][rad_final_id, theta_final_id]>0) & (len(binB_ids)>0):
+                                faB_sum_final_binned[rad_final_id, theta_final_id] = (np.sum(faB_norm[binB_ids]) - avg_rad_dict['fa_sum']['B'][rad_final_id, theta_final_id])
+                                faB_sum_final_binned_val[rad_final_id, theta_final_id] = np.sum(faB_norm[binB_ids])
+
+                            # If denominator is non-zero, calculate deviation from steady-state of averaged aligned body force density for all particles at given (r/r_c, theta) bin
                             if avg_rad_dict['fa_dens']['all'][rad_final_id, theta_final_id][0]>0:
                                 fa_dens_final_binned[rad_final_id, theta_final_id] = ((np.sum(fa_norm[bin_ids]) / area_radial_slice) - avg_rad_dict['fa_dens']['all'][rad_final_id, theta_final_id][0])
                                 fa_dens_final_binned_val[rad_final_id, theta_final_id] = np.sum(fa_norm[bin_ids])/ area_radial_slice
+                            
+                            # If denominator is non-zero, calculate deviation from steady-state of averaged aligned body force density for A particles at given (r/r_c, theta) bin
                             if (avg_rad_dict['fa_dens']['A'][rad_final_id, theta_final_id][0]>0) & (len(binA_ids)>0):
                                 faA_dens_final_binned[rad_final_id, theta_final_id] = ((np.sum(faA_norm[binA_ids]) / area_radial_slice) - avg_rad_dict['fa_dens']['A'][rad_final_id, theta_final_id][0])
                                 faA_dens_final_binned_val[rad_final_id, theta_final_id] = np.sum(faA_norm[binA_ids])/ area_radial_slice
+                            
+                            # If denominator is non-zero, calculate deviation from steady-state of averaged aligned body force density for B particles at given (r/r_c, theta) bin
                             if (avg_rad_dict['fa_dens']['B'][rad_final_id, theta_final_id][0]>0) & (len(binB_ids)>0):
                                 faB_dens_final_binned[rad_final_id, theta_final_id] = ((np.sum(faB_norm[binB_ids]) / area_radial_slice) - avg_rad_dict['fa_dens']['B'][rad_final_id, theta_final_id][0])
                                 faB_dens_final_binned_val[rad_final_id, theta_final_id] = np.sum(faB_norm[binB_ids])/ area_radial_slice
 
+                            # If denominator is non-zero, calculate deviation from steady-state of averaged alignment for all particles at given (r/r_c, theta) bin
                             if avg_rad_dict['align']['all'][rad_final_id, theta_final_id]>0:
                                 align_final_binned[rad_final_id, theta_final_id] = (np.mean(align_norm[bin_ids]) - avg_rad_dict['align']['all'][rad_final_id, theta_final_id])
                                 align_final_binned_val[rad_final_id, theta_final_id] = np.mean(align_norm[bin_ids])
+                            
+                            # If denominator is non-zero, calculate deviation from steady-state of averaged alignment for all particles at given (r/r_c, theta) bin
                             if (avg_rad_dict['align']['A'][rad_final_id, theta_final_id]>0) & (len(binA_ids)>0):
                                 alignA_final_binned[rad_final_id, theta_final_id] = (np.mean(alignA_norm[binA_ids]) - avg_rad_dict['align']['A'][rad_final_id, theta_final_id])
                                 alignA_final_binned_val[rad_final_id, theta_final_id] = np.mean(alignA_norm[binA_ids])
+                            
+                            # If denominator is non-zero, calculate deviation from steady-state of averaged alignment for all particles at given (r/r_c, theta) bin
                             if (avg_rad_dict['align']['B'][rad_final_id, theta_final_id]>0) & (len(binB_ids)>0):
                                 alignB_final_binned[rad_final_id, theta_final_id] = (np.mean(alignB_norm[binB_ids]) - avg_rad_dict['align']['B'][rad_final_id, theta_final_id])
                                 alignB_final_binned_val[rad_final_id, theta_final_id] = np.mean(alignB_norm[binB_ids])
 
+                            # Average nearest cluster radius for all, A, or B particles at given (r/r_c, theta) bin
                             radius_final_binned[rad_final_id, theta_final_id] = (np.mean(r_dist[bin_ids]))
                             radiusA_final_binned[rad_final_id, theta_final_id] = (np.mean(rA_dist[binA_ids]))
                             radiusB_final_binned[rad_final_id, theta_final_id] = (np.mean(rB_dist[binB_ids]))
 
+                            # If denominator is non-zero, calculate deviation from steady-state of averaged number density for all particles at given (r/r_c, theta) bin
                             if avg_rad_dict['num_dens']['all'][rad_final_id, theta_final_id]>0:
                                 num_dens_final_binned[rad_final_id, theta_final_id] = ((len(bin_ids) / area_radial_slice) - avg_rad_dict['num_dens']['all'][rad_final_id, theta_final_id])
                                 num_dens_final_binned_val[rad_final_id, theta_final_id] = (len(bin_ids) / area_radial_slice)
+                            
+                            # If denominator is non-zero, calculate deviation from steady-state of averaged number density for A particles at given (r/r_c, theta) bin
                             if (avg_rad_dict['num_dens']['A'][rad_final_id, theta_final_id]>0) & (len(binA_ids)>0):
                                 num_densA_final_binned[rad_final_id, theta_final_id] = ((len(binA_ids) / area_radial_slice) - avg_rad_dict['num_dens']['A'][rad_final_id, theta_final_id])
                                 num_densA_final_binned_val[rad_final_id, theta_final_id] = (len(binA_ids) / area_radial_slice)
+                            
+                            # If denominator is non-zero, calculate deviation from steady-state of averaged number density for B particles at given (r/r_c, theta) bin
                             if (avg_rad_dict['num_dens']['B'][rad_final_id, theta_final_id]>0) & (len(binB_ids)>0):
                                 num_densB_final_binned[rad_final_id, theta_final_id] = ((len(binB_ids) / area_radial_slice) - avg_rad_dict['num_dens']['B'][rad_final_id, theta_final_id])
                                 num_densB_final_binned_val[rad_final_id, theta_final_id] = (len(binB_ids) / area_radial_slice)
 
-        radial_heterogeneity_dict = {'rad': rad_final_bins, 'theta': theta_final_bins, 'radius': np.mean(r_dist), 'com': {'x': all_surface_measurements[key]['exterior']['com']['x'], 'y': all_surface_measurements[key]['exterior']['com']['y']}, 'fa_avg_real': {'all': fa_avg_real_final_binned}, 'fa_avg': {'all': fa_avg_final_binned, 'A': faA_avg_final_binned, 'B': faB_avg_final_binned}, 'fa_dens': {'all': fa_dens_final_binned, 'A': faA_dens_final_binned, 'B': faB_dens_final_binned}, 'align': {'all': align_final_binned, 'A': alignA_final_binned, 'B': alignB_final_binned}, 'num_dens': {'all': num_dens_final_binned, 'A': num_densA_final_binned, 'B': num_densB_final_binned}}
-        plot_bin_dict = {'rad': rad_final_bins, 'theta': theta_final_bins, 'radius': np.mean(r_dist), 'com': {'x': all_surface_measurements[key]['exterior']['com']['x'], 'y': all_surface_measurements[key]['exterior']['com']['y']}, 'fa_avg_real': {'all': fa_avg_real_final_binned_val}, 'fa_avg': {'all': fa_avg_final_binned_val, 'A': faA_avg_final_binned_val, 'B': faB_avg_final_binned_val}, 'fa_dens': {'all': fa_dens_final_binned_val, 'A': faA_dens_final_binned_val, 'B': faB_dens_final_binned_val}, 'align': {'all': align_final_binned_val, 'A': alignA_final_binned_val, 'B': alignB_final_binned_val}, 'num': {'all': num_final_binned_val, 'A': numA_final_binned_val, 'B': numB_final_binned_val}, 'num_dens': {'all': num_dens_final_binned_val, 'A': num_densA_final_binned_val, 'B': num_densB_final_binned_val}, 'rad_bin': {'all': radius_final_binned, 'A': radiusA_final_binned, 'B': radiusB_final_binned}}
+        #print(avg_rad_dict['rad'])
+        #stop
+        #unique_rad = np.unique(avg_rad_dict['rad'])
+        
+        unique_theta = np.unique(avg_rad_dict['theta'])
 
-        return radial_heterogeneity_dict, plot_dict, plot_bin_dict
+        int_fa_dens_time_theta = np.zeros(len(unique_theta))
+        int_faA_dens_time_theta = np.zeros(len(unique_theta))
+        int_faB_dens_time_theta = np.zeros(len(unique_theta))
+
+        int_fa_avg_real_time_theta = np.zeros(len(unique_theta))
+
+        int_fa_avg_time_theta = np.zeros(len(unique_theta))
+        int_faA_avg_time_theta = np.zeros(len(unique_theta))
+        int_faB_avg_time_theta = np.zeros(len(unique_theta))
+
+        int_fa_sum_time_theta = np.zeros(len(unique_theta))
+        int_faA_sum_time_theta = np.zeros(len(unique_theta))
+        int_faB_sum_time_theta = np.zeros(len(unique_theta))
+
+        int_num_dens_time_theta = np.zeros(len(unique_theta))
+        int_num_densA_time_theta = np.zeros(len(unique_theta))
+        int_num_densB_time_theta = np.zeros(len(unique_theta))
+
+        int_align_time_theta = np.zeros(len(unique_theta))
+        int_alignA_time_theta = np.zeros(len(unique_theta))
+        int_alignB_time_theta = np.zeros(len(unique_theta))
+        temp_id_new = np.where((rad_final_bins>=0.3) & (rad_final_bins<=1.1))[0]
+
+        for j in range(1, len(temp_id_new)):
+            test_id = np.where(avg_rad_dict['rad']==rad_final_bins[temp_id_new[j]])[0]
+            if len(test_id)>0:
+
+                rad_step = (rad_final_bins[temp_id_new[j]]-rad_final_bins[temp_id_new[j-1]])*radius_final_binned[temp_id_new[j],:]
+
+                int_fa_dens_time_theta += (rad_step/2) * (fa_dens_final_binned_val[temp_id_new[j],:]+fa_dens_final_binned_val[temp_id_new[j-1],:])
+                int_faA_dens_time_theta += (rad_step/2) * (faA_dens_final_binned_val[temp_id_new[j],:]+faA_dens_final_binned_val[temp_id_new[j-1],:])
+                int_faB_dens_time_theta += (rad_step/2) * (faB_dens_final_binned_val[temp_id_new[j],:]+faB_dens_final_binned_val[temp_id_new[j-1],:])
+
+                int_fa_avg_real_time_theta += (rad_step/2) * (fa_avg_real_final_binned_val[temp_id_new[j],:]+fa_avg_real_final_binned_val[temp_id_new[j-1],:])
+
+                int_fa_avg_time_theta += (rad_step/2) * (fa_avg_final_binned_val[temp_id_new[j],:]+fa_avg_final_binned_val[temp_id_new[j-1],:])
+                int_faA_avg_time_theta += (rad_step/2) * (faA_avg_final_binned_val[temp_id_new[j],:]+faA_avg_final_binned_val[temp_id_new[j-1],:])
+                int_faB_avg_time_theta += (rad_step/2) * (faB_avg_final_binned_val[temp_id_new[j],:]+faB_avg_final_binned_val[temp_id_new[j-1],:])
+
+                int_fa_sum_time_theta += (rad_step/2) * (fa_sum_final_binned_val[temp_id_new[j],:]+fa_sum_final_binned_val[temp_id_new[j-1],:])
+                int_faA_sum_time_theta += (rad_step/2) * (faA_sum_final_binned_val[temp_id_new[j],:]+faA_sum_final_binned_val[temp_id_new[j-1],:])
+                int_faB_sum_time_theta += (rad_step/2) * (faB_sum_final_binned_val[temp_id_new[j],:]+faB_sum_final_binned_val[temp_id_new[j-1],:])
+
+                int_num_dens_time_theta += (rad_step/2) * (num_dens_final_binned_val[temp_id_new[j],:]+num_dens_final_binned_val[temp_id_new[j-1],:])
+                int_num_densA_time_theta += (rad_step/2) * (num_densA_final_binned_val[temp_id_new[j],:]+num_densA_final_binned_val[temp_id_new[j-1],:])
+                int_num_densB_time_theta += (rad_step/2) * (num_densB_final_binned_val[temp_id_new[j],:]+num_densB_final_binned_val[temp_id_new[j-1],:])
+
+                int_align_time_theta += (rad_step/2) * (align_final_binned_val[temp_id_new[j],:]+align_final_binned_val[temp_id_new[j-1],:])
+                int_alignA_time_theta += (rad_step/2) * (alignA_final_binned_val[temp_id_new[j],:]+alignA_final_binned_val[temp_id_new[j-1],:])
+                int_alignB_time_theta += (rad_step/2) * (alignB_final_binned_val[temp_id_new[j],:]+alignB_final_binned_val[temp_id_new[j-1],:])
+
+        dif_int_fa_dens_time_theta = int_fa_dens_time_theta - integrated_avg_rad_dict['fa_dens']['all']
+        dif_int_faA_dens_time_theta = int_faA_dens_time_theta - integrated_avg_rad_dict['fa_dens']['A']
+        dif_int_faB_dens_time_theta = int_faB_dens_time_theta - integrated_avg_rad_dict['fa_dens']['B']
+
+        dif_int_fa_avg_real_time_theta = int_fa_avg_real_time_theta - integrated_avg_rad_dict['radius']
+
+        dif_int_fa_avg_time_theta = int_fa_avg_time_theta - integrated_avg_rad_dict['fa_avg']['all']
+        dif_int_faA_avg_time_theta = int_faA_avg_time_theta - integrated_avg_rad_dict['fa_avg']['A']
+        dif_int_faB_avg_time_theta = int_faB_avg_time_theta - integrated_avg_rad_dict['fa_avg']['B']
+
+        dif_int_fa_sum_time_theta = int_fa_sum_time_theta - integrated_avg_rad_dict['fa_sum']['all']
+        dif_int_faA_sum_time_theta = int_faA_sum_time_theta - integrated_avg_rad_dict['fa_sum']['A']
+        dif_int_faB_sum_time_theta = int_faB_sum_time_theta - integrated_avg_rad_dict['fa_sum']['B']
+
+        dif_int_num_dens_time_theta = int_num_dens_time_theta - integrated_avg_rad_dict['num_dens']['all']
+        dif_int_num_densA_time_theta = int_num_densA_time_theta - integrated_avg_rad_dict['num_dens']['A']
+        dif_int_num_densB_time_theta = int_num_densB_time_theta - integrated_avg_rad_dict['num_dens']['B']
+
+        dif_int_align_time_theta = int_align_time_theta - integrated_avg_rad_dict['align']['all']
+        dif_int_alignA_time_theta = int_alignA_time_theta - integrated_avg_rad_dict['align']['A']
+        dif_int_alignB_time_theta = int_alignB_time_theta - integrated_avg_rad_dict['align']['B']
+
+
+
+
+
+        dif_avg_int_fa_dens_time_theta = int_fa_dens_time_theta - np.mean(int_fa_dens_time_theta)
+        dif_avg_int_faA_dens_time_theta = int_faA_dens_time_theta - np.mean(int_faA_dens_time_theta)
+        dif_avg_int_faB_dens_time_theta = int_faB_dens_time_theta - np.mean(int_faB_dens_time_theta)
+
+        dif_avg_int_fa_avg_real_time_theta = int_fa_avg_real_time_theta - np.mean(int_fa_avg_real_time_theta)
+
+        dif_avg_int_fa_avg_time_theta = int_fa_avg_time_theta - np.mean(int_fa_avg_time_theta)
+        dif_avg_int_faA_avg_time_theta = int_faA_avg_time_theta - np.mean(int_faA_avg_time_theta)
+        dif_avg_int_faB_avg_time_theta = int_faB_avg_time_theta - np.mean(int_faB_avg_time_theta)
+
+        dif_avg_int_fa_sum_time_theta = int_fa_sum_time_theta - np.mean(int_fa_sum_time_theta)
+        dif_avg_int_faA_sum_time_theta = int_faA_sum_time_theta - np.mean(int_faA_sum_time_theta)
+        dif_avg_int_faB_sum_time_theta = int_faB_sum_time_theta - np.mean(int_faB_sum_time_theta)
+
+        dif_avg_int_num_dens_time_theta = int_num_dens_time_theta - np.mean(int_num_dens_time_theta)
+        dif_avg_int_num_densA_time_theta = int_num_densA_time_theta - np.mean(int_num_densA_time_theta)
+        dif_avg_int_num_densB_time_theta = int_num_densB_time_theta - np.mean(int_num_densB_time_theta)
+
+        dif_avg_int_align_time_theta = int_align_time_theta - np.mean(int_align_time_theta)
+        dif_avg_int_alignA_time_theta = int_alignA_time_theta - np.mean(int_alignA_time_theta)
+        dif_avg_int_alignB_time_theta = int_alignB_time_theta - np.mean(int_alignB_time_theta)
+
+
+        radial_heterogeneity_dict = {'rad': rad_final_bins, 'theta': theta_final_bins, 'radius': np.mean(r_dist), 'radius_ang': radius_final_binned_theta_new, 'com': {'x': all_surface_measurements[key]['exterior']['com']['x'], 'y': all_surface_measurements[key]['exterior']['com']['y']}, 'fa_avg_real': {'all': fa_avg_real_final_binned}, 'fa_avg': {'all': fa_avg_final_binned, 'A': faA_avg_final_binned, 'B': faB_avg_final_binned}, 'fa_sum': {'all': fa_sum_final_binned, 'A': faA_sum_final_binned, 'B': faB_sum_final_binned}, 'fa_dens': {'all': fa_dens_final_binned, 'A': faA_dens_final_binned, 'B': faB_dens_final_binned}, 'align': {'all': align_final_binned, 'A': alignA_final_binned, 'B': alignB_final_binned}, 'num_dens': {'all': num_dens_final_binned, 'A': num_densA_final_binned, 'B': num_densB_final_binned}}
+        #radial_heterogeneity_dict_theta = {'theta': theta_final_bins, 'radius': radius_final_binned_theta_new, 'fa_avg_real': {'all': fa_avg_real_final_binned_theta}, 'fa_sum': {'all': fa_sum_final_binned_theta, 'A': faA_sum_final_binned_theta, 'B': faB_sum_final_binned_theta}, 'fa_avg': {'all': fa_avg_final_binned_theta, 'A': faA_avg_final_binned_theta, 'B': faB_avg_final_binned_theta}, 'fa_dens': {'all': fa_dens_final_binned_theta, 'A': faA_dens_final_binned_theta, 'B': faB_dens_final_binned_theta}, 'align': {'all': align_final_binned_theta, 'A': alignA_final_binned_theta, 'B': alignB_final_binned_theta}, 'num_dens': {'all': num_dens_final_binned_theta, 'A': num_densA_final_binned_theta, 'B': num_densB_final_binned_theta}}
+        
+        plot_bin_dict = {'rad': rad_final_bins, 'theta': theta_final_bins, 'radius': np.mean(r_dist), 'radius_ang': radius_final_binned_theta_new, 'com': {'x': all_surface_measurements[key]['exterior']['com']['x'], 'y': all_surface_measurements[key]['exterior']['com']['y']}, 'fa_avg_real': {'all': fa_avg_real_final_binned_val}, 'fa_avg': {'all': fa_avg_final_binned_val, 'A': faA_avg_final_binned_val, 'B': faB_avg_final_binned_val}, 'fa_dens': {'all': fa_dens_final_binned_val, 'A': faA_dens_final_binned_val, 'B': faB_dens_final_binned_val}, 'align': {'all': align_final_binned_val, 'A': alignA_final_binned_val, 'B': alignB_final_binned_val}, 'num': {'all': num_final_binned_val, 'A': numA_final_binned_val, 'B': numB_final_binned_val}, 'num_dens': {'all': num_dens_final_binned_val, 'A': num_densA_final_binned_val, 'B': num_densB_final_binned_val}, 'rad_bin': {'all': radius_final_binned, 'A': radiusA_final_binned, 'B': radiusB_final_binned}}
+
+        dif_radial_heterogeneity_dict = {'theta': theta_final_bins, 'fa_avg_real': {'all': dif_int_fa_avg_real_time_theta}, 'fa_avg': {'all': dif_int_fa_avg_time_theta, 'A': dif_int_faA_avg_time_theta, 'B': dif_int_faB_avg_time_theta}, 'fa_sum': {'all': dif_int_fa_sum_time_theta, 'A': dif_int_faA_sum_time_theta, 'B': dif_int_faB_sum_time_theta}, 'fa_dens': {'all': dif_int_fa_dens_time_theta, 'A': dif_int_faA_dens_time_theta, 'B': dif_int_faB_dens_time_theta}, 'align': {'all': dif_int_align_time_theta, 'A': dif_int_alignA_time_theta, 'B': dif_int_alignB_time_theta}, 'num_dens': {'all': dif_int_num_dens_time_theta, 'A': dif_int_num_densA_time_theta, 'B': dif_int_num_densB_time_theta}}
+
+        dif_avg_radial_heterogeneity_dict = {'theta': theta_final_bins, 'fa_avg_real': {'all': dif_avg_int_fa_avg_real_time_theta}, 'fa_avg': {'all': dif_avg_int_fa_avg_time_theta, 'A': dif_avg_int_faA_avg_time_theta, 'B': dif_avg_int_faB_avg_time_theta}, 'fa_sum': {'all': dif_avg_int_fa_sum_time_theta, 'A': dif_avg_int_faA_sum_time_theta, 'B': dif_avg_int_faB_sum_time_theta}, 'fa_dens': {'all': dif_avg_int_fa_dens_time_theta, 'A': dif_avg_int_faA_dens_time_theta, 'B': dif_avg_int_faB_dens_time_theta}, 'align': {'all': dif_avg_int_align_time_theta, 'A': dif_avg_int_alignA_time_theta, 'B': dif_avg_int_alignB_time_theta}, 'num_dens': {'all': dif_avg_int_num_dens_time_theta, 'A': dif_avg_int_num_densA_time_theta, 'B': dif_avg_int_num_densB_time_theta}}
+
+        return radial_heterogeneity_dict, dif_radial_heterogeneity_dict, dif_avg_radial_heterogeneity_dict, plot_dict, plot_bin_dict
 
     def radial_ang_active_measurements(self, radial_fa_dict, surface_dict, sep_surface_dict, int_comp_dict, all_surface_measurements, averaged_data_arr, int_dict):
         int_id = averaged_data_arr['int_id']
@@ -5749,524 +5971,42 @@ class particle_props:
         start_dict = {'x': start_x, 'y': start_y}
 
         return penetration_dict, start_dict, vertical_shift, dify_long
-    def interparticle_pressure_nlist(self):
+    
+    def phase_count(self, phase_dict):
         '''
-        Purpose: Takes the composition of each phase and uses neighbor lists to find the
-        nearest, interacting neighbors and calculates the total interparticle stress all,
-        interacting neighbors acting on each reference particle.
+        Purpose: Takes the phase ids of each bin and counts the number of bins of each phase
+
+        Inputs:
+        phase_dict: dictionary of arrays labeling phase of each bin and particle
 
         Outputs:
-        stress_stat_dict: dictionary containing the total interparticle stress
-        between a reference particle of a given type ('all', 'A', or 'B')
-        and its nearest, interacting neighbors of each type ('all', 'A', or 'B')
-        in each direction ('XX', 'XY', 'YX', 'YY'), averaged over all reference particles in each phase.
-
-        press_stat_dict: dictionary containing the average interparticle pressure and
-        shear stress between a reference particle of a given type ('all', 'A', or 'B')
-        and its nearest, interacting neighbors of each type ('all', 'A', or 'B'),
-        averaged over all reference particles in each phase.
-
-        press_plot_dict: dictionary containing information on the interparticle stress
-        and pressure of each bulk and interface reference particle of each type
-        ('all', 'A', or 'B').
+        count_dict: dictionary containing the number of bins of each phase ['bulk' (0), 'int' (1), or 'gas' (2)]
         '''
 
-        
-        # Position and orientation arrays of type A particles in respective phase
-        typ0ind = np.where(self.typ==0)[0]
-        pos_A=self.pos[typ0ind]                               # Find positions of type 0 particles
-
-        # Position and orientation arrays of type B particles in respective phase
-        typ1ind = np.where(self.typ==1)[0]
-        pos_B=self.pos[typ1ind]
-
-        # Calculate area of each phase
-        if self.lx_box > self.ly_box:
-            bulk_area = 2 * np.amax(pos_A[:,0]) * self.ly_box
-        else:
-            bulk_area = 2 * self.ly_box * self.lx_box
-
-        # Neighbor list query arguments to find interacting particles
-        query_args = dict(mode='ball', r_min = 0.1, r_max=self.r_cut)
-
-        # Locate potential neighbor particles by type in the dense phase
-        system_A = freud.AABBQuery(self.f_box, self.f_box.wrap(pos_A))
-        system_B = freud.AABBQuery(self.f_box, self.f_box.wrap(pos_B))
-
-        # Generate neighbor list of dense phase particles (per query args) of respective type (A or B) neighboring bulk phase reference particles of respective type (A or B)
-        AA_nlist = system_A.query(self.f_box.wrap(pos_A), query_args).toNeighborList()
-        AB_nlist = system_A.query(self.f_box.wrap(pos_B), query_args).toNeighborList()
-        BA_nlist = system_B.query(self.f_box.wrap(pos_A), query_args).toNeighborList()
-        BB_nlist = system_B.query(self.f_box.wrap(pos_B), query_args).toNeighborList()
-
-        #Initiate empty arrays for finding stress in given direction from type A dense particles acting on type A bulk particles
-        AA_neigh_ind = np.array([], dtype=int)
-        AA_num_neigh = np.array([])
-
-        SigXX_AA_part=np.zeros(len(pos_A))        #Sum of normal stress in x direction
-        SigXY_AA_part=np.zeros(len(pos_A))        #Sum of tangential stress in x-y direction
-        SigYX_AA_part=np.zeros(len(pos_A))        #Sum of tangential stress in y-x direction
-        SigYY_AA_part=np.zeros(len(pos_A))        #Sum of normal stress in y direction
-
-        SigXX_AA_part_num=np.zeros(len(pos_A))    #Number of interparticle stresses summed in normal x direction
-        SigXY_AA_part_num=np.zeros(len(pos_A))    #Number of interparticle stresses summed in tangential x-y direction
-        SigYX_AA_part_num=np.zeros(len(pos_A))    #Number of interparticle stresses summed in tangential y-x direction
-        SigYY_AA_part_num=np.zeros(len(pos_A))    #Number of interparticle stresses summed in normal y direction
-
-        #Loop over neighbor pairings of A-A neighbor pairs to calculate interparticle stress in each direction
-        for i in range(0, len(pos_A)):
-            if i in AA_nlist.query_point_indices:
-                if i not in AA_neigh_ind:
-
-                    # Find neighbors list IDs where i is reference particle
-                    loc = np.where(AA_nlist.query_point_indices==i)[0]
-                    if len(loc)>1:
-
-                        # Array of reference particle location
-                        pos_temp = np.ones((len(loc), 3))* pos_A[i]
-
-                        # Calculate interparticle separation distances
-                        difx, dify, difr = self.utility_functs.sep_dist_arr(pos_temp, pos_A[AA_nlist.point_indices[loc]], difxy=True)
-
-                        #Calculate interparticle forces
-                        fx, fy = self.theory_functs.computeFLJ_arr(difr, difx, dify, self.eps)
-
-                        # Calculate array of stresses for each neighbor list pairing acting on i reference particle
-                        SigXX = (fx * difx)
-                        SigYY = (fy * dify)
-                        SigXY = (fx * dify)
-                        SigYX = (fy * difx)
-
-                        # Calculate total stress acting on i reference particle
-                        SigXX_AA_part[i] += np.sum(SigXX)
-                        SigYY_AA_part[i] += np.sum(SigYY)
-                        SigXY_AA_part[i] += np.sum(SigXY)
-                        SigYX_AA_part[i] += np.sum(SigYX)
-
-                        # Calculate number of neighbor pairs summed over
-                        SigXX_AA_part_num[i] += len(SigXX)
-                        SigYY_AA_part_num[i] += len(SigYY)
-                        SigXY_AA_part_num[i] += len(SigXY)
-                        SigYX_AA_part_num[i] += len(SigYX)
-
-                    else:
-
-                        # Calculate interparticle separation distances
-                        difx = self.utility_functs.sep_dist_x(pos_A[i][0], pos_A[AA_nlist.point_indices[loc]][0][0])
-                        dify = self.utility_functs.sep_dist_y(pos_A[i][1], pos_A[AA_nlist.point_indices[loc]][0][1])
-                        difr = ( (difx)**2 + (dify)**2)**0.5
-
-                        # Calculate interparticle force
-                        fx, fy = self.theory_functs.computeFLJ(difr, difx, dify, self.eps)
-
-                        # Calculate array of stresses for each neighbor list pairing acting on i reference particle
-                        SigXX = (fx * difx)
-                        SigYY = (fy * dify)
-                        SigXY = (fx * dify)
-                        SigYX = (fy * difx)
-
-                        # Calculate total stress acting on i reference particle
-                        SigXX_AA_part[i] = SigXX
-                        SigYY_AA_part[i] = SigYY
-                        SigXY_AA_part[i] = SigXY
-                        SigYX_AA_part[i] = SigYX
-
-                        # Calculate number of neighbor pairs summed over
-                        SigXX_AA_part_num[i] += 1
-                        SigYY_AA_part_num[i] += 1
-                        SigXY_AA_part_num[i] += 1
-                        SigYX_AA_part_num[i] += 1
-
-                    # Save nearest neighbor information for i reference particle
-                    AA_num_neigh = np.append(AA_num_neigh, len(loc))
-                    AA_neigh_ind = np.append(AA_neigh_ind, int(i))
-            else:
-
-                # Save nearest neighbor information for i reference particle
-                AA_num_neigh = np.append(AA_num_neigh, 0)
-                AA_neigh_ind = np.append(AA_neigh_ind, int(i))
-
-        #Initiate empty arrays for finding stress in given direction from type B dense particles acting on type A bulk particles
-        BA_neigh_ind = np.array([], dtype=int)
-        BA_num_neigh = np.array([])
-
-        SigXX_BA_part=np.zeros(len(pos_A))
-        SigXY_BA_part=np.zeros(len(pos_A))
-        SigYX_BA_part=np.zeros(len(pos_A))
-        SigYY_BA_part=np.zeros(len(pos_A))
-
-        SigXX_BA_part_num=np.zeros(len(pos_A))
-        SigXY_BA_part_num=np.zeros(len(pos_A))
-        SigYX_BA_part_num=np.zeros(len(pos_A))
-        SigYY_BA_part_num=np.zeros(len(pos_A))
-
-        #Loop over neighbor pairings of B-A neighbor pairs to calculate interparticle stress in each direction
-        for i in range(0, len(pos_A)):
-            if i in BA_nlist.query_point_indices:
-                if i not in BA_neigh_ind:
-                    # Find neighbors list IDs where i is reference particle
-                    loc = np.where(BA_nlist.query_point_indices==i)[0]
-                    if len(loc)>1:
-
-                        # Array of reference particle location
-                        pos_temp = np.ones((len(loc), 3))* pos_A[i]
-
-                        # Calculate interparticle separation distances
-                        difx, dify, difr = self.utility_functs.sep_dist_arr(pos_temp, pos_B[BA_nlist.point_indices[loc]], difxy=True)
-
-                        # Calculate interparticle forces
-                        fx, fy = self.theory_functs.computeFLJ_arr(difr, difx, dify, self.eps)
-
-                        # Calculate array of stresses for each neighbor list pairing acting on i reference particle
-                        SigXX = (fx * difx)
-                        SigYY = (fy * dify)
-                        SigXY = (fx * dify)
-                        SigYX = (fy * difx)
-
-                        # Calculate total stress acting on i reference particle
-                        SigXX_BA_part[i] += np.sum(SigXX)
-                        SigYY_BA_part[i] += np.sum(SigYY)
-                        SigXY_BA_part[i] += np.sum(SigXY)
-                        SigYX_BA_part[i] += np.sum(SigYX)
-
-                        # Calculate number of neighbor pairs summed over
-                        SigXX_BA_part_num[i] += len(SigXX)
-                        SigYY_BA_part_num[i] += len(SigYY)
-                        SigXY_BA_part_num[i] += len(SigXY)
-                        SigYX_BA_part_num[i] += len(SigYX)
-
-                    else:
-
-                        # Calculate interparticle separation distances
-                        difx = self.utility_functs.sep_dist_x(pos_A[i][0], pos_B[BA_nlist.point_indices[loc]][0][0])
-                        dify = self.utility_functs.sep_dist_y(pos_A[i][1], pos_B[BA_nlist.point_indices[loc]][0][1])
-                        difr = ( (difx)**2 + (dify)**2)**0.5
-
-                        # Calculate interparticle forces
-                        fx, fy = self.theory_functs.computeFLJ(difr, difx, dify, self.eps)
-
-                        # Calculate array of stresses for each neighbor list pairing acting on i reference particle
-                        SigXX = (fx * difx)
-                        SigYY = (fy * dify)
-                        SigXY = (fx * dify)
-                        SigYX = (fy * difx)
-
-                        # Calculate total stress acting on i reference particle
-                        SigXX_BA_part[i] = SigXX
-                        SigYY_BA_part[i] = SigYY
-                        SigXY_BA_part[i] = SigXY
-                        SigYX_BA_part[i] = SigYX
-
-                        # Calculate number of neighbor pairs summed over
-                        SigXX_BA_part_num[i] += 1
-                        SigYY_BA_part_num[i] += 1
-                        SigXY_BA_part_num[i] += 1
-                        SigYX_BA_part_num[i] += 1
-
-                    # Save nearest neighbor information for i reference particle
-                    BA_num_neigh = np.append(BA_num_neigh, len(loc))
-                    BA_neigh_ind = np.append(BA_neigh_ind, int(i))
-            else:
-
-                # Save nearest neighbor information for i reference particle
-                BA_num_neigh = np.append(BA_num_neigh, 0)
-                BA_neigh_ind = np.append(BA_neigh_ind, int(i))
-
-        #Initiate empty arrays for finding stress in given direction from type A dense particles acting on type B bulk particles
-        AB_neigh_ind = np.array([], dtype=int)
-        AB_num_neigh = np.array([])
-
-        SigXX_AB_part=np.zeros(len(pos_B))
-        SigXY_AB_part=np.zeros(len(pos_B))
-        SigYX_AB_part=np.zeros(len(pos_B))
-        SigYY_AB_part=np.zeros(len(pos_B))
-
-        SigXX_AB_part_num=np.zeros(len(pos_B))
-        SigXY_AB_part_num=np.zeros(len(pos_B))
-        SigYX_AB_part_num=np.zeros(len(pos_B))
-        SigYY_AB_part_num=np.zeros(len(pos_B))
-
-
-        #Loop over neighbor pairings of A-B neighbor pairs to calculate interparticle stress in each direction
-        for i in range(0, len(pos_B)):
-            if i in AB_nlist.query_point_indices:
-                if i not in AB_neigh_ind:
-                    # Find neighbors list IDs where i is reference particle
-                    loc = np.where(AB_nlist.query_point_indices==i)[0]
-                    if len(loc)>1:
-
-                        # Array of reference particle location
-                        pos_temp = np.ones((len(loc), 3))* pos_B[i]
-
-                        # Calculate interparticle separation distances
-                        difx, dify, difr = self.utility_functs.sep_dist_arr(pos_temp, pos_A[AB_nlist.point_indices[loc]], difxy=True)
-
-                        # Calculate interparticle forces
-                        fx, fy = self.theory_functs.computeFLJ_arr(difr, difx, dify, self.eps)
-
-                        # Calculate array of stresses for each neighbor list pairing acting on i reference particle
-                        SigXX = (fx * difx)
-                        SigYY = (fy * dify)
-                        SigXY = (fx * dify)
-                        SigYX = (fy * difx)
-
-                        # Calculate total stress acting on i reference particle
-                        SigXX_AB_part[i] += np.sum(SigXX)
-                        SigYY_AB_part[i] += np.sum(SigYY)
-                        SigXY_AB_part[i] += np.sum(SigXY)
-                        SigYX_AB_part[i] += np.sum(SigYX)
-
-                        # Calculate number of neighbor pairs summed over
-                        SigXX_AB_part_num[i] += len(SigXX)
-                        SigYY_AB_part_num[i] += len(SigYY)
-                        SigXY_AB_part_num[i] += len(SigXY)
-                        SigYX_AB_part_num[i] += len(SigYX)
-
-                    else:
-                        # Calculate interparticle separation distances
-                        difx = self.utility_functs.sep_dist_x(pos_B[i][0], pos_A[AB_nlist.point_indices[loc]][0][0])
-                        dify = self.utility_functs.sep_dist_y(pos_B[i][1], pos_A[AB_nlist.point_indices[loc]][0][1])
-                        difr = ( (difx)**2 + (dify)**2)**0.5
-
-                        # Calculate interparticle forces
-                        fx, fy = self.theory_functs.computeFLJ(difr, difx, dify, self.eps)
-
-                        # Calculate array of stresses for each neighbor list pairing acting on i reference particle
-                        SigXX = (fx * difx)
-                        SigYY = (fy * dify)
-                        SigXY = (fx * dify)
-                        SigYX = (fy * difx)
-
-                        # Calculate total stress acting on i reference particle
-                        SigXX_AB_part[i] += SigXX
-                        SigYY_AB_part[i] += SigYY
-                        SigXY_AB_part[i] += SigXY
-                        SigYX_AB_part[i] += SigYX
-
-                        # Calculate number of neighbor pairs summed over
-                        SigXX_AB_part_num[i] += 1
-                        SigYY_AB_part_num[i] += 1
-                        SigXY_AB_part_num[i] += 1
-                        SigYX_AB_part_num[i] += 1
-
-                    # Save nearest neighbor information for i reference particle
-                    AB_num_neigh = np.append(AB_num_neigh, len(loc))
-                    AB_neigh_ind = np.append(AB_neigh_ind, int(i))
-            else:
-                # Save nearest neighbor information for i reference particle
-                AB_num_neigh = np.append(AB_num_neigh, 0)
-                AB_neigh_ind = np.append(AB_neigh_ind, int(i))
-
-        #Initiate empty arrays for finding stress in given direction from type B dense particles acting on type B bulk particles
-        BB_neigh_ind = np.array([], dtype=int)
-        BB_num_neigh = np.array([])
-
-        SigXX_BB_part=np.zeros(len(pos_B))
-        SigXY_BB_part=np.zeros(len(pos_B))
-        SigYX_BB_part=np.zeros(len(pos_B))
-        SigYY_BB_part=np.zeros(len(pos_B))
-
-        SigXX_BB_part_num=np.zeros(len(pos_B))
-        SigXY_BB_part_num=np.zeros(len(pos_B))
-        SigYX_BB_part_num=np.zeros(len(pos_B))
-        SigYY_BB_part_num=np.zeros(len(pos_B))
-
-        #Loop over neighbor pairings of B-B neighbor pairs to calculate interparticle stress in each direction
-        for i in range(0, len(pos_B)):
-            if i in BB_nlist.query_point_indices:
-                if i not in BB_neigh_ind:
-                    # Find neighbors list IDs where i is reference particle
-                    loc = np.where(BB_nlist.query_point_indices==i)[0]
-                    if len(loc)>1:
-
-                        # Array of reference particle location
-                        pos_temp = np.ones((len(loc), 3))* pos_B[i]
-
-                        # Calculate interparticle separation distances
-                        difx, dify, difr = self.utility_functs.sep_dist_arr(pos_temp, pos_B[BB_nlist.point_indices[loc]], difxy=True)
-
-                        # Calculate interparticle separation forces
-                        fx, fy = self.theory_functs.computeFLJ_arr(difr, difx, dify, self.eps)
-
-                        # Calculate array of stresses for each neighbor list pairing acting on i reference particle
-                        SigXX = (fx * difx)
-                        SigYY = (fy * dify)
-                        SigXY = (fx * dify)
-                        SigYX = (fy * difx)
-
-                        # Calculate total stress acting on i reference particle
-                        SigXX_BB_part[i] += np.sum(SigXX)
-                        SigYY_BB_part[i] += np.sum(SigYY)
-                        SigXY_BB_part[i] += np.sum(SigXY)
-                        SigYX_BB_part[i] += np.sum(SigYX)
-
-                        # Calculate number of neighbor pairs summed over
-                        SigXX_BB_part_num[i] += len(SigXX)
-                        SigYY_BB_part_num[i] += len(SigYY)
-                        SigXY_BB_part_num[i] += len(SigXY)
-                        SigYX_BB_part_num[i] += len(SigYX)
-
-                    else:
-                        difx = self.utility_functs.sep_dist_x(pos_B[i][0], pos_B[BB_nlist.point_indices[loc]][0][0])
-                        dify = self.utility_functs.sep_dist_y(pos_B[i][1], pos_B[BB_nlist.point_indices[loc]][0][1])
-                        difr = ( (difx)**2 + (dify)**2)**0.5
-                        fx, fy = self.theory_functs.computeFLJ(difr, difx, dify, self.eps)
-
-                        # Calculate array of stresses for each neighbor list pairing acting on i reference particle
-                        SigXX = (fx * difx)
-                        SigYY = (fy * dify)
-                        SigXY = (fx * dify)
-                        SigYX = (fy * difx)
-
-                        # Calculate total stress acting on i reference particle
-                        SigXX_BB_part[i] += SigXX
-                        SigYY_BB_part[i] += SigYY
-                        SigXY_BB_part[i] += SigXY
-                        SigYX_BB_part[i] += SigYX
-
-                        # Calculate number of neighbor pairs summed over
-                        SigXX_BB_part_num[i] += 1
-                        SigYY_BB_part_num[i] += 1
-                        SigXY_BB_part_num[i] += 1
-                        SigYX_BB_part_num[i] += 1
-
-                    # Save nearest neighbor information for i reference particle
-                    BB_num_neigh = np.append(BB_num_neigh, len(loc))
-                    BB_neigh_ind = np.append(BB_neigh_ind, int(i))
-            else:
-
-                # Save nearest neighbor information for i reference particle
-                BB_num_neigh = np.append(BB_num_neigh, 0)
-                BB_neigh_ind = np.append(BB_neigh_ind, int(i))
-
-        ###Bulk stress
-
-        # Calculate total stress and number of neighbor pairs summed over for B bulk reference particles and all dense neighbors
-        allB_SigXX_part = SigXX_BB_part + SigXX_AB_part
-        allB_SigXX_part_num = SigXX_BB_part_num + SigXX_AB_part_num
-        allB_SigXY_part = SigXY_BB_part + SigXY_AB_part
-        allB_SigXY_part_num = SigXY_BB_part_num + SigXY_AB_part_num
-        allB_SigYX_part = SigYX_BB_part + SigYX_AB_part
-        allB_SigYX_part_num = SigYX_BB_part_num + SigYX_AB_part_num
-        allB_SigYY_part = SigYY_BB_part + SigYY_AB_part
-        allB_SigYY_part_num = SigYY_BB_part_num + SigYY_AB_part_num
-
-        # Calculate total stress and number of neighbor pairs summed over for all bulk reference particles and B dense neighbors
-        Ball_SigXX_part = np.append(SigXX_BA_part, SigXX_BB_part)
-        Ball_SigXX_part_num = np.append(SigXX_BA_part_num, SigXX_BB_part_num)
-        Ball_SigXY_part = np.append(SigXY_BA_part, SigXY_BB_part)
-        Ball_SigXY_part_num = np.append(SigXY_BA_part_num, SigXY_BB_part_num)
-        Ball_SigYX_part = np.append(SigYX_BA_part, SigYX_BB_part)
-        Ball_SigYX_part_num = np.append(SigYX_BA_part_num, SigYX_BB_part_num)
-        Ball_SigYY_part = np.append(SigYY_BA_part, SigYY_BB_part)
-        Ball_SigYY_part_num = np.append(SigYY_BA_part_num, SigYY_BB_part_num)
-
-        # Calculate total stress and number of neighbor pairs summed over for A bulk reference particles and all dense neighbors
-        allA_SigXX_part = SigXX_AA_part + SigXX_BA_part
-        allA_SigXX_part_num = SigXX_AA_part_num + SigXX_BA_part_num
-        allA_SigXY_part = SigXY_AA_part + SigXY_BA_part
-        allA_SigXY_part_num = SigXY_AA_part_num + SigXY_BA_part_num
-        allA_SigYX_part = SigYX_AA_part + SigYX_BA_part
-        allA_SigYX_part_num = SigYX_AA_part_num + SigYX_BA_part_num
-        allA_SigYY_part = SigYY_AA_part + SigYY_BA_part
-        allA_SigYY_part_num = SigYY_AA_part_num + SigYY_BA_part_num
-
-        # Calculate total stress and number of neighbor pairs summed over for all bulk reference particles and A dense neighbors
-        Aall_SigXX_part = np.append(SigXX_AB_part, SigXX_AA_part)
-        Aall_SigXX_part_num = np.append(SigXX_AB_part_num, SigXX_AA_part_num)
-        Aall_SigXY_part = np.append(SigXY_AB_part, SigXY_AA_part)
-        Aall_SigXY_part_num = np.append(SigXY_AB_part_num, SigXY_AA_part_num)
-        Aall_SigYX_part = np.append(SigYX_AB_part, SigYX_AA_part)
-        Aall_SigYX_part_num = np.append(SigYX_AB_part_num, SigYX_AA_part_num)
-        Aall_SigYY_part = np.append(SigYY_AB_part, SigYY_AA_part)
-        Aall_SigYY_part_num = np.append(SigYY_AB_part_num, SigYY_AA_part_num)
-
-        # Calculate total stress and number of neighbor pairs summed over for all bulk reference particles and all dense neighbors
-        allall_SigXX_part = np.append(allA_SigXX_part, allB_SigXX_part)
-        allall_SigXX_part_num = np.append(allA_SigXX_part_num, allB_SigXX_part_num)
-        allall_SigXY_part = np.append(allA_SigXY_part, allB_SigXY_part)
-        allall_SigXY_part_num = np.append(allA_SigXY_part_num, allB_SigXY_part_num)
-        allall_SigYX_part = np.append(allA_SigYX_part, allB_SigYX_part)
-        allall_SigYX_part_num = np.append(allA_SigYX_part_num, allB_SigYX_part_num)
-        allall_SigYY_part = np.append(allA_SigYY_part, allB_SigYY_part)
-        allall_SigYY_part_num = np.append(allA_SigYY_part_num, allB_SigYY_part_num)
-
-        ###Interparticle pressure
-
-        # Calculate total interparticle pressure experienced by all particles in each phase
-        allall_int_press = np.sum(allall_SigXX_part + allall_SigYY_part)/(2*bulk_area)
-
-        # Calculate total interparticle pressure experienced by all particles in each phase from all A particles
-        allA_int_press = np.sum(allA_SigXX_part + allA_SigYY_part)/(2*bulk_area)
-
-        # Calculate total interparticle pressure experienced by all A particles in each phase
-        Aall_int_press = np.sum(Aall_SigXX_part + Aall_SigYY_part)/(2*bulk_area)
-
-        # Calculate total interparticle pressure experienced by all particles in each phase from all B particles
-        allB_int_press = np.sum(allB_SigXX_part + allB_SigYY_part)/(2*bulk_area)
-
-        # Calculate total interparticle pressure experienced by all B particles in each phase
-        Ball_int_press = np.sum(Ball_SigXX_part + Ball_SigYY_part)/(2*bulk_area)
-
-        # Calculate total interparticle pressure experienced by all A particles in each phase from all A particles
-        AA_int_press = np.sum(SigXX_AA_part + SigYY_AA_part)/(2*bulk_area)
-
-        # Calculate total interparticle pressure experienced by all A particles in each phase from all B particles
-        AB_int_press = np.sum(SigXX_AB_part + SigYY_AB_part)/(2*bulk_area)
-
-        # Calculate total interparticle pressure experienced by all B particles in each phase from all A particles
-        BA_int_press = np.sum(SigXX_BA_part + SigYY_BA_part)/(2*bulk_area)
-
-        # Calculate total interparticle pressure experienced by all B particles in each phase from all B particles
-        BB_int_press = np.sum(SigXX_BB_part + SigYY_BB_part)/(2*bulk_area)
-
-        # Calculate total shear stress experienced by all particles in each phase from all particles
-        allall_shear_stress = np.sum(allall_SigXY_part)/(bulk_area)
-
-        # Calculate total shear stress experienced by all particles in each phase from A particles
-        allA_shear_stress = np.sum(allA_SigXY_part)/(bulk_area)
-
-        # Calculate total shear stress experienced by all A particles in each phase from all particles
-        Aall_shear_stress = np.sum(Aall_SigXY_part)/(bulk_area)
-
-        # Calculate total shear stress experienced by all particles in each phase from B particles
-        allB_shear_stress = np.sum(allB_SigXY_part)/(bulk_area)
-
-        # Calculate total shear stress experienced by all B particles in each phase from all particles
-        Ball_shear_stress = np.sum(Ball_SigXY_part)/(bulk_area)
-
-        # Calculate total shear stress experienced by all A particles in each phase from all A particles
-        AA_shear_stress = np.sum(SigXY_AA_part)/(bulk_area)
-
-        # Calculate total shear stress experienced by all A particles in each phase from all B particles
-        AB_shear_stress = np.sum(SigXY_AB_part)/(bulk_area)
-
-        # Calculate total shear stress experienced by all B particles in each phase from all A particles
-        BA_shear_stress = np.sum(SigXY_BA_part)/(bulk_area)
-
-        # Calculate total shear stress experienced by all B particles in each phase from all B particles
-        BB_shear_stress = np.sum(SigXY_BB_part)/(bulk_area)
-
-        # Make position arrays for plotting total stress on each particle for various activity pairings and phases
-        allall_pos_x = np.append(pos_A[:,0], pos_B[:,0])
-        allall_pos_y = np.append(pos_A[:,1], pos_B[:,1])
-
-        allall_part_int_press = (allall_SigXX_part + allall_SigYY_part)/(2)
-        allall_part_shear_stress = (allall_SigXY_part)
-
-        allA_part_int_press = (allA_SigXX_part + allA_SigYY_part)/(2)
-        allA_part_shear_stress = (allA_SigXY_part)
-
-        allB_part_int_press = (allB_SigXX_part + allB_SigYY_part)/(2)
-        allB_part_shear_stress = (allB_SigXY_part)
-
-        # Create output dictionary for statistical averages of total stress on each particle per phase/activity pairing
-        stress_stat_dict = {'all-all': {'XX': np.sum(allall_SigXX_part), 'XY': np.sum(allall_SigXY_part), 'YX': np.sum(allall_SigYX_part), 'YY': np.sum(allall_SigYY_part)}, 'all-A': {'XX': np.sum(allA_SigXX_part), 'XY': np.sum(allA_SigXY_part), 'YX': np.sum(allA_SigYX_part), 'YY': np.sum(allA_SigYY_part)}, 'all-B': {'XX': np.sum(allB_SigXX_part), 'XY': np.sum(allB_SigXY_part), 'YX': np.sum(allB_SigYX_part), 'YY': np.sum(allB_SigYY_part)}, 'A-A': {'XX': np.sum(SigXX_AA_part), 'XY': np.sum(SigXY_AA_part), 'YX': np.sum(SigYX_AA_part), 'YY': np.sum(SigYY_AA_part)}, 'A-B': {'XX': np.sum(SigXX_AB_part), 'XY': np.sum(SigXY_AB_part), 'YX': np.sum(SigYX_AB_part), 'YY': np.sum(SigYY_AB_part)}, 'B-B': {'XX': np.sum(SigXX_BB_part), 'XY': np.sum(SigXY_BB_part), 'YX': np.sum(SigYX_BB_part), 'YY': np.sum(SigYY_BB_part)}}
-
-        # Create output dictionary for statistical averages of total pressure and shear stress on each particle per phase/activity pairing
-        press_stat_dict = {'all-all': {'press': allall_int_press, 'shear': allall_shear_stress}, 'all-A': {'press': allA_int_press, 'shear': allA_shear_stress}, 'all-B': {'press': allB_int_press, 'shear': allB_shear_stress}, 'A-A': {'press': AA_int_press, 'shear': AA_shear_stress}, 'A-B': {'press': AB_int_press, 'shear': AB_shear_stress}, 'B-B': {'press': BB_int_press, 'shear': BB_shear_stress}}
-
-        # Create output dictionary for plotting of total stress/pressure on each particle per phase/activity pairing and their respective x-y locations
-        press_plot_dict = {'all-all': {'press': allall_part_int_press, 'shear': allall_part_shear_stress, 'x': allall_pos_x, 'y': allall_pos_y}, 'all-A': {'press': allA_part_int_press, 'shear': allA_part_shear_stress, 'x': pos_A[:,0], 'y': pos_A[:,1]}, 'all-B': {'press': allB_part_int_press, 'shear': allB_part_shear_stress, 'x': pos_B[:,0], 'y': pos_B[:,1]}}
-
-        return stress_stat_dict, press_stat_dict, press_plot_dict
+        # Array (NBins_x, NBins_y) that identifies whether bin is bulk (0), interface (1), or gas (2)
+        phaseBin = phase_dict['bin']
+
+        # Array (partNum) that identifies whether bin is bulk (0), interface (1), or gas (2)
+        phasePart = phase_dict['part']
+
+        #Label individual particle phases from identified bin phases
+        int_num=0
+        bulk_num=0
+        gas_num=0
+
+        # Loop over all bins
+        for ix in range(0, self.NBins_x):
+            for iy in range(0, self.NBins_y):
+
+                # Count number of each bin
+                if phaseBin[ix][iy]==1:
+                    int_num+=1
+                elif phaseBin[ix][iy]==0:
+                    bulk_num+=1
+                elif phaseBin[ix][iy]==2:
+                    gas_num+=1
+
+        # Dictionary containing the number of bins of each phase
+        count_dict = {'bulk': bulk_num, 'int': int_num, 'gas': gas_num}
+
+        return count_dict

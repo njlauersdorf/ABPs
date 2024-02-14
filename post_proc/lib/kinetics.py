@@ -288,68 +288,104 @@ class kinetic_props:
         
         return clust_motion_dict, adsorption_dict
 
+    def adsorption_nlist(self):
+        '''
+        Purpose: Calculates the rate of adsorption and desorption from the cluster's surface using
+        Freud's cluster algorithm without consideration of bulk vs. interface
+
+        Output:
+        kinetics_dict: dictionary containing the total adsorption and desorption rate of particles of 
+        each type ('all', 'A', or 'B')
+        '''
+
+        #Compute cluster parameters using system_all neighbor list
+        system_all = freud.AABBQuery(self.f_box, self.f_box.wrap(self.pos))
+        cl_all=freud.cluster.Cluster()                              #Define cluster
+        cl_all.compute(system_all, neighbors={'r_max': self.r_cut})        # Calculate clusters given neighbor list, positions,
+                                                                    # and maximal radial interaction distance
+        clp_all = freud.cluster.ClusterProperties()                 #Define cluster properties
+        ids = cl_all.cluster_idx                                    # get id of each cluster
+
+        clp_all.compute(system_all, ids)                            # Calculate cluster properties given cluster IDs
+        clust_size = clp_all.sizes                                  # find cluster sizes
+
+        in_clust = np.where(clust_size == np.amax(clust_size) )[0][0]       # Particle IDs in cluster
+        not_in_clust = np.where(clust_size != np.amax(clust_size) )[0][0]   # Particle IDs not in cluster
+
+        slow_clust_ids = np.where( (ids==in_clust) & (self.typ==0) )[0]     # Number of slow particles in cluster
+        fast_clust_ids = np.where( (ids==in_clust) & (self.typ==1) )[0]     # Number of fast particles in cluster
+        slow_not_clust_ids = np.where( (ids!=in_clust) & (self.typ==0) )[0] # Number of slow particles not in cluster
+        fast_not_clust_ids = np.where( (ids!=in_clust) & (self.typ==1) )[0] # Number of fast particles not in cluster
+
+        kinetics_dict = {'in_clust': {'all': len(slow_clust_ids) + len(fast_clust_ids), 'A': len(slow_clust_ids), 'B': len(fast_clust_ids)}, 'out_clust': {'all': len(slow_not_clust_ids) + len(fast_not_clust_ids), 'A': len(slow_not_clust_ids), 'B': len(fast_not_clust_ids)}}
+        
+        return kinetics_dict
+
     def particle_flux_final(self, partPhase_time, time_entered_bulk, time_entered_gas, in_clust_arr, partPhase_time_arr, clust_size_arr, pos_x_arr_time, pos_y_arr_time, com_x_arr_time, com_y_arr_time, com_x_parts_arr_time, com_y_parts_arr_time):
         
+        # Phase that each particle started in
         start_part_phase = partPhase_time[0:,]
         start_bulk_id = np.where(partPhase_time[0,:]==0)[0]
         start_gas_id = np.where(partPhase_time[0,:]==2)[0]
         start_int_id = np.where(partPhase_time[0,:]==1)[0]
 
+        # Whether particles started in cluster or gas
         start_clust_id = np.where(in_clust_arr[0,:]==1)[0]
-
         start_gas2_id = np.where(in_clust_arr[0,:]==0)[0]
-
+        
+        # Phase that each particle started in
         start_bulk_id_with_int = np.where(partPhase_time[0,:]==0)[0]
         start_gas_id_with_int = np.where(partPhase_time[0,:]==2)[0]
         start_int_id_with_int = np.where(partPhase_time[0,:]==1)[0]
 
-        num_clust_to_gas2 = np.array([])
-        num_slow_clust_to_gas2 = np.array([])
-        num_fast_clust_to_gas2 = np.array([])
+        # Instantiate empty arrays for calculating number of particles moving between each respective phase
+        num_clust_to_gas2 = np.array([])        # All cluster to gas
+        num_slow_clust_to_gas2 = np.array([])   # Slow cluster to gas
+        num_fast_clust_to_gas2 = np.array([])   # Fast cluster to gas
 
-        num_gas2_to_clust = np.array([])
-        num_slow_gas2_to_clust = np.array([])
-        num_fast_gas2_to_clust = np.array([])
+        num_gas2_to_clust = np.array([])        # All gas to cluster
+        num_slow_gas2_to_clust = np.array([])   # Slow gas to cluster
+        num_fast_gas2_to_clust = np.array([])   # Fast gas to cluster
 
-        num_bulk_to_gas = np.array([])
-        num_slow_bulk_to_gas = np.array([])
-        num_fast_bulk_to_gas = np.array([])
+        num_bulk_to_gas = np.array([])          # All bulk to gas
+        num_slow_bulk_to_gas = np.array([])     # Slow bulk to gas
+        num_fast_bulk_to_gas = np.array([])     # Fast bulk to gas
 
-        num_gas_to_bulk = np.array([])
-        num_slow_gas_to_bulk = np.array([])
-        num_fast_gas_to_bulk = np.array([])
+        num_gas_to_bulk = np.array([])          # All gas to bulk
+        num_slow_gas_to_bulk = np.array([])     # Slow gas to bulk
+        num_fast_gas_to_bulk = np.array([])     # Fast gas to bulk
 
-        num_gas_to_int = np.array([])
-        num_slow_gas_to_int = np.array([])
-        num_fast_gas_to_int = np.array([])
+        num_gas_to_int = np.array([])           # All gas to interface
+        num_slow_gas_to_int = np.array([])      # Slow gas to interface
+        num_fast_gas_to_int = np.array([])      # Fast gas to interface
 
-        num_int_to_gas = np.array([])
-        num_slow_int_to_gas = np.array([])
-        num_fast_int_to_gas = np.array([])
+        num_int_to_gas = np.array([])           # All interface to gas
+        num_slow_int_to_gas = np.array([])      # Slow interface to gas
+        num_fast_int_to_gas = np.array([])      # Fast interface to gas
 
-        num_bulk_to_int = np.array([])
-        num_slow_bulk_to_int = np.array([])
-        num_fast_bulk_to_int = np.array([])
+        num_bulk_to_int = np.array([])          # All bulk to interface
+        num_slow_bulk_to_int = np.array([])     # Slow bulk to interface
+        num_fast_bulk_to_int = np.array([])     # Fast bulk to interface
 
-        num_int_to_bulk = np.array([])
-        num_slow_int_to_bulk = np.array([])
-        num_fast_int_to_bulk = np.array([])
+        num_int_to_bulk = np.array([])          # All interface to bulk
+        num_slow_int_to_bulk = np.array([])     # Slow interface to bulk
+        num_fast_int_to_bulk = np.array([])     # Fast interface to bulk
 
-        num_bulk_to_gas = np.array([])
-        num_slow_bulk_to_gas = np.array([])
-        num_fast_bulk_to_gas = np.array([])
+        num_bulk_to_gas = np.array([])          # All bulk to gas
+        num_slow_bulk_to_gas = np.array([])     # Slow bulk to gas
+        num_fast_bulk_to_gas = np.array([])     # Fast bulk to gas
 
-        num_gas_to_bulk = np.array([])
-        num_slow_gas_to_bulk = np.array([])
-        num_fast_gas_to_bulk = np.array([])
+        num_gas_to_bulk = np.array([])          # All gas to bulk
+        num_slow_gas_to_bulk = np.array([])     # Slow gas to bulk
+        num_fast_gas_to_bulk = np.array([])     # Fast gas to bulk
 
-        num_bulk_to_gas_no_int = np.array([])
-        num_slow_bulk_to_gas_no_int = np.array([])
-        num_fast_bulk_to_gas_no_int = np.array([])
+        num_bulk_to_gas_no_int = np.array([])       # All bulk to gas without going through interface
+        num_slow_bulk_to_gas_no_int = np.array([])  # Slow bulk to gas without going through interface
+        num_fast_bulk_to_gas_no_int = np.array([])  # Fast bulk to gas without going through interface
 
-        num_gas_to_bulk_no_int = np.array([])
-        num_slow_gas_to_bulk_no_int = np.array([])
-        num_fast_gas_to_bulk_no_int = np.array([])
+        num_gas_to_bulk_no_int = np.array([])       # All gas to bulk without going through interface
+        num_slow_gas_to_bulk_no_int = np.array([])  # Slow gas to bulk without going through interface
+        num_fast_gas_to_bulk_no_int = np.array([])  # Fast gas to bulk without going through interface
 
         try:
             print(np.shape(all_time_in_gas_to_bulk))
@@ -365,70 +401,88 @@ class kinetic_props:
             B_time_in_bulk_to_gas = np.array([])
 
         for j in range(1, np.shape(partPhase_time)[0]):
-
+            
+            # Particle IDs in each respective phase of current time step
             bulk_id = np.where(partPhase_time[j,:]==0)[0]
             gas_id = np.where(partPhase_time[j,:]==2)[0]
             int_id = np.where(partPhase_time[j,:]==1)[0]
 
+            # Particle IDs in either cluster or gas of current time step
             clust_id = np.where(in_clust_arr[j,:]==1)[0]
             gas2_id = np.where(in_clust_arr[j,:]==0)[0]
+
+            # Particle IDs in gas in previous time step
             gas2_id_prev = np.where(in_clust_arr[j-1,:]==0)[0]
 
+            # Particle IDs still in cluster since beginning
             still_in_clust = np.intersect1d(start_clust_id, clust_id, return_indices=True)
+
+            # Particle IDs no longer in cluster since beginning
             not_in_clust = np.delete(start_clust_id, still_in_clust[1])
 
+            # Particle IDs still in gas since beginning
             still_in_gas2 = np.intersect1d(start_gas2_id, gas2_id, return_indices=True)
+
+            # Particle IDs no longer in gas since beginning
             not_in_gas2 = np.delete(start_gas2_id, still_in_gas2[1])
 
+            # Particle IDs still in bulk since beginning
             still_in_bulk_no_int = np.intersect1d(start_bulk_id, bulk_id, return_indices=True)
+
+            # Particle IDs no longer in bulk since beginning
             not_in_bulk_no_int = np.delete(start_bulk_id, still_in_bulk_no_int[1])
 
+            # Particle IDs still in gas since beginning
             still_in_gas_no_int = np.intersect1d(start_gas_id, gas_id, return_indices=True)
+
+            # Particle IDs no longer in gas since beginning
             not_in_gas_no_int = np.delete(start_gas_id, still_in_gas_no_int[1])
 
+            # Particle IDs still in bulk since beginning
             still_in_bulk = np.intersect1d(start_bulk_id_with_int, bulk_id, return_indices=True)
+
+            # Particle IDs no longer in bulk since beginning
             not_in_bulk = np.delete(start_bulk_id_with_int, still_in_bulk[1])
 
+            # Particle IDs still in gas since beginning
             still_in_gas = np.intersect1d(start_gas_id_with_int, gas_id, return_indices=True)
+
+            # Particle IDs no longer in gas since beginning
             not_in_gas = np.delete(start_gas_id_with_int, still_in_gas[1])
 
+            # Particle IDs still in interface since beginning
             still_in_int = np.intersect1d(start_int_id_with_int, int_id, return_indices=True)
+
+            # Particle IDs no longer in interface since beginning
             not_in_int = np.delete(start_int_id_with_int, still_in_int[1])
 
+            # Particle IDs that went from cluster to gas and still in it
             clust_now_in_gas2 = np.intersect1d(gas2_id, not_in_clust, return_indices=True)
+
+            # Particle IDs that are not in cluster
             not_in_clust_ids = np.intersect1d(start_clust_id, clust_now_in_gas2[0], return_indices=True)
 
+            # Particle IDs that went from gas to cluster and still in it
             gas2_now_in_clust = np.intersect1d(clust_id, not_in_gas2, return_indices=True)
+
+            # Particle IDs that are not in gas
             not_in_gas2_ids = np.intersect1d(start_gas2_id, gas2_now_in_clust[0], return_indices=True)
 
+            # Particle IDs that went from bulk to gas and still in it
             bulk_now_in_gas_no_int = np.intersect1d(gas_id, not_in_bulk_no_int, return_indices=True)
+
+            # Particle IDs that went from gas to bulk and still in it
             gas_now_in_bulk_no_int = np.intersect1d(bulk_id, not_in_gas_no_int, return_indices=True)
 
+            # Time spent for particles of each type ('all', 'A', or 'B') within bulk until leaving for gas
             all_time_in_bulk_to_gas = np.append(all_time_in_bulk_to_gas, partPhase_time_arr[j] - time_entered_bulk[bulk_now_in_gas_no_int[0]])
             A_time_in_bulk_to_gas = np.append(A_time_in_bulk_to_gas, partPhase_time_arr[j] - time_entered_bulk[np.where(self.typ[bulk_now_in_gas_no_int[0]]==0)[0]])
             B_time_in_bulk_to_gas = np.append(B_time_in_bulk_to_gas, partPhase_time_arr[j] - time_entered_bulk[np.where(self.typ[bulk_now_in_gas_no_int[0]]==1)[0]])
-            print('bulk to gas')
-            print(all_time_in_bulk_to_gas)
-            print(A_time_in_bulk_to_gas)
-            print(B_time_in_bulk_to_gas)
 
-            print(np.mean(all_time_in_bulk_to_gas))
-            print(np.mean(A_time_in_bulk_to_gas))
-            print(np.mean(B_time_in_bulk_to_gas))
-
+            # Time spent for particles of each type ('all', 'A', or 'B') within gas until leaving for bulk
             all_time_in_gas_to_bulk = np.append(all_time_in_gas_to_bulk, partPhase_time_arr[j] - time_entered_gas[gas_now_in_bulk_no_int[0]])
             A_time_in_gas_to_bulk = np.append(A_time_in_gas_to_bulk, partPhase_time_arr[j] - time_entered_gas[np.where(self.typ[gas_now_in_bulk_no_int[0]]==0)[0]])
             B_time_in_gas_to_bulk = np.append(B_time_in_gas_to_bulk, partPhase_time_arr[j] - time_entered_gas[np.where(self.typ[gas_now_in_bulk_no_int[0]]==1)[0]])
-            
-            
-            print('gas to bulk')
-            print(all_time_in_gas_to_bulk)
-            print(A_time_in_gas_to_bulk)
-            print(B_time_in_gas_to_bulk)
-
-            print(np.mean(all_time_in_gas_to_bulk))
-            print(np.mean(A_time_in_gas_to_bulk))
-            print(np.mean(B_time_in_gas_to_bulk))
 
             not_in_bulk_ids_to_gas_no_int = np.intersect1d(start_bulk_id, bulk_now_in_gas_no_int[0], return_indices=True)
             not_in_gas_ids_to_bulk_no_int = np.intersect1d(start_gas_id, gas_now_in_bulk_no_int[0], return_indices=True)
