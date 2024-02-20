@@ -149,7 +149,7 @@ class phase_identification:
         self.typ = typ
 
     def phase_ident_planar(self):
-        # NOTE THIS IS IN PROGRESS AND HAS NOT BEEN VERIFIED FOR ACCURACY!
+        #IN PROGRESS
         '''
         Purpose: Takes the average orientation, area fraction, and pressure of each bin
         and determines whether the bins and belong to the bulk (0), interface (1), or gas (2)
@@ -228,6 +228,7 @@ class phase_identification:
         return phase_dict
 
     def phase_ident(self):
+        #DONE!
         '''
         Purpose: Takes the average orientation, area fraction, and pressure of each bin
         and determines whether the bins and belong to the bulk (0), interface (1), or gas (2)
@@ -310,6 +311,7 @@ class phase_identification:
         return phase_dict
 
     def phase_blur(self, phase_dict):
+        #DONE!
         '''
         Purpose: Takes the phase ids of each bin and blurs the neighbor bins to
         reduce mis-identifications and noise in phase determination method
@@ -419,6 +421,7 @@ class phase_identification:
         return phase_dict
 
     def update_phasePart(self, phase_dict):
+        #DONE!
         '''
         Purpose: Takes the blurred phase ids of each bin and updates the array of
         identified particle phases.
@@ -455,6 +458,7 @@ class phase_identification:
         return phase_dict
 
     def phase_count(self, phase_dict):
+        #DONE!
         '''
         Purpose: Takes the phase ids of each bin and counts the number of bins of each phase
 
@@ -494,6 +498,7 @@ class phase_identification:
         return count_dict
 
     def rebin_phases(self, part_dict, phase_dict):
+        #DONE!
         
         '''
         Purpose: Takes the phase ids of each bin and counts the number of bins of each phase
@@ -587,6 +592,7 @@ class phase_identification:
         return phase_dict
 
     def com_bulk(self, phase_dict, count_dict):
+        #DONE!
         '''
         Purpose: Takes the phase ids of each bin and finds the CoM bin index of the bulk phase bins
 
@@ -677,6 +683,7 @@ class phase_identification:
         return bulk_com_dict
 
     def separate_bulks(self, phase_dict, count_dict, bulk_com_dict):
+        #DONE!
         '''
         Purpose: Takes the phase ids of each bin/particle and separates the bulk bin into
         individual, isolated bulk phases (separate clusters)
@@ -819,6 +826,7 @@ class phase_identification:
         return bulk_dict
 
     def separate_ints(self, phase_dict, count_dict, bulk_dict):
+        #DONE!
         '''
         Purpose: Takes the phase ids of each bin/particle and separates the interface bin into
         individual, isolated interfaces (separate clusters)
@@ -1060,6 +1068,7 @@ class phase_identification:
         return phase_dict, bulk_dict, int_dict
 
     def reduce_gas_noise(self, phase_dict, bulk_dict, int_dict):
+        #DONE!
         '''
         Purpose: Takes the phase ids and bulk/interface ids of each bin/particle
         and blurs the gas phase bins/particles that have bulk phase neighbors to
@@ -1193,6 +1202,7 @@ class phase_identification:
         return phase_dict, bulk_dict, int_dict
 
     def int_comp(self, part_dict, phase_dict, bulk_dict, int_dict):
+        #DONE!
         '''
         Purpose: Takes the phase, bulk, and interface ids and identifies the sufficiently
         large interfaces and calculates the composition of each particle type
@@ -1415,6 +1425,7 @@ class phase_identification:
         return phase_dict, bulk_dict, int_dict, int_comp_dict
 
     def bulk_comp(self, part_dict, phase_dict, bulk_dict):
+        #DONE!
         '''
         Purpose: Takes the phase, bulk, and interface ids and identifies the sufficiently
         large bulk phases and calculates the composition of each particle type
@@ -1513,6 +1524,7 @@ class phase_identification:
         return bulk_comp_dict
 
     def bulk_sort2(self, bulk_comp_dict):
+        #DONE!
         '''
         Purpose: Takes the composition and other identifying information of
         significantly large bulk IDs and sorts them according size from largest
@@ -1577,6 +1589,7 @@ class phase_identification:
         return bulk_comp_dict
 
     def int_sort2(self, int_comp_dict):
+        #DONE!
         '''
         Purpose: Takes the composition and other identifying information of
         significantly large interface IDs and sorts them according size from largest
@@ -1642,6 +1655,7 @@ class phase_identification:
         return int_comp_dict
 
     def phase_sort(self, comp_dict):
+        #DONE!
         '''
         Purpose: Takes the composition and other identifying information of
         significantly large phase IDs and sorts them according size from largest
@@ -1707,6 +1721,7 @@ class phase_identification:
         return comp_dict
 
     def phase_part_count(self, phase_dict, int_dict, int_comp_dict, bulk_dict, bulk_comp_dict, typ):
+        #DONE!
         '''
         Purpose: Takes the phase, bulk, and interface ids and counts the number of each particle type
         ('all', 'A', or 'B') for each total phase, the largest phase ID of the bulk and interface, and
@@ -1728,6 +1743,8 @@ class phase_identification:
         bulk_comp_dict: Dictionary containing information of sigificantly large bulk IDs and their
         composition of each particle type ('all', 'A', or 'B') sorted from largest bulk phase to smallest
         bulk phase or unsorted
+
+        typ: array (partNum) of particle types
 
         Outputs:
         part_count_dict: Dictionary containing the number of particles (int) of each type
@@ -1822,6 +1839,7 @@ class phase_identification:
         return part_count_dict, part_id_dict
 
     def phase_bin_count(self, phase_dict, bulk_dict, int_dict, bulk_comp_dict, int_comp_dict):
+        #DONE!
         '''
         Purpose: Takes the phase, bulk, and interface ids and counts the number of bins of each total phase,
         the largest phase ID of the bulk and interface, and all other, smaller phase IDs of the bulk and interface

@@ -221,7 +221,75 @@ class utility:
                 return nBins
             else:
                 nBins -= 1
-    
+    def gsd_to_csv(self, dataPath, outFile, pos, x_orient_arr, y_orient_arr, typ, time_step, first_time = 1):
+        '''
+        Purpose: Convert important information from gsd to csv format
+
+        Inputs: 
+        dataPath: output path for csv files
+
+        outFile: base name of ouput files with important simulation parameters
+
+        pos (partNum, 3): array of particle positions
+
+        x_orient_arr (partNum): array of x-orientation unit vectors of particles
+
+        y_orient_arr (partNum): array of y-orientation unit vectors of particles
+
+        typ (partNum): array of particle types, either slow (0) or fast (1)
+
+        time_step (float): current time step
+
+        first_time (optional): if true and this is first time data is saved, save headers to output files
+        '''
+        
+        import csv
+
+        # Creat output csv files to save simulation information to
+        with open(dataPath + outFile + '_positions_x.csv', 'a+', encoding = 'UTF8', newline = '') as open_csv_pos_x:
+            csv_writer_pos_x = csv.writer(open_csv_pos_x)
+            with open(dataPath + outFile + '_positions_y.csv', 'a+', encoding = 'UTF8', newline = '') as open_csv_pos_y:
+                csv_writer_pos_y = csv.writer(open_csv_pos_y)
+                with open(dataPath + outFile + '_orientations_x.csv', 'a+', encoding = 'UTF8', newline = '') as open_csv_orient_x:
+                    csv_writer_orient_x = csv.writer(open_csv_orient_x)
+                    with open(dataPath + outFile + '_orientations_y.csv', 'a+', encoding = 'UTF8', newline = '') as open_csv_orient_y:
+                        csv_writer_orient_y = csv.writer(open_csv_orient_y)
+                        with open(dataPath + outFile + '_time_and_box_width.csv', 'a+', encoding = 'UTF8', newline = '') as open_csv_time_and_box:
+                            csv_writer_time_and_box = csv.writer(open_csv_time_and_box)
+                            with open(dataPath + outFile + '_type.csv', 'a+', encoding = 'UTF8', newline = '') as open_csv_typ:
+                                csv_writer_typ = csv.writer(open_csv_typ)
+
+                                # Particle IDs as headers for saved arrays
+                                part_ids = np.linspace(0, len(pos)-1, num=len(pos), dtype=int)
+
+                                # If first save, save headers
+                                if first_time == 1:
+                                    csv_writer_pos_x.writerow(part_ids)
+                                    csv_writer_pos_y.writerow(part_ids)
+                                    csv_writer_typ.writerow(part_ids)
+                                    csv_writer_orient_x.writerow(part_ids)
+                                    csv_writer_orient_y.writerow(part_ids)
+                                    csv_writer_time_and_box.writerow(['box_width', 'time_step'])
+                                
+                                # Save x-positions of particles
+                                csv_writer_pos_x.writerow(pos[:,0])
+                            
+                                # Save y-positions of particles
+                                csv_writer_pos_y.writerow(pos[:,1])
+
+                                # Save time and box information of current time step
+                                csv_writer_time_and_box.writerow([self.lx_box, time_step])
+
+                                # Save activity of particles
+                                csv_writer_typ.writerow(typ)
+
+                                # Save x-orientation unit vector of particles
+                                csv_writer_orient_x.writerow(x_orient_arr)
+
+                                # Save y-orientation unit vector of particles
+                                csv_writer_orient_y.writerow(y_orient_arr)
+                                
+
     def quaternion_rotation_matrix(Q):
         """
         Covert a quaternion into a full three-dimensional rotation matrix.

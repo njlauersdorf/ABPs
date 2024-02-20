@@ -103,6 +103,7 @@ class particle_props:
         self.plotting_utility_functs = plotting_utility.plotting_utility(self.lx_box, self.ly_box, self.partNum, self.typ)
 
     def particle_phase_ids(self, phasePart):
+        #DONE!
         '''
         Purpose: Takes the phase that each particle belongs to and returns arrays of
         IDs of all particles of the respective type belonging to each phase
@@ -148,6 +149,7 @@ class particle_props:
         return phase_part_dict
 
     def particle_normal_fa(self):
+        #DONE!
         '''
         Purpose: Takes the orientation, position, and active force of each particle
         to calculate the active force magnitude pointing towards largest cluster's CoM
@@ -3516,6 +3518,291 @@ class particle_props:
             com_radial_dict_fa[key] = {'int_id': int_id, 'current_id': int(int_comp_dict['ids'][m]), 'ext_rad': exterior_radius, 'int_rad': interior_radius, 'r': r[1:].tolist(), 'area': area_r.tolist(), 'com_x': com_x, 'com_y': com_y, 'int_press': {'all': avg_int_press_r.tolist(), 'A': avg_int_pressA_r.tolist(), 'B': avg_int_pressB_r.tolist()}, 'fa_press': {'all': avg_act_press_r.tolist(), 'A': avg_act_pressA_r.tolist(), 'B': avg_act_pressB_r.tolist()}, 'fa': {'all': avg_act_fa_r.tolist(), 'A': avg_act_faA_r.tolist(), 'B': avg_act_faB_r.tolist()}, 'align': {'all': avg_align_r.tolist(), 'A': avg_alignA_r.tolist(), 'B': avg_alignB_r.tolist()}, 'num_dens': {'all': avg_num_dens_r.tolist(), 'A': avg_num_densA_r.tolist(), 'B': avg_num_densB_r.tolist()}, 'num': {'all': avg_num_r.tolist(), 'A': avg_numA_r.tolist(), 'B': avg_numB_r.tolist()}}
         return com_radial_dict_fa
 
+    def bulk_heterogeneity_avgs(self, method2_align_dict, surface_dict, int_comp_dict, all_surface_measurements, int_dict, phase_dict):
+        
+        bulk_id = np.where(phase_dict['part']==0)[0]
+        bulk_A_id = np.where((phase_dict['part']==0) & (self.typ==0))[0]
+        bulk_B_id = np.where((phase_dict['part']==0) & (self.typ==1))[0]
+
+        int_id = np.where(phase_dict['part']==1)[0]
+        int_A_id = np.where((phase_dict['part']==1) & (self.typ==0))[0]
+        int_B_id = np.where((phase_dict['part']==1) & (self.typ==1))[0]
+
+        gas_id = np.where(phase_dict['part']==2)[0]
+        gas_A_id = np.where((phase_dict['part']==2) & (self.typ==0))[0]
+        gas_B_id = np.where((phase_dict['part']==2) & (self.typ==1))[0]
+
+        A_id = np.where((self.typ==0))[0]
+        B_id = np.where((self.typ==1))[0]
+
+        interface_id = int(np.where(int_comp_dict['comp']==np.max(int_comp_dict['comp']))[0])
+
+        int_id = np.where(int_dict['part']==int_dict['largest ids'][0])[0]
+        key = 'surface id ' + str(int(int_dict['largest ids'][0]))
+
+        min_x = all_surface_measurements[key]['exterior']['com']['x']-30
+        max_x = all_surface_measurements[key]['exterior']['com']['x']+30
+
+        min_y = all_surface_measurements[key]['exterior']['com']['y']-30
+        max_y = all_surface_measurements[key]['exterior']['com']['y']+30
+
+        test_id = np.where((self.pos[:,0]+self.hx_box>=min_x) & (self.pos[:,0]+self.hx_box<=max_x) & (self.pos[:,1]+self.hy_box>=min_y) & (self.pos[:,1]+self.hy_box<=max_y))[0]
+
+        # Instantiate empty array (partNum) containing the average active force alignment
+        # with the nearest interface surface normal
+        part_align = method2_align_dict['part']['align']
+
+        # Instantiate empty array (partNum) containing the average active force magnitude
+        # toward the nearest interface surface normal
+        fa_norm = np.array([])
+        faA_norm = np.array([])
+        faB_norm = np.array([])
+
+        fa_avg = np.array([])
+
+        # Instantiate empty array (partNum) containing the distance from the nearest interface surface
+        x_dist_norm = np.array([])
+        xA_dist_norm = np.array([])
+        xB_dist_norm = np.array([])
+
+        align_norm = np.array([])
+        alignA_norm = np.array([])
+        alignB_norm = np.array([])
+
+        y_dist_norm = np.array([])
+        yA_dist_norm = np.array([])
+        yB_dist_norm = np.array([])
+
+        for m in range(0, len(pos_wrap_x)):
+
+            # Save active force magnitude toward the nearest interface surface normal
+            if self.typ[test_id[m]] == 0:
+                fa_norm=np.append(fa_norm, part_align[test_id[m]]*self.peA)
+                fa_avg=np.append(fa_avg, self.peA)
+                faA_norm=np.append(faA_norm, part_align[test_id[m]]*self.peA)
+                alignA_norm=np.append(alignA_norm, part_align[test_id[m]])
+                xA_dist_norm = np.append(xA_dist_norm, pos_wrap_x[m])
+                yA_dist_norm = np.append(yA_dist_norm, pos_wrap_y[m])
+            else:
+                fa_norm=np.append(fa_norm, part_align[test_id[m]]*self.peB)
+                fa_avg=np.append(fa_avg, self.peB)
+                faB_norm=np.append(faB_norm, part_align[test_id[m]]*self.peB)
+                alignB_norm=np.append(alignB_norm, part_align[test_id[m]])
+                xB_dist_norm = np.append(xB_dist_norm, pos_wrap_x[m])
+                yB_dist_norm = np.append(yB_dist_norm, pos_wrap_y[m])
+
+            # Save separation distance from the nearest interface surface
+            #print(avg_rad)
+            x_dist_norm = np.append(x_dist_norm, pos_wrap_x[m])
+            y_dist_norm = np.append(y_dist_norm, pos_wrap_y[m])
+            align_norm=np.append(align_norm, part_align[test_id[m]])
+
+        import math
+
+        plot_dict = {'rad': {'all': r_dist_norm, 'A': rA_dist_norm, 'B': rB_dist_norm}, 'theta': {'all': theta_dist_norm, 'A': thetaA_dist_norm, 'B': thetaB_dist_norm}, 'radius': {'all': nearest_surface_arr, 'A': nearest_surfaceA_arr, 'B': nearest_surfaceB_arr}}
+
+        def round_decimals_down(number:float, decimals:int=2):
+            """
+            Returns a value rounded down to a specific number of decimal places.
+            """
+            if not isinstance(decimals, int):
+                raise TypeError("decimal places must be an integer")
+            elif decimals < 0:
+                raise ValueError("decimal places has to be 0 or more")
+            elif decimals == 0:
+                return math.floor(number)
+
+            factor = 10 ** decimals
+            return math.floor(number * factor) / factor
+
+        def round_decimals_up(number:float, decimals:int=2):
+            """
+            Returns a value rounded up to a specific number of decimal places.
+            """
+            if not isinstance(decimals, int):
+                raise TypeError("decimal places must be an integer")
+            elif decimals < 0:
+                raise ValueError("decimal places has to be 0 or more")
+            elif decimals == 0:
+                return math.ceil(number)
+
+            factor = 10 ** decimals
+            return math.ceil(number * factor) / factor
+
+        y_final_bins = np.round(np.linspace(min_y, max_y, 20),3)
+        x_final_bins = np.round(np.linspace(min_x, max_x, 20),3)
+
+        min_id = np.where(rad_final_bins==min_rad)[0]
+        max_id = np.where(rad_final_bins==max_rad)[0]
+
+        fa_avg_final_binned = np.zeros((len(x_final_bins), len(y_final_bins)))
+        faA_avg_final_binned = np.zeros((len(x_final_bins), len(y_final_bins)))
+        faB_avg_final_binned = np.zeros((len(x_final_bins), len(y_final_bins)))
+
+        fa_sum_final_binned = np.zeros((len(x_final_bins), len(y_final_bins)))
+        faA_sum_final_binned = np.zeros((len(x_final_bins), len(y_final_bins)))
+        faB_sum_final_binned = np.zeros((len(x_final_bins), len(y_final_bins)))
+
+        fa_avg_real_final_binned = np.zeros((len(x_final_bins), len(y_final_bins)))
+        
+        fa_dens_final_binned = np.zeros((len(x_final_bins), len(y_final_bins)))
+        faA_dens_final_binned = np.zeros((len(x_final_bins), len(y_final_bins)))
+        faB_dens_final_binned = np.zeros((len(x_final_bins), len(y_final_bins)))
+
+
+        align_final_binned = np.zeros((len(x_final_bins), len(y_final_bins)))
+        alignA_final_binned = np.zeros((len(x_final_bins), len(y_final_bins)))
+        alignB_final_binned = np.zeros((len(x_final_bins), len(y_final_bins)))
+
+        num_dens_final_binned = np.zeros((len(x_final_bins), len(y_final_bins)))
+        num_densA_final_binned = np.zeros((len(x_final_bins), len(y_final_bins)))
+        num_densB_final_binned = np.zeros((len(x_final_bins), len(y_final_bins)))
+
+        num_final_binned = np.zeros((len(x_final_bins), len(y_final_bins)))
+        numA_final_binned = np.zeros((len(x_final_bins), len(y_final_bins)))
+        numB_final_binned = np.zeros((len(x_final_bins), len(y_final_bins)))
+
+        fa_sum_final_binned_val = np.zeros((len(x_final_bins), len(y_final_bins)))
+        faA_sum_final_binned_val = np.zeros((len(x_final_bins), len(y_final_bins)))
+        faB_sum_final_binned_val = np.zeros((len(x_final_bins), len(y_final_bins)))
+
+        fa_avg_final_binned_val = np.zeros((len(x_final_bins), len(y_final_bins)))
+        faA_avg_final_binned_val = np.zeros((len(x_final_bins), len(y_final_bins)))
+        faB_avg_final_binned_val = np.zeros((len(x_final_bins), len(y_final_bins)))
+        
+        fa_dens_final_binned_val = np.zeros((len(x_final_bins), len(y_final_bins)))
+        faA_dens_final_binned_val = np.zeros((len(x_final_bins), len(y_final_bins)))
+        faB_dens_final_binned_val = np.zeros((len(x_final_bins), len(y_final_bins)))
+
+        fa_avg_real_final_binned_val = np.zeros((len(x_final_bins), len(y_final_bins)))
+
+        align_final_binned_val = np.zeros((len(x_final_bins), len(y_final_bins)))
+        alignA_final_binned_val = np.zeros((len(x_final_bins), len(y_final_bins)))
+        alignB_final_binned_val = np.zeros((len(x_final_bins), len(y_final_bins)))
+
+        num_dens_final_binned_val = np.zeros((len(x_final_bins), len(y_final_bins)))
+        num_densA_final_binned_val = np.zeros((len(x_final_bins), len(y_final_bins)))
+        num_densB_final_binned_val = np.zeros((len(x_final_bins), len(y_final_bins)))
+
+        num_final_binned_val = np.zeros((len(y_final_bins), len(x_final_bins)))
+        numA_final_binned_val = np.zeros((len(y_final_bins), len(x_final_bins)))
+        numB_final_binned_val = np.zeros((len(y_final_bins), len(x_final_bins)))
+
+
+        
+
+
+        fa_sum_final_binned_theta = np.zeros(len(theta_final_bins))
+        faA_sum_final_binned_theta = np.zeros(len(theta_final_bins))
+        faB_sum_final_binned_theta = np.zeros(len(theta_final_bins))
+
+
+        fa_avg_final_binned_theta = np.zeros(len(theta_final_bins))
+        faA_avg_final_binned_theta = np.zeros(len(theta_final_bins))
+        faB_avg_final_binned_theta = np.zeros(len(theta_final_bins))
+
+        fa_avg_real_final_binned_theta = np.zeros(len(theta_final_bins))
+        
+        fa_dens_final_binned_theta = np.zeros(len(theta_final_bins))
+        faA_dens_final_binned_theta = np.zeros(len(theta_final_bins))
+        faB_dens_final_binned_theta = np.zeros(len(theta_final_bins))
+
+
+        align_final_binned_theta = np.zeros(len(theta_final_bins))
+        alignA_final_binned_theta = np.zeros(len(theta_final_bins))
+        alignB_final_binned_theta = np.zeros(len(theta_final_bins))
+
+        num_dens_final_binned_theta = np.zeros(len(theta_final_bins))
+        num_densA_final_binned_theta = np.zeros(len(theta_final_bins))
+        num_densB_final_binned_theta = np.zeros(len(theta_final_bins))
+
+        num_final_binned_theta = np.zeros(len(theta_final_bins))
+        numA_final_binned_theta = np.zeros(len(theta_final_bins))
+        numB_final_binned_theta = np.zeros(len(theta_final_bins))
+
+        fa_avg_final_binned_val_theta = np.zeros(len(theta_final_bins))
+        faA_avg_final_binned_val_theta = np.zeros(len(theta_final_bins))
+        faB_avg_final_binned_val_theta = np.zeros(len(theta_final_bins))
+        
+        fa_dens_final_binned_val_theta = np.zeros(len(theta_final_bins))
+        faA_dens_final_binned_val_theta = np.zeros(len(theta_final_bins))
+        faB_dens_final_binned_val_theta = np.zeros(len(theta_final_bins))
+
+        fa_avg_real_final_binned_val_theta = np.zeros(len(theta_final_bins))
+
+        align_final_binned_val_theta = np.zeros(len(theta_final_bins))
+        alignA_final_binned_val_theta = np.zeros(len(theta_final_bins))
+        alignB_final_binned_val_theta = np.zeros(len(theta_final_bins))
+
+        num_dens_final_binned_val_theta = np.zeros(len(theta_final_bins))
+        num_densA_final_binned_val_theta = np.zeros(len(theta_final_bins))
+        num_densB_final_binned_val_theta = np.zeros(len(theta_final_bins))
+
+        num_final_binned_val_theta = np.zeros(len(theta_final_bins))
+        numA_final_binned_val_theta = np.zeros(len(theta_final_bins))
+        numB_final_binned_val_theta = np.zeros(len(theta_final_bins))
+
+        sum_id = 0
+        sum_id_theta = 0
+        
+        for indx in range(1, len(x_final_bins)):
+
+            for indy in range(1, len(y_final_bins)):
+                
+                bin_ids = np.where((x_dist_norm <x_final_bins[indx]) & (x_dist_norm >= x_final_bins[indx-1]) & (y_dist_norm < y_final_bins[indy]) & (y_dist_norm >= y_final_bins[indy-1]))[0]
+                binA_ids = np.where((xA_dist_norm <x_final_bins[indx]) & (xA_dist_norm >= x_final_bins[indx-1]) & (yA_dist_norm < y_final_bins[indy]) & (yA_dist_norm >= y_final_bins[indy-1]))[0]
+                binB_ids = np.where((xB_dist_norm <x_final_bins[indx]) & (xB_dist_norm >= x_final_bins[indx-1]) & (yB_dist_norm < y_final_bins[indy]) & (yB_dist_norm >= y_final_bins[indy-1]))[0]
+                
+                if len(bin_ids)>0:
+
+                    area_bin = (x_final_bins[xind]-x_final_bins[xind-1]) * (y_final_bins[yind]-y_final_bins[yind-1])
+
+                    fa_avg_real_final_binned[xind-1, yind-1] = np.mean(fa_avg[bin_ids])
+                    fa_sum_final_binned[xind-1, yind-1] = np.sum(fa_norm[bin_ids])
+                    fa_avg_final_binned[xind-1, yind-1] = np.mean(fa_norm[bin_ids])
+
+                    if len(binA_ids)>0:
+                        faA_sum_final_binned[xind-1, yind-1] = np.sum(faA_norm[binA_ids])
+                    if len(binB_ids)>0:
+                        faB_sum_final_binned[xind-1, yind-1] = np.sum(faB_norm[binB_ids])
+
+                    if len(binA_ids)>0:
+                        faA_avg_final_binned[xind-1, yind-1] = np.mean(faA_norm[binA_ids])
+                    if len(binB_ids)>0:
+                        faB_avg_final_binned[xind-1, yind-1] = np.mean(faB_norm[binB_ids])
+
+                    fa_dens_final_binned[xind-1, yind-1] = np.sum(fa_norm[bin_ids]) / area_bin
+                    if len(binA_ids)>0:
+                        faA_dens_final_binned[xind-1, yind-1] = np.sum(faA_norm[binA_ids]) / area_bin
+                    if len(binB_ids)>0:
+                        faB_dens_final_binned[xind-1, yind-1] = np.sum(faB_norm[binB_ids]) / area_bin
+
+                    align_final_binned[xind-1, yind-1] = np.mean(align_norm[bin_ids])
+                    if len(binA_ids)>0:
+                        alignA_final_binned[xind-1, yind-1] = np.mean(alignA_norm[binA_ids])
+                    if len(binB_ids)>0:
+                        alignB_final_binned[xind-1, yind-1] = np.mean(alignB_norm[binB_ids])
+
+                    num_dens_final_binned[xind-1, yind-1] = len(bin_ids) / area_bin
+                    if len(binA_ids)>0:
+                        num_densA_final_binned[xind-1, yind-1] = len(binA_ids) / area_bin
+                    if len(binB_ids)>0:
+                        num_densB_final_binned[xind-1, yind-1] = len(binB_ids) / area_bin
+
+                    num_final_binned[xind-1, yind-1] = len(bin_ids)
+                    if len(binA_ids)>0:
+                        numA_final_binned[xind-1, yind-1] = len(binA_ids)
+                    if len(binB_ids)>0:
+                        numB_final_binned[xind-1, yind-1] = len(binB_ids)
+
+                    sum_id += 1
+
+        bulk_heterogeneity_dict = {'x': x_final_bins, 'y': y_final_bins, 'com': {'x': all_surface_measurements[key]['exterior']['com']['x'], 'y': all_surface_measurements[key]['exterior']['com']['y']}, 'fa_avg_real': {'all': fa_avg_real_final_binned}, 'fa_sum': {'all': fa_sum_final_binned, 'A': faA_sum_final_binned, 'B': faB_sum_final_binned}, 'fa_avg': {'all': fa_avg_final_binned, 'A': faA_avg_final_binned, 'B': faB_avg_final_binned}, 'fa_dens': {'all': fa_dens_final_binned, 'A': faA_dens_final_binned, 'B': faB_dens_final_binned}, 'align': {'all': align_final_binned, 'A': alignA_final_binned, 'B': alignB_final_binned}, 'num_dens': {'all': num_dens_final_binned, 'A': num_densA_final_binned, 'B': num_densB_final_binned}}
+        #radial_heterogeneity_dict_theta = {'theta': theta_final_bins, 'fa_avg_real': {'all': fa_avg_real_final_binned_theta}, 'fa_sum': {'all': fa_sum_final_binned_theta, 'A': faA_sum_final_binned_theta, 'B': faB_sum_final_binned_theta}, 'fa_avg': {'all': fa_avg_final_binned_theta, 'A': faA_avg_final_binned_theta, 'B': faB_avg_final_binned_theta}, 'fa_dens': {'all': fa_dens_final_binned_theta, 'A': faA_dens_final_binned_theta, 'B': faB_dens_final_binned_theta}, 'align': {'all': align_final_binned_theta, 'A': alignA_final_binned_theta, 'B': alignB_final_binned_theta}, 'num_dens': {'all': num_dens_final_binned_theta, 'A': num_densA_final_binned_theta, 'B': num_densB_final_binned_theta}}
+        plot_bin_dict = {'rad': rad_final_bins, 'theta': theta_final_bins, 'radius': np.mean(r_dist), 'com': {'x': all_surface_measurements[key]['exterior']['com']['x'], 'y': all_surface_measurements[key]['exterior']['com']['y']}, 'fa_sum': {'all': fa_sum_final_binned_val, 'A': faA_sum_final_binned_val, 'B': faB_sum_final_binned_val}, 'fa_avg': {'all': fa_avg_final_binned_val, 'A': faA_avg_final_binned_val, 'B': faB_avg_final_binned_val}, 'fa_dens': {'all': fa_dens_final_binned_val, 'A': faA_dens_final_binned_val, 'B': faB_dens_final_binned_val}, 'align': {'all': align_final_binned_val, 'A': alignA_final_binned_val, 'B': alignB_final_binned_val}, 'num': {'all': num_final_binned_val, 'A': numA_final_binned_val, 'B': numB_final_binned_val}, 'num_dens': {'all': num_dens_final_binned_val, 'A': num_densA_final_binned_val, 'B': num_densB_final_binned_val}}
+            
+        return bulk_heterogeneity_dict, plot_dict, plot_bin_dict
+
     def radial_heterogeneity_avgs(self, method2_align_dict, surface_dict, int_comp_dict, all_surface_measurements, int_dict, phase_dict):
         
         bulk_id = np.where(phase_dict['part']==0)[0]
@@ -4830,7 +5117,7 @@ class particle_props:
                 int_alignA_time_theta += (rad_step/2) * (alignA_final_binned_val[temp_id_new[j],:]+alignA_final_binned_val[temp_id_new[j-1],:])
                 int_alignB_time_theta += (rad_step/2) * (alignB_final_binned_val[temp_id_new[j],:]+alignB_final_binned_val[temp_id_new[j-1],:])
 
-        dif_int_fa_dens_time_theta = int_fa_dens_time_theta - integrated_avg_rad_dict['fa_dens']['all']
+        dif_int_fa_dens_time_theta = int_fa_dens_time_theta - integrated_avg_rad_dict['fa_dens']['all'].astype('float64')
         dif_int_faA_dens_time_theta = int_faA_dens_time_theta - integrated_avg_rad_dict['fa_dens']['A']
         dif_int_faB_dens_time_theta = int_faB_dens_time_theta - integrated_avg_rad_dict['fa_dens']['B']
 

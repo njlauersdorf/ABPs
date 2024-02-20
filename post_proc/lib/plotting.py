@@ -515,10 +515,16 @@ class plotting:
         green = ("#878787")
         green = ("#71797E")
 
+        
+
         green = ("#cc5500")
         #green = ("#b3de69")
         #red = ("#ff6961")
         #red = ("#000000")
+
+        green = ("#4d9221")
+        red = ("#cc5500")
+        yellow = ("#71797E")
 
         bulk_part_ids = phase_ids_dict['bulk']['all']
         gas_part_ids = phase_ids_dict['gas']['all']
@@ -720,7 +726,7 @@ class plotting:
                     bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
         else:
             if self.lx_box == self.ly_box:
-                plt.text(0.66, 0.04, s=r'$\tau$' + ' = ' + '{:.1f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+                plt.text(0.65, 0.04, s=r'$\tau$' + ' = ' + '{:.1f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
                     fontsize=30, transform = ax.transAxes,
                     bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
             elif self.lx_box > self.ly_box:
@@ -757,11 +763,11 @@ class plotting:
         else:
             fast_leg = [Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=green, label='Bulk', markersize=36), Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=yellow, label='Interface', markersize=36), Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=red, label='Gas', markersize=36)]
 
-            one_leg = ax.legend(handles=fast_leg, loc='upper right', borderpad=0.3, labelspacing=0.4, handletextpad=-0.2, bbox_transform=ax.transAxes, bbox_to_anchor=[1.06, 1.17], handlelength=1.5, columnspacing=0.5, fontsize=40, ncol=3, facecolor='None', edgecolor='None')
+            one_leg = ax.legend(handles=fast_leg, loc='upper right', borderpad=0.3, labelspacing=0.4, handletextpad=-0.2, bbox_transform=ax.transAxes, bbox_to_anchor=[1.04, 1.16], handlelength=1.5, columnspacing=0.5, fontsize=40, ncol=3, facecolor='None', edgecolor='None')
             ax.add_artist(one_leg)
         """
         plt.tight_layout()
-        ax.set_facecolor('#F2f2f2')
+        #ax.set_facecolor('#F2f2f2')
         plt.savefig(self.outPath + 'phases_' + self.outFile + ".png", dpi=150, transparent=False, bbox_inches='tight')
         plt.close()  
     
@@ -2409,6 +2415,9 @@ class plotting:
         #Define colors for plots
         yellow = ("#7570b3")
         green = ("#77dd77")
+
+        
+
 
         #Remove bulk particles that are outside plot's xrange
         bulk_lat_mean = np.mean(lat_plot_dict['bulk']['all']['vals'])
@@ -10201,7 +10210,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         #plt.savefig(self.outPath + 'part_activity_' + self.outFile + ".eps", format='eps', dpi=150, bbox_inches='tight')
         plt.close()  
 
-    def plot_part_activity_paper(self, pos, sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None, mono_id=False, interface_id = False, orientation_id = False, zoom_id = False, banner_id = False, presentation_id = False):
+    def plot_part_activity_paper(self, pos, px, py, sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None, mono_id=False, interface_id = False, orientation_id = False, zoom_id = False, banner_id = False, presentation_id = False):
 
         """
         This function plots the particle positions and color codes each particle with its intrinsic
@@ -10335,7 +10344,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
             mono=0
 
         # Generate figure of dimensions proportional to simulation box size (with added x-length for color bar)
-        fig, ax = plt.subplots(2, 1, figsize=(2*x_dim,y_dim), facecolor='white')
+        fig, ax = plt.subplots(1,2, figsize=(x_dim,2*y_dim), facecolor='white')
 
         sz = 0.755
         """
@@ -10378,26 +10387,79 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
             ax[0].add_collection(slowGroup)
             ax[0].add_collection(fastGroup)
 
+
+            ells02 = [Ellipse(xy=np.array([pos0[i,0]+self.hx_box, pos0[i,1]+self.hy_box]),
+                    width=sz, height=sz, label='PeA: '+str(self.peA))
+            for i in range(0,len(pos0))]
+
+            #Assign type 1 particles to plot
+            ells12 = [Ellipse(xy=np.array([pos1[i,0]+self.hx_box, pos1[i,1]+self.hy_box]),
+                    width=sz, height=sz, label='PeB: '+str(self.peB))
+            for i in range(0,len(pos1))]
+
+            # Plot position colored by neighbor number
+            if self.peA <= self.peB:
+                slowGroup2 = mc.PatchCollection(ells02, facecolors=slowCol)
+                fastGroup2 = mc.PatchCollection(ells12,facecolors=fastCol)
+            else:
+                slowGroup2 = mc.PatchCollection(ells12, facecolors=slowCol)
+                fastGroup2 = mc.PatchCollection(ells02,facecolors=fastCol)
+            ax[1].add_collection(slowGroup2)
+            ax[1].add_collection(fastGroup2)
+
             #plt.scatter(neigh_plot_dict['all-all']['x'][typ1ind]+self.hx_box, neigh_plot_dict['all-all']['y'][typ1ind]+self.hy_box, c='black', s=sz)
-            #plt.quiver(pos[typ1ind,0]+self.hx_box, pos[typ1ind,1]+self.hy_box, px, py, color='black', width=0.003)
+            ax[1].quiver(pos[typ1ind,0]+self.hx_box, pos[typ1ind,1]+self.hy_box, px[typ1ind], py[typ1ind], color='black', scale=60, headwidth=10, headaxislength = 10, headlength=10)# width=0.02)
             #plt.quiver(pos[typ1ind,0]+self.hx_box, pos[typ1ind,1]+self.hy_box+self.ly_box, px, py, color='black', width=0.003)
             #plt.quiver(pos[typ1ind,0]+self.hx_box, pos[typ1ind,1]+self.hy_box-self.ly_box, px, py, color='black', width=0.003)
 
-            plt.ylim(0, self.ly_box)
-            plt.xlim(0, self.lx_box)
+            ax[0].set_ylim(0, self.ly_box)
+            ax[0].set_xlim(0, self.lx_box)
+            
+            print(self.tst)
+            if self.tst == 9.12:
+                x_min = self.hx_box-65
+                y_min = self.hy_box+22.5
+                x_max = self.hx_box-45
+                y_max = self.hy_box+42.5
+                
+            else:
+                x_min = 0
+                y_min = 0
+                x_max = self.lx_box
+                y_max = self.ly_box
+            ax[1].set_ylim(y_min, y_max)
+            ax[1].set_xlim(x_min, x_max)
             #plt.ylim(self.hy_box-90, self.hy_box+90)
             #plt.xlim(self.hx_box-80, self.hx_box+100)
 
-        ax.axes.set_xticks([])
-        ax.axes.set_yticks([])
-        ax.axes.set_xticklabels([])
-        ax.axes.set_yticks([])
-        ax.set_aspect('equal')
+        ax[0].plot([x_min, x_min], [y_min, y_max], linewidth = 1.0, linestyle='dashed', c='black')
+        ax[0].plot([x_max, x_max], [y_min, y_max], linewidth = 1.0, linestyle='dashed', c='black')
+        ax[0].plot([x_min, x_max], [y_min, y_min], linewidth = 1.0, linestyle='dashed', c='black')
+        ax[0].plot([x_min, x_max], [y_max, y_max], linewidth = 1.0, linestyle='dashed', c='black')
+        
+        ax[0].plot([x_min, self.lx_box+10], [y_min, 0], linewidth = 1.0, linestyle='dashed', c='black', clip_on=False)
+        ax[0].plot([x_min, self.lx_box + 10], [y_max, self.ly_box], linewidth = 1.0, linestyle='dashed', c='black', clip_on=False)
+
+        ax[0].axes.set_xticks([])
+        ax[0].axes.set_yticks([])
+        ax[0].axes.set_xticklabels([])
+        ax[0].axes.set_yticks([])
+        ax[0].set_aspect('equal')
+
+        ax[1].axes.set_xticks([])
+        ax[1].axes.set_yticks([])
+        ax[1].axes.set_xticklabels([])
+        ax[1].axes.set_yticks([])
+        ax[1].set_aspect('equal')
+
+        #fig.subplots_adjust(hspace=-5)
+        fig.subplots_adjust(wspace=-5)
 
         # Create frame images
         #ax.set_facecolor('white')
         #ax.set_facecolor('#F4F4F4') .  # For website
         plt.tight_layout()
+        
         plt.savefig(self.outPath + 'part_activity_' + self.outFile + ".png", dpi=300, transparent=True, bbox_inches='tight')
         #plt.savefig(self.outPath + 'part_activity_' + self.outFile + ".eps", format='eps', dpi=150, bbox_inches='tight')
         plt.close() 
@@ -11636,11 +11698,16 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
         """
         This function plots the particle positions and color codes each particle with its intrinsic
-        activity at each location in space.
+        activity at each location in space for a specific Pe_S=0 and Pe_F=500 system to track a domain
+        in that system (with zoomed in inset) to show the cycle of avalanche/herding process
 
         Inputs:
 
         pos (partNum, 3): array of (x,y,z) positions for each particle
+
+        px (partNum): x-orientation unit vector of active force
+
+        py (partNum): y-orientation unit vector of active force
 
         sep_surface_dict (default value = None): dictionary (output from surface_curve_interp() in
         interface.py) that contains the interpolated curve representing the
@@ -11739,9 +11806,11 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         slowCol = '#2166ac'
         slowCol = '#4393c3'
 
+        # Define y-dimension of figure
         if banner_id == True:
             y_dim = y_dim * (3/5)
         
+        # Check if monodisperse or binary system
         if (len(typ1ind)==0):
             mono=1
             mono_activity=self.peA
@@ -11759,25 +11828,24 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                 mono=0
             else:
                 mono=1
-            #mono=1
-            #fastCol = '#081d58'
-            #slowCol = '#e31a1c'
+
         else:
             mono=0
 
         # Generate figure of dimensions proportional to simulation box size (with added x-length for color bar)
         fig, ax = plt.subplots(figsize=(x_dim,y_dim), facecolor='white')
-        #ax = fig.add_subplot(111)
 
         import math
 
+        # Define function to rotate particles
         def rotate(x,y): 
             #rotate x,y around xo,yo by theta (rad)
             theta=0
             xr=math.cos(theta)*(x)-math.sin(theta)*(y)
             yr=math.sin(theta)*(x)+math.cos(theta)*(y)
             return xr,yr
-
+        
+        # Shift positions so domain doesn't move
         if (self.tst==279.3):
             pos[:,0]=pos[:,0]+45
         if (self.tst==274.8):
@@ -11797,11 +11865,13 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         if (round(self.tst,1)>=124.8) & (round(self.tst,1)<=126):
             pos[:,0]=pos[:,0]+70
 
+        # Enforce periodic boundary conditions
         test_id = np.where(pos[:,0]>self.hx_box)[0]
         pos[test_id,0]=pos[test_id,0]-self.lx_box
         test_id = np.where(pos[:,0]<-self.hx_box)[0]
         pos[test_id,0]=pos[test_id,0]+self.lx_box
 
+        # Shift positions so domain doesn't move
         if (self.tst==273.9) | (self.tst==274.5) | (self.tst==274.8):
             pos[:,1]=pos[:,1]-20 #913
         #pos[:,1]=pos[:,1]-30 #930
@@ -11821,40 +11891,30 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
             pos[:,1]=pos[:,1]-55
         if (round(self.tst,1)>=124.8) & (round(self.tst,1)<=126):
             pos[:,1]=pos[:,1]-52
-        #if (self.tst==283.2):
-        #    pos[:,1]=pos[:,1]-30
         
+        # Enforce periodic boundary conditions
         test_id = np.where(pos[:,1]>self.hy_box)[0]
         pos[test_id,1]=pos[test_id,1]-self.ly_box
         test_id = np.where(pos[:,1]<-self.hy_box)[0]
         pos[test_id,1]=pos[test_id,1]+self.ly_box
 
-        #plt.scatter(pos[:,0], pos[:,1], s=0.7)
-        #plt.scatter(0, 0, s=8.0, c='red')
-        #plt.show()
-        #stop
-
+        # Rotated positions of particles
         pos_x_rot, pos_y_rot = rotate(pos[:,0], pos[:,1])
 
+        # Shift particle positions to proper box size
         pos[:,0] = pos_x_rot + self.hx_box
         pos[:,1] = pos_y_rot + self.hy_box
-        #test_id = np.where(pos_x_rot>self.hx_box)[0]
-        #pos_x_rot[test_id]=pos_x_rot[test_id]-self.lx_box
-        #test_id = np.where(pos_x_rot<-self.hx_box)[0]
-        #pos_x_rot[test_id]=pos_x_rot[test_id]+self.lx_box
 
-        #test_id = np.where(pos_y_rot>self.hy_box)[0]
-        #pos_y_rot[test_id]=pos_y_rot[test_id]-self.ly_box
-        #test_id = np.where(pos_y_rot<-self.hy_box)[0]
-        #pos_y_rot[test_id]=pos_y_rot[test_id]+self.ly_box
-
+        # Define particle diameter
         sz = 0.755
         sz=0.77
         
+        # Define inset
         from mpl_toolkits.axes_grid1.inset_locator import inset_axes
-        l, b, h, w = 0.4, 0.4, 0.6, 0.2
-        #ax6 = fig.add_axes(matplotlib.transforms.Bbox(np.array([[0.3,0.5],[1.15,0.87]])))
-        ax6 = inset_axes(ax, width=2.5, height=2.5)
+        l, b, h, w = 0.4, 0.0, 0.6, 0.2
+        ax6 = inset_axes(ax, loc=4, width=2.5, height=2.5)
+
+        # Plot particles
         if mono==0:
 
             #Local each particle's positions
@@ -11879,6 +11939,8 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
             else:
                 slowGroup = mc.PatchCollection(ells1, facecolors=slowCol)
                 fastGroup = mc.PatchCollection(ells0,facecolors=fastCol)
+
+            # Place particles in main plot
             ax.add_collection(slowGroup)
             ax.add_collection(fastGroup)
             
@@ -11901,9 +11963,12 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                 slowGroup_2 = mc.PatchCollection(ells1_2, facecolors=slowCol)
                 fastGroup_2 = mc.PatchCollection(ells0_2,facecolors=fastCol)
 
+            # Place particles in inset
             ax6.add_collection(slowGroup_2)
             ax6.add_collection(fastGroup_2)
-            
+
+            # Plot legend
+            """
             if presentation_id == True:
                 fast_leg = [Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=slowCol, label='Slow', markersize=36), Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=fastCol, label='Fast', markersize=36)]
 
@@ -11922,12 +11987,9 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                     fast_leg = [Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=slowCol, label=r'$\mathrm{Pe}_\mathrm{S} = $'+str(int(self.peB)), markersize=32), Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=fastCol, label=r'$\mathrm{Pe}_\mathrm{F} = $'+str(int(self.peA)), markersize=32)]
                 one_leg = ax.legend(handles=fast_leg, loc='upper right', borderpad=0.3, labelspacing=0.4, handletextpad=-0.2, bbox_transform=ax.transAxes, bbox_to_anchor=[1.05, 1.17], handlelength=1.5, columnspacing=0.4, fontsize=36, ncol=2, facecolor='none', edgecolor='none')
                 ax.add_artist(one_leg)
+            """
 
-            #plt.scatter(neigh_plot_dict['all-all']['x'][typ1ind]+self.hx_box, neigh_plot_dict['all-all']['y'][typ1ind]+self.hy_box, c='black', s=sz)
-            #plt.quiver(pos[typ1ind,0]+self.hx_box, pos[typ1ind,1]+self.hy_box, px, py, color='black', width=0.003)
-            #plt.quiver(pos[typ1ind,0]+self.hx_box, pos[typ1ind,1]+self.hy_box+self.ly_box, px, py, color='black', width=0.003)
-            #plt.quiver(pos[typ1ind,0]+self.hx_box, pos[typ1ind,1]+self.hy_box-self.ly_box, px, py, color='black', width=0.003)
-
+        # Plot inner and outer interfaces
         if interface_id == True:
             try:
 
@@ -11969,6 +12031,8 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                         
             except:
                 pass
+        
+        # Plot average active force orientations
         if orientation_id == True:
             try:
                 if active_fa_dict!=None:
@@ -12004,9 +12068,6 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         # Label simulation time
         if banner_id == False:
             if self.lx_box == self.ly_box:
-                #plt.text(0.69, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
-                #    fontsize=24, transform = ax.transAxes,
-                #    bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
                 ax.text(0.03, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
                     fontsize=30, transform = ax.transAxes,
                     bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
@@ -12015,36 +12076,24 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                     fontsize=18, transform = ax.transAxes,
                     bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
         
+        # Remove main plot axes labels
         ax.axes.set_xticks([])
         ax.axes.set_yticks([])
         ax.axes.set_xticklabels([])
         ax.axes.set_yticks([])
         ax.set_aspect('equal')
 
+        # Remove inset axes labels
         ax6.axes.set_xticks([])
         ax6.axes.set_yticks([])
         ax6.axes.set_xticklabels([])
         ax6.axes.set_yticks([])
         ax6.set_aspect('equal')
 
+        # Plot particle orientations
         ax6.quiver(pos[typ1ind,0]+self.hx_box, pos[typ1ind,1]+self.hy_box, px[typ1ind], py[typ1ind], color='black', width=1.0, minlength=0.0, headwidth=2000,headlength=900, headaxislength=900, scale=70)
-            #plt.quiver(pos[typ1ind,0]+self.hx_box, pos[typ1ind,1]+self.hy_box+self.ly_box, px, py, color='black', width=0.003)
-            #plt.quiver(pos[typ1ind,0]+self.hx_box, pos[typ1ind,1]+self.hy_box-self.ly_box, px, py, color='black', width=0.003)
 
-
-
-        #im = plt.scatter((interpart_peA[where_else4])/interpart_peB[where_else4], interpart_press[where_else4] / , c=interpart_peB[where_else4], cmap='Reds', vmin=np.min(interpart_peB[where_else4]), vmax=np.max(interpart_peB[where_else4]), linewidth = 1.8*1.2, s=msz*55*0.7, label='Simulation')
-        #plt.plot([0.35,0.35], [-10000, 100000], color='black', linestyle='dotted')
-        """
-        norm= matplotlib.colors.Normalize(vmin=0.0, vmax=500)
-        fig.subplots_adjust(right=0.88)
-        cbar_ax = fig.add_axes([0.9, 0.11, 0.04, 0.3725])
-        sm = plt.cm.ScalarMappable(norm=norm, cmap = 'binary')
-        sm.set_array([])
-        clb = fig.colorbar(sm, cax=cbar_ax)#ticks=[0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0], ax=ax2)
-        clb.ax.set_title(r'$\mathrm{Pe}_\mathrm{F}$', fontsize=23)
-        clb.ax.tick_params(labelsize=20)
-        """
+        # Define simulation and inset box linewidth
         for axis in ['top', 'bottom', 'left', 'right']:
 
             ax6.spines[axis].set_linewidth(1.5)
@@ -12053,9 +12102,11 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
             ax.spines[axis].set_linewidth(2.0)
 
+        # Define inset axes limits
         ax6.set_ylim(self.hy_box-128, self.hy_box+122)
         ax6.set_xlim(self.hx_box-122, self.hx_box+128)
-        print(self.tst)
+
+        # Define inset location based on time step
         if self.tst==285:
             # 950
             x_min = self.hx_box-20
@@ -12093,10 +12144,6 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
             x_max = self.hx_box+25
             y_min = self.hy_box-25
             y_max = self.hy_box+25
-            #x_min = self.hx_box-10
-            #x_max = self.hx_box+12
-            #y_min = self.hy_box-52
-            #y_max = self.hy_box-30
         if (round(self.tst,1)==127.2):
             x_min = self.hx_box-25
             x_max = self.hx_box+25
@@ -12106,10 +12153,6 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
             x_max = self.lx_box
             y_min = 0
             y_max = self.ly_box
-            #x_min = self.hx_box-10
-            #x_max = self.hx_box+12
-            #y_min = self.hy_box-52
-            #y_max = self.hy_box-30
         if (round(self.tst,1)==106.2):
             x_min = self.hx_box-25
             x_max = self.hx_box+25
@@ -12119,10 +12162,6 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
             x_max = self.lx_box
             y_min = 0
             y_max = self.ly_box
-            #x_min = self.hx_box-10
-            #x_max = self.hx_box+12
-            #y_min = self.hy_box-52
-            #y_max = self.hy_box-30
         if (round(self.tst,1)==115.2):
             x_min = self.hx_box-25
             x_max = self.hx_box+25
@@ -12132,10 +12171,6 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
             x_max = self.lx_box
             y_min = 0
             y_max = self.ly_box
-            #x_min = self.hx_box-10
-            #x_max = self.hx_box+12
-            #y_min = self.hy_box-52
-            #y_max = self.hy_box-30
         if (round(self.tst,1)>=124.8) & (round(self.tst,1)<=126):
             x_min = self.hx_box-25
             x_max = self.hx_box+25
@@ -12146,22 +12181,26 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
             y_min = 0
             y_max = self.ly_box
         
-
+        # Define inset axes limits
         ax6.set_ylim(y_min, y_max)
         ax6.set_xlim(x_min, x_max)
 
+        # Plot location of inset on main plot
         ax.plot([x_min, x_max], [y_min, y_min], linestyle='dashed', linewidth=1.5, color='black')
         ax.plot([x_max, x_max], [y_min, y_max], linestyle='dashed', linewidth=1.5, color='black')
         ax.plot([x_min, x_max], [y_max, y_max], linestyle='dashed', linewidth=1.5, color='black')
         ax.plot([x_min, x_min], [y_min, y_max], linestyle='dashed', linewidth=1.5, color='black')
-
-        ax.plot([x_min, self.hx_box+8.5], [y_max, self.ly_box-9.5], linestyle='dashed', linewidth=1.5, color='black')
-        ax.plot([x_max, self.lx_box-3.5], [y_min, self.hy_box+2.5], linestyle='dashed', linewidth=1.5, color='black')
+        
+        # Connect corners of inset to location of main plot
+        ax.plot([x_max, self.lx_box-4], [y_max, self.hy_box-8.8], linestyle='dashed', linewidth=1.5, color='black')
+        ax.plot([x_min, self.hx_box+8.8], [y_min, 3], linestyle='dashed', linewidth=1.5, color='black')
+        
         # Create frame images
         #ax.set_facecolor('white')
         #ax.set_facecolor('#F4F4F4') .  # For website
+
+        # Save image
         plt.savefig(self.outPath + 'part_activity_' + self.outFile + ".png", dpi=900, transparent=False, bbox_inches='tight')
-        #plt.savefig(self.outPath + 'part_activity_' + self.outFile + ".eps", format='eps', dpi=150, bbox_inches='tight')
         plt.close()  
 
     def plot_part_activity_com_plotted(self, pos, phase_ids_dict, sep_surface_dict=None, int_comp_dict=None, com_opt=None):
