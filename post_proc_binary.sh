@@ -188,6 +188,8 @@ echo "| int-press-nlist: interparticle pressure of entire system             |"
 echo "| com-body-forces: interface pressure using center of mass             |"
 echo "| surface-body-forces: interface pressure using surface normal         |"
 echo "| bubble-body-forces: separate interface pressures using surface norm  |"
+echo "|           ----------------Utility Functions-----------------         |"
+echo "| gsd-to-csv: converts gsd file to csv format with relevant info       |"
 echo "|----------------------------------------------------------------------|"
 
 echo "What do you want to analyze or create plots/videos for?"
