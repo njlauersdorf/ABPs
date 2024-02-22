@@ -11073,6 +11073,8 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         #plt.savefig(self.outPath + 'part_activity_' + self.outFile + ".eps", format='eps', dpi=150, bbox_inches='tight')
         plt.close() 
 
+    
+
     def plot_radial_heterogeneity(self, averagesPath, inFile, pos, single_time_dict, plot_bin_dict, plot_dict, sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None, mono_id=False, interface_id = False, orientation_id = False, zoom_id = False, banner_id = False, presentation_id = False, measure="fa", types="all", circle_opt=0, component = 'dif'):
 
         """
@@ -11693,6 +11695,599 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                 plt.savefig(self.outPath + 'avg_noncircle_radial_heterogeneity_' + measure + '_' + types +'_' + self.outFile + ".png", dpi=200, transparent=False, bbox_inches='tight')
         #plt.savefig(self.outPath + 'part_activity_' + self.outFile + ".eps", format='eps', dpi=150, bbox_inches='tight')
         plt.close() 
+
+
+    
+
+
+    def plot_bulk_heterogeneity(self, averagesPath, inFile, pos, single_time_dict, plot_bin_dict, plot_dict, sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None, mono_id=False, interface_id = False, orientation_id = False, zoom_id = False, banner_id = False, presentation_id = False, measure="fa", types="all", circle_opt=0, component = 'dif'):
+
+        """
+        This function plots the particle positions and color codes each particle with its intrinsic
+        activity at each location in space.
+
+        Inputs:
+
+        pos (partNum, 3): array of (x,y,z) positions for each particle
+
+        sep_surface_dict (default value = None): dictionary (output from surface_curve_interp() in
+        interface.py) that contains the interpolated curve representing the
+        inner and outer surfaces of each interface.
+
+        int_comp_dict (default value = None): dictionary (output from int_sort2() in
+        phase_identification.py) that contains information on each
+        isolated/individual interface.
+
+        active_fa_dict (default value = None): dictionary (output from bin_active_fa() in binning.py)
+        that contains information on the binned average active force magnitude and orientation over
+        space
+
+        mono_id (default value = False): True/False value that specifies whether system should be treated
+        as a monodisperse system (True) or binary system (False)
+
+        interface_id ( default value = False): True/False value that specifies whether
+        the interface interior and exterior surfaces should be plotted
+
+        orientation_id ( default value = False): True/False value that specifies whether
+        the average, binned orientation of particles should be plotted
+
+        zoom_id ( default value = False ): True/False value that specifies whether the bulk of the cluster
+        should be zoomed into for a close-up
+
+        banner_id ( default value = False ): True/False value that specifies whether the system should be
+        elongated along the x-axis when plotted
+
+        presentation_id ( default value = False ): True/False value that specifies whether the formatting should
+        be made for a PowerPoint presentation
+
+        Outputs:
+        .png file with each particle color-coded by intrinsic activity
+        """
+
+        typ0ind = np.where(self.typ == 0)[0]
+        typ1ind = np.where(self.typ == 1)[0]
+        
+        #Set plot colors
+        fastCol = '#e31a1c'
+        #slowCol = '#e31a1c'
+        fastCol = '#a50f15'
+        fastCol = '#b2182b'
+        #fastCol = '#d6604d'
+        slowCol = '#081d58'
+        slowCol = '#2b8cbe'
+        slowCol = '#2166ac'
+        slowCol = '#4393c3'
+
+        # Minimum dimension length (in inches)
+        scaling =7.0
+
+        # X and Y-dimension lengths (in inches)
+        x_dim = int(scaling + 1.0)
+        y_dim = int(scaling)
+
+        # Generate figure of dimensions proportional to simulation box size (with added x-length for color bar)
+        fig, ax = plt.subplots(figsize=(x_dim,y_dim), facecolor='white')
+        #ax = fig.add_subplot(111)
+
+        sz = 0.755
+
+        plt.scatter(pos[:,0]+self.hx_box, pos[:,1]+self.hy_box, s=0.7, c='black')
+        #Local each particle's positions
+        pos0=pos[typ0ind]                               # Find positions of type 0 particles
+        pos1=pos[typ1ind]
+        """
+        #Assign type 0 particles to plot
+
+        ells0 = [Ellipse(xy=np.array([pos0[i,0]+self.hx_box, pos0[i,1]+self.hy_box]),
+                width=sz, height=sz, label='PeA: '+str(self.peA))
+        for i in range(0,len(pos0))]
+
+        #Assign type 1 particles to plot
+        ells1 = [Ellipse(xy=np.array([pos1[i,0]+self.hx_box, pos1[i,1]+self.hy_box]),
+                width=sz, height=sz, label='PeB: '+str(self.peB))
+        for i in range(0,len(pos1))]
+
+        # Plot position colored by neighbor number
+        if self.peA <= self.peB:
+            slowGroup = mc.PatchCollection(ells0, facecolors=slowCol)
+            fastGroup = mc.PatchCollection(ells1,facecolors=fastCol)
+        else:
+            slowGroup = mc.PatchCollection(ells1, facecolors=slowCol)
+            fastGroup = mc.PatchCollection(ells0,facecolors=fastCol)
+        ax.add_collection(slowGroup)
+        ax.add_collection(fastGroup)
+        """
+
+        average_x_path = averagesPath + 'bulk_avgs_x_pa' + str(int(self.peA)) + '_pb' + str(int(self.peB))  + '_xa' + str(int(self.parFrac)) + '_eps' + str(self.eps) + '_phi' + str(float(self.phi)) + '_pNum' + str(self.partNum) +  '_bin5_time1.csv'
+        average_y_path = averagesPath + 'bulk_avgs_y_pa' + str(int(self.peA)) + '_pb' + str(int(self.peB))  + '_xa' + str(int(self.parFrac)) + '_eps' + str(self.eps) + '_phi' + str(float(self.phi)) + '_pNum' + str(self.partNum) +  '_bin5_time1.csv'
+
+        import csv 
+
+        averages_file =  open(average_x_path, newline='')
+        avg_x = np.array(list(csv.reader(averages_file)))
+
+        avg_x_flatten = (avg_x.flatten()).astype(np.float) 
+        avg_x_flatten = np.append(avg_x_flatten, avg_x_flatten[0])
+        averages_file =  open(average_y_path, newline='')
+        avg_y = np.array(list(csv.reader(averages_file)))
+
+        avg_y_flatten = (avg_y.flatten()).astype(np.float) 
+
+        if component != 'avg':
+            avg_y_new = np.zeros(np.shape(single_time_dict[measure][types]))
+
+            for i in range(0, len(single_time_dict['x'])):
+                avg_y_new[i,:] = single_time_dict['y']
+
+            avg_x_new = np.zeros(np.shape(single_time_dict[measure][types]))
+
+            for i in range(0, len(single_time_dict['y'])):
+                avg_x_new[:,i] = single_time_dict['x']
+
+            avg_x_flatten = avg_x_new.flatten()
+            avg_y_flatten = avg_y_new.flatten()
+        else:
+            avg_y_new = np.zeros((len(avg_x_flatten), len(avg_y_flatten)-1))
+            for i in range(0, len(avg_x_flatten)):
+                avg_y_new[i,:] = avg_y_flatten[:-1]
+
+            avg_x_new = np.zeros((len(avg_x_flatten), len(avg_y_flatten)-1))
+
+            for i in range(0, len(avg_y_flatten)-1):
+                avg_x_new[:,i] = avg_x_flatten
+
+            avg_x_flatten = avg_x_new.flatten()
+            avg_y_flatten = avg_y_new.flatten()
+        
+        if circle_opt == 1:
+            x_coords = avg_x_flatten
+            y_coords = avg_y_flatten
+        else:
+            
+            if component == 'avg':
+                x_coords = avg_x_flatten
+                y_coords = avg_y_flatten
+            else:
+                x_coords = avg_x_flatten
+                y_coords = avg_y_flatten
+
+        #x_coords = x_coords.flatten()
+        #y_coords = y_coords.flatten()
+
+
+
+        
+        average_y_path = averagesPath + 'bulk_avgs_y_pa' + str(int(self.peA)) + '_pb' + str(int(self.peB))  + '_xa' + str(int(self.parFrac)) + '_eps' + str(self.eps) + '_phi' + str(float(self.phi)) + '_pNum' + str(self.partNum) +  '_bin5_time1.csv'
+        average_x_path = averagesPath + 'bulk_avgs_x_pa' + str(int(self.peA)) + '_pb' + str(int(self.peB))  + '_xa' + str(int(self.parFrac)) + '_eps' + str(self.eps) + '_phi' + str(float(self.phi)) + '_pNum' + str(self.partNum) +  '_bin5_time1.csv'
+
+        if measure == 'fa_avg':
+            average_val_path = averagesPath + 'bulk_avgs_fa_avg_pa' + str(int(self.peA)) + '_pb' + str(int(self.peB))  + '_xa' + str(int(self.parFrac)) + '_eps' + str(self.eps) + '_phi' + str(float(self.phi)) + '_pNum' + str(self.partNum) +  '_bin5_time1.csv'
+            average_valA_path = averagesPath + 'bulk_avgs_faA_avg_pa' + str(int(self.peA)) + '_pb' + str(int(self.peB))  + '_xa' + str(int(self.parFrac)) + '_eps' + str(self.eps) + '_phi' + str(float(self.phi)) + '_pNum' + str(self.partNum) +  '_bin5_time1.csv'
+            average_valB_path = averagesPath + 'bulk_avgs_faB_avg_pa' + str(int(self.peA)) + '_pb' + str(int(self.peB))  + '_xa' + str(int(self.parFrac)) + '_eps' + str(self.eps) + '_phi' + str(float(self.phi)) + '_pNum' + str(self.partNum) +  '_bin5_time1.csv'
+        elif measure == 'fa_dens':
+            average_val_path = averagesPath + 'bulk_avgs_fa_dens_pa' + str(int(self.peA)) + '_pb' + str(int(self.peB))  + '_xa' + str(int(self.parFrac)) + '_eps' + str(self.eps) + '_phi' + str(float(self.phi)) + '_pNum' + str(self.partNum) +  '_bin5_time1.csv'
+            average_valA_path = averagesPath + 'bulk_avgs_faA_dens_pa' + str(int(self.peA)) + '_pb' + str(int(self.peB))  + '_xa' + str(int(self.parFrac)) + '_eps' + str(self.eps) + '_phi' + str(float(self.phi)) + '_pNum' + str(self.partNum) +  '_bin5_time1.csv'
+            average_valB_path = averagesPath + 'bulk_avgs_faB_dens_pa' + str(int(self.peA)) + '_pb' + str(int(self.peB))  + '_xa' + str(int(self.parFrac)) + '_eps' + str(self.eps) + '_phi' + str(float(self.phi)) + '_pNum' + str(self.partNum) +  '_bin5_time1.csv'
+        elif measure == 'fa_avg_real':
+            average_val_path = averagesPath + 'bulk_avgs_fa_avg_real_pa' + str(int(self.peA)) + '_pb' + str(int(self.peB))  + '_xa' + str(int(self.parFrac)) + '_eps' + str(self.eps) + '_phi' + str(float(self.phi)) + '_pNum' + str(self.partNum) +  '_bin5_time1.csv'
+            average_valA_path = averagesPath + 'bulk_avgs_faA_avg_real_pa' + str(int(self.peA)) + '_pb' + str(int(self.peB))  + '_xa' + str(int(self.parFrac)) + '_eps' + str(self.eps) + '_phi' + str(float(self.phi)) + '_pNum' + str(self.partNum) +  '_bin5_time1.csv'
+            average_valB_path = averagesPath + 'bulk_avgs_faB_avg_real_pa' + str(int(self.peA)) + '_pb' + str(int(self.peB))  + '_xa' + str(int(self.parFrac)) + '_eps' + str(self.eps) + '_phi' + str(float(self.phi)) + '_pNum' + str(self.partNum) +  '_bin5_time1.csv'
+        elif measure == 'num_dens':
+            average_val_path = averagesPath + 'bulk_avgs_num_dens_pa' + str(int(self.peA)) + '_pb' + str(int(self.peB))  + '_xa' + str(int(self.parFrac)) + '_eps' + str(self.eps) + '_phi' + str(float(self.phi)) + '_pNum' + str(self.partNum) +  '_bin5_time1.csv'
+            average_valA_path = averagesPath + 'bulk_avgs_num_densA_pa' + str(int(self.peA)) + '_pb' + str(int(self.peB))  + '_xa' + str(int(self.parFrac)) + '_eps' + str(self.eps) + '_phi' + str(float(self.phi)) + '_pNum' + str(self.partNum) +  '_bin5_time1.csv'
+            average_valB_path = averagesPath + 'bulk_avgs_num_densB_pa' + str(int(self.peA)) + '_pb' + str(int(self.peB))  + '_xa' + str(int(self.parFrac)) + '_eps' + str(self.eps) + '_phi' + str(float(self.phi)) + '_pNum' + str(self.partNum) +  '_bin5_time1.csv'
+        elif measure == 'align':
+            average_val_path = averagesPath + 'bulk_avgs_align_pa' + str(int(self.peA)) + '_pb' + str(int(self.peB))  + '_xa' + str(int(self.parFrac)) + '_eps' + str(self.eps) + '_phi' + str(float(self.phi)) + '_pNum' + str(self.partNum) +  '_bin5_time1.csv'
+            average_valA_path = averagesPath + 'bulk_avgs_alignA_pa' + str(int(self.peA)) + '_pb' + str(int(self.peB))  + '_xa' + str(int(self.parFrac)) + '_eps' + str(self.eps) + '_phi' + str(float(self.phi)) + '_pNum' + str(self.partNum) +  '_bin5_time1.csv'
+            average_valB_path = averagesPath + 'bulk_avgs_alignB_pa' + str(int(self.peA)) + '_pb' + str(int(self.peB))  + '_xa' + str(int(self.parFrac)) + '_eps' + str(self.eps) + '_phi' + str(float(self.phi)) + '_pNum' + str(self.partNum) +  '_bin5_time1.csv'
+
+        import csv 
+
+        if types == 'all':
+            averages_file =  open(average_val_path, newline='')
+            avg_val_r = np.array(list(csv.reader(averages_file)))
+
+            avg_val_r_flatten = (avg_val_r.flatten()).astype(np.float) 
+
+        elif types == 'A':
+            averages_file =  open(average_valA_path, newline='')
+            avg_valA_r = np.array(list(csv.reader(averages_file)))
+
+            avg_valA_r_flatten = (avg_valA_r.flatten()).astype(np.float) 
+
+        elif types == 'B':
+            averages_file =  open(average_valB_path, newline='')
+            avg_valB_r = np.array(list(csv.reader(averages_file)))
+
+            avg_valB_r_flatten = (avg_valB_r.flatten()).astype(np.float) 
+
+        #vals = avg_num_dens_r_flatten#single_time_dict[measure][types].flatten()
+        #vals = (single_time_dict[measure][types].flatten()*(avg_num_dens_r_flatten**2))**0.5+avg_num_dens_r_flatten
+        
+        if component == 'dif':
+            if types == 'all':
+                vals = plot_bin_dict[measure][types].flatten() - avg_val_r_flatten #/ avg_num_dens_r_flatten**2
+            elif types == 'A':
+                vals = plot_bin_dict[measure][types].flatten() - avg_valA_r_flatten# 
+            elif types == 'B':
+                vals = plot_bin_dict[measure][types].flatten() - avg_valB_r_flatten #
+        elif component == 'current':
+            if types == 'all':
+                vals = plot_bin_dict[measure][types].flatten()
+            elif types == 'A':
+                vals = plot_bin_dict[measure][types].flatten()
+            elif types == 'B':
+                vals = plot_bin_dict[measure][types].flatten()
+        elif component == 'avg':
+            if types == 'all':
+                vals = avg_val_r_flatten #/ avg_num_dens_r_flatten**2
+            elif types == 'A':
+                vals = avg_valA_r_flatten# 
+            elif types == 'B':
+                vals = avg_valB_r_flatten #
+        #test_id = np.where(avg_num_dens_r_flatten>0)[0]
+        #vals[test_id] = vals[test_id] / avg_num_dens_r_flatten[test_id]**2
+        #test_id = np.where(vals>3.0)[0]
+        #vals[test_id]=3.0
+        #if component == 'dif':
+        if component == 'dif':
+            if measure == 'num_dens':
+                if (types =='all'):
+                    limit_vals = 2.0
+                elif (types =='B'):
+                    limit_vals = 2.0
+                elif (types =='A'):
+                    limit_vals = 1.25
+            elif measure == 'fa_avg':
+                if (types =='all'):
+                    limit_vals = self.peB * (2/3)
+                elif (types =='B'):
+                    limit_vals = self.peB
+                elif (types =='A'):
+                    limit_vals = self.peA
+            elif measure == 'fa_avg_real':
+                if (types =='all'):
+                    limit_vals = self.peB
+                elif (types =='B'):
+                    limit_vals = self.peB
+                elif (types =='A'):
+                    limit_vals = self.peA
+            elif measure == 'fa_dens':
+                if (types == 'all'):
+                    limit_vals = self.peB * 1.0 * 2.0 * (2/3)
+                elif (types =='B'):
+                    limit_vals = self.peB * 1.0 * 2.0
+                elif (types =='A'):
+                    limit_vals = self.peA * 1.0 * 2.0
+            elif measure == 'align':
+                if (types =='all'):
+                    limit_vals = 1.0
+                elif (types =='B'):
+                    limit_vals = 1.0
+                elif (types =='A'):
+                    limit_vals = 1.0
+
+                    
+        elif component == 'current':
+            if measure == 'num_dens':
+                if (types =='all'):
+                    limit_vals = 2.5
+                elif (types =='B'):
+                    limit_vals = 2.5
+                elif (types =='A'):
+                    limit_vals = 1.25
+            elif measure == 'fa_avg':
+                if (types =='all'):
+                    limit_vals = self.peB * (2/3)
+                elif (types =='B'):
+                    limit_vals = self.peB
+                elif (types =='A'):
+                    limit_vals = self.peA
+            elif measure == 'fa_avg_real':
+                if (types =='all'):
+                    limit_vals = self.peB
+                elif (types =='B'):
+                    limit_vals = self.peB
+                elif (types =='A'):
+                    limit_vals = self.peA
+            elif measure == 'fa_dens':
+                if (types == 'all'):
+                    limit_vals = self.peB * 1.0 * 2.5
+                elif (types =='B'):
+                    limit_vals = self.peB * 1.0 * 2.5
+                elif (types =='A'):
+                    limit_vals = self.peA * 1.0 * 2.0
+            elif measure == 'align':
+                if (types == 'all'):
+                    limit_vals = 1.0
+                elif (types =='B'):
+                    limit_vals = 1.0
+                elif (types =='A'):
+                    limit_vals = 1.0
+        elif component == 'avg':
+            if measure == 'num_dens':
+                if (types =='all'):
+                    limit_vals = 1.6
+                elif (types =='B'):
+                    limit_vals = 1.1
+                elif (types =='A'):
+                    limit_vals = 0.6
+            elif measure == 'fa_avg':
+                if (types =='all'):
+                    limit_vals = self.peB * (2/3) * 0.3
+                elif (types =='B'):
+                    limit_vals = self.peB * 0.4
+                elif (types =='A'):
+                    limit_vals = self.peA * 0.2
+            elif measure == 'fa_avg_real':
+                if (types =='all'):
+                    limit_vals = self.peB * (0.55)
+                elif (types =='B'):
+                    limit_vals = self.peB
+                elif (types =='A'):
+                    limit_vals = self.peA
+            elif measure == 'fa_dens':
+                if (types == 'all'):
+                    limit_vals = self.peB * 0.3 * 1.6 * (2/3)
+                elif (types =='B'):
+                    limit_vals = self.peB * 0.4 * 1.1
+                elif (types =='A'):
+                    limit_vals = self.peA * 0.2 * 0.6
+
+            elif measure == 'align':
+                if (types == 'all'):
+                    limit_vals = 0.2
+                elif (types =='B'):
+                    limit_vals = 0.3
+                elif (types =='A'):
+                    limit_vals = 0.1
+        limit_vals =  np.amax(vals)
+        """
+        else:
+            if measure == 'num_dens':
+                limit_vals = 1.5
+            elif measure == 'fa_avg':
+                limit_vals = 500
+            elif measure == 'fa_avg_real':
+                limit_vals = 500
+            elif measure == 'fa_dens':
+                limit_vals = 750
+            elif measure == 'align':
+                limit_vals = 0.75
+        """
+        if component == 'dif':
+            im = plt.tricontourf(x_coords, y_coords, vals, cmap='seismic', vmin=-limit_vals, vmax=limit_vals)#, norm=matplotlib.colors.LogNorm())#, vmin=-2.5, vmax=2.5, cmap='seismic')#,alpha=0.65, norm=matplotlib.colors.LogNorm())
+        
+        else:
+            if (measure == 'num_dens') | (measure == 'fa_avg_real'):
+                im = plt.tricontourf(x_coords, y_coords, vals, cmap='Greens', vmin=0, vmax=limit_vals)#, norm=matplotlib.colors.LogNorm())#, vmin=-2.5, vmax=2.5, cmap='seismic')#,alpha=0.65, norm=matplotlib.colors.LogNorm())
+            else:
+                im = plt.tricontourf(x_coords, y_coords, vals, cmap='seismic', vmin=-limit_vals, vmax=limit_vals)#, norm=matplotlib.colors.LogNorm())#, vmin=-2.5, vmax=2.5, cmap='seismic')#,alpha=0.65, norm=matplotlib.colors.LogNorm())
+
+
+        if interface_id == True:
+            try:
+
+                if sep_surface_dict!=None:
+                    
+                    for m in range(0, len(sep_surface_dict)):
+                        key = 'surface id ' + str(int(int_comp_dict['ids'][m]))
+                        print(key)
+
+                        
+                        try:
+                            pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
+                            pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
+                            plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_interior_surface_x + self.lx_box, pos_interior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_interior_surface_x - self.lx_box, pos_interior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_interior_surface_x, pos_interior_surface_y+self.ly_box, c='black', s=3.0)
+                            plt.scatter(pos_interior_surface_x, pos_interior_surface_y-self.ly_box, c='black', s=3.0)
+                            
+                        
+                        except:
+                            pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
+                            pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
+                            plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_exterior_surface_x + self.lx_box, pos_exterior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_exterior_surface_x - self.lx_box, pos_exterior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y+self.ly_box, c='black', s=3.0)
+                            plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y-self.ly_box, c='black', s=3.0) 
+                        
+                        try:
+                            
+                            pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
+                            pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
+                            plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_exterior_surface_x + self.lx_box, pos_exterior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_exterior_surface_x - self.lx_box, pos_exterior_surface_y, c='black', s=3.0)
+                            plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y+self.ly_box, c='black', s=3.0)
+                            plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y-self.ly_box, c='black', s=3.0) 
+                            
+                        except:
+                            pass
+                        
+            except:
+                pass
+    
+
+        sm = plt.cm.ScalarMappable(norm=im.norm, cmap = im.cmap)
+        sm.set_array([])
+        clb = fig.colorbar(sm)#, ticks=[-2.5, -1.5, -0.5, 0.5, 1.5, 2.5])#, ax=ax2)
+        #clb.ax.set_title(r'$\mathrm{Pe}_\mathrm{F}$', fontsize=23)
+        if (component == 'current'):
+            if measure == 'fa_avg':
+                if types == 'all':
+                    clb.set_label(r'$F_a \alpha$', fontsize=23, rotation=270, labelpad=28)
+                elif types == 'A':
+                    clb.set_label(r'$F_a^\mathrm{S} \alpha^\mathrm{S}$', fontsize=23, rotation=270, labelpad=28)
+                elif types == 'B':
+                    clb.set_label(r'$F_a^\mathrm{S} \alpha^\mathrm{F}$', fontsize=23, rotation=270, labelpad=28)
+            elif measure == 'fa_dens':
+                if types == 'all':
+                    clb.set_label(r'$n F_a \alpha$', fontsize=23, rotation=270, labelpad=28)
+                elif types == 'A':
+                    clb.set_label(r'$n^\mathrm{S} F_a^\mathrm{S} \alpha^\mathrm{S}$', fontsize=23, rotation=270, labelpad=28)
+                elif types == 'B':
+                    clb.set_label(r'$n^\mathrm{F} F_a^\mathrm{F} \alpha^\mathrm{F}$', fontsize=23, rotation=270, labelpad=28)
+            elif measure == 'align':
+                if types == 'all':
+                    clb.set_label(r'$\alpha$', fontsize=23, rotation=270, labelpad=28)
+                elif types == 'A':
+                    clb.set_label(r'$\alpha^\mathrm{S}$', fontsize=23, rotation=270, labelpad=28)
+                elif types == 'B':
+                    clb.set_label(r'$\alpha^\mathrm{F}$', fontsize=23, rotation=270, labelpad=28)
+            elif measure == 'num_dens':
+                if types == 'all':
+                    clb.set_label(r'$n$', fontsize=23, rotation=270, labelpad=28)
+                elif types == 'A':
+                    clb.set_label(r'$n^\mathrm{S}$', fontsize=23, rotation=270, labelpad=28)
+                elif types == 'B':
+                    clb.set_label(r'$n^\mathrm{F}$', fontsize=23, rotation=270, labelpad=28)
+            elif measure == 'fa_avg_real':
+                if types == 'all':
+                    clb.set_label(r'$F_a$', fontsize=23, rotation=270, labelpad=28)
+        elif (component == 'avg'):
+            if measure == 'fa_avg':
+                if types == 'all':
+                    clb.set_label(r'$\langle F_a \alpha \rangle_\mathrm{t}$', fontsize=23, rotation=270, labelpad=28)
+                elif types == 'A':
+                    clb.set_label(r'$\langle F_a^\mathrm{S} \alpha^\mathrm{S} \rangle_\mathrm{t}$', fontsize=23, rotation=270, labelpad=28)
+                elif types == 'B':
+                    clb.set_label(r'$\langle F_a^\mathrm{S} \alpha^\mathrm{F} \rangle_\mathrm{t}$', fontsize=23, rotation=270, labelpad=28)
+            elif measure == 'fa_dens':
+                if types == 'all':
+                    clb.set_label(r'$\langle n F_a \alpha \rangle_\mathrm{t}$', fontsize=23, rotation=270, labelpad=28)
+                elif types == 'A':
+                    clb.set_label(r'$\langle n^\mathrm{S} F_a^\mathrm{S} \alpha^\mathrm{S} \rangle_\mathrm{t}$', fontsize=23, rotation=270, labelpad=28)
+                elif types == 'B':
+                    clb.set_label(r'$\langle n^\mathrm{F} F_a^\mathrm{F} \alpha^\mathrm{F} \rangle_\mathrm{t}$', fontsize=23, rotation=270, labelpad=28)
+            elif measure == 'align':
+                if types == 'all':
+                    clb.set_label(r'$\langle \alpha \rangle_\mathrm{t}$', fontsize=23, rotation=270, labelpad=28)
+                elif types == 'A':
+                    clb.set_label(r'$\langle \alpha^\mathrm{S} \rangle_\mathrm{t}$', fontsize=23, rotation=270, labelpad=28)
+                elif types == 'B':
+                    clb.set_label(r'$\langle \alpha^\mathrm{F} \rangle_\mathrm{t}$', fontsize=23, rotation=270, labelpad=28)
+            elif measure == 'num_dens':
+                if types == 'all':
+                    clb.set_label(r'$\langle n \rangle_\mathrm{t}$', fontsize=23, rotation=270, labelpad=28)
+                elif types == 'A':
+                    clb.set_label(r'$\langle n^\mathrm{S} \rangle_\mathrm{t}$', fontsize=23, rotation=270, labelpad=28)
+                elif types == 'B':
+                    clb.set_label(r'$\langle n^\mathrm{F} \rangle_\mathrm{t}$', fontsize=23, rotation=270, labelpad=28)
+            elif measure == 'fa_avg_real':
+                if types == 'all':
+                    clb.set_label(r'$\langle F_a \rangle_\mathrm{t}$', fontsize=23, rotation=270, labelpad=28)
+        elif component == 'dif':
+            if measure == 'fa_avg':
+                if types == 'all':
+                    clb.set_label(r'$F_a \alpha - \langle F_a \alpha \rangle_\mathrm{t}$', fontsize=23, rotation=270, labelpad=28)
+                elif types == 'A':
+                    clb.set_label(r'$F_a^\mathrm{S} \alpha^\mathrm{S} - \langle F_a^\mathrm{S} \alpha^\mathrm{S} \rangle_\mathrm{t}$', fontsize=23, rotation=270, labelpad=28)
+                elif types == 'B':
+                    clb.set_label(r'$F_a^\mathrm{S} \alpha^\mathrm{F} - \langle F_a^\mathrm{S} \alpha^\mathrm{F} \rangle_\mathrm{t}$', fontsize=23, rotation=270, labelpad=28)
+            elif measure == 'fa_dens':
+                if types == 'all':
+                    clb.set_label(r'$n F_a \alpha - \langle n F_a \alpha \rangle_\mathrm{t}$', fontsize=23, rotation=270, labelpad=28)
+                elif types == 'A':
+                    clb.set_label(r'$n^\mathrm{S} F_a^\mathrm{S} \alpha^\mathrm{S} - \langle n^\mathrm{S} F_a^\mathrm{S} \alpha^\mathrm{S} \rangle_\mathrm{t}$', fontsize=23, rotation=270, labelpad=28)
+                elif types == 'B':
+                    clb.set_label(r'$n^\mathrm{F} F_a^\mathrm{F} \alpha^\mathrm{F} - \langle n^\mathrm{F} F_a^\mathrm{S} \alpha^\mathrm{F} \rangle_\mathrm{t}$', fontsize=23, rotation=270, labelpad=28)
+            elif measure == 'align':
+                if types == 'all':
+                    clb.set_label(r'$\alpha - \langle \alpha \rangle_\mathrm{t}$', fontsize=23, rotation=270, labelpad=28)
+                elif types == 'A':
+                    clb.set_label(r'$\alpha^\mathrm{S} - \langle \alpha^\mathrm{S} \rangle_\mathrm{t}$', fontsize=23, rotation=270, labelpad=28)
+                elif types == 'B':
+                    clb.set_label(r'$\alpha^\mathrm{F} - \langle \alpha^\mathrm{F} \rangle_\mathrm{t}$', fontsize=23, rotation=270, labelpad=28)
+            elif measure == 'num_dens':
+                if types == 'all':
+                    clb.set_label(r'$n - \langle n \rangle_\mathrm{t}$', fontsize=23, rotation=270, labelpad=28)
+                elif types == 'A':
+                    clb.set_label(r'$n^\mathrm{S} - \langle n^\mathrm{S} \rangle_\mathrm{t}$', fontsize=23, rotation=270, labelpad=28)
+                elif types == 'B':
+                    clb.set_label(r'$n^\mathrm{F} - \langle n^\mathrm{F} \rangle_\mathrm{t}$', fontsize=23, rotation=270, labelpad=28)
+            elif measure == 'fa_avg_real':
+                if types == 'all':
+                    clb.set_label(r'$F_a - \langle F_a \rangle_\mathrm{t}$', fontsize=23, rotation=270, labelpad=28)
+
+        clb.ax.tick_params(labelsize=20)
+        
+        
+        if orientation_id == True:
+            try:
+                if active_fa_dict!=None:
+                    plt.quiver(self.pos_x, self.pos_y, active_fa_dict['bin']['x'], active_fa_dict['bin']['y'], scale=20.0, color='black', alpha=0.8)
+            except:
+                pass
+        """
+        
+
+        
+        for i in range(0, len(avg_theta_r_flatten)-1):   
+            x_coords = self.hx_box + avg_rad_r_flatten * avg_radius_r_flatten * np.cos(avg_theta_r_flatten[i]*(np.pi/180))
+            y_coords = self.hy_box + avg_rad_r_flatten * avg_radius_r_flatten * np.sin(avg_theta_r_flatten[i]*(np.pi/180))
+            plt.plot(x_coords, y_coords, c='black', linewidth=0.5, alpha=0.5)
+
+        for i in range(0, len(avg_rad_r_flatten)):   
+            x_coords = self.hx_box + avg_rad_r_flatten[i] * avg_radius_r_flatten * np.cos(avg_theta_r_flatten*(np.pi/180))
+            y_coords = self.hy_box + avg_rad_r_flatten[i] * avg_radius_r_flatten * np.sin(avg_theta_r_flatten*(np.pi/180))
+            plt.plot(x_coords, y_coords, c='black', linewidth=0.5, alpha=0.5)
+        """
+        #Set axes parameters
+        # If rectangular box, reduce system size plotted
+        if self.lx_box > self.ly_box:
+            ax.set_xlim(-(0.5*dense_x_width)+self.hx_box, (0.5*dense_x_width)+self.hx_box)
+            ax.set_ylim(0.0, self.ly_box)
+        elif self.lx_box < self.ly_box:
+            ax.set_ylim(dense_y_mid-(dense_y_width), dense_y_mid+(dense_y_width))
+            ax.set_xlim(0.0, self.lx_box)
+        # Plot entire system            
+        else:
+
+            ax.set_ylim(0, self.ly_box)
+            ax.set_xlim(0, self.lx_box)
+            ax.set_ylim(25, self.ly_box-25)
+            ax.set_xlim(25, self.lx_box-25)
+        
+        
+        # Label simulation time
+        if component != 'avg':
+            if banner_id == False:
+                if self.lx_box == self.ly_box:
+                    #plt.text(0.69, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+                    #    fontsize=24, transform = ax.transAxes,
+                    #    bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+                    ax.text(0.03, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+                        fontsize=30, transform = ax.transAxes,
+                        bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+                elif self.lx_box > self.ly_box:
+                    ax.text(0.85, 0.1, s=r'$\tau$' + ' = ' + '{:.3f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+                        fontsize=18, transform = ax.transAxes,
+                        bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+            
+        ax.axes.set_xticks([])
+        ax.axes.set_yticks([])
+        ax.axes.set_xticklabels([])
+        ax.axes.set_yticks([])
+        ax.set_aspect('equal')
+        
+        # Create frame images
+        #ax.set_facecolor('white')
+        #ax.set_facecolor('#F4F4F4') .  # For website
+        if component == 'dif':
+            plt.savefig(self.outPath + 'dif_bulk_heterogeneity_' + measure + '_' + types +'_' + self.outFile + ".png", dpi=200, transparent=False, bbox_inches='tight')
+        elif component == 'current':
+            plt.savefig(self.outPath + 'current_bulk_heterogeneity_' + measure + '_' + types +'_' + self.outFile + ".png", dpi=200, transparent=False, bbox_inches='tight')
+        elif component == 'avg':
+            plt.savefig(self.outPath + 'avg_bulk_heterogeneity_' + measure + '_' + types +'_' + self.outFile + ".png", dpi=200, transparent=False, bbox_inches='tight')
+        #plt.savefig(self.outPath + 'part_activity_' + self.outFile + ".eps", format='eps', dpi=150, bbox_inches='tight')
+        plt.close() 
+
+
+
+
 
     def plot_part_activity_zoom_seg(self, pos, px, py, sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None, mono_id=False, interface_id = False, orientation_id = False, zoom_id = False, banner_id = False, presentation_id = False):
 
