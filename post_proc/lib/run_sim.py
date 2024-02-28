@@ -1340,7 +1340,9 @@ class run_sim:
 
         # Update number of particles in gas and dense phase
         NLiq = len(pos)
+        
         NGas = self.partNum - NLiq
+
         typ_A=0
         typ_B=0
 
