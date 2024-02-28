@@ -244,6 +244,7 @@ class run_sim:
 
         # Compute lattice spacing based on each activity
         latNet = (phiCP / self.phi)**0.5
+        latNet = 1.0
 
         # Use latNet to space your particles
         def computeDistance(x, y):
