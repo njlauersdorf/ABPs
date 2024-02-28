@@ -2812,8 +2812,8 @@ class plotting:
         particle lattice spacings color coded.
         """
 
-        A_vel = vel_plot_dict['A']['mag']/dt_step
-        B_vel = vel_plot_dict['B']['mag']/dt_step
+        A_vel = vel_plot_dict['A']['mag']
+        B_vel = vel_plot_dict['B']['mag']
 
         fig = plt.figure(figsize=(14,6))
         ax = fig.add_subplot(111)
@@ -2877,6 +2877,11 @@ class plotting:
         
             plt.savefig(self.outPath + 'plot_avg_vel_histo_' + self.outFile + ".png", dpi=150, transparent=False, bbox_inches='tight')
             plt.close()
+
+        vel_histo_dict = {'A': {'x': xA, 'y': yA}, 'B': {'x': xB, 'y': yB}}
+        vel_histo_stat_dict = {'A': {'mean': np.mean(A_vel), 'median': np.median(A_vel), 'std': np.std(A_vel)}, 'B': {'mean': np.mean(B_vel), 'median': np.median(B_vel), 'std': np.std(B_vel)}}
+
+        return vel_histo_dict, vel_histo_stat_dict
     def cluster_size_histogram(self, collision_plot_dict, avg='False'):
         """
         This function plots a histogram of the lattice spacings of bulk (green)
@@ -10658,8 +10663,15 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                     fast_leg = [Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=slowCol, label=r'$\mathrm{Pe}_\mathrm{S} = $'+str(int(self.peA)), markersize=32), Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=fastCol, label=r'$\mathrm{Pe}_\mathrm{F} = $'+str(int(self.peB)), markersize=32)]
                 else:
                     fast_leg = [Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=slowCol, label=r'$\mathrm{Pe}_\mathrm{S} = $'+str(int(self.peB)), markersize=32), Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=fastCol, label=r'$\mathrm{Pe}_\mathrm{F} = $'+str(int(self.peA)), markersize=32)]
-                one_leg = ax.legend(handles=fast_leg, loc='upper right', borderpad=0.3, labelspacing=0.4, handletextpad=-0.2, bbox_transform=ax.transAxes, bbox_to_anchor=[1.02, 1.15], handlelength=1.5, columnspacing=0.4, fontsize=36, ncol=2, facecolor='none', edgecolor='none')
-                ax.add_artist(one_leg)
+                if (self.peA>=100):
+                    one_leg = ax.legend(handles=fast_leg, loc='upper right', borderpad=0.3, labelspacing=0.4, handletextpad=-0.2, bbox_transform=ax.transAxes, bbox_to_anchor=[1.02, 1.15], handlelength=1.5, columnspacing=0.4, fontsize=36, ncol=2, facecolor='none', edgecolor='none')
+                    ax.add_artist(one_leg)
+                elif (self.peA>=10) & (self.peA<100):
+                    one_leg = ax.legend(handles=fast_leg, loc='upper right', borderpad=0.3, labelspacing=0.4, handletextpad=-0.2, bbox_transform=ax.transAxes, bbox_to_anchor=[0.97, 1.15], handlelength=1.5, columnspacing=0.4, fontsize=36, ncol=2, facecolor='none', edgecolor='none')
+                    ax.add_artist(one_leg)
+                elif (self.peA<10):
+                    one_leg = ax.legend(handles=fast_leg, loc='upper right', borderpad=0.3, labelspacing=0.4, handletextpad=-0.2, bbox_transform=ax.transAxes, bbox_to_anchor=[1.02, 1.15], handlelength=1.5, columnspacing=0.4, fontsize=36, ncol=2, facecolor='none', edgecolor='none')
+                    ax.add_artist(one_leg)
 
             #plt.scatter(neigh_plot_dict['all-all']['x'][typ1ind]+self.hx_box, neigh_plot_dict['all-all']['y'][typ1ind]+self.hy_box, c='black', s=sz)
             #plt.quiver(pos[typ1ind,0]+self.hx_box, pos[typ1ind,1]+self.hy_box, px, py, color='black', width=0.003)
@@ -10776,7 +10788,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         if orientation_id == True:
             try:
                 if active_fa_dict!=None:
-                    plt.quiver(self.pos_x, self.pos_y, active_fa_dict['bin']['x'], active_fa_dict['bin']['y'], scale=20.0, color='black', alpha=0.8, width=0.008)
+                    plt.quiver(self.pos_x, self.pos_y, active_fa_dict['bin']['x'], active_fa_dict['bin']['y'], scale=20.0, color='black', alpha=0.8, width=0.004)
             except:
                 pass
 
@@ -10811,9 +10823,19 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                 #plt.text(0.69, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
                 #    fontsize=24, transform = ax.transAxes,
                 #    bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
-                plt.text(0.62, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
-                    fontsize=30, transform = ax.transAxes,
-                    bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+
+                if self.tst<10:
+                    plt.text(0.68, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+                        fontsize=30, transform = ax.transAxes,
+                        bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+                elif (self.tst>=10) & (self.tst<100):
+                    plt.text(0.62, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+                        fontsize=30, transform = ax.transAxes,
+                        bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+                elif (self.tst>=100):
+                    plt.text(0.62, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+                        fontsize=30, transform = ax.transAxes,
+                        bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
             elif self.lx_box > self.ly_box:
                 plt.text(0.85, 0.1, s=r'$\tau$' + ' = ' + '{:.4f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
                     fontsize=18, transform = ax.transAxes,
@@ -10829,7 +10851,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         #ax.set_facecolor('white')
         #ax.set_facecolor('#F4F4F4') .  # For website
         plt.tight_layout()
-        plt.savefig(self.outPath + 'part_activity_' + self.outFile + ".png", dpi=300, transparent=True, bbox_inches='tight')
+        plt.savefig(self.outPath + 'part_activity_' + self.outFile + ".png", dpi=200, transparent=False, bbox_inches='tight')
         #plt.savefig(self.outPath + 'part_activity_' + self.outFile + ".eps", format='eps', dpi=150, bbox_inches='tight')
         plt.close()  
     

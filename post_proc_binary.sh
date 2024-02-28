@@ -114,6 +114,8 @@ if [ $analyze == "y" ]; then
         echo 'Input must correspond to given options!' 
         exit 0 
     fi
+else
+    plot="n"
 fi
 
 
@@ -136,7 +138,7 @@ if [ $vid == "n" ] && [ $plot == "n" ] && [ $analyze == "n" ]; then
 fi
 
 echo "|----------------------------------------------------------------------|"
-echo "|      Possible simulation options and corresponding user inputs       |"
+echo "|       Possible analysis methods and corresponding user inputs        |"
 echo "|          **************************************************          |"
 echo "|          -----------------System Properties-----------------         |"
 echo "| phases: composition and area of each phase                           |"
@@ -201,6 +203,27 @@ if [ -z "$method" ]; then
     exit 0 
 fi 
 
+echo "|----------------------------------------------------------------------|"
+echo "|      Possible simulation options and corresponding user inputs       |"
+echo "|          **************************************************          |"
+echo "|          -----------------System Properties-----------------         |"
+echo "| none: run simulation method without any modifiers                    |"
+echo "| com: lock largest cluster's center of mass to middle of box          |"
+echo "| interface: plot interior and exterior interface surfaces             |"
+echo "| orient: plot average particle orientations of specified bin size     |"
+echo "| mono: plot a binary system with same activities as monodisperse      |"
+echo "| zoom: zoomed in view of the cluster's bulk                           |"
+echo "| banner: make legend on top of plot instead of above it               |"
+echo "| presentation: reduce complexities for powerpoint presentations       |"
+echo "|----------------------------------------------------------------------|"
+
+echo "Do you want to use any optional modifiers for your analysis/plots, separated by underscores '_', (default = 'none')?"
+read optional
+
+if [ -z "$optional" ]; then 
+    optional="none"
+fi 
+
 echo "What is your starting frame for analysis? (default = start of simulation)"
 read start_step
 
@@ -219,6 +242,14 @@ if [ -z "$end_step" ]; then
     end_step="default"
 fi 
 
+if [ $start_step != "default" ]; then
+    if [ $end_step != "default" ]; then
+        if [ "$start_step" -gt "$end_step" ]; then
+            echo 'Start frame must be less than end frame'
+            exit 0 
+        fi
+    fi
+fi
 if [ $method == "lattice_spacing" ]; then
   echo "Do you want to use parallel processing, namely for lattice spacing (y/n)?"
   read parallel
@@ -229,9 +260,9 @@ fi
 for file in $(ls *gsd)
 do
     if [ "$parallel" = "y" ]; then
-        $submit $script_path/analyze_binary_parallel.sh $hoomd_path $outpath $script_path $file $bin_size $time_step $method $analyze $plot $vid $os $start_step $end_step
+        $submit $script_path/analyze_binary_parallel.sh $hoomd_path $outpath $script_path $file $bin_size $time_step $method $analyze $plot $vid $os $start_step $end_step $optional
     elif [ "$parallel" = "n" ]; then
-        $submit $script_path/analyze_binary.sh $hoomd_path $outpath $script_path $file $bin_size $time_step $method $analyze $plot $vid $os $start_step $end_step
+        $submit $script_path/analyze_binary.sh $hoomd_path $outpath $script_path $file $bin_size $time_step $method $analyze $plot $vid $os $start_step $end_step $optional
     else
         echo "did not recognize response to parallel processing"
     fi

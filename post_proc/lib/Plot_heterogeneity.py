@@ -1,7 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
-
-df = pd.read_csv('/Volumes/EXTERNAL2/final_hetero/output_files/compiled_heterogeneity.txt', sep='\s+', header=0)
+import numpy as np
+df = pd.read_csv('/Volumes/External/hetero_final_test/output_files/compiled_heterogeneity_dif_Ra.txt', sep='\s+', header=0)
 
 headers = df.columns.tolist()
 
@@ -24,45 +24,88 @@ align_A = df['align_A'].values
 align_B = df['align_B'].values
 
 
+fast_act = [200, 300, 350, 400, 450, 500]
+#fast_act = [500]
+for i in range(0, len(fast_act)):
+    test_id = np.where((interpart_peB==fast_act[i]) & (0.5 * interpart_peA + interpart_peB * 0.5>=150))[0]
+    if len(test_id)>0:
+        mono_id = np.where((interpart_peB==fast_act[i]) & (interpart_peA==fast_act[i]))[0]
+        if len(mono_id)==1:
 
-plt.scatter(interpart_peA/interpart_peB, fa_dens_all, c='black', label='all' )
-plt.scatter(interpart_peA/interpart_peB, fa_dens_A, c='blue', label='slow')
-plt.scatter(interpart_peA/interpart_peB, fa_dens_B, c='red', label='fast')
-plt.legend()
+            plt.scatter(interpart_peA[test_id]/interpart_peB[test_id], fa_dens_all[test_id]/fa_dens_all[mono_id], c='black', label='all' )
+            #plt.scatter(interpart_peA[test_id]/interpart_peB[test_id], fa_dens_A[test_id]/fa_dens_A[mono_id], c='blue', label='slow')
+            #plt.scatter(interpart_peA[test_id]/interpart_peB[test_id], fa_dens_B[test_id]/fa_dens_B[mono_id], c='red', label='fast')
+#plt.legend()
 plt.xlabel(r'Activity Ratio ($Pe_R$)')
-plt.ylabel(r'Active Force Density ($n \alpha \langle F^a \rangle$)')
+plt.ylabel(r'Body Force Density Fluctuations ($\Lambda(n \alpha F^a)$)')
+plt.plot([-1, 1], [1,1], linewidth=1.0, linestyle='dashed', color='gray')
+plt.plot([0.175, 0.175], [-10000,20000], linewidth=1.0, linestyle='dashed', color='gray')
+plt.plot([0.35, 0.35], [-10000,20000], linewidth=1.0, linestyle='dashed', color='gray')
+
+plt.xlim([-0.02,1.02])
+
+plt.ylim([0,3])
 
 plt.show()
 
-plt.scatter(interpart_peA/interpart_peB, fa_avg_all, c='black', label='all' )
-plt.scatter(interpart_peA/interpart_peB, fa_avg_A, c='blue', label='slow')
-plt.scatter(interpart_peA/interpart_peB, fa_avg_B, c='red', label='fast')
-plt.legend()
+for i in range(0, len(fast_act)):
+    test_id = np.where((interpart_peB==fast_act[i]) & (0.5 * interpart_peA + interpart_peB * 0.5>=150))[0]
+    if len(test_id)>0:
+        mono_id = np.where((interpart_peB==fast_act[i]) & (interpart_peA==fast_act[i]))[0]
+        if len(mono_id)==1:
+
+            plt.scatter(interpart_peA[test_id]/interpart_peB[test_id], fa_avg_real_all[test_id]/fa_avg_real_all[mono_id], c='black', label='all' )
+
+#plt.legend()
 plt.xlabel(r'Activity Ratio ($Pe_R$)')
-plt.ylabel(r'Average Active Force ($\alpha \langle F^a \rangle$)')
+plt.ylabel(r'Average Active Force Fluctuations ($\Lambda(F^a)$)')
+plt.plot([-1, 1], [1,1], linewidth=1.0, linestyle='dashed', color='gray')
+plt.plot([0.175, 0.175], [-10000,20000], linewidth=1.0, linestyle='dashed', color='gray')
+plt.plot([0.35, 0.35], [-10000,20000], linewidth=1.0, linestyle='dashed', color='gray')
+plt.ylim([0.9,1.2])
+plt.xlim([-0.02,1.02])
 
 plt.show()
 
-plt.scatter(interpart_peA/interpart_peB, fa_avg_real_all, c='black', label='all' )
-plt.legend()
-plt.xlabel(r'Activity Ratio ($Pe_R$)')
-plt.ylabel(r'Average Active Force ($\alpha \langle F^a \rangle$)')
+for i in range(0, len(fast_act)):
+    test_id = np.where((interpart_peB==fast_act[i]) & (0.5 * interpart_peA + interpart_peB * 0.5>=150))[0]
+    if len(test_id)>0:
+        mono_id = np.where((interpart_peB==fast_act[i]) & (interpart_peA==fast_act[i]))[0]
+        if len(mono_id)==1:
+            plt.scatter(interpart_peA[test_id]/interpart_peB[test_id], num_dens_all[test_id]/num_dens_all[mono_id], c='black', label='all' )
+            plt.scatter(interpart_peA[test_id]/interpart_peB[test_id], num_dens_A[test_id]/num_dens_A[mono_id], c='blue', label='slow')
+            plt.scatter(interpart_peA[test_id]/interpart_peB[test_id], num_dens_B[test_id]/num_dens_B[mono_id], c='red', label='fast')
 
+plt.xlabel(r'Activity Ratio ($Pe_R$)')
+plt.ylabel(r'Number Density Fluctuations ($\Lambda(n)$)')
+plt.plot([-1, 1], [1,1], linewidth=1.0, linestyle='dashed', color='gray')
+plt.plot([0.175, 0.175], [-10000,20000], linewidth=1.0, linestyle='dashed', color='gray')
+plt.plot([0.35, 0.35], [-10000,20000], linewidth=1.0, linestyle='dashed', color='gray')
+plt.xlim([-0.02,1.02])
+
+plt.ylim([0,6])
+
+#plt.legend()
 plt.show()
 
-plt.scatter(interpart_peA/interpart_peB, num_dens_all, c='black', label='all')
-plt.scatter(interpart_peA/interpart_peB, num_dens_A, c='blue', label='slow')
-plt.scatter(interpart_peA/interpart_peB, num_dens_B, c='red', label='fast')
-plt.xlabel(r'Activity Ratio ($Pe_R$)')
-plt.ylabel(r'Number Density ($n$)')
-plt.legend()
-plt.show()
+for i in range(0, len(fast_act)):
+    test_id = np.where((interpart_peB==fast_act[i]) & (0.5 * interpart_peA + interpart_peB * 0.5>=150))[0]
+    if len(test_id)>0:
+        mono_id = np.where((interpart_peB==fast_act[i]) & (interpart_peA==fast_act[i]))[0]
+        if len(mono_id)==1:
 
-plt.scatter(interpart_peA/interpart_peB, align_all, c='black', label='all')
-plt.scatter(interpart_peA/interpart_peB, align_A, c='blue', label='all')
-plt.scatter(interpart_peA/interpart_peB, align_B, c='red', label='all')
+            plt.scatter(interpart_peA[test_id]/interpart_peB[test_id], align_all[test_id]/align_all[mono_id], c='black', label='all' )
+            plt.scatter(interpart_peA[test_id]/interpart_peB[test_id], align_A[test_id]/align_A[mono_id], c='blue', label='slow')
+            plt.scatter(interpart_peA[test_id]/interpart_peB[test_id], align_B[test_id]/align_B[mono_id], c='red', label='fast')
+
+plt.ylim([0,6])
 
 plt.xlabel(r'Activity Ratio ($Pe_R$)')
-plt.ylabel(r'Alignment ($\alpha$)')
-plt.legend()
+plt.ylabel(r'Alignment Fluctuations ($\Lambda(\alpha)$)')
+plt.plot([-1, 1], [1,1], linewidth=1.0, linestyle='dashed', color='gray')
+plt.plot([0.175, 0.175], [-10000,20000], linewidth=1.0, linestyle='dashed', color='gray')
+plt.plot([0.35, 0.35], [-10000,20000], linewidth=1.0, linestyle='dashed', color='gray')
+plt.xlim([-0.02,1.02])
+
+#plt.legend()
 plt.show()

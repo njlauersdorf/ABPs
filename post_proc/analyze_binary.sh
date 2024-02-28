@@ -31,7 +31,11 @@ os=${11}
 start_frame=${12}
 # This is the end frame for analysis
 end_frame=${13}
-
+# This is the optional analysis parameters
+optional=${14}
+echo optional
+echo $optional
+stop
 # Activate environment if on windows, otherwise, activate yourself or later if longleaf
 if [ $os == "windows" ]; then
     source ~/.profile
@@ -164,9 +168,9 @@ echo $pa2
 # Runs analysis for whatever method you specified
 if [ $analyze == "y" ]; then
     if [ $os == "mac" ]; then
-        python3 $script_path/full_density_analysis_binary_updates_temp.py $fname $hoomd_path $outpath $pa2 $pb $xa2 $ep $phi $dtau $bin $step $method $plot $start_frame $end_frame
+        python3 $script_path/full_density_analysis_binary_updates_temp.py $fname $hoomd_path $outpath $pa2 $pb $xa2 $ep $phi $dtau $bin $step $method $plot $start_frame $end_frame $optional
     elif [ $os == "windows" ]; then
-        python $script_path/full_density_analysis_binary_updates_temp.py $fname $hoomd_path $outpath $pa2 $pb $xa2 $ep $phi $dtau $bin $step $method $plot $start_frame $end_frame
+        python $script_path/full_density_analysis_binary_updates_temp.py $fname $hoomd_path $outpath $pa2 $pb $xa2 $ep $phi $dtau $bin $step $method $plot $start_frame $end_frame $optional
     fi
 fi
 
@@ -178,13 +182,14 @@ eps=${ep}
 phi=${phi}
 pNum=${pNum%.*}
 
+echo $vid
 # Creates videos for whatever method you specified
 if [ $vid == "y" ]; then
     if [ $method == "activity" ]; then
         if [ $os == "mac" ]; then
             pic_path="${outpath}_pic_files/part_activity_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}"
             vid_path="${outpath}_vid_files/part_activity_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}"
-            ffmpeg -start_number $start_frame -framerate 16 -i "$pic_path"_frame_%05d.png\
+            ffmpeg -start_number $start_frame -framerate 8 -i "$pic_path"_frame_%05d.png\
             -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
             "$vid_path".mp4
         elif [ $os == "windows" ]; then

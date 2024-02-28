@@ -42,7 +42,7 @@ import phase_identification
 import binning
 import particles
 class stress_and_pressure:
-    def __init__(self, lx_box, ly_box, NBins_x, NBins_y, partNum, pos, typ, px, py, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict):
+    def __init__(self, lx_box, ly_box, NBins_x, NBins_y, partNum, pos, typ, px, py, part_dict, eps, peA, peB, parFrac):
 
         import freud
 
@@ -87,12 +87,6 @@ class stress_and_pressure:
         self.peB = peB
 
         self.parFrac = parFrac
-
-        self.align_dict = align_dict
-
-        self.area_frac_dict = area_frac_dict
-
-        self.press_dict = press_dict
 
         self.binning = binning.binning(self.lx_box, self.ly_box, self.partNum, self.NBins_x, self.NBins_y, self.peA, self.peB, self.typ, self.eps)
 

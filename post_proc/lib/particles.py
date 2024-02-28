@@ -914,7 +914,7 @@ class particle_props:
 
         return vel_phase_dict, vel_phase_plot_dict
 
-    def part_velocity(self, prev_pos, prev_ang, ori):
+    def part_velocity(self, prev_pos, prev_ang, ori, dt_step):
         '''
         Purpose: Calculates the velocity of each particle type indescriminate of phases
 
@@ -940,18 +940,18 @@ class particle_props:
         typ0ind = np.where(self.typ==0)[0]
         typ1ind = np.where(self.typ==1)[0]
 
-        typ01_vel_mag = (dx**2 + dy**2) ** 0.5
+        typ01_vel_mag = ((dx**2 + dy**2) ** 0.5)/dt_step
 
         # Slow particle properties
-        typ0_vel_x = dx[typ0ind]
-        typ0_vel_y = dy[typ0ind]
-        typ0_vel_mag = (typ0_vel_x**2 + typ0_vel_y**2) ** 0.5
+        typ0_vel_x = dx[typ0ind]/dt_step
+        typ0_vel_y = dy[typ0ind]/dt_step
+        typ0_vel_mag = ((typ0_vel_x**2 + typ0_vel_y**2) ** 0.5)
         pos0 = self.pos[typ0ind]
 
         # Fast particle properties
-        typ1_vel_x = dx[typ1ind]
-        typ1_vel_y = dy[typ1ind]
-        typ1_vel_mag = (typ1_vel_x**2 + typ1_vel_y**2) ** 0.5
+        typ1_vel_x = dx[typ1ind]/dt_step
+        typ1_vel_y = dy[typ1ind]/dt_step
+        typ1_vel_mag = ((typ1_vel_x**2 + typ1_vel_y**2) ** 0.5)
         pos1 = self.pos[typ1ind]
 
         # Slow/fast particle average velocities
@@ -975,7 +975,7 @@ class particle_props:
         typ1_median = np.median(typ1_vel_mag)
 
         # Dictionary containing the velocity of each particle type ('all', 'A', or 'B') for plotting
-        vel_plot_dict = {'all': {'x': dx, 'y': dy, 'mag': dr, 'pos': self.pos}, 'A': {'x': typ0_vel_x, 'y': typ0_vel_y, 'mag': typ0_vel_mag, 'pos': pos0}, 'B': {'x': typ1_vel_x, 'y': typ1_vel_y, 'mag': typ1_vel_mag, 'pos': pos1} }
+        vel_plot_dict = {'all': {'x': dx/dt_step, 'y': dy/dt_step, 'mag': dr/dt_step, 'pos': self.pos}, 'A': {'x': typ0_vel_x, 'y': typ0_vel_y, 'mag': typ0_vel_mag, 'pos': pos0}, 'B': {'x': typ1_vel_x, 'y': typ1_vel_y, 'mag': typ1_vel_mag, 'pos': pos1} }
 
         # Dictionary containing the average, mode, standard deviation, and median of velocity
         # of each particle type ('all', 'A', or 'B')
