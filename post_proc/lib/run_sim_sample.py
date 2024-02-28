@@ -69,6 +69,7 @@ epsA = ( ( ( 4 * (peA * (partPercA/100) + peB * (1.0 - (partPercA/100 ) ) ) ) / 
 epsB = ( ( ( 4 * (peA * (partPercA/100) + peB * (1.0 - (partPercA/100 ) ) ) ) / 24) + 10 )
 
 tauLJ = theory_functs.computeTauLJ(eps)
+tauLJ = theory_functs.computeTauLJ(1.0)
 
 dt = 0.0000001 * tauLJ                        # timestep size.  I use 0.000001 for dt=tauLJ* (eps/10^6) generally
 

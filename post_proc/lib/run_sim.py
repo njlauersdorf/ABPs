@@ -244,7 +244,6 @@ class run_sim:
 
         # Compute lattice spacing based on each activity
         latNet = (phiCP / self.phi)**0.5
-        latNet = 1.0
 
         # Use latNet to space your particles
         def computeDistance(x, y):
@@ -972,6 +971,9 @@ class run_sim:
                        dynamic=['attribute', 'property', 'momentum'])
 
         #Number of time steps to run simulation for.
+
+        print(self.totTsteps)
+        print(type(self.totTsteps))
         hoomd.run(self.totTsteps)
 
     def random_init_fine(self):
@@ -1213,7 +1215,8 @@ class run_sim:
 
         # Compute lattice spacing based on each activity
         latNet = self.theory_functs.conForRClust2(self.peA, self.peB, self.beta_A, self.beta_B, self.eps)
-        
+        latNet = 1.0
+
         # Compute gas phase density, phiG
         phiG = self.theory_functs.compPhiG(peNet, latNet)
 
