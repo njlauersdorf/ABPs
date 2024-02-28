@@ -122,7 +122,7 @@ if [ $dont_run == "no" ]; then
     # 25 50 75)
 
     declare -a pb
-    pb=(200 300 400 500)
+    pb=(500)
 
     # List for particle fraction
     declare -a xa
