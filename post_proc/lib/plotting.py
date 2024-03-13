@@ -11282,6 +11282,10 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
             average_val_path = averagesPath + 'radial_avgs_num_dens_pa' + str(int(self.peA)) + '_pb' + str(int(self.peB))  + '_xa' + str(int(self.parFrac)) + '_eps' + str(self.eps) + '_phi' + str(float(self.phi)) + '_pNum' + str(self.partNum) +  '_bin5_time1.csv'
             average_valA_path = averagesPath + 'radial_avgs_num_densA_pa' + str(int(self.peA)) + '_pb' + str(int(self.peB))  + '_xa' + str(int(self.parFrac)) + '_eps' + str(self.eps) + '_phi' + str(float(self.phi)) + '_pNum' + str(self.partNum) +  '_bin5_time1.csv'
             average_valB_path = averagesPath + 'radial_avgs_num_densB_pa' + str(int(self.peA)) + '_pb' + str(int(self.peB))  + '_xa' + str(int(self.parFrac)) + '_eps' + str(self.eps) + '_phi' + str(float(self.phi)) + '_pNum' + str(self.partNum) +  '_bin5_time1.csv'
+        elif measure == 'part_frac':
+            average_valA_path = averagesPath + 'radial_avgs_part_fracA_pa' + str(int(self.peA)) + '_pb' + str(int(self.peB))  + '_xa' + str(int(self.parFrac)) + '_eps' + str(self.eps) + '_phi' + str(float(self.phi)) + '_pNum' + str(self.partNum) +  '_bin5_time1.csv'
+            average_valB_path = averagesPath + 'radial_avgs_part_fracB_pa' + str(int(self.peA)) + '_pb' + str(int(self.peB))  + '_xa' + str(int(self.parFrac)) + '_eps' + str(self.eps) + '_phi' + str(float(self.phi)) + '_pNum' + str(self.partNum) +  '_bin5_time1.csv'
+        
         elif measure == 'align':
             average_val_path = averagesPath + 'radial_avgs_align_pa' + str(int(self.peA)) + '_pb' + str(int(self.peB))  + '_xa' + str(int(self.parFrac)) + '_eps' + str(self.eps) + '_phi' + str(float(self.phi)) + '_pNum' + str(self.partNum) +  '_bin5_time1.csv'
             average_valA_path = averagesPath + 'radial_avgs_alignA_pa' + str(int(self.peA)) + '_pb' + str(int(self.peB))  + '_xa' + str(int(self.parFrac)) + '_eps' + str(self.eps) + '_phi' + str(float(self.phi)) + '_pNum' + str(self.partNum) +  '_bin5_time1.csv'
@@ -11357,6 +11361,11 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                     limit_vals = 2.0
                 elif (types =='A'):
                     limit_vals = 1.25
+            elif measure == 'part_frac':
+                if (types =='B'):
+                    limit_vals = 1.0
+                elif (types =='A'):
+                    limit_vals = 1.0
             elif measure == 'fa_avg':
                 if (types =='all'):
                     limit_vals = self.peB * (2/3)
@@ -11393,6 +11402,11 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                     limit_vals = 2.5
                 elif (types =='A'):
                     limit_vals = 1.25
+            elif measure == 'part_frac':
+                if (types =='B'):
+                    limit_vals = 1.0
+                elif (types =='A'):
+                    limit_vals = 1.0
             elif measure == 'fa_avg':
                 if (types =='all'):
                     limit_vals = self.peB * (2/3)
@@ -11429,6 +11443,11 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                     limit_vals = 1.1
                 elif (types =='A'):
                     limit_vals = 0.6
+            elif measure == 'part_frac':
+                if (types =='B'):
+                    limit_vals = 1.0
+                elif (types =='A'):
+                    limit_vals = 1.0
             elif measure == 'fa_avg':
                 if (types =='all'):
                     limit_vals = self.peB * (2/3) * 0.3
@@ -11476,7 +11495,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
             im = plt.tricontourf(x_coords, y_coords, vals, cmap='seismic', vmin=-limit_vals, vmax=limit_vals)#, norm=matplotlib.colors.LogNorm())#, vmin=-2.5, vmax=2.5, cmap='seismic')#,alpha=0.65, norm=matplotlib.colors.LogNorm())
         
         else:
-            if (measure == 'num_dens') | (measure == 'fa_avg_real'):
+            if (measure == 'num_dens') | (measure == 'fa_avg_real') | (measure == 'part_frac'):
                 im = plt.tricontourf(x_coords, y_coords, vals, cmap='Greens', vmin=0, vmax=limit_vals)#, norm=matplotlib.colors.LogNorm())#, vmin=-2.5, vmax=2.5, cmap='seismic')#,alpha=0.65, norm=matplotlib.colors.LogNorm())
             else:
                 im = plt.tricontourf(x_coords, y_coords, vals, cmap='seismic', vmin=-limit_vals, vmax=limit_vals)#, norm=matplotlib.colors.LogNorm())#, vmin=-2.5, vmax=2.5, cmap='seismic')#,alpha=0.65, norm=matplotlib.colors.LogNorm())
@@ -11568,6 +11587,11 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                     clb.set_label(r'$n^\mathrm{S}$', fontsize=23, rotation=270, labelpad=28)
                 elif types == 'B':
                     clb.set_label(r'$n^\mathrm{F}$', fontsize=23, rotation=270, labelpad=28)
+            elif measure == 'part_frac':
+                if types == 'A':
+                    clb.set_label(r'$\chi^\mathrm{S}$', fontsize=23, rotation=270, labelpad=28)
+                elif types == 'B':
+                    clb.set_label(r'$\chi^\mathrm{F}$', fontsize=23, rotation=270, labelpad=28)
             elif measure == 'fa_avg_real':
                 if types == 'all':
                     clb.set_label(r'$F_a$', fontsize=23, rotation=270, labelpad=28)
@@ -11600,6 +11624,11 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                     clb.set_label(r'$\langle n^\mathrm{S} \rangle_\mathrm{t}$', fontsize=23, rotation=270, labelpad=28)
                 elif types == 'B':
                     clb.set_label(r'$\langle n^\mathrm{F} \rangle_\mathrm{t}$', fontsize=23, rotation=270, labelpad=28)
+            elif measure == 'part_frac':
+                if types == 'A':
+                    clb.set_label(r'$\langle \chi^\mathrm{S} \rangle_\mathrm{t}$', fontsize=23, rotation=270, labelpad=28)
+                elif types == 'B':
+                    clb.set_label(r'$\langle \chi^\mathrm{F} \rangle_\mathrm{t}$', fontsize=23, rotation=270, labelpad=28)
             elif measure == 'fa_avg_real':
                 if types == 'all':
                     clb.set_label(r'$\langle F_a \rangle_\mathrm{t}$', fontsize=23, rotation=270, labelpad=28)
@@ -11632,6 +11661,11 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                     clb.set_label(r'$n^\mathrm{S} - \langle n^\mathrm{S} \rangle_\mathrm{t}$', fontsize=23, rotation=270, labelpad=28)
                 elif types == 'B':
                     clb.set_label(r'$n^\mathrm{F} - \langle n^\mathrm{F} \rangle_\mathrm{t}$', fontsize=23, rotation=270, labelpad=28)
+            elif measure == 'part_frac':
+                if types == 'A':
+                    clb.set_label(r'$\chi^\mathrm{S} - \langle \chi^\mathrm{S} \rangle_\mathrm{t}$', fontsize=23, rotation=270, labelpad=28)
+                elif types == 'B':
+                    clb.set_label(r'$\chi^\mathrm{F} - \langle \chi^\mathrm{F} \rangle_\mathrm{t}$', fontsize=23, rotation=270, labelpad=28)
             elif measure == 'fa_avg_real':
                 if types == 'all':
                     clb.set_label(r'$F_a - \langle F_a \rangle_\mathrm{t}$', fontsize=23, rotation=270, labelpad=28)

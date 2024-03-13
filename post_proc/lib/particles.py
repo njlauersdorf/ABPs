@@ -4029,6 +4029,9 @@ class particle_props:
         num_densA_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
         num_densB_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
 
+        part_fracA_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
+        part_fracB_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
+
         num_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
         numA_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
         numB_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
@@ -4054,6 +4057,9 @@ class particle_props:
         num_dens_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))
         num_densA_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))
         num_densB_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))
+
+        part_fracA_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))
+        part_fracB_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))
 
         num_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))
         numA_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))
@@ -4087,6 +4093,9 @@ class particle_props:
         num_densA_final_binned_theta = np.zeros(len(theta_final_bins))
         num_densB_final_binned_theta = np.zeros(len(theta_final_bins))
 
+        part_fracA_final_binned_theta = np.zeros(len(theta_final_bins))
+        part_fracB_final_binned_theta = np.zeros(len(theta_final_bins))
+
         num_final_binned_theta = np.zeros(len(theta_final_bins))
         numA_final_binned_theta = np.zeros(len(theta_final_bins))
         numB_final_binned_theta = np.zeros(len(theta_final_bins))
@@ -4108,6 +4117,9 @@ class particle_props:
         num_dens_final_binned_val_theta = np.zeros(len(theta_final_bins))
         num_densA_final_binned_val_theta = np.zeros(len(theta_final_bins))
         num_densB_final_binned_val_theta = np.zeros(len(theta_final_bins))
+
+        part_fracA_final_binned_val_theta = np.zeros(len(theta_final_bins))
+        part_fracB_final_binned_val_theta = np.zeros(len(theta_final_bins))
 
         num_final_binned_val_theta = np.zeros(len(theta_final_bins))
         numA_final_binned_val_theta = np.zeros(len(theta_final_bins))
@@ -4222,6 +4234,11 @@ class particle_props:
                     if len(binB_ids)>0:
                         num_densB_final_binned[rad_final_id, theta_final_id] = len(binB_ids) / area_radial_slice
 
+                    if len(binA_ids)>0:
+                        part_fracA_final_binned[rad_final_id, theta_final_id] = len(binA_ids) / (len(binA_ids) + len(binB_ids))
+                    if len(binB_ids)>0:
+                        part_fracB_final_binned[rad_final_id, theta_final_id] = len(binB_ids) / (len(binA_ids) + len(binB_ids))
+
                     num_final_binned[rad_final_id, theta_final_id] = len(bin_ids)
                     if len(binA_ids)>0:
                         numA_final_binned[rad_final_id, theta_final_id] = len(binA_ids)
@@ -4259,6 +4276,9 @@ class particle_props:
         int_num_densA_time_theta = np.zeros(len(unique_theta))
         int_num_densB_time_theta = np.zeros(len(unique_theta))
 
+        int_part_fracA_time_theta = np.zeros(len(unique_theta))
+        int_part_fracB_time_theta = np.zeros(len(unique_theta))
+
         int_align_time_theta = np.zeros(len(unique_theta))
         int_alignA_time_theta = np.zeros(len(unique_theta))
         int_alignB_time_theta = np.zeros(len(unique_theta))
@@ -4294,16 +4314,19 @@ class particle_props:
                 int_num_densA_time_theta += (rad_step/2) * (num_densA_final_binned[temp_id_new[j],:]+num_densA_final_binned[temp_id_new[j-1],:])
                 int_num_densB_time_theta += (rad_step/2) * (num_densB_final_binned[temp_id_new[j],:]+num_densB_final_binned[temp_id_new[j-1],:])
 
+                int_part_fracA_time_theta += (rad_step/2) * (part_fracA_final_binned[temp_id_new[j],:]+part_fracA_final_binned[temp_id_new[j-1],:])
+                int_part_fracB_time_theta += (rad_step/2) * (part_fracB_final_binned[temp_id_new[j],:]+part_fracB_final_binned[temp_id_new[j-1],:])
+
                 int_align_time_theta += (rad_step/2) * (align_final_binned[temp_id_new[j],:]+align_final_binned[temp_id_new[j-1],:])
                 int_alignA_time_theta += (rad_step/2) * (alignA_final_binned[temp_id_new[j],:]+alignA_final_binned[temp_id_new[j-1],:])
                 int_alignB_time_theta += (rad_step/2) * (alignB_final_binned[temp_id_new[j],:]+alignB_final_binned[temp_id_new[j-1],:])
 
         avg_clust_rad_theta = int_rad_avg_time_theta / int_num
 
-        radial_heterogeneity_dict = {'rad': rad_final_bins, 'theta': theta_final_bins, 'radius': np.mean(r_dist), 'com': {'x': all_surface_measurements[key]['exterior']['com']['x'], 'y': all_surface_measurements[key]['exterior']['com']['y']}, 'fa_avg_real': {'all': fa_avg_real_final_binned}, 'fa_sum': {'all': fa_sum_final_binned, 'A': faA_sum_final_binned, 'B': faB_sum_final_binned}, 'fa_avg': {'all': fa_avg_final_binned, 'A': faA_avg_final_binned, 'B': faB_avg_final_binned}, 'fa_dens': {'all': fa_dens_final_binned, 'A': faA_dens_final_binned, 'B': faB_dens_final_binned}, 'align': {'all': align_final_binned, 'A': alignA_final_binned, 'B': alignB_final_binned}, 'num_dens': {'all': num_dens_final_binned, 'A': num_densA_final_binned, 'B': num_densB_final_binned}}
-        int_radial_heterogeneity_dict = {'theta': theta_final_bins, 'radius': avg_clust_rad_theta, 'fa_avg_real': {'all': int_fa_avg_real_time_theta}, 'fa_sum': {'all': int_fa_sum_time_theta, 'A': int_faA_sum_time_theta, 'B': int_faB_sum_time_theta}, 'fa_avg': {'all': int_fa_avg_time_theta, 'A': int_faA_avg_time_theta, 'B': int_faB_avg_time_theta}, 'fa_dens': {'all': int_fa_dens_time_theta, 'A': int_faA_dens_time_theta, 'B': int_faB_dens_time_theta}, 'align': {'all': int_align_time_theta, 'A': int_alignA_time_theta, 'B': int_alignB_time_theta}, 'num_dens': {'all': int_num_dens_time_theta, 'A': int_num_densA_time_theta, 'B': int_num_densB_time_theta}}
+        radial_heterogeneity_dict = {'rad': rad_final_bins, 'theta': theta_final_bins, 'radius': np.mean(r_dist), 'com': {'x': all_surface_measurements[key]['exterior']['com']['x'], 'y': all_surface_measurements[key]['exterior']['com']['y']}, 'fa_avg_real': {'all': fa_avg_real_final_binned}, 'fa_sum': {'all': fa_sum_final_binned, 'A': faA_sum_final_binned, 'B': faB_sum_final_binned}, 'fa_avg': {'all': fa_avg_final_binned, 'A': faA_avg_final_binned, 'B': faB_avg_final_binned}, 'fa_dens': {'all': fa_dens_final_binned, 'A': faA_dens_final_binned, 'B': faB_dens_final_binned}, 'align': {'all': align_final_binned, 'A': alignA_final_binned, 'B': alignB_final_binned}, 'num_dens': {'all': num_dens_final_binned, 'A': num_densA_final_binned, 'B': num_densB_final_binned}, 'part_frac': {'A': part_fracA_final_binned, 'B': part_fracB_final_binned}}
+        int_radial_heterogeneity_dict = {'theta': theta_final_bins, 'radius': avg_clust_rad_theta, 'fa_avg_real': {'all': int_fa_avg_real_time_theta}, 'fa_sum': {'all': int_fa_sum_time_theta, 'A': int_faA_sum_time_theta, 'B': int_faB_sum_time_theta}, 'fa_avg': {'all': int_fa_avg_time_theta, 'A': int_faA_avg_time_theta, 'B': int_faB_avg_time_theta}, 'fa_dens': {'all': int_fa_dens_time_theta, 'A': int_faA_dens_time_theta, 'B': int_faB_dens_time_theta}, 'align': {'all': int_align_time_theta, 'A': int_alignA_time_theta, 'B': int_alignB_time_theta}, 'num_dens': {'all': int_num_dens_time_theta, 'A': int_num_densA_time_theta, 'B': int_num_densB_time_theta}, 'part_frac': {'A': int_part_fracA_time_theta, 'B': int_part_fracB_time_theta}}
         #radial_heterogeneity_dict_theta = {'theta': theta_final_bins, 'fa_avg_real': {'all': fa_avg_real_final_binned_theta}, 'fa_sum': {'all': fa_sum_final_binned_theta, 'A': faA_sum_final_binned_theta, 'B': faB_sum_final_binned_theta}, 'fa_avg': {'all': fa_avg_final_binned_theta, 'A': faA_avg_final_binned_theta, 'B': faB_avg_final_binned_theta}, 'fa_dens': {'all': fa_dens_final_binned_theta, 'A': faA_dens_final_binned_theta, 'B': faB_dens_final_binned_theta}, 'align': {'all': align_final_binned_theta, 'A': alignA_final_binned_theta, 'B': alignB_final_binned_theta}, 'num_dens': {'all': num_dens_final_binned_theta, 'A': num_densA_final_binned_theta, 'B': num_densB_final_binned_theta}}
-        plot_bin_dict = {'rad': rad_final_bins, 'theta': theta_final_bins, 'radius': np.mean(r_dist), 'com': {'x': all_surface_measurements[key]['exterior']['com']['x'], 'y': all_surface_measurements[key]['exterior']['com']['y']}, 'fa_sum': {'all': fa_sum_final_binned_val, 'A': faA_sum_final_binned_val, 'B': faB_sum_final_binned_val}, 'fa_avg': {'all': fa_avg_final_binned_val, 'A': faA_avg_final_binned_val, 'B': faB_avg_final_binned_val}, 'fa_dens': {'all': fa_dens_final_binned_val, 'A': faA_dens_final_binned_val, 'B': faB_dens_final_binned_val}, 'align': {'all': align_final_binned_val, 'A': alignA_final_binned_val, 'B': alignB_final_binned_val}, 'num': {'all': num_final_binned_val, 'A': numA_final_binned_val, 'B': numB_final_binned_val}, 'num_dens': {'all': num_dens_final_binned_val, 'A': num_densA_final_binned_val, 'B': num_densB_final_binned_val}}
+        plot_bin_dict = {'rad': rad_final_bins, 'theta': theta_final_bins, 'radius': np.mean(r_dist), 'com': {'x': all_surface_measurements[key]['exterior']['com']['x'], 'y': all_surface_measurements[key]['exterior']['com']['y']}, 'fa_sum': {'all': fa_sum_final_binned_val, 'A': faA_sum_final_binned_val, 'B': faB_sum_final_binned_val}, 'fa_avg': {'all': fa_avg_final_binned_val, 'A': faA_avg_final_binned_val, 'B': faB_avg_final_binned_val}, 'fa_dens': {'all': fa_dens_final_binned_val, 'A': faA_dens_final_binned_val, 'B': faB_dens_final_binned_val}, 'align': {'all': align_final_binned_val, 'A': alignA_final_binned_val, 'B': alignB_final_binned_val}, 'num': {'all': num_final_binned_val, 'A': numA_final_binned_val, 'B': numB_final_binned_val}, 'num_dens': {'all': num_dens_final_binned_val, 'A': num_densA_final_binned_val, 'B': num_densB_final_binned_val}, 'part_frac': {'A': part_fracA_final_binned_val, 'B': part_fracB_final_binned_val}}
             
         return radial_heterogeneity_dict, int_radial_heterogeneity_dict, plot_dict, plot_bin_dict
 
@@ -4623,6 +4646,9 @@ class particle_props:
         num_densA_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))     # Deviation of Averaged number density for A particles in (r/r_c, theta) bins from steady-state
         num_densB_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))     # Deviation of Averaged number density for B particles in (r/r_c, theta) bins from steady-state
 
+        part_fracA_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))     # Deviation of Averaged number density for A particles in (r/r_c, theta) bins from steady-state
+        part_fracB_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))     # Deviation of Averaged number density for B particles in (r/r_c, theta) bins from steady-state
+
         num_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))           # Deviation of Total number of all particles in (r/r_c, theta) bins from steady-state
         numA_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))          # Deviation of Total number of A particles in (r/r_c, theta) bins from steady-state
         numB_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))          # Deviation of Total number of B particles in (r/r_c, theta) bins from steady-state
@@ -4648,6 +4674,9 @@ class particle_props:
         num_dens_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))  # Averaged number density for all particles in (r/r_c, theta) bins for current time step
         num_densA_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins))) # Averaged number density for A particles in (r/r_c, theta) bins for current time step
         num_densB_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins))) # Averaged number density for B particles in (r/r_c, theta) bins for current time step
+
+        part_fracA_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins))) # Averaged number density for A particles in (r/r_c, theta) bins for current time step
+        part_fracB_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins))) # Averaged number density for B particles in (r/r_c, theta) bins for current time step
 
         num_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))       # Total number all particles in (r/r_c, theta) bins for current time step
         numA_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))      # Total number A particles in (r/r_c, theta) bins for current time step
@@ -4682,6 +4711,9 @@ class particle_props:
         num_densA_final_binned_theta = np.zeros(len(theta_final_bins))          # Deviation of Average number density for A particles in (theta) bins averaged over (r/r_c) from steady-state
         num_densB_final_binned_theta = np.zeros(len(theta_final_bins))          # Deviation of Average number density for B particles in (theta) bins averaged over (r/r_c) from steady-state
 
+        part_fracA_final_binned_theta = np.zeros(len(theta_final_bins))          # Deviation of Average number density for A particles in (theta) bins averaged over (r/r_c) from steady-state
+        part_fracB_final_binned_theta = np.zeros(len(theta_final_bins))          # Deviation of Average number density for B particles in (theta) bins averaged over (r/r_c) from steady-state
+
         num_final_binned_theta = np.zeros(len(theta_final_bins))                # Deviation of Total number of all particles in (theta) bins averaged over (r/r_c) from steady-state
         numA_final_binned_theta = np.zeros(len(theta_final_bins))               # Deviation of Total number of A particles in (theta) bins averaged over (r/r_c) from steady-state
         numB_final_binned_theta = np.zeros(len(theta_final_bins))               # Deviation of Total number of B particles in (theta) bins averaged over (r/r_c) from steady-state
@@ -4707,6 +4739,9 @@ class particle_props:
         num_dens_final_binned_val_theta = np.zeros(len(theta_final_bins))       # Average number density for all particles in (theta) bins averaged over (r/r_c) for current time step
         num_densA_final_binned_val_theta = np.zeros(len(theta_final_bins))      # Average number density for A particles in (theta) bins averaged over (r/r_c) for current time step
         num_densB_final_binned_val_theta = np.zeros(len(theta_final_bins))      # Average number density for B particles in (theta) bins averaged over (r/r_c) for current time step
+
+        part_fracA_final_binned_val_theta = np.zeros(len(theta_final_bins))      # Average number density for A particles in (theta) bins averaged over (r/r_c) for current time step
+        part_fracB_final_binned_val_theta = np.zeros(len(theta_final_bins))      # Average number density for B particles in (theta) bins averaged over (r/r_c) for current time step
 
         num_final_binned_val_theta = np.zeros(len(theta_final_bins))            # Total number all particles in (theta) bins averaged over (r/r_c) for current time step
         numA_final_binned_val_theta = np.zeros(len(theta_final_bins))           # Total number A particles in (theta) bins averaged over (r/r_c) for current time step
@@ -4947,6 +4982,16 @@ class particle_props:
                                 num_densB_final_binned[rad_final_id, theta_final_id] = ((len(binB_ids) / area_radial_slice) - float(avg_rad_dict['num_dens']['B'][rad_final_id, theta_final_id][0]))
                                 num_densB_final_binned_val[rad_final_id, theta_final_id] = (len(binB_ids) / area_radial_slice)
 
+                            # If denominator is non-zero, calculate deviation from steady-state of averaged number density for A particles at given (r/r_c, theta) bin
+                            if (float(avg_rad_dict['part_frac']['A'][rad_final_id, theta_final_id][0])>0) & (len(binA_ids)>0):
+                                part_fracA_final_binned[rad_final_id, theta_final_id] = ((len(binA_ids) / (len(binA_ids) + len(binB_ids))) - float(avg_rad_dict['part_frac']['A'][rad_final_id, theta_final_id][0]))
+                                part_fracA_final_binned_val[rad_final_id, theta_final_id] = (len(binA_ids) / (len(binA_ids) + len(binB_ids)))
+                            
+                            # If denominator is non-zero, calculate deviation from steady-state of averaged number density for B particles at given (r/r_c, theta) bin
+                            if (float(avg_rad_dict['part_frac']['B'][rad_final_id, theta_final_id][0])>0) & (len(binB_ids)>0):
+                                part_fracB_final_binned[rad_final_id, theta_final_id] = ((len(binB_ids) / (len(binA_ids) + len(binB_ids))) - float(avg_rad_dict['part_frac']['B'][rad_final_id, theta_final_id][0]))
+                                part_fracB_final_binned_val[rad_final_id, theta_final_id] = (len(binB_ids) / (len(binA_ids) + len(binB_ids)))
+
                         # If did not load save file for averages
                         else:
                             
@@ -5035,6 +5080,16 @@ class particle_props:
                                 num_densB_final_binned[rad_final_id, theta_final_id] = ((len(binB_ids) / area_radial_slice) - avg_rad_dict['num_dens']['B'][rad_final_id, theta_final_id])
                                 num_densB_final_binned_val[rad_final_id, theta_final_id] = (len(binB_ids) / area_radial_slice)
 
+                            # If denominator is non-zero, calculate deviation from steady-state of averaged number density for A particles at given (r/r_c, theta) bin
+                            if (avg_rad_dict['part_frac']['A'][rad_final_id, theta_final_id]>0) & (len(binA_ids)>0):
+                                part_fracA_final_binned[rad_final_id, theta_final_id] = ((len(binA_ids) / (len(binB_ids) + len(binA_ids)))- avg_rad_dict['part_frac']['A'][rad_final_id, theta_final_id])
+                                part_fracA_final_binned_val[rad_final_id, theta_final_id] = (len(binA_ids) / (len(binB_ids) + len(binA_ids)))
+                            
+                            # If denominator is non-zero, calculate deviation from steady-state of averaged number density for B particles at given (r/r_c, theta) bin
+                            if (avg_rad_dict['part_frac']['B'][rad_final_id, theta_final_id]>0) & (len(binB_ids)>0):
+                                part_fracB_final_binned[rad_final_id, theta_final_id] = ((len(binB_ids) / (len(binB_ids) + len(binA_ids))) - avg_rad_dict['part_frac']['B'][rad_final_id, theta_final_id])
+                                part_fracB_final_binned_val[rad_final_id, theta_final_id] = (len(binB_ids) / (len(binB_ids) + len(binA_ids)))
+
         #print(avg_rad_dict['rad'])
         #stop
         #unique_rad = np.unique(avg_rad_dict['rad'])
@@ -5058,6 +5113,9 @@ class particle_props:
         int_num_dens_time_theta = np.zeros(len(unique_theta))
         int_num_densA_time_theta = np.zeros(len(unique_theta))
         int_num_densB_time_theta = np.zeros(len(unique_theta))
+
+        int_part_fracA_time_theta = np.zeros(len(unique_theta))
+        int_part_fracB_time_theta = np.zeros(len(unique_theta))
 
         int_align_time_theta = np.zeros(len(unique_theta))
         int_alignA_time_theta = np.zeros(len(unique_theta))
@@ -5088,6 +5146,9 @@ class particle_props:
                 int_num_densA_time_theta += (rad_step/2) * (num_densA_final_binned_val[temp_id_new[j],:]+num_densA_final_binned_val[temp_id_new[j-1],:])
                 int_num_densB_time_theta += (rad_step/2) * (num_densB_final_binned_val[temp_id_new[j],:]+num_densB_final_binned_val[temp_id_new[j-1],:])
 
+                int_part_fracA_time_theta += (rad_step/2) * (part_fracA_final_binned_val[temp_id_new[j],:]+part_fracA_final_binned_val[temp_id_new[j-1],:])
+                int_part_fracB_time_theta += (rad_step/2) * (part_fracB_final_binned_val[temp_id_new[j],:]+part_fracB_final_binned_val[temp_id_new[j-1],:])
+
                 int_align_time_theta += (rad_step/2) * (align_final_binned_val[temp_id_new[j],:]+align_final_binned_val[temp_id_new[j-1],:])
                 int_alignA_time_theta += (rad_step/2) * (alignA_final_binned_val[temp_id_new[j],:]+alignA_final_binned_val[temp_id_new[j-1],:])
                 int_alignB_time_theta += (rad_step/2) * (alignB_final_binned_val[temp_id_new[j],:]+alignB_final_binned_val[temp_id_new[j-1],:])
@@ -5109,6 +5170,9 @@ class particle_props:
         dif_int_num_dens_time_theta = int_num_dens_time_theta - integrated_avg_rad_dict['num_dens']['all']
         dif_int_num_densA_time_theta = int_num_densA_time_theta - integrated_avg_rad_dict['num_dens']['A']
         dif_int_num_densB_time_theta = int_num_densB_time_theta - integrated_avg_rad_dict['num_dens']['B']
+
+        dif_int_part_fracA_time_theta = int_part_fracA_time_theta - integrated_avg_rad_dict['part_frac']['A']
+        dif_int_part_fracB_time_theta = int_part_fracB_time_theta - integrated_avg_rad_dict['part_frac']['B']
 
         dif_int_align_time_theta = int_align_time_theta - integrated_avg_rad_dict['align']['all']
         dif_int_alignA_time_theta = int_alignA_time_theta - integrated_avg_rad_dict['align']['A']
@@ -5136,19 +5200,22 @@ class particle_props:
         dif_avg_int_num_densA_time_theta = int_num_densA_time_theta - np.mean(int_num_densA_time_theta)
         dif_avg_int_num_densB_time_theta = int_num_densB_time_theta - np.mean(int_num_densB_time_theta)
 
+        dif_avg_int_part_fracA_time_theta = int_part_fracA_time_theta - np.mean(int_part_fracA_time_theta)
+        dif_avg_int_part_fracB_time_theta = int_part_fracB_time_theta - np.mean(int_part_fracB_time_theta)
+
         dif_avg_int_align_time_theta = int_align_time_theta - np.mean(int_align_time_theta)
         dif_avg_int_alignA_time_theta = int_alignA_time_theta - np.mean(int_alignA_time_theta)
         dif_avg_int_alignB_time_theta = int_alignB_time_theta - np.mean(int_alignB_time_theta)
 
 
-        radial_heterogeneity_dict = {'rad': rad_final_bins, 'theta': theta_final_bins, 'radius': np.mean(r_dist), 'radius_ang': radius_final_binned_theta_new, 'com': {'x': all_surface_measurements[key]['exterior']['com']['x'], 'y': all_surface_measurements[key]['exterior']['com']['y']}, 'fa_avg_real': {'all': fa_avg_real_final_binned}, 'fa_avg': {'all': fa_avg_final_binned, 'A': faA_avg_final_binned, 'B': faB_avg_final_binned}, 'fa_sum': {'all': fa_sum_final_binned, 'A': faA_sum_final_binned, 'B': faB_sum_final_binned}, 'fa_dens': {'all': fa_dens_final_binned, 'A': faA_dens_final_binned, 'B': faB_dens_final_binned}, 'align': {'all': align_final_binned, 'A': alignA_final_binned, 'B': alignB_final_binned}, 'num_dens': {'all': num_dens_final_binned, 'A': num_densA_final_binned, 'B': num_densB_final_binned}}
+        radial_heterogeneity_dict = {'rad': rad_final_bins, 'theta': theta_final_bins, 'radius': np.mean(r_dist), 'radius_ang': radius_final_binned_theta_new, 'com': {'x': all_surface_measurements[key]['exterior']['com']['x'], 'y': all_surface_measurements[key]['exterior']['com']['y']}, 'fa_avg_real': {'all': fa_avg_real_final_binned}, 'fa_avg': {'all': fa_avg_final_binned, 'A': faA_avg_final_binned, 'B': faB_avg_final_binned}, 'fa_sum': {'all': fa_sum_final_binned, 'A': faA_sum_final_binned, 'B': faB_sum_final_binned}, 'fa_dens': {'all': fa_dens_final_binned, 'A': faA_dens_final_binned, 'B': faB_dens_final_binned}, 'align': {'all': align_final_binned, 'A': alignA_final_binned, 'B': alignB_final_binned}, 'num_dens': {'all': num_dens_final_binned, 'A': num_densA_final_binned, 'B': num_densB_final_binned}, 'part_frac': {'A': part_fracA_final_binned, 'B': part_fracB_final_binned}}
         #radial_heterogeneity_dict_theta = {'theta': theta_final_bins, 'radius': radius_final_binned_theta_new, 'fa_avg_real': {'all': fa_avg_real_final_binned_theta}, 'fa_sum': {'all': fa_sum_final_binned_theta, 'A': faA_sum_final_binned_theta, 'B': faB_sum_final_binned_theta}, 'fa_avg': {'all': fa_avg_final_binned_theta, 'A': faA_avg_final_binned_theta, 'B': faB_avg_final_binned_theta}, 'fa_dens': {'all': fa_dens_final_binned_theta, 'A': faA_dens_final_binned_theta, 'B': faB_dens_final_binned_theta}, 'align': {'all': align_final_binned_theta, 'A': alignA_final_binned_theta, 'B': alignB_final_binned_theta}, 'num_dens': {'all': num_dens_final_binned_theta, 'A': num_densA_final_binned_theta, 'B': num_densB_final_binned_theta}}
         
-        plot_bin_dict = {'rad': rad_final_bins, 'theta': theta_final_bins, 'radius': np.mean(r_dist), 'radius_ang': radius_final_binned_theta_new, 'com': {'x': all_surface_measurements[key]['exterior']['com']['x'], 'y': all_surface_measurements[key]['exterior']['com']['y']}, 'fa_avg_real': {'all': fa_avg_real_final_binned_val}, 'fa_avg': {'all': fa_avg_final_binned_val, 'A': faA_avg_final_binned_val, 'B': faB_avg_final_binned_val}, 'fa_dens': {'all': fa_dens_final_binned_val, 'A': faA_dens_final_binned_val, 'B': faB_dens_final_binned_val}, 'align': {'all': align_final_binned_val, 'A': alignA_final_binned_val, 'B': alignB_final_binned_val}, 'num': {'all': num_final_binned_val, 'A': numA_final_binned_val, 'B': numB_final_binned_val}, 'num_dens': {'all': num_dens_final_binned_val, 'A': num_densA_final_binned_val, 'B': num_densB_final_binned_val}, 'rad_bin': {'all': radius_final_binned, 'A': radiusA_final_binned, 'B': radiusB_final_binned}}
+        plot_bin_dict = {'rad': rad_final_bins, 'theta': theta_final_bins, 'radius': np.mean(r_dist), 'radius_ang': radius_final_binned_theta_new, 'com': {'x': all_surface_measurements[key]['exterior']['com']['x'], 'y': all_surface_measurements[key]['exterior']['com']['y']}, 'fa_avg_real': {'all': fa_avg_real_final_binned_val}, 'fa_avg': {'all': fa_avg_final_binned_val, 'A': faA_avg_final_binned_val, 'B': faB_avg_final_binned_val}, 'fa_dens': {'all': fa_dens_final_binned_val, 'A': faA_dens_final_binned_val, 'B': faB_dens_final_binned_val}, 'align': {'all': align_final_binned_val, 'A': alignA_final_binned_val, 'B': alignB_final_binned_val}, 'num': {'all': num_final_binned_val, 'A': numA_final_binned_val, 'B': numB_final_binned_val}, 'num_dens': {'all': num_dens_final_binned_val, 'A': num_densA_final_binned_val, 'B': num_densB_final_binned_val}, 'part_frac': {'A': part_fracA_final_binned_val, 'B': part_fracB_final_binned_val}, 'rad_bin': {'all': radius_final_binned, 'A': radiusA_final_binned, 'B': radiusB_final_binned}}
 
-        dif_radial_heterogeneity_dict = {'theta': theta_final_bins, 'fa_avg_real': {'all': dif_int_fa_avg_real_time_theta}, 'fa_avg': {'all': dif_int_fa_avg_time_theta, 'A': dif_int_faA_avg_time_theta, 'B': dif_int_faB_avg_time_theta}, 'fa_sum': {'all': dif_int_fa_sum_time_theta, 'A': dif_int_faA_sum_time_theta, 'B': dif_int_faB_sum_time_theta}, 'fa_dens': {'all': dif_int_fa_dens_time_theta, 'A': dif_int_faA_dens_time_theta, 'B': dif_int_faB_dens_time_theta}, 'align': {'all': dif_int_align_time_theta, 'A': dif_int_alignA_time_theta, 'B': dif_int_alignB_time_theta}, 'num_dens': {'all': dif_int_num_dens_time_theta, 'A': dif_int_num_densA_time_theta, 'B': dif_int_num_densB_time_theta}}
+        dif_radial_heterogeneity_dict = {'theta': theta_final_bins, 'fa_avg_real': {'all': dif_int_fa_avg_real_time_theta}, 'fa_avg': {'all': dif_int_fa_avg_time_theta, 'A': dif_int_faA_avg_time_theta, 'B': dif_int_faB_avg_time_theta}, 'fa_sum': {'all': dif_int_fa_sum_time_theta, 'A': dif_int_faA_sum_time_theta, 'B': dif_int_faB_sum_time_theta}, 'fa_dens': {'all': dif_int_fa_dens_time_theta, 'A': dif_int_faA_dens_time_theta, 'B': dif_int_faB_dens_time_theta}, 'align': {'all': dif_int_align_time_theta, 'A': dif_int_alignA_time_theta, 'B': dif_int_alignB_time_theta}, 'num_dens': {'all': dif_int_num_dens_time_theta, 'A': dif_int_num_densA_time_theta, 'B': dif_int_num_densB_time_theta}, 'part_frac': {'A': dif_int_part_fracA_time_theta, 'B': dif_int_part_fracB_time_theta}}
 
-        dif_avg_radial_heterogeneity_dict = {'theta': theta_final_bins, 'fa_avg_real': {'all': dif_avg_int_fa_avg_real_time_theta}, 'fa_avg': {'all': dif_avg_int_fa_avg_time_theta, 'A': dif_avg_int_faA_avg_time_theta, 'B': dif_avg_int_faB_avg_time_theta}, 'fa_sum': {'all': dif_avg_int_fa_sum_time_theta, 'A': dif_avg_int_faA_sum_time_theta, 'B': dif_avg_int_faB_sum_time_theta}, 'fa_dens': {'all': dif_avg_int_fa_dens_time_theta, 'A': dif_avg_int_faA_dens_time_theta, 'B': dif_avg_int_faB_dens_time_theta}, 'align': {'all': dif_avg_int_align_time_theta, 'A': dif_avg_int_alignA_time_theta, 'B': dif_avg_int_alignB_time_theta}, 'num_dens': {'all': dif_avg_int_num_dens_time_theta, 'A': dif_avg_int_num_densA_time_theta, 'B': dif_avg_int_num_densB_time_theta}}
+        dif_avg_radial_heterogeneity_dict = {'theta': theta_final_bins, 'fa_avg_real': {'all': dif_avg_int_fa_avg_real_time_theta}, 'fa_avg': {'all': dif_avg_int_fa_avg_time_theta, 'A': dif_avg_int_faA_avg_time_theta, 'B': dif_avg_int_faB_avg_time_theta}, 'fa_sum': {'all': dif_avg_int_fa_sum_time_theta, 'A': dif_avg_int_faA_sum_time_theta, 'B': dif_avg_int_faB_sum_time_theta}, 'fa_dens': {'all': dif_avg_int_fa_dens_time_theta, 'A': dif_avg_int_faA_dens_time_theta, 'B': dif_avg_int_faB_dens_time_theta}, 'align': {'all': dif_avg_int_align_time_theta, 'A': dif_avg_int_alignA_time_theta, 'B': dif_avg_int_alignB_time_theta}, 'num_dens': {'all': dif_avg_int_num_dens_time_theta, 'A': dif_avg_int_num_densA_time_theta, 'B': dif_avg_int_num_densB_time_theta}, 'part_frac': {'A': dif_avg_int_part_fracA_time_theta, 'B': dif_avg_int_part_fracB_time_theta}}
 
         return radial_heterogeneity_dict, dif_radial_heterogeneity_dict, dif_avg_radial_heterogeneity_dict, plot_dict, plot_bin_dict
 
