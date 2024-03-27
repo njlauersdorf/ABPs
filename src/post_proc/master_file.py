@@ -3478,6 +3478,13 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                 
                                 # Plot particles color-coded by activity
                                 plotting_functs.plot_part_activity(pos, all_surface_curves, int_comp_dict, active_fa_dict, mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option, banner_id = banner_option, presentation_id = presentation_option)
+                        elif (measurement_method == 'activity-blank'):
+                            #DONE!
+                            if plot == 'y':
+                                
+                                # Plot particles color-coded by activity
+                                plotting_functs.plot_part_activity_blank(pos, all_surface_curves, int_comp_dict, active_fa_dict, mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option, banner_id = banner_option, presentation_id = presentation_option)
+                        
                         elif (measurement_method == 'activity-paper'):
                             #DONE!
                             if plot == 'y':  
