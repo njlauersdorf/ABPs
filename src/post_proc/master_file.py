@@ -243,6 +243,8 @@ interface_option = False
 banner_option = False
 presentation_option = False
 large_arrows_option = False
+mono_slow_option = False
+mono_fast_option = False
 
 # Check whether optional input parameters given in user input
 if optional_method != 'none':
@@ -264,6 +266,10 @@ if optional_method != 'none':
             presentation_option = True
         elif optional_options[i] == 'large':
             large_arrows_option = True
+        elif optional_options[i] == 'mono-slow':
+            mono_slow_option = True
+        elif optional_options[i] == 'mono-fast':
+            mono_fast_option = True
 
 time_prob_AA_bulk = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0], dtype=np.float64)
 time_prob_AB_bulk = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0], dtype=np.float64)
@@ -3483,7 +3489,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                             if plot == 'y':
                                 
                                 # Plot particles color-coded by activity
-                                plotting_functs.plot_part_activity_blank(pos, all_surface_curves, int_comp_dict, active_fa_dict, mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option, banner_id = banner_option, presentation_id = presentation_option)
+                                plotting_functs.plot_part_activity_blank(pos, all_surface_curves, int_comp_dict, active_fa_dict, mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option, banner_id = banner_option, presentation_id = presentation_option, mono_slow_id = mono_slow_option, mono_fast_id = mono_fast_option)
                         
                         elif (measurement_method == 'activity-paper'):
                             #DONE!
