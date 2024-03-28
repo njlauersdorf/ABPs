@@ -123,18 +123,23 @@ class interface:
 
         # Magnitude of WCA potential (softness)
         self.eps = eps
+        if self.peA == 0:
+            lat_theory = 0
+            curPLJ = 0
+            self.phi_theory = 0
+            self.phi_g_theory = 0
+        else:
+            # Calculate lattice spacing from theory
+            lat_theory = self.theory_functs.conForRClust(self.peNet, eps)
 
-        # Calculate lattice spacing from theory
-        lat_theory = self.theory_functs.conForRClust(self.peNet, eps)
+            # Calculate interparticle pressure from theory
+            curPLJ = self.theory_functs.ljPress(lat_theory, self.peNet, eps)
 
-        # Calculate interparticle pressure from theory
-        curPLJ = self.theory_functs.ljPress(lat_theory, self.peNet, eps)
+            # Calculate dense phase area fraction from theory
+            self.phi_theory = self.theory_functs.latToPhi(lat_theory)
 
-        # Calculate dense phase area fraction from theory
-        self.phi_theory = self.theory_functs.latToPhi(lat_theory)
-
-        # Calculate gas phase area fraction from theory
-        self.phi_g_theory = self.theory_functs.compPhiG(self.peNet, lat_theory)
+            # Calculate gas phase area fraction from theory
+            self.phi_g_theory = self.theory_functs.compPhiG(self.peNet, lat_theory)
 
         # Array (partNum) of particle types
         self.typ = typ
