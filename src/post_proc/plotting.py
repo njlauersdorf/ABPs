@@ -11188,7 +11188,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
         if mono_slow_id == True:
             plt.savefig(self.outPath + 'part_activity_blank_mono_slow_' + self.outFile + ".png", dpi=200, transparent=False, bbox_inches='tight')
-        if mono_fast_id == True:
+        elif mono_fast_id == True:
             plt.savefig(self.outPath + 'part_activity_blank_mono_fast_' + self.outFile + ".png", dpi=200, transparent=False, bbox_inches='tight')
         else:
             plt.savefig(self.outPath + 'part_activity_blank_' + self.outFile + ".png", dpi=200, transparent=False, bbox_inches='tight')
