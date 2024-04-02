@@ -6,6 +6,8 @@ import os
 
 import numpy as np
 
+sys.path.append(os.path.join(os.path.dirname(__file__)[:-7], 'post_proc'))
+
 import theory
 
 class run_sim:
@@ -8214,6 +8216,344 @@ class run_sim:
                     overwrite=True,
                     phase=-1,
                     dynamic=['attribute', 'property', 'momentum'])
+
+        # Run
+        hoomd.run(self.totTsteps)
+
+    def hard_sphere(self):
+        '''
+        Purpose: Run simulation of specified properties using near steady-state initialization of
+        a MIPS cluster with a dilute phase and a random (homogeneous) distribution of activities
+        throughout the system and Brownian integration method
+        '''
+
+        import random
+
+        # Use path to HOOMD-Blue
+        if self.hoomdPath == '/Users/nicklauersdorf/hoomd-blue/build/':
+            sys.path.insert(0,self.hoomdPath)
+
+        import hoomd                    # import hoomd functions based on path
+        from hoomd import md
+        from hoomd import deprecated
+
+        # Initialize system
+        hoomd.context.initialize()
+        
+        def computeDistance(x, y):
+            return np.sqrt((x**2) + (y**2))
+
+        def interDist(x1, y1, x2, y2):
+            return np.sqrt((x2 - x1)**2 + (y2 - y1)**2)
+
+        def orientToOrigin(x, y, act):
+            "Using similar triangles to find sides"
+            x *= -1.
+            y *= -1.
+            hypRatio = act / np.sqrt(x**2 + y**2)
+            xAct = hypRatio * x
+            yAct = hypRatio * y
+            return xAct, yAct
+
+        # List of activities
+        peList = [ self.peA ]
+
+        # Empty lists to store particle positions and types
+        pos = []
+        typ = []
+        rOrient = []
+
+        # z-value for simulation initialization
+        z = 0.5
+
+        if (self.peA / self.peB) >= 0.35:
+            clust_rad = 80
+        else:
+            clust_rad = 50 + 30 * ((self.peA/self.peB)/0.35 )
+
+        
+
+        # Set simulation box according to phiTotal
+        areaParts = self.partNum * np.pi * (0.25)
+        abox = (areaParts / self.phi)
+        lbox = np.sqrt(abox)
+        hbox = lbox / 2.
+
+        lx_box = lbox
+        ly_box = lbox
+        hx_box = lx_box / 2
+        hy_box = ly_box / 2
+
+
+        area_bulk_sphere = np.pi * clust_rad**2
+
+        if (self.peA/self.peB)>=0.35:
+            clust_size = 42000
+        elif (self.peA/self.peB)<0.175:
+            clust_size = 27000 
+        else:
+            clust_size = 27000 + 15000 * ((self.peA/self.peB)/0.35)
+
+        NGas = self.partNum - clust_size
+
+        # Number of particles of each type to place in gas phase
+        partNumB_gas= 0 
+        partNumA_gas= 0
+
+
+        import utility
+
+
+        # Instantiate utility functions module
+        utility_functs = utility.utility(lx_box, ly_box)
+
+        # If particles overlap, find new position
+        tooClose = 1.1
+
+        # Compute mesh
+        nBins_x = (utility_functs.getNBins(lx_box, self.r_cut))
+        nBins_y = (utility_functs.getNBins(ly_box, self.r_cut))
+        sizeBin_x = utility_functs.roundUp((lx_box / nBins_x), 6)
+        sizeBin_y = utility_functs.roundUp((ly_box / nBins_y), 6)
+
+        # Place particles in gas phase
+        count = 0
+        gaspos = []
+        binParts = [[[] for b in range(nBins_x)] for a in range(nBins_y)]
+        while count < NGas:
+            place = 1
+            # Generate random position
+            gasx = (np.random.rand() - 0.5) * lx_box
+            gasy = (np.random.rand() - 0.5) * ly_box
+            r = computeDistance(gasx, gasy)
+
+            # Are any gas particles too close?
+            tmpx = gasx + hx_box
+            tmpy = gasy + hy_box
+            indx = int(tmpx / sizeBin_x)
+            indy = int(tmpy / sizeBin_y)
+
+            # Get index of surrounding bins
+            lbin = indx - 1  # index of left bins
+            rbin = indx + 1  # index of right bins
+            bbin = indy - 1  # index of bottom bins
+            tbin = indy + 1  # index of top bins
+            if rbin == nBins_x:
+                rbin -= nBins_x  # adjust if wrapped
+            if tbin == nBins_y:
+                tbin -= nBins_y  # adjust if wrapped
+            hlist = [lbin, indx, rbin]  # list of horizontal bin indices
+            vlist = [bbin, indy, tbin]  # list of vertical bin indices
+            
+            dif_cent = interDist(gasx, gasy, 0, 0)
+            
+
+            if dif_cent >clust_rad + 1:
+                # Loop through all bins
+                for h in range(0, len(hlist)):
+
+                    for v in range(0, len(vlist)):
+                        # Take care of periodic wrapping for position
+                        wrapX = 0.0
+                        wrapY = 0.0
+                        if h == 0 and hlist[h] == -1:
+                            wrapX -= lx_box
+                        if h == 2 and hlist[h] == 0:
+                            wrapX += lx_box
+                        if v == 0 and vlist[v] == -1:
+                            wrapY -= ly_box
+                        if v == 2 and vlist[v] == 0:
+                            wrapY += ly_box
+                        # Compute distance between particles
+                        if binParts[hlist[h]][vlist[v]]:
+                            for b in range(0, len(binParts[hlist[h]][vlist[v]])):
+                                # Get index of nearby particle
+                                ref = binParts[hlist[h]][vlist[v]][b]
+                                r = interDist(gasx, gasy,
+                                            gaspos[ref][0] + wrapX,
+                                            gaspos[ref][1] + wrapY)
+                                # Round to 4 decimal places
+                                r = round(r, 4)
+                                # If too close, generate new position
+                                if r <= tooClose:
+                                    place = 0
+                                    break
+                        if place == 0:
+                            break
+                    if place == 0:
+                        break
+            else:
+                place = 0
+                
+            # Is it safe to append the particle?
+            if place == 1:
+                binParts[indx][indy].append(count)
+                gaspos.append((gasx, gasy, z))
+                rOrient.append(0)       # not oriented
+                typ.append(0)           # final particle type, same as outer ring
+                count += 1              # increment count
+
+        
+        #plt.scatter()
+        # All particle positions
+        pos = gaspos
+
+        typ_A = 0
+        typ_B = 0
+
+        partNumA_gas = NGas / 2
+        partNumB_gas = NGas / 2
+        # Identify species of gas
+        NGas_shift=NGas
+        for i in range(0,NGas):
+            rand_val=random.random()
+            xA_gas=partNumA_gas/NGas_shift
+            if rand_val<=xA_gas:
+                typ[i]=0
+                typ_A+=1
+                partNumA_gas-=1
+                NGas_shift-=1
+            else:
+                typ[i]=1
+                typ_B+=1
+                partNumB_gas-=1
+                NGas_shift-=1
+
+        # Find particle types
+        typ_arr=np.array(typ)
+        id0=np.where(typ_arr==0)
+        id1=np.where(typ_arr==1)
+
+        # Define positions
+        x, y, z = zip(*pos)
+        partNum = len(pos)
+
+        # Get the number of types
+        uniqueTyp = []
+        for i in typ:
+            if i not in uniqueTyp:
+                uniqueTyp.append(i)
+
+        # Get the number of each type
+        particles = [ 0 for x in range(0, len(uniqueTyp)) ]
+        for i in range(0, len(uniqueTyp)):
+            for j in typ:
+                if uniqueTyp[i] == j:
+                    particles[i] += 1
+
+        # Convert types to letter values
+        unique_char_types = []
+        for i in uniqueTyp:
+            unique_char_types.append( chr(ord('@') + i+1) )
+        char_types = []
+        for i in typ:
+            char_types.append( chr(ord('@') + i+1) )
+
+        # Get a list of activities for all particles
+        pe = []
+        peList = [self.peA, self.peB]
+        for i in typ:
+            pe.append(peList[i])
+
+        import hoomd                    # import hoomd functions based on path
+        from hoomd import md
+        from hoomd import deprecated
+
+        # Now we make the system in hoomd
+        hoomd.context.initialize()
+
+        # A small shift to help with the periodic box
+        snap = hoomd.data.make_snapshot(N = NGas,
+                                        box = hoomd.data.boxdim(Lx=lx_box,
+                                                                Ly=ly_box,
+                                                                dimensions=2),
+                                        particle_types = unique_char_types)
+
+        # Set positions/types for all particles
+        snap.particles.position[:] = pos[:]
+        snap.particles.typeid[:] = typ[:]
+        snap.particles.types[:] = char_types[:]
+
+        # Initialize the system
+        system = hoomd.init.read_snapshot(snap)
+        all = hoomd.group.all()
+        groups = []
+        for i in unique_char_types:
+            groups.append(hoomd.group.type(type=i))
+
+        # Set particle potentials
+        nl = hoomd.md.nlist.cell()
+        lj = hoomd.md.pair.lj(r_cut=self.r_cut, nlist=nl)
+        lj.set_params(mode='shift')
+        for i in range(0, len(unique_char_types)):
+            for j in range(i, len(unique_char_types)):
+                lj.pair_coeff.set(unique_char_types[i],
+                                  unique_char_types[j],
+                                  epsilon=self.eps, sigma=self.sigma)
+
+        wallstructure=md.wall.group()
+        wallstructure.add_sphere(r=clust_rad, origin=(0,0,0.5), inside=False)
+        
+        #bulk_sphere = hoomd.md.wall.sphere(r=clust_rad, origin=(0,0,z), inside=False)      
+
+        lj2=md.wall.lj(wallstructure, r_cut=self.r_cut)
+
+        #lj2=md.wall.lj(bulk_sphere, r_cut=self.r_cut)
+
+        wall_width = 1.0
+
+
+        lj2.force_coeff.set('A', sigma=wall_width, epsilon=100.0)  #plotted below in red
+        lj2.force_coeff.set('B', sigma=wall_width, epsilon=100.0)  #plotted below in red
+
+
+        # Brownian equilibration
+        brownEquil = 10000
+
+        hoomd.md.integrate.mode_standard(dt=self.dt)
+        bd = hoomd.md.integrate.brownian(group=all, kT=self.kT, seed=self.seed1)
+        hoomd.run(brownEquil)
+
+        
+        
+        # Set activity of each group
+        np.random.seed(self.seed2)                           # seed for random orientations
+        angle = np.random.rand(NGas) * 2 * np.pi     # random particle orientation
+        activity = []
+        for i in range(0, NGas):
+
+            
+            x = (np.cos(angle[i])) * pe[i]
+            y = (np.sin(angle[i])) * pe[i]
+            z = 0.
+            tuple = (x, y, z)
+            activity.append(tuple)
+
+        # Implement the activities in hoomd
+        hoomd.md.force.active(group=all,
+                              seed=self.seed3,
+                              f_lst=activity,
+                              rotation_diff=self.D_r,
+                              orientation_link=False,
+                              orientation_reverse_link=True)
+
+        # Name the file from parameters
+        out = "homogeneous_cluster_pa" + str(int(self.peA))
+        out += "_pb" + str(int(self.peB))
+        out += "_phi" + str(self.intPhi)
+        out += "_eps" + str(self.eps)
+        out += "_xa" + str(self.partFracA)
+        out += "_pNum" + str(self.partNum)
+        out += "_dtau" + "{:.1e}".format(self.dt)
+        out += ".gsd"
+
+        # Write dump
+        hoomd.dump.gsd(out,
+                       period=self.dumpFreq,
+                       group=all,
+                       overwrite=True,
+                       phase=-1,
+                       dynamic=['attribute', 'property', 'momentum'])
 
         # Run
         hoomd.run(self.totTsteps)

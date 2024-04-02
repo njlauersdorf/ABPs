@@ -2618,6 +2618,15 @@ with hoomd.open(name=inFile, mode='rb') as t:
                         # Find curl and divergence of binned average alignment toward cluster CoM
                         align_grad_dict = binning_functs.curl_and_div(align_dict)
 
+                        if measurement_method == 'random-forest':
+                            from sklern.ensemble import RandomForestClassifier
+                            from sklearn.metrics import accuracy_score, confusion_matrix, precision_score, recall_score, ConfusionMatrixDisplay
+                            from sklearn.model_selection import RandomizedSearchCV, train_test_split
+                            from scipy.stats import randint
+
+                            dataset 
+
+
                         # Instantiate plotting functions module
                         plotting_functs = plotting.plotting(orient_dict, pos_dict, lx_box, ly_box, NBins_x, NBins_y, sizeBin_x, sizeBin_y, peA, peB, parFrac, eps, typ, tst, partNum, picPath, outFile, intPhi)
 
@@ -5084,7 +5093,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                             
                             # Save radial distribution function data
                             data_output_functs.write_to_txt(radial_df_dict, dataPath + 'gas_radial_df_' + outfile + '.txt')
-
+                            
                             if plot == 'y':
 
                                 # Plot general and all partial radial distribution functions for current time step

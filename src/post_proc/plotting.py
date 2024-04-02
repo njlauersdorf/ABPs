@@ -3278,6 +3278,11 @@ class plotting:
         rdf_ab = np.array(radial_df_dict['A-B'])
         rdf_bb = np.array(radial_df_dict['B-B'])
 
+        plt.plot(radial_df_dict['r'], radial_df_dict['A-A'], c='blue')
+        plt.plot(radial_df_dict['r'], radial_df_dict['B-B'], c='red')
+        plt.show()
+        stop
+
         #Find order for plotting overlapping data
         AA_bulk_max = np.max(rdf_aa)
         AB_bulk_max = np.max(rdf_ab)

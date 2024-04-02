@@ -39,12 +39,12 @@ read answer
 if [ $answer == "y" ]; then
     sedtype='sed'
     submit='sbatch'
-    script_path="$HOME/ABPs/src/run_sim/run_gpu.sh"
+    script_path="$HOME/ABPs/tools/submission_scripts/run_sim/run_gpu.sh"
     tempOne="$HOME/ABPs/src/run_sim/run_sim_sample.py"
 else
     sedtype='gsed'
     submit='sh'
-    script_path="$HOME/ABPs/src/run_sim/run_local.sh"
+    script_path="$HOME/ABPs/tools/submission_scripts/run_sim/run_local.sh"
     tempOne="$HOME/ABPs/src/run_sim/run_sim_sample.py"
 fi
 
@@ -78,7 +78,7 @@ read answer
 
 init_cond=$answer
 
-list_of_sims="random_init_fine random_init chemical_equilibrium homogeneous_cluster homogeneous_cluster_fine slow_bulk_cluster fast_bulk_cluster half_cluster constant_pressure slow_membrane immobile_membrane immobile_orient_membrane slow_constrained_membrane slow_adsorb_constrained_membrane slow_int_constrained_membrane slow_int_constrained_membrane_dif_temp"
+list_of_sims="hard_sphere random_init_fine random_init chemical_equilibrium homogeneous_cluster homogeneous_cluster_fine slow_bulk_cluster fast_bulk_cluster half_cluster constant_pressure slow_membrane immobile_membrane immobile_orient_membrane slow_constrained_membrane slow_adsorb_constrained_membrane slow_int_constrained_membrane slow_int_constrained_membrane_dif_temp"
 
 if exists_in_list "$list_of_sims" " " $init_cond; then
     dont_run='no'
@@ -111,7 +111,7 @@ if [ $dont_run == "no" ]; then
     # Frequency for dumping simulation data
     declare -a dump_freq
     #dump_freq=( 0.001 )
-    dump_freq=(0.3)
+    dump_freq=(0.1)
     #( 0.0025 )
 
     # Lists for activity of A and B species
