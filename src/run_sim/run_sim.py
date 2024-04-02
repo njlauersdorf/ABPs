@@ -8288,13 +8288,13 @@ class run_sim:
         area_bulk_sphere = np.pi * clust_rad**2
 
         if (self.peA/self.peB)>=0.35:
-            clust_size = 42000
+            clust_size = 40000
         elif (self.peA/self.peB)<0.175:
-            clust_size = 27000 
+            clust_size = 25000 
         else:
-            clust_size = 27000 + 15000 * ((self.peA/self.peB)/0.35)
+            clust_size = 25000 + 15000 * ((self.peA/self.peB)/0.35)
 
-        NGas = self.partNum - clust_size
+        NGas = int(self.partNum - clust_size)
 
         # Number of particles of each type to place in gas phase
         partNumB_gas= 0 
