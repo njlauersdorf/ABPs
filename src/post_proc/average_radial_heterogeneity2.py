@@ -59,6 +59,10 @@ for i in range(0, len(current_files)):
         average_faA_dens_path = current_path + '/averages/integrated_radial_avgs_faA_dens' + inFile + '.csv'
         average_faB_dens_path = current_path + '/averages/integrated_radial_avgs_faB_dens' + inFile + '.csv'
 
+        average_fa_sum_path = current_path + '/averages/integrated_radial_avgs_fa_sum' + inFile + '.csv'
+        average_faA_sum_path = current_path + '/averages/integrated_radial_avgs_faA_sum' + inFile + '.csv'
+        average_faB_sum_path = current_path + '/averages/integrated_radial_avgs_faB_sum' + inFile + '.csv'
+
         average_fa_avg_path = current_path + '/averages/integrated_radial_avgs_fa_avg' + inFile + '.csv'
         average_faA_avg_path = current_path + '/averages/integrated_radial_avgs_faA_avg' + inFile + '.csv'
         average_faB_avg_path = current_path + '/averages/integrated_radial_avgs_faB_avg' + inFile + '.csv'
@@ -72,6 +76,9 @@ for i in range(0, len(current_files)):
         average_num_dens_path = current_path + '/averages/integrated_radial_avgs_num_dens' + inFile + '.csv'
         average_num_densA_path = current_path + '/averages/integrated_radial_avgs_num_densA' + inFile + '.csv'
         average_num_densB_path = current_path + '/averages/integrated_radial_avgs_num_densB' + inFile + '.csv'
+
+        average_xA_path = current_path + '/averages/integrated_radial_avgs_part_fracA' + inFile + '.csv'
+        average_xB_path = current_path + '/averages/integrated_radial_avgs_part_fracB' + inFile + '.csv'
 
         file_path = current_path + '/' + current_file
 
@@ -114,6 +121,27 @@ for i in range(0, len(current_files)):
             avg_faB_dens_r = np.array(list(csv.reader(averages_file)))
 
             avg_faB_dens_r_flatten = (avg_faB_dens_r.flatten()).astype(np.float) 
+
+            averages_file.close()
+
+            averages_file =  open(average_fa_sum_path, newline='')
+            avg_fa_sum_r = np.array(list(csv.reader(averages_file)))
+
+            avg_fa_sum_r_flatten = (avg_fa_sum_r.flatten()).astype(np.float) 
+
+            averages_file.close()
+
+            averages_file =  open(average_faA_sum_path, newline='')
+            avg_faA_sum_r = np.array(list(csv.reader(averages_file)))
+
+            avg_faA_sum_r_flatten = (avg_faA_sum_r.flatten()).astype(np.float) 
+
+            averages_file.close()
+
+            averages_file =  open(average_faB_sum_path, newline='')
+            avg_faB_sum_r = np.array(list(csv.reader(averages_file)))
+
+            avg_faB_sum_r_flatten = (avg_faB_sum_r.flatten()).astype(np.float) 
 
             averages_file.close()
 
@@ -188,6 +216,20 @@ for i in range(0, len(current_files)):
 
             averages_file.close()
 
+            averages_file =  open(average_xA_path, newline='')
+            avg_xA_r = np.array(list(csv.reader(averages_file)))
+
+            avg_xA_avg_r_flatten = (avg_xA_r.flatten()).astype(np.float) 
+
+            averages_file.close()
+
+            averages_file =  open(average_xB_path, newline='')
+            avg_xB_r = np.array(list(csv.reader(averages_file)))
+
+            avg_xB_avg_r_flatten = (avg_xB_r.flatten()).astype(np.float) 
+
+            averages_file.close()
+
             avg_theta_r_new = np.zeros(np.shape(avg_fa_dens_r))
 
             time_sum = np.zeros(num_data)
@@ -203,6 +245,13 @@ for i in range(0, len(current_files)):
             fa_avg_sum = np.zeros(num_data)
             faA_avg_sum = np.zeros(num_data)
             faB_avg_sum = np.zeros(num_data)
+
+            fa_sum_sum = np.zeros(num_data)
+            faA_sum_sum = np.zeros(num_data)
+            faB_sum_sum = np.zeros(num_data)
+
+            xA_avg_sum = np.zeros(num_data)
+            xB_avg_sum = np.zeros(num_data)
 
             align_sum = np.zeros(num_data)
             alignA_sum = np.zeros(num_data)
@@ -235,6 +284,13 @@ for i in range(0, len(current_files)):
                     faA_avg_sum += (df['fa_avg_A'].values[start_val:num_data+start_val])**2
                     faB_avg_sum += (df['fa_avg_B'].values[start_val:num_data+start_val])**2
 
+                    fa_sum_sum += (df['fa_sum_all'].values[start_val:num_data+start_val])**2#*avg_fa_r_flatten**2)**0.5+*avg_fa_r_flatten#temp[test_id] / avg_fa_r_flatten[test_id]**2
+                    faA_sum_sum += (df['fa_sum_A'].values[start_val:num_data+start_val])**2
+                    faB_sum_sum += (df['fa_sum_B'].values[start_val:num_data+start_val])**2
+
+                    xA_avg_sum += (df['fa_sum_A'].values[start_val:num_data+start_val])**2
+                    xB_avg_sum += (df['fa_sum_B'].values[start_val:num_data+start_val])**2
+
                     align_sum += (df['align_all'].values[start_val:num_data+start_val])**2
                     alignA_sum += (df['align_A'].values[start_val:num_data+start_val])**2
                     alignB_sum += (df['align_B'].values[start_val:num_data+start_val])**2
@@ -256,6 +312,10 @@ for i in range(0, len(current_files)):
             faA_avg_time_avg = faA_avg_sum / count
             faB_avg_time_avg = faB_avg_sum / count
 
+            fa_sum_time_avg = fa_sum_sum / count
+            faA_sum_time_avg = faA_sum_sum / count
+            faB_sum_time_avg = faB_sum_sum / count
+
             fa_avg_real_time_avg = fa_avg_real_sum / count
 
             align_time_avg = align_sum / count
@@ -266,6 +326,9 @@ for i in range(0, len(current_files)):
             num_densA_time_avg = num_densA_sum / count
             num_densB_time_avg = num_densB_sum / count
 
+            xA_avg_time_avg = xA_avg_sum / count
+            xB_avg_time_avg = xB_avg_sum / count
+
             fa_dens_time_avg_norm = np.mean(fa_dens_time_avg) / np.mean(avg_fa_dens_r_flatten**2)
             faA_dens_time_avg_norm = np.mean(faA_dens_time_avg) / np.mean(avg_faA_dens_r_flatten**2)
             faB_dens_time_avg_norm = np.mean(faB_dens_time_avg) / np.mean(avg_faB_dens_r_flatten**2)
@@ -273,6 +336,10 @@ for i in range(0, len(current_files)):
             fa_avg_time_avg_norm = np.mean(fa_avg_time_avg) / np.mean(avg_fa_avg_r_flatten**2)
             faA_avg_time_avg_norm = np.mean(faA_avg_time_avg) / np.mean(avg_faA_avg_r_flatten**2)
             faB_avg_time_avg_norm = np.mean(faB_avg_time_avg) / np.mean(avg_faB_avg_r_flatten**2)
+
+            fa_sum_time_avg_norm = np.mean(fa_sum_time_avg) / np.mean(avg_fa_sum_r_flatten**2)
+            faA_sum_time_avg_norm = np.mean(faA_sum_time_avg) / np.mean(avg_faA_sum_r_flatten**2)
+            faB_sum_time_avg_norm = np.mean(faB_sum_time_avg) / np.mean(avg_faB_sum_r_flatten**2)
 
             fa_avg_real_time_avg_norm = np.mean(fa_avg_real_time_avg) / np.mean(avg_fa_avg_real_r_flatten**2)
 
@@ -283,6 +350,9 @@ for i in range(0, len(current_files)):
             num_dens_time_avg_norm = np.mean(num_dens_time_avg) / np.mean(avg_num_dens_r_flatten**2)
             num_densA_time_avg_norm = np.mean(num_densA_time_avg) / np.mean(avg_num_densA_r_flatten**2)
             num_densB_time_avg_norm = np.mean(num_densB_time_avg) / np.mean(avg_num_densB_r_flatten**2)
+
+            xA_avg_time_avg_norm = np.mean(xA_avg_time_avg) / np.mean(avg_xA_avg_r_flatten**2)
+            xB_avg_time_avg_norm = np.mean(xB_avg_time_avg) / np.mean(avg_xB_avg_r_flatten**2)
             """
             fa_dens_time_theta_avg = np.mean(fa_dens_time_avg_norm)
             faA_dens_time_theta_avg = np.mean(faA_dens_time_avg_norm)
@@ -308,7 +378,7 @@ for i in range(0, len(current_files)):
             xa_id = inFile.find('xa')
 
             #averaged_data_arr = {'fa_dens': {'all': fa_dens_time_theta_avg, 'A': faA_dens_time_theta_avg, 'B': faB_dens_time_theta_avg}, 'fa_avg_real': {'all': fa_avg_real_time_theta_avg}, 'fa_avg': {'all': fa_avg_time_theta_avg, 'A': faA_avg_time_theta_avg, 'B': faB_avg_time_theta_avg}, 'num_dens': {'all': num_dens_time_theta_avg, 'A': num_densA_time_theta_avg, 'B': num_densB_time_theta_avg}, 'align': {'all': align_time_theta_avg, 'A': alignA_time_theta_avg, 'B': alignB_time_theta_avg}}
-            averaged_data_arr = {'fa_dens': {'all': fa_dens_time_avg_norm, 'A': faA_dens_time_avg_norm, 'B': faB_dens_time_avg_norm}, 'fa_avg_real': {'all': fa_avg_real_time_avg_norm}, 'fa_avg': {'all': fa_avg_time_avg_norm, 'A': faA_avg_time_avg_norm, 'B': faB_avg_time_avg_norm}, 'num_dens': {'all': num_dens_time_avg_norm, 'A': num_densA_time_avg_norm, 'B': num_densB_time_avg_norm}, 'align': {'all': align_time_avg_norm, 'A': alignA_time_avg_norm, 'B': alignB_time_avg_norm}}
+            averaged_data_arr = {'fa_dens': {'all': fa_dens_time_avg_norm, 'A': faA_dens_time_avg_norm, 'B': faB_dens_time_avg_norm}, 'fa_sum': {'all': fa_sum_time_avg_norm, 'A': faA_sum_time_avg_norm, 'B': faB_sum_time_avg_norm}, 'fa_avg_real': {'all': fa_avg_real_time_avg_norm}, 'fa_avg': {'all': fa_avg_time_avg_norm, 'A': faA_avg_time_avg_norm, 'B': faB_avg_time_avg_norm}, 'num_dens': {'all': num_dens_time_avg_norm, 'A': num_densA_time_avg_norm, 'B': num_densB_time_avg_norm}, 'align': {'all': align_time_avg_norm, 'A': alignA_time_avg_norm, 'B': alignB_time_avg_norm}, 'part_frac': {'A': xA_avg_time_avg_norm, 'B': xB_avg_time_avg_norm}}
             #averaged_data_arr_new = {'fa_dens': {'all': np.mean(avg_fa_dens_r_flatten**2), 'A': np.mean(avg_faA_dens_r_flatten**2), 'B': np.mean(avg_faB_dens_r_flatten**2)}, 'fa_avg_real': {'all': np.mean(avg_fa_avg_real_r_flatten**2)}, 'fa_avg': {'all': np.mean(avg_fa_avg_r_flatten**2), 'A': np.mean(avg_faA_avg_r_flatten**2), 'B': np.mean(avg_faB_avg_r_flatten**2)}, 'num_dens': {'all': np.mean(avg_num_dens_r_flatten**2), 'A': np.mean(avg_num_densA_r_flatten**2), 'B': np.mean(avg_num_densB_r_flatten**2)}, 'align': {'all': np.mean(avg_align_r_flatten**2), 'A': np.mean(avg_alignA_r_flatten**2), 'B': np.mean(avg_alignB_r_flatten**2)}}
 
             def write_to_txt(input_dict, outPath):

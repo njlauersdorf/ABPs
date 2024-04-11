@@ -330,6 +330,62 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
     if measurement_method=='crop-gsd':
         utility_functs.crop_gsd(inFile, start, end)
+    
+    elif measurement_method == 'circular-wall':
+        outfile = 'pa'+str(int(peA))+'_pb'+str(int(peB))+'_xa'+str(int(parFrac))+'_eps'+str(eps)+'_phi'+str(phi)+'_pNum' + str(int(partNum)) + '_bin' + str(int(bin_width)) + '_time' + str(int(time_step))
+            
+        # If time-averaged fluctuations file does not exist, calculate it...
+        if os.path.isfile(averagesPath + "radial_avgs_fa_avg_" + outfile+ '.csv')==0:
+            sum_num = 0
+            
+            # Time range to calculate time-average at steady state
+            end_avg = int(dumps/time_step)-1
+            start_avg = int(end_avg/3)
+
+            # Loop over time
+            for p in range(start_avg, end_avg):
+
+                # Current time step
+                j=int(p*time_step)
+
+                print('j')
+                print(j)
+                
+                snap = t[j]                                 #Take current frame
+
+                #Arrays of particle data
+                pos = snap.particles.position               # current positions
+                pos[:,-1] = 0.0                             # 2D system
+                xy = np.delete(pos, 2, 1)
+
+                ori = snap.particles.orientation            #current orientation (quaternions)
+                ang = np.array(list(map(utility_functs.quatToAngle, ori))) # convert to [-pi, pi]
+                x_orient_arr = np.array(list(map(utility_functs.quatToXOrient, ori))) # convert to [-pi, pi]
+                y_orient_arr = np.array(list(map(utility_functs.quatToYOrient, ori))) # convert to [-pi, pi]
+
+                typ = snap.particles.typeid                 # Particle type
+                typ0ind=np.where(snap.particles.typeid==0)      # Calculate which particles are type 0
+                typ1ind=np.where(snap.particles.typeid==1)      # Calculate which particles are type 1
+
+                tst = snap.configuration.step               # timestep
+                tst -= first_tstep                          # normalize by first timestep
+                tst *= dtau                                 # convert to Brownian time
+                time_arr[j]=tst
+
+                #Bin system to calculate orientation and alignment that will be used in vector plots
+                NBins_x = utility_functs.getNBins(lx_box, bin_width)
+                NBins_y = utility_functs.getNBins(ly_box, bin_width)
+
+                # Calculate size of bins
+                sizeBin_x = utility_functs.roundUp(((lx_box) / NBins_x), 6)
+                sizeBin_y = utility_functs.roundUp(((ly_box) / NBins_y), 6)
+
+                # Instantiate particle properties module
+                particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, eps, typ, pos, x_orient_arr, y_orient_arr)
+
+                particle_prop_functs.radial_heterogeneity_circle()
+
+
     else:
         if measurement_method == 'radial-heterogeneity':
             
@@ -5553,6 +5609,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                     plotting_functs.vel_histogram(vel_phase_plot_dict, dt_step, avg='True')
 
+        
         elif measurement_method == 'collision':
             #DONE!
 

@@ -4516,6 +4516,616 @@ class particle_props:
             
         return radial_heterogeneity_dict, int_radial_heterogeneity_dict, plot_dict, plot_bin_dict
 
+    def radial_heterogeneity_circle(self):
+
+        # Particle IDs for A and B particles
+        A_id = np.where((self.typ==0))[0]
+        B_id = np.where((self.typ==1))[0]
+
+        # Shift x-positions of particles from -h_box, h_box to 0, l_box
+        pos_wrap_x = self.pos[:,0] + self.hx_box
+
+        # Enforce periodic boundary conditions 
+        test_id = np.where(pos_wrap_x>self.lx_box)[0]
+        if len(test_id)>0:
+            pos_wrap_x[test_id] = pos_wrap_x[test_id]-self.lx_box
+        test_id = np.where(pos_wrap_x<0)[0]
+        if len(test_id)>0:
+            pos_wrap_x[test_id] = pos_wrap_x[test_id]+self.lx_box
+
+        # Shift y-positions of particles from -h_box, h_box to 0, l_box
+        pos_wrap_y = self.pos[:,1] + self.hy_box
+
+        # Enforce periodic boundary conditions 
+        test_id = np.where(pos_wrap_y>self.ly_box)[0]
+        if len(test_id)>0:
+            pos_wrap_y[test_id] = pos_wrap_y[test_id]-self.ly_box
+        test_id = np.where(pos_wrap_y<0)[0]
+        if len(test_id)>0:
+            pos_wrap_y[test_id] = pos_wrap_y[test_id]+self.ly_box
+
+        # Calculate radial distance of particles from cluster's center of mass
+        difx_parts = (pos_wrap_x - self.hx_box)
+        dify_parts = (pos_wrap_y - self.hy_box)
+        difr_parts = (difx_parts ** 2 + dify_parts ** 2) ** 0.5
+
+        # Angular location of particles
+        ang_parts = np.arctan2(dify_parts, difx_parts)*(180/np.pi)
+
+        # Convert angles from -180, 180 to 0, 360 degrees
+        neg_ang = np.where(ang_parts<=0)[0]
+        if len(neg_ang)>0:
+            ang_parts[neg_ang] = 180 + (180+ang_parts[neg_ang])
+
+        # Instantiate empty array for normalized separation distance of particles from cluster's center of mass
+        difr_parts_norm = np.zeros(len(difr_parts))
+
+        r_dot_p = np.zeros(self.partNum)
+        difx_arr = np.zeros(self.partNum)
+        dify_arr = np.zeros(self.partNum)
+        difr_arr = np.zeros(self.partNum)
+
+        # Loop over all particles
+        for h in range(0, self.partNum):
+
+            # Shifted x- and y-position of particle
+            x_pos = self.pos[h,0] + self.hx_box
+            y_pos = self.pos[h,1] + self.hy_box
+
+            # Calculate separation distance from largest cluster's CoM
+            difx = self.utility_functs.sep_dist_x(x_pos, self.hx_box)
+            dify = self.utility_functs.sep_dist_y(y_pos, self.hy_box)
+        
+            difr = (difx ** 2 + dify ** 2) ** 0.5
+
+            difx_arr[h] = difx
+            dify_arr[h] = dify
+            difr_arr[h] = difr
+            # Alignment toward largest cluster's CoM
+            r_dot_p[h] = -difx * self.px[h] + -dify * self.py[h]
+
+        def round_decimals_down(number:float, decimals:int=2):
+            """
+            Returns a value rounded down to a specific number of decimal places.
+            """
+            if not isinstance(decimals, int):
+                raise TypeError("decimal places must be an integer")
+            elif decimals < 0:
+                raise ValueError("decimal places has to be 0 or more")
+            elif decimals == 0:
+                return math.floor(number)
+
+            factor = 10 ** decimals
+            return math.floor(number * factor) / factor
+
+        def round_decimals_up(number:float, decimals:int=2):
+            """
+            Returns a value rounded up to a specific number of decimal places.
+            """
+            if not isinstance(decimals, int):
+                raise TypeError("decimal places must be an integer")
+            elif decimals < 0:
+                raise ValueError("decimal places has to be 0 or more")
+            elif decimals == 0:
+                return math.ceil(number)
+
+            factor = 10 ** decimals
+            return math.ceil(number * factor) / factor
+
+        # Define angular bins for this time step 
+        theta_bins = np.round(np.linspace(0, 360, 181),0)
+        rad_bins = np.round(np.linspace(0, int(self.hx_box), int(self.hx_box/3)),0)
+        print(rad_bins)
+        # Define angular bins to be same as in time-averaged case
+        theta_final_bins = np.round(np.linspace(2, 360, 180),0)
+        rad_final_bins = np.round(np.linspace(1, int(self.hx_box), int(self.hx_box/3)-1),0)
+        print(rad_final_bins)
+        stop
+
+        # Define empty arrays for binned data given radial and angular bins
+        fa_avg_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))        # Deviation of Averaged aligned body force magnitude for all particles in (r/r_c, theta) bins from steady-state
+        faA_avg_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))       # Deviation of Averaged aligned body force magnitude for A particles in (r/r_c, theta) bins from steady-state
+        faB_avg_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))       # Deviation of Averaged aligned body force magnitude for B particles in (r/r_c, theta) bins from steady-state
+
+        fa_sum_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))        # Deviation of Total aligned body force magnitude for all particles in (r/r_c, theta) bins from steady-state
+        faA_sum_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))       # Deviation of Total aligned body force magnitude for A particles in (r/r_c, theta) bins from steady-state
+        faB_sum_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))       # Deviation of Total aligned body force magnitude for B particles in (r/r_c, theta) bins from steady-state
+
+        fa_avg_real_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))   # Deviation of Average body force magnitude for all particles in (r/r_c, theta) bins from steady-state
+
+        fa_dens_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))       # Deviation of Averaged aligned body force density for all particles in (r/r_c, theta) bins from steady-state
+        faA_dens_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))      # Deviation of Averaged aligned body force density for A particles in (r/r_c, theta) bins from steady-state
+        faB_dens_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))      # Deviation of Averaged aligned body force density for B particles in (r/r_c, theta) bins from steady-state
+
+        align_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))         # Deviation of Averaged alignment for all particles in (r/r_c, theta) bins from steady-state
+        alignA_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))        # Deviation of Averaged alignment for A particles in (r/r_c, theta) bins from steady-state
+        alignB_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))        # Deviation of Averaged alignment for B particles in (r/r_c, theta) bins from steady-state
+
+        num_dens_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))      # Deviation of Averaged number density for all particles in (r/r_c, theta) bins from steady-state
+        num_densA_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))     # Deviation of Averaged number density for A particles in (r/r_c, theta) bins from steady-state
+        num_densB_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))     # Deviation of Averaged number density for B particles in (r/r_c, theta) bins from steady-state
+
+        part_fracA_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))     # Deviation of Averaged number density for A particles in (r/r_c, theta) bins from steady-state
+        part_fracB_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))     # Deviation of Averaged number density for B particles in (r/r_c, theta) bins from steady-state
+
+        num_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))           # Deviation of Total number of all particles in (r/r_c, theta) bins from steady-state
+        numA_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))          # Deviation of Total number of A particles in (r/r_c, theta) bins from steady-state
+        numB_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))          # Deviation of Total number of B particles in (r/r_c, theta) bins from steady-state
+
+        fa_avg_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))    # Averaged aligned body force magnitude for all particles in (r/r_c, theta) bins for current time step
+        faA_avg_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))   # Averaged aligned body force magnitude for A particles in (r/r_c, theta) bins for current time step
+        faB_avg_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))   # Averaged aligned body force magnitude for B particles in (r/r_c, theta) bins for current time step
+
+        fa_sum_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))    # Total aligned body force magnitude for all particles in (r/r_c, theta) bins for current time step
+        faA_sum_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))   # Total aligned body force magnitude for A particles in (r/r_c, theta) bins for current time step
+        faB_sum_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))   # Total aligned body force magnitude for B particles in (r/r_c, theta) bins for current time step
+
+        fa_avg_real_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))# Average body force magnitude for all particles in (r/r_c, theta) bins for current time step
+
+        fa_dens_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))   # Averaged aligned body force density for all particles in (r/r_c, theta) bins for current time step
+        faA_dens_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))  # Averaged aligned body force density for A particles in (r/r_c, theta) bins for current time step
+        faB_dens_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))  # Averaged aligned body force density for B particles in (r/r_c, theta) bins for current time step
+
+        align_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))     # Averaged alignment for all particles in (r/r_c, theta) bins for current time step
+        alignA_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))    # Averaged alignment for A particles in (r/r_c, theta) bins for current time step
+        alignB_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))    # Averaged alignment for B particles in (r/r_c, theta) bins for current time step
+
+        num_dens_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))  # Averaged number density for all particles in (r/r_c, theta) bins for current time step
+        num_densA_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins))) # Averaged number density for A particles in (r/r_c, theta) bins for current time step
+        num_densB_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins))) # Averaged number density for B particles in (r/r_c, theta) bins for current time step
+
+        part_fracA_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins))) # Averaged number density for A particles in (r/r_c, theta) bins for current time step
+        part_fracB_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins))) # Averaged number density for B particles in (r/r_c, theta) bins for current time step
+
+        num_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))       # Total number all particles in (r/r_c, theta) bins for current time step
+        numA_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))      # Total number A particles in (r/r_c, theta) bins for current time step
+        numB_final_binned_val = np.zeros((len(rad_final_bins), len(theta_final_bins)))      # Total number B particles in (r/r_c, theta) bins for current time step
+
+        radius_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))        
+        radiusA_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
+        radiusB_final_binned = np.zeros((len(rad_final_bins), len(theta_final_bins)))
+
+        
+        fa_sum_final_binned_theta = np.zeros(len(theta_final_bins))             # Deviation of Total aligned body force magnitude for all particles in (theta) bins averaged over (r/r_c) from steady-state
+        faA_sum_final_binned_theta = np.zeros(len(theta_final_bins))            # Deviation of Total aligned body force magnitude for A particles in (theta) bins averaged over (r/r_c) from steady-state
+        faB_sum_final_binned_theta = np.zeros(len(theta_final_bins))            # Deviation of Total aligned body force magnitude for B particles in (theta) bins averaged over (r/r_c) from steady-state
+
+
+        fa_avg_final_binned_theta = np.zeros(len(theta_final_bins))             # Deviation of Average aligned body force magnitude for all particles in (theta) bins averaged over (r/r_c) from steady-state
+        faA_avg_final_binned_theta = np.zeros(len(theta_final_bins))            # Deviation of Average aligned body force magnitude for A particles in (theta) bins averaged over (r/r_c) from steady-state
+        faB_avg_final_binned_theta = np.zeros(len(theta_final_bins))            # Deviation of Average aligned body force magnitude for B particles in (theta) bins averaged over (r/r_c) from steady-state
+
+        fa_avg_real_final_binned_theta = np.zeros(len(theta_final_bins))        # Deviation of Average body force magnitude for all particles in (theta) bins averaged over (r/r_c) from steady-state
+        
+        fa_dens_final_binned_theta = np.zeros(len(theta_final_bins))            # Deviation of Average aligned body force density for all particles in (theta) bins averaged over (r/r_c) from steady-state
+        faA_dens_final_binned_theta = np.zeros(len(theta_final_bins))           # Deviation of Average aligned body force density for A particles in (theta) bins averaged over (r/r_c) from steady-state
+        faB_dens_final_binned_theta = np.zeros(len(theta_final_bins))           # Deviation of Average aligned body force density for B particles in (theta) bins averaged over (r/r_c) from steady-state
+
+
+        align_final_binned_theta = np.zeros(len(theta_final_bins))              # Deviation of Average alignment for all particles in (theta) bins averaged over (r/r_c) from steady-state
+        alignA_final_binned_theta = np.zeros(len(theta_final_bins))             # Deviation of Average alignment for A particles in (theta) bins averaged over (r/r_c) from steady-state
+        alignB_final_binned_theta = np.zeros(len(theta_final_bins))             # Deviation of Average alignment for B particles in (theta) bins averaged over (r/r_c) from steady-state
+
+        num_dens_final_binned_theta = np.zeros(len(theta_final_bins))           # Deviation of Average number density for all particles in (theta) bins averaged over (r/r_c) from steady-state
+        num_densA_final_binned_theta = np.zeros(len(theta_final_bins))          # Deviation of Average number density for A particles in (theta) bins averaged over (r/r_c) from steady-state
+        num_densB_final_binned_theta = np.zeros(len(theta_final_bins))          # Deviation of Average number density for B particles in (theta) bins averaged over (r/r_c) from steady-state
+
+        part_fracA_final_binned_theta = np.zeros(len(theta_final_bins))          # Deviation of Average number density for A particles in (theta) bins averaged over (r/r_c) from steady-state
+        part_fracB_final_binned_theta = np.zeros(len(theta_final_bins))          # Deviation of Average number density for B particles in (theta) bins averaged over (r/r_c) from steady-state
+
+        num_final_binned_theta = np.zeros(len(theta_final_bins))                # Deviation of Total number of all particles in (theta) bins averaged over (r/r_c) from steady-state
+        numA_final_binned_theta = np.zeros(len(theta_final_bins))               # Deviation of Total number of A particles in (theta) bins averaged over (r/r_c) from steady-state
+        numB_final_binned_theta = np.zeros(len(theta_final_bins))               # Deviation of Total number of B particles in (theta) bins averaged over (r/r_c) from steady-state
+
+        fa_avg_final_binned_val_theta = np.zeros(len(theta_final_bins))         # Average aligned body force magnitude for all particles in (theta) bins averaged over (r/r_c) for current time step
+        faA_avg_final_binned_val_theta = np.zeros(len(theta_final_bins))        # Average aligned body force magnitude for A particles in (theta) bins averaged over (r/r_c) for current time step
+        faB_avg_final_binned_val_theta = np.zeros(len(theta_final_bins))        # Average aligned body force magnitude for B particles in (theta) bins averaged over (r/r_c) for current time step
+
+        fa_sum_final_binned_val_theta = np.zeros(len(theta_final_bins))         # Total aligned body force magnitude for all particles in (theta) bins averaged over (r/r_c) for current time step
+        faA_sum_final_binned_val_theta = np.zeros(len(theta_final_bins))        # Total aligned body force magnitude for A particles in (theta) bins averaged over (r/r_c) for current time step
+        faB_sum_final_binned_val_theta = np.zeros(len(theta_final_bins))        # Total aligned body force magnitude for B particles in (theta) bins averaged over (r/r_c) for current time step
+        
+        fa_dens_final_binned_val_theta = np.zeros(len(theta_final_bins))        # Average aligned body force density for all particles in (theta) bins averaged over (r/r_c) for current time step
+        faA_dens_final_binned_val_theta = np.zeros(len(theta_final_bins))       # Average aligned body force density for A particles in (theta) bins averaged over (r/r_c) for current time step
+        faB_dens_final_binned_val_theta = np.zeros(len(theta_final_bins))       # Average aligned body force density for B particles in (theta) bins averaged over (r/r_c) for current time step
+
+        fa_avg_real_final_binned_val_theta = np.zeros(len(theta_final_bins))    # Average body force magnitude for all particles in (theta) bins averaged over (r/r_c) for current time step
+
+        align_final_binned_val_theta = np.zeros(len(theta_final_bins))          # Average alignment for all particles in (theta) bins averaged over (r/r_c) for current time step
+        alignA_final_binned_val_theta = np.zeros(len(theta_final_bins))         # Average alignment for A particles in (theta) bins averaged over (r/r_c) for current time step
+        alignB_final_binned_val_theta = np.zeros(len(theta_final_bins))         # Average alignment for B particles in (theta) bins averaged over (r/r_c) for current time step
+
+        num_dens_final_binned_val_theta = np.zeros(len(theta_final_bins))       # Average number density for all particles in (theta) bins averaged over (r/r_c) for current time step
+        num_densA_final_binned_val_theta = np.zeros(len(theta_final_bins))      # Average number density for A particles in (theta) bins averaged over (r/r_c) for current time step
+        num_densB_final_binned_val_theta = np.zeros(len(theta_final_bins))      # Average number density for B particles in (theta) bins averaged over (r/r_c) for current time step
+
+        part_fracA_final_binned_val_theta = np.zeros(len(theta_final_bins))      # Average number density for A particles in (theta) bins averaged over (r/r_c) for current time step
+        part_fracB_final_binned_val_theta = np.zeros(len(theta_final_bins))      # Average number density for B particles in (theta) bins averaged over (r/r_c) for current time step
+
+        num_final_binned_val_theta = np.zeros(len(theta_final_bins))            # Total number all particles in (theta) bins averaged over (r/r_c) for current time step
+        numA_final_binned_val_theta = np.zeros(len(theta_final_bins))           # Total number A particles in (theta) bins averaged over (r/r_c) for current time step
+        numB_final_binned_val_theta = np.zeros(len(theta_final_bins))           # Total number B particles in (theta) bins averaged over (r/r_c) for current time step
+
+        radius_final_binned_theta_new = np.zeros(len(theta_final_bins))         # Average cluster radius in (theta) bins averaged over (r/r_c) for current time step
+
+        avg_rad_theta = np.mean(difr_ext_surface)
+
+        sum_id = 0
+        sum_id_theta = 0
+
+        # Loop over select time-averaged angular bins within current min and max angles
+        for n_theta in range(1, len(theta_bins)):
+
+            # Loop over select time-averaged radial bins within current min and max radii
+            for n_rad in range(1, len(rad_bins)):
+
+                # Find all, A, and B particle IDs currently within time-averaged bin
+                bin_ids = np.where((ang_parts <theta_bins[n_theta]) & (ang_parts >= theta_bins[n_theta-1]) & (difr_arr < rad_bins[n_rad]) & (difr_arr >= rad_bins[n_rad-1]))[0]
+                binA_ids = np.where((ang_parts <theta_bins[n_theta]) & (ang_parts >= theta_bins[n_theta-1]) & (difr_arr < rad_bins[n_rad]) & (difr_arr >= rad_bins[n_rad-1]) & (self.typ==0))[0]
+                binB_ids = np.where((ang_parts <theta_bins[n_theta]) & (ang_parts >= theta_bins[n_theta-1]) & (difr_arr < rad_bins[n_rad]) & (difr_arr >= rad_bins[n_rad-1]) & (self.typ==1))[0]
+                
+                # If particles within bin, calculate property
+                if len(bin_ids)>0:
+                    """
+                    rad_final_id = np.where(rad_final_bins==rad_bins[n_rad])[0]
+                    theta_final_id = np.where(theta_final_bins==theta_bins[n_theta])[0]
+
+                    area_radial_slice = np.pi * ((rad_bins[n_rad]*avg_rad_theta)**2 - (rad_bins[n_rad-1]*avg_rad_theta)**2) * ((theta_bins[n_theta]-theta_bins[n_theta-1])/360)
+
+                    fa_final_binned[rad_final_id, theta_final_id] = np.mean(fa_norm[bin_ids])
+                    faA_final_binned[rad_final_id, theta_final_id] = np.mean(faA_norm[binA_ids])
+                    faB_final_binned[rad_final_id, theta_final_id] = np.mean(faB_norm[binB_ids])
+
+                    align_final_binned[rad_final_id, theta_final_id] = np.mean(align_norm[bin_ids])
+                    alignA_final_binned[rad_final_id, theta_final_id] = np.mean(alignA_norm[binA_ids])
+                    alignB_final_binned[rad_final_id, theta_final_id] = np.mean(alignB_norm[binB_ids])
+
+                    num_dens_final_binned[rad_final_id, theta_final_id] = len(bin_ids) / area_radial_slice
+                    num_densA_final_binned[rad_final_id, theta_final_id] = len(binA_ids) / area_radial_slice
+                    num_densB_final_binned[rad_final_id, theta_final_id] = len(binB_ids) / area_radial_slice
+
+                    num_final_binned[rad_final_id, theta_final_id] = len(bin_ids)
+                    numA_final_binned[rad_final_id, theta_final_id] = len(binA_ids)
+                    numB_final_binned[rad_final_id, theta_final_id] = len(binB_ids)
+                    """
+                    
+                    # Find ID of time-averaged bin arrays
+                    rad_final_id = np.where(rad_final_bins==rad_bins[n_rad])[0]
+                    theta_final_id = np.where(theta_final_bins==theta_bins[n_theta])[0]
+                    
+                    # Current area of radial slice
+                    area_radial_slice = np.pi * ((rad_bins[n_rad]*np.mean(nearest_surface_arr[bin_ids]))**2 - (rad_bins[n_rad-1]*np.mean(nearest_surface_arr[bin_ids]))**2) * ((theta_bins[n_theta]-theta_bins[n_theta-1])/360)
+                    
+                    # If non-zero, continue...
+                    if area_radial_slice > 0:
+
+                        # If load saved file for averages...
+                        if load_save == 1:
+                            
+                            # If denominator is non-zero, calculate deviation from steady-state of average body force magnitude for all particles at given (r/r_c, theta) bin
+                            if (float(avg_rad_dict['fa_avg_real']['all'][rad_final_id, theta_final_id][0])>0):
+                                fa_avg_real_final_binned[rad_final_id, theta_final_id] = ((np.mean(fa_avg[bin_ids])) - float(avg_rad_dict['fa_avg_real']['all'][rad_final_id, theta_final_id][0]))
+                                fa_avg_real_final_binned_val[rad_final_id, theta_final_id] = np.mean(fa_avg[bin_ids])
+
+                            # If denominator is non-zero, calculate deviation from steady-state of average aligned body force density for all particles at given (r/r_c, theta) bin
+                            if float(avg_rad_dict['fa_dens']['all'][rad_final_id, theta_final_id][0])>0:
+                                fa_dens_final_binned[rad_final_id, theta_final_id] = ((np.sum(fa_norm[bin_ids]) / area_radial_slice) - float(avg_rad_dict['fa_dens']['all'][rad_final_id, theta_final_id][0]))
+                                fa_dens_final_binned_val[rad_final_id, theta_final_id] = np.sum(fa_norm[bin_ids])/ area_radial_slice
+                            
+                            # If denominator is non-zero, calculate deviation from steady-state of average aligned body force density for A particles at given (r/r_c, theta) bin
+                            if (float(avg_rad_dict['fa_dens']['A'][rad_final_id, theta_final_id][0])>0) & (len(binA_ids)>0):
+                                faA_dens_final_binned[rad_final_id, theta_final_id] = ((np.sum(faA_norm[binA_ids]) / area_radial_slice) - float(avg_rad_dict['fa_dens']['A'][rad_final_id, theta_final_id][0]))
+                                faA_dens_final_binned_val[rad_final_id, theta_final_id] = np.sum(faA_norm[binA_ids])/ area_radial_slice
+                            
+                            # If denominator is non-zero, calculate deviation from steady-state of average aligned body force density for B particles at given (r/r_c, theta) bin
+                            if (float(avg_rad_dict['fa_dens']['B'][rad_final_id, theta_final_id][0])>0) & (len(binB_ids)>0):
+                                faB_dens_final_binned[rad_final_id, theta_final_id] = ((np.sum(faB_norm[binB_ids]) / area_radial_slice) - float(avg_rad_dict['fa_dens']['B'][rad_final_id, theta_final_id][0]))
+                                faB_dens_final_binned_val[rad_final_id, theta_final_id] = np.sum(faB_norm[binB_ids])/ area_radial_slice
+
+                            # If denominator is non-zero, calculate deviation from steady-state of total aligned body force magnitude for all particles at given (r/r_c, theta) bin
+                            if (float(avg_rad_dict['fa_sum']['all'][rad_final_id, theta_final_id][0])>0):
+                                fa_sum_final_binned[rad_final_id, theta_final_id] = (np.sum(fa_norm[bin_ids]) - float(avg_rad_dict['fa_sum']['all'][rad_final_id, theta_final_id][0]))
+                                fa_sum_final_binned_val[rad_final_id, theta_final_id] = np.sum(fa_norm[bin_ids])
+                            
+                            # If denominator is non-zero, calculate deviation from steady-state of total aligned body force magnitude for A particles at given (r/r_c, theta) bin
+                            if (float(avg_rad_dict['fa_sum']['A'][rad_final_id, theta_final_id][0])>0) & (len(binA_ids)>0):
+                                faA_sum_final_binned[rad_final_id, theta_final_id] = (np.sum(faA_norm[binA_ids]) - float(avg_rad_dict['fa_sum']['A'][rad_final_id, theta_final_id][0]))
+                                faA_sum_final_binned_val[rad_final_id, theta_final_id] = np.sum(faA_norm[binA_ids])
+                            
+                            # If denominator is non-zero, calculate deviation from steady-state of total aligned body force magnitude for B particles at given (r/r_c, theta) bin
+                            if (float(avg_rad_dict['fa_sum']['B'][rad_final_id, theta_final_id][0])>0) & (len(binB_ids)>0):
+                                faB_sum_final_binned[rad_final_id, theta_final_id] = (np.sum(faB_norm[binB_ids]) - float(avg_rad_dict['fa_sum']['B'][rad_final_id, theta_final_id][0]))
+                                faB_sum_final_binned_val[rad_final_id, theta_final_id] = np.sum(faB_norm[binB_ids])
+
+                            # If denominator is non-zero, calculate deviation from steady-state of averaged aligned body force magnitude for all particles at given (r/r_c, theta) bin
+                            if (float(avg_rad_dict['fa_avg']['all'][rad_final_id, theta_final_id][0])>0):
+                                fa_avg_final_binned[rad_final_id, theta_final_id] = (np.mean(fa_norm[bin_ids]) - float(avg_rad_dict['fa_avg']['all'][rad_final_id, theta_final_id][0]))
+                                fa_avg_final_binned_val[rad_final_id, theta_final_id] = np.mean(fa_norm[bin_ids])
+                            
+                            # If denominator is non-zero, calculate deviation from steady-state of averaged aligned body force magnitude for A particles at given (r/r_c, theta) bin
+                            if (float(avg_rad_dict['fa_avg']['A'][rad_final_id, theta_final_id][0])>0) & (len(binA_ids)>0):
+                                faA_avg_final_binned[rad_final_id, theta_final_id] = (np.mean(faA_norm[binA_ids]) - float(avg_rad_dict['fa_avg']['A'][rad_final_id, theta_final_id][0]))
+                                faA_avg_final_binned_val[rad_final_id, theta_final_id] = np.mean(faA_norm[binA_ids])
+                            
+                            # If denominator is non-zero, calculate deviation from steady-state of averaged aligned body force magnitude for B particles at given (r/r_c, theta) bin
+                            if (float(avg_rad_dict['fa_avg']['B'][rad_final_id, theta_final_id][0])>0) & (len(binB_ids)>0):
+                                faB_avg_final_binned[rad_final_id, theta_final_id] = (np.mean(faB_norm[binB_ids]) - float(avg_rad_dict['fa_avg']['B'][rad_final_id, theta_final_id][0]))
+                                faB_avg_final_binned_val[rad_final_id, theta_final_id] = np.mean(faB_norm[binB_ids])
+
+                            # If denominator is non-zero, calculate deviation from steady-state of averaged alignment for all particles at given (r/r_c, theta) bin
+                            if float(avg_rad_dict['align']['all'][rad_final_id, theta_final_id][0])>0:
+                                align_final_binned[rad_final_id, theta_final_id] = (np.mean(align_norm[bin_ids]) - float(avg_rad_dict['align']['all'][rad_final_id, theta_final_id][0]))
+                                align_final_binned_val[rad_final_id, theta_final_id] = np.mean(align_norm[bin_ids])
+                            
+                            # If denominator is non-zero, calculate deviation from steady-state of averaged alignment for A particles at given (r/r_c, theta) bin
+                            if (float(avg_rad_dict['align']['A'][rad_final_id, theta_final_id][0])>0) & (len(binA_ids)>0):
+                                alignA_final_binned[rad_final_id, theta_final_id] = (np.mean(alignA_norm[binA_ids]) - float(avg_rad_dict['align']['A'][rad_final_id, theta_final_id][0]))
+                                alignA_final_binned_val[rad_final_id, theta_final_id] = np.mean(alignA_norm[binA_ids])
+                            
+                            # If denominator is non-zero, calculate deviation from steady-state of averaged alignment for B particles at given (r/r_c, theta) bin
+                            if (float(avg_rad_dict['align']['B'][rad_final_id, theta_final_id][0])>0) & (len(binB_ids)>0):
+                                alignB_final_binned[rad_final_id, theta_final_id] = (np.mean(alignB_norm[binB_ids]) - float(avg_rad_dict['align']['B'][rad_final_id, theta_final_id][0]))
+                                alignB_final_binned_val[rad_final_id, theta_final_id] = np.mean(alignB_norm[binB_ids])
+
+                            # Average nearest cluster radius for all, A, or B particles at given (r/r_c, theta) bin
+                            radius_final_binned[rad_final_id, theta_final_id] = (np.mean(r_dist[bin_ids]))
+                            radiusA_final_binned[rad_final_id, theta_final_id] = (np.mean(rA_dist[binA_ids]))
+                            radiusB_final_binned[rad_final_id, theta_final_id] = (np.mean(rB_dist[binB_ids]))
+
+
+                            # If denominator is non-zero, calculate deviation from steady-state of averaged number density for all particles at given (r/r_c, theta) bin
+                            if float(avg_rad_dict['num_dens']['all'][rad_final_id, theta_final_id][0])>0:
+                                num_dens_final_binned[rad_final_id, theta_final_id] = ((len(bin_ids) / area_radial_slice) - float(avg_rad_dict['num_dens']['all'][rad_final_id, theta_final_id][0]))
+                                num_dens_final_binned_val[rad_final_id, theta_final_id] = (len(bin_ids) / area_radial_slice)
+                            
+                            # If denominator is non-zero, calculate deviation from steady-state of averaged number density for A particles at given (r/r_c, theta) bin
+                            if (float(avg_rad_dict['num_dens']['A'][rad_final_id, theta_final_id][0])>0) & (len(binA_ids)>0):
+                                num_densA_final_binned[rad_final_id, theta_final_id] = ((len(binA_ids) / area_radial_slice) - float(avg_rad_dict['num_dens']['A'][rad_final_id, theta_final_id][0]))
+                                num_densA_final_binned_val[rad_final_id, theta_final_id] = (len(binA_ids) / area_radial_slice)
+                            
+                            # If denominator is non-zero, calculate deviation from steady-state of averaged number density for B particles at given (r/r_c, theta) bin
+                            if (float(avg_rad_dict['num_dens']['B'][rad_final_id, theta_final_id][0])>0) & (len(binB_ids)>0):
+                                num_densB_final_binned[rad_final_id, theta_final_id] = ((len(binB_ids) / area_radial_slice) - float(avg_rad_dict['num_dens']['B'][rad_final_id, theta_final_id][0]))
+                                num_densB_final_binned_val[rad_final_id, theta_final_id] = (len(binB_ids) / area_radial_slice)
+
+                            # If denominator is non-zero, calculate deviation from steady-state of averaged number density for A particles at given (r/r_c, theta) bin
+                            if (float(avg_rad_dict['part_frac']['A'][rad_final_id, theta_final_id][0])>0) & (len(binA_ids)>0):
+                                part_fracA_final_binned[rad_final_id, theta_final_id] = ((len(binA_ids) / (len(binA_ids) + len(binB_ids))) - float(avg_rad_dict['part_frac']['A'][rad_final_id, theta_final_id][0]))
+                                part_fracA_final_binned_val[rad_final_id, theta_final_id] = (len(binA_ids) / (len(binA_ids) + len(binB_ids)))
+                            
+                            # If denominator is non-zero, calculate deviation from steady-state of averaged number density for B particles at given (r/r_c, theta) bin
+                            if (float(avg_rad_dict['part_frac']['B'][rad_final_id, theta_final_id][0])>0) & (len(binB_ids)>0):
+                                part_fracB_final_binned[rad_final_id, theta_final_id] = ((len(binB_ids) / (len(binA_ids) + len(binB_ids))) - float(avg_rad_dict['part_frac']['B'][rad_final_id, theta_final_id][0]))
+                                part_fracB_final_binned_val[rad_final_id, theta_final_id] = (len(binB_ids) / (len(binA_ids) + len(binB_ids)))
+
+                        # If did not load save file for averages
+                        else:
+                            
+                            # If denominator is non-zero, calculate deviation from steady-state of average body force magnitude for all particles at given (r/r_c, theta) bin
+                            if float(avg_rad_dict['fa_avg_real']['all'][rad_final_id, theta_final_id][0])>0:
+                                fa_avg_real_final_binned[rad_final_id, theta_final_id] = ((np.mean(fa_avg[bin_ids])) - float(avg_rad_dict['fa_avg_real']['all'][rad_final_id, theta_final_id][0]))
+                                fa_avg_real_final_binned_val[rad_final_id, theta_final_id] = np.mean(fa_avg[bin_ids])
+
+                            # If denominator is non-zero, calculate deviation from steady-state of average aligned body force magnitude for all particles at given (r/r_c, theta) bin
+                            if avg_rad_dict['fa_avg']['all'][rad_final_id, theta_final_id]>0:
+                                fa_avg_final_binned[rad_final_id, theta_final_id] = (np.mean(fa_norm[bin_ids]) - avg_rad_dict['fa_avg']['all'][rad_final_id, theta_final_id])
+                                fa_avg_final_binned_val[rad_final_id, theta_final_id] = np.mean(fa_norm[bin_ids])
+                            
+                            # If denominator is non-zero, calculate deviation from steady-state of average aligned body force magnitude for A particles at given (r/r_c, theta) bin
+                            if (avg_rad_dict['fa_avg']['A'][rad_final_id, theta_final_id]>0) & (len(binA_ids)>0):
+                                faA_avg_final_binned[rad_final_id, theta_final_id] = (np.mean(faA_norm[binA_ids]) - avg_rad_dict['fa_avg']['A'][rad_final_id, theta_final_id])
+                                faA_avg_final_binned_val[rad_final_id, theta_final_id] = np.mean(faA_norm[binA_ids])
+                            
+                            # If denominator is non-zero, calculate deviation from steady-state of average aligned body force magnitude for B particles at given (r/r_c, theta) bin
+                            if (avg_rad_dict['fa_avg']['B'][rad_final_id, theta_final_id]>0) & (len(binB_ids)>0):
+                                faB_avg_final_binned[rad_final_id, theta_final_id] = (np.mean(faB_norm[binB_ids]) - avg_rad_dict['fa_avg']['B'][rad_final_id, theta_final_id])
+                                faB_avg_final_binned_val[rad_final_id, theta_final_id] = np.mean(faB_norm[binB_ids])
+
+                            # If denominator is non-zero, calculate deviation from steady-state of total aligned body force magnitude for all particles at given (r/r_c, theta) bin
+                            if avg_rad_dict['fa_sum']['all'][rad_final_id, theta_final_id]>0:
+                                fa_sum_final_binned[rad_final_id, theta_final_id] = (np.sum(fa_norm[bin_ids]) - avg_rad_dict['fa_sum']['all'][rad_final_id, theta_final_id])
+                                fa_sum_final_binned_val[rad_final_id, theta_final_id] = np.sum(fa_norm[bin_ids])
+                            
+                            # If denominator is non-zero, calculate deviation from steady-state of total aligned body force magnitude for A particles at given (r/r_c, theta) bin
+                            if (avg_rad_dict['fa_sum']['A'][rad_final_id, theta_final_id]>0) & (len(binA_ids)>0):
+                                faA_sum_final_binned[rad_final_id, theta_final_id] = (np.sum(faA_norm[binA_ids]) - avg_rad_dict['fa_sum']['A'][rad_final_id, theta_final_id])
+                                faA_sum_final_binned_val[rad_final_id, theta_final_id] = np.sum(faA_norm[binA_ids])
+                            
+                            # If denominator is non-zero, calculate deviation from steady-state of total aligned body force magnitude for B particles at given (r/r_c, theta) bin
+                            if (avg_rad_dict['fa_sum']['B'][rad_final_id, theta_final_id]>0) & (len(binB_ids)>0):
+                                faB_sum_final_binned[rad_final_id, theta_final_id] = (np.sum(faB_norm[binB_ids]) - avg_rad_dict['fa_sum']['B'][rad_final_id, theta_final_id])
+                                faB_sum_final_binned_val[rad_final_id, theta_final_id] = np.sum(faB_norm[binB_ids])
+
+                            # If denominator is non-zero, calculate deviation from steady-state of averaged aligned body force density for all particles at given (r/r_c, theta) bin
+                            if avg_rad_dict['fa_dens']['all'][rad_final_id, theta_final_id][0]>0:
+                                fa_dens_final_binned[rad_final_id, theta_final_id] = ((np.sum(fa_norm[bin_ids]) / area_radial_slice) - avg_rad_dict['fa_dens']['all'][rad_final_id, theta_final_id][0])
+                                fa_dens_final_binned_val[rad_final_id, theta_final_id] = np.sum(fa_norm[bin_ids])/ area_radial_slice
+                            
+                            # If denominator is non-zero, calculate deviation from steady-state of averaged aligned body force density for A particles at given (r/r_c, theta) bin
+                            if (avg_rad_dict['fa_dens']['A'][rad_final_id, theta_final_id][0]>0) & (len(binA_ids)>0):
+                                faA_dens_final_binned[rad_final_id, theta_final_id] = ((np.sum(faA_norm[binA_ids]) / area_radial_slice) - avg_rad_dict['fa_dens']['A'][rad_final_id, theta_final_id][0])
+                                faA_dens_final_binned_val[rad_final_id, theta_final_id] = np.sum(faA_norm[binA_ids])/ area_radial_slice
+                            
+                            # If denominator is non-zero, calculate deviation from steady-state of averaged aligned body force density for B particles at given (r/r_c, theta) bin
+                            if (avg_rad_dict['fa_dens']['B'][rad_final_id, theta_final_id][0]>0) & (len(binB_ids)>0):
+                                faB_dens_final_binned[rad_final_id, theta_final_id] = ((np.sum(faB_norm[binB_ids]) / area_radial_slice) - avg_rad_dict['fa_dens']['B'][rad_final_id, theta_final_id][0])
+                                faB_dens_final_binned_val[rad_final_id, theta_final_id] = np.sum(faB_norm[binB_ids])/ area_radial_slice
+
+                            # If denominator is non-zero, calculate deviation from steady-state of averaged alignment for all particles at given (r/r_c, theta) bin
+                            if avg_rad_dict['align']['all'][rad_final_id, theta_final_id]>0:
+                                align_final_binned[rad_final_id, theta_final_id] = (np.mean(align_norm[bin_ids]) - avg_rad_dict['align']['all'][rad_final_id, theta_final_id])
+                                align_final_binned_val[rad_final_id, theta_final_id] = np.mean(align_norm[bin_ids])
+                            
+                            # If denominator is non-zero, calculate deviation from steady-state of averaged alignment for all particles at given (r/r_c, theta) bin
+                            if (avg_rad_dict['align']['A'][rad_final_id, theta_final_id]>0) & (len(binA_ids)>0):
+                                alignA_final_binned[rad_final_id, theta_final_id] = (np.mean(alignA_norm[binA_ids]) - avg_rad_dict['align']['A'][rad_final_id, theta_final_id])
+                                alignA_final_binned_val[rad_final_id, theta_final_id] = np.mean(alignA_norm[binA_ids])
+                            
+                            # If denominator is non-zero, calculate deviation from steady-state of averaged alignment for all particles at given (r/r_c, theta) bin
+                            if (avg_rad_dict['align']['B'][rad_final_id, theta_final_id]>0) & (len(binB_ids)>0):
+                                alignB_final_binned[rad_final_id, theta_final_id] = (np.mean(alignB_norm[binB_ids]) - avg_rad_dict['align']['B'][rad_final_id, theta_final_id])
+                                alignB_final_binned_val[rad_final_id, theta_final_id] = np.mean(alignB_norm[binB_ids])
+
+                            # Average nearest cluster radius for all, A, or B particles at given (r/r_c, theta) bin
+                            radius_final_binned[rad_final_id, theta_final_id] = (np.mean(r_dist[bin_ids]))
+                            radiusA_final_binned[rad_final_id, theta_final_id] = (np.mean(rA_dist[binA_ids]))
+                            radiusB_final_binned[rad_final_id, theta_final_id] = (np.mean(rB_dist[binB_ids]))
+
+                            # If denominator is non-zero, calculate deviation from steady-state of averaged number density for all particles at given (r/r_c, theta) bin
+                            if avg_rad_dict['num_dens']['all'][rad_final_id, theta_final_id]>0:
+                                num_dens_final_binned[rad_final_id, theta_final_id] = ((len(bin_ids) / area_radial_slice) - avg_rad_dict['num_dens']['all'][rad_final_id, theta_final_id])
+                                num_dens_final_binned_val[rad_final_id, theta_final_id] = (len(bin_ids) / area_radial_slice)
+                            
+                            # If denominator is non-zero, calculate deviation from steady-state of averaged number density for A particles at given (r/r_c, theta) bin
+                            if (avg_rad_dict['num_dens']['A'][rad_final_id, theta_final_id]>0) & (len(binA_ids)>0):
+                                num_densA_final_binned[rad_final_id, theta_final_id] = ((len(binA_ids) / area_radial_slice) - avg_rad_dict['num_dens']['A'][rad_final_id, theta_final_id])
+                                num_densA_final_binned_val[rad_final_id, theta_final_id] = (len(binA_ids) / area_radial_slice)
+                            
+                            # If denominator is non-zero, calculate deviation from steady-state of averaged number density for B particles at given (r/r_c, theta) bin
+                            if (avg_rad_dict['num_dens']['B'][rad_final_id, theta_final_id]>0) & (len(binB_ids)>0):
+                                num_densB_final_binned[rad_final_id, theta_final_id] = ((len(binB_ids) / area_radial_slice) - avg_rad_dict['num_dens']['B'][rad_final_id, theta_final_id])
+                                num_densB_final_binned_val[rad_final_id, theta_final_id] = (len(binB_ids) / area_radial_slice)
+
+                            # If denominator is non-zero, calculate deviation from steady-state of averaged number density for A particles at given (r/r_c, theta) bin
+                            if (avg_rad_dict['part_frac']['A'][rad_final_id, theta_final_id]>0) & (len(binA_ids)>0):
+                                part_fracA_final_binned[rad_final_id, theta_final_id] = ((len(binA_ids) / (len(binB_ids) + len(binA_ids)))- avg_rad_dict['part_frac']['A'][rad_final_id, theta_final_id])
+                                part_fracA_final_binned_val[rad_final_id, theta_final_id] = (len(binA_ids) / (len(binB_ids) + len(binA_ids)))
+                            
+                            # If denominator is non-zero, calculate deviation from steady-state of averaged number density for B particles at given (r/r_c, theta) bin
+                            if (avg_rad_dict['part_frac']['B'][rad_final_id, theta_final_id]>0) & (len(binB_ids)>0):
+                                part_fracB_final_binned[rad_final_id, theta_final_id] = ((len(binB_ids) / (len(binB_ids) + len(binA_ids))) - avg_rad_dict['part_frac']['B'][rad_final_id, theta_final_id])
+                                part_fracB_final_binned_val[rad_final_id, theta_final_id] = (len(binB_ids) / (len(binB_ids) + len(binA_ids)))
+
+        #print(avg_rad_dict['rad'])
+        #stop
+        #unique_rad = np.unique(avg_rad_dict['rad'])
+        
+        unique_theta = np.unique(avg_rad_dict['theta'])
+
+        int_fa_dens_time_theta = np.zeros(len(unique_theta))
+        int_faA_dens_time_theta = np.zeros(len(unique_theta))
+        int_faB_dens_time_theta = np.zeros(len(unique_theta))
+
+        int_fa_avg_real_time_theta = np.zeros(len(unique_theta))
+
+        int_fa_avg_time_theta = np.zeros(len(unique_theta))
+        int_faA_avg_time_theta = np.zeros(len(unique_theta))
+        int_faB_avg_time_theta = np.zeros(len(unique_theta))
+
+        int_fa_sum_time_theta = np.zeros(len(unique_theta))
+        int_faA_sum_time_theta = np.zeros(len(unique_theta))
+        int_faB_sum_time_theta = np.zeros(len(unique_theta))
+
+        int_num_dens_time_theta = np.zeros(len(unique_theta))
+        int_num_densA_time_theta = np.zeros(len(unique_theta))
+        int_num_densB_time_theta = np.zeros(len(unique_theta))
+
+        int_part_fracA_time_theta = np.zeros(len(unique_theta))
+        int_part_fracB_time_theta = np.zeros(len(unique_theta))
+
+        int_align_time_theta = np.zeros(len(unique_theta))
+        int_alignA_time_theta = np.zeros(len(unique_theta))
+        int_alignB_time_theta = np.zeros(len(unique_theta))
+        temp_id_new = np.where((rad_final_bins>=0.3) & (rad_final_bins<=1.1))[0]
+
+        for j in range(1, len(temp_id_new)):
+            test_id = np.where(avg_rad_dict['rad']==rad_final_bins[temp_id_new[j]])[0]
+            if len(test_id)>0:
+
+                rad_step = (rad_final_bins[temp_id_new[j]]-rad_final_bins[temp_id_new[j-1]])*radius_final_binned[temp_id_new[j],:]
+
+                int_fa_dens_time_theta += (rad_step/2) * (fa_dens_final_binned_val[temp_id_new[j],:]+fa_dens_final_binned_val[temp_id_new[j-1],:])
+                int_faA_dens_time_theta += (rad_step/2) * (faA_dens_final_binned_val[temp_id_new[j],:]+faA_dens_final_binned_val[temp_id_new[j-1],:])
+                int_faB_dens_time_theta += (rad_step/2) * (faB_dens_final_binned_val[temp_id_new[j],:]+faB_dens_final_binned_val[temp_id_new[j-1],:])
+
+                int_fa_avg_real_time_theta += (rad_step/2) * (fa_avg_real_final_binned_val[temp_id_new[j],:]+fa_avg_real_final_binned_val[temp_id_new[j-1],:])
+
+                int_fa_avg_time_theta += (rad_step/2) * (fa_avg_final_binned_val[temp_id_new[j],:]+fa_avg_final_binned_val[temp_id_new[j-1],:])
+                int_faA_avg_time_theta += (rad_step/2) * (faA_avg_final_binned_val[temp_id_new[j],:]+faA_avg_final_binned_val[temp_id_new[j-1],:])
+                int_faB_avg_time_theta += (rad_step/2) * (faB_avg_final_binned_val[temp_id_new[j],:]+faB_avg_final_binned_val[temp_id_new[j-1],:])
+
+                int_fa_sum_time_theta += (rad_step/2) * (fa_sum_final_binned_val[temp_id_new[j],:]+fa_sum_final_binned_val[temp_id_new[j-1],:])
+                int_faA_sum_time_theta += (rad_step/2) * (faA_sum_final_binned_val[temp_id_new[j],:]+faA_sum_final_binned_val[temp_id_new[j-1],:])
+                int_faB_sum_time_theta += (rad_step/2) * (faB_sum_final_binned_val[temp_id_new[j],:]+faB_sum_final_binned_val[temp_id_new[j-1],:])
+
+                int_num_dens_time_theta += (rad_step/2) * (num_dens_final_binned_val[temp_id_new[j],:]+num_dens_final_binned_val[temp_id_new[j-1],:])
+                int_num_densA_time_theta += (rad_step/2) * (num_densA_final_binned_val[temp_id_new[j],:]+num_densA_final_binned_val[temp_id_new[j-1],:])
+                int_num_densB_time_theta += (rad_step/2) * (num_densB_final_binned_val[temp_id_new[j],:]+num_densB_final_binned_val[temp_id_new[j-1],:])
+
+                int_part_fracA_time_theta += (rad_step/2) * (part_fracA_final_binned_val[temp_id_new[j],:]+part_fracA_final_binned_val[temp_id_new[j-1],:])
+                int_part_fracB_time_theta += (rad_step/2) * (part_fracB_final_binned_val[temp_id_new[j],:]+part_fracB_final_binned_val[temp_id_new[j-1],:])
+
+                int_align_time_theta += (rad_step/2) * (align_final_binned_val[temp_id_new[j],:]+align_final_binned_val[temp_id_new[j-1],:])
+                int_alignA_time_theta += (rad_step/2) * (alignA_final_binned_val[temp_id_new[j],:]+alignA_final_binned_val[temp_id_new[j-1],:])
+                int_alignB_time_theta += (rad_step/2) * (alignB_final_binned_val[temp_id_new[j],:]+alignB_final_binned_val[temp_id_new[j-1],:])
+
+        dif_int_fa_dens_time_theta = int_fa_dens_time_theta - integrated_avg_rad_dict['fa_dens']['all'].astype('float64')
+        dif_int_faA_dens_time_theta = int_faA_dens_time_theta - integrated_avg_rad_dict['fa_dens']['A']
+        dif_int_faB_dens_time_theta = int_faB_dens_time_theta - integrated_avg_rad_dict['fa_dens']['B']
+
+        dif_int_fa_avg_real_time_theta = int_fa_avg_real_time_theta - integrated_avg_rad_dict['radius']
+
+        dif_int_fa_avg_time_theta = int_fa_avg_time_theta - integrated_avg_rad_dict['fa_avg']['all']
+        dif_int_faA_avg_time_theta = int_faA_avg_time_theta - integrated_avg_rad_dict['fa_avg']['A']
+        dif_int_faB_avg_time_theta = int_faB_avg_time_theta - integrated_avg_rad_dict['fa_avg']['B']
+
+        dif_int_fa_sum_time_theta = int_fa_sum_time_theta - integrated_avg_rad_dict['fa_sum']['all']
+        dif_int_faA_sum_time_theta = int_faA_sum_time_theta - integrated_avg_rad_dict['fa_sum']['A']
+        dif_int_faB_sum_time_theta = int_faB_sum_time_theta - integrated_avg_rad_dict['fa_sum']['B']
+
+        dif_int_num_dens_time_theta = int_num_dens_time_theta - integrated_avg_rad_dict['num_dens']['all']
+        dif_int_num_densA_time_theta = int_num_densA_time_theta - integrated_avg_rad_dict['num_dens']['A']
+        dif_int_num_densB_time_theta = int_num_densB_time_theta - integrated_avg_rad_dict['num_dens']['B']
+
+        dif_int_part_fracA_time_theta = int_part_fracA_time_theta - integrated_avg_rad_dict['part_frac']['A']
+        dif_int_part_fracB_time_theta = int_part_fracB_time_theta - integrated_avg_rad_dict['part_frac']['B']
+
+        dif_int_align_time_theta = int_align_time_theta - integrated_avg_rad_dict['align']['all']
+        dif_int_alignA_time_theta = int_alignA_time_theta - integrated_avg_rad_dict['align']['A']
+        dif_int_alignB_time_theta = int_alignB_time_theta - integrated_avg_rad_dict['align']['B']
+
+
+
+
+
+        dif_avg_int_fa_dens_time_theta = int_fa_dens_time_theta - np.mean(int_fa_dens_time_theta)
+        dif_avg_int_faA_dens_time_theta = int_faA_dens_time_theta - np.mean(int_faA_dens_time_theta)
+        dif_avg_int_faB_dens_time_theta = int_faB_dens_time_theta - np.mean(int_faB_dens_time_theta)
+
+        dif_avg_int_fa_avg_real_time_theta = int_fa_avg_real_time_theta - np.mean(int_fa_avg_real_time_theta)
+
+        dif_avg_int_fa_avg_time_theta = int_fa_avg_time_theta - np.mean(int_fa_avg_time_theta)
+        dif_avg_int_faA_avg_time_theta = int_faA_avg_time_theta - np.mean(int_faA_avg_time_theta)
+        dif_avg_int_faB_avg_time_theta = int_faB_avg_time_theta - np.mean(int_faB_avg_time_theta)
+
+        dif_avg_int_fa_sum_time_theta = int_fa_sum_time_theta - np.mean(int_fa_sum_time_theta)
+        dif_avg_int_faA_sum_time_theta = int_faA_sum_time_theta - np.mean(int_faA_sum_time_theta)
+        dif_avg_int_faB_sum_time_theta = int_faB_sum_time_theta - np.mean(int_faB_sum_time_theta)
+
+        dif_avg_int_num_dens_time_theta = int_num_dens_time_theta - np.mean(int_num_dens_time_theta)
+        dif_avg_int_num_densA_time_theta = int_num_densA_time_theta - np.mean(int_num_densA_time_theta)
+        dif_avg_int_num_densB_time_theta = int_num_densB_time_theta - np.mean(int_num_densB_time_theta)
+
+        dif_avg_int_part_fracA_time_theta = int_part_fracA_time_theta - np.mean(int_part_fracA_time_theta)
+        dif_avg_int_part_fracB_time_theta = int_part_fracB_time_theta - np.mean(int_part_fracB_time_theta)
+
+        dif_avg_int_align_time_theta = int_align_time_theta - np.mean(int_align_time_theta)
+        dif_avg_int_alignA_time_theta = int_alignA_time_theta - np.mean(int_alignA_time_theta)
+        dif_avg_int_alignB_time_theta = int_alignB_time_theta - np.mean(int_alignB_time_theta)
+
+
+        radial_heterogeneity_dict = {'rad': rad_final_bins, 'theta': theta_final_bins, 'radius': np.mean(r_dist), 'radius_ang': radius_final_binned_theta_new, 'com': {'x': all_surface_measurements[key]['exterior']['com']['x'], 'y': all_surface_measurements[key]['exterior']['com']['y']}, 'fa_avg_real': {'all': fa_avg_real_final_binned}, 'fa_avg': {'all': fa_avg_final_binned, 'A': faA_avg_final_binned, 'B': faB_avg_final_binned}, 'fa_sum': {'all': fa_sum_final_binned, 'A': faA_sum_final_binned, 'B': faB_sum_final_binned}, 'fa_dens': {'all': fa_dens_final_binned, 'A': faA_dens_final_binned, 'B': faB_dens_final_binned}, 'align': {'all': align_final_binned, 'A': alignA_final_binned, 'B': alignB_final_binned}, 'num_dens': {'all': num_dens_final_binned, 'A': num_densA_final_binned, 'B': num_densB_final_binned}, 'part_frac': {'A': part_fracA_final_binned, 'B': part_fracB_final_binned}}
+        #radial_heterogeneity_dict_theta = {'theta': theta_final_bins, 'radius': radius_final_binned_theta_new, 'fa_avg_real': {'all': fa_avg_real_final_binned_theta}, 'fa_sum': {'all': fa_sum_final_binned_theta, 'A': faA_sum_final_binned_theta, 'B': faB_sum_final_binned_theta}, 'fa_avg': {'all': fa_avg_final_binned_theta, 'A': faA_avg_final_binned_theta, 'B': faB_avg_final_binned_theta}, 'fa_dens': {'all': fa_dens_final_binned_theta, 'A': faA_dens_final_binned_theta, 'B': faB_dens_final_binned_theta}, 'align': {'all': align_final_binned_theta, 'A': alignA_final_binned_theta, 'B': alignB_final_binned_theta}, 'num_dens': {'all': num_dens_final_binned_theta, 'A': num_densA_final_binned_theta, 'B': num_densB_final_binned_theta}}
+        
+        plot_bin_dict = {'rad': rad_final_bins, 'theta': theta_final_bins, 'radius': np.mean(r_dist), 'radius_ang': radius_final_binned_theta_new, 'com': {'x': all_surface_measurements[key]['exterior']['com']['x'], 'y': all_surface_measurements[key]['exterior']['com']['y']}, 'fa_avg_real': {'all': fa_avg_real_final_binned_val}, 'fa_avg': {'all': fa_avg_final_binned_val, 'A': faA_avg_final_binned_val, 'B': faB_avg_final_binned_val}, 'fa_dens': {'all': fa_dens_final_binned_val, 'A': faA_dens_final_binned_val, 'B': faB_dens_final_binned_val}, 'align': {'all': align_final_binned_val, 'A': alignA_final_binned_val, 'B': alignB_final_binned_val}, 'num': {'all': num_final_binned_val, 'A': numA_final_binned_val, 'B': numB_final_binned_val}, 'num_dens': {'all': num_dens_final_binned_val, 'A': num_densA_final_binned_val, 'B': num_densB_final_binned_val}, 'part_frac': {'A': part_fracA_final_binned_val, 'B': part_fracB_final_binned_val}, 'rad_bin': {'all': radius_final_binned, 'A': radiusA_final_binned, 'B': radiusB_final_binned}}
+
+        dif_radial_heterogeneity_dict = {'theta': theta_final_bins, 'fa_avg_real': {'all': dif_int_fa_avg_real_time_theta}, 'fa_avg': {'all': dif_int_fa_avg_time_theta, 'A': dif_int_faA_avg_time_theta, 'B': dif_int_faB_avg_time_theta}, 'fa_sum': {'all': dif_int_fa_sum_time_theta, 'A': dif_int_faA_sum_time_theta, 'B': dif_int_faB_sum_time_theta}, 'fa_dens': {'all': dif_int_fa_dens_time_theta, 'A': dif_int_faA_dens_time_theta, 'B': dif_int_faB_dens_time_theta}, 'align': {'all': dif_int_align_time_theta, 'A': dif_int_alignA_time_theta, 'B': dif_int_alignB_time_theta}, 'num_dens': {'all': dif_int_num_dens_time_theta, 'A': dif_int_num_densA_time_theta, 'B': dif_int_num_densB_time_theta}, 'part_frac': {'A': dif_int_part_fracA_time_theta, 'B': dif_int_part_fracB_time_theta}}
+
+        dif_avg_radial_heterogeneity_dict = {'theta': theta_final_bins, 'fa_avg_real': {'all': dif_avg_int_fa_avg_real_time_theta}, 'fa_avg': {'all': dif_avg_int_fa_avg_time_theta, 'A': dif_avg_int_faA_avg_time_theta, 'B': dif_avg_int_faB_avg_time_theta}, 'fa_sum': {'all': dif_avg_int_fa_sum_time_theta, 'A': dif_avg_int_faA_sum_time_theta, 'B': dif_avg_int_faB_sum_time_theta}, 'fa_dens': {'all': dif_avg_int_fa_dens_time_theta, 'A': dif_avg_int_faA_dens_time_theta, 'B': dif_avg_int_faB_dens_time_theta}, 'align': {'all': dif_avg_int_align_time_theta, 'A': dif_avg_int_alignA_time_theta, 'B': dif_avg_int_alignB_time_theta}, 'num_dens': {'all': dif_avg_int_num_dens_time_theta, 'A': dif_avg_int_num_densA_time_theta, 'B': dif_avg_int_num_densB_time_theta}, 'part_frac': {'A': dif_avg_int_part_fracA_time_theta, 'B': dif_avg_int_part_fracB_time_theta}}
+
+        return radial_heterogeneity_dict, dif_radial_heterogeneity_dict, dif_avg_radial_heterogeneity_dict, plot_dict, plot_bin_dict
+
+
     def radial_heterogeneity(self, method2_align_dict, avg_rad_dict, integrated_avg_rad_dict, surface_dict, int_comp_dict, all_surface_measurements, int_dict, phase_dict, load_save = 0):
         
         # Bulk particle IDs for all, A, and B particles

@@ -2021,17 +2021,29 @@ class measurement:
         BB_prob_dense=BB_dense_num_neigh[B_def_id]/allB_dense_num_neigh[B_def_id]
 
         # Find slow and fast bulk particle fraction
-        chi_s_bulk = len(pos_A_bulk)/len(pos_bulk)
-        chi_f_bulk = len(pos_B_bulk)/len(pos_bulk)
+        if len(pos_bulk)>0:
+            chi_s_bulk = len(pos_A_bulk)/len(pos_bulk)
+            chi_f_bulk = len(pos_B_bulk)/len(pos_bulk)
+        else:
+            chi_s_bulk = 0
+            chi_f_bulk = 0
 
         # Find slow and fast interface particle fraction
-        chi_s_int = len(pos_A_int)/len(pos_int)
-        chi_f_int = len(pos_B_int)/len(pos_int)
-
+        if len(pos_int)>0:
+            chi_s_int = len(pos_A_int)/len(pos_int)
+            chi_f_int = len(pos_B_int)/len(pos_int)
+        else:
+            chi_s_int = 0
+            chi_f_int = 0
+            
         # Find slow and fast dense particle fraction
-        chi_s_dense = len(pos_A_dense)/len(pos_dense)
-        chi_f_dense = len(pos_B_dense)/len(pos_dense)
-        
+        if len(pos_dense)>0:
+            chi_s_dense = len(pos_A_dense)/len(pos_dense)
+            chi_f_dense = len(pos_B_dense)/len(pos_dense)
+        else:
+            chi_s_dense = 0
+            chi_f_dense = 0
+
         # Calculate degree of segregation for A neighbors in bulk (measured fraction of neighbors 
         # being A normalized by probability neighbors is type A assuming well mixed, i.e. fast particle fraction)
         if chi_s_bulk>0:
