@@ -3981,11 +3981,15 @@ class particle_props:
         A_id = np.where((self.typ==0))[0]
         B_id = np.where((self.typ==1))[0]
 
-        interface_id = int(np.where(int_comp_dict['comp']==np.max(int_comp_dict['comp']))[0])
-
-        int_id = np.where(int_dict['part']==int_dict['largest ids'][0])[0]
-        key = 'surface id ' + str(int(int_dict['largest ids'][0]))
-    
+        try:
+            int_id = np.where(int_dict['part']==int_dict['largest ids'][0])[0]
+            key = 'surface id ' + str(int(int_dict['largest ids'][0]))
+        except:
+            interface_id = int(np.where(int_comp_dict['comp']==np.max(int_comp_dict['comp']))[0])
+            interface_id = int_comp_dict['ids'][interface_id]
+            int_id = np.where(int_dict['part']==interface_id)[0]
+            key = 'surface id ' + str(int(interface_id))
+        
         ext_rad = (surface_dict[key]['exterior']['pos']['x']**2 + surface_dict[key]['exterior']['pos']['y']**2)**0.5
 
         

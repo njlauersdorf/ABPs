@@ -853,6 +853,9 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                         particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, eps, typ, pos, x_orient_arr, y_orient_arr)
 
+                        # Calculate average binned interface properties for current time frame
+                        single_time_dict, int_single_time_dict, plot_dict, plot_bin_dict = particle_prop_functs.radial_heterogeneity_avgs(method2_align_dict, all_surface_curves, int_comp_dict, all_surface_measurements, int_dict, phase_dict)
+
                         try:
                             
                             # Calculate average binned interface properties for current time frame
