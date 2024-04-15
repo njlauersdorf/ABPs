@@ -506,7 +506,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     outFile = out + pad
 
                     
-
+                    min_size = 0
                     # If cluster sufficiently large
                     if clust_large >= min_size:
                         
@@ -3130,7 +3130,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     out = outfile + "_frame_"
                     pad = str(j).zfill(5)
                     outFile = out + pad
-
+                    min_size = 0
                     # If cluster sufficiently large
                     if clust_large >= min_size:
                         
