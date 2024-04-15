@@ -4672,6 +4672,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                 # Save degree of penetration data
                                 data_output_functs.write_to_txt(penetration_dict, dataPath + 'penetration_depth_' + outfile + '.txt')
 
+
                         elif measurement_method == 'radial-df':
                             #DONE
 
@@ -5544,6 +5545,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                     prev_pos = pos.copy()
                     prev_ang = ang.copy()
+        
         elif measurement_method == 'radial-df':
             # Done!
             

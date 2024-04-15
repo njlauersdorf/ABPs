@@ -5151,12 +5151,15 @@ class particle_props:
         A_id = np.where((self.typ==0))[0]
         B_id = np.where((self.typ==1))[0]
 
-        # Largest interface IDs for all, A, and B particles
-        int_id = np.where(int_dict['part']==int_dict['largest ids'][0])[0]
-
-        # Largest interface key for dictionary
-        key = 'surface id ' + str(int(int_dict['largest ids'][0]))
-
+        try:
+            int_id = np.where(int_dict['part']==int_dict['largest ids'][0])[0]
+            key = 'surface id ' + str(int(int_dict['largest ids'][0]))
+        except:
+            interface_id = int(np.where(int_comp_dict['comp']==np.max(int_comp_dict['comp']))[0])
+            interface_id = int_comp_dict['ids'][interface_id]
+            int_id = np.where(int_dict['part']==interface_id)[0]
+            key = 'surface id ' + str(int(interface_id))
+        
         # Exterior cluster surface radii of surface points
         difx_ext_surface = (surface_dict[key]['exterior']['pos']['x'] - all_surface_measurements[key]['exterior']['com']['x'])
         dify_ext_surface = (surface_dict[key]['exterior']['pos']['y'] - all_surface_measurements[key]['exterior']['com']['y'])
