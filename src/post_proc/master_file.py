@@ -245,6 +245,7 @@ presentation_option = False
 large_arrows_option = False
 mono_slow_option = False
 mono_fast_option = False
+swap_col_option = False
 
 # Check whether optional input parameters given in user input
 if optional_method != 'none':
@@ -270,6 +271,8 @@ if optional_method != 'none':
             mono_slow_option = True
         elif optional_options[i] == 'mono-fast':
             mono_fast_option = True
+        elif optional_options[i] == 'swap':
+            swap_col_option = True
 
 time_prob_AA_bulk = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0], dtype=np.float64)
 time_prob_AB_bulk = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0], dtype=np.float64)
@@ -3624,8 +3627,6 @@ with hoomd.open(name=inFile, mode='rb') as t:
                             from csv import writer
                             
                             # If surface is properly defined, calculate and save difference in current time step from previous for interface properties
-                            radial_heterogeneity_dict, dif_radial_heterogeneity_dict, dif_avg_radial_heterogeneity_dict, plot_heterogeneity_dict, plot_bin_dict = particle_prop_functs.radial_heterogeneity(method2_align_dict, avg_rad_dict, integrated_avg_rad_dict, all_surface_curves, int_comp_dict, all_surface_measurements, int_dict, phase_dict, load_save=load_save)
-                            
                             try:
                                 radial_heterogeneity_dict, dif_radial_heterogeneity_dict, dif_avg_radial_heterogeneity_dict, plot_heterogeneity_dict, plot_bin_dict = particle_prop_functs.radial_heterogeneity(method2_align_dict, avg_rad_dict, integrated_avg_rad_dict, all_surface_curves, int_comp_dict, all_surface_measurements, int_dict, phase_dict, load_save=load_save)
                                 

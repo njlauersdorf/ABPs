@@ -10866,7 +10866,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         plt.savefig(self.outPath + 'part_activity_' + self.outFile + ".png", dpi=200, transparent=False, bbox_inches='tight')
         plt.close() 
 
-    def plot_part_activity_blank(self, pos, sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None, mono_id=False, interface_id = False, orientation_id = False, zoom_id = False, banner_id = False, presentation_id = False, mono_slow_id = False, mono_fast_id = False):
+    def plot_part_activity_blank(self, pos, sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None, mono_id=False, interface_id = False, orientation_id = False, zoom_id = False, banner_id = False, presentation_id = False, mono_slow_id = False, mono_fast_id = False, swap_col_id = False):
 
         """
         This function plots the particle positions and color codes each particle with its intrinsic
@@ -10968,7 +10968,10 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
         if mono_slow_id == True:
             fastCol = '#4393c3'
-        if mono_fast_id == True:
+        elif mono_fast_id == True:
+            slowCol = '#b2182b'
+        elif swap_col_id == True:
+            fastCol = '#4393c3'
             slowCol = '#b2182b'
 
 
@@ -11196,6 +11199,8 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
             plt.savefig(self.outPath + 'part_activity_blank_mono_slow_' + self.outFile + ".png", dpi=200, transparent=False, bbox_inches='tight')
         elif mono_fast_id == True:
             plt.savefig(self.outPath + 'part_activity_blank_mono_fast_' + self.outFile + ".png", dpi=200, transparent=False, bbox_inches='tight')
+        elif swap_col_id == True:
+            plt.savefig(self.outPath + 'part_activity_blank_swap_col_' + self.outFile + ".png", dpi=200, transparent=False, bbox_inches='tight')
         else:
             plt.savefig(self.outPath + 'part_activity_blank_' + self.outFile + ".png", dpi=200, transparent=False, bbox_inches='tight')
         plt.close()  
