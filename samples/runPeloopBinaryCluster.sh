@@ -116,15 +116,16 @@ if [ $dont_run == "no" ]; then
 
     # Lists for activity of A and B species
     declare -a pa
-    pa=(0 50 100 150 200 300 400 500)
+    pa=(0)
+    # 50 100 150 200 300 400 500)
     # 25 50 75)
 
     declare -a pb
-    pb=(500)
+    pb=(0)
 
     # List for particle fraction
     declare -a xa
-    xa=(20 50 80)
+    xa=(50)
 
     # List for phi
     declare -a phi
