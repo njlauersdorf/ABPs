@@ -199,8 +199,8 @@ if [ $vid == "y" ]; then
         fi
     elif [ $method == "activity-blank-video" ]; then
         if [ $os == "mac" ]; then
-            pic_path="${outpath}_pic_files/part_activity_blank_video_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}"
-            vid_path="${outpath}_vid_files/part_activity_blank_video_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}"
+            pic_path="${outpath}_pic_files/part_activity_blank_video_mono_fast_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}"
+            vid_path="${outpath}_vid_files/part_activity_blank_video_mono_fast_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}"
             ffmpeg -start_number $start_frame -framerate 10 -i "$pic_path"_frame_%05d.png\
             -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
             "$vid_path".mp4
