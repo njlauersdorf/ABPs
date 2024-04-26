@@ -185,8 +185,8 @@ echo $vid
 if [ $vid == "y" ]; then
     if [ $method == "activity-blank" ]; then
         if [ $os == "mac" ]; then
-            pic_path="${outpath}_pic_files/part_activity_blank_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}"
-            vid_path="${outpath}_vid_files/part_activity_blank_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}"
+            pic_path="${outpath}_pic_files/part_activity_blank_mono_fast_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}"
+            vid_path="${outpath}_vid_files/part_activity_blank_mono_fast_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}"
             ffmpeg -start_number $start_frame -framerate 16 -i "$pic_path"_frame_%05d.png\
             -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
             "$vid_path".mp4
@@ -205,8 +205,8 @@ if [ $vid == "y" ]; then
             -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
             "$vid_path".mp4
         elif [ $os == "windows" ]; then
-            pic_path=$(echo "${outpath}_pic_files/part_activity_blank_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}" | tr -d '\r')
-            vid_path=$(echo "${outpath}_vid_files/part_activity_blank_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}" | tr -d '\r')
+            pic_path=$(echo "${outpath}_pic_files/part_activity_blank_mono_fast_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}" | tr -d '\r')
+            vid_path=$(echo "${outpath}_vid_files/part_activity_blank_mono_fast_pa${pa2}_pb${pb}_xa${xa2}_eps${eps}_phi${phi}_pNum${pNum}_bin${bin}_time${step}" | tr -d '\r')
             ffmpeg -start_number $start_frame -framerate 10 -i "$pic_path"_frame_%05d.png\
             -vcodec libx264 -s 1600x1200 -pix_fmt yuv420p -threads 1\
             "$vid_path".mp4
