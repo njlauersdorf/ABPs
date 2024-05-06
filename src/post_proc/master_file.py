@@ -3465,9 +3465,14 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                 com_x_arr_time = np.append(com_x_arr_time, all_surface_measurements['surface id ' + str(int(int_comp_dict['ids'][0]))]['exterior']['com']['x']-hx_box)
                                 com_y_arr_time = np.append(com_y_arr_time, all_surface_measurements['surface id ' + str(int(int_comp_dict['ids'][0]))]['exterior']['com']['y']-hy_box)
                             except:
-                                com_x_arr_time = np.append(com_x_arr_time, all_surface_measurements['surface id ' + str(int(int_comp_dict['ids'][0]))]['interior']['com']['x']-hx_box)
-                                com_y_arr_time = np.append(com_y_arr_time, all_surface_measurements['surface id ' + str(int(int_comp_dict['ids'][0]))]['interior']['com']['y']-hy_box)
-
+                                try:
+                                    com_x_arr_time = np.append(com_x_arr_time, all_surface_measurements['surface id ' + str(int(int_comp_dict['ids'][0]))]['interior']['com']['x']-hx_box)
+                                    com_y_arr_time = np.append(com_y_arr_time, all_surface_measurements['surface id ' + str(int(int_comp_dict['ids'][0]))]['interior']['com']['y']-hy_box)
+                                except:
+                                    com_x_arr_time = np.append(com_x_arr_time, 0)
+                                    com_y_arr_time = np.append(com_y_arr_time, 0)
+                            print(np.max(pos[:,0]))
+                            print(np.min(pos[:,0]))
                             # Save cluster CoM over time
                             com_x_parts_arr_time = np.append(com_x_parts_arr_time, com_dict['com']['x'])
                             com_y_parts_arr_time = np.append(com_y_parts_arr_time, com_dict['com']['y'])
