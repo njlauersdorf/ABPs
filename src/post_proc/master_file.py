@@ -333,7 +333,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
     if measurement_method=='crop-gsd':
         utility_functs.crop_gsd(inFile, start, end)
-    
+
     elif measurement_method == 'circular-wall':
         outfile = 'pa'+str(int(peA))+'_pb'+str(int(peB))+'_xa'+str(int(parFrac))+'_eps'+str(eps)+'_phi'+str(phi)+'_pNum' + str(int(partNum)) + '_bin' + str(int(bin_width)) + '_time' + str(int(time_step))
             
@@ -2485,7 +2485,38 @@ with hoomd.open(name=inFile, mode='rb') as t:
                 plt.plot(func)
                 plt.show()
 
+            elif measurement_method=='phases-random':
 
+                system_all = freud.AABBQuery(f_box, f_box.wrap(pos))
+                cl_all=freud.cluster.Cluster()                              #Define cluster
+                
+                cl_all.compute(system_all, neighbors={'r_max': 0.9})        # Calculate clusters given neighbor list, positions,
+                                                                            # and maximal radial interaction distance
+                clp_all = freud.cluster.ClusterProperties()                 #Define cluster properties
+                ids = cl_all.cluster_idx                                    # get id of each cluster
+                clp_all.compute(system_all, ids)                            # Calculate cluster properties given cluster IDs
+                clust_size = clp_all.sizes                                  # find cluster sizes
+
+                min_size=int(partNum/10)                                     #Minimum cluster size for measurements to happen
+                lcID = np.where(clust_size == np.amax(clust_size))[0][0]    #Identify largest cluster
+                clust_large = np.amax(clust_size)
+
+                num_all = len(np.where(ids==lcID)[0])
+
+                num_A = len(np.where((ids==lcID) & (typ==0))[0])
+                num_B = len(np.where((ids==lcID) & (typ==1))[0])
+
+                in_clust_dict = {'all': num_all, 'A': num_A, 'B': num_B}
+                
+                data_output_functs = data_output.data_output(lx_box, ly_box, sizeBin_x, sizeBin_y, tst, clust_large, dt_step)
+
+            
+                data_output_functs.write_to_txt(in_clust_dict, dataPath + 'in_clust_' + outfile + '.txt')
+
+
+
+                # Instantiate particle properties module
+                particle_prop_functs = particles.particle_props(lx_box, ly_box, partNum, NBins_x, NBins_y, peA, peB, eps, typ, pos, x_orient_arr, y_orient_arr)
             else:
                     
                 #Compute cluster parameters using neighbor list of all particles within LJ cut-off distance
@@ -2521,7 +2552,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                     plt.plot(centroid_values[:, 0], centroid_values[:, 1], 'kx', markersize=15)
                     plt.show()
                 """
-                cl_all.compute(system_all, neighbors={'r_max': 1.3})        # Calculate clusters given neighbor list, positions,
+                cl_all.compute(system_all, neighbors={'r_max': 0.9})        # Calculate clusters given neighbor list, positions,
                                                                             # and maximal radial interaction distance
                 clp_all = freud.cluster.ClusterProperties()                 #Define cluster properties
                 ids = cl_all.cluster_idx                                    # get id of each cluster
@@ -3471,8 +3502,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                 except:
                                     com_x_arr_time = np.append(com_x_arr_time, 0)
                                     com_y_arr_time = np.append(com_y_arr_time, 0)
-                            print(np.max(pos[:,0]))
-                            print(np.min(pos[:,0]))
+
                             # Save cluster CoM over time
                             com_x_parts_arr_time = np.append(com_x_parts_arr_time, com_dict['com']['x'])
                             com_y_parts_arr_time = np.append(com_y_parts_arr_time, com_dict['com']['y'])
