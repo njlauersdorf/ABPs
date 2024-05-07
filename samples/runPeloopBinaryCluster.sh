@@ -116,7 +116,7 @@ if [ $dont_run == "no" ]; then
 
     # Lists for activity of A and B species
     declare -a pa
-    pa=(0 50 100 150 200 300 400 500)
+    pa=(0 50 100 300)
     # 50 100 150 200 300 400 500)
     # 25 50 75)
 
@@ -129,7 +129,7 @@ if [ $dont_run == "no" ]; then
 
     # List for phi
     declare -a phi
-    phi=(65)
+    phi=(60 64 65)
    
     # List for epsilon
     declare -a eps
