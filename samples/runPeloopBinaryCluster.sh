@@ -106,7 +106,7 @@ if [ $dont_run == "no" ]; then
 
     # Length of simulation in Brownian time steps
     declare -i runfor
-    runfor=$(( 2400 ))
+    runfor=$(( 10000 ))
 
     # Frequency for dumping simulation data
     declare -a dump_freq
@@ -116,7 +116,7 @@ if [ $dont_run == "no" ]; then
 
     # Lists for activity of A and B species
     declare -a pa
-    pa=(0 50 100 300)
+    pa=(0 50 75)
     # 50 100 150 200 300 400 500)
     # 25 50 75)
 
@@ -129,7 +129,7 @@ if [ $dont_run == "no" ]; then
 
     # List for phi
     declare -a phi
-    phi=(60 64 65)
+    phi=(60 65 67 69 71)
    
     # List for epsilon
     declare -a eps
