@@ -116,7 +116,7 @@ if [ $dont_run == "no" ]; then
 
     # Lists for activity of A and B species
     declare -a pa
-    pa=(0 50 75)
+    pa=(0 25 50 75)
     # 50 100 150 200 300 400 500)
     # 25 50 75)
 
