@@ -5169,7 +5169,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                             if plot == 'y':
 
                                 # Plot partices and color-code by activity
-                                plotting_functs.plot_part_activity(pos, mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option, banner_id = banner_option, presentation_id = presentation_option)
+                                plotting_functs.plot_part_activity(pos, mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option, banner_id = banner_option, presentation_id = presentation_option, mono_slow_id = mono_slow_option, mono_fast_id = mono_fast_option)
 
                         elif measurement_method == 'gas-radial-df':
                             #DONE

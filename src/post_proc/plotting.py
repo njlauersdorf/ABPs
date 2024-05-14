@@ -10578,6 +10578,9 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
             y_dim = int(scaling)
 
         #Set plot colors
+        fastCol = '#b2182b'
+        slowCol = '#4393c3'
+        
         if mono_slow_id == True:
             fastCol = '#4393c3'
         elif mono_fast_id == True:
