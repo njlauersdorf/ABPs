@@ -10481,7 +10481,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         #plt.savefig(self.outPath + 'part_activity_' + self.outFile + ".eps", format='eps', dpi=150, bbox_inches='tight')
         plt.close() 
 
-    def plot_part_activity(self, pos, sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None, mono_id=False, interface_id = False, orientation_id = False, zoom_id = False, banner_id = False, presentation_id = False, mono_slow_id = False, mono_fast_id = False):
+    def plot_part_activity(self, pos, sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None, mono_id=False, interface_id = False, orientation_id = False, zoom_id = False, banner_id = False, presentation_id = False, mono_slow_id = False, mono_fast_id = False, swap_col_id = False):
 
         """
         This function plots the particle positions and color codes each particle with its intrinsic
@@ -10580,7 +10580,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         #Set plot colors
         fastCol = '#b2182b'
         slowCol = '#4393c3'
-        
+
         if mono_slow_id == True:
             fastCol = '#4393c3'
         elif mono_fast_id == True:
