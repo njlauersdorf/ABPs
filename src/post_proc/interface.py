@@ -699,7 +699,7 @@ class interface:
             # Instantiate empty array (NBins_x, NBins_y) that labels whether bin is exterior surface bin (1) or not (0)
             ext_surface_id=np.zeros((self.NBins_x, self.NBins_y), dtype=int)
         
-
+            
             # If interface sufficiently large...
             if int_large_ids[m]!=999:
 
@@ -756,6 +756,8 @@ class interface:
                 # Number of bins belonging to interior and exterior surfaces
                 int_surface_num = len(int_surface_x)
                 ext_surface_num = len(ext_surface_x)
+                print('test')
+                print(int_surface_num)
 
                 # If interior surface defined, label each bin as belonging to exterior/interior surface (1) or not (0)
                 if int_surface_num > 0:
@@ -773,6 +775,8 @@ class interface:
 
                 ext_surface_pos_x = ext_surface_x * self.sizeBin_x
                 ext_surface_pos_y = ext_surface_y * self.sizeBin_y
+                
+                
                 
                 # Dictionary containing information on exterior and interior surfaces for reference interface
                 indiv_surface_dict = {'interior': {'x bin': int_surface_x, 'y bin': int_surface_y, 'ids': int_surface_id, 'num': int_surface_num}, 'exterior': {'x bin': ext_surface_x, 'y bin': ext_surface_y, 'ids': ext_surface_id, 'num': ext_surface_num}}
