@@ -3992,7 +3992,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                             
                             # Measure radial interparticle pressure
-                            radial_int_press_dict = particle_prop_functs.radial_int_press(stress_plot_dict)
+                            radial_int_press_dict = stress_and_pressure_functs.radial_int_press(stress_plot_dict)
 
                             radial_fa_dict = particle_prop_functs.radial_surface_normal_fa_bubble2(method2_align_dict, all_surface_curves, int_comp_dict, all_surface_measurements, int_dict)
 
