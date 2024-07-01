@@ -650,7 +650,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                         # Calculate average orientation per bin
                         orient_dict2 = binning_functs2.bin_orient(part_dict2, pos, x_orient_arr, y_orient_arr, com_dict['com'])
-
+                        
                         #Slow/fast composition of bulk phase
                         part_count_dict, part_id_dict = phase_ident_functs.phase_part_count(phase_dict, int_dict, int_comp_dict, bulk_dict, bulk_comp_dict, typ)
 
@@ -3651,14 +3651,14 @@ with hoomd.open(name=inFile, mode='rb') as t:
                             
                             # Save number of bins per phase data
                             data_output_functs.write_to_txt(bin_count_dict['bin'], dataPath + 'PhaseComp_bins_' + outfile + '.txt')
-
+                            
                             if plot == 'y':
 
                                 # Plot particles color-coded by phase
                                 #active_fa_dict2
 
                                 if large_arrows_option==True:
-                                    plotting_functs.plot_phases(pos, part_id_dict, phase_dict, all_surface_curves, int_comp_dict, orient_dict2, interface_id = interface_option, orientation_id = orientation_option, banner_id = banner_option, presentation_id = presentation_option, large_arrows_id=large_arrows_option)
+                                    plotting_functs.plot_phases(pos, part_id_dict, phase_dict, all_surface_curves, int_comp_dict, orient_dict2, interface_id = interface_option, orientation_id = orientation_option, banner_id = banner_option, presentation_id = presentation_option, large_arrows_id=large_arrows_option, active_fa_dict_new = active_fa_dict)
                                 else:
                                     plotting_functs.plot_phases(pos, part_id_dict, phase_dict, all_surface_curves, int_comp_dict, active_fa_dict, interface_id = interface_option, orientation_id = orientation_option, banner_id = banner_option, presentation_id = presentation_option, large_arrows_id=large_arrows_option)
                         elif measurement_method == 'radial-heterogeneity':
@@ -3990,7 +3990,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                             # Calculate interparticle stresses and pressures
                             stress_stat_dict, press_stat_dict, press_stat_indiv_dict, press_plot_dict, stress_plot_dict, press_plot_indiv_dict, press_hetero_dict = stress_and_pressure_functs.interparticle_pressure_nlist_phases()
 
-                            """
+                            
                             # Measure radial interparticle pressure
                             radial_int_press_dict = particle_prop_functs.radial_int_press(stress_plot_dict)
 
@@ -4018,8 +4018,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
 
                             stress_and_pressure_functs = stress_and_pressure.stress_and_pressure(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, x_orient_arr, y_orient_arr, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
                             act_press_dict_bubble = stress_and_pressure_functs.total_active_pressure_bubble(com_radial_dict_fa_bubble, all_surface_measurements, int_comp_dict, all_surface_measurements)
+                            
                             """
-
                             bin_width_arr = np.linspace(1, 6, 6, dtype=float)
                             
                             # Heterogeneity
@@ -4446,7 +4446,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                             #plt.contourf(pos_dict_tmp[])
 
                             #stop
-
+                            """
                             
                             """
                             for m in range(0, len(sep_surface_dict)):

@@ -463,7 +463,7 @@ class plotting:
         plt.savefig(self.outPath + 'phases_heterogeneity_' + self.outFile + ".png", dpi=150, transparent=False, bbox_inches='tight')
         plt.close()  
 
-    def plot_phases(self, pos, phase_ids_dict, phase_dict, sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None, interface_id = False, orientation_id = False, banner_id = False, presentation_id=False, large_arrows_id=False):
+    def plot_phases(self, pos, phase_ids_dict, phase_dict, sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None, interface_id = False, orientation_id = False, banner_id = False, presentation_id=False, large_arrows_id=False, active_fa_dict_new = None):
         #DONE!
         """
         This function plots each particle's position and color-codes each
@@ -523,8 +523,8 @@ class plotting:
         #red = ("#000000")
 
         green = ("#4d9221")
-        red = ("#cc5500")
-        yellow = ("#71797E")
+        yellow = ("#cc5500")
+        red = ("#54278f")
 
         bulk_part_ids = phase_ids_dict['bulk']['all']
         gas_part_ids = phase_ids_dict['gas']['all']
@@ -587,6 +587,24 @@ class plotting:
 
         # Set plotted particle size
         sz = 0.755
+
+        # Enforce periodic boundary conditions
+        
+
+
+        pos[:,0] = pos[:,0] - 30
+        test_id = np.where(pos[:,0]>self.hx_box)[0]
+        pos[test_id,0]=pos[test_id,0]-self.lx_box
+        test_id = np.where(pos[:,0]<-self.hx_box)[0]
+        pos[test_id,0]=pos[test_id,0]+self.lx_box
+
+        pos[:,1] = pos[:,1] - 30
+        test_id = np.where(pos[:,1]>self.hy_box)[0]
+        pos[test_id,1]=pos[test_id,1]-self.ly_box
+        test_id = np.where(pos[:,1]<-self.hy_box)[0]
+        pos[test_id,1]=pos[test_id,1]+self.ly_box
+
+        
         
         # Plot position colored by phase
         if len(bulk_part_ids)>0:
@@ -624,11 +642,25 @@ class plotting:
                         try:
                             pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
                             pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
-                            plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
-                            plt.scatter(pos_interior_surface_x + self.lx_box, pos_interior_surface_y, c='black', s=3.0)
-                            plt.scatter(pos_interior_surface_x - self.lx_box, pos_interior_surface_y, c='black', s=3.0)
-                            plt.scatter(pos_interior_surface_x, pos_interior_surface_y+self.ly_box, c='black', s=3.0)
-                            plt.scatter(pos_interior_surface_x, pos_interior_surface_y-self.ly_box, c='black', s=3.0)
+
+                            pos_interior_surface_x = pos_interior_surface_x - 30
+                            test_id = np.where(pos_interior_surface_x>self.lx_box)[0]
+                            pos_interior_surface_x[test_id]=pos_interior_surface_x[test_id]-self.lx_box
+                            test_id = np.where(pos_interior_surface_x<0)[0]
+                            pos_interior_surface_x[test_id]=pos_interior_surface_x[test_id]+self.lx_box
+
+                            pos_interior_surface_y = pos_interior_surface_y - 30
+                            test_id = np.where(pos_interior_surface_y>self.ly_box)[0]
+                            pos_interior_surface_y[test_id]=pos_interior_surface_y[test_id]-self.ly_box
+                            test_id = np.where(pos_interior_surface_y<0)[0]
+                            pos_interior_surface_y[test_id]=pos_interior_surface_y[test_id]+self.ly_box
+
+
+                            ax.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
+                            ax.scatter(pos_interior_surface_x + self.lx_box, pos_interior_surface_y, c='black', s=3.0)
+                            ax.scatter(pos_interior_surface_x - self.lx_box, pos_interior_surface_y, c='black', s=3.0)
+                            ax.scatter(pos_interior_surface_x, pos_interior_surface_y+self.ly_box, c='black', s=3.0)
+                            ax.scatter(pos_interior_surface_x, pos_interior_surface_y-self.ly_box, c='black', s=3.0)
                         except:
                             pass
 
@@ -636,11 +668,24 @@ class plotting:
                             
                             pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
                             pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
-                            plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
-                            plt.scatter(pos_exterior_surface_x + self.lx_box, pos_exterior_surface_y, c='black', s=3.0)
-                            plt.scatter(pos_exterior_surface_x - self.lx_box, pos_exterior_surface_y, c='black', s=3.0)
-                            plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y+self.ly_box, c='black', s=3.0)
-                            plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y-self.ly_box, c='black', s=3.0) 
+
+                            pos_exterior_surface_x = pos_exterior_surface_x - 30
+                            test_id = np.where(pos_exterior_surface_x>self.lx_box)[0]
+                            pos_exterior_surface_x[test_id]=pos_exterior_surface_x[test_id]-self.lx_box
+                            test_id = np.where(pos_exterior_surface_x<0)[0]
+                            pos_exterior_surface_x[test_id]=pos_exterior_surface_x[test_id]+self.lx_box
+
+                            pos_exterior_surface_y = pos_exterior_surface_y - 30
+                            test_id = np.where(pos_exterior_surface_y>self.ly_box)[0]
+                            pos_exterior_surface_y[test_id]=pos_exterior_surface_y[test_id]-self.ly_box
+                            test_id = np.where(pos_exterior_surface_y<0)[0]
+                            pos_exterior_surface_y[test_id]=pos_exterior_surface_y[test_id]+self.ly_box
+
+                            ax.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
+                            ax.scatter(pos_exterior_surface_x + self.lx_box, pos_exterior_surface_y, c='black', s=3.0)
+                            ax.scatter(pos_exterior_surface_x - self.lx_box, pos_exterior_surface_y, c='black', s=3.0)
+                            ax.scatter(pos_exterior_surface_x, pos_exterior_surface_y+self.ly_box, c='black', s=3.0)
+                            ax.scatter(pos_exterior_surface_x, pos_exterior_surface_y-self.ly_box, c='black', s=3.0) 
                         except:
                             pass
             except:
@@ -682,6 +727,18 @@ class plotting:
                                 pos_x_new[k][l] = self.pos_x[k][l]*3
                                 pos_y_new[k][l] = self.pos_y[k][l]*3
 
+                                pos_x_new[k][l] = pos_x_new[k][l] - 30
+                                if pos_x_new[k][l]>self.lx_box:
+                                    pos_x_new[k][l] = pos_x_new[k][l] - self.lx_box
+                                elif pos_x_new[k][l]<0:
+                                    pos_x_new[k][l]=pos_x_new[k][l]+self.lx_box
+
+                                pos_y_new[k][l] = pos_y_new[k][l] - 30
+                                if pos_y_new[k][l]>self.ly_box:
+                                    pos_y_new[k][l] = pos_y_new[k][l] - self.ly_box
+                                elif pos_y_new[k][l]<0:
+                                    pos_y_new[k][l]=pos_y_new[k][l]+self.ly_box
+
 
                         active_r = ( np.array(new_orient_dict_x) ** 2 + np.array(new_orient_dict_y) ** 2 ) ** 0.5
 
@@ -692,7 +749,7 @@ class plotting:
                         
                         for i in range(0, len(nonzero_x_id)):
                             #plt.quiver(self.pos_x[nonzero_x_id[i]][nonzero_y_id[i]]*3, self.pos_y[nonzero_x_id[i]][nonzero_y_id[i]]*3, active_fa_dict['bin']['x'][nonzero_x_id[i]][nonzero_y_id[i]], active_fa_dict['bin']['y'][nonzero_x_id[i]][nonzero_y_id[i]], scale=10.0, width=0.01, color='black', alpha=0.8)
-                            plt.quiver(pos_x_new[nonzero_x_id[i]][nonzero_y_id[i]], pos_y_new[nonzero_x_id[i]][nonzero_y_id[i]], new_orient_dict_x[nonzero_x_id[i]][nonzero_y_id[i]], new_orient_dict_y[nonzero_x_id[i]][nonzero_y_id[i]], scale=10.0, width=0.01, color='black', alpha=0.8)
+                            ax.quiver(pos_x_new[nonzero_x_id[i]][nonzero_y_id[i]], pos_y_new[nonzero_x_id[i]][nonzero_y_id[i]], new_orient_dict_x[nonzero_x_id[i]][nonzero_y_id[i]], new_orient_dict_y[nonzero_x_id[i]][nonzero_y_id[i]], scale=10.0, width=0.01, color='black', alpha=0.8)
                         
                 except:
                     pass
@@ -706,7 +763,7 @@ class plotting:
                         nonzero_x_id = nonzero_id[0]
                         nonzero_y_id = nonzero_id[1]
 
-                        plt.quiver(self.pos_x, self.pos_y, active_fa_dict['bin']['x'], active_fa_dict['bin']['y'], scale=20.0, color='black', alpha=0.8, width=0.004)
+                        ax.quiver(self.pos_x, self.pos_y, active_fa_dict['bin']['x'], active_fa_dict['bin']['y'], scale=20.0, color='black', alpha=0.8, width=0.004)
                 except:
                     pass
         
@@ -746,15 +803,15 @@ class plotting:
 
         # If rectangular box, reduce system size plotted
         if self.lx_box > self.ly_box:
-            plt.xlim(dense_x_mid-(dense_x_width/2), dense_x_mid+(dense_x_width/2))
-            plt.ylim(0, self.ly_box)
+            ax.set_xlim(dense_x_mid-(dense_x_width/2), dense_x_mid+(dense_x_width/2))
+            ax.set_ylim(0, self.ly_box)
         elif self.lx_box < self.ly_box:
-            plt.ylim(dense_y_mid-(dense_y_width/2), dense_y_mid+(dense_y_width/2))
-            plt.xlim(0, self.lx_box)
+            ax.set_ylim(dense_y_mid-(dense_y_width/2), dense_y_mid+(dense_y_width/2))
+            ax.set_xlim(0, self.lx_box)
         # Plot entire system
         else:
-            plt.ylim(0, self.ly_box)
-            plt.xlim(0, self.lx_box)
+            ax.set_ylim(0, self.ly_box)
+            ax.set_xlim(0, self.lx_box)
         
         #plt.scatter(self.hx_box, self.hy_box, c='black', s=70)
 
@@ -770,6 +827,155 @@ class plotting:
 
             one_leg = ax.legend(handles=fast_leg, loc='upper right', borderpad=0.3, labelspacing=0.4, handletextpad=-0.2, bbox_transform=ax.transAxes, bbox_to_anchor=[1.04, 1.16], handlelength=1.5, columnspacing=0.5, fontsize=40, ncol=3, facecolor='None', edgecolor='None')
             ax.add_artist(one_leg)
+
+
+        
+        l, b, h, w = .72, .03, .94, .25
+        ax6 = fig.add_axes([l, b, w, h])
+        # Set plotted particle size
+        sz = 0.755
+
+        # Plot position colored by phase
+        if len(bulk_part_ids)>0:
+            ells_bulk = [Ellipse(xy=np.array([pos[bulk_part_ids[i],0]+self.hx_box,pos[bulk_part_ids[i],1]+self.hy_box]),
+                width=sz, height=sz)
+        for i in range(0,len(bulk_part_ids))]
+            bulkGroup = mc.PatchCollection(ells_bulk, facecolor=green)
+            ax6.add_collection(bulkGroup)
+
+        if len(gas_part_ids)>0:
+            ells_gas = [Ellipse(xy=np.array([pos[gas_part_ids[i],0]+self.hx_box,pos[gas_part_ids[i],1]+self.hy_box]),
+                width=sz, height=sz)
+        for i in range(0,len(gas_part_ids))]
+            gasGroup = mc.PatchCollection(ells_gas, facecolor=red)
+            ax6.add_collection(gasGroup)
+
+        if len(int_part_ids)>0:
+            ells_int = [Ellipse(xy=np.array([pos[int_part_ids[i],0]+self.hx_box,pos[int_part_ids[i],1]+self.hy_box]),
+                width=sz, height=sz)
+        for i in range(0,len(int_part_ids))]
+
+            intGroup = mc.PatchCollection(ells_int, facecolor=yellow)
+            ax6.add_collection(intGroup)
+
+        # Plot interpolated inner and outer interface surface curves
+        if interface_id == True:
+            try:
+
+                if sep_surface_dict!=None:
+                    
+                    for m in range(0, len(sep_surface_dict)):
+                        key = 'surface id ' + str(int(int_comp_dict['ids'][m]))
+                        print(key)
+
+                        try:
+                            pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
+                            pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
+
+                            pos_interior_surface_x = pos_interior_surface_x - 30
+                            test_id = np.where(pos_interior_surface_x>self.lx_box)[0]
+                            pos_interior_surface_x[test_id]=pos_interior_surface_x[test_id]-self.lx_box
+                            test_id = np.where(pos_interior_surface_x<0)[0]
+                            pos_interior_surface_x[test_id]=pos_interior_surface_x[test_id]+self.lx_box
+
+                            pos_interior_surface_y = pos_interior_surface_y - 30
+                            test_id = np.where(pos_interior_surface_y>self.ly_box)[0]
+                            pos_interior_surface_y[test_id]=pos_interior_surface_y[test_id]-self.ly_box
+                            test_id = np.where(pos_interior_surface_y<0)[0]
+                            pos_interior_surface_y[test_id]=pos_interior_surface_y[test_id]+self.ly_box
+
+                            ax6.plot(pos_interior_surface_x, pos_interior_surface_y, color='black', s=5.0)
+                            ax6.plot(pos_interior_surface_x + self.lx_box, pos_interior_surface_y, color='black', linewidth=5.0)
+                            ax6.plot(pos_interior_surface_x - self.lx_box, pos_interior_surface_y, color='black', linewidth=5.0)
+                            ax6.plot(pos_interior_surface_x, pos_interior_surface_y+self.ly_box, color='black', linewidth=5.0)
+                            ax6.plot(pos_interior_surface_x, pos_interior_surface_y-self.ly_box, color='black', linewidth=5.0)
+
+
+                            ax6.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
+                            ax6.scatter(pos_interior_surface_x + self.lx_box, pos_interior_surface_y, c='black', s=3.0)
+                            ax6.scatter(pos_interior_surface_x - self.lx_box, pos_interior_surface_y, c='black', s=3.0)
+                            ax6.scatter(pos_interior_surface_x, pos_interior_surface_y+self.ly_box, c='black', s=3.0)
+                            ax6.scatter(pos_interior_surface_x, pos_interior_surface_y-self.ly_box, c='black', s=3.0)
+                        except:
+                            pass
+
+                        try:
+                            
+                            pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
+                            pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
+
+                            pos_exterior_surface_x = pos_exterior_surface_x - 30
+                            test_id = np.where(pos_exterior_surface_x>self.lx_box)[0]
+                            pos_exterior_surface_x[test_id]=pos_exterior_surface_x[test_id]-self.lx_box
+                            test_id = np.where(pos_exterior_surface_x<0)[0]
+                            pos_exterior_surface_x[test_id]=pos_exterior_surface_x[test_id]+self.lx_box
+
+                            pos_exterior_surface_y = pos_exterior_surface_y - 30
+                            test_id = np.where(pos_exterior_surface_y>self.ly_box)[0]
+                            pos_exterior_surface_y[test_id]=pos_exterior_surface_y[test_id]-self.ly_box
+                            test_id = np.where(pos_exterior_surface_y<0)[0]
+                            pos_exterior_surface_y[test_id]=pos_exterior_surface_y[test_id]+self.ly_box
+
+                            ax6.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
+                            ax6.scatter(pos_exterior_surface_x + self.lx_box, pos_exterior_surface_y, c='black', s=3.0)
+                            ax6.scatter(pos_exterior_surface_x - self.lx_box, pos_exterior_surface_y, c='black', s=3.0)
+                            ax6.scatter(pos_exterior_surface_x, pos_exterior_surface_y+self.ly_box, c='black', s=3.0)
+                            ax6.scatter(pos_exterior_surface_x, pos_exterior_surface_y-self.ly_box, c='black', s=3.0) 
+                        except:
+                            pass
+            except:
+                pass
+        
+
+
+            
+        #for i in range(0, len(self.pos_x)):
+        #    for j in range(0, len(self.pos_y)):
+        #        ax6.quiver(self.pos_x[i][j]-30, self.pos_y[i][j]-30, active_fa_dict_new['bin']['x'][i][j], active_fa_dict_new['bin']['y'][i][j], scale=10.0, width=0.01, color='black', alpha=0.8)
+
+
+        ax6.quiver(pos[:,0]+self.hx_box, pos[:,1]+self.hy_box, active_fa_dict['part']['x'], active_fa_dict['part']['y'], scale=15.0, width=0.05, headwidth= 6, color='black', alpha=0.8)
+
+        
+        ax6.tick_params(axis='both', which='both',
+                        bottom=False, top=False, left=False, right=False,
+                        labelbottom=False, labeltop=False, labelleft=False, labelright=False)
+
+        import matplotlib
+        """
+        norm= matplotlib.colors.Normalize(vmin=0.0, vmax=500)
+        fig.subplots_adjust(right=0.88)
+        cbar_ax = fig.add_axes([0.9, 0.11, 0.04, 0.3725])
+        sm = plt.cm.ScalarMappable(norm=norm, cmap = 'binary')
+        sm.set_array([])
+        clb = fig.colorbar(sm, cax=cbar_ax)#ticks=[0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0], ax=ax2)
+        clb.ax.set_title(r'$\mathrm{Pe}_\mathrm{F}$', fontsize=23)
+        clb.ax.tick_params(labelsize=20)
+        """
+
+        x_min = 103
+        x_max = 108
+        y_min = 170
+        y_max = 189
+
+        ax6.set_ylim([y_min,y_max])
+        ax6.set_xlim([x_min, x_max])
+
+        ax.plot([x_min, x_min],[y_min, y_max], linestyle='dashed', c='black', linewidth=3 )
+        ax.plot([x_max, x_max],[y_min, y_max], linestyle='dashed', c='black', linewidth=3 )
+        ax.plot([x_min, x_max],[y_min, y_min], linestyle='dashed', c='black', linewidth=3 )
+        ax.plot([x_min, x_max],[y_max, y_max], linestyle='dashed', c='black', linewidth=3 )
+
+        ax.plot([x_min, 186],[y_max, 253], linestyle='dotted', c='black', linewidth=3 )
+        ax.plot([x_min, 186],[y_min, 3.0], linestyle='dotted', c='black', linewidth=3 )
+
+        ax6.set_facecolor('white')
+
+        ax6.spines["bottom"].set_linewidth(3)
+        ax6.spines["top"].set_linewidth(3)
+        ax6.spines["left"].set_linewidth(3)
+        ax6.spines["right"].set_linewidth(3)
+
         
         plt.tight_layout()
         #ax.set_facecolor('#F2f2f2')
@@ -1063,6 +1269,7 @@ class plotting:
 
             one_leg = ax.legend(handles=fast_leg, loc='upper right', borderpad=0.3, labelspacing=0.4, handletextpad=-0.2, bbox_transform=ax.transAxes, bbox_to_anchor=[1.06, 1.17], handlelength=1.5, columnspacing=0.5, fontsize=40, ncol=3, facecolor='None', edgecolor='None')
             ax.add_artist(one_leg)
+
         plt.tight_layout()
         ax.set_facecolor('#F2f2f2')
         plt.savefig(self.outPath + 'gas_tracers_' + self.outFile + ".png", dpi=150, transparent=False, bbox_inches='tight')
