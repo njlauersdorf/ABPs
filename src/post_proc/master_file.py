@@ -4015,8 +4015,6 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                 key = 'surface id ' + str(int(int_comp_dict['ids'][m]))
                                 data_output_functs.write_to_txt(com_radial_dict_fa_bubble[key], dataPath + 'bubble_com_active_pressure_radial2_' + outfile + '.txt')
                             
-
-                            stress_and_pressure_functs = stress_and_pressure.stress_and_pressure(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, x_orient_arr, y_orient_arr, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
                             act_press_dict_bubble = stress_and_pressure_functs.total_active_pressure_bubble(com_radial_dict_fa_bubble, all_surface_measurements, int_comp_dict, all_surface_measurements)
                             
                             """
