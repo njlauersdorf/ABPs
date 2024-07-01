@@ -3988,7 +3988,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                             lattice_structure_functs = measurement.measurement(lx_box, ly_box, NBins_x, NBins_y, partNum, phase_dict, pos, typ, x_orient_arr, y_orient_arr, part_dict, eps, peA, peB, parFrac, align_dict, area_frac_dict, press_dict)
 
                             # Calculate interparticle stresses and pressures
-                            stress_stat_dict, press_stat_dict, press_stat_indiv_dict, press_plot_dict, stress_plot_dict, press_plot_indiv_dict, press_hetero_dict = stress_and_pressure_functs.interparticle_pressure_nlist_phases()
+                            stress_stat_dict, press_stat_dict, press_stat_indiv_dict, press_plot_dict, stress_plot_dict, press_plot_indiv_dict, press_hetero_dict = stress_and_pressure_functs.interparticle_pressure_nlist_phases(phase_dict)
 
                             
                             # Measure radial interparticle pressure
