@@ -3586,7 +3586,8 @@ with hoomd.open(name=inFile, mode='rb') as t:
                             if plot == 'y':
                                 
                                 # Plot particles color-coded by activity
-                                plotting_functs.plot_part_activity(pos, all_surface_curves, int_comp_dict, active_fa_dict, mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option, banner_id = banner_option, presentation_id = presentation_option, mono_slow_id = mono_slow_option, mono_fast_id = mono_fast_option, swap_col_id = swap_col_option)
+                                plotting_functs.plot_part_activity(pos, phase_dict=phase_dict, sep_surface_dict=all_surface_curves, int_comp_dict=int_comp_dict, active_fa_dict = orient_dict2, mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option, banner_id = banner_option, presentation_id = presentation_option, mono_slow_id = mono_slow_option, mono_fast_id = mono_fast_option, swap_col_id = swap_col_option, surface_measure = all_surface_measurements, large_arrows_id=large_arrows_option, active_fa_dict_new = active_fa_dict)
+                                stop
                         elif (measurement_method == 'activity-blank'):
                             #DONE!
                             if plot == 'y':
@@ -3658,7 +3659,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                 #active_fa_dict2
 
                                 if large_arrows_option==True:
-                                    plotting_functs.plot_phases(pos, part_id_dict, phase_dict, all_surface_curves, int_comp_dict, orient_dict2, interface_id = interface_option, orientation_id = orientation_option, banner_id = banner_option, presentation_id = presentation_option, large_arrows_id=large_arrows_option, active_fa_dict_new = active_fa_dict)
+                                    plotting_functs.plot_phases(pos, part_id_dict, phase_dict, all_surface_curves, int_comp_dict, orient_dict2, interface_id = interface_option, orientation_id = orientation_option, banner_id = banner_option, presentation_id = presentation_option, large_arrows_id=large_arrows_option, active_fa_dict_new = active_fa_dict, px=x_orient_arr, py=y_orient_arr)
                                 else:
                                     plotting_functs.plot_phases(pos, part_id_dict, phase_dict, all_surface_curves, int_comp_dict, active_fa_dict, interface_id = interface_option, orientation_id = orientation_option, banner_id = banner_option, presentation_id = presentation_option, large_arrows_id=large_arrows_option)
                         elif measurement_method == 'radial-heterogeneity':
@@ -5167,7 +5168,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                             if plot == 'y':
 
                                 # Plot partices and color-code by activity
-                                plotting_functs.plot_part_activity(pos, mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option, banner_id = banner_option, presentation_id = presentation_option, mono_slow_id = mono_slow_option, mono_fast_id = mono_fast_option, swap_col_id = swap_col_option)
+                                plotting_functs.plot_part_activity(pos, mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option, banner_id = banner_option, presentation_id = presentation_option, mono_slow_id = mono_slow_option, mono_fast_id = mono_fast_option, swap_col_id = swap_col_option, large_arrows_id=large_arrows_option, active_fa_dict_new = active_fa_dict, active_fa_dict=orient_dict2)
 
                         elif measurement_method == 'gas-radial-df':
                             #DONE

@@ -463,7 +463,7 @@ class plotting:
         plt.savefig(self.outPath + 'phases_heterogeneity_' + self.outFile + ".png", dpi=150, transparent=False, bbox_inches='tight')
         plt.close()  
 
-    def plot_phases(self, pos, phase_ids_dict, phase_dict, sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None, interface_id = False, orientation_id = False, banner_id = False, presentation_id=False, large_arrows_id=False, active_fa_dict_new = None):
+    def plot_phases(self, pos, phase_ids_dict, phase_dict, sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None, interface_id = False, orientation_id = False, banner_id = False, presentation_id=False, large_arrows_id=False, active_fa_dict_new = None, px=None, py=None):
         #DONE!
         """
         This function plots each particle's position and color-codes each
@@ -592,13 +592,13 @@ class plotting:
         
 
 
-        pos[:,0] = pos[:,0] - 30
+        pos[:,0] = pos[:,0]# - 30
         test_id = np.where(pos[:,0]>self.hx_box)[0]
         pos[test_id,0]=pos[test_id,0]-self.lx_box
         test_id = np.where(pos[:,0]<-self.hx_box)[0]
         pos[test_id,0]=pos[test_id,0]+self.lx_box
 
-        pos[:,1] = pos[:,1] - 30
+        pos[:,1] = pos[:,1]# - 30
         test_id = np.where(pos[:,1]>self.hy_box)[0]
         pos[test_id,1]=pos[test_id,1]-self.ly_box
         test_id = np.where(pos[:,1]<-self.hy_box)[0]
@@ -643,13 +643,13 @@ class plotting:
                             pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
                             pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
 
-                            pos_interior_surface_x = pos_interior_surface_x - 30
+                            pos_interior_surface_x = pos_interior_surface_x# - 30
                             test_id = np.where(pos_interior_surface_x>self.lx_box)[0]
                             pos_interior_surface_x[test_id]=pos_interior_surface_x[test_id]-self.lx_box
                             test_id = np.where(pos_interior_surface_x<0)[0]
                             pos_interior_surface_x[test_id]=pos_interior_surface_x[test_id]+self.lx_box
 
-                            pos_interior_surface_y = pos_interior_surface_y - 30
+                            pos_interior_surface_y = pos_interior_surface_y# - 30
                             test_id = np.where(pos_interior_surface_y>self.ly_box)[0]
                             pos_interior_surface_y[test_id]=pos_interior_surface_y[test_id]-self.ly_box
                             test_id = np.where(pos_interior_surface_y<0)[0]
@@ -669,13 +669,13 @@ class plotting:
                             pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
                             pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
 
-                            pos_exterior_surface_x = pos_exterior_surface_x - 30
+                            pos_exterior_surface_x = pos_exterior_surface_x# - 30
                             test_id = np.where(pos_exterior_surface_x>self.lx_box)[0]
                             pos_exterior_surface_x[test_id]=pos_exterior_surface_x[test_id]-self.lx_box
                             test_id = np.where(pos_exterior_surface_x<0)[0]
                             pos_exterior_surface_x[test_id]=pos_exterior_surface_x[test_id]+self.lx_box
 
-                            pos_exterior_surface_y = pos_exterior_surface_y - 30
+                            pos_exterior_surface_y = pos_exterior_surface_y# - 30
                             test_id = np.where(pos_exterior_surface_y>self.ly_box)[0]
                             pos_exterior_surface_y[test_id]=pos_exterior_surface_y[test_id]-self.ly_box
                             test_id = np.where(pos_exterior_surface_y<0)[0]
@@ -709,7 +709,7 @@ class plotting:
                             for l in range(0, len(active_fa_dict['bin']['all']['y'])):
                                 count = 0
                                 noncount = 0
-                                '''
+                                
                                 for i in range(0, len(phase_dict['bin'])):
                                     for j in range(0, len(phase_dict['bin'])):
                                         if (self.pos_x[i][j] <= self.pos_x[k+1][l] * 3) & (self.pos_x[i][j] >= self.pos_x[k][l] * 3) & (self.pos_y[i][j] <= self.pos_y[k][l+1] * 3) & (self.pos_y[i][j] >= self.pos_y[k][l] * 3):
@@ -717,23 +717,24 @@ class plotting:
                                                 count += 1
                                             else:
                                                 noncount += 1
-                                '''
-                                #if count > noncount/4:
-                                    #print(k)
-                                    #print(l)
-                                    #if ((active_fa_dict['bin']['all']['x'][k][l] ** 2 + active_fa_dict['bin']['all']['y'][k][l] ** 2) ** 0.5 >=0.20) | (count > noncount):
-                                new_orient_dict_x[k][l]=active_fa_dict['bin']['all']['x'][k][l]
-                                new_orient_dict_y[k][l]=active_fa_dict['bin']['all']['y'][k][l]
+                                
+                                #if count > 2*noncount:
+                                #print(k)
+                                #print(l)
+                                #if ((active_fa_dict['bin']['all']['x'][k][l] ** 2 + active_fa_dict['bin']['all']['y'][k][l] ** 2) ** 0.5 >=0.20) | (count > noncount):
+                                orient_mag = ( active_fa_dict['bin']['all']['x'][k][l] ** 2 + active_fa_dict['bin']['all']['y'][k][l] ** 2 ) ** 0.5
+                                new_orient_dict_x[k][l]=active_fa_dict['bin']['all']['x'][k][l] / orient_mag
+                                new_orient_dict_y[k][l]=active_fa_dict['bin']['all']['y'][k][l] / orient_mag
                                 pos_x_new[k][l] = self.pos_x[k][l]*3
                                 pos_y_new[k][l] = self.pos_y[k][l]*3
 
-                                pos_x_new[k][l] = pos_x_new[k][l] - 30
+                                pos_x_new[k][l] = pos_x_new[k][l]# - 30
                                 if pos_x_new[k][l]>self.lx_box:
                                     pos_x_new[k][l] = pos_x_new[k][l] - self.lx_box
                                 elif pos_x_new[k][l]<0:
                                     pos_x_new[k][l]=pos_x_new[k][l]+self.lx_box
 
-                                pos_y_new[k][l] = pos_y_new[k][l] - 30
+                                pos_y_new[k][l] = pos_y_new[k][l]# - 30
                                 if pos_y_new[k][l]>self.ly_box:
                                     pos_y_new[k][l] = pos_y_new[k][l] - self.ly_box
                                 elif pos_y_new[k][l]<0:
@@ -749,7 +750,7 @@ class plotting:
                         
                         for i in range(0, len(nonzero_x_id)):
                             #plt.quiver(self.pos_x[nonzero_x_id[i]][nonzero_y_id[i]]*3, self.pos_y[nonzero_x_id[i]][nonzero_y_id[i]]*3, active_fa_dict['bin']['x'][nonzero_x_id[i]][nonzero_y_id[i]], active_fa_dict['bin']['y'][nonzero_x_id[i]][nonzero_y_id[i]], scale=10.0, width=0.01, color='black', alpha=0.8)
-                            ax.quiver(pos_x_new[nonzero_x_id[i]][nonzero_y_id[i]], pos_y_new[nonzero_x_id[i]][nonzero_y_id[i]], new_orient_dict_x[nonzero_x_id[i]][nonzero_y_id[i]], new_orient_dict_y[nonzero_x_id[i]][nonzero_y_id[i]], scale=10.0, width=0.01, color='black', alpha=0.8)
+                            ax.quiver(pos_x_new[nonzero_x_id[i]][nonzero_y_id[i]], pos_y_new[nonzero_x_id[i]][nonzero_y_id[i]], new_orient_dict_x[nonzero_x_id[i]][nonzero_y_id[i]], new_orient_dict_y[nonzero_x_id[i]][nonzero_y_id[i]], scale=30.0, width=0.03, color='black', headwidth=6, minshaft = 2)
                         
                 except:
                     pass
@@ -829,7 +830,7 @@ class plotting:
             ax.add_artist(one_leg)
 
 
-        
+        """
         l, b, h, w = .72, .03, .94, .25
         ax6 = fig.add_axes([l, b, w, h])
         # Set plotted particle size
@@ -934,13 +935,13 @@ class plotting:
         #        ax6.quiver(self.pos_x[i][j]-30, self.pos_y[i][j]-30, active_fa_dict_new['bin']['x'][i][j], active_fa_dict_new['bin']['y'][i][j], scale=10.0, width=0.01, color='black', alpha=0.8)
 
 
-        ax6.quiver(pos[:,0]+self.hx_box, pos[:,1]+self.hy_box, active_fa_dict['part']['x'], active_fa_dict['part']['y'], scale=15.0, width=0.05, headwidth= 6, color='black', alpha=0.8)
+        ax6.quiver(pos[:,0]+self.hx_box, pos[:,1]+self.hy_box, px, py, color='black', scale=12.0, width=0.05, headwidth=8, minshaft = 1.5)
 
         
         ax6.tick_params(axis='both', which='both',
                         bottom=False, top=False, left=False, right=False,
                         labelbottom=False, labeltop=False, labelleft=False, labelright=False)
-
+        """
         import matplotlib
         """
         norm= matplotlib.colors.Normalize(vmin=0.0, vmax=500)
@@ -952,7 +953,7 @@ class plotting:
         clb.ax.set_title(r'$\mathrm{Pe}_\mathrm{F}$', fontsize=23)
         clb.ax.tick_params(labelsize=20)
         """
-
+        """
         x_min = 103
         x_max = 108
         y_min = 170
@@ -960,7 +961,7 @@ class plotting:
 
         ax6.set_ylim([y_min,y_max])
         ax6.set_xlim([x_min, x_max])
-
+        
         ax.plot([x_min, x_min],[y_min, y_max], linestyle='dashed', c='black', linewidth=3 )
         ax.plot([x_max, x_max],[y_min, y_max], linestyle='dashed', c='black', linewidth=3 )
         ax.plot([x_min, x_max],[y_min, y_min], linestyle='dashed', c='black', linewidth=3 )
@@ -975,6 +976,7 @@ class plotting:
         ax6.spines["top"].set_linewidth(3)
         ax6.spines["left"].set_linewidth(3)
         ax6.spines["right"].set_linewidth(3)
+        """
 
         
         plt.tight_layout()
@@ -7147,7 +7149,7 @@ class plotting:
         sm.set_array([])
         tick_lev = np.arange(min_n, max_n+max_n/10, (max_n-min_n)/10)
         clb = fig.colorbar(sm, ticks=tick_lev, boundaries=level_boundaries,
-values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStrFormatter('%.2f'))
+        values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStrFormatter('%.2f'))
 
         clb.ax.tick_params(labelsize=16)
         clb.set_label(r'$\Psi$', labelpad=-55, y=1.04, rotation=0, fontsize=18)
@@ -8570,8 +8572,8 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                 ax.add_collection(slowGroup)
                 ax.add_collection(fastGroup)
 
-                plt.quiver((pos[:,0]+self.hx_box)+(np.sqrt(2)/2)*self.lx_box, (pos[:,1]+self.hy_box)-(np.sqrt(2)/2)*self.ly_box, px, py, scale=200.0, color='black', alpha=0.8)
-                plt.quiver((pos[:,0]+self.hx_box)+(np.sqrt(2)/2)*self.lx_box, (pos[:,1]+self.hy_box)+(np.sqrt(2)/2)*self.ly_box, px, py, scale=200.0, color='black', alpha=0.8)
+                #plt.quiver((pos[:,0]+self.hx_box)+(np.sqrt(2)/2)*self.lx_box, (pos[:,1]+self.hy_box)-(np.sqrt(2)/2)*self.ly_box, px, py, scale=200.0, color='black', alpha=0.8)
+                #plt.quiver((pos[:,0]+self.hx_box)+(np.sqrt(2)/2)*self.lx_box, (pos[:,1]+self.hy_box)+(np.sqrt(2)/2)*self.ly_box, px, py, scale=200.0, color='black', alpha=0.8)
 
                 
             else:
@@ -9036,8 +9038,8 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                 ax.add_collection(slowGroup)
                 ax.add_collection(fastGroup)
 
-                plt.quiver((pos[:,0]+self.hx_box)-(np.sqrt(2)/2)*self.lx_box, (pos[:,1]+self.hy_box)-(np.sqrt(2)/2)*self.ly_box, px, py, scale=200.0, color='black', alpha=0.8)
-                plt.quiver((pos[:,0]+self.hx_box)-(np.sqrt(2)/2)*self.lx_box, (pos[:,1]+self.hy_box)+(np.sqrt(2)/2)*self.ly_box, px, py, scale=200.0, color='black', alpha=0.8)
+                #plt.quiver((pos[:,0]+self.hx_box)-(np.sqrt(2)/2)*self.lx_box, (pos[:,1]+self.hy_box)-(np.sqrt(2)/2)*self.ly_box, px, py, scale=200.0, color='black', alpha=0.8)
+                #plt.quiver((pos[:,0]+self.hx_box)-(np.sqrt(2)/2)*self.lx_box, (pos[:,1]+self.hy_box)+(np.sqrt(2)/2)*self.ly_box, px, py, scale=200.0, color='black', alpha=0.8)
 
             
             else:
@@ -10117,8 +10119,8 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                 ax.add_collection(slowGroup)
                 ax.add_collection(fastGroup)
 
-                plt.quiver((pos[:,0]+self.hx_box)-(np.sqrt(2)/2)*self.lx_box, (pos[:,1]+self.hy_box)-(np.sqrt(2)/2)*self.ly_box, px, py, scale=200.0, color='black', alpha=0.8)
-                plt.quiver((pos[:,0]+self.hx_box)-(np.sqrt(2)/2)*self.lx_box, (pos[:,1]+self.hy_box)+(np.sqrt(2)/2)*self.ly_box, px, py, scale=200.0, color='black', alpha=0.8)
+                #plt.quiver((pos[:,0]+self.hx_box)-(np.sqrt(2)/2)*self.lx_box, (pos[:,1]+self.hy_box)-(np.sqrt(2)/2)*self.ly_box, px, py, scale=200.0, color='black', alpha=0.8)
+                #plt.quiver((pos[:,0]+self.hx_box)-(np.sqrt(2)/2)*self.lx_box, (pos[:,1]+self.hy_box)+(np.sqrt(2)/2)*self.ly_box, px, py, scale=200.0, color='black', alpha=0.8)
 
             
             else:
@@ -10416,7 +10418,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                     fontsize=30, transform = ax.transAxes,
                     bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
             elif self.lx_box > self.ly_box:
-                plt.text(0.85, 0.1, s=r'$\tau$' + ' = ' + '{:.4f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+                plt.text(0.82, 0.1, s=r'$\tau$' + ' = ' + '{:.4f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
                     fontsize=18, transform = ax.transAxes,
                     bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
         
@@ -10688,7 +10690,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
         #plt.savefig(self.outPath + 'part_activity_' + self.outFile + ".eps", format='eps', dpi=150, bbox_inches='tight')
         plt.close() 
 
-    def plot_part_activity(self, pos, sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None, mono_id=False, interface_id = False, orientation_id = False, zoom_id = False, banner_id = False, presentation_id = False, mono_slow_id = False, mono_fast_id = False, swap_col_id = False):
+    def plot_part_activity(self, pos, phase_dict=None, sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None, mono_id=False, interface_id = False, orientation_id = False, zoom_id = False, banner_id = False, presentation_id = False, mono_slow_id = False, mono_fast_id = False, swap_col_id = False, surface_measure = None, large_arrows_id=False, active_fa_dict_new = None):
 
         """
         This function plots the particle positions and color codes each particle with its intrinsic
@@ -10964,6 +10966,45 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
                 one_leg = ax.legend(handles=fast_leg, loc='upper right', borderpad=0.3, handletextpad=-0.2, bbox_transform=ax.transAxes, bbox_to_anchor=[0.7, 1.13], handlelength=1.5, columnspacing=0.4, fontsize=32, ncol=2, facecolor='none', edgecolor='none')
                 ax.add_artist(one_leg)
+        """
+        shift_x = 128.027 - 1.70532
+        shift_y = 128.89445 - 118.90436
+
+        time1770_x = 18.84246
+        time1770_y = 153.309844
+
+        time1760_x = 32.108835
+        time1760_y = 176.644695
+
+        time1750_x = 58.16595
+        time1750_y = 193.5806
+
+        time1740_x = 92.630896
+        time1740_y = 212.808485
+
+        time1730_x = 131.328773
+        time1730_y = 216.28956
+
+
+        #ax.scatter(1.70532, 118.90436, c='black', s=10)
+
+        ax.scatter(128.027, 128.89445, c='black', s=75)
+        ax.scatter(time1770_x + shift_x, time1770_y + shift_y, c='black', s=75)
+        ax.plot([128.027, time1770_x + shift_x], [128.89445, time1770_y + shift_y], color='black', linestyle='dashed', linewidth=3)
+       
+        ax.scatter(time1760_x + shift_x, time1760_y + shift_y, c='black', s=75)
+        ax.plot([time1770_x + shift_x, time1760_x + shift_x], [time1770_y + shift_y, time1760_y + shift_y], color='black', linestyle='dashed', linewidth=3)
+        
+        ax.scatter(time1750_x + shift_x, time1750_y + shift_y, c='black', s=75)
+        ax.plot([time1760_x + shift_x, time1750_x + shift_x], [time1760_y + shift_y, time1750_y + shift_y], color='black', linestyle='dashed', linewidth=3)
+        
+        ax.scatter(time1740_x + shift_x, time1740_y + shift_y, c='black', s=75)
+        ax.plot([time1740_x + shift_x, time1750_x + shift_x], [time1740_y + shift_y, time1750_y + shift_y], color='black', linestyle='dashed', linewidth=3)
+        
+        ax.scatter(time1730_x + shift_x - self.lx_box, time1730_y + shift_y, c='black', s=75)
+        ax.plot([time1730_x + shift_x, time1740_x + shift_x], [time1730_y + shift_y, time1740_y + shift_y], color='black', linestyle='dashed', linewidth=3)
+        ax.plot([time1730_x + shift_x - self.lx_box, time1740_x + shift_x - self.lx_box], [time1730_y + shift_y, time1740_y + shift_y], color='black', linestyle='dashed', linewidth=3)
+        """
         if interface_id == True:
             try:
 
@@ -10975,6 +11016,8 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
 
                         
                         try:
+                            print('int')
+                            print(surface_measure[key]['interior']['com'])
                             pos_interior_surface_x = sep_surface_dict[key]['interior']['pos']['x']
                             pos_interior_surface_y = sep_surface_dict[key]['interior']['pos']['y']
                             plt.scatter(pos_interior_surface_x, pos_interior_surface_y, c='black', s=3.0)
@@ -10983,6 +11026,8 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                             plt.scatter(pos_interior_surface_x, pos_interior_surface_y+self.ly_box, c='black', s=3.0)
                             plt.scatter(pos_interior_surface_x, pos_interior_surface_y-self.ly_box, c='black', s=3.0)
                         except:
+                            print('ext')
+                            print(surface_measure[key]['exterior']['com'])
                             pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
                             pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
                             plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
@@ -10992,7 +11037,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                             plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y-self.ly_box, c='black', s=3.0) 
                         
                         try:
-                            
+
                             pos_exterior_surface_x = sep_surface_dict[key]['exterior']['pos']['x']
                             pos_exterior_surface_y = sep_surface_dict[key]['exterior']['pos']['y']
                             plt.scatter(pos_exterior_surface_x, pos_exterior_surface_y, c='black', s=3.0)
@@ -11005,12 +11050,77 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                         
             except:
                 pass
+
+
         if orientation_id == True:
+            if large_arrows_id == True:
+
+                new_orient_dict_x = np.zeros(np.shape(active_fa_dict['bin']['all']['x']))
+                new_orient_dict_y = np.zeros(np.shape(active_fa_dict['bin']['all']['x']))
+
+                pos_x_new = np.zeros(np.shape(active_fa_dict['bin']['all']['x']))
+                pos_y_new = np.zeros(np.shape(active_fa_dict['bin']['all']['x']))
+                try:
+                    if active_fa_dict!=None:
+                        for k in range(0, len(active_fa_dict['bin']['all']['x'])):
+                            for l in range(0, len(active_fa_dict['bin']['all']['y'])):
+                                
+                                #print(k)
+                                #print(l)
+                                #if ((active_fa_dict['bin']['all']['x'][k][l] ** 2 + active_fa_dict['bin']['all']['y'][k][l] ** 2) ** 0.5 >=0.20) | (count > noncount):
+                                orient_mag = ( active_fa_dict['bin']['all']['x'][k][l] ** 2 + active_fa_dict['bin']['all']['y'][k][l] ** 2 ) ** 0.5
+                                new_orient_dict_x[k][l]=active_fa_dict['bin']['all']['x'][k][l] / orient_mag
+                                new_orient_dict_y[k][l]=active_fa_dict['bin']['all']['y'][k][l] / orient_mag
+                                pos_x_new[k][l] = self.pos_x[k][l]*3
+                                pos_y_new[k][l] = self.pos_y[k][l]*3
+
+                                pos_x_new[k][l] = pos_x_new[k][l]
+                                if pos_x_new[k][l]>self.lx_box:
+                                    pos_x_new[k][l] = pos_x_new[k][l] - self.lx_box
+                                elif pos_x_new[k][l]<0:
+                                    pos_x_new[k][l]=pos_x_new[k][l]+self.lx_box
+
+                                pos_y_new[k][l] = pos_y_new[k][l]
+                                if pos_y_new[k][l]>self.ly_box:
+                                    pos_y_new[k][l] = pos_y_new[k][l] - self.ly_box
+                                elif pos_y_new[k][l]<0:
+                                    pos_y_new[k][l]=pos_y_new[k][l]+self.ly_box
+
+
+                        active_r = ( np.array(new_orient_dict_x) ** 2 + np.array(new_orient_dict_y) ** 2 ) ** 0.5
+
+                        nonzero_id = np.nonzero(active_r)
+                        
+                        nonzero_x_id = nonzero_id[0]
+                        nonzero_y_id = nonzero_id[1]
+                        
+                        for i in range(0, len(nonzero_x_id)):
+                            #plt.quiver(self.pos_x[nonzero_x_id[i]][nonzero_y_id[i]]*3, self.pos_y[nonzero_x_id[i]][nonzero_y_id[i]]*3, active_fa_dict['bin']['x'][nonzero_x_id[i]][nonzero_y_id[i]], active_fa_dict['bin']['y'][nonzero_x_id[i]][nonzero_y_id[i]], scale=10.0, width=0.01, color='black', alpha=0.8)
+                            ax.quiver(pos_x_new[nonzero_x_id[i]][nonzero_y_id[i]], pos_y_new[nonzero_x_id[i]][nonzero_y_id[i]], new_orient_dict_x[nonzero_x_id[i]][nonzero_y_id[i]], new_orient_dict_y[nonzero_x_id[i]][nonzero_y_id[i]], scale=30.0, width=0.03, color='black', headwidth=6, minshaft = 2)
+                        
+                except:
+                    pass
+            else:
+                try:
+                    if active_fa_dict!=None:
+                        active_r = ( active_fa_dict['bin']['x'] ** 2 + active_fa_dict['bin']['y'] ** 2 ) ** 0.5
+
+                        nonzero_id = np.nonzero(active_r)
+        
+                        nonzero_x_id = nonzero_id[0]
+                        nonzero_y_id = nonzero_id[1]
+
+                        ax.quiver(self.pos_x, self.pos_y, active_fa_dict['bin']['x'], active_fa_dict['bin']['y'], scale=20.0, color='black', alpha=0.8, width=0.004)
+                except:
+                    pass
+
+
+        """if orientation_id == True:
             try:
                 if active_fa_dict!=None:
                     plt.quiver(self.pos_x, self.pos_y, active_fa_dict['bin']['x'], active_fa_dict['bin']['y'], scale=20.0, color='black', alpha=0.8, width=0.004)
             except:
-                pass
+                pass"""
 
         #Set axes parameters
         # If rectangular box, reduce system size plotted
@@ -11038,6 +11148,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                 #plt.xlim(self.hx_box-80, self.hx_box+100)
         longleaf_opt = True
         # Label simulation time
+        """
         if banner_id == False:
             if self.lx_box == self.ly_box:
                 #plt.text(0.69, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
@@ -11073,7 +11184,7 @@ values=(level_boundaries[:-1] + level_boundaries[1:]) / 2, format=tick.FormatStr
                 plt.text(0.85, 0.1, s=r'$\tau$' + ' = ' + '{:.4f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
                     fontsize=18, transform = ax.transAxes,
                     bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
-        
+        """
         ax.axes.set_xticks([])
         ax.axes.set_yticks([])
         ax.axes.set_xticklabels([])
