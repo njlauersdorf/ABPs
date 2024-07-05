@@ -9062,7 +9062,7 @@ class plotting:
                 ax.add_collection(slowGroup)
                 ax.add_collection(fastGroup)
 
-                plt.quiver((pos[:,0]-self.hx_box), (pos[:,1]+self.hy_box), px, py, scale=200.0, color='black', alpha=0.8)
+                #plt.quiver((pos[:,0]-self.hx_box), (pos[:,1]+self.hy_box), px, py, scale=200.0, color='black', alpha=0.8)
 
 
             ells0 = [Ellipse(xy=np.array([pos0[i,0]+self.hx_box, pos0[i,1]+self.hy_box]),
@@ -9084,7 +9084,7 @@ class plotting:
             ax.add_collection(slowGroup)
             ax.add_collection(fastGroup)
 
-            plt.quiver((pos[:,0]+self.hx_box), (pos[:,1]+self.hy_box), px, py, scale=180.0, headwidth=10, color='black', alpha=0.8)
+            #plt.quiver((pos[:,0]+self.hx_box), (pos[:,1]+self.hy_box), px, py, scale=180.0, headwidth=10, color='black', alpha=0.8)
 
             if self.peA == 50:
                 
@@ -9126,8 +9126,8 @@ class plotting:
                 ax.add_collection(slowGroup)
                 ax.add_collection(fastGroup)
 
-                plt.quiver((pos[:,0]+self.hx_box)+(np.sqrt(2)/2)*self.lx_box, (pos[:,1]+self.hy_box)-(np.sqrt(2)/2)*self.ly_box, px, py, scale=200.0, color='black', alpha=0.8)
-                plt.quiver((pos[:,0]+self.hx_box)+(np.sqrt(2)/2)*self.lx_box, (pos[:,1]+self.hy_box)+(np.sqrt(2)/2)*self.ly_box, px, py, scale=200.0, color='black', alpha=0.8)
+                #plt.quiver((pos[:,0]+self.hx_box)+(np.sqrt(2)/2)*self.lx_box, (pos[:,1]+self.hy_box)-(np.sqrt(2)/2)*self.ly_box, px, py, scale=200.0, color='black', alpha=0.8)
+                #plt.quiver((pos[:,0]+self.hx_box)+(np.sqrt(2)/2)*self.lx_box, (pos[:,1]+self.hy_box)+(np.sqrt(2)/2)*self.ly_box, px, py, scale=200.0, color='black', alpha=0.8)
 
                 
             else:
@@ -9150,7 +9150,7 @@ class plotting:
                 ax.add_collection(slowGroup)
                 ax.add_collection(fastGroup)
 
-                plt.quiver((pos[:,0]+3*self.hx_box), (pos[:,1]+self.hy_box), px, py, scale=200.0, color='black', alpha=0.8)
+                #plt.quiver((pos[:,0]+3*self.hx_box), (pos[:,1]+self.hy_box), px, py, scale=200.0, color='black', alpha=0.8)
 
             if presentation_id == True:
                 fast_leg = [Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=slowCol, label='Slow', markersize=36), Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=fastCol, label='Fast', markersize=36)]
@@ -9309,8 +9309,8 @@ class plotting:
                 #plt.ylim(self.hy_box-25-2, self.hy_box+25+2)
                 #plt.xlim(self.hy_box-25-2, self.hy_box+25+2)
                 if self.peA==0:
-                    plt.ylim(self.hy_box-5, self.hy_box+25)
-                    plt.xlim(self.hx_box-65, self.lx_box-145)
+                    plt.ylim(self.hy_box-23, self.hy_box+12)
+                    plt.xlim(self.hx_box-35, self.lx_box-115)
                 elif self.peA==100:
                     #plt.ylim(self.hy_box-25, self.hy_box+25)
                     #plt.xlim(self.hx_box-115, self.lx_box-165)
@@ -9347,7 +9347,7 @@ class plotting:
                     fontsize=30, transform = ax.transAxes,
                     bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
             elif self.lx_box > self.ly_box:
-                plt.text(0.80, 0.1, s=r'$\tau$' + ' = ' + '{:.4f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+                plt.text(0.75, 0.1, s=r'$\tau$' + ' = ' + '{:.4f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
                     fontsize=18, transform = ax.transAxes,
                     bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
         
