@@ -9346,7 +9346,7 @@ class plotting:
                 #plt.text(0.66, 0.06, s=r'$\tau$' + ' = ' + '{:.3f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
                 #    fontsize=30, transform = ax.transAxes,
                 #    bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
-                plt.text(0.55, 0.06, s=r'$\tau$' + ' = ' + '{:.3f}'.format(300+self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+                plt.text(0.54, 0.06, s=r'$\tau$' + ' = ' + '{:.3f}'.format(300+self.tst) + ' ' + r'$\tau_\mathrm{B}$',
                     fontsize=30, transform = ax.transAxes,
                     bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
             elif self.lx_box > self.ly_box:
