@@ -11151,7 +11151,7 @@ class plotting:
                 #plt.xlim(self.hx_box-80, self.hx_box+100)
         longleaf_opt = True
         # Label simulation time
-        """
+        
         if banner_id == False:
             if self.lx_box == self.ly_box:
                 #plt.text(0.69, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
@@ -11187,7 +11187,7 @@ class plotting:
                 plt.text(0.85, 0.1, s=r'$\tau$' + ' = ' + '{:.4f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
                     fontsize=18, transform = ax.transAxes,
                     bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
-        """
+        
         ax.axes.set_xticks([])
         ax.axes.set_yticks([])
         ax.axes.set_xticklabels([])
