@@ -8407,7 +8407,7 @@ class plotting:
                     one_leg = ax0.legend(handles=fast_leg, loc='upper right', borderpad=0.3, labelspacing=0.4, handletextpad=-0.2, bbox_transform=ax0.transAxes, bbox_to_anchor=[0.97, 1.17], handlelength=1.5, columnspacing=0.4, fontsize=26, ncol=2, facecolor='none', edgecolor='none')
                     ax0.add_artist(one_leg)
                 elif (self.peA<10):
-                    one_leg = ax0.legend(handles=fast_leg, loc='upper right', borderpad=0.3, labelspacing=0.4, handletextpad=-0.2, bbox_transform=ax0.transAxes, bbox_to_anchor=[1.05, 1.17], handlelength=1.5, columnspacing=0.4, fontsize=26, ncol=2, facecolor='none', edgecolor='none')
+                    one_leg = ax0.legend(handles=fast_leg, loc='upper right', borderpad=0.3, labelspacing=0.4, handletextpad=-0.2, bbox_transform=ax0.transAxes, bbox_to_anchor=[1.04, 1.17], handlelength=1.5, columnspacing=0.4, fontsize=26, ncol=2, facecolor='none', edgecolor='none')
                     ax0.add_artist(one_leg)
 
 
@@ -8528,7 +8528,7 @@ class plotting:
 
             # Label simulation time
             if self.lx_box == self.ly_box:
-                ax0.text(0.48, 0.04, s=r'$\tau$' + ' = ' + '{:.1f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+                ax0.text(0.49, 0.04, s=r'$\tau$' + ' = ' + '{:.1f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
                     fontsize=24, transform = ax0.transAxes,
                     bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
             elif self.lx_box > self.ly_box:
