@@ -8407,7 +8407,7 @@ class plotting:
                     one_leg = ax0.legend(handles=fast_leg, loc='upper right', borderpad=0.3, labelspacing=0.4, handletextpad=-0.2, bbox_transform=ax0.transAxes, bbox_to_anchor=[0.97, 1.17], handlelength=1.5, columnspacing=0.4, fontsize=26, ncol=2, facecolor='none', edgecolor='none')
                     ax0.add_artist(one_leg)
                 elif (self.peA<10):
-                    one_leg = ax0.legend(handles=fast_leg, loc='upper right', borderpad=0.3, labelspacing=0.4, handletextpad=-0.2, bbox_transform=ax0.transAxes, bbox_to_anchor=[0.98, 1.17], handlelength=1.5, columnspacing=0.4, fontsize=26, ncol=2, facecolor='none', edgecolor='none')
+                    one_leg = ax0.legend(handles=fast_leg, loc='upper right', borderpad=0.3, labelspacing=0.4, handletextpad=-0.2, bbox_transform=ax0.transAxes, bbox_to_anchor=[1.08, 1.17], handlelength=1.5, columnspacing=0.4, fontsize=26, ncol=2, facecolor='none', edgecolor='none')
                     ax0.add_artist(one_leg)
 
 
@@ -8613,7 +8613,7 @@ class plotting:
                                 label='Steady State', markersize=0))
             one_leg = ax1.legend(handles=fast_leg, loc='center',
                         columnspacing=0.08, handletextpad=0.4,
-                        bbox_transform=ax1.transAxes, bbox_to_anchor=[0.5, 1.07],
+                        bbox_transform=ax1.transAxes, bbox_to_anchor=[0.5, 1.09],
                         fontsize=20, frameon=False, ncol=1)
             ax1.add_artist(one_leg)
 
