@@ -7892,6 +7892,27 @@ class plotting:
     
 
     def plot_clust_fluctuations(self, pos, outfile_name, ang, sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None, longleaf_opt = None):
+        if self.peA == 120:
+                pos[:,0] = pos[:,0] + (45)
+                pos[:,1] = pos[:,1] + (10)
+        elif self.peA == 0:
+                pos[:,0] = pos[:,0] + (30)
+                pos[:,1] = pos[:,1] - (160)
+        elif self.peA == 400:
+                pos[:,0] = pos[:,0] - (self.hx_box+10)
+                pos[:,1] = pos[:,1] - (self.hy_box+20)
+
+        # Enforce periodic boundary conditions
+        test_id = np.where(pos[:,0]>self.hx_box)[0]
+        pos[test_id,0]=pos[test_id,0]-self.lx_box
+        test_id = np.where(pos[:,0]<-self.hx_box)[0]
+        pos[test_id,0]=pos[test_id,0]+self.lx_box
+
+        # Enforce periodic boundary conditions
+        test_id = np.where(pos[:,1]>self.hy_box)[0]
+        pos[test_id,1]=pos[test_id,1]-self.ly_box
+        test_id = np.where(pos[:,1]<-self.hy_box)[0]
+        pos[test_id,1]=pos[test_id,1]+self.ly_box
 
         if longleaf_opt == False:
 
@@ -8358,11 +8379,15 @@ class plotting:
 
             sz = 0.755
 
+            
+
 
             if mono==0:
                 #Local each particle's positions
                 pos0=pos[typ0ind]                               # Find positions of type 0 particles
                 pos1=pos[typ1ind]
+
+                
 
                 #Assign type 0 particles to plot
                 """
