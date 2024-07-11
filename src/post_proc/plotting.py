@@ -8553,7 +8553,7 @@ class plotting:
 
             txtFile2 = 'PhaseComp_' + outfile_name + '.txt'
             if longleaf_opt==True:
-                df2 = pd.read_csv('/proj/dklotsalab/users/ABPs/binary_soft/the_bubble/random/eps1.0/xa50/pb500/active_passive/temp_files_new/' + txtFile2, sep='\s+', header=0)
+                df2 = pd.read_csv('/proj/dklotsalab/users/ABPs/binary_soft/the_bubble/random/eps1.0/xa50/pb500/videos/temp_files_new/' + txtFile2, sep='\s+', header=0)
             else:
                 df2 = pd.read_csv('/Volumes/EXTERNAL2/temp_files_new/' + txtFile2, sep='\s+', header=0)
 
