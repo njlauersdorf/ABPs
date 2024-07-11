@@ -8354,7 +8354,7 @@ class plotting:
 
             #fig = plt.figure(figsize=(x_dim,y_dim*2))
             #ax = fig.add_subplot(121, gridspec_kw={'height_ratios': [2, 1]})
-            fig, (ax0, ax1) = plt.subplots(2, 1, figsize=(6,8), hspace=0.0, gridspec_kw={'height_ratios': [2, 1]})
+            fig, (ax0, ax1) = plt.subplots(2, 1, figsize=(6,8), hspace=-2.0, gridspec_kw={'height_ratios': [2, 1]})
 
             sz = 0.755
 
@@ -8652,8 +8652,6 @@ class plotting:
             ax1.tick_params(axis='x', labelsize=16)
             ax1.tick_params(axis='y', labelsize=16)
 
-            fig.subplots_adjust(hspace=-2)
-            fig.subplots_adjust(wspace=0.03)
             plt.tight_layout()
             plt.savefig(self.outPath + 'clust_fluctuations_' + self.outFile + ".png", bbox_inches = 'tight', pad_inches = 0.3, dpi=150, transparent=False)
             plt.close()  
