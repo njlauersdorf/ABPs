@@ -8652,7 +8652,8 @@ class plotting:
             ax1.tick_params(axis='x', labelsize=16)
             ax1.tick_params(axis='y', labelsize=16)
 
-            fig.subplots_adjust(hspace=0.03)
+            fig.subplots_adjust(hspace=-0.2)
+            fig.subplots_adjust(wspace=0.03)
             plt.tight_layout()
             plt.savefig(self.outPath + 'clust_fluctuations_' + self.outFile + ".png", bbox_inches = 'tight', pad_inches = 0.3, dpi=150, transparent=False)
             plt.close()  
