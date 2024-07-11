@@ -8613,8 +8613,8 @@ class plotting:
                                 label='Steady State', markersize=0))
             one_leg = ax1.legend(handles=fast_leg, loc='center',
                         columnspacing=0.08, handletextpad=0.4,
-                        bbox_transform=ax1.transAxes, bbox_to_anchor=[0.825, 0.935],
-                        fontsize=fsize*2.4, frameon=False, ncol=1)
+                        bbox_transform=ax1.transAxes, bbox_to_anchor=[0.52, 1.05],
+                        fontsize=20, frameon=False, ncol=1)
             ax1.add_artist(one_leg)
 
             
