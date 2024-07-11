@@ -3638,6 +3638,14 @@ with hoomd.open(name=inFile, mode='rb') as t:
                                 plotting_functs.plot_part_activity_wide_desorb_orient(pos, x_orient_arr, y_orient_arr, all_surface_curves, int_comp_dict, active_fa_dict, mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option, banner_id = banner_option, presentation_id = presentation_option)
 
 
+                        elif (measurement_method == 'activity-wide-adsorb-orient2'):
+                            #DONE!
+                            if plot == 'y':
+                                
+                                # Plot particles color-coded by activity
+                                plotting_functs.plot_part_activity_wide_adsorb_orient2(pos, x_orient_arr, y_orient_arr, all_surface_curves, int_comp_dict, active_fa_dict, mono_id = mono_option, zoom_id = zoom_option, interface_id = interface_option, orientation_id = orientation_option, banner_id = banner_option, presentation_id = presentation_option)
+
+
                         elif measurement_method == 'activity-com':
                             
                             if plot == 'y':
