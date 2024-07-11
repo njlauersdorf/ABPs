@@ -8276,7 +8276,6 @@ class plotting:
             plt.savefig(self.outPath + 'clust_fluctuations_' + self.outFile + ".png", bbox_inches = 'tight', pad_inches = 0.3, dpi=150, transparent=False)
             plt.close()   
         else:
-            stop
             typ0ind = np.where(self.typ == 0)[0]
             typ1ind = np.where(self.typ == 1)[0]
 
