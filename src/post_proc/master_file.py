@@ -49,6 +49,10 @@ if hoomdPath[:4] == '/nas':
 else:
     pass
 
+if hoomdPath[:4] == '/nas':
+    longleaf_option = True
+else:
+    longleaf_option = False
 # Import modules
 import matplotlib.pyplot as plt
 
@@ -4524,7 +4528,7 @@ with hoomd.open(name=inFile, mode='rb') as t:
                             if plot == 'y':
 
                                 # Plot particles color-coded by activity with sub-plot of change in cluster size over time
-                                plotting_functs.plot_clust_fluctuations(pos, outfile, all_surface_curves, int_comp_dict)
+                                plotting_functs.plot_clust_fluctuations(pos, outfile, all_surface_curves, int_comp_dict, longleaf_opt = longleaf_option)
                         
                         elif measurement_method == 'cluster-msd':
                             if j>(start * time_step):
