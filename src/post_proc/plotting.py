@@ -11553,8 +11553,11 @@ class plotting:
         else:
             mono=0
 
+        print(x_dim)
+        print(y_dim)
+        
         # Generate figure of dimensions proportional to simulation box size (with added x-length for color bar)
-        fig = plt.figure(figsize=(x_dim,y_dim), facecolor='white')
+        fig = plt.figure(figsize=(3*x_dim,y_dim), facecolor='white')
         ax = fig.add_subplot(111)
 
         if self.peA == 0:
@@ -11759,7 +11762,7 @@ class plotting:
 
                 #plt.quiver((pos[:,0]+3*self.hx_box), (pos[:,1]+self.hy_box), px, py, scale=200.0, color='black', alpha=0.8)
 
-            
+            """
             if presentation_id == True:
                 fast_leg = [Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=slowCol, label='Slow', markersize=36), Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=fastCol, label='Fast', markersize=36)]
 
@@ -11778,7 +11781,7 @@ class plotting:
                     fast_leg = [Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=slowCol, label=r'$\mathrm{Pe}_\mathrm{S} = $'+str(int(self.peB)), markersize=32), Line2D([0], [0], lw=0, marker='o', markeredgewidth=1.8*1.2, markeredgecolor='None', markerfacecolor=fastCol, label=r'$\mathrm{Pe}_\mathrm{F} = $'+str(int(self.peA)), markersize=32)]
                 one_leg = ax.legend(handles=fast_leg, loc='upper right', borderpad=0.3, labelspacing=0.4, handletextpad=-0.2, bbox_transform=ax.transAxes, bbox_to_anchor=[0.92, 1.19], handlelength=1.5, columnspacing=0.4, fontsize=36, ncol=2, facecolor='none', edgecolor='none')
                 ax.add_artist(one_leg)
-
+            """
             #plt.scatter(neigh_plot_dict['all-all']['x'][typ1ind]+self.hx_box, neigh_plot_dict['all-all']['y'][typ1ind]+self.hy_box, c='black', s=sz)
             #plt.quiver(pos[typ1ind,0]+self.hx_box, pos[typ1ind,1]+self.hy_box, px, py, color='black', width=0.003)
             #plt.quiver(pos[typ1ind,0]+self.hx_box, pos[typ1ind,1]+self.hy_box+self.ly_box, px, py, color='black', width=0.003)
@@ -11897,16 +11900,27 @@ class plotting:
                     plt.quiver(self.pos_x, self.pos_y, active_fa_dict['bin']['x'], active_fa_dict['bin']['y'], scale=20.0, color='black', alpha=0.8)
             except:
                 pass
+        
+        
 
+        
         #Set axes parameters
         # If rectangular box, reduce system size plotted
+
+        print(self.hy_box+9)
+        print(self.hy_box+24)
+        print(self.hx_box+88)
+        print(self.lx_box+20)
+        
         if self.lx_box > self.ly_box:
             plt.xlim(-(0.5*dense_x_width)+self.hx_box, (0.5*dense_x_width)+self.hx_box)
             plt.ylim(0.0, self.ly_box)
         elif self.lx_box < self.ly_box:
             plt.ylim(dense_y_mid-(dense_y_width), dense_y_mid+(dense_y_width))
             plt.xlim(0.0, self.lx_box)
-        # Plot entire system            
+        # Plot entire system           
+
+        
         else:
 
             if zoom_id == True:
@@ -11914,9 +11928,45 @@ class plotting:
                 #plt.xlim(self.hy_box-25-2, self.hy_box+25+2)
                 
                 if self.peA==0:
-                    plt.ylim(self.hy_box-7.5, self.hy_box+27.5)
-                    plt.xlim(self.hx_box+80, self.lx_box)
+                    if round(self.tst,3) == 1.318:
+                        plt.ylim(136.5, 151.5)
+                        plt.xlim(217.5, 262.5)
 
+                        #plt.text(0.05, 0.8, s=r'Herding',
+                        #    fontsize=75, transform = ax.transAxes,
+                        #    bbox=dict(facecolor=(1,1,1,1.0), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+
+                        
+                        x_min = 220 + 17.5
+                        x_max = 220 + 27.5
+                        y_min = 136.5 + 2.5
+                        y_max = 151.5 - 2.5
+
+                    elif round(self.tst,3) == 1.444:
+                        plt.ylim(134, 149)
+                        plt.xlim(217.5, 262.5)
+
+                        #plt.text(0.05, 0.8, s=r'Domains at Interface',
+                        #    fontsize=75, transform = ax.transAxes,
+                        #    bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), linewidth=8.0, linecolor='black', boxstyle='round, pad=0.1'))
+
+                        x_min = 220 + 17.5
+                        x_max = 220 + 27.5
+                        y_min = 134 + 2.5
+                        y_max = 149 - 2.5
+                    elif round(self.tst,3) == 3.000:
+
+                        plt.ylim(136.5, 151.5)
+                        plt.xlim(214.5, 259.5)
+
+                        #plt.text(0.05, 0.8, s=r'Domains in Bulk',
+                        #    fontsize=75, transform = ax.transAxes,
+                        #    bbox=dict(facecolor=(1,1,1,1.0), edgecolor=(0,0,0,1), edgewidth = 3.0, boxstyle='round, pad=0.1'))
+
+                        x_min = 217 + 17.5
+                        x_max = 217 + 27.5
+                        y_min = 136.5 + 2.5
+                        y_max = 151.5 - 2.5
                 elif self.peA==50:
                     #plt.ylim(self.hy_box-25, self.hy_box+25)
                     #plt.xlim(self.hx_box-115, self.lx_box-165)
@@ -11940,14 +11990,24 @@ class plotting:
                 #plt.text(0.69, 0.04, s=r'$\tau$' + ' = ' + '{:.2f}'.format(self.tst) + ' ' + r'$\tau_\mathrm{B}$',
                 #    fontsize=24, transform = ax.transAxes,
                 #    bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
-                plt.text(0.54, 0.06, s=r'$\tau$' + ' = ' + '{:.3f}'.format(300+self.tst) + ' ' + r'$\tau_\mathrm{B}$',
-                    fontsize=30, transform = ax.transAxes,
+                #plt.text(0.54, 0.06, s=r'$\tau$' + ' = ' + '{:.3f}'.format(300+self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+                #    fontsize=30, transform = ax.transAxes,
+                #    bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+                plt.text(0.71, 0.06, s=r'$\tau$' + ' = ' + '{:.3f}'.format(300+self.tst) + ' ' + r'$\tau_\mathrm{B}$',
+                    fontsize=60, transform = ax.transAxes,
                     bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
+
             elif self.lx_box > self.ly_box:
                 plt.text(0.82, 0.1, s=r'$\tau$' + ' = ' + '{:.4f}'.format(300+self.tst) + ' ' + r'$\tau_\mathrm{B}$',
                     fontsize=18, transform = ax.transAxes,
                     bbox=dict(facecolor=(1,1,1,0.75), edgecolor=(0,0,0,1), boxstyle='round, pad=0.1'))
         
+        
+        ax.plot([x_min, x_min], [y_min, y_max], linestyle='solid', linewidth=16.0, color='yellow')
+        ax.plot([x_max, x_max], [y_min, y_max], linestyle='solid', linewidth=16.0, color='yellow')
+        ax.plot([x_min, x_max], [y_min, y_min], linestyle='solid', linewidth=16.0, color='yellow')
+        ax.plot([x_min, x_max], [y_max, y_max], linestyle='solid', linewidth=16.0, color='yellow')
+
         ax.axes.set_xticks([])
         ax.axes.set_yticks([])
         ax.axes.set_xticklabels([])
@@ -11961,6 +12021,8 @@ class plotting:
         plt.savefig(self.outPath + 'part_activity_adsorb_orient2_' + self.outFile + ".png", dpi=200, transparent=True, bbox_inches='tight')
         #plt.savefig(self.outPath + 'part_activity_' + self.outFile + ".eps", format='eps', dpi=150, bbox_inches='tight')
         plt.close()  
+
+    
 
     def plot_part_activity_paper(self, pos, px, py, sep_surface_dict=None, int_comp_dict=None, active_fa_dict=None, mono_id=False, interface_id = False, orientation_id = False, zoom_id = False, banner_id = False, presentation_id = False):
 
